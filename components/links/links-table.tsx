@@ -82,13 +82,6 @@ export default function LinksTable({
   primaryVersion?: DocumentVersion;
   mutateDocument?: () => void;
 }) {
-  const [tags, _] = useQueryState<string[]>("tags", {
-    parse: (value: string) => value.split(",").filter(Boolean),
-    serialize: (value: string[]) => value.join(","),
-  });
-
-  const selectedTagNames = useMemo(() => tags ?? [], [tags]);
-
   const now = Date.now();
   const router = useRouter();
   const { isFree } = usePlan();
@@ -126,14 +119,6 @@ export default function LinksTable({
       };
     });
   }, [links, now]);
-
-  processedLinks = useMemo(() => {
-    if (!links?.length) return [];
-    return processedLinks.filter((link) => {
-      if (selectedTagNames.length === 0) return true;
-      return link.tags.some((tag) => selectedTagNames.includes(tag.name));
-    });
-  }, [links, processedLinks, selectedTagNames]);
 
   const { canAddLinks } = useLimits();
   const { data: features } = useSWR<{

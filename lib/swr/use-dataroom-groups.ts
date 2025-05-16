@@ -53,7 +53,12 @@ export default function useDataroomGroups({ documentId }: { documentId?: string 
   };
 }
 
-export function useDataroomGroupLinks() {
+export function useDataroomGroupLinks(
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+  tags?: string[],
+) {
   const router = useRouter();
 
   const { id, groupId } = router.query as {
@@ -64,17 +69,25 @@ export function useDataroomGroupLinks() {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: links, error } = useSWR<LinkWithViews[]>(
+  const { data, error } = useSWR<{
+    links: LinkWithViews[];
+    pagination: {
+      total: number;
+      pages: number;
+    };
+  }>(
     teamId &&
       id &&
-      `/api/teams/${teamId}/datarooms/${id}/groups/${groupId}/links`,
+    `/api/teams/${teamId}/datarooms/${id}/groups/${groupId}/links?page=${page}&limit=${limit}${search ? `&search=${search}` : ""
+    }${tags?.length ? `&tags=${tags.join(",")}` : ""}`,
     fetcher,
     { dedupingInterval: 10000 },
   );
 
   return {
-    links,
-    loading: !error && !links,
+    links: data?.links,
+    pagination: data?.pagination,
+    loading: !error && !data,
     error,
   };
 }

@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
+import { z } from "zod";
 
 import { LIMITS } from "@/lib/constants";
 import { errorhandler } from "@/lib/errorHandler";
@@ -11,6 +12,12 @@ import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
 import { authOptions } from "../../auth/[...nextauth]";
+
+const querySchema = z.object({
+  id: z.string().min(1, "Link ID is required"),
+  page: z.string().optional().transform((val) => parseInt(val || "1")),
+  limit: z.string().optional().transform((val) => parseInt(val || "10")),
+});
 
 export default async function handle(
   req: NextApiRequest,
@@ -23,12 +30,12 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
-    // get link id from query params
-    const { id } = req.query as { id: string };
-
-    const userId = (session.user as CustomUser).id;
-
     try {
+      // Validate query parameters
+      const { id, page, limit } = querySchema.parse(req.query);
+
+      const userId = (session.user as CustomUser).id;
+
       // get the numPages from document
       const result = await prisma.link.findUnique({
         where: {
@@ -80,6 +87,13 @@ export default async function handle(
         result?.document?.numPages ||
         0;
 
+      // Get total count of views
+      const totalViews = await prisma.view.count({
+        where: {
+          linkId: id,
+        },
+      });
+
       const views = await prisma.view.findMany({
         where: {
           linkId: id,
@@ -87,6 +101,8 @@ export default async function handle(
         orderBy: {
           viewedAt: "desc",
         },
+        skip: (page - 1) * limit,
+        take: limit,
       });
 
       // limit the number of views to 20 on free plan
@@ -128,12 +144,25 @@ export default async function handle(
         };
       });
 
-      // TODO: Check that the user is owner of the links, otherwise return 401
-
-      return res.status(200).json(viewsWithDuration);
+      return res.status(200).json({
+        views: viewsWithDuration,
+        pagination: {
+          total: totalViews,
+          pages: Math.ceil(totalViews / limit),
+          currentPage: page,
+          pageSize: limit,
+        },
+      });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "Invalid request parameters",
+          details: error.errors,
+        });
+      }
+
       log({
-        message: `Failed to get views for link: _${id}_. \n\n ${error} \n\n*Metadata*: \`{userId: ${userId}}\``,
+        message: `Failed to get views for link: _${req.query.id}_. \n\n ${error} \n\n*Metadata*: \`{userId: ${(session.user as CustomUser).id}}\``,
         type: "error",
       });
       errorhandler(error, res);

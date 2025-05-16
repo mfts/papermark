@@ -1,24 +1,26 @@
 import ErrorPage from "next/error";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
+import { useQueryState } from "nuqs";
+
+import { useDocument, useDocumentLinks } from "@/lib/swr/use-document";
+import useLimits from "@/lib/swr/use-limits";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import DocumentHeader from "@/components/documents/document-header";
+import { Pagination } from "@/components/documents/pagination";
 import { StatsComponent } from "@/components/documents/stats";
 import VideoAnalytics from "@/components/documents/video-analytics";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import LinksTable from "@/components/links/links-table";
-import { NavMenu } from "@/components/navigation-menu";
+import { SearchBoxPersisted } from "@/components/search-box";
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import VisitorsTable from "@/components/visitors/visitors-table";
-
-import { useDocument, useDocumentLinks } from "@/lib/swr/use-document";
-import useLimits from "@/lib/swr/use-limits";
 
 export default function DocumentPage() {
   const {
@@ -27,12 +29,65 @@ export default function DocumentPage() {
     error,
     mutate: mutateDocument,
   } = useDocument();
-  const { links } = useDocumentLinks();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchQuery] = useQueryState<string | null>("search", {
+    parse: (value: string) => value || null,
+    serialize: (value: string | null) => value || "",
+  });
+  const [tags] = useQueryState<string[]>("tags", {
+    parse: (value: string) => value.split(",").filter(Boolean),
+    serialize: (value: string[]) => value.join(","),
+  });
+
+  useEffect(() => {
+    if (searchQuery || tags) {
+      setCurrentPage(1);
+    }
+  }, [searchQuery, tags]);
+
+  const { links, pagination, isValidating } = useDocumentLinks(
+    currentPage,
+    pageSize,
+    searchQuery || undefined,
+    tags || undefined,
+  );
   const teamInfo = useTeam();
 
   const { canAddLinks } = useLimits();
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
+  const linksSectionRef = useRef<HTMLDivElement>(null);
+  const shouldScrollRef = useRef(false);
+
+  // TODO: scroll to Title H2
+  // const scrollToLinks = useCallback(() => {
+  //   if (linksSectionRef.current && shouldScrollRef.current) {
+  //     linksSectionRef.current.scrollIntoView({
+  //       behavior: "smooth",
+  //       block: "start",
+  //     });
+  //     shouldScrollRef.current = false;
+  //   }
+  // }, []);
+
+  // TODO: scroll to Title H2
+  // useEffect(() => {
+  //   if (!isValidating && shouldScrollRef.current) {
+  //     scrollToLinks();
+  //   }
+  // }, [isValidating, scrollToLinks]);
+
+  const handlePageSizeChange = useCallback((newSize: number) => {
+    shouldScrollRef.current = true;
+    setPageSize(newSize);
+    setCurrentPage(1);
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    shouldScrollRef.current = true;
+    setCurrentPage(page);
+  }, []);
 
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
@@ -94,12 +149,36 @@ export default function DocumentPage() {
             )}
 
             {/* Links */}
-            <LinksTable
-              links={links}
-              targetType={"DOCUMENT"}
-              primaryVersion={primaryVersion}
-              mutateDocument={mutateDocument}
-            />
+            <div className="space-y-4 pt-2" ref={linksSectionRef}>
+              <div className="flex items-center gap-4">
+                <SearchBoxPersisted
+                  loading={isValidating}
+                  inputClassName="h-10"
+                  placeholder="Search links..."
+                />
+              </div>
+              <LinksTable
+                links={links}
+                targetType={"DOCUMENT"}
+                primaryVersion={primaryVersion}
+                mutateDocument={mutateDocument}
+              />
+              {pagination && pagination.total > 0 && (
+                <div className="mt-4 flex w-full justify-center">
+                  <Pagination
+                    currentPage={currentPage}
+                    pageSize={pageSize}
+                    className="w-full"
+                    totalItems={pagination.total}
+                    totalPages={pagination.pages}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                    totalShownItems={links?.length || 0}
+                    itemName="links"
+                  />
+                </div>
+              )}
+            </div>
 
             {/* Visitors */}
             <VisitorsTable
