@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { validateEmail } from "@/lib/utils/validate-email";
 
+import PlanBadge from "../billing/plan-badge";
 import { Button } from "./button";
 import {
   Card,
@@ -34,6 +35,7 @@ export function Form({
   handleSubmit,
   validate,
   defaultValue,
+  plan,
 }: {
   title: string;
   description: string;
@@ -44,6 +46,7 @@ export function Form({
   handleSubmit: (data: any) => Promise<any>;
   validate?: (data: string) => boolean;
   defaultValue?: string;
+  plan?: string;
 }) {
   const [saving, setSaving] = useState(false);
   const [value, setValue] = useState(defaultValue);
@@ -123,7 +126,9 @@ export function Form({
     >
       <Card className="bg-transparent">
         <CardHeader>
-          <CardTitle>{title}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            {title} {plan && <PlanBadge plan={plan} />}
+          </CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>

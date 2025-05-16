@@ -1,6 +1,7 @@
 import { parsePageId } from "notion-utils";
 
 import { DocumentData } from "@/lib/documents/create-document";
+import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { convertCadToPdfTask } from "@/lib/trigger/convert-files";
@@ -11,7 +12,6 @@ import { getExtension } from "@/lib/utils";
 import { conversionQueue } from "@/lib/utils/trigger-utils";
 import { sendDocumentCreatedWebhook } from "@/lib/webhook/triggers/document-created";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
-import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 
 type ProcessDocumentParams = {
   documentData: DocumentData;
@@ -208,20 +208,19 @@ export const processDocument = async ({
       storageType: document.versions[0].storageType,
     });
 
-    await Promise.all([
-      prisma.document.update({
-        where: { id: document.id },
-        data: { advancedExcelEnabled: true },
-      }),
-      prisma.documentVersion.update({
-        where: { id: document.versions[0].id },
-        data: { numPages: 1 },
-      }),
-    ]);
+    await prisma.documentVersion.update({
+      where: { id: document.versions[0].id },
+      data: { numPages: 1 },
+    });
 
-    await fetch(
-      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${document.id}`,
-    );
+    try {
+      await fetch(
+        `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${document.id}`,
+      );
+    } catch (error) {
+      console.error("Failed to revalidate document:", error);
+      // The document is still updated, so we can continue without throwing
+    }
   }
 
   // Send webhooks

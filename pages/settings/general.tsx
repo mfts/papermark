@@ -5,6 +5,7 @@ import { PlanEnum } from "@/ee/stripe/constants";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
@@ -14,8 +15,10 @@ import { SettingsHeader } from "@/components/settings/settings-header";
 import { Form } from "@/components/ui/form";
 
 export default function General() {
+  const analytics = useAnalytics();
   const teamInfo = useTeam();
-  const { plan } = usePlan();
+  const teamId = teamInfo?.currentTeam?.id;
+  const { isFree, isPro, isTrial } = usePlan();
   const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
   const [planModalTrigger, setPlanModalTrigger] = useState<string>("");
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
@@ -29,31 +32,30 @@ export default function General() {
   const handleExcelAdvancedModeChange = async (data: {
     enableExcelAdvancedMode: string;
   }) => {
-    if (plan === "free" && data.enableExcelAdvancedMode === "true") {
+    if (isFree && data.enableExcelAdvancedMode === "true") {
       showUpgradeModal(PlanEnum.Business, "advanced-excel-mode");
       return;
     }
 
-    const promise = fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/enable-advanced-mode`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          enableExcelAdvancedMode: data.enableExcelAdvancedMode === "true",
-        }),
+    analytics.capture("Toggle Excel Advanced Mode", {
+      teamId,
+      enableExcelAdvancedMode: data.enableExcelAdvancedMode === "true",
+    });
+
+    const promise = fetch(`/api/teams/${teamId}/update-advanced-mode`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
       },
-    ).then(async (res) => {
+      body: JSON.stringify({
+        enableExcelAdvancedMode: data.enableExcelAdvancedMode === "true",
+      }),
+    }).then(async (res) => {
       if (!res.ok) {
         const { error } = await res.json();
         throw new Error(error.message);
       }
-      await Promise.all([
-        mutate(`/api/teams/${teamInfo?.currentTeam?.id}`),
-        mutate(`/api/teams`),
-      ]);
+      await Promise.all([mutate(`/api/teams/${teamId}`), mutate(`/api/teams`)]);
       return res.json();
     });
 
@@ -68,24 +70,23 @@ export default function General() {
   };
 
   const handleTeamNameChange = async (updateData: any) => {
-    const promise = fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/update-name`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateData),
+    analytics.capture("Update Team Name", {
+      teamId,
+      name: updateData.name,
+    });
+
+    const promise = fetch(`/api/teams/${teamId}/update-name`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
       },
-    ).then(async (res) => {
+      body: JSON.stringify(updateData),
+    }).then(async (res) => {
       if (!res.ok) {
         const { error } = await res.json();
         throw new Error(error.message);
       }
-      await Promise.all([
-        mutate(`/api/teams/${teamInfo?.currentTeam?.id}`),
-        mutate(`/api/teams`),
-      ]);
+      await Promise.all([mutate(`/api/teams/${teamId}`), mutate(`/api/teams`)]);
       return res.json();
     });
 
@@ -127,7 +128,7 @@ export default function General() {
 
           <Form
             title="Excel Advanced Mode"
-            description="Enable advanced mode for all Excel files in your team. This will use Microsoft Office viewer for better formatting."
+            description="Enable advanced mode for all new Excel files in your team. Existing files will not be affected."
             inputAttrs={{
               name: "enableExcelAdvancedMode",
               type: "checkbox",
@@ -136,8 +137,9 @@ export default function General() {
             defaultValue={String(
               teamInfo?.currentTeam?.enableExcelAdvancedMode ?? false,
             )}
-            helpText="When enabled, Excel files will be viewed using the Microsoft Office viewer for better formatting and compatibility."
+            helpText="When enabled, newly uploaded Excel files will be viewed using the Microsoft Office viewer for better formatting and compatibility."
             handleSubmit={handleExcelAdvancedModeChange}
+            plan={(isFree && !isTrial) || isPro ? "Business" : undefined}
           />
 
           <DeleteTeam />
