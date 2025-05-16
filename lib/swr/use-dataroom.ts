@@ -344,17 +344,29 @@ export function useDataroomViewers({ dataroomId }: { dataroomId: string }) {
 export function useDataroomVisits({
   dataroomId,
   groupId,
+  page = 1,
+  limit = 10,
+  search,
 }: {
   dataroomId: string;
   groupId?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
 }) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: views, error } = useSWR<any[]>(
+  const { data, error } = useSWR<{
+    views: any[];
+    pagination: {
+      total: number;
+      pages: number;
+    };
+  }>(
     teamId &&
       dataroomId &&
-      `/api/teams/${teamId}/datarooms/${dataroomId}${groupId ? `/groups/${groupId}` : ""}/views`,
+    `/api/teams/${teamId}/datarooms/${dataroomId}${groupId ? `/groups/${groupId}` : ""}/views?page=${page}&limit=${limit}${search ? `&search=${search}` : ""}`,
     fetcher,
     {
       dedupingInterval: 10000,
@@ -362,8 +374,9 @@ export function useDataroomVisits({
   );
 
   return {
-    views,
-    loading: !error && !views,
+    views: data?.views,
+    pagination: data?.pagination,
+    loading: !error && !data,
     error,
   };
 }
