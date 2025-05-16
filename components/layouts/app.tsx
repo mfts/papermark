@@ -1,14 +1,21 @@
-import { AppSidebar } from "@/components/sidebar/app-sidebar";
+import Cookies from "js-cookie";
 
-import { Separator } from "../ui/separator";
-import { SidebarInset, SidebarTrigger } from "../ui/sidebar";
-import { SidebarProvider } from "../ui/sidebar";
-import { AppBreadcrumb } from "./breadcrumb";
-import TrialBanner from "./trial-banner";
+import { AppBreadcrumb } from "@/components/layouts/breadcrumb";
+import TrialBanner from "@/components/layouts/trial-banner";
+import { AppSidebar } from "@/components/sidebar/app-sidebar";
+import { Separator } from "@/components/ui/separator";
+import {
+  SIDEBAR_COOKIE_NAME,
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const isSidebarOpen = Cookies.get(SIDEBAR_COOKIE_NAME) === "true";
+
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={isSidebarOpen}>
       <div className="flex flex-1 flex-col gap-x-1 bg-gray-50 dark:bg-black md:flex-row">
         <AppSidebar />
         <SidebarInset className="ring-1 ring-gray-200 dark:ring-gray-800">
