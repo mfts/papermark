@@ -7,16 +7,19 @@ import { LinkType } from "@prisma/client";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
-import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
-import { LinkOptions } from "@/components/links/link-sheet/link-options";
-import { Button } from "@/components/ui/button";
-
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import {
   convertDataUrlToFile,
   copyToClipboard,
   uploadImage,
 } from "@/lib/utils";
+
+import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { OnboardingDataroomLinkOptions } from "@/components/welcome/containers/onboarding-dataroom-link-options";
+import { OnboardingLinkOptions } from "@/components/welcome/containers/onboarding-link-options";
 
 export function LinkOptionContainer({
   currentLinkId,
@@ -81,7 +84,7 @@ export function LinkOptionContainer({
         `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${currentLinkId}`,
         `Link copied to clipboard. Redirecting to dataroom page...`,
       );
-      router.push(`/datarooms/${currentDataroomId}`);
+      router.push(`/datarooms/${currentDataroomId}/documents`);
     } else {
       copyToClipboard(
         `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${currentLinkId}`,
@@ -114,8 +117,19 @@ export function LinkOptionContainer({
         variants={STAGGER_CHILD_VARIANTS}
         className="flex flex-col items-center space-y-10 text-center"
       >
-        <h1 className="font-display text-3xl font-semibold text-foreground transition-colors sm:text-4xl">
-          Share your unique link
+        <h1
+          className={
+            `font-display mx-auto text-center text-3xl font-semibold text-foreground transition-colors sm:text-4xl ` +
+            (showLinkSettings ? "whitespace-nowrap" : "max-w-md")
+          }
+        >
+          {showLinkSettings
+            ? currentDataroomId
+              ? "Configure your dataroom link"
+              : "Configure your document link"
+            : currentDataroomId
+              ? "Securely share your unique dataroom link"
+              : "Securely share your unique document link"}
         </h1>
       </motion.div>
 
@@ -123,17 +137,29 @@ export function LinkOptionContainer({
         {showLinkSettings && (
           <main className="max-h-[calc(100dvh-10rem)] min-h-[300px] overflow-y-scroll scrollbar-hide">
             <div className="flex flex-col justify-center">
+              <div className="w-full max-w-xs pb-8 sm:max-w-lg">
+                {currentDataroomId ? (
+                  <OnboardingDataroomLinkOptions
+                    data={linkData}
+                    setData={setLinkData}
+                    currentPreset={undefined}
+                  />
+                ) : (
+                  <OnboardingLinkOptions
+                    data={linkData}
+                    setData={setLinkData}
+                    linkType={LinkType.DOCUMENT_LINK}
+                    currentPreset={undefined}
+                  />
+                )}
+              </div>
               <div className="mb-4 flex items-center justify-center">
                 <Button onClick={() => setShowLinkSettings(false)}>
                   Share {currentDataroomId ? `Dataroom` : `Document`}
                 </Button>
               </div>
-              <div className="w-full max-w-xs pb-8 sm:max-w-lg">
-                <LinkOptions
-                  data={linkData}
-                  setData={setLinkData}
-                  linkType={LinkType.DOCUMENT_LINK}
-                />
+              <div className="text-center text-xs text-muted-foreground">
+                <span>You can always change settings later.</span>
               </div>
             </div>
           </main>
@@ -154,9 +180,14 @@ export function LinkOptionContainer({
                 </div>
                 <div className="mb-4 flex items-center justify-center">
                   <Button onClick={handleSubmit} loading={isLoading}>
-                    Save & Copy Link
+                    Copy & Share
                   </Button>
                 </div>
+                {!currentDataroomId && (
+                  <div className="text-center text-xs text-muted-foreground">
+                    <span>To see page by page analytics</span>
+                  </div>
+                )}
               </div>
             </main>
           )}

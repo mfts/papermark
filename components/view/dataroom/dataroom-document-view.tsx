@@ -57,6 +57,7 @@ export type DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE = {
   viewerEmail?: string;
   viewerId?: string;
   conversationsEnabled?: boolean;
+  isTeamMember?: boolean;
 };
 
 export default function DataroomDocumentView({
@@ -174,6 +175,7 @@ export default function DataroomDocumentView({
           viewerEmail,
           viewerId,
           conversationsEnabled,
+          isTeamMember,
         } = fetchData as DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE;
         analytics.identify(
           userEmail ?? viewerEmail ?? verifiedEmail ?? data.email ?? undefined,
@@ -186,6 +188,7 @@ export default function DataroomDocumentView({
           viewerId: viewerId,
           viewerEmail: viewerEmail ?? data.email ?? verifiedEmail ?? userEmail,
           isEmbedded,
+          isTeamMember,
         });
 
         // set the verification token to the cookie
@@ -215,6 +218,7 @@ export default function DataroomDocumentView({
           viewerEmail,
           viewerId,
           conversationsEnabled,
+          isTeamMember,
         }));
         setSubmitted(true);
         setVerificationRequested(false);
@@ -252,13 +256,21 @@ export default function DataroomDocumentView({
         (!submitted && !isProtected) ||
         token ||
         preview ||
-        viewData.dataroomViewId
+        viewData.dataroomViewId ||
+        previewToken
       ) {
         handleSubmission();
         didMount.current = true;
       }
     }
-  }, [submitted, isProtected, token, preview, viewData.dataroomViewId]);
+  }, [
+    submitted,
+    isProtected,
+    token,
+    preview,
+    viewData.dataroomViewId,
+    previewToken,
+  ]);
 
   // Components to render when email is submitted but verification is pending
   if (verificationRequested) {
