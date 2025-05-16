@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { Fragment, memo, useCallback, useMemo, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
 import {
@@ -356,7 +356,7 @@ export function DataroomItemsList({
 
     if (isMobile) {
       return (
-        <>
+        <Fragment key={itemId}>
           {item.itemType === "folder" ? (
             <FolderCard
               key={itemId}
@@ -374,12 +374,12 @@ export function DataroomItemsList({
               dataroomId={dataroomId}
             />
           )}
-        </>
+        </Fragment>
       );
     }
 
     return (
-      <>
+      <Fragment key={itemId}>
         {item.itemType === "folder" ? (
           <DroppableFolder
             key={itemId}
@@ -427,7 +427,7 @@ export function DataroomItemsList({
             />
           </DraggableItem>
         )}
-      </>
+      </Fragment>
     );
   };
   const resetSelection = () => {
@@ -590,7 +590,9 @@ export function DataroomItemsList({
         {isMobile ? (
           <div>
             <ul role="list" className="space-y-4">
-              {mixedItems.map(renderItem)}
+              {mixedItems.map((item) => (
+                <li key={`${item.itemType}-${item.id}`}>{renderItem(item)}</li>
+              ))}
             </ul>
             <Portal containerId={"documents-header-count"}>
               <HeaderContent />
@@ -616,7 +618,11 @@ export function DataroomItemsList({
               }}
             >
               <ul role="list" className="space-y-4">
-                {mixedItems.map(renderItem)}
+                {mixedItems.map((item) => (
+                  <li key={`${item.itemType}-${item.id}`}>
+                    {renderItem(item)}
+                  </li>
+                ))}
               </ul>
 
               <Portal>

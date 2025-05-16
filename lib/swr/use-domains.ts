@@ -8,7 +8,7 @@ export function useDomains() {
   const teamInfo = useTeam();
 
   const { data: domains, error } = useSWR<Domain[]>(
-    `/api/teams/${teamInfo?.currentTeam?.id}/domains`,
+    teamInfo?.currentTeam?.id ? `/api/teams/${teamInfo.currentTeam.id}/domains` : null,
     fetcher,
     {
       dedupingInterval: 60000,
