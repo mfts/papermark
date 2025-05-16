@@ -27,6 +27,7 @@ import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { validateEmail } from "@/lib/utils/validate-email";
+import { fetchUploadDocumentsCount } from "@/lib/api/links/link-data";
 
 export async function POST(request: NextRequest) {
   try {
@@ -119,6 +120,7 @@ export async function POST(request: NextRequest) {
         allowDownload: true,
         enableConversation: true,
         teamId: true,
+        requireAdminApproval: true,
         team: {
           select: {
             plan: true,
@@ -640,6 +642,12 @@ export async function POST(request: NextRequest) {
         const dataroomViewId =
           newDataroomView?.id ?? dataroomSession?.viewId ?? undefined;
 
+        const uploadDocumentsCount = await fetchUploadDocumentsCount({
+          dataroomId,
+          viewerId: viewer?.id!,
+          teamId: link.teamId!,
+        });
+
         const returnObject = {
           message: "Dataroom View recorded",
           viewId: dataroomViewId,
@@ -651,6 +659,8 @@ export async function POST(request: NextRequest) {
           viewerId: viewer?.id,
           conversationsEnabled: link.enableConversation,
           enableVisitorUpload: link.enableUpload,
+          requireAdminApproval: link.requireAdminApproval,
+          uploadDocumentsCount, // number of documents uploaded to the dataroom by visitors
           ...(isTeamMember && { isTeamMember: true }),
         };
 
@@ -937,6 +947,7 @@ export async function POST(request: NextRequest) {
         canDownload: canDownload,
         viewerId: viewer?.id,
         conversationsEnabled: link.enableConversation,
+        requireAdminApproval: link.requireAdminApproval,
         ...(isTeamMember && { isTeamMember: true }),
       };
 

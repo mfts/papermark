@@ -31,12 +31,16 @@ export default function useDocuments() {
     };
   }>(
     teamId &&
-      `/api/teams/${teamId}/documents?${
-        searchQuery ? `query=${searchQuery}` : ""
-      }${sortQuery ? `&sort=${sortQuery}` : ""}${paginationParams}`.replace(
-        /^\?&/,
-        "?",
-      ),
+    `/api/teams/${teamId}/documents${searchQuery || sortQuery || paginationParams
+      ? `?${[
+        searchQuery ? `query=${searchQuery}` : "",
+        sortQuery ? `sort=${sortQuery}` : "",
+        paginationParams,
+      ]
+        .filter(Boolean)
+        .join("&")}`
+      : ""
+    }`,
     fetcher,
     {
       revalidateOnFocus: false,

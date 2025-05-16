@@ -63,6 +63,7 @@ export default async function handle(
           groupId: true,
           audienceType: true,
           teamId: true,
+          requireAdminApproval: true,
           team: {
             select: {
               plan: true,
@@ -330,6 +331,7 @@ export default async function handle(
           enableUpload: linkData.enableUpload || false,
           isFileRequestOnly: linkData.isFileRequestOnly || false,
           uploadFolderId: linkData.uploadFolderId || null,
+          requireAdminApproval: !!linkData.requireAdminApproval,
         },
         include: {
           views: {

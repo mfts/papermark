@@ -48,6 +48,7 @@ export async function POST(
         uploadFolderId: true,
         dataroomId: true,
         teamId: true,
+        requireAdminApproval: true,
         team: {
           select: {
             plan: true,
@@ -93,6 +94,7 @@ export async function POST(
       teamId: link.teamId,
       teamPlan: link.team?.plan ?? "free",
       isExternalUpload: true,
+      requireAdminApproval: !!link.requireAdminApproval,
     });
 
     // 2. Create the dataroom document
@@ -138,7 +140,7 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ ...document, folderId: dataroomFolderId });
   } catch (error) {
     console.error("Error uploading document:", error);
     return NextResponse.json(

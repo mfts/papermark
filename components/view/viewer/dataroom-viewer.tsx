@@ -1,9 +1,11 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import React from "react";
 
 import {
   DataroomBrand,
   DataroomFolder,
+  Document,
+  DocumentApprovalStatus,
   ViewerGroupAccessControls,
 } from "@prisma/client";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
@@ -58,6 +60,7 @@ type DataroomDocument = {
   versions: DocumentVersion[];
   canDownload: boolean;
   canView: boolean;
+  approvedStatus: DocumentApprovalStatus;
 };
 
 const getParentFolders = (
@@ -108,10 +111,13 @@ export default function DataroomViewer({
   isEmbedded?: boolean;
   viewerEmail?: string;
 }) {
-  const { documents, folders } = dataroom as {
+  const { documents: initialDocuments, folders } = dataroom as {
     documents: DataroomDocument[];
     folders: DataroomFolder[];
   };
+
+  const [documents, setDocuments] =
+    useState<DataroomDocument[]>(initialDocuments);
 
   const breadcrumbFolders = useMemo(
     () => getParentFolders(folderId, folders),
@@ -209,6 +215,32 @@ export default function DataroomViewer({
       />
     );
   };
+
+  const handleUploadSuccess = useCallback(
+    (newDocument: Document & { versions: DocumentVersion[] }) => {
+      const transformedDocument: DataroomDocument = {
+        dataroomDocumentId: newDocument.id,
+        id: newDocument.id,
+        name: newDocument.name,
+        folderId: newDocument.folderId || folderId,
+        orderIndex: documents.length,
+        downloadOnly: newDocument.downloadOnly,
+        versions:
+          newDocument?.versions.map((version) => ({
+            id: version.id,
+            type: version.type,
+            versionNumber: version.versionNumber,
+            hasPages: version.hasPages,
+            isVertical: version.isVertical,
+          })) || [],
+        canDownload: false,
+        canView: false,
+        approvedStatus: newDocument.approvedStatus ?? "PENDING",
+      };
+      setDocuments((prev) => [...(prev || []), transformedDocument]);
+    },
+    [],
+  );
 
   return (
     <>
@@ -314,7 +346,6 @@ export default function DataroomViewer({
                       ))}
                     </BreadcrumbList>
                   </Breadcrumb>
-
                   <div className="flex items-center gap-x-2">
                     {enableIndexFile && viewId && viewerId && (
                       <IndexFileDialog
@@ -327,13 +358,15 @@ export default function DataroomViewer({
                     )}
 
                     {viewData?.enableVisitorUpload && viewerId && (
-                      <DocumentUploadModal
-                        linkId={linkId}
-                        dataroomId={dataroom?.id}
-                        viewerId={viewerId}
-                        folderId={folderId ?? undefined}
-                      />
-                    )}
+                    <DocumentUploadModal
+                      linkId={linkId}
+                      dataroomId={dataroom?.id}
+                      viewerId={viewerId}
+                      folderId={folderId ?? undefined}
+                      onUploadSuccess={handleUploadSuccess}
+                      documentCount={viewData.uploadDocumentsCount}
+                    />
+                  )}
                   </div>
                 </div>
               </div>

@@ -145,6 +145,12 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+enum DocumentApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Document {
   id                   String              @id @default(cuid())
   name                 String
@@ -178,6 +184,11 @@ model Document {
   // upload external documents
   uploadedDocument DocumentUpload[]
   isExternalUpload Boolean          @default(false) // Indicates if the document is an external upload
+
+  requireApproval Boolean @default(false)
+  approvedAt           DateTime?
+  approvedBy           String? // userId
+  approvedStatus       DocumentApprovalStatus? // This is the status of the document approval [pending, approved, rejected]
 
   @@index([ownerId])
   @@index([teamId])

@@ -1,30 +1,34 @@
 import React, { useEffect, useState } from "react";
 
+
+
 import { CircleHelpIcon, CircleXIcon, FolderIcon, XIcon } from "lucide-react";
 import { motion } from "motion/react";
 
+
+
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
+
+
 
 import { SidebarFolderTreeSelection as DataroomFolderTree } from "@/components/datarooms/folders";
 import { TSelectedFolder } from "@/components/documents/move-folder-modal";
 import { SidebarFolderTreeSelection as AllDocFolderTree } from "@/components/sidebar-folders";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
+
+
 import { DEFAULT_LINK_TYPE } from "..";
 import LinkItem from "../link-item";
 import { LinkUpgradeOptions } from "../link-options";
+
+
+
+
 
 function FolderSelectionModal({
   open,
@@ -144,8 +148,12 @@ export default function UploadSection({
   }: LinkUpgradeOptions) => void;
   targetId: string;
 }) {
-  const { enableUpload, isFileRequestOnly, uploadFolderId, uploadFolderName } =
-    data;
+  const {
+    enableUpload,
+    uploadFolderId,
+    uploadFolderName,
+    requireAdminApproval,
+  } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
   const [selectedFolder, setSelectedFolder] = useState<TSelectedFolder | null>(
     null,
@@ -172,12 +180,13 @@ export default function UploadSection({
     setEnabled(updatedUpload);
   };
 
-  const handleFileRequestToggle = (checked: boolean): void => {
-    setData({
-      ...data,
-      isFileRequestOnly: checked,
-    });
-  };
+  // TODO: for admin approval toggle
+  // const handleAdminApprovalToggle = (checked: boolean): void => {
+  //   setData({
+  //     ...data,
+  //     requireAdminApproval: checked,
+  //   });
+  // };
 
   const handleSelectFolder = (selectedFolder: TSelectedFolder | null): void => {
     setSelectedFolder(selectedFolder);
@@ -185,6 +194,7 @@ export default function UploadSection({
       ...data,
       uploadFolderId: selectedFolder?.id ?? null,
       uploadFolderName: selectedFolder?.name || "Home",
+      requireAdminApproval: true, // default to true
     });
   };
 
@@ -247,6 +257,33 @@ export default function UploadSection({
                   handleSelectFolder={handleSelectFolder}
                 />
               </div>
+              {/* TODO: Add admin approval toggle */}
+              {/* <div className="space-y-4">
+                <Label
+                  htmlFor="admin-approval"
+                  className="flex flex-col items-start gap-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Admin approval required</span>
+                    <BadgeTooltip content="When enabled, uploaded files will require admin approval before being visible in the dataroom and visible to the visitor.">
+                      <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+                    </BadgeTooltip>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    Files will be frozen until approved by an admin
+                  </span>
+                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="admin-approval" className="text-sm">
+                    Require admin approval for uploaded files
+                  </Label>
+                  <Switch
+                    id="admin-approval"
+                    checked={requireAdminApproval}
+                    onCheckedChange={handleAdminApprovalToggle}
+                  />
+                </div>
+              </div> */}
             </div>
           </div>
         </motion.div>

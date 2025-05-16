@@ -41,6 +41,8 @@ export type DEFAULT_DATAROOM_VIEW_TYPE = {
   viewerId?: string;
   conversationsEnabled?: boolean;
   enableVisitorUpload?: boolean;
+  requireAdminApproval: boolean;
+  uploadDocumentsCount?: number;
   isTeamMember?: boolean;
 };
 
@@ -79,6 +81,7 @@ export default function DataroomView({
     enableAgreement,
     group,
   } = link;
+  console.log(" dataroom", dataroom);
 
   const analytics = useAnalytics();
   const router = useRouter();
@@ -89,6 +92,7 @@ export default function DataroomView({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [viewData, setViewData] = useState<DEFAULT_DATAROOM_VIEW_TYPE>({
     viewId: "",
+    requireAdminApproval: link.requireAdminApproval ?? false,
   });
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
     DEFAULT_ACCESS_FORM_DATA,
@@ -139,6 +143,8 @@ export default function DataroomView({
           viewerId,
           conversationsEnabled,
           enableVisitorUpload,
+          requireAdminApproval,
+          uploadDocumentsCount,
           isTeamMember,
         } = fetchData as DEFAULT_DATAROOM_VIEW_TYPE;
 
@@ -173,6 +179,8 @@ export default function DataroomView({
           viewerId,
           conversationsEnabled,
           enableVisitorUpload,
+          requireAdminApproval,
+          uploadDocumentsCount,
           isTeamMember,
         });
         setSubmitted(true);

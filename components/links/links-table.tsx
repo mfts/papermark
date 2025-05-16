@@ -206,6 +206,7 @@ export default function LinksTable({
       isFileRequestOnly: link.isFileRequestOnly ?? false,
       uploadFolderId: link.uploadFolderId ?? null,
       uploadFolderName: link.uploadFolderName ?? "Home",
+      requireAdminApproval: !!link.requireAdminApproval,
       enableIndexFile: link.enableIndexFile ?? false,
     });
     //wait for dropdown to close before opening the link sheet
