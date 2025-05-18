@@ -13,6 +13,7 @@ import {
   CloudDownloadIcon,
   DownloadIcon,
   FileDownIcon,
+  FolderIcon,
   MoonIcon,
   ServerIcon,
   SheetIcon,
@@ -868,6 +869,29 @@ export default function DocumentHeader({
                     >
                       {item.dataroom.name}
                     </Link>
+                    {item.folder ? (
+                      <Link
+                        href={`/datarooms/${item.dataroom.id}/documents/${item.folder.path}`}
+                        className="flex flex-row items-center space-x-2 hover:underline"
+                        title={`Folder: ${item.folder.name}`}
+                      >
+                        <ArrowRightIcon className="h-3.5 w-3.5" />
+                        <FolderIcon className="mr-1 h-4 w-4" />
+                        <span className="ml-1 truncate">
+                          {item.folder.name}
+                        </span>
+                      </Link>
+                    ) : (
+                      <Link
+                        href={`/datarooms/${item.dataroom.id}/documents`}
+                        className="flex flex-row items-center space-x-2 hover:underline"
+                        title="Home"
+                      >
+                        <ArrowRightIcon className="h-3.5 w-3.5" />
+                        <FolderIcon className="mr-1 h-4 w-4" />
+                        <span className="ml-1 truncate">Home</span>
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
