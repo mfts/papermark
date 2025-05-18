@@ -1,64 +1,64 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { getServerSession } from "next-auth";
+import { Session } from "next-auth";
+import { getServerSession } from "next-auth/next";
 
+import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
+
+interface CustomSession extends Session {
+  user: {
+    id: string;
+    name?: string | null;
+  };
+}
 
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
   if (req.method === "PATCH") {
-    // PATCH /api/teams/:teamId/update-name
+    // PATCH /api/teams/:teamId/update-advanced-mode
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
     }
 
     const { teamId } = req.query as { teamId: string };
+    const { enableExcelAdvancedMode } = req.body;
 
     try {
-      // check if the team exists
+      // Verify user is part of the team
       const team = await prisma.team.findUnique({
         where: {
           id: teamId,
-        },
-        include: {
-          users: true,
+          users: {
+            some: {
+              userId: (session.user as CustomUser).id,
+            },
+          },
         },
       });
-      if (!team) {
-        return res.status(400).json("Team doesn't exists");
+      if (!team || team.plan.includes("free")) {
+        return res.status(401).json({ error: "Unauthorized" });
       }
 
-      // check if current user is admin of the team
-      const isUserAdmin = team.users.some(
-        (user) =>
-          user.role === "ADMIN" &&
-          user.userId === (session.user as CustomUser).id,
-      );
-      if (!isUserAdmin) {
-        return res
-          .status(403)
-          .json("You are not permitted to perform this action");
-      }
-
-      // update name
+      // Update team limits
       await prisma.team.update({
         where: {
           id: teamId,
         },
         data: {
-          name: req.body.name,
+          enableExcelAdvancedMode,
         },
       });
 
-      return res.status(200).json("Team name updated!");
+      return res.status(200).json("Excel mode updated!");
     } catch (error) {
-      return res.status(500).json((error as Error).message);
+      errorhandler(error, res);
     }
   } else {
     // We only allow PATCH requests

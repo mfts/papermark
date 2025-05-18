@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -14,6 +12,7 @@ import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import DeleteDataroom from "@/components/datarooms/settings/delete-dataroooom";
 import DuplicateDataroom from "@/components/datarooms/settings/duplicate-dataroom";
+import SettingsTabs from "@/components/datarooms/settings/settings-tabs";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +25,6 @@ import {
 } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export default function Settings() {
   const { dataroom } = useDataroom();
@@ -58,14 +56,7 @@ export default function Settings() {
           <h1 className="text-2xl font-semibold">Settings</h1>
         </div>
         <div className="mx-auto grid w-full items-start gap-6 md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr]">
-          <nav className="grid gap-2 text-sm text-muted-foreground">
-            <Link
-              href={`/datarooms/${dataroom.id}/settings`}
-              className="rounded-lg bg-muted px-2 py-1 font-semibold text-primary"
-            >
-              General
-            </Link>
-          </nav>
+          <SettingsTabs dataroomId={dataroom.id} />
           <div className="grid gap-6">
             <Form
               title="Dataroom Name"

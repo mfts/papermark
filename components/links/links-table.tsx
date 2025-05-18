@@ -553,7 +553,10 @@ export default function LinksTable({
                                   >
                                     <Settings2Icon strokeWidth={1.75} />
                                     <span className="whitespace-nowrap">
-                                      {countActiveSettings(link)} options
+                                      {countActiveSettings(link)}{" "}
+                                      {countActiveSettings(link) === 1
+                                        ? "control"
+                                        : "controls"}
                                     </span>
                                   </Button>
                                 </PopoverTrigger>

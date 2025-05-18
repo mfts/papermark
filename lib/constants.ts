@@ -412,3 +412,5 @@ export const EU_COUNTRY_CODES = [
   "SI",
   "SK",
 ];
+
+export const SYSTEM_FILES = [".DS_Store", "Thumbs.db", "node_modules"];

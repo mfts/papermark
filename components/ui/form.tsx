@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { validateEmail } from "@/lib/utils/validate-email";
 
+import PlanBadge from "../billing/plan-badge";
 import { Button } from "./button";
 import {
   Card,
@@ -21,6 +22,8 @@ import {
   CardTitle,
 } from "./card";
 import { Input } from "./input";
+import { Label } from "./label";
+import { Switch } from "./switch";
 
 export function Form({
   title,
@@ -32,6 +35,7 @@ export function Form({
   handleSubmit,
   validate,
   defaultValue,
+  plan,
 }: {
   title: string;
   description: string;
@@ -42,6 +46,7 @@ export function Form({
   handleSubmit: (data: any) => Promise<any>;
   validate?: (data: string) => boolean;
   defaultValue?: string;
+  plan?: string;
 }) {
   const [saving, setSaving] = useState(false);
   const [value, setValue] = useState(defaultValue);
@@ -51,8 +56,57 @@ export function Form({
   }, [defaultValue]);
 
   const saveDisabled = useMemo(() => {
-    return saving || !value || value === defaultValue;
-  }, [saving, value, defaultValue]);
+    if (saving) return true;
+    if (inputAttrs.type === "checkbox") {
+      const currentValue = value === "true";
+      const defaultVal = defaultValue === "true";
+      return currentValue === defaultVal;
+    }
+    return !value || value === defaultValue;
+  }, [saving, value, defaultValue, inputAttrs.type]);
+
+  const renderInput = () => {
+    if (inputAttrs.type === "checkbox") {
+      return (
+        <div className="flex items-center space-x-2">
+          <Switch
+            checked={value === "true"}
+            onCheckedChange={(checked) => setValue(String(checked))}
+            disabled={!!disabledTooltip}
+            id={inputAttrs.name}
+          />
+          <Label
+            htmlFor={inputAttrs.name}
+            className="text-sm text-muted-foreground"
+          >
+            {inputAttrs.placeholder}
+          </Label>
+        </div>
+      );
+    }
+
+    return (
+      <Input
+        {...inputAttrs}
+        value={value}
+        type={inputAttrs.type || "text"}
+        required
+        disabled={!!disabledTooltip}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={(e) => setValue(e.target.value.trim())}
+        onKeyDown={(e) =>
+          inputAttrs.type === "email" && e.key === " " && e.preventDefault()
+        }
+        className={cn(
+          "w-full max-w-md focus:border-gray-500 focus:outline-none focus:ring-gray-500",
+          {
+            "cursor-not-allowed bg-gray-100 text-gray-400": disabledTooltip,
+          },
+        )}
+        data-1p-ignore
+      />
+    );
+  };
 
   return (
     <form
@@ -72,33 +126,14 @@ export function Form({
     >
       <Card className="bg-transparent">
         <CardHeader>
-          <CardTitle>{title}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            {title} {plan && <PlanBadge plan={plan} />}
+          </CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
           {typeof defaultValue === "string" ? (
-            <Input
-              {...inputAttrs}
-              value={value}
-              type={inputAttrs.type || "text"}
-              required
-              disabled={!!disabledTooltip}
-              onChange={(e) => setValue(e.target.value)}
-              onBlur={(e) => setValue(e.target.value.trim())}
-              onKeyDown={(e) =>
-                inputAttrs.type === "email" &&
-                e.key === " " &&
-                e.preventDefault()
-              }
-              className={cn(
-                "w-full max-w-md focus:border-gray-500 focus:outline-none focus:ring-gray-500",
-                {
-                  "cursor-not-allowed bg-gray-100 text-gray-400":
-                    disabledTooltip,
-                },
-              )}
-              data-1p-ignore
-            />
+            renderInput()
           ) : (
             <div className="h-[2.35rem] w-full max-w-md animate-pulse rounded-md bg-gray-200" />
           )}
