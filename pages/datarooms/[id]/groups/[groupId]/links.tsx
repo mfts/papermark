@@ -98,6 +98,10 @@ export default function DataroomGroupLinksPage() {
                 links={links}
                 targetType={"DATAROOM"}
                 loading={isValidating}
+                page={currentPage}
+                pageSize={pageSize}
+                searchQuery={searchQuery || undefined}
+                tags={tags || undefined}
               />
               {pagination && pagination.total > 0 && (
                 <div className="mt-4 flex w-full justify-center">

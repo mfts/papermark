@@ -122,6 +122,10 @@ export default function DataroomAnalyticsPage() {
                 links={links}
                 targetType={"DATAROOM"}
                 loading={isValidating}
+                page={currentPage}
+                pageSize={pageSize}
+                searchQuery={searchQuery || undefined}
+                tags={tags || undefined}
               />
               {pagination && pagination.total > 0 && (
                 <div className="mt-4 flex w-full justify-center">
@@ -144,6 +148,10 @@ export default function DataroomAnalyticsPage() {
               isOpen={isLinkSheetOpen}
               setIsOpen={setIsLinkSheetOpen}
               existingLinks={links}
+              page={currentPage}
+              pageSize={pageSize}
+              searchQuery={searchQuery || undefined}
+              tags={tags || undefined}
             />
           </TabsContent>
         </Tabs>

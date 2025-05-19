@@ -71,19 +71,29 @@ import LinkSheet, {
 import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
 
+interface LinksTableProps {
+  targetType: "DOCUMENT" | "DATAROOM";
+  links?: LinkWithViews[];
+  primaryVersion?: DocumentVersion;
+  mutateDocument?: () => void;
+  loading?: boolean;
+  page: number;
+  pageSize: number;
+  searchQuery?: string;
+  tags?: string[];
+}
+
 export default function LinksTable({
   targetType,
   links,
   primaryVersion,
   mutateDocument,
   loading = false,
-}: {
-  targetType: "DOCUMENT" | "DATAROOM";
-  links?: LinkWithViews[];
-  primaryVersion?: DocumentVersion;
-  mutateDocument?: () => void;
-  loading?: boolean;
-}) {
+  page = 1,
+  pageSize = 10,
+  searchQuery,
+  tags,
+}: LinksTableProps) {
   const now = Date.now();
   const router = useRouter();
   const { isFree } = usePlan();
@@ -91,6 +101,15 @@ export default function LinksTable({
   const { groupId } = router.query as {
     groupId?: string;
   };
+
+  const getSearchParams = useMemo(() => {
+    const searchParams = new URLSearchParams();
+    searchParams.set("page", page.toString());
+    searchParams.set("limit", pageSize.toString());
+    if (searchQuery) searchParams.set("search", searchQuery);
+    if (tags?.length) searchParams.set("tags", tags.join(","));
+    return searchParams;
+  }, [page, pageSize, searchQuery, tags]);
 
   const { isMobile } = useMediaQuery();
 
@@ -249,8 +268,11 @@ export default function LinksTable({
     mutate(
       `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
         link.documentId ?? link.dataroomId ?? "",
-      )}/links`,
-      (links || []).concat(duplicatedLink),
+      )}/links?${getSearchParams.toString()}`,
+      (currentData: any) => ({
+        ...currentData,
+        links: [duplicatedLink, ...(currentData?.links || [])],
+      }),
       false,
     );
 
@@ -261,8 +283,11 @@ export default function LinksTable({
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
           duplicatedLink.documentId ?? duplicatedLink.dataroomId ?? "",
-        )}/groups/${duplicatedLink.groupId}/links`,
-        groupLinks.concat(duplicatedLink),
+        )}/groups/${duplicatedLink.groupId}/links?${getSearchParams.toString()}`,
+        (currentData: any) => ({
+          ...currentData,
+          links: [duplicatedLink, ...groupLinks],
+        }),
         false,
       );
     }
@@ -315,8 +340,13 @@ export default function LinksTable({
     mutate(
       `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
         targetId,
-      )}/links`,
-      (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
+      )}/links?${getSearchParams.toString()}`,
+      (currentData: any) => ({
+        ...currentData,
+        links: (currentData?.links || []).map((link: LinkWithViews) =>
+          link.id === linkId ? archivedLink : link,
+        ),
+      }),
       false,
     );
 
@@ -327,8 +357,13 @@ export default function LinksTable({
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
           archivedLink.documentId ?? archivedLink.dataroomId ?? "",
-        )}/groups/${groupId}/links`,
-        groupLinks.map((link) => (link.id === linkId ? archivedLink : link)),
+        )}/groups/${groupId}/links?${getSearchParams.toString()}`,
+        (currentData: any) => ({
+          ...currentData,
+          links: (currentData?.links || []).map((link: LinkWithViews) =>
+            link.id === linkId ? archivedLink : link,
+          ),
+        }),
         false,
       );
     }
@@ -747,6 +782,10 @@ export default function LinksTable({
           linkType={`${targetType}_LINK`}
           currentLink={selectedLink.id ? selectedLink : undefined}
           existingLinks={links}
+          page={page}
+          pageSize={pageSize}
+          searchQuery={searchQuery}
+          tags={tags}
         />
 
         {selectedEmbedLink && (

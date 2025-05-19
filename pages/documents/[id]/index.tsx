@@ -163,6 +163,10 @@ export default function DocumentPage() {
                 primaryVersion={primaryVersion}
                 mutateDocument={mutateDocument}
                 loading={isValidating}
+                page={currentPage}
+                pageSize={pageSize}
+                searchQuery={searchQuery || undefined}
+                tags={tags || undefined}
               />
               {pagination && pagination.total > 0 && (
                 <div className="mt-4 flex w-full justify-center">
@@ -192,6 +196,10 @@ export default function DocumentPage() {
               linkType="DOCUMENT_LINK"
               setIsOpen={setIsLinkSheetOpen}
               existingLinks={links}
+              page={currentPage}
+              pageSize={pageSize}
+              searchQuery={searchQuery || undefined}
+              tags={tags || undefined}  
             />
           </>
         ) : (
