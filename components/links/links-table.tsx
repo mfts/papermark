@@ -15,7 +15,6 @@ import {
   LinkIcon,
   Settings2Icon,
 } from "lucide-react";
-import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
@@ -45,6 +44,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -76,11 +76,13 @@ export default function LinksTable({
   links,
   primaryVersion,
   mutateDocument,
+  loading = false,
 }: {
   targetType: "DOCUMENT" | "DATAROOM";
   links?: LinkWithViews[];
   primaryVersion?: DocumentVersion;
   mutateDocument?: () => void;
+  loading?: boolean;
 }) {
   const now = Date.now();
   const router = useRouter();
@@ -375,7 +377,32 @@ export default function LinksTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {processedLinks && processedLinks.length > 0 ? (
+              {loading ? (
+                Array.from({ length: 3 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="w-[250px]">
+                      <Skeleton className="h-6 w-full" />
+                    </TableCell>
+                    <TableCell className="flex items-center gap-x-2 sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
+                      <Skeleton className="h-6 w-full" />
+                    </TableCell>
+                    {hasAnyTags ? (
+                      <TableCell className="w-[250px] 2xl:w-auto">
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                    ) : null}
+                    <TableCell>
+                      <Skeleton className="h-6 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-24" />
+                    </TableCell>
+                    <TableCell className="text-center sm:text-right">
+                      <Skeleton className="h-8 w-8" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : processedLinks && processedLinks.length > 0 ? (
                 processedLinks
                   .filter((link) => !link.isArchived)
                   .map((link) => (

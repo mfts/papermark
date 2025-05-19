@@ -90,7 +90,11 @@ export default function DataroomPage() {
                 placeholder="Search links..."
               />
             </div>
-            <LinksTable links={links} targetType={"DATAROOM"} />
+            <LinksTable
+              links={links}
+              targetType={"DATAROOM"}
+              loading={isValidating}
+            />
             {pagination && pagination.total > 0 && (
               <div className="mt-4 flex w-full justify-center">
                 <Pagination

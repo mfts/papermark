@@ -162,6 +162,7 @@ export default function DocumentPage() {
                 targetType={"DOCUMENT"}
                 primaryVersion={primaryVersion}
                 mutateDocument={mutateDocument}
+                loading={isValidating}
               />
               {pagination && pagination.total > 0 && (
                 <div className="mt-4 flex w-full justify-center">
