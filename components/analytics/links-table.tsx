@@ -44,6 +44,7 @@ import { fetcher } from "@/lib/utils";
 import { downloadCSV } from "@/lib/utils/csv";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { Badge } from "../ui/badge";
 
 interface Link {
   id: string;
@@ -54,6 +55,7 @@ interface Link {
   views: number;
   avgDuration: string;
   lastViewed: Date | null;
+  isExpired: boolean;
 }
 
 function CopyButton({ url }: { url: string }) {
@@ -94,9 +96,19 @@ const columns: ColumnDef<Link>[] = [
       <div className="flex items-center overflow-visible sm:space-x-3">
         <div className="min-w-0 flex-1">
           <div className="focus:outline-none">
-            <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
-              {row.original.name}
-            </p>
+            <div className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
+              <p className="overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
+                {row.original.name}
+              </p>
+              {row.original.isExpired ? (
+                <Badge
+                  variant="outline"
+                  className="border-red-500/80 text-red-500/80"
+                >
+                  Expired
+                </Badge>
+              ) : null}
+            </div>
             <div className="flex items-center gap-x-1">
               <p className="text-sm text-muted-foreground">
                 {row.original.url}
