@@ -12,6 +12,7 @@ export function isSystemFile(name: string): boolean {
 interface CreateFolderResponse {
   path: string;
   parentFolderPath?: string;
+  name: string;
 }
 
 export async function createFolderInDataroom({
@@ -93,10 +94,18 @@ export async function createFolderInBoth({
   analytics: any;
 }): Promise<{ dataroomPath: string; mainDocsPath: string }> {
   try {
-    const [dataroomResponse, mainDocsResponse] = await Promise.all([
-      createFolderInDataroom({ teamId, dataroomId, name, path }),
-      createFolderInMainDocs({ teamId, name, path }),
-    ]);
+    const dataroomResponse = await createFolderInDataroom({ teamId, dataroomId, name, path });
+
+    const pathSegments = dataroomResponse.path.split('/').filter(Boolean);
+    const parentPath = pathSegments.length > 1
+      ? pathSegments.slice(0, -1).join('/')
+      : undefined;
+
+    const mainDocsResponse = await createFolderInMainDocs({
+      teamId,
+      name: dataroomResponse.name,
+      path: parentPath
+    });
 
     // Track analytics
     analytics.capture("Folder Added in dataroom", {
