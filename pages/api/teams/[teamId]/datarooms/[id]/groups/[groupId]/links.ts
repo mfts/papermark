@@ -50,8 +50,11 @@ export default async function handle(
       }
 
       // Get pagination parameters
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
+      const page = Math.max(1, Number.parseInt(req.query.page as string) || 1);
+      const limit = Math.min(
+        50,
+        Math.max(1, Number.parseInt(req.query.limit as string) || 10),
+      );
       const search = req.query.search as string;
       const tags = (req.query.tags as string)?.split(",").filter(Boolean);
 

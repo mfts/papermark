@@ -65,15 +65,17 @@ interface ViewWithDuration extends View {
   completionRate: number;
 }
 
+interface Pagination {
+  total: number;
+  pages: number;
+  page: number;
+  limit: number;
+}
+
 export function useLinkVisits(linkId: string, page: number = 1, pageSize: number = 10) {
   const { data, error } = useSWR<{
     views: ViewWithDuration[];
-    pagination: {
-      total: number;
-      pages: number;
-      currentPage: number;
-      pageSize: number;
-    };
+    pagination: Pagination;
   }>(
     linkId && `/api/links/${encodeURIComponent(linkId)}/visits?page=${page}&limit=${pageSize}`,
     fetcher,

@@ -46,9 +46,12 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      // Get pagination parameters
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
+      // // Get pagination parameters
+      const page = Math.max(1, Number.parseInt(req.query.page as string) || 1);
+      const limit = Math.min(
+        50,
+        Math.max(1, Number.parseInt(req.query.limit as string) || 10),
+      );
       const search = req.query.search as string;
       const tags = (req.query.tags as string)?.split(",").filter(Boolean);
 

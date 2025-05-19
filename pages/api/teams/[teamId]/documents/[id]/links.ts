@@ -24,8 +24,9 @@ export default async function handle(
 
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
     const { page = "1", limit = "10", search, tags } = req.query;
-    const pageNumber = parseInt(page as string);
-    const limitNumber = parseInt(limit as string);
+    const pageNumber = Math.max(1, parseInt(page as string) || 1);
+    const limitNumber = Math.max(1, Math.min(50, parseInt(limit as string) || 10));
+
     const skip = (pageNumber - 1) * limitNumber;
 
     const userId = (session.user as CustomUser).id;
