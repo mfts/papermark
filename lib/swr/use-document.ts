@@ -59,7 +59,7 @@ export function useDocumentLinks(
   searchParams.set("limit", limit.toString());
   if (search) searchParams.set("search", search);
   if (tags?.length) searchParams.set("tags", tags.join(","));
-
+  // GET /api/teams/:teamId/documents/:id/links?page=1&limit=10&search=test&tags=tag1,tag2
   const { data, error, isValidating } = useSWR<{
     links: LinkWithViews[];
     pagination: {

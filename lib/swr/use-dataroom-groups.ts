@@ -68,7 +68,7 @@ export function useDataroomGroupLinks(
 
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-
+  // GET /api/teams/:teamId/datarooms/:id/groups/:groupId/links?page=1&limit=10&search=test&tags=tag1,tag2
   const { data, error } = useSWR<{
     links: LinkWithViews[];
     pagination: {

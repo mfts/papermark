@@ -16,7 +16,7 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "GET") {
-    // GET /api/teams/:teamId/datarooms/:id/links
+    // GET /api/teams/:teamId/datarooms/:id/links?page=1&limit=10&search=test&tags=tag1,tag2
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
