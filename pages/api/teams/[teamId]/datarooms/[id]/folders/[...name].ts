@@ -78,7 +78,7 @@ export default async function handle(
 
       const foldersWithRecursiveCounts = await Promise.all(
         folders.map(async (folder) => {
-          const recursiveCounts = await getRecursiveFolderCounts(prisma, folder.id, dataroomId);
+          const recursiveCounts = await getRecursiveFolderCounts(prisma, folder.id);
           return {
             ...folder,
             _count: {

@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-export async function getRecursiveFolderCounts(db: PrismaClient, folderId: string, dataroomId: string) {
+export async function getRecursiveFolderCounts(db: PrismaClient, folderId: string) {
   const folder = await db.dataroomFolder.findUnique({
     where: { id: folderId },
     include: {
@@ -15,7 +15,7 @@ export async function getRecursiveFolderCounts(db: PrismaClient, folderId: strin
   let totalChildFolders = folder.childFolders.length;
 
   for (const childFolder of folder.childFolders) {
-    const childCounts = await getRecursiveFolderCounts(db, childFolder.id, dataroomId);
+    const childCounts = await getRecursiveFolderCounts(db, childFolder.id);
     totalDocuments += childCounts.documents;
     totalChildFolders += childCounts.childFolders;
   }
