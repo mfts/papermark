@@ -55,6 +55,7 @@ export default function DataroomView({
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
+  logoOnAccessForm,
   isEmbedded,
   preview,
 }: {
@@ -70,6 +71,7 @@ export default function DataroomView({
   useCustomAccessForm?: boolean;
   isEmbedded?: boolean;
   preview?: boolean;
+  logoOnAccessForm?: boolean;
 }) {
   const {
     linkType,
@@ -247,6 +249,7 @@ export default function DataroomView({
         useCustomAccessForm={useCustomAccessForm}
         brand={brand}
         customFields={link.customFields}
+        logoOnAccessForm={logoOnAccessForm}
       />
     );
   }
@@ -276,7 +279,13 @@ export default function DataroomView({
           viewerId={viewData.viewerId}
           viewData={viewData}
           isEmbedded={isEmbedded}
-          viewerEmail={viewData.viewerEmail ?? data.email ?? verifiedEmail ?? userEmail ?? undefined}
+          viewerEmail={
+            viewData.viewerEmail ??
+            data.email ??
+            verifiedEmail ??
+            userEmail ??
+            undefined
+          }
         />
       </div>
     );

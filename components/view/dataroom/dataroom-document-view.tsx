@@ -75,6 +75,7 @@ export default function DataroomDocumentView({
   useCustomAccessForm,
   isEmbedded,
   preview,
+  logoOnAccessForm,
 }: {
   link: LinkWithDataroomDocument;
   userEmail: string | null | undefined;
@@ -94,6 +95,7 @@ export default function DataroomDocumentView({
   useCustomAccessForm?: boolean;
   isEmbedded?: boolean;
   preview?: boolean;
+  logoOnAccessForm?: boolean;
 }) {
   const {
     linkType,
@@ -306,6 +308,7 @@ export default function DataroomDocumentView({
         useCustomAccessForm={useCustomAccessForm}
         brand={brand}
         customFields={link.customFields}
+        logoOnAccessForm={logoOnAccessForm}
       />
     );
   }
