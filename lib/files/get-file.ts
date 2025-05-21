@@ -41,8 +41,15 @@ const getFileFromS3 = async (key: string) => {
   );
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message);
+    try {
+      const error = await response.json();
+      throw new Error(
+        error.message || `Request failed with status ${response.status}`,
+      );
+    } catch (parseError) {
+      // Handle cases where the response isn't valid JSON
+      throw new Error(`Request failed with status ${response.status}`);
+    }
   }
 
   const { url } = (await response.json()) as { url: string };

@@ -20,9 +20,21 @@ export default async function handler(
 
   // Extract the API Key from the Authorization header
   const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res
+      .status(401)
+      .json({ message: "Unauthorized: Invalid Authorization header" });
+  }
   const token = authHeader?.split(" ")[1]; // Assuming the format is "Bearer [token]"
 
   // Check if the API Key matches
+  if (!process.env.INTERNAL_API_KEY) {
+    log({
+      message: "INTERNAL_API_KEY environment variable is not set",
+      type: "error",
+    });
+    return res.status(500).json({ message: "Server configuration error" });
+  }
   if (token !== process.env.INTERNAL_API_KEY) {
     res.status(401).json({ message: "Unauthorized" });
     return;
