@@ -756,7 +756,9 @@ export default function DocumentHeader({
               )}
 
               {primaryVersion.type !== "notion" &&
-                primaryVersion.type !== "zip" && (
+                primaryVersion.type !== "zip" &&
+                primaryVersion.type !== "map" &&
+                primaryVersion.type !== "email" && (
                   <DropdownMenuItem
                     onClick={() =>
                       isFree
