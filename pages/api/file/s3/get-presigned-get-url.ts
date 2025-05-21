@@ -21,11 +21,13 @@ export default async function handler(
   // Extract the API Key from the Authorization header
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res
-      .status(401)
-      .json({ message: "Unauthorized: Invalid Authorization header" });
+    return res.status(401).json({ message: "Unauthorized" });
   }
-  const token = authHeader?.split(" ")[1]; // Assuming the format is "Bearer [token]"
+  const token = authHeader.split(" ")[1]; // Assuming the format is "Bearer [token]"
+
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
   // Check if the API Key matches
   if (!process.env.INTERNAL_API_KEY) {
@@ -36,8 +38,7 @@ export default async function handler(
     return res.status(500).json({ message: "Server configuration error" });
   }
   if (token !== process.env.INTERNAL_API_KEY) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   const { key } = req.body as { key: string };
