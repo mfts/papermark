@@ -50,14 +50,9 @@ export const sendDataroomTrialExpiredEmailTask = task({
 
       const isPaid = ["pro", "business", "datarooms", "datarooms-plus"].includes(updatedTeam.plan);
       if (!isPaid) {
-        await prisma.team.update({
+        await prisma.brand.deleteMany({
           where: {
-            id: payload.teamId,
-          },
-          data: {
-            brand: {
-              delete: true
-            }
+            teamId: payload.teamId,
           }
         })
 
