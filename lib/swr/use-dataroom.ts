@@ -1,6 +1,7 @@
 import { useRouter } from "next/router";
 
 import { useMemo } from "react";
+import { toast } from "sonner";
 
 import { useTeam } from "@/context/team-context";
 import { Dataroom, DataroomDocument, DataroomFolder } from "@prisma/client";
@@ -29,7 +30,17 @@ export function useDataroom() {
   const { data: dataroom, error } = useSWR<Dataroom>(
     teamId && id && `/api/teams/${teamId}/datarooms/${id}`,
     fetcher,
-    { dedupingInterval: 10000 },
+    {
+      dedupingInterval: 10000,
+      onError: (err) => {
+        if (err.status === 404) {
+          toast.error("Dataroom not found", {
+            description: "The dataroom you're looking for doesn't exist or has been moved.",
+          });
+          router.replace("/datarooms");
+        }
+      }
+    },
   );
 
   return {

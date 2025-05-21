@@ -87,6 +87,7 @@ export type FolderWithCount = Folder & {
 
 export function useFolder({ name }: { name: string[] }) {
   const teamInfo = useTeam();
+  const router = useRouter();
 
   const { data: folders, error } = useSWR<FolderWithCount[]>(
     teamInfo?.currentTeam?.id &&
@@ -96,6 +97,11 @@ export function useFolder({ name }: { name: string[] }) {
     {
       revalidateOnFocus: false,
       dedupingInterval: 30000,
+      onError: (err) => {
+        if (err.status === 404) {
+          router.replace("/documents");
+        }
+      },
     },
   );
 
