@@ -34,15 +34,15 @@ const getFileFromS3 = async (key: string) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
       },
       body: JSON.stringify({ key: key }),
     },
   );
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to get presigned get url, failed with status code ${response.status}`,
-    );
+    const error = await response.json();
+    throw new Error(error.message);
   }
 
   const { url } = (await response.json()) as { url: string };
