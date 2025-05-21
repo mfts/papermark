@@ -86,7 +86,7 @@ export type FolderWithCount = Folder & {
 };
 
 export function useFolder({ name }: { name: string[] }) {
-  const { currentTeamId } = useTeam();
+  const teamInfo = useTeam();
   const router = useRouter();
 
   const { data: folders, error } = useSWR<FolderWithCount[]>(
