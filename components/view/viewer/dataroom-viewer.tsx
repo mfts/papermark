@@ -339,9 +339,7 @@ export default function DataroomViewer({
               </div>
               <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
                 {mixedItems.map((item) => (
-                  <li key={`${item.id}}`}>
-                    {renderItem(item)}
-                  </li>
+                  <li key={item.id}>{renderItem(item)}</li>
                 ))}
               </ul>
             </div>
