@@ -20,7 +20,6 @@ const acceptableViewerFileTypes = {
   "image/jpeg": [], // ".jpg"
   "image/png": [], // ".png"
   "image/jpg": [], // ".jpg"
-  "application/vnd.ms-outlook": [".msg"], // ".msg"
 };
 
 export default function ViewerUploadZone({
