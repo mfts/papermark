@@ -35,6 +35,8 @@ export function getSupportedContentType(contentType: string): string | null {
     case "application/vnd.google-earth.kml+xml":
     case "application/vnd.google-earth.kmz":
       return "map";
+    case "application/vnd.ms-outlook":
+      return "email";
     default:
       return null;
   }
@@ -92,6 +94,8 @@ export function getExtensionFromContentType(
       return "kml";
     case "application/vnd.google-earth.kmz":
       return "kmz";
+    case "application/vnd.ms-outlook":
+      return "msg";
     default:
       return null;
   }

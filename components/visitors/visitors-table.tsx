@@ -20,6 +20,10 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import { useDocumentVisits } from "@/lib/swr/use-document";
+import { durationFormat, timeAgo } from "@/lib/utils";
+
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import {
   Collapsible,
@@ -37,10 +41,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-
-import { usePlan } from "@/lib/swr/use-billing";
-import { useDocumentVisits } from "@/lib/swr/use-document";
-import { durationFormat, timeAgo } from "@/lib/utils";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Pagination } from "../documents/pagination";
@@ -150,7 +150,7 @@ export default function VisitorsTable({
                 <TableRow>
                   <TableCell colSpan={5}>
                     <div className="flex h-40 w-full items-center justify-center">
-                      <p>No Data Available</p>
+                      <p>No visits yet. Try sharing a link.</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -269,7 +269,7 @@ export default function VisitorsTable({
                                         {view.verified && (
                                           <BadgeTooltip
                                             content="Verified visitor"
-                                            key="verified"
+                                            key={`verified-${view.id}`}
                                           >
                                             <BadgeCheckIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
                                           </BadgeTooltip>
@@ -277,7 +277,7 @@ export default function VisitorsTable({
                                         {view.internal && (
                                           <BadgeTooltip
                                             content="Internal visitor"
-                                            key="internal"
+                                            key={`internal-${view.id}`}
                                           >
                                             <BadgeInfoIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
                                           </BadgeTooltip>
@@ -285,7 +285,7 @@ export default function VisitorsTable({
                                         {view.agreementResponse && (
                                           <BadgeTooltip
                                             content={`Agreed to ${view.agreementResponse.agreement.name}`}
-                                            key="nda-agreement"
+                                            key={`agreement-${view.id}`}
                                           >
                                             <FileBadgeIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
                                           </BadgeTooltip>
@@ -293,7 +293,7 @@ export default function VisitorsTable({
                                         {view.downloadedAt && (
                                           <BadgeTooltip
                                             content={`Downloaded ${timeAgo(view.downloadedAt)}`}
-                                            key="download"
+                                            key={`download-${view.id}`}
                                           >
                                             <DownloadCloudIcon className="h-4 w-4 text-cyan-500 hover:text-cyan-600" />
                                           </BadgeTooltip>
@@ -301,7 +301,7 @@ export default function VisitorsTable({
                                         {view.dataroomId && (
                                           <BadgeTooltip
                                             content={`Dataroom Visitor`}
-                                            key="download"
+                                            key={`dataroom-${view.id}`}
                                           >
                                             <ServerIcon className="h-4 w-4 text-[#fb7a00] hover:text-[#fb7a00]/90" />
                                           </BadgeTooltip>
@@ -309,7 +309,7 @@ export default function VisitorsTable({
                                         {view.feedbackResponse && (
                                           <BadgeTooltip
                                             content={`${view.feedbackResponse.data.question}: ${view.feedbackResponse.data.answer}`}
-                                            key="feedback"
+                                            key={`feedback-${view.id}`}
                                           >
                                             {view.feedbackResponse.data
                                               .answer === "yes" ? (

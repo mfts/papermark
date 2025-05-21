@@ -13,6 +13,11 @@ import { useAnalytics } from "@/lib/analytics";
 import { SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
 import { resumableUpload } from "@/lib/files/tus-upload";
+import {
+  createFolderInBoth,
+  createFolderInMainDocs,
+  isSystemFile,
+} from "@/lib/folders/create-folder";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { CustomUser } from "@/lib/types";
@@ -65,6 +70,7 @@ const allAcceptableDropZoneMimeTypes = {
   "video/ogg": [], // ".ogg"
   "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
   "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
+  "application/vnd.ms-outlook": [".msg"], // ".msg"
 };
 
 interface FileWithPaths extends File {
@@ -469,6 +475,10 @@ export default function UploadZone({
 
         let files: FileWithPaths[] = [];
 
+        if (isSystemFile(entry.name)) {
+          return files;
+        }
+
         if (entry.isDirectory) {
           /**
            * Let's create the folder.
@@ -499,55 +509,17 @@ export default function UploadZone({
               throw new Error("No team found");
             }
 
-            const response = await fetch(
-              `/api/teams/${teamInfo.currentTeam.id}/${endpointTargetType}`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  name: entry.name, // as folderName
-                  path: parentPathOfThisEntry ?? folderPathName,
-                }),
-              },
-            );
-
-            if (!response.ok) {
-              const { message } = await response.json();
-              setRejectedFiles((prev) => [
-                {
-                  fileName: entry.name,
-                  message: message,
-                },
-                ...prev,
-              ]);
-            } else {
-              let {
-                parentFolderPath: parentFolderPath,
-                path: slugifiedPathNameOfThisEntryAfterFolderCreation,
-              } = await response.json();
-
-              if (
-                slugifiedPathNameOfThisEntryAfterFolderCreation?.startsWith("/")
-              ) {
-                // Reason "/" is removed because our `createDocument` API needs `path` to not start with "/"
-                slugifiedPathNameOfThisEntryAfterFolderCreation =
-                  slugifiedPathNameOfThisEntryAfterFolderCreation.slice(1);
-              }
+            // Create folder in main documents if not in dataroom
+            if (!dataroomId) {
+              // Create folder in main documents only
+              const { path: folderPath } = await createFolderInMainDocs({
+                teamId: teamInfo.currentTeam.id,
+                name: entry.name,
+                path: parentPathOfThisEntry ?? folderPathName,
+              });
 
               analytics.capture("Folder Added", { folderName: entry.name });
-              mutate(
-                `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
-              );
-              mutate(
-                `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`,
-              );
-              mutate(
-                `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
-              );
 
-              // Now we are sure that folder is created at the backend and we can continue to traverse its child folders/files.
               const dirReader = (
                 entry as FileSystemDirectoryEntry
               ).createReader();
@@ -555,16 +527,57 @@ export default function UploadZone({
                 (resolve) => dirReader.readEntries(resolve),
               );
 
-              for (const subEntry of subEntries) {
+              const filteredSubEntries = subEntries.filter(
+                (subEntry) => !isSystemFile(subEntry.name),
+              );
+              for (const subEntry of filteredSubEntries) {
                 files.push(
                   ...(await traverseFolder(
                     subEntry,
-                    slugifiedPathNameOfThisEntryAfterFolderCreation,
+                    folderPath.startsWith("/")
+                      ? folderPath.slice(1)
+                      : folderPath,
+                  )),
+                );
+              }
+            } else {
+              // Create folder in both dataroom and main documents
+              const { dataroomPath } = await createFolderInBoth({
+                teamId: teamInfo.currentTeam.id,
+                dataroomId,
+                name: entry.name,
+                path: parentPathOfThisEntry ?? folderPathName,
+                setRejectedFiles,
+                analytics,
+              });
+
+              const dirReader = (
+                entry as FileSystemDirectoryEntry
+              ).createReader();
+              const subEntries = await new Promise<FileSystemEntry[]>(
+                (resolve) => dirReader.readEntries(resolve),
+              );
+
+              const filteredSubEntries = subEntries.filter(
+                (subEntry) => !isSystemFile(subEntry.name),
+              );
+
+              for (const subEntry of filteredSubEntries) {
+                files.push(
+                  ...(await traverseFolder(
+                    subEntry,
+                    dataroomPath.startsWith("/")
+                      ? dataroomPath.slice(1)
+                      : dataroomPath,
                   )),
                 );
               }
             }
           } catch (error) {
+            console.error(
+              "An error occurred while creating the folder: ",
+              error,
+            );
             setRejectedFiles((prev) => [
               {
                 fileName: entry.name,
@@ -574,6 +587,10 @@ export default function UploadZone({
             ]);
           }
         } else if (entry.isFile) {
+          if (isSystemFile(entry.name)) {
+            return files;
+          }
+
           let file = await new Promise<FileWithPaths>((resolve) =>
             (entry as FileSystemFileEntry).file(resolve),
           );
@@ -582,18 +599,28 @@ export default function UploadZone({
           const browserFileTypeCompatibilityIssue = file.type === "";
 
           if (browserFileTypeCompatibilityIssue) {
-            const fileExtension = file.name.split(".").pop();
-            const correctFileType =
-              fileExtension &&
-              Object.keys(acceptableDropZoneFileTypes).find((fileType) =>
-                fileType.endsWith(fileExtension),
-              );
+            const fileExtension = file.name.split(".").pop()?.toLowerCase();
+            let correctMimeType: string | undefined;
+            if (fileExtension) {
+              // Iterate through acceptableDropZoneFileTypes to find the MIME type for the extension
+              for (const [mime, extsUntyped] of Object.entries(
+                acceptableDropZoneFileTypes,
+              )) {
+                const exts = extsUntyped as string[]; // Explicitly type exts
+                if (
+                  exts.some((ext) => ext.toLowerCase() === "." + fileExtension)
+                ) {
+                  correctMimeType = mime;
+                  break;
+                }
+              }
+            }
 
-            if (correctFileType) {
+            if (correctMimeType) {
               // if we can't do like ```file.type = fileType``` because of [Error: Setting getter-only property "type"]
               // The following is the only best way to resolve the problem
               file = new File([file], file.name, {
-                type: correctFileType,
+                type: correctMimeType,
                 lastModified: file.lastModified,
               });
             }

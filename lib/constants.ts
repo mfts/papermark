@@ -87,6 +87,7 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "video/ogg", // .ogg
   "application/vnd.google-earth.kml+xml", // .kml
   "application/vnd.google-earth.kmz", // .kmz
+  "application/vnd.ms-outlook", // .msg
 ];
 
 export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
@@ -100,6 +101,7 @@ export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "zip",
   "video",
   "map",
+  "email",
 ] as const;
 
 export const VIDEO_EVENT_TYPES = [
@@ -412,3 +414,5 @@ export const EU_COUNTRY_CODES = [
   "SI",
   "SK",
 ];
+
+export const SYSTEM_FILES = [".DS_Store", "Thumbs.db", "node_modules"];
