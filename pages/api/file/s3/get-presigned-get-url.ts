@@ -18,28 +18,28 @@ export default async function handler(
     return res.status(405).end("Method Not Allowed");
   }
 
-  // // Extract the API Key from the Authorization header
-  // const authHeader = req.headers.authorization;
-  // if (!authHeader || !authHeader.startsWith("Bearer ")) {
-  //   return res.status(401).json({ message: "Unauthorized" });
-  // }
-  // const token = authHeader.split(" ")[1]; // Assuming the format is "Bearer [token]"
+  // Extract the API Key from the Authorization header
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  const token = authHeader.split(" ")[1]; // Assuming the format is "Bearer [token]"
 
-  // if (!token) {
-  //   return res.status(401).json({ message: "Unauthorized" });
-  // }
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
-  // // Check if the API Key matches
-  // if (!process.env.INTERNAL_API_KEY) {
-  //   log({
-  //     message: "INTERNAL_API_KEY environment variable is not set",
-  //     type: "error",
-  //   });
-  //   return res.status(500).json({ message: "Server configuration error" });
-  // }
-  // if (token !== process.env.INTERNAL_API_KEY) {
-  //   return res.status(401).json({ message: "Unauthorized" });
-  // }
+  // Check if the API Key matches
+  if (!process.env.INTERNAL_API_KEY) {
+    log({
+      message: "INTERNAL_API_KEY environment variable is not set",
+      type: "error",
+    });
+    return res.status(500).json({ message: "Server configuration error" });
+  }
+  if (token !== process.env.INTERNAL_API_KEY) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
   const { key } = req.body as { key: string };
 
