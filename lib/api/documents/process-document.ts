@@ -1,6 +1,7 @@
 import { parsePageId } from "notion-utils";
 
 import { DocumentData } from "@/lib/documents/create-document";
+import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { convertCadToPdfTask } from "@/lib/trigger/convert-files";
@@ -39,6 +40,7 @@ export const processDocument = async ({
     supportedFileType,
     fileSize,
     numPages,
+    enableExcelAdvancedMode,
   } = documentData;
 
   // Get passed type property or alternatively, the file extension and save it as the type
@@ -71,7 +73,7 @@ export const processDocument = async ({
   });
 
   // determine if the document is download only
-  const isDownloadOnly = type === "zip" || type === "map";
+  const isDownloadOnly = type === "zip" || type === "map" || type === "email";
 
   // Save data to the database
   const document = await prisma.document.create({
@@ -85,6 +87,7 @@ export const processDocument = async ({
       storageType,
       ownerId: userId,
       teamId: teamId,
+      advancedExcelEnabled: enableExcelAdvancedMode,
       downloadOnly: isDownloadOnly,
       ...(createLink && {
         links: {
@@ -197,6 +200,27 @@ export const processDocument = async ({
         concurrencyKey: teamId,
       },
     );
+  }
+
+  if (type === "sheet" && enableExcelAdvancedMode) {
+    await copyFileToBucketServer({
+      filePath: document.versions[0].file,
+      storageType: document.versions[0].storageType,
+    });
+
+    await prisma.documentVersion.update({
+      where: { id: document.versions[0].id },
+      data: { numPages: 1 },
+    });
+
+    try {
+      await fetch(
+        `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${document.id}`,
+      );
+    } catch (error) {
+      console.error("Failed to revalidate document:", error);
+      // The document is still updated, so we can continue without throwing
+    }
   }
 
   // Send webhooks

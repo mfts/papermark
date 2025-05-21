@@ -50,6 +50,11 @@ export interface DocumentWithVersion extends Document {
       id: string;
       name: string;
     };
+    folder: {
+      id: string;
+      name: string;
+      path: string;
+    };
   }[];
   hasPageLinks: boolean;
 }
@@ -299,6 +304,7 @@ export interface Team {
   logo?: React.ElementType;
   plan?: string;
   createdAt?: Date;
+  enableExcelAdvancedMode?: boolean;
 }
 
 export interface TeamDetail {

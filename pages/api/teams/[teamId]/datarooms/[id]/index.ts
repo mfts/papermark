@@ -50,6 +50,13 @@ export default async function handle(
         },
       });
 
+      if (!dataroom) {
+        return res.status(404).json({
+          error: "Not Found",
+          message: "The requested dataroom does not exist",
+        });
+      }
+
       return res.status(200).json(dataroom);
     } catch (error) {
       errorhandler(error, res);
@@ -89,19 +96,23 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      const featureFlags = await getFeatureFlags({ teamId: team.id });
-      const isDataroomsPlus = team.plan.includes("datarooms-plus");
-
-      if (!isDataroomsPlus && !featureFlags.roomChangeNotifications) {
-        return res.status(403).json({
-          message: "This feature is not available in your plan",
-        });
-      }
-
       const { name, enableChangeNotifications } = req.body as {
         name?: string;
         enableChangeNotifications?: boolean;
       };
+
+      const featureFlags = await getFeatureFlags({ teamId: team.id });
+      const isDataroomsPlus = team.plan.includes("datarooms-plus");
+
+      if (
+        enableChangeNotifications !== undefined &&
+        !isDataroomsPlus &&
+        !featureFlags.roomChangeNotifications
+      ) {
+        return res.status(403).json({
+          message: "This feature is not available in your plan",
+        });
+      }
 
       const dataroom = await prisma.dataroom.update({
         where: {

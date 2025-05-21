@@ -1,10 +1,6 @@
 import { useRouter } from "next/router";
 
-
-
 import { useCallback, useMemo, useRef, useState } from "react";
-
-
 
 import { useTeam } from "@/context/team-context";
 import { DocumentStorageType } from "@prisma/client";
@@ -13,24 +9,25 @@ import { DropEvent, FileRejection, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-
-
 import { useAnalytics } from "@/lib/analytics";
 import { SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
 import { resumableUpload } from "@/lib/files/tus-upload";
-import { createFolderInBoth, createFolderInMainDocs, isSystemFile } from "@/lib/folders/create-folder";
+import {
+  createFolderInBoth,
+  createFolderInMainDocs,
+  isSystemFile,
+} from "@/lib/folders/create-folder";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { CustomUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
-import { getFileSizeLimit, getFileSizeLimits } from "@/lib/utils/get-file-size-limits";
+import {
+  getFileSizeLimit,
+  getFileSizeLimits,
+} from "@/lib/utils/get-file-size-limits";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
-
-
-
-
 
 // Originally these mime values were directly used in the dropzone hook.
 // There was a solid reason to take them out of the scope, primarily to solve a browser compatibility issue to determine the file type when user dropped a folder.
@@ -73,6 +70,7 @@ const allAcceptableDropZoneMimeTypes = {
   "video/ogg": [], // ".ogg"
   "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
   "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
+  "application/vnd.ms-outlook": [".msg"], // ".msg"
 };
 
 interface FileWithPaths extends File {
@@ -601,18 +599,28 @@ export default function UploadZone({
           const browserFileTypeCompatibilityIssue = file.type === "";
 
           if (browserFileTypeCompatibilityIssue) {
-            const fileExtension = file.name.split(".").pop();
-            const correctFileType =
-              fileExtension &&
-              Object.keys(acceptableDropZoneFileTypes).find((fileType) =>
-                fileType.endsWith(fileExtension),
-              );
+            const fileExtension = file.name.split(".").pop()?.toLowerCase();
+            let correctMimeType: string | undefined;
+            if (fileExtension) {
+              // Iterate through acceptableDropZoneFileTypes to find the MIME type for the extension
+              for (const [mime, extsUntyped] of Object.entries(
+                acceptableDropZoneFileTypes,
+              )) {
+                const exts = extsUntyped as string[]; // Explicitly type exts
+                if (
+                  exts.some((ext) => ext.toLowerCase() === "." + fileExtension)
+                ) {
+                  correctMimeType = mime;
+                  break;
+                }
+              }
+            }
 
-            if (correctFileType) {
+            if (correctMimeType) {
               // if we can't do like ```file.type = fileType``` because of [Error: Setting getter-only property "type"]
               // The following is the only best way to resolve the problem
               file = new File([file], file.name, {
-                type: correctFileType,
+                type: correctMimeType,
                 lastModified: file.lastModified,
               });
             }
