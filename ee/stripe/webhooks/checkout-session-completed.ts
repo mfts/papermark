@@ -105,6 +105,6 @@ export async function checkoutSessionCompleted(
       email: team.users[0].user.email as string,
       name: team.users[0].user.name as string,
     },
-    planType: plan.name,
+    planType: plan.slug,
   });
 }
