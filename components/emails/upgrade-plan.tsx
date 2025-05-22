@@ -91,18 +91,14 @@ const UpgradePlanEmail = ({
             <Text className="text-sm leading-6 text-black">
               On the {planType} plan, you now have access to:
             </Text>
-            {planFeatures &&
-              planFeatures.map(
-                (feature: string, index: number) => (
-                  <Text
-                    key={index}
-                    className="ml-1 text-sm leading-4 text-black"
-                  >
-                    ◆ {feature}
-                  </Text>
-                ),
-                [],
-              )}
+            {planFeatures?.map(
+              (feature: string, index: number) => (
+                <Text key={index} className="ml-1 text-sm leading-4 text-black">
+                  ◆ {feature}
+                </Text>
+              ),
+              [],
+            )}
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
