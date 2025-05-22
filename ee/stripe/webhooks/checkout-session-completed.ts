@@ -99,12 +99,21 @@ export async function checkoutSessionCompleted(
     },
   });
 
+  // if event creation time more than 1 hour ago, return
+  if (event.created > Date.now() - 1 * 60 * 60 * 1000) {
+    await log({
+      message: `Checkout session completed event created more than 1 hour ago: ${event.id}`,
+      type: "error",
+    });
+    return;
+  }
+
   // Send thank you email to project owner if they are a new customer
   await sendUpgradePlanEmail({
     user: {
       email: team.users[0].user.email as string,
       name: team.users[0].user.name as string,
     },
-    planType: plan.name,
+    planType: plan.slug,
   });
 }
