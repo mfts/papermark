@@ -166,77 +166,75 @@ export default function DocumentCard({
   };
 
   return (
-    <>
-      <li
-        className={cn(
-          "group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4",
-          isProcessing && "cursor-not-allowed opacity-60",
-        )}
-      >
-        <div className="z-0 flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
-          <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-            {fileIcon({
-              fileType: document.versions[0].type ?? "",
-              className: "h-8 w-8",
-              isLight,
-            })}
-          </div>
+    <div
+      className={cn(
+        "group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4",
+        isProcessing && "cursor-not-allowed opacity-60",
+      )}
+    >
+      <div className="z-0 flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
+        <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
+          {fileIcon({
+            fileType: document.versions[0].type ?? "",
+            className: "h-8 w-8",
+            isLight,
+          })}
+        </div>
 
-          <div className="flex-col">
-            <div className="flex items-center">
-              <h2 className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg">
-                <button
-                  onClick={handleDocumentClick}
-                  className="w-full truncate"
-                  disabled={isProcessing}
-                >
-                  <span>{document.name}</span>
-                  {isProcessing && (
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      (Processing...)
-                    </span>
-                  )}
-                  <span className="absolute inset-0" />
-                </button>
-              </h2>
-            </div>
-            <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
-              <p className="truncate">
-                Updated {timeAgo(document.versions[0].updatedAt)}
-              </p>
-            </div>
+        <div className="flex-col">
+          <div className="flex items-center">
+            <h2 className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg">
+              <button
+                onClick={handleDocumentClick}
+                className="w-full truncate"
+                disabled={isProcessing}
+              >
+                <span>{document.name}</span>
+                {isProcessing && (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    (Processing...)
+                  </span>
+                )}
+                <span className="absolute inset-0" />
+              </button>
+            </h2>
+          </div>
+          <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+            <p className="truncate">
+              Updated {timeAgo(document.versions[0].updatedAt)}
+            </p>
           </div>
         </div>
-        {canDownload && !isProcessing && (
-          <div className="z-10">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 p-0 text-gray-500 ring-1 ring-gray-100 hover:bg-gray-200 group-hover/row:text-foreground group-hover/row:ring-gray-300"
-                  aria-label="Open menu"
-                >
-                  <MoreVerticalIcon className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    downloadDocument();
-                  }}
-                >
-                  <Download className="h-4 w-4" />
-                  Download
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
-      </li>
-    </>
+      </div>
+      {canDownload && !isProcessing && (
+        <div className="z-10">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 p-0 text-gray-500 ring-1 ring-gray-100 hover:bg-gray-200 group-hover/row:text-foreground group-hover/row:ring-gray-300"
+                aria-label="Open menu"
+              >
+                <MoreVerticalIcon className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  downloadDocument();
+                }}
+              >
+                <Download className="h-4 w-4" />
+                Download
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+    </div>
   );
 }

@@ -256,7 +256,7 @@ export function useDataroomFolderWithParents({
 
   const { data: folders, error } = useSWR<{ name: string; path: string }[]>(
     teamId &&
-      name &&
+    name && !!name.length &&
       `/api/teams/${teamId}/datarooms/${dataroomId}/folders/parents/${name.join("/")}`,
     fetcher,
     {
