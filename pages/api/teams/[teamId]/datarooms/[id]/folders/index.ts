@@ -6,7 +6,18 @@ import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { getRecursiveFolderCounts } from "@/lib/dataroom/get-recursive-folder-docs-count";
 
+/**
+ * API route handler for managing dataroom folders within a team.
+ *
+ * Handles GET and POST requests for listing and creating folders in a dataroom. GET requests support fetching root folders with recursive document and child folder counts, including documents outside folders, or all folders with their documents and subfolders. POST requests create a new folder, ensuring unique naming within the parent folder.
+ *
+ * @remark
+ * - Returns 401 Unauthorized if the user is not authenticated or not a member of the team.
+ * - Returns 400 Bad Request if a unique folder name cannot be generated after multiple attempts.
+ * - Only GET and POST methods are allowed; others return 405 Method Not Allowed.
+ */
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -68,7 +79,20 @@ export default async function handle(
           },
         });
 
-        return res.status(200).json(folders);
+        const foldersWithRecursiveCounts = await Promise.all(
+          folders.map(async (folder) => {
+            const recursiveCounts = await getRecursiveFolderCounts(prisma, folder.id);
+            return {
+              ...folder,
+              _count: {
+                documents: recursiveCounts.documents,
+                childFolders: recursiveCounts.childFolders,
+              },
+            };
+          })
+        );
+
+        return res.status(200).json(foldersWithRecursiveCounts);
       }
 
       if (include_documents === "true") {

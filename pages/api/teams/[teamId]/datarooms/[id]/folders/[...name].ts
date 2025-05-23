@@ -5,7 +5,15 @@ import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { getRecursiveFolderCounts } from "@/lib/dataroom/get-recursive-folder-docs-count";
 
+/**
+ * Handles API requests for retrieving child folders under a specified parent folder in a dataroom for a team.
+ *
+ * On a GET request, authenticates the user, verifies team membership, locates the parent folder by path, and returns all immediate child folders with their recursive counts of documents and child folders. Responds with appropriate HTTP status codes for unauthorized access, missing parent folders, or unsupported methods.
+ *
+ * @remark Only the GET method is supported; other methods return 405 Method Not Allowed.
+ */
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -75,7 +83,20 @@ export default async function handle(
         },
       });
 
-      return res.status(200).json(folders);
+      const foldersWithRecursiveCounts = await Promise.all(
+        folders.map(async (folder) => {
+          const recursiveCounts = await getRecursiveFolderCounts(prisma, folder.id);
+          return {
+            ...folder,
+            _count: {
+              documents: recursiveCounts.documents,
+              childFolders: recursiveCounts.childFolders,
+            },
+          };
+        })
+      );
+
+      return res.status(200).json(foldersWithRecursiveCounts);
     } catch (error) {
       console.error("Request error", error);
       return res.status(500).json({ error: "Error fetching folders" });
