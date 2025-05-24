@@ -50,7 +50,7 @@ export function AddFolderToDataroomModal({
 
   const { datarooms } = useDatarooms();
 
-  const handleSubmit = async (event: any) => {
+  const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
 

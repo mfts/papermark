@@ -41,7 +41,7 @@ export function LinkOptionContainer({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const handleSubmit = async (event: any) => {
+  const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
 
     setIsLoading(true);

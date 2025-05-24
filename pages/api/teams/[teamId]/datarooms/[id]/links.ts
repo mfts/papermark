@@ -84,6 +84,7 @@ export default async function handle(
               const folder = await prisma.dataroomFolder.findUnique({
                 where: {
                   id: link.uploadFolderId,
+                  removedAt: null,
                 },
                 select: {
                   name: true,

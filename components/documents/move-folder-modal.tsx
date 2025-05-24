@@ -55,7 +55,7 @@ export function MoveToFolderModal({
     ? (router.query.name as string[]).join("/")
     : "";
 
-  const handleSubmit = async (event: any) => {
+  const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
 

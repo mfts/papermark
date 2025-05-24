@@ -85,6 +85,7 @@ export default async function handler(
       where: {
         id: folderId,
         dataroomId,
+        removedAt: null,
       },
       select: { id: true, name: true, path: true },
     });
@@ -97,6 +98,7 @@ export default async function handler(
       where: {
         dataroomId,
         path: { startsWith: rootFolder.path + "/" },
+        removedAt: null,
       },
       select: { id: true, name: true, path: true },
     });
@@ -108,6 +110,7 @@ export default async function handler(
         folderId: {
           in: allFolders.map((f) => f.id),
         },
+        removedAt: null,
       },
       select: {
         id: true,

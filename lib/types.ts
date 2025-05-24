@@ -1,12 +1,10 @@
 import {
   Agreement,
   CustomField,
-  Dataroom,
   DataroomDocument,
   DataroomFolder,
   Document,
   DocumentVersion,
-  Feedback,
   Link,
   User as PrismaUser,
   View,
@@ -128,6 +126,7 @@ export interface LinkWithDataroom extends Link {
     id: string;
     name: string;
     teamId: string;
+    updatedAt: Date;
     documents: {
       id: string;
       folderId: string | null;

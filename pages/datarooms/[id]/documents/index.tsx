@@ -107,7 +107,7 @@ export default function Documents() {
           <div className="space-y-4 md:col-span-3">
             <section id="documents-header-count" className="min-h-8" />
 
-            {isLoading ? <LoadingDocuments count={3} /> : null}
+             {(isLoading || !dataroom) ? <LoadingDocuments count={3} /> : null}
 
             {isReordering ? (
               <DataroomSortableList

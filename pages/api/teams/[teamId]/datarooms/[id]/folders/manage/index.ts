@@ -46,6 +46,7 @@ export default async function handle(
         where: {
           id: folderId,
           dataroomId: dataroomId,
+          removedAt: null,
         },
         select: {
           name: true,
@@ -65,6 +66,7 @@ export default async function handle(
       await prisma.dataroomFolder.update({
         where: {
           id: folderId,
+          removedAt: null,
         },
         data: {
           name: name,

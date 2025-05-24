@@ -42,11 +42,12 @@ export async function fetchDataroomLinkData({
           id: true,
           name: true,
           teamId: true,
+          updatedAt: true,
           documents: {
             where:
               groupPermissions.length > 0 || groupId
-                ? { id: { in: documentIds } }
-                : undefined,
+                ? { id: { in: documentIds }, removedAt: null }
+                : { removedAt: null },
             select: {
               id: true,
               folderId: true,
@@ -84,8 +85,8 @@ export async function fetchDataroomLinkData({
           folders: {
             where:
               groupPermissions.length > 0 || groupId
-                ? { id: { in: folderIds } }
-                : undefined,
+                ? { id: { in: folderIds }, removedAt: null }
+                : { removedAt: null },
             orderBy: [{ orderIndex: "asc" }, { name: "asc" }],
           },
         },
@@ -174,8 +175,9 @@ export async function fetchDataroomDocumentLinkData({
         select: {
           id: true,
           name: true,
+          updatedAt: true,
           documents: {
-            where: { id: dataroomDocumentId },
+            where: { id: dataroomDocumentId, removedAt: null },
             select: {
               id: true,
               updatedAt: true,
