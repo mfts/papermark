@@ -49,6 +49,7 @@ export default async function handle(
             dataroomId,
             path,
           },
+          removedAt: null,
         },
         select: {
           id: true,
@@ -64,13 +65,14 @@ export default async function handle(
         where: {
           dataroomId,
           parentId: parentFolder.id,
+          removedAt: null,
         },
         orderBy: {
           name: "asc",
         },
         include: {
           _count: {
-            select: { documents: true, childFolders: true },
+            select: { documents: { where: { removedAt: null } }, childFolders: { where: { removedAt: null } } },
           },
         },
       });

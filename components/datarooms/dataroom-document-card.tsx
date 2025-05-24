@@ -95,20 +95,6 @@ export default function DataroomDocumentCard({
     };
   }, []);
 
-  const handleButtonClick = (event: any, documentId: string) => {
-    event.stopPropagation();
-    event.preventDefault();
-
-    console.log("isFirstClick", isFirstClick);
-    if (isFirstClick) {
-      handleRemoveDocument(documentId);
-      setIsFirstClick(false);
-      setMenuOpen(false); // Close the dropdown after deleting
-    } else {
-      setIsFirstClick(true);
-    }
-  };
-
   const handleRemoveDocument = async (documentId: string) => {
     // Prevent the first click from deleting the document
     if (!isFirstClick) {
@@ -140,6 +126,12 @@ export default function DataroomDocumentCard({
             revalidate: false,
           },
         );
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/trash?root=true`,
+        );
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/trash`,
+        );
       }),
       {
         loading: "Removing document...",
@@ -147,6 +139,20 @@ export default function DataroomDocumentCard({
         error: "Failed to remove document. Try again.",
       },
     );
+  };
+
+  const handleButtonClick = (event: any, documentId: string) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    console.log("isFirstClick", isFirstClick);
+    if (isFirstClick) {
+      handleRemoveDocument(documentId);
+      setIsFirstClick(false);
+      setMenuOpen(false); // Close the dropdown after deleting
+    } else {
+      setIsFirstClick(true);
+    }
   };
 
   const handleMenuStateChange = (open: boolean) => {

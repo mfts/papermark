@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 
 import { memo, useMemo } from "react";
 
-import { HomeIcon } from "lucide-react";
+import { HomeIcon, Trash2 } from "lucide-react";
 
 import {
   DataroomFolderWithDocuments,
@@ -18,9 +18,11 @@ const FolderComponent = memo(
   ({
     dataroomId,
     folder,
+    trash = false,
   }: {
     dataroomId: string;
     folder: DataroomFolderWithDocuments;
+    trash?: boolean;
   }) => {
     const router = useRouter();
 
@@ -45,9 +47,10 @@ const FolderComponent = memo(
             key={childFolder.id}
             dataroomId={dataroomId}
             folder={childFolder}
+            trash={trash}
           />
         )),
-      [folder.childFolders, dataroomId],
+      [folder.childFolders, dataroomId, trash],
     );
 
     const isActive =
@@ -58,13 +61,12 @@ const FolderComponent = memo(
     );
 
     const handleFolderClick = () => {
-      router.push(
-        `/datarooms/${dataroomId}/documents${folder.path}`,
-        `/datarooms/${dataroomId}/documents${folder.path}`,
-        {
-          scroll: false,
-        },
-      );
+      const basePath = trash
+        ? `/datarooms/${dataroomId}/trash`
+        : `/datarooms/${dataroomId}/documents`;
+      router.push(`${basePath}${folder.path}`, `${basePath}${folder.path}`, {
+        scroll: false,
+      });
     };
 
     return (
@@ -86,9 +88,11 @@ FolderComponent.displayName = "FolderComponent";
 const SidebarFolders = ({
   dataroomId,
   folders,
+  trash = false,
 }: {
   dataroomId: string;
   folders: DataroomFolderWithDocuments[];
+  trash?: boolean;
 }) => {
   const nestedFolders = useMemo(() => {
     if (folders) {
@@ -102,28 +106,66 @@ const SidebarFolders = ({
       <SidebarLink
         href={`/datarooms/${dataroomId}/documents`}
         label={"Dataroom Home"}
+        icon={<HomeIcon className="h-5 w-5 shrink-0" aria-hidden="true" />}
       />
-      {nestedFolders.map((folder) => (
-        <FolderComponent
-          key={folder.id}
-          dataroomId={dataroomId}
-          folder={folder}
-        />
-      ))}
+      {trash
+        ? null
+        : nestedFolders.map((folder) => (
+            <FolderComponent
+              key={folder.id}
+              dataroomId={dataroomId}
+              folder={folder}
+              trash={trash}
+            />
+          ))}
+      <SidebarLink
+        href={`/datarooms/${dataroomId}/trash`}
+        label={"Trash"}
+        icon={<Trash2 className="h-5 w-5 shrink-0" aria-hidden="true" />}
+      />
+      {trash
+        ? nestedFolders.map((folder) => (
+            <FolderComponent
+              key={folder.id}
+              dataroomId={dataroomId}
+              folder={folder}
+              trash={trash}
+            />
+          ))
+        : null}
     </FileTree>
   );
 };
 
-export function SidebarFolderTree({ dataroomId }: { dataroomId: string }) {
-  const { folders, error } = useDataroomFoldersTree({ dataroomId });
+export function SidebarFolderTree({
+  dataroomId,
+  trash,
+}: {
+  dataroomId: string;
+  trash?: boolean;
+}) {
+  const { folders, error } = useDataroomFoldersTree({
+    dataroomId,
+    trash,
+  });
 
   if (!folders || error) return null;
 
-  return <SidebarFolders dataroomId={dataroomId} folders={folders} />;
+  return (
+    <SidebarFolders dataroomId={dataroomId} folders={folders} trash={trash} />
+  );
 }
 
 export const SidebarLink = memo(
-  ({ href, label }: { href: string; label: string }) => {
+  ({
+    href,
+    label,
+    icon,
+  }: {
+    href: string;
+    label: string;
+    icon: React.ReactNode;
+  }) => {
     const router = useRouter();
     const isActive = router.asPath === href;
 
@@ -141,7 +183,7 @@ export const SidebarLink = memo(
           className="inline-flex w-full cursor-pointer items-center"
           onClick={() => router.push(href)}
         >
-          <HomeIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+          {icon}
           <span className="ml-2 w-fit truncate" title={label}>
             {label}
           </span>

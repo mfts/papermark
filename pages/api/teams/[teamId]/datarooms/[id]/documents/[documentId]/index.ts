@@ -5,6 +5,8 @@ import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { ItemType } from "@prisma/client";
+import { createTrashItem } from "../../folders/manage/[folderId]";
 
 export default async function handle(
   req: NextApiRequest,
@@ -49,6 +51,7 @@ export default async function handle(
         where: {
           id: documentId,
           dataroomId: dataroomId,
+          removedAt: null,
         },
         data: {
           folderId: folderId,
@@ -71,7 +74,10 @@ export default async function handle(
         newPath: document.folder?.path,
         oldPath: currentPathName,
       });
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error in PATCH /api/teams/:teamId/datarooms/:id/documents/:documentId:", error);
+      return res.status(500).json({ error: "Failed to move document" });
+    }
   } else if (req.method === "DELETE") {
     /// DELETE /api/teams/:teamId/datarooms/:id/documents/:documentId
     const session = await getServerSession(req, res, authOptions);
@@ -114,19 +120,53 @@ export default async function handle(
         return res.status(401).end("Dataroom not found");
       }
 
-      const document = await prisma.dataroomDocument.delete({
-        where: {
-          id: documentId,
-          dataroomId: dataroomId,
-        },
+      await prisma.$transaction(async (tx) => {
+        const updatedDocument = await tx.dataroomDocument.update({
+          where: {
+            id: documentId,
+            dataroomId: dataroomId,
+            removedAt: null,
+          },
+          data: {
+            removedAt: new Date(),
+          },
+          select: {
+            id: true,
+            document: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            folder: {
+              select: {
+                path: true,
+              },
+            },
+          },
+        });
+        if (!updatedDocument) {
+          throw new Error("Document not found in this dataroom");
+        }
+
+        await createTrashItem(tx, {
+          itemId: updatedDocument.id,
+          itemType: ItemType.DATAROOM_DOCUMENT,
+          dataroomId,
+          dataroomDocumentId: updatedDocument.id,
+          name: updatedDocument.document.name,
+          fullPath: updatedDocument.folder?.path,
+          userId,
+          trashPath: null,
+          parentId: null,
+        });
       });
 
-      if (!document) {
-        return res.status(404).end("Document not found");
-      }
-
       return res.status(204).end(); // No Content
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error in DELETE /api/teams/:teamId/datarooms/:id/documents/:documentId:", error);
+      return res.status(500).json({ error: error instanceof Error ? error.message : "Failed to delete document" });
+    }
   } else {
     // We only allow PATCH and DELETE requests
     res.setHeader("Allow", ["PATCH", "DELETE"]);

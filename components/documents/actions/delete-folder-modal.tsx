@@ -50,6 +50,12 @@ export function useDeleteFolderModal(
             mutate(
               `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
             );
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/trash?root=true`,
+            );
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/trash`,
+            );
             return isDataroom
               ? "Folder removed successfully."
               : `Folder deleted successfully with ${folderToDelete?._count.documents} documents and ${folderToDelete?._count.childFolders} folders`;

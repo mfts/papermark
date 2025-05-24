@@ -40,12 +40,12 @@ export default async function handler(
       for (const item of newOrder) {
         if (item.category === "folder") {
           await prisma.dataroomFolder.update({
-            where: { id: item.id },
+            where: { id: item.id, removedAt: null },
             data: { orderIndex: item.orderIndex },
           });
         } else {
           await prisma.dataroomDocument.update({
-            where: { id: item.id },
+            where: { id: item.id, removedAt: null },
             data: { orderIndex: item.orderIndex },
           });
         }

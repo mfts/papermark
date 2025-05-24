@@ -3,7 +3,13 @@ import { useRouter } from "next/router";
 
 import { useMemo } from "react";
 
+import { useDataroom } from "@/lib/swr/use-dataroom";
+import { useDocument } from "@/lib/swr/use-document";
+import { useFolderWithParents } from "@/lib/swr/use-folders";
+import useViewer from "@/lib/swr/use-viewer";
+
 import { BreadcrumbComponent as DataroomBreadcrumb } from "@/components/datarooms/dataroom-breadcrumb";
+import { DataroomTrashBreadcrumb } from "@/components/datarooms/dataroom-trash-breadcrumb";
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -19,11 +25,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { useDataroom } from "@/lib/swr/use-dataroom";
-import { useDocument } from "@/lib/swr/use-document";
-import { useFolderWithParents } from "@/lib/swr/use-folders";
-import useViewer from "@/lib/swr/use-viewer";
 
 const FOLDERS_TO_DISPLAY = 1; // Only show the last folder in the path
 
@@ -442,9 +443,19 @@ export const AppBreadcrumb = () => {
       return <DataroomBreadcrumb />;
     }
 
+    // Dataroom trash routes
+    if (path === "/datarooms/[id]/trash" && id) {
+      return <DataroomTrashBreadcrumb />;
+    }
+
     // Dataroom document routes
     if (path === "/datarooms/[id]/documents/[...name]" && id) {
       return <DataroomBreadcrumb />;
+    }
+
+    // Dataroom trash routes
+    if (path === "/datarooms/[id]/trash/[...name]" && id) {
+      return <DataroomTrashBreadcrumb />;
     }
 
     // Single dataroom route

@@ -1,0 +1,197 @@
+import { NextResponse } from "next/server";
+
+import { receiver } from "@/lib/cron";
+import { getTrashItemsInFolderHierarchy } from "@/lib/api/dataroom/trash-utils";
+import prisma from "@/lib/prisma";
+import { log } from "@/lib/utils";
+import { ItemType } from "@prisma/client";
+
+/**
+ * Cron job to automatically purge trash items that have passed their purgeAt date.
+ * This permanently deletes both DataroomDocuments and DataroomFolders along with their TrashItem records.
+ * 
+ */
+
+export const maxDuration = 300; // 5 minutes
+
+export async function POST(req: Request) {
+    const body = await req.json();
+    if (process.env.VERCEL === "1") {
+        const isValid = await receiver.verify({
+            signature: req.headers.get("Upstash-Signature") || "",
+            body: JSON.stringify(body),
+        });
+        if (!isValid) {
+            return new Response("Unauthorized", { status: 401 });
+        }
+    }
+
+    try {
+        const now = new Date();
+
+        // Find all trash items that need to be purged
+        const expiredTrashItems = await prisma.trashItem.findMany({
+            where: {
+                purgeAt: {
+                    lte: now, // purgeAt is less than or equal to current time
+                },
+            },
+            orderBy: [
+                { itemType: 'desc' }, // Process folders first (to handle hierarchy)
+                { deletedAt: 'asc' }   // Process older items first
+            ],
+            select: {
+                id: true,
+                itemId: true,
+                itemType: true,
+                dataroomId: true,
+                dataroomDocumentId: true,
+                dataroomFolderId: true,
+                name: true,
+                purgeAt: true,
+            },
+        });
+
+        if (expiredTrashItems.length === 0) {
+            await log({
+                message: "Auto-purge completed: No expired trash items found",
+                type: "cron",
+            });
+            return NextResponse.json({
+                message: "No expired items to purge",
+                purgedCount: 0
+            });
+        }
+
+        let totalPurged = 0;
+        const errors: string[] = [];
+
+        // Process each expired item
+        for (const trashItem of expiredTrashItems) {
+            try {
+                await prisma.$transaction(async (tx) => {
+                    if (trashItem.itemType === ItemType.DATAROOM_FOLDER && trashItem.dataroomFolderId) {
+                        // For folders, we need to get all child items and delete them recursively
+                        const trashItemsToDelete = await getTrashItemsInFolderHierarchy(
+                            trashItem.dataroomFolderId,
+                            trashItem.dataroomId,
+                            tx,
+                            trashItem,
+                        );
+
+                        // Delete all child items first
+                        for (const item of trashItemsToDelete) {
+                            if (item.itemType === ItemType.DATAROOM_DOCUMENT && item.dataroomDocumentId) {
+                                // Check if the document still exists before trying to delete it
+                                const documentExists = await tx.dataroomDocument.findUnique({
+                                    where: { id: item.dataroomDocumentId },
+                                });
+
+                                if (documentExists) {
+                                    await tx.dataroomDocument.delete({
+                                        where: {
+                                            id: item.dataroomDocumentId,
+                                            dataroomId: trashItem.dataroomId,
+                                        },
+                                    });
+                                }
+                            } else if (item.itemType === ItemType.DATAROOM_FOLDER && item.dataroomFolderId) {
+                                // Check if the folder still exists before trying to delete it
+                                const folderExists = await tx.dataroomFolder.findUnique({
+                                    where: { id: item.dataroomFolderId },
+                                });
+
+                                if (folderExists) {
+                                    await tx.dataroomFolder.delete({
+                                        where: {
+                                            id: item.dataroomFolderId,
+                                        },
+                                    });
+                                }
+                            }
+
+                            // Delete the trash item record
+                            await tx.trashItem.delete({
+                                where: {
+                                    id: item.id,
+                                    dataroomId: trashItem.dataroomId,
+                                },
+                            });
+                        }
+                    } else if (trashItem.itemType === ItemType.DATAROOM_DOCUMENT && trashItem.dataroomDocumentId) {
+                        // For documents, just delete the document and trash item
+
+                        // Check if the document still exists before trying to delete it
+                        const documentExists = await tx.dataroomDocument.findUnique({
+                            where: { id: trashItem.dataroomDocumentId },
+                        });
+
+                        if (documentExists) {
+                            await tx.dataroomDocument.delete({
+                                where: {
+                                    id: trashItem.dataroomDocumentId,
+                                    dataroomId: trashItem.dataroomId,
+                                },
+                            });
+                        }
+
+                        // Delete the trash item record
+                        await tx.trashItem.delete({
+                            where: {
+                                id: trashItem.id,
+                                dataroomId: trashItem.dataroomId,
+                            },
+                        });
+                    }
+                });
+
+                totalPurged++;
+
+                await log({
+                    message: `Auto-purged ${trashItem.itemType}: "${trashItem.name}" (ID: ${trashItem.itemId})`,
+                    type: "cron",
+                });
+
+            } catch (error) {
+                const errorMessage = `Failed to purge ${trashItem.itemType} "${trashItem.name}" (ID: ${trashItem.itemId}): ${(error as Error).message}`;
+                errors.push(errorMessage);
+
+                await log({
+                    message: errorMessage,
+                    type: "cron",
+                    mention: true,
+                });
+            }
+        }
+
+        // Summary log
+        const summaryMessage = `Auto-purge completed: ${totalPurged}/${expiredTrashItems.length} items purged successfully`;
+        if (errors.length > 0) {
+            await log({
+                message: `${summaryMessage}. ${errors.length} errors encountered.`,
+                type: "cron",
+                mention: true,
+            });
+        } else {
+            await log({
+                message: summaryMessage,
+                type: "cron",
+            });
+        }
+
+        return NextResponse.json({
+            message: summaryMessage,
+            purgedCount: totalPurged,
+            totalExpired: expiredTrashItems.length,
+            errors: errors.length > 0 ? errors : undefined,
+        });
+
+    } catch (error) {
+        await log({
+            message: `Auto-purge cron failed. \n\nError: ${(error as Error).message}`,
+            type: "cron",
+            mention: true,
+        });
+        return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    }
+} 

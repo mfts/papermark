@@ -178,12 +178,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 
       const { teamId } = link.dataroom;
 
-      const lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
-        return Math.max(
-          max,
-          new Date(doc.document.versions[0].updatedAt).getTime(),
-        );
-      }, 0);
+      const lastUpdatedAt = getDataroomLastUpdatedAt(link.dataroom);
 
       return {
         props: {
@@ -230,6 +225,37 @@ export async function getStaticPaths() {
     paths: [],
     fallback: true,
   };
+}
+
+export function getDataroomLastUpdatedAt(dataroom: any): number {
+  const documentsLastUpdated =
+    dataroom.documents.length > 0
+      ? dataroom.documents.reduce((max: number, doc: any) => {
+          if (doc.document.versions && doc.document.versions.length > 0) {
+            return Math.max(
+              max,
+              new Date(doc.document.versions[0].updatedAt).getTime(),
+            );
+          }
+          return max;
+        }, 0)
+      : 0;
+
+  const foldersLastUpdated =
+    dataroom.folders && dataroom.folders.length > 0
+      ? dataroom.folders.reduce((max: number, folder: any) => {
+          return Math.max(max, new Date(folder.updatedAt).getTime());
+        }, 0)
+      : 0;
+
+  if (documentsLastUpdated > 0 || foldersLastUpdated > 0) {
+    return Math.max(documentsLastUpdated, foldersLastUpdated);
+  }
+  const dataroomCreatedTime = dataroom.createdAt
+    ? new Date(dataroom.createdAt).getTime()
+    : Date.now();
+
+  return dataroomCreatedTime;
 }
 
 export default function ViewPage({

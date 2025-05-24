@@ -64,6 +64,9 @@ export default async function handle(
                 name: true,
                 teamId: true,
                 documents: {
+                  where: {
+                    removedAt: null,
+                  },
                   include: {
                     document: {
                       include: {
@@ -72,7 +75,7 @@ export default async function handle(
                     },
                   },
                 },
-                folders: true,
+                folders: { where: { removedAt: null } },
                 updatedAt: true,
                 createdAt: true,
               },

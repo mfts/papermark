@@ -867,6 +867,7 @@ export async function POST(request: NextRequest) {
               dataroomId: dataroomId,
               documentId: documentId,
             },
+            removedAt: null,
           },
           select: { id: true },
         });

@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import NotFound from "@/pages/404";
+import { getDataroomLastUpdatedAt } from "@/pages/view/[linkId]";
 import { Brand, DataroomBrand } from "@prisma/client";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
@@ -151,12 +152,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 
       const { teamId } = link.dataroom;
 
-      const lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
-        return Math.max(
-          max,
-          new Date(doc.document.versions[0].updatedAt).getTime(),
-        );
-      }, 0);
+      const lastUpdatedAt = getDataroomLastUpdatedAt(link.dataroom);
 
       return {
         props: {
