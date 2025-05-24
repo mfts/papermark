@@ -80,68 +80,57 @@ export async function POST(req: Request) {
                         );
 
                         // Delete all child items first
+                        const documentIds: string[] = [];
+                        const folderIds: string[] = [];
+                        const trashItemIds: string[] = [];
+
+                        // Collect IDs for bulk deletion
                         for (const item of trashItemsToDelete) {
                             if (item.itemType === ItemType.DATAROOM_DOCUMENT && item.dataroomDocumentId) {
-                                // Check if the document still exists before trying to delete it
-                                const documentExists = await tx.dataroomDocument.findUnique({
-                                    where: { id: item.dataroomDocumentId },
-                                });
-
-                                if (documentExists) {
-                                    await tx.dataroomDocument.delete({
-                                        where: {
-                                            id: item.dataroomDocumentId,
-                                            dataroomId: trashItem.dataroomId,
-                                        },
-                                    });
-                                }
+                                documentIds.push(item.dataroomDocumentId);
                             } else if (item.itemType === ItemType.DATAROOM_FOLDER && item.dataroomFolderId) {
-                                // Check if the folder still exists before trying to delete it
-                                const folderExists = await tx.dataroomFolder.findUnique({
-                                    where: { id: item.dataroomFolderId },
-                                });
-
-                                if (folderExists) {
-                                    await tx.dataroomFolder.delete({
-                                        where: {
-                                            id: item.dataroomFolderId,
-                                        },
-                                    });
-                                }
+                                folderIds.push(item.dataroomFolderId);
                             }
-
-                            // Delete the trash item record
-                            await tx.trashItem.delete({
-                                where: {
-                                    id: item.id,
-                                    dataroomId: trashItem.dataroomId,
-                                },
-                            });
+                            trashItemIds.push(item.id);
                         }
+
+                        // Perform bulk deletions concurrently
+                        await Promise.all([
+                            // Delete documents in bulk
+                            documentIds.length > 0 ? tx.dataroomDocument.deleteMany({
+                                where: {
+                                    id: { in: documentIds },
+                                },
+                            }) : Promise.resolve(),
+
+                            // Delete folders in bulk
+                            folderIds.length > 0 ? tx.dataroomFolder.deleteMany({
+                                where: {
+                                    id: { in: folderIds },
+                                },
+                            }) : Promise.resolve(),
+
+                            // Delete trash items in bulk
+                            trashItemIds.length > 0 ? tx.trashItem.deleteMany({
+                                where: {
+                                    id: { in: trashItemIds },
+                                },
+                            }) : Promise.resolve(),
+                        ]);
                     } else if (trashItem.itemType === ItemType.DATAROOM_DOCUMENT && trashItem.dataroomDocumentId) {
-                        // For documents, just delete the document and trash item
-
-                        // Check if the document still exists before trying to delete it
-                        const documentExists = await tx.dataroomDocument.findUnique({
-                            where: { id: trashItem.dataroomDocumentId },
-                        });
-
-                        if (documentExists) {
-                            await tx.dataroomDocument.delete({
+                        // For documents, delete the document and trash item concurrently
+                        await Promise.all([
+                            tx.dataroomDocument.deleteMany({
                                 where: {
                                     id: trashItem.dataroomDocumentId,
-                                    dataroomId: trashItem.dataroomId,
                                 },
-                            });
-                        }
-
-                        // Delete the trash item record
-                        await tx.trashItem.delete({
-                            where: {
-                                id: trashItem.id,
-                                dataroomId: trashItem.dataroomId,
-                            },
-                        });
+                            }),
+                            tx.trashItem.delete({
+                                where: {
+                                    id: trashItem.id,
+                                },
+                            }),
+                        ]);
                     }
                 });
 

@@ -4,13 +4,13 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import NotFound from "@/pages/404";
-import { getDataroomLastUpdatedAt } from "@/pages/view/[linkId]";
 import { Brand, DataroomBrand } from "@prisma/client";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 
+import { getDataroomLastUpdatedAt } from "@/lib/dataroom/utils";
 import notion from "@/lib/notion";
 import {
   CustomUser,

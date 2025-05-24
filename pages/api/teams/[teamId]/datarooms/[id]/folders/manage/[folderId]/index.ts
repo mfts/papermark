@@ -4,58 +4,10 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
-import { errorhandler } from "@/lib/errorHandler";
+import { createTrashItem } from "@/lib/dataroom/trash";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { ItemType, Prisma } from "@prisma/client";
-const TRASH_RETENTION_DAYS = 30;
-
-const calculatePurgeDate = (): Date => {
-  const purgeDate = new Date();
-  purgeDate.setDate(purgeDate.getDate() + TRASH_RETENTION_DAYS);
-  return purgeDate;
-};
-interface CreateTrashItemInput {
-  itemId: string;
-  itemType: ItemType;
-  dataroomId: string;
-  name: string;
-  fullPath: string | null;
-  userId: string;
-  dataroomDocumentId?: string;
-  dataroomFolderId?: string;
-  trashPath: string | null;
-  parentId?: string | null;
-}
-// Helper function to create trash item
-export async function createTrashItem(tx: Prisma.TransactionClient, {
-  itemId,
-  itemType,
-  dataroomId,
-  name,
-  fullPath,
-  userId,
-  dataroomDocumentId,
-  dataroomFolderId,
-  trashPath,
-  parentId,
-}: CreateTrashItemInput) {
-  return await tx.trashItem.create({
-    data: {
-      itemId,
-      itemType,
-      dataroomId,
-      name,
-      fullPath,
-      parentId,
-      deletedBy: userId,
-      purgeAt: calculatePurgeDate(),
-      trashPath: trashPath,
-      ...(dataroomDocumentId && { dataroomDocumentId }),
-      ...(dataroomFolderId && { dataroomFolderId }),
-    },
-  });
-}
 
 export default async function handle(
   req: NextApiRequest,

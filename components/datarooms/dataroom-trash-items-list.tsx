@@ -181,7 +181,7 @@ export function DataroomTrashItemsList({
 
   const HeaderContent = memo(() => {
     if (selectedDocumentsLength > 0 || selectedFoldersLength > 0) {
-      const totalItems = folderCount + documentCount;
+      const totalItems = mixedItems.length;
       const isAllSelected =
         totalItems === selectedDocumentsLength + selectedFoldersLength;
 

@@ -13,10 +13,12 @@ export async function getTrashItemsInFolderHierarchy(
     tx: Prisma.TransactionClient,
     existingTrashItem: TrashItemWithData,
 ): Promise<TrashItemWithData[]> {
-    const result = new Set<TrashItemWithData>();
+    const result = new Map<string, TrashItemWithData>();
+
 
     // Add the existing trash item to the result
-    result.add(existingTrashItem);
+    result.set(existingTrashItem.id, existingTrashItem);
+
 
     async function collectTrashItems(currentFolderId: string) {
         const trashItems = await tx.trashItem.findMany({
@@ -33,7 +35,7 @@ export async function getTrashItemsInFolderHierarchy(
             },
         });
 
-        trashItems.forEach((item) => result.add(item));
+        trashItems.forEach((item) => result.set(item.id, item));
 
         const childFolders = trashItems.filter(
             (item) => item.itemType === ItemType.DATAROOM_FOLDER,
@@ -47,5 +49,5 @@ export async function getTrashItemsInFolderHierarchy(
     }
 
     await collectTrashItems(folderId);
-    return Array.from(result);
+    return Array.from(result.values());
 } 

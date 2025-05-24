@@ -170,6 +170,73 @@ export default async function handle(
             });
 
             await prisma.$transaction(async (tx) => {
+                // First, check for collisions before making any changes
+                const foldersToRestore = trashItems.filter(
+                    item => item.itemType === ItemType.DATAROOM_FOLDER && item.dataroomFolderId
+                );
+                const documentsToRestore = trashItems.filter(
+                    item => item.itemType === ItemType.DATAROOM_DOCUMENT && item.dataroomDocumentId
+                );
+
+                // Check for folder name collisions in the target folder
+                if (foldersToRestore.length > 0) {
+                    const existingFolders = await tx.dataroomFolder.findMany({
+                        where: {
+                            dataroomId,
+                            parentId: selectedFolderId, // Check only inside the target folder
+                            removedAt: null,
+                        },
+                        select: { name: true },
+                    });
+
+                    if (existingFolders.length > 0) {
+                        const existingFolderNames = new Set(
+                            existingFolders.map((f) => f.name)
+                        );
+                        const duplicateFolderNames = foldersToRestore
+                            .map((item) => item.name)
+                            .filter((name) => existingFolderNames.has(name));
+
+                        if (duplicateFolderNames.length > 0) {
+                            throw new Error(
+                                `Cannot restore folders: Duplicate names found in target folder - ${duplicateFolderNames.join(", ")}`
+                            );
+                        }
+                    }
+                }
+
+                // Check for document name collisions in the target folder
+                if (documentsToRestore.length > 0) {
+                    const existingDocuments = await tx.dataroomDocument.findMany({
+                        where: {
+                            dataroomId,
+                            folderId: selectedFolderId, // Check only inside the target folder
+                            removedAt: null,
+                        },
+                        include: {
+                            document: {
+                                select: { name: true },
+                            },
+                        },
+                    });
+
+                    if (existingDocuments.length > 0) {
+                        const existingDocumentNames = new Set(
+                            existingDocuments.map((d) => d.document.name)
+                        );
+                        const duplicateDocumentNames = documentsToRestore
+                            .map((item) => item.name)
+                            .filter((name) => existingDocumentNames.has(name));
+
+                        if (duplicateDocumentNames.length > 0) {
+                            throw new Error(
+                                `Cannot restore documents: Duplicate names found in target folder - ${duplicateDocumentNames.join(", ")}`
+                            );
+                        }
+                    }
+                }
+
+                // If no collisions, proceed with restoration
                 for (const item of trashItems) {
                     if (
                         item.itemType === ItemType.DATAROOM_FOLDER &&

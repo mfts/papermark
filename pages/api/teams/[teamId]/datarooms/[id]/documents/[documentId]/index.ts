@@ -3,10 +3,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
+import { createTrashItem } from "@/lib/dataroom/trash";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { ItemType } from "@prisma/client";
-import { createTrashItem } from "../../folders/manage/[folderId]";
 
 export default async function handle(
   req: NextApiRequest,

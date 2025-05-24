@@ -120,6 +120,8 @@ export default async function handle(
           parentId: true,
           itemId: true,
           dataroomId: true,
+          trashPath: true,
+          fullPath: true,
           dataroomFolder: {
             select: {
               id: true,
@@ -137,6 +139,7 @@ export default async function handle(
             select: {
               id: true,
               folderId: true,
+              removedAt: true,
               document: {
                 select: { id: true, name: true, type: true },
               },

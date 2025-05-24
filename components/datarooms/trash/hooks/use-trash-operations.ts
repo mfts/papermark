@@ -30,6 +30,8 @@ export function useTrashOperations({
         );
         mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders`);
         mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/trash`);
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`);
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders?root=true`);
     };
 
     const handleRestore = async (

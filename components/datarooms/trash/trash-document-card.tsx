@@ -78,7 +78,7 @@ export default function TrashDocumentCard({
   const onRestore = () => {
     handleRestore(item.id, "document");
   };
-
+  // TODO: Add download functionality
   const handleDownload = () => {
     console.log("Download document");
   };

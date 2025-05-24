@@ -33,6 +33,19 @@ export default function DeleteConfirmationDialog({
   const requiredText = "permanently delete";
   const isInputValid = inputValue === requiredText;
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isInputValid) {
+      onConfirm();
+      setInputValue("");
+    }
+  };
+
+  const handleCancel = () => {
+    setInputValue("");
+    onClose();
+  };
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent className="max-w-md">
@@ -63,44 +76,54 @@ export default function DeleteConfirmationDialog({
               </div>
             </div>
 
-            <div className="space-y-3">
-              <label
-                htmlFor="verification"
-                className="text-sm text-muted-foreground"
-              >
-                Type{" "}
-                <span className="font-medium text-foreground">
-                  permanently delete
-                </span>{" "}
-                to confirm
-              </label>
-              <Input
-                type="text"
-                name="verification"
-                id="verification"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                pattern={requiredText}
-                required
-                autoComplete="off"
-                placeholder="Type to confirm..."
-                className={cn(
-                  "bg-white transition-colors dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent",
-                  isInputValid && "border-green-500 dark:border-green-500",
-                )}
-              />
-            </div>
+            <form onSubmit={handleSubmit} id="delete-confirmation-form">
+              <div className="space-y-3">
+                <label
+                  htmlFor="verification"
+                  className="text-sm text-muted-foreground"
+                >
+                  Type{" "}
+                  <span className="font-medium text-foreground">
+                    permanently delete
+                  </span>{" "}
+                  to confirm
+                </label>
+                <Input
+                  type="text"
+                  name="verification"
+                  id="verification"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  pattern={requiredText}
+                  required
+                  autoComplete="off"
+                  placeholder="Type to confirm..."
+                  aria-label="Type 'permanently delete' to confirm deletion"
+                  aria-describedby="verification-help verification-instructions"
+                  aria-invalid={inputValue.length > 0 && !isInputValid}
+                  className={cn(
+                    "bg-white transition-colors dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent",
+                    isInputValid && "border-green-500 dark:border-green-500",
+                    !isInputValid && inputValue.length > 0 && "border-red-500 dark:border-red-500",
+                  )}
+                />
+                <div
+                  id="verification-help"
+                  className="text-xs text-muted-foreground"
+                >
+                  You must type exactly "{requiredText}" to enable the delete button.
+                </div>
+              </div>
+            </form>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-2">
-          <AlertDialogCancel onClick={() => setInputValue("")} className="mt-0">
+          <AlertDialogCancel onClick={handleCancel} className="mt-0">
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={() => {
-              onConfirm();
-              setInputValue("");
-            }}
+            type="submit"
+            form="delete-confirmation-form"
             disabled={!isInputValid}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:pointer-events-none disabled:opacity-50"
           >

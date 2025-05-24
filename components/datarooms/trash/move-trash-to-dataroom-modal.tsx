@@ -52,7 +52,7 @@ export function MoveTrashToDataroomFolderModal({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const handleSubmit = async (event: any) => {
+  const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -77,7 +77,7 @@ export function MoveTrashToDataroomFolderModal({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to move items");
+        throw new Error(error.error || "Failed to move items");
       }
 
       toast.success("Items moved successfully");

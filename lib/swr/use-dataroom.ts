@@ -315,7 +315,7 @@ export function useDataroomTrashFolderWithParents({
 
   const { data: folders, error } = useSWR<{ name: string; path: string }[]>(
     teamId &&
-    name &&
+    name.length > 0 &&
     `/api/teams/${teamId}/datarooms/${dataroomId}/trash/parents/${name.join("/")}`,
     fetcher,
     {

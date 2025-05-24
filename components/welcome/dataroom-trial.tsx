@@ -40,7 +40,7 @@ export default function DataroomTrial() {
 
   const [loading, setLoading] = useState<boolean>(false);
 
-  const handleSubmit = async (event: any) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     event.stopPropagation();
 

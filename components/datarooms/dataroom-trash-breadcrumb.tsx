@@ -48,7 +48,7 @@ function BreadcrumbComponentBase({
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href={`/datarooms/${dataroomId}/documents`}>
+            <Link href={`/datarooms/${dataroomId}/trash`}>
               {dataroom?.name || "Loading..."}
             </Link>
           </BreadcrumbLink>
@@ -64,7 +64,11 @@ function BreadcrumbComponentBase({
           <>
             <BreadcrumbItem>
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1">
+                <DropdownMenuTrigger
+                  asChild={false}
+                  className="flex items-center gap-1 rounded-md p-1 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  aria-label="Show folders in trash breadcrumb"
+                >
                   <BreadcrumbEllipsis className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
@@ -129,7 +133,7 @@ function BreadcrumbComponentBase({
 
 const DataroomTrashBreadcrumb = () => {
   const router = useRouter();
-  const name = router.query.name as string[];
+  const name = (router.query.name as string[] | undefined) ?? [];
   const dataroomId = router.query.id as string;
   const MemoizedBreadcrumbComponent = useMemo(() => {
     return <BreadcrumbComponentBase name={name} dataroomId={dataroomId} />;

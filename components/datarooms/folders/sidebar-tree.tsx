@@ -55,10 +55,11 @@ const FolderComponent = memo(
 
     const isActive =
       folder.path === "/" + (router.query.name as string[])?.join("/");
-    const isChildActive = folder.childFolders.some(
-      (childFolder) =>
-        childFolder.path === "/" + (router.query.name as string[])?.join("/"),
-    );
+    const isChildActive =
+      folder.childFolders?.some(
+        (childFolder) =>
+          childFolder.path === "/" + (router.query.name as string[])?.join("/"),
+      ) || false;
 
     const handleFolderClick = () => {
       const basePath = trash

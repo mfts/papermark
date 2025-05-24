@@ -10,6 +10,7 @@ import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 
+import { getDataroomLastUpdatedAt } from "@/lib/dataroom/utils";
 import notion from "@/lib/notion";
 import { addSignedUrls } from "@/lib/notion/utils";
 import {
@@ -225,37 +226,6 @@ export async function getStaticPaths() {
     paths: [],
     fallback: true,
   };
-}
-
-export function getDataroomLastUpdatedAt(dataroom: any): number {
-  const documentsLastUpdated =
-    dataroom.documents.length > 0
-      ? dataroom.documents.reduce((max: number, doc: any) => {
-          if (doc.document.versions && doc.document.versions.length > 0) {
-            return Math.max(
-              max,
-              new Date(doc.document.versions[0].updatedAt).getTime(),
-            );
-          }
-          return max;
-        }, 0)
-      : 0;
-
-  const foldersLastUpdated =
-    dataroom.folders && dataroom.folders.length > 0
-      ? dataroom.folders.reduce((max: number, folder: any) => {
-          return Math.max(max, new Date(folder.updatedAt).getTime());
-        }, 0)
-      : 0;
-
-  if (documentsLastUpdated > 0 || foldersLastUpdated > 0) {
-    return Math.max(documentsLastUpdated, foldersLastUpdated);
-  }
-  const dataroomCreatedTime = dataroom.createdAt
-    ? new Date(dataroom.createdAt).getTime()
-    : Date.now();
-
-  return dataroomCreatedTime;
 }
 
 export default function ViewPage({
