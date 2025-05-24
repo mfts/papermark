@@ -96,12 +96,6 @@ export default function DataroomDocumentCard({
   }, []);
 
   const handleRemoveDocument = async (documentId: string) => {
-    // Prevent the first click from deleting the document
-    if (!isFirstClick) {
-      setIsFirstClick(true);
-      return;
-    }
-
     const endpoint = currentFolderPath
       ? `/folders/documents/${currentFolderPath.join("/")}`
       : "/documents";
@@ -145,11 +139,10 @@ export default function DataroomDocumentCard({
     event.stopPropagation();
     event.preventDefault();
 
-    console.log("isFirstClick", isFirstClick);
     if (isFirstClick) {
       handleRemoveDocument(documentId);
       setIsFirstClick(false);
-      setMenuOpen(false); // Close the dropdown after deleting
+      setMenuOpen(false);
     } else {
       setIsFirstClick(true);
     }
