@@ -155,7 +155,7 @@ export default async function handle(
           dataroomId,
           dataroomDocumentId: updatedDocument.id,
           name: updatedDocument.document.name,
-          fullPath: updatedDocument.folder?.path,
+          fullPath: updatedDocument.folder?.path ?? null,
           userId,
           trashPath: null,
           parentId: null,

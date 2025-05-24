@@ -15,17 +15,17 @@ const calculatePurgeDate = (): Date => {
   purgeDate.setDate(purgeDate.getDate() + TRASH_RETENTION_DAYS);
   return purgeDate;
 };
-interface TrashItem {
+interface CreateTrashItemInput {
   itemId: string;
   itemType: ItemType;
   dataroomId: string;
   name: string;
-  fullPath: string | null | undefined;
+  fullPath: string | null;
   userId: string;
   dataroomDocumentId?: string;
   dataroomFolderId?: string;
-  trashPath: string | null | undefined;
-  parentId?: string | null | undefined;
+  trashPath: string | null;
+  parentId?: string | null;
 }
 // Helper function to create trash item
 export async function createTrashItem(tx: any, {
@@ -39,7 +39,7 @@ export async function createTrashItem(tx: any, {
   dataroomFolderId,
   trashPath,
   parentId,
-}: TrashItem) {
+}: CreateTrashItemInput) {
   return await tx.trashItem.create({
     data: {
       itemId,
