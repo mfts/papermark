@@ -7,7 +7,7 @@ import { getServerSession } from "next-auth/next";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { ItemType } from "@prisma/client";
+import { ItemType, Prisma } from "@prisma/client";
 const TRASH_RETENTION_DAYS = 30;
 
 const calculatePurgeDate = (): Date => {
@@ -28,7 +28,7 @@ interface CreateTrashItemInput {
   parentId?: string | null;
 }
 // Helper function to create trash item
-export async function createTrashItem(tx: any, {
+export async function createTrashItem(tx: Prisma.TransactionClient, {
   itemId,
   itemType,
   dataroomId,
@@ -145,7 +145,7 @@ export default async function handle(
 }
 
 async function softDeleteFolderAndContents(
-  tx: any,
+  tx: Prisma.TransactionClient,
   folderId: string,
   dataroomId: string,
   userId: string,
@@ -256,7 +256,7 @@ async function softDeleteFolderAndContents(
       dataroomId,
       dataroomDocumentId: doc.id,
       name: doc.document.name,
-      fullPath: doc.folder?.path,
+      fullPath: doc.folder?.path ?? null,
       userId,
       trashPath: trashPath,
       parentId: folder.id
