@@ -117,10 +117,11 @@ export default async function handle(
       ? view.document!.teamId!
       : view.dataroom!.teamId!;
 
-  // Get all team members who are admins or managers to be notified
+  // Get all active team members who are admins or managers to be notified
   const users = await prisma.userTeam.findMany({
     where: {
       role: { in: ["ADMIN", "MANAGER"] },
+      status: "ACTIVE",
       teamId: teamId,
     },
     select: {
@@ -133,7 +134,7 @@ export default async function handle(
     },
   });
 
-  // Get the owner of the document
+  // Get the active owner of the document
   let ownerEmail: string | null = null;
   if (view.document?.ownerId) {
     const ownerUser = await prisma.userTeam.findUnique({
@@ -142,6 +143,7 @@ export default async function handle(
           userId: view.document!.ownerId!,
           teamId: teamId,
         },
+        status: "ACTIVE",
       },
       select: {
         user: {
