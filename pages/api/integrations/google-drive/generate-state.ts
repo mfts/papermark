@@ -14,8 +14,7 @@ export default async function handle(
         // GET /api/integrations/google-drive/generate-state
         const session = await getServerSession(req, res, authOptions);
         if (!session) {
-            res.status(401).end("Unauthorized");
-            throw new Error("Unauthorized");
+            return res.status(401).end("Unauthorized");
         }
         const sessionUser = session.user as CustomUser;
         const stateBase = `${sessionUser.email}:${Date.now()}`;
