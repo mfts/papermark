@@ -28,7 +28,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <AppBreadcrumb />
             </div>
           </header>
-          {/* Trial banner shown only on trial */}
           <TrialBanner />
           <BlockingModal />
           <main className="flex-1">{children}</main>

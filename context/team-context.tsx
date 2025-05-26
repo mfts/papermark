@@ -55,7 +55,7 @@ export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
       isLoading: loading,
       setCurrentTeam,
     }),
-    [teams, currentTeam, loading],
+    [teams, currentTeam, currentTeamId, loading],
   );
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;
