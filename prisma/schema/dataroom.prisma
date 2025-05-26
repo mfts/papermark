@@ -14,11 +14,17 @@ model Dataroom {
   brand        DataroomBrand?
 
   // conversation
-  conversationsEnabled Boolean      @default(false)
+  conversationsEnabled Boolean        @default(false)
   conversations        Conversation[]
 
   // upload external documents
   uploadedDocuments DocumentUpload[]
+
+  // tags
+  tags TagItem[]
+
+  // notification settings
+  enableChangeNotifications Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -35,7 +41,6 @@ model DataroomDocument {
   folderId   String?
   folder     DataroomFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
   orderIndex Int?
-
   googleDriveFileId String?
 
   conversations     Conversation[]
@@ -99,8 +104,8 @@ model ViewerGroup {
   teamId     String
   team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
-  views View[]
-  conversations  Conversation[]
+  views         View[]
+  conversations Conversation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

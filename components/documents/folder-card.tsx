@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { TeamContextType } from "@/context/team-context";
 import {
   BetweenHorizontalStartIcon,
+  ClipboardCopyIcon,
+  CopyIcon,
   FolderIcon,
   FolderInputIcon,
   FolderPenIcon,
@@ -14,6 +16,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
+
+import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
+import { FolderWithCount } from "@/lib/swr/use-documents";
+import { timeAgo } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,14 +31,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
-import { FolderWithCount } from "@/lib/swr/use-documents";
-import { timeAgo } from "@/lib/utils";
-
 import { MoveToDataroomFolderModal } from "../datarooms/move-dataroom-folder-modal";
 import { EditFolderModal } from "../folders/edit-folder-modal";
 import { AddFolderToDataroomModal } from "./add-folder-to-dataroom-modal";
-import { DeleteFolderModal } from "./delete-folder-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
 
 type FolderCardProps = {
@@ -44,7 +45,9 @@ type FolderCardProps = {
   isOver?: boolean;
   isHovered?: boolean;
   isSelected?: boolean;
+  onDelete?: (folderId: string) => void;
 };
+
 export default function FolderCard({
   folder,
   teamInfo,
@@ -54,13 +57,13 @@ export default function FolderCard({
   isOver,
   isSelected,
   isHovered,
+  onDelete,
 }: FolderCardProps) {
   const router = useRouter();
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const [openFolder, setOpenFolder] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const folderPath =
@@ -74,55 +77,14 @@ export default function FolderCard({
 
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
-    if (!openFolder || !addDataroomOpen || !deleteModalOpen) {
+    if (!openFolder || !addDataroomOpen) {
       setTimeout(() => {
         document.body.style.pointerEvents = "";
       });
     }
-  }, [openFolder, addDataroomOpen, deleteModalOpen]);
+  }, [openFolder, addDataroomOpen]);
 
-  const handleButtonClick = (event: any, FolderId: string) => {
-    event.stopPropagation();
-    event.preventDefault();
 
-    setDeleteModalOpen(false);
-    handleDeleteFolder(FolderId);
-    setMenuOpen(false);
-  };
-
-  const handleDeleteFolder = async (folderId: string) => {
-    const endpointTargetType =
-      isDataroom && dataroomId ? `datarooms/${dataroomId}/folders` : "folders";
-
-    toast.promise(
-      fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/manage/${folderId}`,
-        {
-          method: "DELETE",
-        },
-      ),
-      {
-        loading: isDataroom ? "Removing folder..." : "Deleting folder...",
-        success: () => {
-          mutate(
-            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
-          );
-          mutate(
-            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`,
-          );
-          mutate(
-            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
-          );
-          return isDataroom
-            ? "Folder removed successfully."
-            : `Folder deleted successfully with ${folder._count.documents} documents and ${folder._count.childFolders} folders`;
-        },
-        error: isDataroom
-          ? "Failed to remove folder."
-          : "Failed to delete folder. Move documents first.",
-      },
-    );
-  };
 
   const handleCreateDataroom = (e: any, folderId: string) => {
     e.stopPropagation();
@@ -244,7 +206,7 @@ export default function FolderCard({
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" ref={dropdownRef}>
+            <DropdownMenuContent align="end" ref={dropdownRef} className="w-64">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
                 onClick={(e) => {
@@ -286,13 +248,31 @@ export default function FolderCard({
                   ? "Copy folder to other dataroom"
                   : "Add folder to dataroom"}
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(folder.id);
+                  toast.success("Folder ID copied to clipboard");
+                }}
+                className="group/folderid"
+              >
+                <CopyIcon className="mr-2 h-4 w-4" />
+                <span className="inline group-hover/folderid:hidden">
+                  Copy Folder ID
+                </span>
+                <span className="hidden group-hover/folderid:inline group-hover/folderid:cursor-copy">
+                  {folder.id}
+                </span>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
-                  setDeleteModalOpen(true);
+                  onDelete?.(folder.id);
+                  setMenuOpen(false);
                 }}
                 className="text-destructive duration-200 focus:bg-destructive focus:text-destructive-foreground"
               >
@@ -329,18 +309,6 @@ export default function FolderCard({
           folderId={folder.id}
           folderName={folder.name}
           dataroomId={dataroomId}
-        />
-      ) : null}
-      {deleteModalOpen ? (
-        <DeleteFolderModal
-          folderId={folder.id}
-          open={deleteModalOpen}
-          setOpen={setDeleteModalOpen}
-          folderName={folder.name}
-          documents={folder._count.documents}
-          childFolders={folder._count.childFolders}
-          isDataroom={isDataroom}
-          handleButtonClick={handleButtonClick}
         />
       ) : null}
       {moveFolderOpen && !isDataroom ? (

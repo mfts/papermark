@@ -6,14 +6,14 @@ import { useTeam } from "@/context/team-context";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
-import DocumentUpload from "@/components/document-upload";
-import { Button } from "@/components/ui/button";
-
 import { useAnalytics } from "@/lib/analytics";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
 import { putFile } from "@/lib/files/put-file";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
+
+import DocumentUpload from "@/components/document-upload";
+import { Button } from "@/components/ui/button";
 
 export function UploadContainer({
   currentFile,

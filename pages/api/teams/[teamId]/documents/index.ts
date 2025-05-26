@@ -117,14 +117,13 @@ export default async function handle(
               path: true,
             },
           },
-          ...(query &&
-            sort === "lastViewed" && {
-              views: {
-                select: { viewedAt: true },
-                orderBy: { viewedAt: "desc" },
-                take: 1,
-              },
-            }),
+          ...(sort === "lastViewed" && {
+            views: {
+              select: { viewedAt: true },
+              orderBy: { viewedAt: "desc" },
+              take: 1,
+            },
+          }),
           _count: {
             select: {
               links: true,
@@ -280,6 +279,8 @@ export default async function handle(
           supportedFileType: fileType,
           contentType,
           fileSize,
+          enableExcelAdvancedMode:
+            fileType === "sheet" && team.enableExcelAdvancedMode,
         },
         teamId,
         userId,

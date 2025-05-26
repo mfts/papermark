@@ -127,6 +127,8 @@ const SingleDataroomBreadcrumb = ({ path }: { path: string }) => {
         return "Analytics";
       case "/datarooms/[id]/conversations":
         return "Conversations";
+      case "/datarooms/[id]/settings/notifications":
+        return "Notifications";
       default:
         return dataroom?.name || "Loading...";
     }

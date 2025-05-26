@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 
-import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ interface CustomFieldProps {
   isLast?: boolean;
 }
 
-export default function CustomField({
+export default memo(function CustomField({
   field,
   onUpdate,
   onDelete,
@@ -39,7 +39,7 @@ export default function CustomField({
 
   useEffect(() => {
     onUpdate(localField);
-  }, [localField, onUpdate]);
+  }, [localField]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -166,4 +166,4 @@ export default function CustomField({
       </div>
     </div>
   );
-}
+});

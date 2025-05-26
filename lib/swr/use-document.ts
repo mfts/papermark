@@ -3,10 +3,9 @@ import { useRouter } from "next/router";
 import { useTeam } from "@/context/team-context";
 import { View } from "@prisma/client";
 import useSWR from "swr";
-import useSWRImmutable from "swr/immutable";
-
 import { DocumentWithVersion, LinkWithViews } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
+import { toast } from "sonner";
 
 export function useDocument() {
   const router = useRouter();
@@ -29,6 +28,14 @@ export function useDocument() {
     fetcher,
     {
       dedupingInterval: 10000,
+      onError: (err) => {
+        if (err.status === 404) {
+          toast.error("Document not found", {
+            description: "The document you're looking for doesn't exist or has been moved.",
+          });
+          router.replace("/documents");
+        }
+      }
     },
   );
 

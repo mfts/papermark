@@ -117,7 +117,11 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           useCustomAccessForm:
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
             teamId === "clup33by90000oewh4rfvp2eg" ||
-            teamId === "cm76hfyvy0002q623hmen99pf",
+            teamId === "cm76hfyvy0002q623hmen99pf" ||
+            teamId === "cm9ztf0s70005js04i689gefn",
+          logoOnAccessForm:
+            teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
         revalidate: 10,
       };
@@ -128,7 +132,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       // iterate the link.documents and extract type and file and rest of the props
       let documents = [];
       for (const document of link.dataroom.documents) {
-        const { file, ...versionWithoutTypeAndFile } =
+        const { file, updatedAt, ...versionWithoutTypeAndFile } =
           document.document.versions[0];
 
         const newDocument = {
@@ -136,13 +140,26 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           dataroomDocumentId: document.id,
           folderId: document.folderId,
           orderIndex: document.orderIndex,
-          versions: [versionWithoutTypeAndFile],
+          versions: [
+            {
+              ...versionWithoutTypeAndFile,
+              updatedAt:
+                document.updatedAt > updatedAt ? document.updatedAt : updatedAt, // use the latest updatedAt
+            },
+          ],
         };
 
         documents.push(newDocument);
       }
 
       const { teamId } = link.dataroom;
+
+      const lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
+        return Math.max(
+          max,
+          new Date(doc.document.versions[0].updatedAt).getTime(),
+        );
+      }, 0);
 
       return {
         props: {
@@ -153,7 +170,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
               dataroom: {
                 ...link.dataroom,
                 documents,
-                lastUpdatedAt: null, // TODO: fix this to get the actual lastUpdatedAt
+                lastUpdatedAt: lastUpdatedAt,
               },
             },
             brand,
@@ -172,7 +189,11 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           useCustomAccessForm:
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
             teamId === "clup33by90000oewh4rfvp2eg" ||
-            teamId === "cm76hfyvy0002q623hmen99pf",
+            teamId === "cm76hfyvy0002q623hmen99pf" ||
+            teamId === "cm9ztf0s70005js04i689gefn",
+          logoOnAccessForm:
+            teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
         revalidate: 10,
       };
@@ -197,6 +218,7 @@ export default function ViewPage({
   showAccountCreationSlide,
   useAdvancedExcelViewer,
   useCustomAccessForm,
+  logoOnAccessForm,
   error,
 }: {
   linkData: DocumentLinkData | DataroomLinkData;
@@ -216,6 +238,7 @@ export default function ViewPage({
   showAccountCreationSlide: boolean;
   useAdvancedExcelViewer: boolean;
   useCustomAccessForm: boolean;
+  logoOnAccessForm: boolean;
   error?: boolean;
 }) {
   const router = useRouter();
@@ -339,6 +362,7 @@ export default function ViewPage({
           useCustomAccessForm={useCustomAccessForm}
           token={storedToken}
           verifiedEmail={verifiedEmail}
+          logoOnAccessForm={logoOnAccessForm}
         />
       </>
     );
@@ -419,6 +443,7 @@ export default function ViewPage({
           verifiedEmail={verifiedEmail}
           previewToken={previewToken}
           preview={!!preview}
+          logoOnAccessForm={logoOnAccessForm}
         />
       </>
     );

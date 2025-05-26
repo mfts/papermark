@@ -1,51 +1,55 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-
-
 import { FormEvent, useCallback, useEffect, useState } from "react";
-
-
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { CheckCircleIcon, Loader2, UploadCloud } from "lucide-react";
-import { usePlausible } from "next-plausible";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-
-
 import { useAnalytics } from "@/lib/analytics";
 import { SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
 import { useUpload } from "@/lib/context/upload-context";
-import { DocumentData, createDocument, createNewDocumentVersion } from "@/lib/documents/create-document";
+import {
+  DocumentData,
+  createDocument,
+  createNewDocumentVersion,
+} from "@/lib/documents/create-document";
 import { putFile } from "@/lib/files/put-file";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
-
-
 import DocumentUpload from "@/components/document-upload";
 import GoogleDriveIntegration from "@/components/integrations/google-drive/google-drive";
 import { useGoogleDriveStatus } from "@/components/integrations/google-drive/google-drive";
-import GoogleDrivePicker, { GoogleDriveFile } from "@/components/integrations/google-drive/google-drive-picker";
+import GoogleDrivePicker, {
+  GoogleDriveFile,
+} from "@/components/integrations/google-drive/google-drive-picker";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-
-
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { SetGroupPermissionsModal } from "../datarooms/groups/set-group-permissions-modal";
 import { ConfirmationDialog } from "../ui/confirmation-dialog";
-
-
-
-
 
 export interface ProcessedFile {
   folderId: string;
@@ -68,6 +72,12 @@ export interface Files {
   folderPathName: string | undefined;
 }
 
+interface DataroomDocument {
+  id: string;
+  documentId: string;
+  dataroomId: string;
+}
+
 export function AddDocumentModal({
   newVersion,
   children,
@@ -84,7 +94,6 @@ export function AddDocumentModal({
   setAddDocumentModalOpen?: (isOpen: boolean) => void;
 }) {
   const router = useRouter();
-  const plausible = usePlausible();
   const analytics = useAnalytics();
   const [uploading, setUploading] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined);
@@ -108,6 +117,15 @@ export function AddDocumentModal({
     isLoading,
     mutate: mutateGoogleDriveIntegration,
   } = useGoogleDriveStatus();
+
+  const [showGroupPermissions, setShowGroupPermissions] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<
+    {
+      documentId: string;
+      dataroomDocumentId: string;
+      fileName: string;
+    }[]
+  >([]);
   const teamId = teamInfo?.currentTeam?.id as string;
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [confirmDialogData, setConfirmDialogData] = useState<{
@@ -122,6 +140,53 @@ export function AddDocumentModal({
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
+
+  const addDocumentToDataroom = async ({
+    documentId,
+    folderPathName,
+  }: {
+    documentId: string;
+    folderPathName?: string;
+  }): Promise<Response | undefined> => {
+    try {
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            documentId: documentId,
+            folderPathName: folderPathName,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const { message } = await response.json();
+        toast.error(message);
+        return undefined;
+      }
+
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
+      );
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders/documents/${folderPathName}`,
+      );
+
+      toast.success("Document added to dataroom successfully! 🎉");
+      return response;
+    } catch (error) {
+      toast.error("Error adding document to dataroom.");
+      console.error(
+        "An error occurred while adding document to the dataroom: ",
+        error,
+      );
+      return undefined;
+    }
+  };
 
   const handleFileUpload = async (
     event: FormEvent<HTMLFormElement>,
@@ -204,12 +269,29 @@ export function AddDocumentModal({
         const document = await response.json();
 
         if (isDataroom && dataroomId) {
-          await addDocumentToDataroom({
+          const dataroomResponse = await addDocumentToDataroom({
             documentId: document.id,
             folderPathName: currentFolderPath?.join("/"),
           });
 
-          plausible("documentUploaded");
+          if (dataroomResponse?.ok) {
+            const dataroomDocument =
+              (await dataroomResponse.json()) as DataroomDocument & {
+                dataroom: { _count: { viewerGroups: number } };
+              };
+
+            if (dataroomDocument.dataroom._count.viewerGroups > 0) {
+              setShowGroupPermissions(true);
+              setUploadedFiles([
+                {
+                  documentId: document.id,
+                  dataroomDocumentId: dataroomDocument.id,
+                  fileName: document.name,
+                },
+              ]);
+            }
+          }
+
           analytics.capture("Document Added", {
             documentId: document.id,
             name: document.name,
@@ -230,8 +312,6 @@ export function AddDocumentModal({
         if (!newVersion) {
           toast.success("Document uploaded. Redirecting to document page...");
 
-          // track the event
-          plausible("documentUploaded");
           analytics.capture("Document Added", {
             documentId: document.id,
             name: document.name,
@@ -248,8 +328,6 @@ export function AddDocumentModal({
           // redirect to the document page
           router.push("/documents/" + document.id);
         } else {
-          // track the event
-          plausible("documentVersionUploaded");
           analytics.capture("Document Added", {
             documentId: document.id,
             name: document.name,
@@ -277,51 +355,6 @@ export function AddDocumentModal({
       setUploading(false);
       setIsOpen(false);
       setAddDocumentModalOpen && setAddDocumentModalOpen(false);
-    }
-  };
-
-  const addDocumentToDataroom = async ({
-    documentId,
-    folderPathName,
-  }: {
-    documentId: string;
-    folderPathName?: string;
-  }) => {
-    try {
-      const response = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            documentId: documentId,
-            folderPathName: folderPathName,
-          }),
-        },
-      );
-
-      if (!response.ok) {
-        const { message } = await response.json();
-        toast.error(message);
-        return;
-      }
-
-      mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
-      );
-      mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders/documents/${folderPathName}`,
-      );
-
-      toast.success("Document added to dataroom successfully! 🎉");
-    } catch (error) {
-      toast.error("Error adding document to dataroom.");
-      console.error(
-        "An error occurred while adding document to the dataroom: ",
-        error,
-      );
     }
   };
 
@@ -381,58 +414,73 @@ export function AddDocumentModal({
         },
       );
 
-      if (response) {
-        const document = await response.json();
+      if (!response.ok) {
+        const { error } = await response.json();
+        toast.error(error);
+        return;
+      }
 
-        if (isDataroom && dataroomId) {
-          await addDocumentToDataroom({
-            documentId: document.id,
-            folderPathName: currentFolderPath?.join("/"),
-          });
+      const document = await response.json();
 
-          plausible("documentUploaded");
-          plausible("notionDocumentUploaded");
-          analytics.capture("Document Added", {
-            documentId: document.id,
-            name: document.name,
-            numPages: document.numPages,
-            path: router.asPath,
-            type: "notion",
-            teamId: teamId,
-            dataroomId: dataroomId,
-            $set: {
-              teamId: teamId,
-              teamPlan: plan,
-            },
-          });
+      if (isDataroom && dataroomId) {
+        const dataroomResponse = await addDocumentToDataroom({
+          documentId: document.id,
+          folderPathName: currentFolderPath?.join("/"),
+        });
 
-          return;
+        if (dataroomResponse?.ok) {
+          const dataroomDocument =
+            (await dataroomResponse.json()) as DataroomDocument & {
+              dataroom: { _count: { viewerGroups: number } };
+            };
+
+          if (dataroomDocument.dataroom._count.viewerGroups > 0) {
+            setShowGroupPermissions(true);
+            setUploadedFiles([
+              {
+                documentId: document.id,
+                dataroomDocumentId: dataroomDocument.id,
+                fileName: document.name,
+              },
+            ]);
+          }
         }
 
-        if (!newVersion) {
-          toast.success(
-            "Notion Page processed. Redirecting to document page...",
-          );
-
-          // track the event
-          plausible("documentUploaded");
-          plausible("notionDocumentUploaded");
-          analytics.capture("Document Added", {
-            documentId: document.id,
-            name: document.name,
-            fileSize: null,
-            path: router.asPath,
-            type: "notion",
+        analytics.capture("Document Added", {
+          documentId: document.id,
+          name: document.name,
+          numPages: document.numPages,
+          path: router.asPath,
+          type: "notion",
+          teamId: teamId,
+          dataroomId: dataroomId,
+          $set: {
             teamId: teamId,
-            $set: {
-              teamId: teamId,
-              teamPlan: plan,
-            },
-          });
+            teamPlan: plan,
+          },
+        });
 
-          // redirect to the document page
-          router.push("/documents/" + document.id);
-        }
+        return;
+      }
+
+      if (!newVersion) {
+        toast.success("Notion Page processed. Redirecting to document page...");
+
+        analytics.capture("Document Added", {
+          documentId: document.id,
+          name: document.name,
+          fileSize: null,
+          path: router.asPath,
+          type: "notion",
+          teamId: teamId,
+          $set: {
+            teamId: teamId,
+            teamPlan: plan,
+          },
+        });
+
+        // redirect to the document page
+        router.push("/documents/" + document.id);
       }
     } catch (error) {
       setUploading(false);
@@ -668,9 +716,8 @@ export function AddDocumentModal({
                 <TabsTrigger value="notion">Notion Page</TabsTrigger>
               </TabsList>
             ) : (
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-1">
                 <TabsTrigger value="document">Document</TabsTrigger>
-                <TabsTrigger value="google-drive">Google Drive</TabsTrigger>
               </TabsList>
             )}
             <TabsContent value="document">
@@ -849,7 +896,6 @@ export function AddDocumentModal({
           </Tabs>
         </DialogContent>
       </Dialog>
-
       {confirmDialogData && (
         <ConfirmationDialog
           isOpen={showConfirmDialog}
@@ -866,6 +912,20 @@ export function AddDocumentModal({
           loading={uploading}
         />
       )}
+      {showGroupPermissions && dataroomId && (
+        <SetGroupPermissionsModal
+          open={showGroupPermissions}
+          setOpen={setShowGroupPermissions}
+          dataroomId={dataroomId}
+          uploadedFiles={uploadedFiles}
+          onComplete={() => {
+            setShowGroupPermissions(false);
+            setAddDocumentModalOpen?.(false);
+            setUploadedFiles([]);
+          }}
+          isAutoOpen
+        />
+      )}
     </>
   );
-};
+}

@@ -1,20 +1,23 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
-import { LinkAudienceType, LinkType } from "@prisma/client";
+import { LinkAudienceType, LinkPreset, LinkType } from "@prisma/client";
 import { RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import useSWR from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { useDomains } from "@/lib/swr/use-domains";
+import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
-import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
+import { convertDataUrlToFile, fetcher, uploadImage } from "@/lib/utils";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
@@ -42,6 +45,7 @@ import { ButtonTooltip } from "@/components/ui/tooltip";
 import { CustomFieldData } from "./custom-fields-panel";
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
+import TagSection from "./tags/tag-section";
 
 export const DEFAULT_LINK_PROPS = (
   linkType: LinkType,
@@ -78,11 +82,13 @@ export const DEFAULT_LINK_PROPS = (
   audienceType: groupId ? LinkAudienceType.GROUP : LinkAudienceType.GENERAL,
   groupId: groupId,
   customFields: [],
+  tags: [],
   enableConversation: false,
   enableUpload: false,
   isFileRequestOnly: false,
   uploadFolderId: null,
   uploadFolderName: "Home",
+  enableIndexFile: false,
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -116,11 +122,13 @@ export type DEFAULT_LINK_TYPE = {
   audienceType: LinkAudienceType;
   groupId: string | null;
   customFields: CustomFieldData[];
+  tags: string[];
   enableConversation: boolean;
   enableUpload: boolean;
   isFileRequestOnly: boolean;
   uploadFolderId: string | null;
   uploadFolderName: string;
+  enableIndexFile: boolean;
 };
 
 export default function LinkSheet({
@@ -141,6 +149,7 @@ export default function LinkSheet({
     id: string;
     groupId?: string;
   };
+
   const { domains } = useDomains();
 
   const {
@@ -149,13 +158,33 @@ export default function LinkSheet({
     mutate: mutateGroups,
   } = useDataroomGroups();
   const teamInfo = useTeam();
-  const { isFree, isDatarooms, isDataroomsPlus, isTrial } = usePlan();
+  const { isFree, isPro, isBusiness, isDatarooms, isDataroomsPlus, isTrial } =
+    usePlan();
+  const { limits } = useLimits();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(
     DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms),
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [currentPreset, setCurrentPreset] = useState<LinkPreset | null>(null);
+
+  const isPresetsAllowed =
+    (isPro && limits?.advancedLinkControlsOnPro) ||
+    isBusiness ||
+    isDatarooms ||
+    isDataroomsPlus;
+
+  // Presets
+  const { data: presets } = useSWR<LinkPreset[]>(
+    teamInfo?.currentTeam?.id
+      ? `/api/teams/${teamInfo.currentTeam.id}/presets`
+      : null,
+    fetcher,
+    {
+      dedupingInterval: 10000,
+    },
+  );
 
   useEffect(() => {
     setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms));
@@ -184,7 +213,48 @@ export default function LinkSheet({
     const { previewToken } = await response.json();
     const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}?previewToken=${previewToken}`;
     setIsLoading(false);
-    window.open(previewLink, "_blank");
+    const linkElement = document.createElement("a");
+    linkElement.href = previewLink;
+    linkElement.target = "_blank";
+    document.body.appendChild(linkElement);
+    linkElement.click();
+
+    setTimeout(() => {
+      document.body.removeChild(linkElement);
+    }, 100);
+  };
+
+  const applyPreset = (presetId: string) => {
+    const preset = presets?.find((p) => p.id === presetId);
+    if (!preset) return;
+
+    setData((prev) => {
+      return {
+        ...prev,
+        name: prev.name, // Keep existing name
+        domain: prev.domain, // Keep existing domain
+        slug: prev.slug, // Keep existing slug
+        emailProtected: preset.emailProtected ?? prev.emailProtected,
+        emailAuthenticated:
+          preset.emailAuthenticated ?? prev.emailAuthenticated,
+        allowList: preset.allowList || prev.allowList,
+        denyList: preset.denyList || prev.denyList,
+        password: preset.password || prev.password,
+        enableCustomMetatag:
+          preset.enableCustomMetaTag ?? prev.enableCustomMetatag,
+        metaTitle: preset.metaTitle || prev.metaTitle,
+        metaDescription: preset.metaDescription || prev.metaDescription,
+        metaImage: preset.metaImage || prev.metaImage,
+        metaFavicon: preset.metaFavicon || prev.metaFavicon,
+        allowDownload: preset.allowDownload || prev.allowDownload,
+        enableAgreement: preset.enableAgreement || prev.enableAgreement,
+        agreementId: preset.agreementId || prev.agreementId,
+        enableScreenshotProtection:
+          preset.enableScreenshotProtection || prev.enableScreenshotProtection,
+      };
+    });
+
+    setCurrentPreset(preset);
   };
 
   const handleSubmit = async (event: any, shouldPreview: boolean = false) => {
@@ -423,7 +493,6 @@ export default function LinkSheet({
                       <div className="space-y-6 pb-10 pt-2">
                         <div className="space-y-2">
                           <Label htmlFor="link-name">Link Name</Label>
-
                           <Input
                             type="text"
                             name="link-name"
@@ -444,6 +513,49 @@ export default function LinkSheet({
                             editLink={!!currentLink}
                           />
                         </div>
+                        <div className="space-y-2">
+                          <TagSection
+                            {...{ data, setData }}
+                            teamId={teamInfo?.currentTeam?.id as string}
+                          />
+                        </div>
+
+                        {/* Preset Selector - only show when creating a new link */}
+                        {!currentLink &&
+                          isPresetsAllowed &&
+                          presets &&
+                          presets.length > 0 && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="preset">Link Preset</Label>
+                                <Link
+                                  href="/settings/presets"
+                                  className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                >
+                                  Manage
+                                </Link>
+                              </div>
+                              <Select onValueChange={applyPreset}>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select a preset" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {presets.map((preset) => (
+                                    <SelectItem
+                                      key={preset.id}
+                                      value={preset.id}
+                                    >
+                                      {preset.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <p className="text-xs text-muted-foreground">
+                                Apply a preset to quickly configure link
+                                settings
+                              </p>
+                            </div>
+                          )}
 
                         <div className="relative flex items-center">
                           <Separator className="absolute bg-muted-foreground" />
@@ -460,6 +572,7 @@ export default function LinkSheet({
                           targetId={targetId}
                           linkType={linkType}
                           editLink={!!currentLink}
+                          currentPreset={currentPreset}
                         />
                       </div>
                     </TabsContent>
@@ -556,6 +669,49 @@ export default function LinkSheet({
                             editLink={!!currentLink}
                           />
                         </div>
+                        <div className="space-y-2">
+                          <TagSection
+                            {...{ data, setData }}
+                            teamId={teamInfo?.currentTeam?.id as string}
+                          />
+                        </div>
+
+                        {/* Preset Selector for Group links - only show when creating a new link */}
+                        {!currentLink &&
+                          isPresetsAllowed &&
+                          presets &&
+                          presets.length > 0 && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="preset">Link Preset</Label>
+                                <Link
+                                  href="/settings/presets"
+                                  className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                >
+                                  Manage
+                                </Link>
+                              </div>
+                              <Select onValueChange={applyPreset}>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select a preset" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {presets.map((preset) => (
+                                    <SelectItem
+                                      key={preset.id}
+                                      value={preset.id}
+                                    >
+                                      {preset.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <p className="text-xs text-muted-foreground">
+                                Apply a preset to quickly configure link
+                                settings
+                              </p>
+                            </div>
+                          )}
 
                         <div className="relative flex items-center">
                           <Separator className="absolute bg-muted-foreground" />
@@ -572,6 +728,7 @@ export default function LinkSheet({
                           targetId={targetId}
                           linkType={linkType}
                           editLink={!!currentLink}
+                          currentPreset={currentPreset}
                         />
                       </div>
                     </TabsContent>

@@ -21,6 +21,12 @@ export default function useDocuments() {
   const paginationParams =
     searchQuery || sortQuery ? `&page=${page}&limit=${pageSize}` : "";
 
+  const queryParts = [];
+  if (searchQuery) queryParts.push(`query=${searchQuery}`);
+  if (sortQuery) queryParts.push(`sort=${sortQuery}`);
+  if (paginationParams) queryParts.push(paginationParams.substring(1));
+  const queryString = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
+
   const { data, isValidating, error } = useSWR<{
     documents: DocumentWithLinksAndLinkCountAndViewCount[];
     pagination?: {
@@ -30,13 +36,7 @@ export default function useDocuments() {
       pageSize: number;
     };
   }>(
-    teamId &&
-      `/api/teams/${teamId}/documents?${
-        searchQuery ? `query=${searchQuery}` : ""
-      }${sortQuery ? `&sort=${sortQuery}` : ""}${paginationParams}`.replace(
-        /^\?&/,
-        "?",
-      ),
+    teamId && `/api/teams/${teamId}/documents${queryString}`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -62,7 +62,7 @@ export function useFolderDocuments({ name }: { name: string[] }) {
     DocumentWithLinksAndLinkCountAndViewCount[]
   >(
     teamInfo?.currentTeam?.id &&
-      name &&
+    name.length > 0 &&
       `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${name.join("/")}`,
     fetcher,
     {
@@ -87,15 +87,21 @@ export type FolderWithCount = Folder & {
 
 export function useFolder({ name }: { name: string[] }) {
   const teamInfo = useTeam();
+  const router = useRouter();
 
   const { data: folders, error } = useSWR<FolderWithCount[]>(
     teamInfo?.currentTeam?.id &&
-      name &&
+    name.length > 0 &&
       `/api/teams/${teamInfo?.currentTeam?.id}/folders/${name.join("/")}`,
     fetcher,
     {
       revalidateOnFocus: false,
       dedupingInterval: 30000,
+      onError: (err) => {
+        if (err.status === 404) {
+          router.replace("/documents");
+        }
+      },
     },
   );
 
