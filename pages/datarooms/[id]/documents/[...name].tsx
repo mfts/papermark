@@ -3,15 +3,22 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { ArrowUpDownIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
+import {
+  ArrowUpDownIcon,
+  FolderPlusIcon,
+  LibraryIcon,
+  PlusIcon,
+} from "lucide-react";
+
+import { useDataroom, useDataroomItems } from "@/lib/swr/use-dataroom";
 
 import DownloadDataroomButton from "@/components/datarooms/actions/download-dataroom";
 import GenerateIndexButton from "@/components/datarooms/actions/generate-index-button";
-import { BreadcrumbComponent } from "@/components/datarooms/dataroom-breadcrumb";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomItemsList } from "@/components/datarooms/dataroom-items-list";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import { SidebarFolderTree } from "@/components/datarooms/folders";
+import { SelectDocumentsModal } from "@/components/datarooms/select-documents-modal";
 import { DataroomSortableList } from "@/components/datarooms/sortable/sortable-list";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { LoadingDocuments } from "@/components/documents/loading-document";
@@ -19,8 +26,6 @@ import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-
-import { useDataroom, useDataroomItems } from "@/lib/swr/use-dataroom";
 
 export default function Documents() {
   const router = useRouter();
@@ -34,6 +39,8 @@ export default function Documents() {
   const teamInfo = useTeam();
 
   const [isReordering, setIsReordering] = useState<boolean>(false);
+  const [selectDocumentsModalOpen, setSelectDocumentsModalOpen] =
+    useState<boolean>(false);
 
   return (
     <AppLayout>
@@ -74,6 +81,18 @@ export default function Documents() {
                 <span>Add Document</span>
               </Button>
             </AddDocumentModal>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="group flex items-center justify-start gap-x-3 px-3 text-left"
+              onClick={() => setSelectDocumentsModalOpen(true)}
+              title="Add documents from All documents"
+            >
+              <LibraryIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+              <span>From All Documents</span>
+            </Button>
+
             <AddFolderModal isDataroom={true} dataroomId={dataroom?.id} key={2}>
               <Button
                 size="sm"
@@ -113,7 +132,7 @@ export default function Documents() {
           <div className="space-y-4 md:col-span-3">
             <section id="documents-header-count" className="min-h-8" />
 
-            {isLoading ? <LoadingDocuments count={3} /> : null}
+            {isLoading || !dataroom ? <LoadingDocuments count={3} /> : null}
 
             {isReordering ? (
               <DataroomSortableList
@@ -135,6 +154,14 @@ export default function Documents() {
             )}
           </div>
         </div>
+
+        {selectDocumentsModalOpen && (
+          <SelectDocumentsModal
+            open={selectDocumentsModalOpen}
+            setOpen={setSelectDocumentsModalOpen}
+            dataroomId={dataroom?.id!}
+          />
+        )}
       </div>
     </AppLayout>
   );
