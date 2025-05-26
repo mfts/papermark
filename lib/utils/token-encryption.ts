@@ -17,7 +17,7 @@ export function encryptToken(token: string): string {
     // Generate encryption key from environment variable
     const encryptedKey: string = crypto
         .createHash("sha256")
-        .update(String(process.env.NEXT_PRIVATE_TOKEN_ENCRYPTION_KEY || process.env.NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY))
+        .update(String(process.env.NEXT_PRIVATE_TOKEN_ENCRYPTION_KEY))
         .digest("base64")
         .substring(0, 32);
 
@@ -40,7 +40,7 @@ export function decryptToken(encryptedToken: string): string {
     // Generate encryption key from environment variable
     const encryptedKey: string = crypto
         .createHash("sha256")
-        .update(String(process.env.NEXT_PRIVATE_TOKEN_ENCRYPTION_KEY || process.env.NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY))
+        .update(String(process.env.NEXT_PRIVATE_TOKEN_ENCRYPTION_KEY))
         .digest("base64")
         .substring(0, 32);
 

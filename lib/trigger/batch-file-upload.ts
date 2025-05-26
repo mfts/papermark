@@ -223,9 +223,6 @@ export const batchFileUpload = task({
                                 fileId: failedFileId || "unknown"
                             });
 
-                            failedUploads++;
-                            metadata.set("failedUploads", failedUploads);
-
                             // Update file status to failed if we found the file
                             if (failedFileId) {
                                 const currentFileProgress = fileProgress[failedFileId];
@@ -425,7 +422,6 @@ export const batchFileUpload = task({
                     logger.error("Error processing batch:", { error: error instanceof Error ? error.message : String(error) });
                     failedUploads += batch.length;
                     metadata.set("failedUploads", failedUploads);
-
                     // Mark all files in the batch as failed
                     batch.forEach(file => {
                         fileProgress[file.id] = {
@@ -547,11 +543,12 @@ export const batchFileUpload = task({
 
         // Ensure our success/failure counts match the file status counts
         if (fileStatusCounts.success !== successfulUploads || fileStatusCounts.failed !== failedUploads) {
-            logger.info("Updating final counts to match file status", {
+            logger.info("Correcting final counts to match actual file status (fixes any double-counting)", {
                 oldSuccessful: successfulUploads,
                 newSuccessful: fileStatusCounts.success,
                 oldFailed: failedUploads,
-                newFailed: fileStatusCounts.failed
+                newFailed: fileStatusCounts.failed,
+                totalFiles: files.length
             });
 
             successfulUploads = fileStatusCounts.success;

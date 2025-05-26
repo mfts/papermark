@@ -75,7 +75,7 @@ export function useGoogleDriveUpload() {
     const [jobId, setJobId] = useState<string | null>(null);
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const lastMetadataUpdate = useRef<number>(0);
-    const mutateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const mutateTimeoutRefs = useRef<Map<string, NodeJS.Timeout>>(new Map());
     const toastShown = useRef<{ [key: string]: boolean }>({});
     const uploadInProgress = useRef<boolean>(false);
 
@@ -88,7 +88,7 @@ export function useGoogleDriveUpload() {
 
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.jobId && data.accessToken) {
+                    if (data.hasActiveSession && data.jobId && data.accessToken) {
                         setJobId(data.jobId);
                         setAccessToken(data.accessToken);
                         setIsUploading(true);
@@ -103,10 +103,10 @@ export function useGoogleDriveUpload() {
         fetchExistingSession();
 
         return () => {
-            if (mutateTimeoutRef.current) {
-                clearTimeout(mutateTimeoutRef.current);
-                mutateTimeoutRef.current = null;
-            }
+            mutateTimeoutRefs.current.forEach((timeout) => {
+                clearTimeout(timeout);
+            });
+            mutateTimeoutRefs.current.clear();
         };
     }, [jobId, accessToken]);
 
@@ -147,16 +147,17 @@ export function useGoogleDriveUpload() {
 
     // Debounced mutate function to prevent excessive API calls
     const debouncedMutate = useCallback((key: string) => {
-        if (mutateTimeoutRef.current) {
-            clearTimeout(mutateTimeoutRef.current);
+        const existingTimeout = mutateTimeoutRefs.current.get(key);
+        if (existingTimeout) {
+            clearTimeout(existingTimeout);
         }
-
-        mutateTimeoutRef.current = setTimeout(() => {
+        const newTimeout = setTimeout(() => {
             mutate(key).catch((error) => {
                 console.error("Error mutating data", error);
             });
-            mutateTimeoutRef.current = null;
+            mutateTimeoutRefs.current.delete(key);
         }, 300);
+        mutateTimeoutRefs.current.set(key, newTimeout);
     }, []);
 
 

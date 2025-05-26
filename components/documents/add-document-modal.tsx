@@ -489,8 +489,15 @@ export function AddDocumentModal({
           const error = await response.json();
           if (error.requiresReconnect) {
             toast.error("Google Drive connection expired. Please reconnect.");
+            const fallbackProcessedFiles: ProcessedFile = processedFiles || {
+              folderId: "root",
+              folderName: "Root",
+              parentFolderId: null,
+              files: rootFolderFiles,
+              children: [],
+            };
             return {
-              processedFiles: processedFiles!,
+              processedFiles: fallbackProcessedFiles,
               files: [...rootFolderFiles, ...files],
             };
           }
@@ -503,6 +510,17 @@ export function AddDocumentModal({
       } catch (error) {
         console.error("Error processing Google Drive file:", error);
         toast.error("Failed to process file from Google Drive");
+        const fallbackProcessedFiles: ProcessedFile = processedFiles || {
+          folderId: "root",
+          folderName: "Root",
+          parentFolderId: null,
+          files: rootFolderFiles,
+          children: [],
+        };
+        return {
+          processedFiles: fallbackProcessedFiles,
+          files: [...rootFolderFiles, ...files],
+        };
       }
     }
     if (folderIds.length === 0) {

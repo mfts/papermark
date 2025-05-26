@@ -84,7 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const now = new Date();
         const expiresAt = new Date(now.getTime() + tokens.expires_in * 1000);
-        const refreshTokenExpiresAt = new Date(now.getTime() + tokens.refresh_token_expires_in * 1000);
+        const refreshTokenExpiresAt = tokens.refresh_token_expires_in ? new Date(now.getTime() + tokens.refresh_token_expires_in * 1000) : new Date("9999-12-31"); // effectively “no expiry”
 
         await prisma.googleDriveIntegration.upsert({
             where: { userId: user.id },

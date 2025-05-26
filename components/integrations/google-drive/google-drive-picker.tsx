@@ -1,10 +1,8 @@
-"use client";
+import { Fragment, useEffect, useRef, useState } from "react";
 
-import { useEffect, useState } from "react";
 
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
 
 declare const gapi: any; // Declare gapi to avoid TypeScript errors
@@ -51,7 +49,7 @@ export default function GoogleDrivePicker({
   const [isLoading, setIsLoading] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   const [isPickerLoaded, setIsPickerLoaded] = useState(false);
-  let picker: any;
+  const pickerRef = useRef<any>(null);
   useEffect(() => {
     // Load the Google API script
     const loadGoogleApi = () => {
@@ -67,13 +65,15 @@ export default function GoogleDrivePicker({
           reject(new Error("Failed to load Google API script"));
         };
         document.body.appendChild(script);
-        document.body.style.overflow = "hidden";
       });
     };
 
     loadGoogleApi().catch((error) => {
       handleError("Failed to load Google API", error);
     });
+    return () => {
+      document.body.style.overflow = "auto";
+    };
   }, []);
 
   const handleSelectFile = () => {
@@ -126,7 +126,7 @@ export default function GoogleDrivePicker({
         .setIncludeFolders(true)
         .setSelectFolderEnabled(true);
 
-      picker = new google.picker.PickerBuilder()
+      pickerRef.current = new google.picker.PickerBuilder()
         .addView(docsView)
         .addView(foldersView)
         .setOAuthToken(accessToken)
@@ -137,7 +137,8 @@ export default function GoogleDrivePicker({
         .setTitle("Select a file from Google Drive")
         .build();
 
-      picker.setVisible(true);
+      document.body.style.overflow = "hidden";
+      pickerRef.current.setVisible(true);
     } catch (error) {
       handleError("Failed to create Google Picker", error);
     }
@@ -146,6 +147,7 @@ export default function GoogleDrivePicker({
   const pickerCallback = async (data: any) => {
     if (!data || !data[google.picker.Response.ACTION]) {
       setIsLoading(false);
+      document.body.style.overflow = "auto";
       return;
     }
 
@@ -164,6 +166,8 @@ export default function GoogleDrivePicker({
             `Google Picker error: ${error.message || "Unknown error"}`,
           );
         }
+      } else {
+        document.body.style.overflow = "auto";
       }
       setIsLoading(false);
       return;
@@ -188,8 +192,8 @@ export default function GoogleDrivePicker({
     if (onError) onError(error || new Error(message));
     document.body.style.overflow = "auto";
     mutate();
-    if (picker) {
-      picker.dispose();
+    if (pickerRef.current) {
+      pickerRef.current.dispose();
     }
   };
 
@@ -200,15 +204,15 @@ export default function GoogleDrivePicker({
       className="mt-6 w-full lg:w-1/2"
     >
       {isLoading ? (
-        <>
+        <Fragment>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Loading Google Drive...
-        </>
+        </Fragment>
       ) : !isScriptLoaded ? (
-        <>
+        <Fragment>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Initializing...
-        </>
+        </Fragment>
       ) : (
         `Select ${multiple ? "files" : "file"} from Google Drive`
       )}

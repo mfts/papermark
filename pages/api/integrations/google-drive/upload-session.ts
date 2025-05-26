@@ -24,7 +24,10 @@ export default async function handler(
                 const sessionToken = req.cookies.gdrive_upload_session;
 
                 if (!sessionToken) {
-                    return res.status(404).json({ error: "No active upload session" });
+                    return res.status(200).json({
+                        hasActiveSession: false,
+                        reason: "No session token found"
+                    });
                 }
 
                 const uploadSession = await getGDriveUploadSession(sessionToken);
@@ -35,16 +38,27 @@ export default async function handler(
                         "Set-Cookie",
                         `gdrive_upload_session=; Path=/; HttpOnly; Max-Age=0`
                     );
-                    return res.status(404).json({ error: "Session expired or invalid" });
+                    return res.status(200).json({
+                        hasActiveSession: false,
+                        reason: "Session expired or invalid"
+                    });
                 }
 
                 // Make sure the session belongs to the current user
                 if (uploadSession.userId !== userId) {
-                    return res.status(403).json({ error: "Unauthorized session access" });
+                    res.setHeader(
+                        "Set-Cookie",
+                        `gdrive_upload_session=; Path=/; HttpOnly; Max-Age=0`
+                    );
+                    return res.status(200).json({
+                        hasActiveSession: false,
+                        reason: "Unauthorized session access"
+                    });
                 }
 
                 // Return the necessary data to continue with the upload
                 return res.status(200).json({
+                    hasActiveSession: true,
                     jobId: uploadSession.jobId,
                     accessToken: uploadSession.accessToken,
                     teamId: uploadSession.teamId

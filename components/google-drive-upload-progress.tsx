@@ -73,9 +73,7 @@ export function GoogleDriveUploadProgress({
   };
 
   useEffect(() => {
-    if (open) {
-      setIsOpen(true);
-    }
+    setIsOpen(open);
   }, [open]);
 
   useEffect(() => {
@@ -566,7 +564,9 @@ export function GoogleDriveUploadProgress({
                         </TooltipProvider>
                       ) : (
                         <span className="ml-2 text-sm text-gray-500">
-                          {upload.progress.toFixed(0)}%
+                          {Number.isFinite(upload.progress)
+                            ? `${upload.progress.toFixed(0)}%`
+                            : "--"}
                         </span>
                       )}
                     </div>

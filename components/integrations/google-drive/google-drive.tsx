@@ -63,7 +63,10 @@ export const scope = [
 ];
 
 // Custom hook for handling URL parameters
-const useUrlParameters = (setIsConnected: (value: boolean) => void) => {
+const useUrlParameters = (
+  setIsConnected: (value: boolean) => void,
+  mutate: () => void,
+) => {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -73,6 +76,7 @@ const useUrlParameters = (setIsConnected: (value: boolean) => void) => {
     if (success === "true") {
       toast.success("Successfully connected to Google Drive");
       setIsConnected(true);
+      mutate();
     } else if (error) {
       const errorMessages: Record<string, string> = {
         no_code_or_state:
@@ -104,7 +108,7 @@ const useUrlParameters = (setIsConnected: (value: boolean) => void) => {
     if (success === "true" || error) {
       removeSuccessAndErrorParams();
     }
-  }, [searchParams, setIsConnected]);
+  }, [searchParams, setIsConnected, mutate]);
 };
 
 export default function GoogleDriveIntegration({
@@ -113,15 +117,16 @@ export default function GoogleDriveIntegration({
   className?: string;
 }) {
   const { data: session } = useSession();
-  const { isConnected, setIsConnected, isLoading, setIsLoading } =
+  const { isConnected, setIsConnected, isLoading, setIsLoading, mutate } =
     useGoogleDriveStatus();
 
-  useUrlParameters(setIsConnected);
+  useUrlParameters(setIsConnected, mutate);
 
   const handleConnect = useCallback(async () => {
     setIsLoading(true);
     if (!session) {
       toast.error("You must be logged in to connect Google Drive");
+      setIsLoading(false);
       return;
     }
 
@@ -132,6 +137,7 @@ export default function GoogleDriveIntegration({
       toast.error(
         "Unable to connect to Google Drive due to missing configuration. Please contact support if this issue persists.",
       );
+      setIsLoading(false);
       return;
     }
 
@@ -153,6 +159,7 @@ export default function GoogleDriveIntegration({
         "Something went wrong during the connection process. Please try again.",
       );
       console.error("Failed to generate security token");
+      setIsLoading(false);
       return;
     }
 
@@ -180,6 +187,7 @@ export default function GoogleDriveIntegration({
   const handleDisconnect = useCallback(async () => {
     if (!session) {
       toast.error("You must be logged in to disconnect Google Drive");
+      setIsLoading(false);
       return;
     }
 
@@ -199,6 +207,7 @@ export default function GoogleDriveIntegration({
       }
 
       setIsConnected(false);
+      mutate();
       toast.success("Successfully disconnected Google Drive");
     } catch (error) {
       console.error("Error disconnecting Google Drive:", error);
@@ -206,7 +215,7 @@ export default function GoogleDriveIntegration({
     } finally {
       setIsLoading(false);
     }
-  }, [session, setIsConnected, setIsLoading]);
+  }, [session, setIsConnected, setIsLoading, mutate]);
 
   return (
     <Card className="p-6">

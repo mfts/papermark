@@ -251,20 +251,21 @@ export async function processAndUploadFiles(
             // Convert stream to buffer
             let buffer: Buffer;
             if (stream && typeof stream.pipe === 'function') {
-                // If it's a Node.js stream
+                // If it's a Node.js stream, read it properly
                 buffer = await new Promise<Buffer>((resolve, reject) => {
                     const chunks: Buffer[] = [];
                     stream.on('data', (chunk: Buffer) => chunks.push(chunk));
                     stream.on('end', () => resolve(Buffer.concat(chunks)));
                     stream.on('error', reject);
                 });
+            } else if (Buffer.isBuffer(stream)) {
+                buffer = stream;
             } else if (stream && typeof stream === 'object') {
-                // If it's already a buffer or array-like object
-                if (stream._readableState && stream._readableState.buffer) {
-                    // Handle PassThrough stream with buffer
-                    buffer = Buffer.concat(stream._readableState.buffer);
-                } else {
+                // Try to convert other object types to Buffer
+                try {
                     buffer = Buffer.from(stream);
+                } catch (error) {
+                    throw new Error('Unable to convert stream data to Buffer');
                 }
             } else {
                 throw new Error('Invalid stream format received from Google Drive');

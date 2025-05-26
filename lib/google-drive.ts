@@ -9,13 +9,9 @@ interface TokenResponse {
 
 export class GoogleDriveClient {
     private static instance: GoogleDriveClient;
-    private auth: any;
 
     private constructor() {
-        this.auth = new google.auth.OAuth2(
-            process.env.GOOGLE_CLIENT_ID,
-            process.env.GOOGLE_CLIENT_SECRET
-        );
+        // No shared auth instance - create per user
     }
 
     // Get the instance of the GoogleDriveClient
@@ -58,6 +54,7 @@ export class GoogleDriveClient {
         const integration = await prisma.googleDriveIntegration.findUnique({
             where: { userId },
         });
+        
         if (!integration) {
             throw new Error("Google Drive not connected");
         }
@@ -91,13 +88,16 @@ export class GoogleDriveClient {
             }
         }
 
-        // Set credentials and return drive client
-        this.auth.setCredentials({
+        const userAuth = new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET
+        );
+        userAuth.setCredentials({
             access_token: integration.accessToken,
             refresh_token: integration.refreshToken,
         });
 
-        return google.drive({ version: 'v3', auth: this.auth });
+        return google.drive({ version: 'v3', auth: userAuth });
     }
 
     // Function to list files with improvements
@@ -118,8 +118,11 @@ export class GoogleDriveClient {
 
         // Function to process a folder and its contents
         const processFolder = async (currentFolderId: string) => {
-            let nextPageToken;
+            let nextPageToken: string | undefined;
             let response: any;
+            let retryCount = 0;
+            const maxRetries = 3;
+            const baseDelay = 1000;
 
             do {
                 try {
@@ -130,6 +133,7 @@ export class GoogleDriveClient {
                         orderBy: 'modifiedTime desc',
                         pageToken: nextPageToken,
                     });
+                    retryCount = 0;
 
                     // Process each item in the current folder
                     const folderPromises = response.data.files.map(async (item: any) => {
@@ -165,9 +169,15 @@ export class GoogleDriveClient {
 
                     nextPageToken = response.data.nextPageToken;
                 } catch (error) {
-                    // Implement exponential backoff and retry logic here
-                    console.error('Error fetching files:', error);
-                    // Retry logic with exponential backoff
+                    console.error(`Error fetching files for folder ${currentFolderId}:`, error);
+                    retryCount++;
+                    if (retryCount >= maxRetries) {
+                        console.error(`Max retries (${maxRetries}) exceeded for folder ${currentFolderId}. Skipping remaining pages.`);
+                        break;
+                    }
+                    const delay = baseDelay * Math.pow(2, retryCount - 1);
+                    console.log(`Retrying in ${delay}ms... (attempt ${retryCount}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
                 }
             } while (nextPageToken);
         };

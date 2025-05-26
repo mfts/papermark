@@ -41,6 +41,9 @@ export function resumableUpload({
 }: ResumableUploadParams) {
   return new Promise<{ upload: tus.Upload; complete: Promise<UploadResult> }>(
     (resolve, reject) => {
+      if (!(file instanceof File) && !fileName) {
+        throw new Error("fileName is required!");
+      }
       let completeResolve: (
         value: UploadResult | PromiseLike<UploadResult>,
       ) => void;

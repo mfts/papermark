@@ -46,7 +46,7 @@ export async function findFolderRecord({
     logger.info("Finding folder record", { name, teamId, parentId, dataroomId, path });
     if (dataroomId) {
         return prisma.dataroomFolder.findUnique({
-            where: { dataroomId_path: { dataroomId, path: path ?? "" }, parentId: parentId ?? null, name: name }
+            where: { dataroomId_path: { dataroomId, path: path ?? "" } }
         });
     } else {
         return prisma.folder.findFirst({ where: { name, teamId, parentId: parentId ?? null } });
