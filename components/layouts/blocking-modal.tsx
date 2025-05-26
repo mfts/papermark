@@ -5,7 +5,7 @@ import { useTeam } from "@/context/team-context";
 import { TeamContextType } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { InfoIcon, ShieldAlertIcon } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import { useGetTeam } from "@/lib/swr/use-team";
@@ -20,10 +20,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { AddTeamModal } from "../teams/add-team-modal";
-import { Button } from "../ui/button";
 
 export const BlockingModal = () => {
   const { isFree, isTrial } = usePlan();
@@ -40,17 +40,29 @@ export const BlockingModal = () => {
   const userTeam = teams?.find((t) => t.id !== team?.id);
   const multipleUsers = team?.users?.length && team?.users?.length > 1;
 
-  const shouldShowBanner = isFree && !isTrial && isAdmin && multipleUsers;
+  // const shouldShowBanner = isFree && !isTrial && isAdmin && multipleUsers;
   const [showModal, setShowModal] = useState(false);
 
+  // Check if current user is blocked due to trial expiration
+  const currentUserTeam = team?.users.find(
+    (user) => user.userId === currentUserId,
+  );
+
+  const isBlockedDueToTrial =
+    currentUserTeam?.status === "BLOCKED_TRIAL_EXPIRED";
+
   const shouldShowModal =
-    isFree && !isTrial && !isAdmin && multipleUsers && showModal;
+    (isFree && !isTrial && !isAdmin && multipleUsers && showModal) ||
+    isBlockedDueToTrial;
 
   useEffect(() => {
-    if (isFree && !isTrial && !isAdmin && multipleUsers) {
+    if (
+      (isFree && !isTrial && !isAdmin && multipleUsers) ||
+      isBlockedDueToTrial
+    ) {
       setShowModal(true);
     }
-  }, [isFree, isTrial, isAdmin, multipleUsers]);
+  }, [isFree, isTrial, isAdmin, multipleUsers, isBlockedDueToTrial]);
 
   useEffect(() => {
     if (shouldShowModal) {
@@ -102,7 +114,7 @@ export const BlockingModal = () => {
 
   return (
     <>
-      <div className="flex w-full px-4">
+      {/* <div className="flex w-full px-4">
         {shouldShowBanner && (
           <div className="flex w-full items-center gap-3 rounded-md border border-yellow-200 bg-yellow-50 p-4 text-sm dark:border-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-100">
             <div className="flex-shrink-0">
@@ -118,19 +130,23 @@ export const BlockingModal = () => {
               </p>
             </div>
             <UpgradePlanModal
-              clickedPlan={PlanEnum.DataRooms}
+              clickedPlan={PlanEnum.Pro}
               trigger="trial_end_blocking_modal"
             >
               <Button type="button" variant="orange">
                 Upgrade
               </Button>
             </UpgradePlanModal>
+            <Button type="button" variant="outline">
+              Dismiss
+            </Button>
           </div>
         )}
-      </div>
+      </div> */}
       <AlertDialog open={!!shouldShowModal} onOpenChange={setShowModal}>
         <AlertDialogContent
-          className="w-full max-w-md"
+          className="w-full max-w-lg"
+          overlayClassName="backdrop-blur"
           onContextMenu={(e) => e.preventDefault()}
         >
           <AlertDialogHeader className="flex flex-col items-center text-center">
@@ -140,48 +156,56 @@ export const BlockingModal = () => {
             <AlertDialogTitle className="text-2xl font-semibold">
               Account Access Limited
             </AlertDialogTitle>
-            <AlertDialogDescription className="mt-2 text-muted-foreground">
-              Your team is now on a free solo plan. You no longer have access to
-              this workspace.
-            </AlertDialogDescription>
-            <AlertDialogDescription className="my-2 text-muted-foreground">
-              {userTeam ? (
-                <>
-                  Switch to{" "}
-                  <Button
-                    variant="link"
-                    className="p-0 font-bold text-primary"
-                    onClick={handleSwitchTeam}
-                  >
-                    {userTeam.name}
-                  </Button>{" "}
-                  to continue using the platform.
-                </>
-              ) : (
-                "Create a new team to continue using the platform."
-              )}
+            <AlertDialogDescription className="mt-2 space-y-2 text-muted-foreground">
+              <div>
+                Your team is now on a free solo plan. Your access to this team
+                has been limited.
+              </div>
+              <div>
+                Contact your team owner, upgrade the team or{" "}
+                {userTeam ? (
+                  <span>
+                    switch to another team to continue using the platform.
+                  </span>
+                ) : (
+                  <span>create a new team to continue using the platform.</span>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
+            <Button
+              variant="link"
+              className="w-full sm:w-auto"
+              onClick={() => signOut()}
+            >
+              Log out
+            </Button>
             <UpgradePlanModal
-              clickedPlan={PlanEnum.DataRooms}
+              clickedPlan={PlanEnum.Pro}
               trigger="trial_end_blocking_modal_for_team_member"
             >
-              <Button
-                className="w-full sm:w-auto"
-                variant="outline"
-                type="button"
-              >
+              <Button className="w-full sm:w-auto" type="button">
                 Upgrade
               </Button>
             </UpgradePlanModal>
             {userTeam ? (
-              <Button className="w-full sm:w-auto" onClick={handleSwitchTeam}>
-                Switch to &quot;{userTeam.name}&quot;
+              <Button
+                variant="outline"
+                className="w-full gap-0 sm:w-auto"
+                onClick={handleSwitchTeam}
+              >
+                Switch to &quot;
+                <span className="w-[15ch] max-w-fit truncate">
+                  {userTeam.name}
+                </span>
+                &quot;
               </Button>
             ) : (
               <AddTeamModal setCurrentTeam={setCurrentTeam}>
-                <Button className="w-full sm:w-auto">Create New Team</Button>
+                <Button variant="outline" className="w-full sm:w-auto">
+                  Create New Team
+                </Button>
               </AddTeamModal>
             )}
           </AlertDialogFooter>

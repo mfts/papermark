@@ -52,10 +52,8 @@ export default function Billing() {
   const router = useRouter();
 
   const getUserDocumentCount = (userId: string) => {
-    const documents = team?.documents.filter(
-      (document) => document.owner?.id === userId,
-    );
-    return documents?.length;
+    return team?.users.find((user) => user.userId === userId)?.user._count
+      .documents;
   };
 
   const isCurrentUser = (userId: string) => {
@@ -302,9 +300,16 @@ export default function Billing() {
                   </div>
                 </div>
                 <div className="flex items-center gap-12">
-                  <span className="text-sm capitalize text-foreground">
-                    {member.role.toLowerCase()}
-                  </span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-sm capitalize text-foreground">
+                      {member.role.toLowerCase()}
+                    </span>
+                    {member.status === "BLOCKED_TRIAL_EXPIRED" && (
+                      <span className="text-xs font-medium text-red-500">
+                        Blocked (Trial Expired)
+                      </span>
+                    )}
+                  </div>
                   {leavingUserId === member.userId ? (
                     <span className="text-xs">leaving...</span>
                   ) : (
