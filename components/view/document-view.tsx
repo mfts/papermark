@@ -62,6 +62,7 @@ export default function DocumentView({
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
+  logoOnAccessForm,
   isEmbedded,
 }: {
   link: LinkWithDocument;
@@ -83,6 +84,7 @@ export default function DocumentView({
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
   isEmbedded?: boolean;
+  logoOnAccessForm?: boolean;
 }) {
   const {
     document,
@@ -262,6 +264,7 @@ export default function DocumentView({
         disableEditEmail={disableEditEmail}
         useCustomAccessForm={useCustomAccessForm}
         customFields={link.customFields}
+        logoOnAccessForm={logoOnAccessForm}
       />
     );
   }

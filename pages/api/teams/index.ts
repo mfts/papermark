@@ -34,6 +34,7 @@ export default async function handle(
               name: true,
               plan: true,
               createdAt: true,
+              enableExcelAdvancedMode: true,
             },
           },
         },
@@ -66,6 +67,7 @@ export default async function handle(
             name: true,
             plan: true,
             createdAt: true,
+            enableExcelAdvancedMode: true,
           },
         });
         teams.push(defaultTeam);

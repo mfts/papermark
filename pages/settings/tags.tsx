@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import {
@@ -237,8 +237,8 @@ export default function TagSetting() {
                 {availableTags && !loadingTags ? (
                   availableTags.map((tag) => {
                     return (
-                      <>
-                        <TableRow key={tag.id} className="group/row">
+                      <Fragment key={tag.id}>
+                        <TableRow className="group/row">
                           {/* Name */}
                           <TableCell>
                             <div className="flex items-center overflow-visible sm:space-x-3">
@@ -314,7 +314,7 @@ export default function TagSetting() {
                             </DropdownMenu>
                           </TableCell>
                         </TableRow>
-                      </>
+                      </Fragment>
                     );
                   })
                 ) : (

@@ -119,6 +119,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             teamId === "clup33by90000oewh4rfvp2eg" ||
             teamId === "cm76hfyvy0002q623hmen99pf" ||
             teamId === "cm9ztf0s70005js04i689gefn",
+          logoOnAccessForm:
+            teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
         revalidate: 10,
       };
@@ -188,6 +191,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             teamId === "clup33by90000oewh4rfvp2eg" ||
             teamId === "cm76hfyvy0002q623hmen99pf" ||
             teamId === "cm9ztf0s70005js04i689gefn",
+          logoOnAccessForm:
+            teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
         revalidate: 10,
       };
@@ -212,6 +218,7 @@ export default function ViewPage({
   showAccountCreationSlide,
   useAdvancedExcelViewer,
   useCustomAccessForm,
+  logoOnAccessForm,
   error,
 }: {
   linkData: DocumentLinkData | DataroomLinkData;
@@ -231,6 +238,7 @@ export default function ViewPage({
   showAccountCreationSlide: boolean;
   useAdvancedExcelViewer: boolean;
   useCustomAccessForm: boolean;
+  logoOnAccessForm: boolean;
   error?: boolean;
 }) {
   const router = useRouter();
@@ -354,6 +362,7 @@ export default function ViewPage({
           useCustomAccessForm={useCustomAccessForm}
           token={storedToken}
           verifiedEmail={verifiedEmail}
+          logoOnAccessForm={logoOnAccessForm}
         />
       </>
     );
@@ -434,6 +443,7 @@ export default function ViewPage({
           verifiedEmail={verifiedEmail}
           previewToken={previewToken}
           preview={!!preview}
+          logoOnAccessForm={logoOnAccessForm}
         />
       </>
     );

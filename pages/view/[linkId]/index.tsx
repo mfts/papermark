@@ -55,6 +55,7 @@ export interface ViewPageProps {
   showAccountCreationSlide: boolean;
   useAdvancedExcelViewer: boolean;
   useCustomAccessForm: boolean;
+  logoOnAccessForm: boolean;
 }
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
@@ -146,6 +147,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             teamId === "clup33by90000oewh4rfvp2eg" ||
             teamId === "cm76hfyvy0002q623hmen99pf" ||
             teamId === "cm9ztf0s70005js04i689gefn",
+          logoOnAccessForm:
+            teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
         revalidate: brand || recordMap ? 10 : false,
       };
@@ -215,6 +219,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             teamId === "clup33by90000oewh4rfvp2eg" ||
             teamId === "cm76hfyvy0002q623hmen99pf" ||
             teamId === "cm9ztf0s70005js04i689gefn",
+          logoOnAccessForm:
+            teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
         revalidate: 10,
       };
@@ -240,6 +247,7 @@ export default function ViewPage({
   showAccountCreationSlide,
   useAdvancedExcelViewer,
   useCustomAccessForm,
+  logoOnAccessForm,
   error,
   notionError,
 }: ViewPageProps & { error?: boolean; notionError?: boolean }) {
@@ -371,6 +379,7 @@ export default function ViewPage({
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
+          logoOnAccessForm={logoOnAccessForm}
           token={storedToken}
           verifiedEmail={verifiedEmail}
         />
@@ -450,6 +459,7 @@ export default function ViewPage({
           brand={brand}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
+          logoOnAccessForm={logoOnAccessForm}
           token={storedToken}
           previewToken={previewToken}
           preview={!!preview}

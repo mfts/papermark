@@ -1,6 +1,7 @@
 import { LinkWithViews } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type LinkSetting = {
   key: keyof LinkWithViews;
@@ -85,35 +86,41 @@ export default function LinkActiveControls({
   );
 
   return (
-    <div className="p-3">
-      <div className="mb-2 text-sm font-medium">Active Link Controls</div>
-      <ul className="space-y-1 text-sm">
-        {activeSettings.length > 0 ? (
-          activeSettings.map((setting) => (
-            <li
-              key={setting.key.toString()}
-              className="flex items-center gap-2 text-gray-900"
+    <Card className="p-0">
+      <CardHeader className="p-2">
+        <CardTitle className="text-sm font-medium">
+          Active Link Controls
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-2 pt-0">
+        <ul className="space-y-1 text-sm">
+          {activeSettings.length > 0 ? (
+            activeSettings.map((setting) => (
+              <li
+                key={setting.key.toString()}
+                className="flex items-center gap-2 text-foreground"
+              >
+                <span className="inline-block h-2 w-2 rounded-full bg-green-400" />
+                {setting.label}
+              </li>
+            ))
+          ) : (
+            <li className="text-muted-foreground">No active settings</li>
+          )}
+        </ul>
+        {onEditClick && (
+          <div className="mt-4">
+            <Button
+              className="h-7 w-full focus-visible:ring-0 focus-visible:ring-offset-0"
+              variant="outline"
+              size="sm"
+              onClick={onEditClick}
             >
-              <span className="inline-block h-2 w-2 rounded-full bg-green-400" />
-              {setting.label}
-            </li>
-          ))
-        ) : (
-          <li className="text-gray-400">No active settings</li>
+              Configure link
+            </Button>
+          </div>
         )}
-      </ul>
-      {onEditClick && (
-        <div className="mt-2">
-          <Button
-            className="h-7 w-full focus-visible:ring-0 focus-visible:ring-offset-0"
-            variant="outline"
-            size="sm"
-            onClick={onEditClick}
-          >
-            Configure link
-          </Button>
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }

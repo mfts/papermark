@@ -39,7 +39,7 @@ export const sendDataroomTrialExpiredEmailTask = task({
       });
       logger.info("Email sent", { to: payload.to, teamId: payload.teamId });
 
-      await prisma.team.update({
+      const updatedTeam = await prisma.team.update({
         where: {
           id: payload.teamId,
         },
@@ -47,6 +47,18 @@ export const sendDataroomTrialExpiredEmailTask = task({
           plan: team.plan.replace("+drtrial", ""),
         },
       });
+
+      const isPaid = ["pro", "business", "datarooms", "datarooms-plus"].includes(updatedTeam.plan);
+      if (!isPaid) {
+        await prisma.brand.deleteMany({
+          where: {
+            teamId: payload.teamId,
+          }
+        })
+
+        logger.info("Branding removed after trail expired", { teamId: payload.teamId })
+      }
+
       logger.info("Trial removed", { teamId: payload.teamId });
       return;
     }
