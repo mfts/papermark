@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { Fragment, memo, useCallback, useMemo, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
 import {
@@ -25,28 +25,34 @@ import {
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
-import { EmptyDocuments } from "@/components/documents/empty-document";
-import FolderCard from "@/components/documents/folder-card";
-import { UploadNotificationDrawer } from "@/components/upload-notification";
-import UploadZone from "@/components/upload-zone";
-
 import { moveDataroomDocumentToFolder } from "@/lib/documents/move-dataroom-documents";
 import { moveDataroomFolderToFolder } from "@/lib/documents/move-dataroom-folders";
 import {
   DataroomFolderDocument,
   DataroomFolderWithCount,
 } from "@/lib/swr/use-dataroom";
-import { FolderWithCount } from "@/lib/swr/use-documents";
+import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
-import { DraggableItem } from "../documents/drag-and-drop/draggable-item";
-import { DroppableFolder } from "../documents/drag-and-drop/droppable-folder";
-import { Button } from "../ui/button";
-import { Portal } from "../ui/portal";
-import { ButtonTooltip } from "../ui/tooltip";
-import { useRemoveDataroomItemsModal } from "./actions/remove-document-modal";
-import DataroomDocumentCard from "./dataroom-document-card";
+import { useRemoveDataroomItemsModal } from "@/components/datarooms/actions/remove-document-modal";
+import DataroomDocumentCard from "@/components/datarooms/dataroom-document-card";
+import { useDeleteFolderModal } from "@/components/documents/actions/delete-folder-modal";
+import { DraggableItem } from "@/components/documents/drag-and-drop/draggable-item";
+import { DroppableFolder } from "@/components/documents/drag-and-drop/droppable-folder";
+import { EmptyDocuments } from "@/components/documents/empty-document";
+import FolderCard from "@/components/documents/folder-card";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Portal } from "@/components/ui/portal";
+import { ButtonTooltip } from "@/components/ui/tooltip";
+import { UploadNotificationDrawer } from "@/components/upload-notification";
+import UploadZone, {
+  RejectedFile,
+  UploadState,
+} from "@/components/upload-zone";
+
 import { itemsMessage } from "./folders/utils";
+import { SetGroupPermissionsModal } from "./groups/set-group-permissions-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type FolderOrDocument =
@@ -68,13 +74,18 @@ export function DataroomItemsList({
   folderCount: number;
   documentCount: number;
 }) {
+  const { viewerGroups } = useDataroomGroups();
   const { isMobile } = useMediaQuery();
 
-  const [uploads, setUploads] = useState<
-    { fileName: string; progress: number; documentId?: string }[]
-  >([]);
-  const [rejectedFiles, setRejectedFiles] = useState<
-    { fileName: string; message: string }[]
+  const [uploads, setUploads] = useState<UploadState[]>([]);
+  const [rejectedFiles, setRejectedFiles] = useState<RejectedFile[]>([]);
+  const [showGroupPermissions, setShowGroupPermissions] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<
+    {
+      documentId: string;
+      dataroomDocumentId: string;
+      fileName: string;
+    }[]
   >([]);
 
   const [showDrawer, setShowDrawer] = useState(false);
@@ -94,6 +105,24 @@ export function DataroomItemsList({
   const [parentFolderId, setParentFolderId] = useState<string>("");
   const [isOverFolder, setIsOverFolder] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+
+  const { setDeleteModalOpen, setFolderToDelete, DeleteFolderModal } =
+    useDeleteFolderModal(teamInfo, true, dataroomId);
+
+  const handleDeleteFolder = useCallback(
+    (folderId: string) => {
+      const folderToDelete = mixedItems.find(
+        (f) => f.id === folderId && f.itemType === "folder",
+      );
+      if (folderToDelete && folderToDelete.itemType === "folder") {
+        const { itemType, ...folder } = folderToDelete;
+        setFolderToDelete(folder);
+        setDeleteModalOpen(true);
+        setSelectedFolders((prev) => prev.filter((id) => id !== folderId));
+      }
+    },
+    [mixedItems, setFolderToDelete, setDeleteModalOpen, setSelectedFolders],
+  );
 
   const handleCloseDrawer = () => {
     setShowDrawer(false);
@@ -327,7 +356,7 @@ export function DataroomItemsList({
 
     if (isMobile) {
       return (
-        <>
+        <Fragment key={itemId}>
           {item.itemType === "folder" ? (
             <FolderCard
               key={itemId}
@@ -335,6 +364,7 @@ export function DataroomItemsList({
               teamInfo={teamInfo}
               isDataroom={!!dataroomId}
               dataroomId={dataroomId}
+              onDelete={handleDeleteFolder}
             />
           ) : (
             <DataroomDocumentCard
@@ -344,12 +374,12 @@ export function DataroomItemsList({
               dataroomId={dataroomId}
             />
           )}
-        </>
+        </Fragment>
       );
     }
 
     return (
-      <>
+      <Fragment key={itemId}>
         {item.itemType === "folder" ? (
           <DroppableFolder
             key={itemId}
@@ -374,6 +404,7 @@ export function DataroomItemsList({
                 dataroomId={dataroomId}
                 isSelected={selectedFolders.includes(item.id)}
                 isDragging={isDragging && selectedFolders.includes(item.id)}
+                onDelete={handleDeleteFolder}
               />
             </DraggableItem>
           </DroppableFolder>
@@ -396,7 +427,7 @@ export function DataroomItemsList({
             />
           </DraggableItem>
         )}
-      </>
+      </Fragment>
     );
   };
   const resetSelection = () => {
@@ -406,8 +437,40 @@ export function DataroomItemsList({
 
   const HeaderContent = memo(() => {
     if (selectedDocumentsLength > 0 || selectedFoldersLength > 0) {
+      const totalItems = folderCount + documentCount;
+      const isAllSelected =
+        totalItems === selectedDocumentsLength + selectedFoldersLength;
+
+      const handleSelectAll = () => {
+        if (isAllSelected) {
+          resetSelection();
+        } else {
+          const allDocumentIds = mixedItems
+            .filter((item) => item.itemType === "document")
+            .map((doc) => doc.id);
+          const allFolderIds = mixedItems
+            .filter((item) => item.itemType === "folder")
+            .map((folder) => folder.id);
+          setSelectedDocuments(allDocumentIds);
+          setSelectedFolders(allFolderIds);
+        }
+      };
+
       return (
         <div className="mb-2 flex items-center gap-x-1 rounded-3xl bg-gray-100 text-sm text-foreground dark:bg-gray-800">
+          <div className="ml-5 flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-200 hover:dark:bg-gray-700">
+            <ButtonTooltip
+              content={isAllSelected ? "Deselect all" : "Select all"}
+            >
+              <Checkbox
+                id="select-all"
+                checked={isAllSelected}
+                onCheckedChange={handleSelectAll}
+                className="h-5 w-5"
+                aria-label={isAllSelected ? "Deselect all" : "Select all"}
+              />
+            </ButtonTooltip>
+          </div>
           <ButtonTooltip content="Clear selection">
             <Button
               onClick={resetSelection}
@@ -477,23 +540,47 @@ export function DataroomItemsList({
   });
   HeaderContent.displayName = "HeaderContent";
 
+  const handleUploadSuccess = (
+    files: {
+      fileName: string;
+      documentId: string;
+      dataroomDocumentId: string;
+    }[],
+  ) => {
+    if (viewerGroups && viewerGroups.length > 0) {
+      setUploadedFiles(files);
+      setShowGroupPermissions(true);
+    }
+    return;
+  };
+
   return (
     <>
       <UploadZone
         folderPathName={folderPathName?.join("/")}
         onUploadStart={(newUploads) => {
-          setUploads(newUploads);
+          setUploads((prevUploads) => [...prevUploads, ...newUploads]);
           setShowDrawer(true);
         }}
         onUploadProgress={(index, progress, documentId) => {
-          setUploads((prevUploads) =>
-            prevUploads.map((upload, i) =>
-              i === index ? { ...upload, progress, documentId } : upload,
-            ),
-          );
+          setUploads((prevUploads) => {
+            const recentBatchStartIndex = prevUploads.length - index - 1;
+            if (
+              recentBatchStartIndex < 0 ||
+              recentBatchStartIndex >= prevUploads.length
+            ) {
+              return prevUploads;
+            }
+            return prevUploads.map((upload, i) =>
+              i === recentBatchStartIndex
+                ? { ...upload, progress, documentId }
+                : upload,
+            );
+          });
         }}
+        onUploadSuccess={handleUploadSuccess}
         onUploadRejected={(rejected) => {
-          setRejectedFiles(rejected);
+          setRejectedFiles((prevRejected) => [...prevRejected, ...rejected]);
           setShowDrawer(true);
         }}
         setUploads={setUploads}
@@ -503,7 +590,9 @@ export function DataroomItemsList({
         {isMobile ? (
           <div>
             <ul role="list" className="space-y-4">
-              {mixedItems.map(renderItem)}
+              {mixedItems.map((item) => (
+                <li key={`${item.itemType}-${item.id}`}>{renderItem(item)}</li>
+              ))}
             </ul>
             <Portal containerId={"documents-header-count"}>
               <HeaderContent />
@@ -529,7 +618,11 @@ export function DataroomItemsList({
               }}
             >
               <ul role="list" className="space-y-4">
-                {mixedItems.map(renderItem)}
+                {mixedItems.map((item) => (
+                  <li key={`${item.itemType}-${item.id}`}>
+                    {renderItem(item)}
+                  </li>
+                ))}
               </ul>
 
               <Portal>
@@ -555,6 +648,7 @@ export function DataroomItemsList({
                         teamInfo={teamInfo}
                         isDataroom={!!dataroomId}
                         dataroomId={dataroomId}
+                        onDelete={handleDeleteFolder}
                       />
                     ) : null}
                     {selectedDocumentsLength + selectedFoldersLength > 1 ? (
@@ -605,6 +699,21 @@ export function DataroomItemsList({
           setRejectedFiles={setRejectedFiles}
         />
       ) : null}
+
+      {showGroupPermissions && dataroomId && (
+        <SetGroupPermissionsModal
+          open={showGroupPermissions}
+          setOpen={setShowGroupPermissions}
+          dataroomId={dataroomId}
+          uploadedFiles={uploadedFiles}
+          onComplete={() => {
+            setShowGroupPermissions(false);
+            setUploadedFiles([]);
+          }}
+          isAutoOpen
+        />
+      )}
+      <DeleteFolderModal />
     </>
   );
 }

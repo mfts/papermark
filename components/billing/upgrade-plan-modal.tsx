@@ -11,6 +11,10 @@ import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan
 import { PLANS } from "@/ee/stripe/utils";
 import { CheckIcon, Users2Icon } from "lucide-react";
 
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+import { capitalize, cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -20,10 +24,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
-import { capitalize, cn } from "@/lib/utils";
 
 // Feature rendering component
 const FeatureItem = ({ feature }: { feature: Feature }) => {
@@ -103,12 +103,14 @@ export function UpgradePlanModal({
   trigger,
   open,
   setOpen,
+  highlightItem,
   children,
 }: {
   clickedPlan: PlanEnum;
   trigger?: string;
   open?: boolean;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  highlightItem?: string[];
   children?: React.ReactNode;
 }) {
   const router = useRouter();
@@ -261,7 +263,12 @@ export function UpgradePlanModal({
                 <ul className="mb-6 mt-2 space-y-2 text-sm leading-6 text-gray-600 dark:text-muted-foreground">
                   {planFeatures.features.map((feature, i) => (
                     <li key={i}>
-                      <FeatureItem feature={feature} />
+                      <FeatureItem
+                        feature={{
+                          ...feature,
+                          isHighlighted: highlightItem?.includes(feature.id),
+                        }}
+                      />
                     </li>
                   ))}
                 </ul>

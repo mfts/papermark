@@ -9,6 +9,7 @@ import { hashToken } from "@/lib/api/auth/token";
 import { verifyPreviewSession } from "@/lib/auth/preview-auth";
 import { PreviewSession } from "@/lib/auth/preview-auth";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
@@ -109,10 +110,12 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Check if link exists
     if (!link) {
       return NextResponse.json({ message: "Link not found." }, { status: 404 });
     }
 
+    // Check if link is archived
     if (link.isArchived) {
       return NextResponse.json(
         { message: "Link is no longer available." },
@@ -120,267 +123,299 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if email is required for visiting the link
-    if (link.emailProtected) {
-      if (!email || email.trim() === "") {
-        return NextResponse.json(
-          { message: "Email is required." },
-          { status: 400 },
-        );
-      }
-
-      // validate email
-      if (!validateEmail(email)) {
-        return NextResponse.json(
-          { message: "Invalid email address." },
-          { status: 400 },
-        );
-      }
-    }
-
-    // Check if password is required for visiting the link
-    if (link.password) {
-      if (!password || password.trim() === "") {
-        return NextResponse.json(
-          { message: "Password is required." },
-          { status: 400 },
-        );
-      }
-
-      let isPasswordValid: boolean = false;
-      const textParts: string[] = link.password.split(":");
-      if (!textParts || textParts.length !== 2) {
-        isPasswordValid = await checkPassword(password, link.password);
-      } else {
-        const decryptedPassword = decryptEncrpytedPassword(link.password);
-        isPasswordValid = decryptedPassword === password;
-      }
-
-      if (!isPasswordValid) {
-        return NextResponse.json(
-          { message: "Invalid password." },
-          { status: 403 },
-        );
-      }
-    }
-
-    // Check if agreement is required for visiting the link
-    if (link.enableAgreement && !hasConfirmedAgreement) {
-      return NextResponse.json(
-        { message: "Agreement to NDA is required." },
-        { status: 400 },
-      );
-    }
-
-    // Check if email is allowed to visit the link
-    if (link.allowList && link.allowList.length > 0) {
-      // Extract the domain from the email address
-      const emailDomain = email.substring(email.lastIndexOf("@"));
-
-      // Determine if the email or its domain is allowed
-      const isAllowed = link.allowList.some((allowed) => {
-        return (
-          allowed === email ||
-          (allowed.startsWith("@") && emailDomain === allowed)
-        );
-      });
-
-      // Deny access if the email is not allowed
-      if (!isAllowed) {
-        return NextResponse.json(
-          { message: "Unauthorized access" },
-          { status: 403 },
-        );
-      }
-    }
-
-    // Check if email is denied to visit the link
-    if (link.denyList && link.denyList.length > 0) {
-      // Extract the domain from the email address
-      const emailDomain = email.substring(email.lastIndexOf("@"));
-
-      // Determine if the email or its domain is denied
-      const isDenied = link.denyList.some((denied) => {
-        return (
-          denied === email || (denied.startsWith("@") && emailDomain === denied)
-        );
-      });
-
-      // Deny access if the email is denied
-      if (isDenied) {
-        return NextResponse.json(
-          { message: "Unauthorized access" },
-          { status: 403 },
-        );
-      }
-    }
-
-    // Request OTP Code for email verification if
-    // 1) email verification is required and
-    // 2) code is not provided or token not provided
-    if (link.emailAuthenticated && !code && !token) {
-      const ipAddressValue = ipAddress(request);
-
-      const { success } = await ratelimit(10, "1 m").limit(
-        `send-otp:${ipAddressValue}`,
-      );
-      if (!success) {
-        return NextResponse.json(
-          { message: "Too many requests. Please try again later." },
-          { status: 429 },
-        );
-      }
-
-      await prisma.verificationToken.deleteMany({
-        where: {
-          identifier: `otp:${linkId}:${email}`,
-        },
-      });
-
-      const otpCode = generateOTP();
-      const expiresAt = new Date();
-      expiresAt.setMinutes(expiresAt.getMinutes() + 10); // token expires at 10 minutes
-
-      await prisma.verificationToken.create({
-        data: {
-          token: otpCode,
-          identifier: `otp:${linkId}:${email}`,
-          expires: expiresAt,
-        },
-      });
-
-      waitUntil(sendOtpVerificationEmail(email, otpCode));
-      return NextResponse.json({
-        type: "email-verification",
-        message: "Verification email sent.",
-      });
-    }
-
     let isEmailVerified: boolean = false;
     let hashedVerificationToken: string | null = null;
-    if (link.emailAuthenticated && code) {
-      const ipAddressValue = ipAddress(request);
-      const { success } = await ratelimit(10, "1 m").limit(
-        `verify-otp:${ipAddressValue}`,
-      );
-      if (!success) {
+    // Check if the user is part of the team and therefore skip verification steps
+    let isTeamMember: boolean = false;
+    let isPreview: boolean = false;
+    if (userId && previewToken) {
+      const session = await getServerSession(authOptions);
+      if (!session) {
         return NextResponse.json(
-          { message: "Too many requests. Please try again later." },
-          { status: 429 },
-        );
-      }
-
-      // Check if the OTP code is valid
-      const verification = await prisma.verificationToken.findUnique({
-        where: {
-          token: code,
-          identifier: `otp:${linkId}:${email}`,
-        },
-      });
-
-      if (!verification) {
-        return NextResponse.json(
-          {
-            message: "Unauthorized access. Request new access.",
-            resetVerification: true,
-          },
+          { message: "You need to be logged in to preview the link." },
           { status: 401 },
         );
       }
 
-      // Check the OTP code's expiration date
-      if (Date.now() > verification.expires.getTime()) {
+      const sessionUserId = (session.user as CustomUser).id;
+      const teamMembership = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId: sessionUserId,
+            teamId: link.teamId!,
+          },
+        },
+      });
+      if (teamMembership) {
+        isTeamMember = true;
+        isPreview = true;
+        isEmailVerified = true;
+      }
+    }
+
+    if (!isTeamMember) {
+      // Check if email is required for visiting the link
+      if (link.emailProtected) {
+        if (!email || email.trim() === "") {
+          return NextResponse.json(
+            { message: "Email is required." },
+            { status: 400 },
+          );
+        }
+
+        // validate email
+        if (!validateEmail(email)) {
+          return NextResponse.json(
+            { message: "Invalid email address." },
+            { status: 400 },
+          );
+        }
+      }
+
+      // Check if password is required for visiting the link
+      if (link.password) {
+        if (!password || password.trim() === "") {
+          return NextResponse.json(
+            { message: "Password is required." },
+            { status: 400 },
+          );
+        }
+
+        let isPasswordValid: boolean = false;
+        const textParts: string[] = link.password.split(":");
+        if (!textParts || textParts.length !== 2) {
+          isPasswordValid = await checkPassword(password, link.password);
+        } else {
+          const decryptedPassword = decryptEncrpytedPassword(link.password);
+          isPasswordValid = decryptedPassword === password;
+        }
+
+        if (!isPasswordValid) {
+          return NextResponse.json(
+            { message: "Invalid password." },
+            { status: 403 },
+          );
+        }
+      }
+
+      // Check if agreement is required for visiting the link
+      if (link.enableAgreement && !hasConfirmedAgreement) {
+        return NextResponse.json(
+          { message: "Agreement to NDA is required." },
+          { status: 400 },
+        );
+      }
+
+      // Check if email is allowed to visit the link
+      if (link.allowList && link.allowList.length > 0) {
+        // Extract the domain from the email address
+        const emailDomain = email.substring(email.lastIndexOf("@"));
+
+        // Determine if the email or its domain is allowed
+        const isAllowed = link.allowList.some((allowed) => {
+          return (
+            allowed === email ||
+            (allowed.startsWith("@") && emailDomain === allowed)
+          );
+        });
+
+        // Deny access if the email is not allowed
+        if (!isAllowed) {
+          return NextResponse.json(
+            { message: "Unauthorized access" },
+            { status: 403 },
+          );
+        }
+      }
+
+      // Check if email is denied to visit the link
+      if (link.denyList && link.denyList.length > 0) {
+        // Extract the domain from the email address
+        const emailDomain = email.substring(email.lastIndexOf("@"));
+
+        // Determine if the email or its domain is denied
+        const isDenied = link.denyList.some((denied) => {
+          return (
+            denied === email ||
+            (denied.startsWith("@") && emailDomain === denied)
+          );
+        });
+
+        // Deny access if the email is denied
+        if (isDenied) {
+          return NextResponse.json(
+            { message: "Unauthorized access" },
+            { status: 403 },
+          );
+        }
+      }
+
+      // Request OTP Code for email verification if
+      // 1) email verification is required and
+      // 2) code is not provided or token not provided
+      if (link.emailAuthenticated && !code && !token) {
+        const ipAddressValue = ipAddress(request);
+
+        const { success } = await ratelimit(10, "1 m").limit(
+          `send-otp:${ipAddressValue}`,
+        );
+        if (!success) {
+          return NextResponse.json(
+            { message: "Too many requests. Please try again later." },
+            { status: 429 },
+          );
+        }
+
+        await prisma.verificationToken.deleteMany({
+          where: {
+            identifier: `otp:${linkId}:${email}`,
+          },
+        });
+
+        const otpCode = generateOTP();
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 10); // token expires at 10 minutes
+
+        await prisma.verificationToken.create({
+          data: {
+            token: otpCode,
+            identifier: `otp:${linkId}:${email}`,
+            expires: expiresAt,
+          },
+        });
+
+        waitUntil(
+          sendOtpVerificationEmail(email, otpCode, false, link.teamId!),
+        );
+        return NextResponse.json({
+          type: "email-verification",
+          message: "Verification email sent.",
+        });
+      }
+
+      if (link.emailAuthenticated && code) {
+        const ipAddressValue = ipAddress(request);
+        const { success } = await ratelimit(10, "1 m").limit(
+          `verify-otp:${ipAddressValue}`,
+        );
+        if (!success) {
+          return NextResponse.json(
+            { message: "Too many requests. Please try again later." },
+            { status: 429 },
+          );
+        }
+
+        // Check if the OTP code is valid
+        const verification = await prisma.verificationToken.findUnique({
+          where: {
+            token: code,
+            identifier: `otp:${linkId}:${email}`,
+          },
+        });
+
+        if (!verification) {
+          return NextResponse.json(
+            {
+              message: "Unauthorized access. Request new access.",
+              resetVerification: true,
+            },
+            { status: 401 },
+          );
+        }
+
+        // Check the OTP code's expiration date
+        if (Date.now() > verification.expires.getTime()) {
+          await prisma.verificationToken.delete({
+            where: {
+              token: code,
+            },
+          });
+          return NextResponse.json(
+            {
+              message: "Access expired. Request new access.",
+              resetVerification: true,
+            },
+            { status: 401 },
+          );
+        }
+
+        // delete the OTP code after verification
         await prisma.verificationToken.delete({
           where: {
             token: code,
           },
         });
-        return NextResponse.json(
-          {
-            message: "Access expired. Request new access.",
-            resetVerification: true,
-          },
-          { status: 401 },
-        );
-      }
 
-      // delete the OTP code after verification
-      await prisma.verificationToken.delete({
-        where: {
-          token: code,
-        },
-      });
-
-      // Create a email verification token for repeat access
-      const token = newId("email");
-      hashedVerificationToken = hashToken(token);
-      const tokenExpiresAt = new Date();
-      tokenExpiresAt.setHours(tokenExpiresAt.getHours() + 23); // token expires at 23 hours
-      await prisma.verificationToken.create({
-        data: {
-          token: hashedVerificationToken,
-          identifier: `link-verification:${linkId}:${link.teamId}:${email}`,
-          expires: tokenExpiresAt,
-        },
-      });
-
-      isEmailVerified = true;
-    }
-
-    if (link.emailAuthenticated && token) {
-      const ipAddressValue = ipAddress(request);
-      const { success } = await ratelimit(10, "1 m").limit(
-        `verify-email:${ipAddressValue}`,
-      );
-      if (!success) {
-        return NextResponse.json(
-          { message: "Too many requests. Please try again later." },
-          { status: 429 },
-        );
-      }
-
-      // Check if the long-term verification token is valid
-      const verification = await prisma.verificationToken.findUnique({
-        where: {
-          token: token,
-          identifier: `link-verification:${linkId}:${link.teamId}:${email}`,
-        },
-      });
-
-      if (!verification) {
-        return NextResponse.json(
-          {
-            message: "Unauthorized access. Request new access.",
-            resetVerification: true,
-          },
-          { status: 401 },
-        );
-      }
-
-      // Check the long-term verification token's expiration date
-      if (Date.now() > verification.expires.getTime()) {
-        // delete the long-term verification token after verification
-        await prisma.verificationToken.delete({
-          where: {
-            token: token,
+        // Create a email verification token for repeat access
+        const token = newId("email");
+        hashedVerificationToken = hashToken(token);
+        const tokenExpiresAt = new Date();
+        tokenExpiresAt.setHours(tokenExpiresAt.getHours() + 23); // token expires at 23 hours
+        await prisma.verificationToken.create({
+          data: {
+            token: hashedVerificationToken,
+            identifier: `link-verification:${linkId}:${link.teamId}:${email}`,
+            expires: tokenExpiresAt,
           },
         });
-        return NextResponse.json(
-          {
-            message: "Access expired. Request new access.",
-            resetVerification: true,
-          },
-          { status: 401 },
-        );
+
+        isEmailVerified = true;
       }
 
-      isEmailVerified = true;
+      if (link.emailAuthenticated && token) {
+        const ipAddressValue = ipAddress(request);
+        const { success } = await ratelimit(10, "1 m").limit(
+          `verify-email:${ipAddressValue}`,
+        );
+        if (!success) {
+          return NextResponse.json(
+            { message: "Too many requests. Please try again later." },
+            { status: 429 },
+          );
+        }
+
+        // Check if the long-term verification token is valid
+        const verification = await prisma.verificationToken.findUnique({
+          where: {
+            token: token,
+            identifier: `link-verification:${linkId}:${link.teamId}:${email}`,
+          },
+        });
+
+        if (!verification) {
+          return NextResponse.json(
+            {
+              message: "Unauthorized access. Request new access.",
+              resetVerification: true,
+            },
+            { status: 401 },
+          );
+        }
+
+        // Check the long-term verification token's expiration date
+        if (Date.now() > verification.expires.getTime()) {
+          // delete the long-term verification token after verification
+          await prisma.verificationToken.delete({
+            where: {
+              token: token,
+            },
+          });
+          return NextResponse.json(
+            {
+              message: "Access expired. Request new access.",
+              resetVerification: true,
+            },
+            { status: 401 },
+          );
+        }
+
+        isEmailVerified = true;
+      }
     }
 
     // Check if there's a valid preview session
     let previewSession: PreviewSession | null = null;
-    let isPreview: boolean = false;
-    if (previewToken) {
+    if (!isPreview && previewToken) {
       const session = await getServerSession(authOptions);
       if (!session) {
         return NextResponse.json(
@@ -487,6 +522,12 @@ export async function POST(request: NextRequest) {
       let sheetData;
       // let documentPagesPromise, documentVersionPromise;
       if (hasPages) {
+        const featureFlags = await getFeatureFlags({
+          teamId: link.teamId!,
+        });
+        const inDocumentLinks =
+          !link.team?.plan.includes("free") || featureFlags.inDocumentLinks;
+
         // get pages from document version
         console.time("get-pages");
         documentPages = await prisma.documentPage.findMany({
@@ -496,8 +537,8 @@ export async function POST(request: NextRequest) {
             file: true,
             storageType: true,
             pageNumber: true,
-            embeddedLinks: !link.team?.plan.includes("free"),
-            pageLinks: !link.team?.plan.includes("free"),
+            embeddedLinks: inDocumentLinks,
+            pageLinks: inDocumentLinks,
             metadata: true,
           },
         });
@@ -616,6 +657,7 @@ export async function POST(request: NextRequest) {
               : LOCALHOST_IP
             : undefined,
         verificationToken: hashedVerificationToken ?? undefined,
+        ...(isTeamMember && { isTeamMember: true }),
       };
 
       return NextResponse.json(returnObject);

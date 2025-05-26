@@ -38,22 +38,22 @@ model Session {
 }
 
 model User {
-  id             String         @id @default(cuid())
+  id             String     @id @default(cuid())
   name           String?
-  email          String?        @unique
+  email          String?    @unique
   emailVerified  DateTime?
   image          String?
-  createdAt      DateTime       @default(now())
+  createdAt      DateTime   @default(now())
   accounts       Account[]
   sessions       Session[]
   documents      Document[]
   teams          UserTeam[]
   domains        Domain[]
-  chats  Chat[]
+  chats          Chat[]
   contactId      String?
-  plan           String         @default("free")
-  stripeId       String?        @unique // Stripe subscription / customer ID
-  subscriptionId String?        @unique // Stripe subscription ID
+  plan           String     @default("free")
+  stripeId       String?    @unique // Stripe subscription / customer ID
+  subscriptionId String?    @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
 
@@ -61,7 +61,7 @@ model User {
 
   // conversation
   participatedConversations ConversationParticipant[]
-  messages Message[]
+  messages                  Message[]
 }
 
 model Team {
@@ -95,13 +95,17 @@ model Team {
   incomingWebhooks IncomingWebhook[]
   restrictedTokens RestrictedToken[]
   webhooks         Webhook[]
-  
+
   conversations Conversation[]
 
   uploadedDocuments DocumentUpload[]
 
+  // team settings
+  enableExcelAdvancedMode Boolean @default(false) // Enable Excel advanced mode for all documents in the team
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  Tag       Tag[]
 }
 
 model Brand {
@@ -166,16 +170,17 @@ model Document {
   links                Link[]
   views                View[]
   versions             DocumentVersion[]
-  chats        Chat[]
+  chats                Chat[]
 
   folderId String? // Optional Folder ID for documents in folders
   folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
-  datarooms DataroomDocument[] // Datarooms associated with this document
+  datarooms   DataroomDocument[] // Datarooms associated with this document
+  tags TagItem[]
 
   // upload external documents
   uploadedDocument DocumentUpload[]
-  isExternalUpload Boolean @default(false) // Indicates if the document is an external upload
+  isExternalUpload Boolean          @default(false) // Indicates if the document is an external upload
 
   @@index([ownerId])
   @@index([teamId])
@@ -248,35 +253,35 @@ model Domain {
 }
 
 model View {
-  id                String             @id @default(cuid())
-  link              Link               @relation(fields: [linkId], references: [id])
-  linkId            String
-  document          Document?          @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId        String?
-  dataroom          Dataroom?          @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
-  dataroomId        String?
-  dataroomViewId    String? // This is the view ID from the dataroom
-  viewerEmail       String? // Email of the viewer if known
-  viewerName        String? // Name of the viewer if known
-  verified          Boolean            @default(false) // Whether the viewer email has been verified
-  viewedAt          DateTime           @default(now())
-  downloadedAt      DateTime? // This is the time the document was downloaded
-  reactions         Reaction[]
-  viewType          ViewType           @default(DOCUMENT_VIEW)
-  viewerId          String? // This is the viewer ID from the dataroom
-  viewer            Viewer?            @relation(fields: [viewerId], references: [id], onDelete: Cascade)
-  groupId           String? // This is the group ID from the dataroom
-  group             ViewerGroup?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
-  feedbackResponse  FeedbackResponse?
-  agreementResponse AgreementResponse?
+  id                  String               @id @default(cuid())
+  link                Link                 @relation(fields: [linkId], references: [id])
+  linkId              String
+  document            Document?            @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId          String?
+  dataroom            Dataroom?            @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroomId          String?
+  dataroomViewId      String? // This is the view ID from the dataroom
+  viewerEmail         String? // Email of the viewer if known
+  viewerName          String? // Name of the viewer if known
+  verified            Boolean              @default(false) // Whether the viewer email has been verified
+  viewedAt            DateTime             @default(now())
+  downloadedAt        DateTime? // This is the time the document was downloaded
+  reactions           Reaction[]
+  viewType            ViewType             @default(DOCUMENT_VIEW)
+  viewerId            String? // This is the viewer ID from the dataroom
+  viewer              Viewer?              @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  groupId             String? // This is the group ID from the dataroom
+  group               ViewerGroup?         @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  feedbackResponse    FeedbackResponse?
+  agreementResponse   AgreementResponse?
   customFieldResponse CustomFieldResponse?
 
   isArchived Boolean @default(false) // Indicates if the view is archived and not counted in the analytics
 
   // conversation
-  conversationViews  ConversationView[]
-  messages           Message[]
-  initialConversations Conversation[] @relation("initialView")
+  conversationViews    ConversationView[]
+  messages             Message[]
+  initialConversations Conversation[]     @relation("initialView")
 
   uploadedDocuments DocumentUpload[] // uploaded documents by this view
 
@@ -307,10 +312,10 @@ model Viewer {
   teamId     String
   team       Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
-  views  View[]
-  groups ViewerGroupMembership[]
+  views                     View[]
+  groups                    ViewerGroupMembership[]
   participatedConversations ConversationParticipant[]
-  messages Message[]
+  messages                  Message[]
 
   uploadedDocuments DocumentUpload[] // uploaded documents by this viewer
 
@@ -443,6 +448,9 @@ model Agreement {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  deletedAt DateTime?
+  deletedBy String?
+
   @@index([teamId])
 }
 
@@ -459,7 +467,6 @@ model AgreementResponse {
   @@index([agreementId])
   @@index([viewId])
 }
-
 
 model IncomingWebhook {
   id                  String    @id @default(cuid())
@@ -537,35 +544,34 @@ model YearInReview {
   @@index([teamId])
 }
 
-
 model DocumentUpload {
-  id                String          @id @default(cuid())
-  documentId        String
-  document          Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  teamId            String
-  team              Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  viewerId          String?
-  viewer            Viewer?         @relation(fields: [viewerId], references: [id], onDelete: SetNull)
-  viewId            String?
-  view              View?           @relation(fields: [viewId], references: [id], onDelete: SetNull)
-  linkId            String
-  link              Link            @relation(fields: [linkId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  teamId     String
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  viewerId   String?
+  viewer     Viewer?  @relation(fields: [viewerId], references: [id], onDelete: SetNull)
+  viewId     String?
+  view       View?    @relation(fields: [viewId], references: [id], onDelete: SetNull)
+  linkId     String
+  link       Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
   // Optional dataroom relations
-  dataroomId        String?
-  dataroom          Dataroom?       @relation(fields: [dataroomId], references: [id], onDelete: SetNull)
+  dataroomId         String?
+  dataroom           Dataroom?         @relation(fields: [dataroomId], references: [id], onDelete: SetNull)
   dataroomDocumentId String?
-  dataroomDocument  DataroomDocument? @relation(fields: [dataroomDocumentId], references: [id], onDelete: SetNull)
+  dataroomDocument   DataroomDocument? @relation(fields: [dataroomDocumentId], references: [id], onDelete: SetNull)
 
   // Additional metadata
-  originalFilename  String?
-  fileSize          Int?
-  numPages          Int?
-  mimeType          String?
-  uploadedAt        DateTime        @default(now())
-  
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  originalFilename String?
+  fileSize         Int?
+  numPages         Int?
+  mimeType         String?
+  uploadedAt       DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([documentId])
   @@index([viewerId])
@@ -574,4 +580,54 @@ model DocumentUpload {
   @@index([teamId])
   @@index([dataroomId])
   @@index([dataroomDocumentId])
+}
+
+enum TagType {
+  LINK_TAG
+  DOCUMENT_TAG
+  DATAROOM_TAG
+}
+
+model Tag {
+  id          String       @id @default(cuid())
+  name        String
+  color       String
+  description String?
+
+  teamId      String
+  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  items       TagItem[]
+
+  createdBy   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([teamId, name])
+  @@index([teamId])
+  @@index([name])
+  @@index([id])
+}
+
+model TagItem {
+  id        String           @id @default(cuid())
+  tagId     String
+  tag       Tag              @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  itemType      TagType
+
+  // tag can be linked to a link, document or dataroom
+  linkId String?
+  link   Link?   @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  dataroomId String?
+  dataroom   Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+
+  taggedBy  String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([tagId, linkId])
+  @@index([tagId, documentId])
+  @@index([tagId, dataroomId])
 }

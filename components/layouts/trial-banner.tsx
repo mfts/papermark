@@ -67,7 +67,7 @@ function TrialBannerComponent({
             {datarooms &&
               daysLeft(
                 new Date(
-                  datarooms[0].createdAt ??
+                  datarooms[0]?.createdAt ??
                     teamInfo?.currentTeam?.createdAt ??
                     new Date(),
                 ),

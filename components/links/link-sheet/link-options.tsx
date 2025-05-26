@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkAudienceType, LinkType } from "@prisma/client";
+import { LinkPreset } from "@prisma/client";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
@@ -23,6 +24,7 @@ import { ProBannerSection } from "@/components/links/link-sheet/pro-banner-secti
 import AgreementSection from "./agreement-section";
 import ConversationSection from "./conversation-section";
 import CustomFieldsSection from "./custom-fields-section";
+import IndexFileSection from "./index-file-section";
 import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
 import UploadSection from "./upload-section";
@@ -40,12 +42,14 @@ export const LinkOptions = ({
   targetId,
   linkType,
   editLink,
+  currentPreset = null,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   targetId?: string;
   linkType: LinkType;
   editLink?: boolean;
+  currentPreset?: LinkPreset | null;
 }) => {
   const {
     isStarter,
@@ -56,7 +60,6 @@ export const LinkOptions = ({
     isTrial,
   } = usePlan();
   const { limits } = useLimits();
-
   const allowAdvancedLinkControls = limits
     ? limits?.advancedLinkControlsOnPro
     : false;
@@ -83,7 +86,7 @@ export const LinkOptions = ({
       <EmailProtectionSection {...{ data, setData }} />
       <AllowNotificationSection {...{ data, setData }} />
       <AllowDownloadSection {...{ data, setData }} />
-      <ExpirationSection {...{ data, setData }} />
+      <ExpirationSection {...{ data, setData }} presets={currentPreset} />
       {limits?.dataroomUpload &&
       linkType === LinkType.DATAROOM_LINK &&
       targetId ? (
@@ -92,6 +95,13 @@ export const LinkOptions = ({
           isAllowed={isTrial || isDatarooms || isDataroomsPlus}
           handleUpgradeStateChange={handleUpgradeStateChange}
           targetId={targetId}
+        />
+      ) : null}
+      {linkType === LinkType.DATAROOM_LINK ? (
+        <IndexFileSection
+          {...{ data, setData }}
+          isAllowed={isDataroomsPlus}
+          handleUpgradeStateChange={handleUpgradeStateChange}
         />
       ) : null}
       <OGSection
@@ -105,6 +115,7 @@ export const LinkOptions = ({
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
         editLink={editLink ?? false}
+        presets={currentPreset}
       />
 
       <EmailAuthenticationSection
@@ -129,6 +140,7 @@ export const LinkOptions = ({
             isDataroomsPlus
           }
           handleUpgradeStateChange={handleUpgradeStateChange}
+          presets={currentPreset}
         />
       ) : null}
       {data.audienceType === LinkAudienceType.GENERAL ? (
@@ -142,6 +154,7 @@ export const LinkOptions = ({
             isDataroomsPlus
           }
           handleUpgradeStateChange={handleUpgradeStateChange}
+          presets={currentPreset}
         />
       ) : null}
       <PasswordSection {...{ data, setData }} />
@@ -162,6 +175,7 @@ export const LinkOptions = ({
           isTrial || isDatarooms || isDataroomsPlus || allowWatermarkOnBusiness
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
+        presets={currentPreset}
       />
       <AgreementSection
         {...{ data, setData }}
@@ -201,6 +215,7 @@ export const LinkOptions = ({
         {...{ data, setData }}
         isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
         handleUpgradeStateChange={handleUpgradeStateChange}
+        presets={currentPreset}
       />
       {linkType === LinkType.DOCUMENT_LINK ? (
         <ProBannerSection

@@ -58,13 +58,14 @@ model Link {
   enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
 
   // conversation
-  enableConversation Boolean      @default(false)  // Controls if conversations are allowed on this link
-  conversations        Conversation[]
+  enableConversation Boolean        @default(false) // Controls if conversations are allowed on this link
+  conversations      Conversation[]
 
   // upload
-  enableUpload Boolean? @default(false) // Optional give user a option to enable the upload document function
+  enableUpload      Boolean? @default(false) // Optional give user a option to enable the upload document function
   isFileRequestOnly Boolean? @default(false) // Optional give user a option to enable the file request only
-  uploadFolderId     String? // This can be nullable, indicating upload to root folder, either document folder or dataroom folder
+  uploadFolderId    String? // This can be nullable, indicating upload to root folder, either document folder or dataroom folder
+  enableIndexFile   Boolean? @default(false)
 
   uploadedDocuments DocumentUpload[]
 
@@ -73,22 +74,48 @@ model Link {
 
   customFields CustomField[]
 
+  tags TagItem[]
+
   @@unique([domainSlug, slug])
   @@index([documentId])
   @@index([teamId])
 }
 
 model LinkPreset {
-  id     String @id @default(cuid())
+  id     String  @id @default(cuid())
   name   String
   teamId String
-  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team   Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  pId    String? @unique
 
   enableCustomMetaTag Boolean? @default(false) // Optional give user a option to enable the custom metatag
   metaTitle           String? // This will be the meta title of the link
   metaDescription     String? // This will be the meta description of the link
   metaImage           String? // This will be the meta image of the link 
   metaFavicon         String? // This will be the meta favicon of the link
+
+  emailProtected     Boolean?  @default(true)
+  emailAuthenticated Boolean?  @default(false)
+  allowDownload      Boolean?  @default(false)
+  enableAllowList    Boolean?  @default(false)
+  allowList          String[]
+  enableDenyList     Boolean?  @default(false)
+  denyList           String[]
+  expiresIn          Int?  // how many days from link creation until it expires in seconds
+  enableScreenshotProtection Boolean? @default(false)
+  expiresAt          DateTime?
+  enablePassword     Boolean?  @default(false)
+  password           String?
+  enableWatermark    Boolean?  @default(false)
+  watermarkConfig    Json? //{text: "Confidential", isTiled: false, color: "#000000", fontSize: 12, opacity: 0.5, rotation: 30, position: "top-right"}
+  
+  enableAgreement Boolean? @default(false)
+  agreementId     String?
+
+  enableCustomFields Boolean? @default(false)
+  customFields       Json? //[{type: "SHORT_TEXT", identifier: "name", label: "Name", required: true}]
+
+  isDefault Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

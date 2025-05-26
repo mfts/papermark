@@ -4,6 +4,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -49,6 +50,13 @@ export default async function handle(
         },
       });
 
+      if (!dataroom) {
+        return res.status(404).json({
+          error: "Not Found",
+          message: "The requested dataroom does not exist",
+        });
+      }
+
       return res.status(200).json(dataroom);
     } catch (error) {
       errorhandler(error, res);
@@ -64,7 +72,6 @@ export default async function handle(
       teamId: string;
       id: string;
     };
-    const { name } = req.body as { name: string };
 
     const userId = (session.user as CustomUser).id;
 
@@ -79,18 +86,44 @@ export default async function handle(
             },
           },
         },
+        select: {
+          id: true,
+          plan: true,
+        },
       });
 
       if (!team) {
         return res.status(401).end("Unauthorized");
       }
 
+      const { name, enableChangeNotifications } = req.body as {
+        name?: string;
+        enableChangeNotifications?: boolean;
+      };
+
+      const featureFlags = await getFeatureFlags({ teamId: team.id });
+      const isDataroomsPlus = team.plan.includes("datarooms-plus");
+
+      if (
+        enableChangeNotifications !== undefined &&
+        !isDataroomsPlus &&
+        !featureFlags.roomChangeNotifications
+      ) {
+        return res.status(403).json({
+          message: "This feature is not available in your plan",
+        });
+      }
+
       const dataroom = await prisma.dataroom.update({
         where: {
           id: dataroomId,
-          teamId,
         },
-        data: { name: name },
+        data: {
+          ...(name && { name }),
+          ...(typeof enableChangeNotifications === "boolean" && {
+            enableChangeNotifications,
+          }),
+        },
       });
 
       return res.status(200).json(dataroom);
@@ -152,7 +185,7 @@ export default async function handle(
       errorhandler(error, res);
     }
   } else {
-    // We only allow GET requests
+    // We only allow GET, and PATCH requests
     res.setHeader("Allow", ["GET", "PATCH"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }

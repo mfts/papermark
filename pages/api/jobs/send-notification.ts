@@ -48,6 +48,7 @@ export default async function handle(
       teamId: string | null;
       id: string;
       name: string;
+      ownerId: string | null;
     } | null;
     dataroom: {
       teamId: string | null;
@@ -79,6 +80,7 @@ export default async function handle(
             teamId: true,
             id: true,
             name: true,
+            ownerId: true,
           },
         },
         dataroom: {
@@ -131,6 +133,28 @@ export default async function handle(
     },
   });
 
+  // Get the owner of the document
+  let ownerEmail: string | null = null;
+  if (view.document?.ownerId) {
+    const ownerUser = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId: view.document!.ownerId!,
+          teamId: teamId,
+        },
+      },
+      select: {
+        user: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
+
+    ownerEmail = ownerUser?.user.email || null;
+  }
+
   const includeLocation =
     !view.team?.plan?.includes("free") &&
     !view.team?.plan?.includes("starter") &&
@@ -146,6 +170,19 @@ export default async function handle(
     const adminEmail = users.find((user) => user.role === "ADMIN")?.user.email;
 
     if (view.viewType === "DOCUMENT_VIEW") {
+      const teamMembers = users
+        .map((user) => user.user.email!)
+        .filter((email) => email !== adminEmail);
+
+      // Add ownerEmail to teamMembers if it exists and isn't already included
+      if (
+        ownerEmail &&
+        ownerEmail !== adminEmail &&
+        !teamMembers.includes(ownerEmail)
+      ) {
+        teamMembers.push(ownerEmail);
+      }
+
       // send email to document owner that document
       await sendViewedDocumentEmail({
         ownerEmail: adminEmail!,
@@ -153,9 +190,7 @@ export default async function handle(
         documentName: view.document!.name,
         linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
         viewerEmail: view.viewerEmail,
-        teamMembers: users
-          .map((user) => user.user.email!)
-          .filter((email) => email !== adminEmail),
+        teamMembers,
         locationString: includeLocation ? locationString : undefined,
       });
     } else {
