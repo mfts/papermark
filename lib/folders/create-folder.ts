@@ -82,30 +82,24 @@ export async function createFolderInBoth({
   teamId,
   dataroomId,
   name,
-  path,
+  mainDocsPath,
+  dataroomPath,
   setRejectedFiles,
   analytics,
 }: {
   teamId: string;
   dataroomId: string;
   name: string;
-  path?: string;
+    mainDocsPath?: string;
+    dataroomPath?: string;
   setRejectedFiles: (files: { fileName: string; message: string }[]) => void;
   analytics: any;
 }): Promise<{ dataroomPath: string; mainDocsPath: string }> {
   try {
-    const dataroomResponse = await createFolderInDataroom({ teamId, dataroomId, name, path });
-
-    const pathSegments = dataroomResponse.path.split('/').filter(Boolean);
-    const parentPath = pathSegments.length > 1
-      ? pathSegments.slice(0, -1).join('/')
-      : undefined;
-
-    const mainDocsResponse = await createFolderInMainDocs({
-      teamId,
-      name: dataroomResponse.name,
-      path: parentPath
-    });
+    const [dataroomResponse, mainDocsResponse] = await Promise.all([
+      createFolderInDataroom({ teamId, dataroomId, name, path: dataroomPath }),
+      createFolderInMainDocs({ teamId, name, path: mainDocsPath })
+    ]);
 
     // Track analytics
     analytics.capture("Folder Added in dataroom", {

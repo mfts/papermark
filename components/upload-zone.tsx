@@ -19,18 +19,21 @@ import { useAnalytics } from "@/lib/analytics";
 import { SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
 import { resumableUpload } from "@/lib/files/tus-upload";
-import { createFolderInBoth, createFolderInMainDocs, isSystemFile } from "@/lib/folders/create-folder";
+import {
+  createFolderInBoth,
+  createFolderInMainDocs,
+  isSystemFile,
+} from "@/lib/folders/create-folder";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { CustomUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
-import { getFileSizeLimit, getFileSizeLimits } from "@/lib/utils/get-file-size-limits";
+import {
+  getFileSizeLimit,
+  getFileSizeLimits,
+} from "@/lib/utils/get-file-size-limits";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
-
-
-
-
 
 // Originally these mime values were directly used in the dropzone hook.
 // There was a solid reason to take them out of the scope, primarily to solve a browser compatibility issue to determine the file type when user dropped a folder.
@@ -78,6 +81,7 @@ const allAcceptableDropZoneMimeTypes = {
 interface FileWithPaths extends File {
   path?: string;
   whereToUploadPath?: string;
+  dataroomUploadPath?: string;
 }
 
 export interface UploadState {
@@ -333,6 +337,7 @@ export default function UploadZone({
         };
 
         const fileUploadPathName = file?.whereToUploadPath;
+        const dataroomUploadPathName = file?.dataroomUploadPath;
 
         const response = await createDocument({
           documentData,
@@ -362,7 +367,7 @@ export default function UploadZone({
                 },
                 body: JSON.stringify({
                   documentId: document.id,
-                  folderPathName: fileUploadPathName,
+                  folderPathName: dataroomUploadPathName || fileUploadPathName,
                 }),
               },
             );
@@ -379,9 +384,9 @@ export default function UploadZone({
             mutate(
               `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
             );
-            fileUploadPathName &&
+            (dataroomUploadPathName || fileUploadPathName) &&
               mutate(
-                `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders/documents/${fileUploadPathName}`,
+                `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders/documents/${dataroomUploadPathName || fileUploadPathName}`,
               );
           } catch (error) {
             console.error(
@@ -467,6 +472,7 @@ export default function UploadZone({
       const traverseFolder = async (
         entry: FileSystemEntry,
         parentPathOfThisEntry?: string,
+        dataroomParentPath?: string,
       ): Promise<FileWithPaths[]> => {
         /**
          * Summary of this function:
@@ -532,23 +538,29 @@ export default function UploadZone({
               const filteredSubEntries = subEntries.filter(
                 (subEntry) => !isSystemFile(subEntry.name),
               );
+
+              const resolvedFolderPath = folderPath.startsWith("/")
+                ? folderPath.slice(1)
+                : folderPath;
+
               for (const subEntry of filteredSubEntries) {
                 files.push(
                   ...(await traverseFolder(
                     subEntry,
-                    folderPath.startsWith("/")
-                      ? folderPath.slice(1)
-                      : folderPath,
+                    resolvedFolderPath,
+                    undefined,
                   )),
                 );
               }
             } else {
               // Create folder in both dataroom and main documents
-              const { dataroomPath } = await createFolderInBoth({
+              // Use separate paths for dataroom and main documents
+              const { dataroomPath, mainDocsPath } = await createFolderInBoth({
                 teamId: teamInfo.currentTeam.id,
                 dataroomId,
                 name: entry.name,
-                path: parentPathOfThisEntry ?? folderPathName,
+                mainDocsPath: parentPathOfThisEntry ?? folderPathName,
+                dataroomPath: dataroomParentPath ?? folderPathName,
                 setRejectedFiles,
                 analytics,
               });
@@ -564,13 +576,20 @@ export default function UploadZone({
                 (subEntry) => !isSystemFile(subEntry.name),
               );
 
+              // Use the resolved paths for all children
+              const resolvedMainDocsPath = mainDocsPath.startsWith("/")
+                ? mainDocsPath.slice(1)
+                : mainDocsPath;
+              const resolvedDataroomPath = dataroomPath.startsWith("/")
+                ? dataroomPath.slice(1)
+                : dataroomPath;
+
               for (const subEntry of filteredSubEntries) {
                 files.push(
                   ...(await traverseFolder(
                     subEntry,
-                    dataroomPath.startsWith("/")
-                      ? dataroomPath.slice(1)
-                      : dataroomPath,
+                    resolvedMainDocsPath,
+                    resolvedDataroomPath,
                   )),
                 );
               }
@@ -624,6 +643,7 @@ export default function UploadZone({
             : entry.fullPath;
 
           file.whereToUploadPath = parentPathOfThisEntry ?? folderPathName;
+          file.dataroomUploadPath = dataroomParentPath;
 
           files.push(file);
         }
@@ -644,7 +664,13 @@ export default function UploadZone({
               (typeof (item as any)?.getAsEntry === "function" &&
                 (item as any).getAsEntry()) ??
               null;
-            return entry ? traverseFolder(entry) : [];
+            return entry
+              ? traverseFolder(
+                  entry,
+                  folderPathName,
+                  dataroomId ? folderPathName : undefined,
+                )
+              : [];
           }),
         );
         fileResults.forEach((fileResult) =>
@@ -660,6 +686,7 @@ export default function UploadZone({
           const file: FileWithPaths = event.target.files[i];
           file.path = file.name;
           file.whereToUploadPath = folderPathName;
+          file.dataroomUploadPath = folderPathName;
           filesToBePassedToOnDrop.push(event.target.files[i]);
         }
       }
