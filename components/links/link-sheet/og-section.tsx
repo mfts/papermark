@@ -32,6 +32,7 @@ export default function OGSection({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => void;
   editLink: boolean;
   presets: LinkPreset | null;
@@ -176,6 +177,7 @@ export default function OGSection({
             state: true,
             trigger: "link_sheet_og_section",
             plan: "Business",
+            highlightItem: ["custom-social-cards"],
           })
         }
         resetAction={resetMetatags}
