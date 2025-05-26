@@ -311,7 +311,7 @@ export function GoogleDriveUploadProgress({
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <div className="w-[400px] rounded-lg border border-gray-200 bg-white shadow-lg">
+      <div className="w-[446px] rounded-lg border border-gray-200 bg-white shadow-lg">
         <div className="border-b border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">

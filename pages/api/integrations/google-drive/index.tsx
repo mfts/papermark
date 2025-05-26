@@ -7,6 +7,20 @@ import { GoogleDriveClient } from "@/lib/google-drive";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
+function sanitizeIntegration(integration: any) {
+  if (!integration) return null;
+
+  return {
+    id: integration.id,
+    email: integration.email,
+    name: integration.name,
+    picture: integration.picture,
+    createdAt: integration.createdAt,
+    updatedAt: integration.updatedAt,
+    accessToken: integration.accessToken,
+  };
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -46,11 +60,14 @@ export default async function handler(
       integration?.refreshToken &&
       (accessTokenExpired || refreshTokenExpired)
     ) {
-      const refreshTokenResponse = await GoogleDriveClient.getInstance().refreshAccessToken(
-        integration!.refreshToken,
-      );
+      const refreshTokenResponse =
+        await GoogleDriveClient.getInstance().refreshAccessToken(
+          integration!.refreshToken,
+        );
       const expiresAt = new Date();
-      expiresAt.setSeconds(expiresAt.getSeconds() + refreshTokenResponse.expires_in);
+      expiresAt.setSeconds(
+        expiresAt.getSeconds() + refreshTokenResponse.expires_in,
+      );
       const updatedIntegration = await prisma.googleDriveIntegration.update({
         where: { userId },
         data: {
@@ -58,10 +75,16 @@ export default async function handler(
           accessToken: refreshTokenResponse.access_token,
         },
       });
-      return res.status(200).json({ isConnected: !!integration, integration: updatedIntegration });
+      return res.status(200).json({
+        isConnected: !!integration,
+        integration: sanitizeIntegration(updatedIntegration),
+      });
     }
 
-    return res.status(200).json({ isConnected: !!integration, integration });
+    return res.status(200).json({
+      isConnected: !!integration,
+      integration: sanitizeIntegration(integration),
+    });
   } catch (error) {
     console.error("Error checking Google Drive connection status:", error);
     return res

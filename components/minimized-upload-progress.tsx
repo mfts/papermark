@@ -52,7 +52,7 @@ export function MinimizedUploadProgress({
 
   return (
     <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 transform duration-300 animate-in fade-in slide-in-from-bottom-5">
-      <div className="w-96 rounded-lg border border-gray-200 bg-white shadow-lg">
+      <div className="w-[400px] rounded-lg border border-gray-200 bg-white shadow-lg">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center space-x-2">
             <UploadCloud className="h-5 w-5 text-primary" />
