@@ -5,7 +5,6 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
-import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -44,8 +43,7 @@ export default function Billing() {
   const { data: session } = useSession();
   const { team, loading } = useGetTeam()!;
   const teamInfo = useTeam();
-  const { plan: userPlan, planName } = usePlan();
-  const { limits } = useLimits();
+  const { canAddUsers, showUpgradePlanModal } = useLimits();
   const { teams } = useTeams();
   const analytics = useAnalytics();
 
@@ -53,14 +51,9 @@ export default function Billing() {
 
   const router = useRouter();
 
-  const numUsers = (team && team.users.length) ?? 1;
-  const numInvitations = (invitations && invitations.length) ?? 0;
-
   const getUserDocumentCount = (userId: string) => {
-    const documents = team?.documents.filter(
-      (document) => document.owner?.id === userId,
-    );
-    return documents?.length;
+    return team?.users.find((user) => user.userId === userId)?.user._count
+      .documents;
   };
 
   const isCurrentUser = (userId: string) => {
@@ -129,6 +122,8 @@ export default function Billing() {
 
     await mutate(`/api/teams/${teamInfo?.currentTeam?.id}`);
     await mutate("/api/teams");
+    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/invitations`);
+    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/limits`);
 
     setLeavingUserId("");
     if (isCurrentUser(userId)) {
@@ -171,6 +166,8 @@ export default function Billing() {
       email: invitation.email as string,
       teamId: teamInfo?.currentTeam?.id,
     });
+    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/invitations`);
+    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/limits`);
 
     toast.success("Invitation resent successfully!");
   };
@@ -202,9 +199,11 @@ export default function Billing() {
     });
 
     mutate(`/api/teams/${teamInfo?.currentTeam?.id}/invitations`);
+    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/limits`);
 
     toast.success("Invitation revoked successfully!");
   };
+  const showInvite = canAddUsers;
 
   return (
     <AppLayout>
@@ -229,7 +228,7 @@ export default function Billing() {
                   Teammates that have access to this project.
                 </p>
               </div>
-              {userPlan === "free" ? (
+              {showUpgradePlanModal ? (
                 <UpgradePlanModal
                   clickedPlan={PlanEnum.Pro}
                   trigger={"invite_team_members"}
@@ -238,8 +237,7 @@ export default function Billing() {
                     Upgrade to invite members
                   </Button>
                 </UpgradePlanModal>
-              ) : limits === null ||
-                (limits && limits.users! > numUsers + numInvitations) ? (
+              ) : showInvite ? (
                 <AddTeamMembers
                   open={isTeamMemberInviteModalOpen}
                   setOpen={setTeamMemberInviteModalOpen}
@@ -302,9 +300,16 @@ export default function Billing() {
                   </div>
                 </div>
                 <div className="flex items-center gap-12">
-                  <span className="text-sm capitalize text-foreground">
-                    {member.role.toLowerCase()}
-                  </span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-sm capitalize text-foreground">
+                      {member.role.toLowerCase()}
+                    </span>
+                    {member.status === "BLOCKED_TRIAL_EXPIRED" && (
+                      <span className="text-xs font-medium text-red-500">
+                        Blocked (Trial Expired)
+                      </span>
+                    )}
+                  </div>
                   {leavingUserId === member.userId ? (
                     <span className="text-xs">leaving...</span>
                   ) : (

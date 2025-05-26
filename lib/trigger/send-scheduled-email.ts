@@ -33,30 +33,52 @@ export const sendDataroomTrialExpiredEmailTask = task({
     }
 
     if (team.plan.includes("drtrial")) {
+      // send email to the user
       await sendDataroomTrialEndEmail({
         email: payload.to,
         name: payload.name,
       });
       logger.info("Email sent", { to: payload.to, teamId: payload.teamId });
 
+      // remove trial on the plan
       const updatedTeam = await prisma.team.update({
-        where: {
-          id: payload.teamId,
-        },
-        data: {
-          plan: team.plan.replace("+drtrial", ""),
-        },
+        where: { id: payload.teamId },
+        data: { plan: team.plan.replace("+drtrial", "") },
       });
 
-      const isPaid = ["pro", "business", "datarooms", "datarooms-plus"].includes(updatedTeam.plan);
+      const isPaid = [
+        "pro",
+        "business",
+        "datarooms",
+        "datarooms-plus",
+      ].includes(updatedTeam.plan);
+
       if (!isPaid) {
+        // remove branding
         await prisma.brand.deleteMany({
           where: {
             teamId: payload.teamId,
-          }
-        })
+          },
+        });
+        logger.info("Branding removed after trial expired", {
+          teamId: payload.teamId,
+        });
 
-        logger.info("Branding removed after trail expired", { teamId: payload.teamId })
+        // block all non-admin users
+        const blockedUsers = await prisma.userTeam.updateMany({
+          where: {
+            teamId: payload.teamId,
+            role: { not: "ADMIN" },
+          },
+          data: {
+            status: "BLOCKED_TRIAL_EXPIRED",
+            blockedAt: new Date(),
+          },
+        });
+        logger.info("Team members blocked after trial expired", {
+          teamId: payload.teamId,
+          usersCount: blockedUsers.count,
+        });
       }
 
       logger.info("Trial removed", { teamId: payload.teamId });

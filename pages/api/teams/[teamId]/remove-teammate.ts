@@ -39,14 +39,28 @@ export default async function handle(
         return res.status(401).json("You can't remove the Admin");
       }
 
-      await prisma.userTeam.delete({
-        where: {
-          userId_teamId: {
-            userId: userToBeDeleted,
+      await Promise.all([
+        // update all documents owned by the user to be deleted to be owned by the team
+        prisma.document.updateMany({
+          where: {
             teamId,
+            ownerId: userToBeDeleted,
           },
-        },
-      });
+          data: {
+            ownerId: null,
+          },
+        }),
+        // delete the user from the team
+        prisma.userTeam.delete({
+          where: {
+            userId_teamId: {
+              userId: userToBeDeleted,
+              teamId,
+            },
+          },
+        }),
+      ]);
+
       return res.status(204).end();
     } catch (error) {
       errorhandler(error, res);

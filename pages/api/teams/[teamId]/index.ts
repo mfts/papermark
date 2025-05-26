@@ -41,20 +41,18 @@ export default async function handle(
               role: true,
               teamId: true,
               userId: true,
+              status: true,
               user: {
                 select: {
                   email: true,
                   name: true,
-                },
-              },
-            },
-          },
-          documents: {
-            select: {
-              owner: {
-                select: {
-                  name: true,
-                  id: true,
+                  _count: {
+                    select: {
+                      documents: {
+                        where: { teamId: teamId },
+                      },
+                    },
+                  },
                 },
               },
             },

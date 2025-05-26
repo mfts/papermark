@@ -310,18 +310,16 @@ export interface Team {
 export interface TeamDetail {
   id: string;
   name: string;
-  documents: {
-    owner: {
-      id: string;
-      name: string;
-    };
-  }[];
   users: {
     role: "ADMIN" | "MANAGER" | "MEMBER";
+    status: "ACTIVE" | "BLOCKED_TRIAL_EXPIRED";
     teamId: string;
     user: {
       email: string;
       name: string;
+      _count: {
+        documents: number;
+      };
     };
     userId: string;
   }[];
