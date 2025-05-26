@@ -139,104 +139,113 @@ export const batchFileUpload = task({
 
         // Process each batch of 3 files in parallel
         const allDocumentPromises: Promise<any>[] = [];
+        const batchPromises: Promise<void>[] = [];
+
+        // Use a mutex-like approach to safely add document promises
+        const addDocumentPromise = (promise: Promise<any>) => {
+            allDocumentPromises.push(promise);
+        };
+
         for (const batch of chunks) {
-            try {
-                logger.info(`Processing batch of ${batch.length} files`);
+            // Create a promise for each batch to run in parallel
+            const batchPromise = (async () => {
+                try {
+                    logger.info(`Processing batch of ${batch.length} files`);
 
-                const result = await processAndUploadFiles(
-                    batch.map(file => file.id),
-                    teamId,
-                    userId,
-                    async (fileId: string, bytesUploaded: number, bytesTotal: number) => {
-                        const progress = Math.round((bytesUploaded / bytesTotal) * 100);
-                        const currentTime = Date.now();
+                    const result = await processAndUploadFiles(
+                        batch.map(file => file.id),
+                        teamId,
+                        userId,
+                        async (fileId: string, bytesUploaded: number, bytesTotal: number) => {
+                            const progress = Math.round((bytesUploaded / bytesTotal) * 100);
+                            const currentTime = Date.now();
 
-                        // Update individual file progress with detailed status
-                        const currentFileProgress = fileProgress[fileId] || {
-                            progress: 0,
-                            status: "pending",
-                            startTime: currentTime
-                        };
-
-                        // Determine appropriate status based on progress and previous state
-                        let status = currentFileProgress.status;
-                        if (progress === 100) {
-                            status = "completed";
-
-                            // Record completion time for metrics
-                            fileProgress[fileId] = {
-                                ...currentFileProgress,
-                                progress,
-                                status,
-                                bytesUploaded,
-                                bytesTotal,
-                                endTime: currentTime
-                            };
-
-                            completedFiles++;
-                            metadata.set("completedFiles", completedFiles);
-                            metadata.set("progress", Math.round((completedFiles / files.length) * 100));
-                        } else if (progress > 0) {
-                            status = "processing"; // Active upload
-
-                            // Record upload progress details
-                            fileProgress[fileId] = {
-                                ...currentFileProgress,
-                                progress,
-                                status,
-                                bytesUploaded,
-                                bytesTotal
-                            };
-                        } else if (currentFileProgress.status === "pending") {
-                            status = "initializing"; // Just starting
-
-                            fileProgress[fileId] = {
-                                ...currentFileProgress,
+                            // Update individual file progress with detailed status
+                            const currentFileProgress = fileProgress[fileId] || {
                                 progress: 0,
-                                status,
-                                bytesUploaded: 0,
-                                bytesTotal
+                                status: "pending",
+                                startTime: currentTime
                             };
-                        }
 
-                        metadata.set("fileProgress", fileProgress);
-                    },
-                    (error: Error) => {
-                        // Find the file ID that failed
-                        const failedFileId = batch.find(file =>
-                            !fileProgress[file.id] ||
-                            (fileProgress[file.id].status !== "completed" &&
-                                fileProgress[file.id].status !== "failed")
-                        )?.id;
+                            // Determine appropriate status based on progress and previous state
+                            let status = currentFileProgress.status;
+                            if (progress === 100) {
+                                status = "completed";
 
-                        logger.error("Error processing file:", {
-                            error: error.message,
-                            fileId: failedFileId || "unknown"
-                        });
+                                // Record completion time for metrics
+                                fileProgress[fileId] = {
+                                    ...currentFileProgress,
+                                    progress,
+                                    status,
+                                    bytesUploaded,
+                                    bytesTotal,
+                                    endTime: currentTime
+                                };
 
-                        failedUploads++;
-                        metadata.set("failedUploads", failedUploads);
+                                completedFiles++;
+                                metadata.set("completedFiles", completedFiles);
+                                metadata.set("progress", Math.round((completedFiles / files.length) * 100));
+                            } else if (progress > 0) {
+                                status = "processing"; // Active upload
 
-                        // Update file status to failed if we found the file
-                        if (failedFileId) {
-                            const currentFileProgress = fileProgress[failedFileId];
-                            const retryCount = (currentFileProgress?.retryCount || 0) + 1;
+                                // Record upload progress details
+                                fileProgress[fileId] = {
+                                    ...currentFileProgress,
+                                    progress,
+                                    status,
+                                    bytesUploaded,
+                                    bytesTotal
+                                };
+                            } else if (currentFileProgress.status === "pending") {
+                                status = "initializing"; // Just starting
 
-                            fileProgress[failedFileId] = {
-                                ...currentFileProgress,
-                                progress: 0,
-                                status: "failed",
-                                error: `${error.message} (Try ${retryCount}/3)`,
-                                endTime: Date.now(),
-                                retryCount
-                            };
+                                fileProgress[fileId] = {
+                                    ...currentFileProgress,
+                                    progress: 0,
+                                    status,
+                                    bytesUploaded: 0,
+                                    bytesTotal
+                                };
+                            }
+
                             metadata.set("fileProgress", fileProgress);
-                        }
-                    },
-                    folderTree,
-                    path,
-                    folderRenames
-                );
+                        },
+                        (error: Error) => {
+                            // Find the file ID that failed
+                            const failedFileId = batch.find(file =>
+                                !fileProgress[file.id] ||
+                                (fileProgress[file.id].status !== "completed" &&
+                                    fileProgress[file.id].status !== "failed")
+                            )?.id;
+
+                            logger.error("Error processing file:", {
+                                error: error.message,
+                                fileId: failedFileId || "unknown"
+                            });
+
+                            failedUploads++;
+                            metadata.set("failedUploads", failedUploads);
+
+                            // Update file status to failed if we found the file
+                            if (failedFileId) {
+                                const currentFileProgress = fileProgress[failedFileId];
+                                const retryCount = (currentFileProgress?.retryCount || 0) + 1;
+
+                                fileProgress[failedFileId] = {
+                                    ...currentFileProgress,
+                                    progress: 0,
+                                    status: "failed",
+                                    error: `${error.message} (Try ${retryCount}/3)`,
+                                    endTime: Date.now(),
+                                    retryCount
+                                };
+                                metadata.set("fileProgress", fileProgress);
+                            }
+                        },
+                        folderTree,
+                        path,
+                        folderRenames
+                    );
                 // Process each successful upload to create documents with proper folder information
                 if (result.results) {
                     for (const fileResult of result.results) {
@@ -388,8 +397,8 @@ export const batchFileUpload = task({
                                         }
                                     })();
 
-                                    // Add the promise to our tracking array
-                                    allDocumentPromises.push(documentPromise);
+                                    // Add the promise to our tracking array safely
+                                    addDocumentPromise(documentPromise);
                                 }
                             } catch (docError) {
                                 // This catch is now for any errors that occur before documentPromise is created
@@ -408,35 +417,45 @@ export const batchFileUpload = task({
                         }
                     }
                 }
-                successfulUploads += result.successfulUploads;
-                failedUploads += result.failedUploads;
-                metadata.set("successfulUploads", successfulUploads);
-                metadata.set("failedUploads", failedUploads);
-            } catch (error) {
-                logger.error("Error processing batch:", { error: error instanceof Error ? error.message : String(error) });
-                failedUploads += batch.length;
-                metadata.set("failedUploads", failedUploads);
+                    successfulUploads += result.successfulUploads;
+                    failedUploads += result.failedUploads;
+                    metadata.set("successfulUploads", successfulUploads);
+                    metadata.set("failedUploads", failedUploads);
+                } catch (error) {
+                    logger.error("Error processing batch:", { error: error instanceof Error ? error.message : String(error) });
+                    failedUploads += batch.length;
+                    metadata.set("failedUploads", failedUploads);
 
-                // Mark all files in the batch as failed
-                batch.forEach(file => {
-                    fileProgress[file.id] = {
-                        progress: 0,
-                        status: "failed",
-                        error: error instanceof Error ? error.message : "Unknown error",
-                        fileName: file.name,
-                        documentCreated: false,
-                        documentCreationStatus: "failed",
-                        documentCreationError: error instanceof Error ? error.message : "Unknown error",
-                        startTime: Date.now(),
-                        fileSize: file.size || 0,
-                        retryCount: 0
-                    };
-                });
-                metadata.set("fileProgress", fileProgress);
-            }
+                    // Mark all files in the batch as failed
+                    batch.forEach(file => {
+                        fileProgress[file.id] = {
+                            progress: 0,
+                            status: "failed",
+                            error: error instanceof Error ? error.message : "Unknown error",
+                            fileName: file.name,
+                            documentCreated: false,
+                            documentCreationStatus: "failed",
+                            documentCreationError: error instanceof Error ? error.message : "Unknown error",
+                            startTime: Date.now(),
+                            fileSize: file.size || 0,
+                            retryCount: 0
+                        };
+                    });
+                    metadata.set("fileProgress", fileProgress);
+                }
+            })();
+            batchPromises.push(batchPromise);
         }
-        // Wait for all document creation processes to complete
-        await Promise.all(allDocumentPromises);
+        // Wait for all batches to complete in parallel
+        // This ensures all document promises are added to allDocumentPromises before we try to await them
+        await Promise.allSettled(batchPromises);
+
+        // Now wait for all document creation processes to complete
+        // At this point, all document promises have been added to the array
+        if (allDocumentPromises.length > 0) {
+            logger.info(`Waiting for ${allDocumentPromises.length} document creation processes to complete`);
+            await Promise.allSettled(allDocumentPromises);
+        }
 
         // Get a fresh snapshot of all file statuses after promises complete
         const finalFileProgress = { ...fileProgress };

@@ -46,18 +46,19 @@ export default async function handler(
       integration?.refreshToken &&
       (accessTokenExpired || refreshTokenExpired)
     ) {
-      integration = await GoogleDriveClient.getInstance().refreshAccessToken(
+      const refreshTokenResponse = await GoogleDriveClient.getInstance().refreshAccessToken(
         integration!.refreshToken,
       );
       const expiresAt = new Date();
-      expiresAt.setSeconds(expiresAt.getSeconds() + integration!.expires_in);
-      await prisma.googleDriveIntegration.update({
+      expiresAt.setSeconds(expiresAt.getSeconds() + refreshTokenResponse.expires_in);
+      const updatedIntegration = await prisma.googleDriveIntegration.update({
         where: { userId },
         data: {
           expiresAt: expiresAt,
-          accessToken: integration!.access_token,
+          accessToken: refreshTokenResponse.access_token,
         },
       });
+      return res.status(200).json({ isConnected: !!integration, integration: updatedIntegration });
     }
 
     return res.status(200).json({ isConnected: !!integration, integration });

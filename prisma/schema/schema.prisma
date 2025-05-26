@@ -36,8 +36,8 @@ model GoogleDriveIntegration {
   name                  String?
   picture               String?
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String   @db.VarChar(255)
-  refreshToken          String   @db.VarChar(255)
+  accessToken           String   @db.Text
+  refreshToken          String   @db.Text
   expiresAt             DateTime
   refreshTokenExpiresAt DateTime
   createdAt             DateTime @default(now())
