@@ -90,8 +90,6 @@ export function useDataroomItems({
     },
   );  
 
-  console.log("folderData", folderData);
-
   const { data: documentData, error: documentError } = useSWR<DataroomFolderDocument[]>(
     shouldFetch ? `/api/teams/${teamId}/datarooms/${id}${documentsPath}` : null,
     fetcher,
@@ -154,8 +152,6 @@ export function useDataroomTrashItems({
       dedupingInterval: 30000,
     },
   );
-
-  console.log("folderData", folderData);
 
   const documentCount = folderData?.filter(item => item.itemType === "DATAROOM_DOCUMENT").length || 0;
   const folderCount = folderData?.filter(item => item.itemType === "DATAROOM_FOLDER").length || 0;
@@ -266,7 +262,6 @@ export function useDataroomFoldersTree({
       dedupingInterval: 30000,
     },
   );
-  console.log("jsnonon", folders);
 
   return {
     folders,

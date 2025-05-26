@@ -18,11 +18,7 @@ export default function Documents() {
     useDataroomTrashItems({
       root: true,
     });
-
-  console.log("items", items);
   const teamInfo = useTeam();
-
-  const [isReordering, setIsReordering] = useState<boolean>(false);
 
   return (
     <AppLayout>

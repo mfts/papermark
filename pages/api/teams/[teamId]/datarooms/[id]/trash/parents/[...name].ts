@@ -46,7 +46,6 @@ export default async function handle(
 
       for (let i = 0; i < name.length; i++) {
         const trashPath = "/" + name.slice(0, i + 1).join("/"); // construct the trash path
-        console.log("trashPath", trashPath);
 
         const trashItem = await prisma.trashItem.findFirst({
           where: {
