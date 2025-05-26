@@ -9,8 +9,6 @@ import PlausibleProvider from "next-plausible";
 import { NuqsAdapter } from "nuqs/adapters/next/pages";
 
 import { EXCLUDED_PATHS } from "@/lib/constants";
-
-import { EXCLUDED_PATHS } from "@/lib/constants";
 import { UploadProvider } from "@/lib/context/upload-context";
 
 import { UploadNotificationDrawer } from "@/components/documents/upload-notification-drawer";
@@ -83,22 +81,22 @@ export default function App({
               domain="papermark.io"
               enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
             >
-               <NuqsAdapter>
-                 <main className={inter.className}>
-                <Toaster closeButton />
-                <TooltipProvider delayDuration={100}>
-                  {EXCLUDED_PATHS.includes(router.pathname) ? (
-                    <Component {...pageProps} />
-                  ) : (
-                    <TeamProvider>
-                      <UploadProvider>
-                        <Component {...pageProps} />
-                        <UploadNotificationDrawer />
-                      </UploadProvider>
-                    </TeamProvider>
-                  )}
-                </TooltipProvider>
-              </main>
+              <NuqsAdapter>
+                <main className={inter.className}>
+                  <Toaster closeButton />
+                  <TooltipProvider delayDuration={100}>
+                    {EXCLUDED_PATHS.includes(router.pathname) ? (
+                      <Component {...pageProps} />
+                    ) : (
+                      <TeamProvider>
+                        <UploadProvider>
+                          <Component {...pageProps} />
+                          <UploadNotificationDrawer />
+                        </UploadProvider>
+                      </TeamProvider>
+                    )}
+                  </TooltipProvider>
+                </main>
               </NuqsAdapter>
             </PlausibleProvider>
           </ThemeProvider>
@@ -106,4 +104,4 @@ export default function App({
       </SessionProvider>
     </>
   );
-}
+};
