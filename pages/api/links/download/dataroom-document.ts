@@ -52,6 +52,7 @@ export default async function handle(
               documents: {
                 where: {
                   documentId: documentId,
+                  removedAt: null
                 },
                 select: {
                   id: true,

@@ -53,6 +53,9 @@ export default async function handler(
         },
         select: {
           folders: {
+            where: {
+              removedAt: null,
+            },
             select: {
               id: true,
               name: true,
@@ -60,6 +63,9 @@ export default async function handler(
             },
           },
           documents: {
+            where: {
+              removedAt: null,
+            },
             select: {
               id: true,
               folderId: true,

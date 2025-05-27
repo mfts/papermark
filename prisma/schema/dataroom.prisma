@@ -12,6 +12,7 @@ model Dataroom {
   viewers      Viewer[]
   viewerGroups ViewerGroup[]
   brand        DataroomBrand?
+  trashItems   TrashItem[]        // Items in trash
 
   // conversation
   conversationsEnabled Boolean        @default(false)
@@ -41,7 +42,8 @@ model DataroomDocument {
   folderId   String?
   folder     DataroomFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
   orderIndex Int?
-
+  removedAt  DateTime?       // When the document was moved to trash
+  trashItems TrashItem[]     // Relation to trash items
   conversations Conversation[]
 
   uploadedDocuments DocumentUpload[]
@@ -65,6 +67,8 @@ model DataroomFolder {
   dataroomId   String
   dataroom     Dataroom           @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
   orderIndex   Int?
+  removedAt    DateTime?          // When the folder was moved to trash
+  trashItems   TrashItem[]        // Relation to trash items
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -150,3 +154,49 @@ enum ItemType {
   DATAROOM_DOCUMENT
   DATAROOM_FOLDER
 }
+
+model TrashItem {
+  id          String   @id @default(cuid())
+  
+  // Original item information
+  itemId      String
+  itemType    ItemType // Use a generic enum to accommodate more item types in the future
+  
+  // Dataroom and folder associations
+  dataroomId  String
+  dataroom    Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  
+  dataroomDocumentId String?  // Stores the original document ID
+  dataroomDocument   DataroomDocument? @relation(fields: [dataroomDocumentId], references: [id], onDelete: SetNull)
+  
+  dataroomFolderId    String?  // Stores the original folder ID
+  dataroomFolder      DataroomFolder? @relation(fields: [dataroomFolderId], references: [id], onDelete: SetNull)
+  
+  fullPath    String?  // Complete original path for reference
+  trashPath   String?   // The path to the trash item
+  
+  parentId    String?  // null for root folders, references DataroomFolder.id for hierarchy
+
+
+  // Metadata and audit trail
+  name        String   // Original item name
+  deletedAt   DateTime @default(now())
+  deletedBy   String   // User ID who deleted the item
+  
+  purgeAt     DateTime? // Optional: Auto-purge date (e.g., 30 days after deletion)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dataroomId])
+  @@index([dataroomDocumentId])
+  @@index([dataroomFolderId])
+  @@index([itemType, itemId])
+  @@index([deletedAt])
+  @@index([purgeAt])
+  @@unique([dataroomId, itemId])
+  @@index([dataroomId, parentId, itemType])
+  @@unique([dataroomId, dataroomFolderId])
+  @@unique([dataroomId, dataroomDocumentId])
+}
+
