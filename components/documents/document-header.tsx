@@ -601,17 +601,19 @@ export default function DocumentHeader({
               openModal={openAddDocModal}
               setAddDocumentModalOpen={setOpenAddDocModal}
             >
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenAddDocModal(true);
-                }}
-                className="hidden md:flex"
-              >
-                <FileUp className="h-6 w-6" />
-              </Button>
+              <ButtonTooltip content="Upload new version">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenAddDocModal(true);
+                  }}
+                  className="hidden md:flex"
+                >
+                  <FileUp className="h-6 w-6" />
+                </Button>
+              </ButtonTooltip>
             </AddDocumentModal>
           )}
 

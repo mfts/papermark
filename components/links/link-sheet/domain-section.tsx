@@ -320,6 +320,7 @@ export default function DomainSection({
             ? "select_custom_domain_dataroom"
             : "select_custom_domain_document"
         }
+        highlightItem={["custom-domain"]}
       />
     </>
   );
