@@ -16,6 +16,7 @@ interface TeamContextProps {
 export type TeamContextType = {
   teams: Team[];
   currentTeam: Team | null;
+  currentTeamId: string | null;
   isLoading: boolean;
   setCurrentTeam: (team: Team) => void;
 };
@@ -23,11 +24,12 @@ export type TeamContextType = {
 export const initialState = {
   teams: [],
   currentTeam: null,
+  currentTeamId: null,
   isLoading: false,
   setCurrentTeam: (team: Team) => {},
 };
 
-const TeamContext = createContext<TeamContextType | null>(initialState);
+const TeamContext = createContext<TeamContextType>(initialState);
 
 export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
   const { teams, loading } = useTeams();
@@ -49,10 +51,11 @@ export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
       currentTeam:
         (teams || []).find((team) => team.id === currentTeamId) ||
         (teams || [])[0],
+      currentTeamId,
       isLoading: loading,
       setCurrentTeam,
     }),
-    [teams, currentTeam, loading],
+    [teams, currentTeam, currentTeamId, loading],
   );
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;

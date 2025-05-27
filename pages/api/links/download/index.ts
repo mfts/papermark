@@ -61,8 +61,8 @@ export default async function handle(
         return res.status(404).json({ error: "Error downloading" });
       }
 
-      // if link does not allow download, we should not allow the download
-      if (!view.link.allowDownload && !view.document?.downloadOnly) {
+      // if document is downloadOnly, always allow. Otherwise, check link settings.
+      if (!view.document?.downloadOnly && !view.link.allowDownload) {
         return res.status(403).json({ error: "Error downloading" });
       }
 

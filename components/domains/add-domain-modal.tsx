@@ -123,6 +123,7 @@ export function AddDomainModal({
               : PlanEnum.Business
           }
           trigger={"add_domain_overview"}
+          highlightItem={["custom-domain"]}
         >
           <Button>Upgrade to Add Domain</Button>
         </UpgradePlanModal>
@@ -138,6 +139,7 @@ export function AddDomainModal({
           open={open}
           setOpen={setOpen}
           trigger={"add_domain_link_sheet"}
+          highlightItem={["custom-domain"]}
         />
       );
     }

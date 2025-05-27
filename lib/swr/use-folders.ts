@@ -20,7 +20,7 @@ export function useFolderWithParents({ name }: { name: string[] }) {
 
   const { data: folders, error } = useSWR<{ name: string; path: string }[]>(
     teamInfo?.currentTeam?.id &&
-      name &&
+    name && !!name.length &&
       `/api/teams/${teamInfo?.currentTeam?.id}/folders/parents/${name.join("/")}`,
     fetcher,
     {

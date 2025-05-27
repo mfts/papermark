@@ -8,6 +8,7 @@ export type DocumentData = {
   supportedFileType: string; // papermark types: "pdf", "sheet", "docs", "slides", "map", "zip"
   fileSize: number | undefined; // file size in bytes
   numPages?: number;
+  enableExcelAdvancedMode?: boolean;
 };
 
 export const createDocument = async ({

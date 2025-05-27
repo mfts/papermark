@@ -5,6 +5,7 @@ import { z } from "zod";
 import { fetcher } from "@/lib/utils";
 
 import { configSchema } from "./server";
+import { usePlan } from "@/lib/swr/use-billing";
 
 export type LimitProps = z.infer<typeof configSchema> & {
   usage: {
@@ -17,6 +18,7 @@ export type LimitProps = z.infer<typeof configSchema> & {
 
 export function useLimits() {
   const teamInfo = useTeam();
+  const { isFree, isTrial } = usePlan();
   const teamId = teamInfo?.currentTeam?.id;
 
   const { data, error } = useSWR<LimitProps | null>(
@@ -32,8 +34,10 @@ export function useLimits() {
     : true;
   const canAddLinks = data?.links ? data?.usage?.links < data?.links : true;
   const canAddUsers = data?.users ? data?.usage?.users < data?.users : true;
+  const showUpgradePlanModal = (isFree && !isTrial) || (isTrial && !canAddUsers);
 
   return {
+    showUpgradePlanModal,
     limits: data,
     canAddDocuments,
     canAddLinks,

@@ -5,12 +5,15 @@ import * as React from "react";
 import { useLimits } from "@/ee/limits/swr-handler";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { ChevronsUpDown, UserRoundPlusIcon } from "lucide-react";
+import { Team } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -19,9 +22,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-
-import { Team } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 import { AddSeatModal } from "../billing/add-seat-modal";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
@@ -42,7 +42,7 @@ export function TeamSwitcher({
   const [isAddSeatModalOpen, setAddSeatModalOpen] =
     React.useState<boolean>(false);
   const { isMobile } = useSidebar();
-  const { canAddUsers } = useLimits();
+  const { canAddUsers, showUpgradePlanModal } = useLimits();
 
   const switchTeam = (team: Team) => {
     localStorage.setItem("currentTeamId", team.id);
@@ -53,7 +53,7 @@ export function TeamSwitcher({
 
   return (
     <SidebarMenu className="flex flex-row items-center gap-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1.5">
-      <SidebarMenuItem>
+      <SidebarMenuItem className="w-full">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
@@ -80,6 +80,7 @@ export function TeamSwitcher({
             <DropdownMenuLabel className="text-xs text-muted-foreground">
               Teams
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
             {teams.map((team, index) => (
               <DropdownMenuItem
                 key={index}
@@ -112,7 +113,7 @@ export function TeamSwitcher({
         </DropdownMenu>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        {activeTeam.plan?.includes("free") ? (
+        {showUpgradePlanModal ? (
           <UpgradePlanModal
             clickedPlan={PlanEnum.Pro}
             trigger={"invite_team_members"}

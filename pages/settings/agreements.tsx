@@ -140,6 +140,7 @@ export default function NdaAgreements() {
         trigger="nda_agreements_page"
         open={showUpgradeModal}
         setOpen={setShowUpgradeModal}
+        highlightItem={["nda"]}
       />
       <AgreementSheet isOpen={isOpen} setIsOpen={setIsOpen} />
     </AppLayout>

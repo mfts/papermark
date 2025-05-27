@@ -13,6 +13,7 @@ import {
   CloudDownloadIcon,
   DownloadIcon,
   FileDownIcon,
+  FolderIcon,
   MoonIcon,
   ServerIcon,
   SheetIcon,
@@ -286,26 +287,30 @@ export default function DocumentHeader({
   };
 
   const enableAdvancedExcel = async (document: Document) => {
-    try {
-      const response = await fetch(
-        `/api/teams/${teamId}/documents/${document.id}/advanced-mode`,
-        { method: "POST", headers: { "Content-Type": "application/json" } },
-      );
-      if (!response.ok) {
-        const { message } = await response.json();
-        toast.error(message);
-      } else {
+    toast.promise(
+      fetch(`/api/teams/${teamId}/documents/${document.id}/advanced-mode`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }).then(async (response) => {
+        if (!response.ok) {
+          const { message } = await response.json();
+          throw new Error(message);
+        }
         const { message } = await response.json();
         plausible("advancedExcelEnabled", {
           props: { documentId: document.id },
         }); // track the event
+        mutate(`/api/teams/${teamId}/documents/${document.id}`);
         handleCloseAlert("enable-advanced-excel-alert");
-        toast.success(message);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("An error occurred. Please try again.");
-    }
+        return message;
+      }),
+      {
+        loading: "Enabling advanced Excel mode...",
+        success: (message) => message,
+        error: (error) =>
+          error.message || "Failed to enable advanced Excel mode",
+      },
+    );
   };
 
   // export method to fetch the visits data and convert to csv.
@@ -596,17 +601,19 @@ export default function DocumentHeader({
               openModal={openAddDocModal}
               setAddDocumentModalOpen={setOpenAddDocModal}
             >
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenAddDocModal(true);
-                }}
-                className="hidden md:flex"
-              >
-                <FileUp className="h-6 w-6" />
-              </Button>
+              <ButtonTooltip content="Upload new version">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenAddDocModal(true);
+                  }}
+                  className="hidden md:flex"
+                >
+                  <FileUp className="h-6 w-6" />
+                </Button>
+              </ButtonTooltip>
             </AddDocumentModal>
           )}
 
@@ -751,7 +758,9 @@ export default function DocumentHeader({
               )}
 
               {primaryVersion.type !== "notion" &&
-                primaryVersion.type !== "zip" && (
+                primaryVersion.type !== "zip" &&
+                primaryVersion.type !== "map" &&
+                primaryVersion.type !== "email" && (
                   <DropdownMenuItem
                     onClick={() =>
                       isFree
@@ -864,6 +873,29 @@ export default function DocumentHeader({
                     >
                       {item.dataroom.name}
                     </Link>
+                    {item.folder ? (
+                      <Link
+                        href={`/datarooms/${item.dataroom.id}/documents/${item.folder.path}`}
+                        className="flex flex-row items-center space-x-2 hover:underline"
+                        title={`Folder: ${item.folder.name}`}
+                      >
+                        <ArrowRightIcon className="h-3.5 w-3.5" />
+                        <FolderIcon className="mr-1 h-4 w-4" />
+                        <span className="ml-1 truncate">
+                          {item.folder.name}
+                        </span>
+                      </Link>
+                    ) : (
+                      <Link
+                        href={`/datarooms/${item.dataroom.id}/documents`}
+                        className="flex flex-row items-center space-x-2 hover:underline"
+                        title="Home"
+                      >
+                        <ArrowRightIcon className="h-3.5 w-3.5" />
+                        <FolderIcon className="mr-1 h-4 w-4" />
+                        <span className="ml-1 truncate">Home</span>
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

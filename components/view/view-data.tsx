@@ -93,7 +93,9 @@ export default function ViewData({
         ? viewData.conversationsEnabled
         : false),
     assistantEnabled: document.assistantEnabled,
-    allowDownload: isDownloadAllowed(canDownload, link.allowDownload ?? false),
+    allowDownload:
+      document.downloadOnly ||
+      isDownloadAllowed(canDownload, link.allowDownload ?? false),
     isTeamMember: viewData.isTeamMember,
   };
 

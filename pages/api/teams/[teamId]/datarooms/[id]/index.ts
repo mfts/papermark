@@ -50,6 +50,13 @@ export default async function handle(
         },
       });
 
+      if (!dataroom) {
+        return res.status(404).json({
+          error: "Not Found",
+          message: "The requested dataroom does not exist",
+        });
+      }
+
       return res.status(200).json(dataroom);
     } catch (error) {
       errorhandler(error, res);

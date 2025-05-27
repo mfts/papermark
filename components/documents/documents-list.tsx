@@ -486,16 +486,18 @@ export function DocumentsList({
               {folders && !foldersLoading
                 ? folders.map((folder) => {
                     return (
-                      <FolderCard
-                        key={folder.id}
-                        folder={folder}
-                        teamInfo={teamInfo}
-                        isSelected={selectedFolders.includes(folder.id)}
-                        isDragging={
-                          isDragging && selectedFolders.includes(folder.id)
-                        }
-                        onDelete={handleDeleteFolder}
-                      />
+                      <li key={folder.id}>
+                        <FolderCard
+                          key={folder.id}
+                          folder={folder}
+                          teamInfo={teamInfo}
+                          isSelected={selectedFolders.includes(folder.id)}
+                          isDragging={
+                            isDragging && selectedFolders.includes(folder.id)
+                          }
+                          onDelete={handleDeleteFolder}
+                        />
+                      </li>
                     );
                   })
                 : Array.from({ length: 3 }).map((_, i) => (
@@ -521,14 +523,17 @@ export function DocumentsList({
               {documents && !loading
                 ? documents.map((document) => {
                     return (
-                      <DocumentCard
-                        key={document.id}
-                        document={document}
-                        teamInfo={teamInfo}
-                        isDragging={
-                          isDragging && selectedDocuments.includes(document.id)
-                        }
-                      />
+                      <li key={document.id}>
+                        <DocumentCard
+                          key={document.id}
+                          document={document}
+                          teamInfo={teamInfo}
+                          isDragging={
+                            isDragging &&
+                            selectedDocuments.includes(document.id)
+                          }
+                        />
+                      </li>
                     );
                   })
                 : Array.from({ length: 3 }).map((_, i) => (
@@ -579,35 +584,39 @@ export function DocumentsList({
                   {folders && !foldersLoading
                     ? folders.map((folder) => {
                         return (
-                          <DroppableFolder
-                            key={folder.id}
-                            id={folder.id}
-                            disabledFolder={selectedFolders}
-                            path={folder.path}
-                          >
-                            <DraggableItem
+                          <li key={folder.id}>
+                            <DroppableFolder
                               key={folder.id}
                               id={folder.id}
-                              isSelected={selectedFolders.includes(folder.id)}
-                              onSelect={(id, type) => {
-                                handleSelect(id, type);
-                              }}
-                              isDraggingSelected={isDragging}
-                              type="folder"
+                              disabledFolder={selectedFolders}
+                              path={folder.path}
                             >
-                              <FolderCard
+                              <DraggableItem
                                 key={folder.id}
-                                folder={folder}
-                                teamInfo={teamInfo}
+                                id={folder.id}
                                 isSelected={selectedFolders.includes(folder.id)}
-                                isDragging={
-                                  isDragging &&
-                                  selectedFolders.includes(folder.id)
-                                }
-                                onDelete={handleDeleteFolder}
-                              />
-                            </DraggableItem>
-                          </DroppableFolder>
+                                onSelect={(id, type) => {
+                                  handleSelect(id, type);
+                                }}
+                                isDraggingSelected={isDragging}
+                                type="folder"
+                              >
+                                <FolderCard
+                                  key={folder.id}
+                                  folder={folder}
+                                  teamInfo={teamInfo}
+                                  isSelected={selectedFolders.includes(
+                                    folder.id,
+                                  )}
+                                  isDragging={
+                                    isDragging &&
+                                    selectedFolders.includes(folder.id)
+                                  }
+                                  onDelete={handleDeleteFolder}
+                                />
+                              </DraggableItem>
+                            </DroppableFolder>
+                          </li>
                         );
                       })
                     : Array.from({ length: 3 }).map((_, i) => (
@@ -633,26 +642,30 @@ export function DocumentsList({
                   {documents && !loading
                     ? documents.map((document) => {
                         return (
-                          <DraggableItem
-                            key={document.id}
-                            id={document.id}
-                            isSelected={selectedDocuments.includes(document.id)}
-                            isDraggingSelected={isDragging}
-                            type="document"
-                            onSelect={(id, type) => {
-                              handleSelect(id, type);
-                            }}
-                          >
-                            <DocumentCard
+                          <li key={document.id}>
+                            <DraggableItem
                               key={document.id}
-                              document={document}
-                              teamInfo={teamInfo}
-                              isDragging={
-                                isDragging &&
-                                selectedDocuments.includes(document.id)
-                              }
-                            />
-                          </DraggableItem>
+                              id={document.id}
+                              isSelected={selectedDocuments.includes(
+                                document.id,
+                              )}
+                              isDraggingSelected={isDragging}
+                              type="document"
+                              onSelect={(id, type) => {
+                                handleSelect(id, type);
+                              }}
+                            >
+                              <DocumentCard
+                                key={document.id}
+                                document={document}
+                                teamInfo={teamInfo}
+                                isDragging={
+                                  isDragging &&
+                                  selectedDocuments.includes(document.id)
+                                }
+                              />
+                            </DraggableItem>
+                          </li>
                         );
                       })
                     : Array.from({ length: 3 }).map((_, i) => (
