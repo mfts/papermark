@@ -22,6 +22,7 @@ import { resumableUpload } from "@/lib/files/tus-upload";
 import {
   createFolderInBoth,
   createFolderInMainDocs,
+  determineFolderPaths,
   isSystemFile,
 } from "@/lib/folders/create-folder";
 import { usePlan } from "@/lib/swr/use-billing";
@@ -553,14 +554,24 @@ export default function UploadZone({
                 );
               }
             } else {
-              // Create folder in both dataroom and main documents
-              // Use separate paths for dataroom and main documents
+              const isFirstLevelFolder =
+                (parentPathOfThisEntry ?? folderPathName) === folderPathName;
+
+              const {
+                parentDataroomPath: targetParentDataroomPath,
+                parentMainDocsPath: targetParentMainDocsPath,
+              } = determineFolderPaths({
+                currentDataroomPath: dataroomParentPath ?? folderPathName,
+                currentMainDocsPath: parentPathOfThisEntry,
+                isFirstLevelFolder,
+              });
+
               const { dataroomPath, mainDocsPath } = await createFolderInBoth({
                 teamId: teamInfo.currentTeam.id,
                 dataroomId,
                 name: entry.name,
-                mainDocsPath: parentPathOfThisEntry ?? folderPathName,
-                dataroomPath: dataroomParentPath ?? folderPathName,
+                parentMainDocsPath: targetParentMainDocsPath,
+                parentDataroomPath: targetParentDataroomPath,
                 setRejectedFiles,
                 analytics,
               });
