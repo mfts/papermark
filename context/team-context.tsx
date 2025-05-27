@@ -29,7 +29,7 @@ export const initialState = {
   setCurrentTeam: (team: Team) => {},
 };
 
-const TeamContext = createContext<TeamContextType | null>(initialState);
+const TeamContext = createContext<TeamContextType>(initialState);
 
 export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
   const { teams, loading } = useTeams();
@@ -55,7 +55,7 @@ export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
       isLoading: loading,
       setCurrentTeam,
     }),
-    [teams, currentTeam, loading],
+    [teams, currentTeam, currentTeamId, loading],
   );
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;

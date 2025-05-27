@@ -5,10 +5,10 @@ import { TeamDetail } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
 
 export function useGetTeam() {
-  const teamInfo = useTeam();
+  const { currentTeamId } = useTeam();
 
   const { data: team, error } = useSWR<TeamDetail>(
-    teamInfo?.currentTeam && `/api/teams/${teamInfo.currentTeam.id}`,
+    currentTeamId && `/api/teams/${currentTeamId}`,
     fetcher,
     {
       dedupingInterval: 20000,
