@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -131,27 +131,45 @@ export type DEFAULT_LINK_TYPE = {
   enableIndexFile: boolean;
 };
 
+interface LinkSheetProps {
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+  linkType: LinkType;
+  currentLink?: DEFAULT_LINK_TYPE;
+  existingLinks?: LinkWithViews[];
+  page: number;
+  pageSize: number;
+  searchQuery?: string;
+  tags?: string[];
+}
+
 export default function LinkSheet({
   isOpen,
   setIsOpen,
   linkType,
   currentLink,
   existingLinks,
-}: {
-  isOpen: boolean;
-  setIsOpen: Dispatch<SetStateAction<boolean>>;
-  linkType: LinkType;
-  currentLink?: DEFAULT_LINK_TYPE;
-  existingLinks?: LinkWithViews[];
-}) {
+  page = 1,
+  pageSize = 10,
+  searchQuery,
+  tags,
+}: LinkSheetProps) {
   const router = useRouter();
   const { id: targetId, groupId } = router.query as {
     id: string;
     groupId?: string;
   };
 
-  const { domains } = useDomains();
+  const getSearchParams = useMemo(() => {
+    const searchParams = new URLSearchParams();
+    searchParams.set("page", page.toString());
+    searchParams.set("limit", pageSize.toString());
+    if (searchQuery) searchParams.set("search", searchQuery);
+    if (tags?.length) searchParams.set("tags", tags.join(","));
+    return searchParams;
+  }, [page, pageSize, searchQuery, tags]);
 
+  const { domains } = useDomains();
   const {
     viewerGroups,
     loading: isLoadingGroups,
@@ -330,10 +348,13 @@ export default function LinkSheet({
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
           targetId,
-        )}/links`,
-        (existingLinks || []).map((link) =>
-          link.id === currentLink.id ? returnedLink : link,
-        ),
+        )}/links?${getSearchParams.toString()}`,
+        (currentData: any) => ({
+          ...currentData,
+          links: (currentData?.links || []).map((link: any) =>
+            link.id === currentLink.id ? returnedLink : link,
+          ),
+        }),
         false,
       );
 
@@ -354,8 +375,11 @@ export default function LinkSheet({
             mutate(
               `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
                 targetId,
-              )}/groups/${groupId}/links`,
-              groupLinks,
+              )}/groups/${groupId}/links?${getSearchParams.toString()}`,
+              (currentData: any) => ({
+                ...currentData,
+                links: groupLinks,
+              }),
               false,
             );
           } else if (returnedLink.groupId === groupId) {
@@ -367,8 +391,11 @@ export default function LinkSheet({
             mutate(
               `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
                 targetId,
-              )}/groups/${groupId}/links`,
-              [returnedLink, ...groupLinks],
+              )}/groups/${groupId}/links?${getSearchParams.toString()}`,
+              (currentData: any) => ({
+                ...currentData,
+                links: [returnedLink, ...groupLinks],
+              }),
               false,
             );
           }
@@ -381,10 +408,13 @@ export default function LinkSheet({
           mutate(
             `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
               targetId,
-            )}/groups/${groupId}/links`,
-            groupLinks.map((link) =>
-              link.id === currentLink.id ? returnedLink : link,
-            ),
+            )}/groups/${groupId}/links?${getSearchParams.toString()}`,
+            (currentData: any) => ({
+              ...currentData,
+              links: (currentData?.links || []).map((link: any) =>
+                link.id === currentLink.id ? returnedLink : link,
+              ),
+            }),
             false,
           );
         }
@@ -393,13 +423,15 @@ export default function LinkSheet({
       toast.success("Link updated successfully");
     } else {
       setIsOpen(false);
-
       // Add the new link to the list of links
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
           targetId,
-        )}/links`,
-        [returnedLink, ...(existingLinks || [])],
+        )}/links?${getSearchParams.toString()}`,
+        (currentData: any) => ({
+          ...currentData,
+          links: [returnedLink, ...(currentData?.links || [])],
+        }),
         false,
       );
 
@@ -414,8 +446,11 @@ export default function LinkSheet({
         mutate(
           `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
             targetId,
-          )}/groups/${groupId}/links`,
-          [returnedLink, ...groupLinks],
+          )}/groups/${groupId}/links?${getSearchParams.toString()}`,
+          (currentData: any) => ({
+            ...currentData,
+            links: [returnedLink, ...groupLinks],
+          }),
           false,
         );
       }
