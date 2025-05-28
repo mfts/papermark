@@ -1,10 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 
+
+
 import { useTeam } from "@/context/team-context";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
 
+
+
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
+
+
+
 import Nav from "@/components/view/nav";
+
+
+
+
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -18,7 +30,9 @@ export default function PDFViewer(props: any) {
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
+  const visibilityRef = useRef<boolean>(true);
   const teamInfo = useTeam();
+  const { trackPageViewSafely, resetTrackingState } = useSafePageViewTracker();
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -30,11 +44,52 @@ export default function PDFViewer(props: any) {
 
     // when component unmounts, calculate duration and track page view
     return () => {
-      const endTime = Date.now();
-      const duration = Math.round(endTime - startTimeRef.current);
-      trackPageView(duration);
+      const duration = Math.round(Date.now() - startTimeRef.current);
+      trackPageViewSafely(
+        {
+          linkId: linkId,
+          documentId: documentId,
+          viewId: viewId,
+          duration: duration,
+          pageNumber: pageNumberRef.current,
+          versionNumber: props.versionNumber,
+          isPreview: isPreview,
+        },
+        false,
+      );
     };
   }, [pageNumber]); // monitor pageNumber for changes
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        visibilityRef.current = true;
+        startTimeRef.current = Date.now();
+        resetTrackingState();
+      } else {
+        visibilityRef.current = false;
+        const duration = Date.now() - startTimeRef.current;
+        trackPageViewSafely(
+          {
+            linkId: linkId,
+            documentId: documentId,
+            viewId: viewId,
+            duration: duration,
+            pageNumber: pageNumberRef.current,
+            versionNumber: props.versionNumber,
+            isPreview: isPreview,
+          },
+          true,
+        );
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [pageNumber]);
 
   useEffect(() => {
     if (numPages > 0) {
@@ -54,9 +109,19 @@ export default function PDFViewer(props: any) {
   // duration is measured in milliseconds
   useEffect(() => {
     const handleBeforeUnload = () => {
-      const endTime = Date.now();
-      const duration = Math.round(endTime - startTimeRef.current);
-      trackPageView(duration);
+      const duration = Math.round(Date.now() - startTimeRef.current);
+      trackPageViewSafely(
+        {
+          linkId: linkId,
+          documentId: documentId,
+          viewId: viewId,
+          duration: duration,
+          pageNumber: pageNumberRef.current,
+          versionNumber: props.versionNumber,
+          isPreview: isPreview,
+        },
+        true,
+      );
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -130,24 +195,6 @@ export default function PDFViewer(props: any) {
     } catch (error) {
       console.error("Error downloading file:", error);
     }
-  }
-
-  async function trackPageView(duration: number = 0) {
-    await fetch("/api/record_view", {
-      method: "POST",
-      body: JSON.stringify({
-        linkId: linkId,
-        documentId: documentId,
-        viewId: viewId,
-        duration: duration,
-        pageNumber: pageNumberRef.current,
-        versionNumber: props.versionNumber,
-        isPreview: isPreview,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
   }
 
   async function updateNumPages(numPages: number) {

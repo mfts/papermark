@@ -6,6 +6,7 @@ import React from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -21,39 +22,6 @@ import "@/styles/custom-viewer-styles.css";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 5;
 
-const trackPageView = async (data: {
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  duration: number;
-  pageNumber: number;
-  versionNumber: number;
-  dataroomId?: string;
-  setViewedPages?: React.Dispatch<
-    React.SetStateAction<{ pageNumber: number; duration: number }[]>
-  >;
-  isPreview?: boolean;
-}) => {
-  data.setViewedPages &&
-    data.setViewedPages((prevViewedPages) =>
-      prevViewedPages.map((page) =>
-        page.pageNumber === data.pageNumber
-          ? { ...page, duration: page.duration + data.duration }
-          : page,
-      ),
-    );
-
-  // If the view is a preview, do not track the view
-  if (data.isPreview) return;
-
-  await fetch("/api/record_view", {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-};
 
 export default function PagesHorizontalViewer({
   pages,
@@ -140,7 +108,6 @@ export default function PagesHorizontalViewer({
   const pageNumberRef = useRef<number>(pageNumber);
   const visibilityRef = useRef<boolean>(true);
   const containerRef = useRef<HTMLDivElement>(null);
-  const scrollActionRef = useRef<boolean>(false);
   const hasTrackedDownRef = useRef<boolean>(false);
   const hasTrackedUpRef = useRef<boolean>(false);
   const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
@@ -148,6 +115,7 @@ export default function PagesHorizontalViewer({
   const [imageDimensions, setImageDimensions] = useState<
     Record<number, { width: number; height: number }>
   >({});
+  const { trackPageViewSafely, resetTrackingState } = useSafePageViewTracker();
 
   const scaleCoordinates = (coords: string, scaleFactor: number) => {
     return coords
@@ -212,21 +180,25 @@ export default function PagesHorizontalViewer({
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
         startTimeRef.current = Date.now(); // Reset start time when the page becomes visible again
+        resetTrackingState();
       } else {
         visibilityRef.current = false;
         if (pageNumber <= numPages) {
           const duration = Date.now() - startTimeRef.current;
-          trackPageView({
-            linkId,
-            documentId,
-            viewId,
-            duration,
-            pageNumber: pageNumber,
-            versionNumber,
-            dataroomId,
-            setViewedPages,
-            isPreview,
-          });
+          trackPageViewSafely(
+            {
+              linkId,
+              documentId,
+              viewId,
+              duration,
+              pageNumber: pageNumber,
+              versionNumber,
+              dataroomId,
+              setViewedPages,
+              isPreview,
+            },
+            true,
+          );
         }
       }
     };
@@ -243,7 +215,7 @@ export default function PagesHorizontalViewer({
 
     if (visibilityRef.current && pageNumber <= numPages) {
       const duration = Date.now() - startTimeRef.current;
-      trackPageView({
+      trackPageViewSafely({
         linkId,
         documentId,
         viewId,
@@ -261,17 +233,20 @@ export default function PagesHorizontalViewer({
     const handleBeforeUnload = () => {
       if (pageNumber <= numPages) {
         const duration = Date.now() - startTimeRef.current;
-        trackPageView({
-          linkId,
-          documentId,
-          viewId,
-          duration,
-          pageNumber: pageNumber,
-          versionNumber,
-          dataroomId,
-          setViewedPages,
-          isPreview,
-        });
+        trackPageViewSafely(
+          {
+            linkId,
+            documentId,
+            viewId,
+            duration,
+            pageNumber: pageNumber,
+            versionNumber,
+            dataroomId,
+            setViewedPages,
+            isPreview,
+          },
+          true,
+        );
       }
     };
 
@@ -355,7 +330,7 @@ export default function PagesHorizontalViewer({
     preloadImage(pageNumber - 4);
 
     const duration = Date.now() - startTimeRef.current;
-    trackPageView({
+    trackPageViewSafely({
       linkId,
       documentId,
       viewId,
@@ -385,7 +360,7 @@ export default function PagesHorizontalViewer({
     preloadImage(pageNumber + 2);
 
     const duration = Date.now() - startTimeRef.current;
-    trackPageView({
+    trackPageViewSafely({
       linkId,
       documentId,
       viewId,
@@ -428,7 +403,7 @@ export default function PagesHorizontalViewer({
       if (targetPage >= 1 && targetPage <= numPages) {
         // Track the current page before jumping
         const duration = Date.now() - startTimeRef.current;
-        trackPageView({
+        trackPageViewSafely({
           linkId,
           documentId,
           viewId,

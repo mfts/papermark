@@ -10,6 +10,7 @@ import { NotionRenderer } from "react-notion-x";
 // core styles shared by all of react-notion-x (required)
 import "react-notion-x/src/styles.css";
 
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { NotionTheme } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { determineTextColor } from "@/lib/utils/determine-text-color";
@@ -47,9 +48,8 @@ export const NotionPage = ({
   screenshotProtectionEnabled: boolean;
   navData: TNavData;
 }) => {
-  const { isPreview, linkId, documentId, viewId, brand, dataroomId } = navData;
+  const { isPreview, linkId, documentId, viewId, brand } = navData;
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
-  const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [subPageId, setSubPageId] = useQueryState("pageid", {
     history: "push",
@@ -69,28 +69,35 @@ export const NotionPage = ({
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
   const visibilityRef = useRef<boolean>(true);
+  const { trackPageViewSafely, resetTrackingState } = useSafePageViewTracker();
 
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
         startTimeRef.current = Date.now(); // Reset start time when page becomes visible
+        resetTrackingState();
       } else {
         visibilityRef.current = false;
         const duration = Date.now() - startTimeRef.current;
-        if (duration > 0) {
-          trackPageView(duration);
-        }
+        trackPageViewSafely(
+          {
+            linkId: linkId,
+            documentId: documentId,
+            viewId: viewId,
+            duration: duration,
+            pageNumber: pageNumberRef.current,
+            versionNumber: versionNumber,
+            isPreview: isPreview,
+          },
+          true,
+        );
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      if (visibilityRef.current) {
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView(duration); // Also capture duration if component unmounts while visible
-      }
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
@@ -175,7 +182,18 @@ export const NotionPage = ({
   useEffect(() => {
     const handleBeforeUnload = () => {
       const duration = Date.now() - startTimeRef.current;
-      trackPageView(duration);
+      trackPageViewSafely(
+        {
+          linkId: linkId,
+          documentId: documentId,
+          viewId: viewId,
+          duration: duration,
+          pageNumber: pageNumberRef.current,
+          versionNumber: versionNumber,
+          isPreview: isPreview,
+        },
+        true,
+      );
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -184,25 +202,6 @@ export const NotionPage = ({
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [subPageId]);
-
-  async function trackPageView(duration: number = 0) {
-    if (isPreview) return;
-
-    await fetch("/api/record_view", {
-      method: "POST",
-      body: JSON.stringify({
-        linkId: linkId,
-        documentId: documentId,
-        viewId: viewId,
-        duration: duration,
-        pageNumber: pageNumberRef.current,
-        versionNumber: versionNumber,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
 
   // // Function to calculate scroll percentage
   // const calculateScrollPercentage = () => {

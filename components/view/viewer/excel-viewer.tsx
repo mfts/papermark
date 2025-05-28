@@ -4,6 +4,7 @@ import React from "react";
 import "@/public/vendor/handsontable/handsontable.full.min.css";
 import { Brand, DataroomBrand } from "@prisma/client";
 
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
@@ -20,27 +21,7 @@ type SheetData = {
   rowData: RowData[];
 };
 
-const trackPageView = async (data: {
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  duration: number;
-  pageNumber: number;
-  versionNumber: number;
-  dataroomId?: string;
-  isPreview?: boolean;
-}) => {
-  // If the view is a preview, do not track the view
-  if (data.isPreview) return;
 
-  await fetch("/api/record_view", {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-};
 
 export default function ExcelViewer({
   versionNumber,
@@ -61,6 +42,11 @@ export default function ExcelViewer({
   const [isWindowFocused, setIsWindowFocused] = useState(true);
 
   const { linkId, documentId, viewId, isPreview, dataroomId } = navData;
+
+  const startTimeRef = useRef(Date.now());
+  const visibilityRef = useRef<boolean>(true);
+
+  const { trackPageViewSafely, resetTrackingState } = useSafePageViewTracker();
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -85,8 +71,6 @@ export default function ExcelViewer({
   const containerRef = useRef<HTMLDivElement>(null);
   // @ts-ignore - Handsontable import has not types
   const hotInstanceRef = useRef<Handsontable | null>(null);
-  const startTimeRef = useRef(Date.now());
-  const visibilityRef = useRef<boolean>(true);
 
   const calculateSize = () => {
     if (containerRef.current) {
@@ -128,19 +112,23 @@ export default function ExcelViewer({
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
         startTimeRef.current = Date.now(); // Reset start time when page becomes visible
+        resetTrackingState();
       } else {
         visibilityRef.current = false;
         const duration = Date.now() - startTimeRef.current;
-        trackPageView({
-          linkId,
-          documentId,
-          viewId,
-          duration,
-          pageNumber: selectedSheetIndex + 1,
-          versionNumber,
-          dataroomId,
-          isPreview,
-        });
+        trackPageViewSafely(
+          {
+            linkId,
+            documentId,
+            viewId,
+            duration,
+            pageNumber: selectedSheetIndex + 1,
+            versionNumber,
+            dataroomId,
+            isPreview,
+          },
+          true,
+        );
       }
     };
 
@@ -149,16 +137,19 @@ export default function ExcelViewer({
     return () => {
       if (visibilityRef.current) {
         const duration = Date.now() - startTimeRef.current;
-        trackPageView({
-          linkId,
-          documentId,
-          viewId,
-          duration,
-          pageNumber: selectedSheetIndex + 1,
-          versionNumber,
-          dataroomId,
-          isPreview,
-        }); // Also capture duration if component unmounts while visible
+        trackPageViewSafely(
+          {
+            linkId,
+            documentId,
+            viewId,
+            duration,
+            pageNumber: selectedSheetIndex + 1,
+            versionNumber,
+            dataroomId,
+            isPreview,
+          },
+          true,
+        ); // Also capture duration if component unmounts while visible
         startTimeRef.current = Date.now();
       }
       document.removeEventListener("visibilitychange", handleVisibilityChange);
@@ -169,17 +160,21 @@ export default function ExcelViewer({
     const handleBeforeUnload = () => {
       if (!visibilityRef.current) return;
 
+      // Only track if we haven't already tracked an unload event
       const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: selectedSheetIndex + 1,
-        versionNumber,
-        dataroomId,
-        isPreview,
-      });
+      trackPageViewSafely(
+        {
+          linkId,
+          documentId,
+          viewId,
+          duration,
+          pageNumber: selectedSheetIndex + 1,
+          versionNumber,
+          dataroomId,
+          isPreview,
+        },
+        true,
+      );
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);

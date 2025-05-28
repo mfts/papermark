@@ -1,28 +1,8 @@
 import { useEffect, useRef } from "react";
 
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
+
 import Nav, { TNavData } from "../nav";
-
-const trackPageView = async (data: {
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  duration: number;
-  pageNumber: number;
-  versionNumber: number;
-  dataroomId?: string;
-  isPreview?: boolean;
-}) => {
-  // If the view is a preview, do not track the view
-  if (data.isPreview) return;
-
-  await fetch("/api/record_view", {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-};
 
 export default function AdvancedExcelViewer({
   file,
@@ -39,16 +19,40 @@ export default function AdvancedExcelViewer({
   const startTimeRef = useRef(Date.now());
   const visibilityRef = useRef<boolean>(true);
 
+  const { trackPageViewSafely, resetTrackingState } = useSafePageViewTracker();
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
         startTimeRef.current = Date.now(); // Reset start time when page becomes visible
+        resetTrackingState();
       } else {
         visibilityRef.current = false;
         const duration = Date.now() - startTimeRef.current;
         if (duration > 0) {
-          trackPageView({
+          trackPageViewSafely(
+            {
+              linkId,
+              documentId,
+              viewId,
+              duration,
+              pageNumber,
+              versionNumber,
+              dataroomId,
+              isPreview,
+            },
+            true,
+          );
+        }
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      const duration = Date.now() - startTimeRef.current;
+      if (duration > 0) {
+        trackPageViewSafely(
+          {
             linkId,
             documentId,
             viewId,
@@ -57,28 +61,18 @@ export default function AdvancedExcelViewer({
             versionNumber,
             dataroomId,
             isPreview,
-          });
-        }
+          },
+          true,
+        );
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      if (visibilityRef.current) {
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView({
-          linkId,
-          documentId,
-          viewId,
-          duration,
-          pageNumber,
-          versionNumber,
-          dataroomId,
-          isPreview,
-        }); // Also capture duration if component unmounts while visible
-      }
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
 

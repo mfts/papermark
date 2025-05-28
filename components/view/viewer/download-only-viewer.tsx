@@ -6,32 +6,12 @@ import { Brand, DataroomBrand } from "@prisma/client";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
+
 import { Button } from "@/components/ui/button";
 
 import { TDocumentData } from "../dataroom/dataroom-view";
 import Nav, { TNavData } from "../nav";
-
-const trackPageView = async (data: {
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  duration: number;
-  pageNumber: number;
-  versionNumber: number;
-  dataroomId?: string;
-  isPreview?: boolean;
-}) => {
-  // If the view is a preview, do not track the view
-  if (data.isPreview) return;
-
-  await fetch("/api/record_view", {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-};
 
 export default function DownloadOnlyViewer({
   versionNumber,
@@ -45,6 +25,7 @@ export default function DownloadOnlyViewer({
   const router = useRouter();
   const startTimeRef = useRef(Date.now());
   const visibilityRef = useRef<boolean>(true);
+  const { trackPageViewSafely, resetTrackingState } = useSafePageViewTracker();
 
   const { linkId, documentId, viewId, isPreview, allowDownload, dataroomId } =
     navData;
@@ -76,19 +57,23 @@ export default function DownloadOnlyViewer({
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
         startTimeRef.current = Date.now();
+        resetTrackingState();
       } else {
         visibilityRef.current = false;
         const duration = Date.now() - startTimeRef.current;
-        trackPageView({
-          linkId,
-          documentId,
-          viewId,
-          duration,
-          pageNumber: 1,
-          versionNumber,
-          dataroomId,
-          isPreview,
-        });
+        trackPageViewSafely(
+          {
+            linkId,
+            documentId,
+            viewId,
+            duration,
+            pageNumber: 1,
+            versionNumber,
+            dataroomId,
+            isPreview,
+          },
+          true,
+        );
       }
     };
 
@@ -102,16 +87,19 @@ export default function DownloadOnlyViewer({
   useEffect(() => {
     const handleBeforeUnload = () => {
       const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: 1,
-        versionNumber,
-        dataroomId,
-        isPreview,
-      });
+      trackPageViewSafely(
+        {
+          linkId,
+          documentId,
+          viewId,
+          duration,
+          pageNumber: 1,
+          versionNumber,
+          dataroomId,
+          isPreview,
+        },
+        true,
+      );
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);

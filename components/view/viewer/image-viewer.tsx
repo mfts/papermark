@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -12,28 +13,6 @@ import { PoweredBy } from "../powered-by";
 import { SVGWatermark } from "../watermark-svg";
 
 import "@/styles/custom-viewer-styles.css";
-
-const trackPageView = async (data: {
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  duration: number;
-  pageNumber: number;
-  versionNumber: number;
-  dataroomId?: string;
-  isPreview?: boolean;
-}) => {
-  // If the view is a preview, do not track the view
-  if (data.isPreview) return;
-
-  await fetch("/api/record_view", {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-};
 
 export default function ImageViewer({
   file,
@@ -61,8 +40,7 @@ export default function ImageViewer({
   const { isPreview, linkId, documentId, viewId, dataroomId } = navData;
 
   const numPages = 1;
-
-  const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
+  const pageNumber = 1;
 
   const [scale, setScale] = useState<number>(1);
   const [isWindowFocused, setIsWindowFocused] = useState(true);
@@ -71,6 +49,8 @@ export default function ImageViewer({
   const visibilityRef = useRef<boolean>(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRefs = useRef<HTMLImageElement | null>(null);
+
+  const { trackPageViewSafely, resetTrackingState } = useSafePageViewTracker();
 
   const [imageDimensions, setImageDimensions] = useState<{
     width: number;
@@ -126,20 +106,19 @@ export default function ImageViewer({
     return () => {
       window.removeEventListener("resize", updateImageDimensions);
     };
-  }, [pageNumber]);
+  }, []);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (pageNumber > numPages) return;
-
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
         startTimeRef.current = Date.now(); // Reset start time when the page becomes visible again
+        resetTrackingState();
       } else {
         visibilityRef.current = false;
-        if (pageNumber <= numPages) {
-          const duration = Date.now() - startTimeRef.current;
-          trackPageView({
+        const duration = Date.now() - startTimeRef.current;
+        trackPageViewSafely(
+          {
             linkId,
             documentId,
             viewId,
@@ -148,8 +127,9 @@ export default function ImageViewer({
             versionNumber,
             dataroomId,
             isPreview,
-          });
-        }
+          },
+          true,
+        );
       }
     };
 
@@ -158,31 +138,15 @@ export default function ImageViewer({
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [pageNumber, numPages]);
+  }, []);
 
   useEffect(() => {
     startTimeRef.current = Date.now();
 
-    if (visibilityRef.current && pageNumber <= numPages) {
+    if (visibilityRef.current) {
       const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: pageNumber,
-        versionNumber,
-        dataroomId,
-        isPreview,
-      });
-    }
-  }, [pageNumber, numPages]);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (pageNumber <= numPages) {
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView({
+      trackPageViewSafely(
+        {
           linkId,
           documentId,
           viewId,
@@ -191,8 +155,29 @@ export default function ImageViewer({
           versionNumber,
           dataroomId,
           isPreview,
-        });
-      }
+        },
+        false,
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Only track if we haven't already tracked an unload event
+      const duration = Date.now() - startTimeRef.current;
+      trackPageViewSafely(
+        {
+          linkId,
+          documentId,
+          viewId,
+          duration,
+          pageNumber: pageNumber,
+          versionNumber,
+          dataroomId,
+          isPreview,
+        },
+        true,
+      );
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -200,7 +185,7 @@ export default function ImageViewer({
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [pageNumber, numPages]);
+  }, []);
 
   // Add this effect near your other useEffect hooks
   useEffect(() => {

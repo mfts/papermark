@@ -5,6 +5,7 @@ import React from "react";
 
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
@@ -45,40 +46,6 @@ const calculateOptimalWidth = (
 
   // For portrait documents, use full width on mobile, min width on desktop
   return isMobile ? containerWidth : minWidth;
-};
-
-const trackPageView = async (data: {
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  duration: number;
-  pageNumber: number;
-  versionNumber: number;
-  dataroomId?: string;
-  setViewedPages?: React.Dispatch<
-    React.SetStateAction<{ pageNumber: number; duration: number }[]>
-  >;
-  isPreview?: boolean;
-}) => {
-  data.setViewedPages &&
-    data.setViewedPages((prevViewedPages) =>
-      prevViewedPages.map((page) =>
-        page.pageNumber === data.pageNumber
-          ? { ...page, duration: page.duration + data.duration }
-          : page,
-      ),
-    );
-
-  // If the view is a preview, do not track the view
-  if (data.isPreview) return;
-
-  await fetch("/api/record_view", {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
 };
 
 export default function PagesVerticalViewer({
@@ -222,6 +189,8 @@ export default function PagesVerticalViewer({
     hasTrackedUpRef.current = false; // Reset tracking status on page number change
   }, [pageNumber]);
 
+  const { trackPageViewSafely, resetTrackingState } = useSafePageViewTracker();
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (pageNumber > numPages) return;
@@ -229,21 +198,25 @@ export default function PagesVerticalViewer({
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
         startTimeRef.current = Date.now(); // Reset start time when the page becomes visible again
+        resetTrackingState();
       } else {
         visibilityRef.current = false;
         if (pageNumber <= numPages) {
           const duration = Date.now() - startTimeRef.current;
-          trackPageView({
-            linkId,
-            documentId,
-            viewId,
-            duration,
-            pageNumber: pageNumber,
-            versionNumber,
-            dataroomId,
-            setViewedPages,
-            isPreview,
-          });
+          trackPageViewSafely(
+            {
+              linkId,
+              documentId,
+              viewId,
+              duration,
+              pageNumber: pageNumber,
+              versionNumber,
+              dataroomId,
+              setViewedPages,
+              isPreview,
+            },
+            true,
+          );
         }
       }
     };
@@ -260,7 +233,7 @@ export default function PagesVerticalViewer({
 
     if (visibilityRef.current && pageNumber <= numPages) {
       const duration = Date.now() - startTimeRef.current;
-      trackPageView({
+      trackPageViewSafely({
         linkId,
         documentId,
         viewId,
@@ -277,18 +250,22 @@ export default function PagesVerticalViewer({
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (pageNumber <= numPages) {
+        // Only track if we haven't already tracked an unload event
         const duration = Date.now() - startTimeRef.current;
-        trackPageView({
-          linkId,
-          documentId,
-          viewId,
-          duration,
-          pageNumber: pageNumber,
-          versionNumber,
-          dataroomId,
-          setViewedPages,
-          isPreview,
-        });
+        trackPageViewSafely(
+          {
+            linkId,
+            documentId,
+            viewId,
+            duration,
+            pageNumber: pageNumber,
+            versionNumber,
+            dataroomId,
+            setViewedPages,
+            isPreview,
+          },
+          true,
+        );
       }
     };
 
@@ -402,7 +379,7 @@ export default function PagesVerticalViewer({
     if (maxVisiblePage !== pageNumber) {
       if (pageNumber <= numPages) {
         const duration = Date.now() - startTimeRef.current;
-        trackPageView({
+        trackPageViewSafely({
           linkId,
           documentId,
           viewId,
@@ -456,7 +433,7 @@ export default function PagesVerticalViewer({
     preloadImage(pageNumber - 4);
 
     const duration = Date.now() - startTimeRef.current;
-    trackPageView({
+    trackPageViewSafely({
       linkId,
       documentId,
       viewId,
@@ -503,7 +480,7 @@ export default function PagesVerticalViewer({
     preloadImage(pageNumber + 2);
 
     const duration = Date.now() - startTimeRef.current;
-    trackPageView({
+    trackPageViewSafely({
       linkId,
       documentId,
       viewId,
@@ -559,7 +536,7 @@ export default function PagesVerticalViewer({
       if (targetPage >= 1 && targetPage <= numPages) {
         // Track the current page before jumping
         const duration = Date.now() - startTimeRef.current;
-        trackPageView({
+        trackPageViewSafely({
           linkId,
           documentId,
           viewId,
