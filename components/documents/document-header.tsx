@@ -14,6 +14,7 @@ import {
   DownloadIcon,
   FileDownIcon,
   FolderIcon,
+  GitBranchIcon,
   MoonIcon,
   ServerIcon,
   SheetIcon,
@@ -39,7 +40,6 @@ import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import FileUp from "@/components/shared/icons/file-up";
 import MoreVertical from "@/components/shared/icons/more-vertical";
-import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -833,6 +833,16 @@ export default function DocumentHeader({
                     Download latest version
                   </DropdownMenuItem>
                 )}
+
+              {/* Manage Versions */}
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/documents/${prismaDocument.id}/versions`)
+                }
+              >
+                <GitBranchIcon className="mr-2 h-4 w-4" />
+                Manage versions
+              </DropdownMenuItem>
 
               <DropdownMenuSeparator />
 
