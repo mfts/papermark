@@ -18,6 +18,7 @@ import {
 } from "@/lib/swr/use-document-versions";
 import { bytesToSize } from "@/lib/utils";
 
+import { Pagination } from "@/components/documents/pagination";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,7 +54,14 @@ interface DocumentVersionManagerProps {
 export function DocumentVersionManager({
   documentId,
 }: DocumentVersionManagerProps) {
-  const { versions, loading, error, mutate } = useDocumentVersions(documentId);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const { versions, loading, error, mutate } = useDocumentVersions(
+    documentId,
+    currentPage,
+    pageSize,
+  );
   const { deleteVersion, promoteVersion, downloadVersion } =
     useDocumentVersionActions(documentId);
 
@@ -96,6 +104,15 @@ export function DocumentVersionManager({
     }
 
     await downloadVersion(version.id);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
   };
 
   if (loading) {
@@ -272,6 +289,19 @@ export function DocumentVersionManager({
           ))}
         </CardContent>
       </Card>
+
+      {versions?.pagination && versions.pagination.totalItems > 0 && (
+        <Pagination
+          currentPage={versions.pagination.currentPage}
+          pageSize={versions.pagination.pageSize}
+          totalItems={versions.pagination.totalItems}
+          totalPages={versions.pagination.totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          totalShownItems={versions.versions.length}
+          itemName="version"
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

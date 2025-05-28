@@ -21,12 +21,18 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
     }
 
-    const { teamId, id: documentId } = req.query as {
+    const { teamId, id: documentId, page = "1", limit = "10" } = req.query as {
         teamId: string;
         id: string;
+        page?: string;
+        limit?: string;
     };
 
     const userId = (session.user as CustomUser).id;
+
+    const pageNumber = parseInt(page, 10);
+    const pageSize = Math.min(parseInt(limit, 10), 50);
+    const skip = (pageNumber - 1) * pageSize;
 
     try {
         const { team, document } = await getTeamWithUsersAndDocument({
@@ -59,6 +65,8 @@ export default async function handle(
                         orderBy: {
                             versionNumber: "desc",
                         },
+                        skip,
+                        take: pageSize,
                     },
                     views: true,
                 },
@@ -70,6 +78,11 @@ export default async function handle(
                 message: "Team not found",
             });
         };
+        const totalVersions = await prisma.documentVersion.count({
+            where: {
+                documentId,
+            },
+        });
 
         const userTeam = await prisma.userTeam.findUnique({
             where: {
@@ -85,9 +98,11 @@ export default async function handle(
 
         const versionsWithMetadata = document?.versions?.map(version => ({
             ...version,
-            canDelete: canManageVersions && !version.isPrimary && document?.versions?.length && document?.versions?.length > 1,
+            canDelete: canManageVersions && !version.isPrimary && totalVersions > 1,
             canPromote: canManageVersions && !version.isPrimary,
         }));
+
+        const totalPages = Math.ceil(totalVersions / pageSize);
 
         return res.status(200).json({
             documentId,
@@ -95,6 +110,14 @@ export default async function handle(
             versions: versionsWithMetadata,
             canManageVersions,
             views: document?.views,
+            pagination: {
+                currentPage: pageNumber,
+                pageSize,
+                totalItems: totalVersions,
+                totalPages,
+                hasNextPage: pageNumber < totalPages,
+                hasPreviousPage: pageNumber > 1,
+            },
         });
 
     } catch (error) {

@@ -57,8 +57,6 @@ export default async function handle(
             },
         });
 
-        console.log("document+++++", document);
-
         if (!team) {
             return res.status(404).json({
                 message: "Team not found"
