@@ -28,15 +28,23 @@ export interface DocumentVersionsResponse {
     documentName: string;
     versions: DocumentVersion[];
     canManageVersions: boolean;
+    pagination?: {
+        currentPage: number;
+        pageSize: number;
+        totalItems: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+    };
 }
 
-export function useDocumentVersions(documentId?: string) {
+export function useDocumentVersions(documentId?: string, page: number = 1, limit: number = 10) {
     const teamInfo = useTeam();
     const teamId = teamInfo?.currentTeam?.id;
 
     const { data, error, mutate } = useSWR<DocumentVersionsResponse>(
         teamId && documentId
-            ? `/api/teams/${teamId}/documents/${documentId}/versions/list`
+            ? `/api/teams/${teamId}/documents/${documentId}/versions/list?page=${page}&limit=${limit}`
             : null,
         fetcher,
         {
