@@ -248,7 +248,7 @@ export default function DownloadOnlyViewer({
       </div>
       <AwayPoster
         isVisible={isInactive}
-        inactivityThreshold={trackingOptions.inactivityThreshold || 20000}
+        inactivityThreshold={trackingOptions.inactivityThreshold}
         onDismiss={updateActivity}
       />
     </>
