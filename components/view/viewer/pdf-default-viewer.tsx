@@ -9,6 +9,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 
 
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
+import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 
 
 
@@ -16,7 +17,7 @@ import Nav from "@/components/view/nav";
 
 
 
-
+import { AwayPoster } from "./away-poster";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -32,43 +33,73 @@ export default function PDFViewer(props: any) {
   const pageNumberRef = useRef<number>(pageNumber);
   const visibilityRef = useRef<boolean>(true);
   const teamInfo = useTeam();
-  const { trackPageViewSafely, resetTrackingState } = useSafePageViewTracker();
+  const {
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+    isInactive,
+    updateActivity,
+  } = useSafePageViewTracker({
+    ...getTrackingOptions(),
+    externalStartTimeRef: startTimeRef,
+  });
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
     pageNumberRef.current = pageNumber;
   }, [pageNumber]);
 
+  // Start interval tracking when component mounts or page changes
   useEffect(() => {
-    startTimeRef.current = Date.now(); // update the start time for the new page
-
-    // when component unmounts, calculate duration and track page view
-    return () => {
-      const duration = Math.round(Date.now() - startTimeRef.current);
-      trackPageViewSafely(
-        {
-          linkId: linkId,
-          documentId: documentId,
-          viewId: viewId,
-          duration: duration,
-          pageNumber: pageNumberRef.current,
-          versionNumber: props.versionNumber,
-          isPreview: isPreview,
-        },
-        false,
-      );
+    const trackingData = {
+      linkId: linkId,
+      documentId: documentId,
+      viewId: viewId,
+      pageNumber: pageNumberRef.current,
+      versionNumber: props.versionNumber,
+      isPreview: isPreview,
     };
-  }, [pageNumber]); // monitor pageNumber for changes
+
+    startIntervalTracking(trackingData);
+
+    return () => {
+      stopIntervalTracking();
+    };
+  }, [
+    pageNumber,
+    linkId,
+    documentId,
+    viewId,
+    props.versionNumber,
+    isPreview,
+    startIntervalTracking,
+    stopIntervalTracking,
+  ]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
-        startTimeRef.current = Date.now();
         resetTrackingState();
+
+        // Restart interval tracking
+        const trackingData = {
+          linkId: linkId,
+          documentId: documentId,
+          viewId: viewId,
+          pageNumber: pageNumberRef.current,
+          versionNumber: props.versionNumber,
+          isPreview: isPreview,
+        };
+        startIntervalTracking(trackingData);
       } else {
         visibilityRef.current = false;
-        const duration = Date.now() - startTimeRef.current;
+        stopIntervalTracking();
+
+        // Track final duration using activity-aware calculation
+        const duration = getActiveDuration();
         trackPageViewSafely(
           {
             linkId: linkId,
@@ -89,7 +120,19 @@ export default function PDFViewer(props: any) {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [pageNumber]);
+  }, [
+    pageNumber,
+    linkId,
+    documentId,
+    viewId,
+    props.versionNumber,
+    isPreview,
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   useEffect(() => {
     if (numPages > 0) {
@@ -109,7 +152,8 @@ export default function PDFViewer(props: any) {
   // duration is measured in milliseconds
   useEffect(() => {
     const handleBeforeUnload = () => {
-      const duration = Math.round(Date.now() - startTimeRef.current);
+      stopIntervalTracking();
+      const duration = getActiveDuration();
       trackPageViewSafely(
         {
           linkId: linkId,
@@ -119,6 +163,7 @@ export default function PDFViewer(props: any) {
           pageNumber: pageNumberRef.current,
           versionNumber: props.versionNumber,
           isPreview: isPreview,
+          dataroomId: props?.navData?.dataroomId || undefined,
         },
         true,
       );
@@ -129,7 +174,16 @@ export default function PDFViewer(props: any) {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, []);
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    props.versionNumber,
+    isPreview,
+    trackPageViewSafely,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   function onPageLoadSuccess() {
     setPageWidth(window.innerWidth);
@@ -263,6 +317,13 @@ export default function PDFViewer(props: any) {
             />
           </Document>
         </div>
+        <AwayPoster
+          isVisible={isInactive}
+          inactivityThreshold={
+            getTrackingOptions().inactivityThreshold 
+          }
+          onDismiss={updateActivity}
+        />
       </div>
     </>
   );

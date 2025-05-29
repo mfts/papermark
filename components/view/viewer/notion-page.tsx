@@ -11,6 +11,7 @@ import { NotionRenderer } from "react-notion-x";
 import "react-notion-x/src/styles.css";
 
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
+import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 import { NotionTheme } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { determineTextColor } from "@/lib/utils/determine-text-color";
@@ -25,6 +26,7 @@ import { Portal } from "@/components/ui/portal";
 
 import { ScreenProtector } from "../../view/ScreenProtection";
 import Nav, { TNavData } from "../../view/nav";
+import { AwayPoster } from "./away-poster";
 
 // custom styles for notion
 import "@/styles/custom-notion-styles.css";
@@ -69,7 +71,45 @@ export const NotionPage = ({
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
   const visibilityRef = useRef<boolean>(true);
-  const { trackPageViewSafely, resetTrackingState } = useSafePageViewTracker();
+  const trackingOptions = getTrackingOptions();
+  const {
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+    isInactive,
+    updateActivity,
+  } = useSafePageViewTracker({
+    ...trackingOptions,
+    externalStartTimeRef: startTimeRef,
+  });
+
+  // Start interval tracking when component mounts
+  useEffect(() => {
+    const trackingData = {
+      linkId: linkId,
+      documentId: documentId,
+      viewId: viewId,
+      pageNumber: pageNumberRef.current,
+      versionNumber: versionNumber,
+      isPreview: isPreview,
+    };
+
+    startIntervalTracking(trackingData);
+
+    return () => {
+      stopIntervalTracking();
+    };
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    isPreview,
+    startIntervalTracking,
+    stopIntervalTracking,
+  ]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -77,9 +117,23 @@ export const NotionPage = ({
         visibilityRef.current = true;
         startTimeRef.current = Date.now(); // Reset start time when page becomes visible
         resetTrackingState();
+
+        // Restart interval tracking
+        const trackingData = {
+          linkId: linkId,
+          documentId: documentId,
+          viewId: viewId,
+          pageNumber: pageNumberRef.current,
+          versionNumber: versionNumber,
+          isPreview: isPreview,
+        };
+        startIntervalTracking(trackingData);
       } else {
         visibilityRef.current = false;
-        const duration = Date.now() - startTimeRef.current;
+        stopIntervalTracking();
+
+        // Track final duration using activity-aware calculation
+        const duration = getActiveDuration();
         trackPageViewSafely(
           {
             linkId: linkId,
@@ -89,6 +143,7 @@ export const NotionPage = ({
             pageNumber: pageNumberRef.current,
             versionNumber: versionNumber,
             isPreview: isPreview,
+            dataroomId: navData?.dataroomId || undefined,
           },
           true,
         );
@@ -100,7 +155,18 @@ export const NotionPage = ({
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    isPreview,
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   // Add this effect near your other useEffect hooks
   useEffect(() => {
@@ -181,7 +247,8 @@ export const NotionPage = ({
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      const duration = Date.now() - startTimeRef.current;
+      stopIntervalTracking();
+      const duration = getActiveDuration();
       trackPageViewSafely(
         {
           linkId: linkId,
@@ -201,7 +268,16 @@ export const NotionPage = ({
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [subPageId]);
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    isPreview,
+    trackPageViewSafely,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   // // Function to calculate scroll percentage
   // const calculateScrollPercentage = () => {
@@ -380,6 +456,11 @@ export const NotionPage = ({
         />
       </div>
       {screenshotProtectionEnabled ? <ScreenProtector /> : null}
+      <AwayPoster
+        isVisible={isInactive}
+        inactivityThreshold={getTrackingOptions().inactivityThreshold}
+        onDismiss={updateActivity}
+      />
     </div>
   );
 };

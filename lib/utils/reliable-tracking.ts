@@ -10,7 +10,6 @@ interface TrackingData {
 }
 
 interface TrackingOptions {
-    useBeacon?: boolean;
     retryAttempts?: number;
     retryDelay?: number;
 }

@@ -1,9 +1,14 @@
 import { useRouter } from "next/router";
 
+
+
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 
+
+
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
+import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +16,7 @@ import { ScreenProtector } from "../ScreenProtection";
 import Nav, { TNavData } from "../nav";
 import { PoweredBy } from "../powered-by";
 import { SVGWatermark } from "../watermark-svg";
+import { AwayPoster } from "./away-poster";
 
 import "@/styles/custom-viewer-styles.css";
 
@@ -50,7 +56,19 @@ export default function ImageViewer({
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRefs = useRef<HTMLImageElement | null>(null);
 
-  const { trackPageViewSafely, resetTrackingState } = useSafePageViewTracker();
+  const trackingOptions = getTrackingOptions();
+  const {
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+    isInactive,
+    updateActivity,
+  } = useSafePageViewTracker({
+    ...trackingOptions,
+    externalStartTimeRef: startTimeRef,
+  });
 
   const [imageDimensions, setImageDimensions] = useState<{
     width: number;
@@ -112,11 +130,21 @@ export default function ImageViewer({
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
-        startTimeRef.current = Date.now(); // Reset start time when the page becomes visible again
         resetTrackingState();
+        const trackingData = {
+          linkId,
+          documentId,
+          viewId,
+          pageNumber: pageNumber,
+          versionNumber,
+          dataroomId,
+          isPreview,
+        };
+        startIntervalTracking(trackingData);
       } else {
         visibilityRef.current = false;
-        const duration = Date.now() - startTimeRef.current;
+        stopIntervalTracking();
+        const duration = getActiveDuration();
         trackPageViewSafely(
           {
             linkId,
@@ -138,33 +166,24 @@ export default function ImageViewer({
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
-
-  useEffect(() => {
-    startTimeRef.current = Date.now();
-
-    if (visibilityRef.current) {
-      const duration = Date.now() - startTimeRef.current;
-      trackPageViewSafely(
-        {
-          linkId,
-          documentId,
-          viewId,
-          duration,
-          pageNumber: pageNumber,
-          versionNumber,
-          dataroomId,
-          isPreview,
-        },
-        false,
-      );
-    }
-  }, []);
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // Only track if we haven't already tracked an unload event
-      const duration = Date.now() - startTimeRef.current;
+      stopIntervalTracking();
+      const duration = getActiveDuration();
       trackPageViewSafely(
         {
           linkId,
@@ -185,7 +204,17 @@ export default function ImageViewer({
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, []);
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    trackPageViewSafely,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   // Add this effect near your other useEffect hooks
   useEffect(() => {
@@ -224,6 +253,34 @@ export default function ImageViewer({
       removeQueryParams(["token", "email", "domain", "slug", "linkId"]);
     }
   }, []); // Run once on mount
+
+  // Start interval tracking when component mounts
+  useEffect(() => {
+    const trackingData = {
+      linkId,
+      documentId,
+      viewId,
+      pageNumber: pageNumber,
+      versionNumber,
+      dataroomId,
+      isPreview,
+    };
+    console.log("trackingData", trackingData);
+    startIntervalTracking(trackingData);
+
+    return () => {
+      stopIntervalTracking();
+    };
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    startIntervalTracking,
+    stopIntervalTracking,
+  ]);
 
   return (
     <>
@@ -301,6 +358,11 @@ export default function ImageViewer({
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
       </div>
+      <AwayPoster
+        isVisible={isInactive}
+        inactivityThreshold={trackingOptions.inactivityThreshold || 60000}
+        onDismiss={updateActivity}
+      />
     </>
   );
 }

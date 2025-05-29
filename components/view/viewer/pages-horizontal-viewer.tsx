@@ -7,6 +7,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
+import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -17,11 +18,11 @@ import Question from "../question";
 import Toolbar from "../toolbar";
 import ViewDurationSummary from "../visitor-graph";
 import { SVGWatermark } from "../watermark-svg";
+import { AwayPoster } from "./away-poster";
 
 import "@/styles/custom-viewer-styles.css";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 5;
-
 
 export default function PagesHorizontalViewer({
   pages,
@@ -115,7 +116,18 @@ export default function PagesHorizontalViewer({
   const [imageDimensions, setImageDimensions] = useState<
     Record<number, { width: number; height: number }>
   >({});
-  const { trackPageViewSafely, resetTrackingState } = useSafePageViewTracker();
+  const {
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+    isInactive,
+    updateActivity,
+  } = useSafePageViewTracker({
+    ...getTrackingOptions(),
+    externalStartTimeRef: startTimeRef,
+  });
 
   const scaleCoordinates = (coords: string, scaleFactor: number) => {
     return coords
@@ -173,18 +185,66 @@ export default function PagesHorizontalViewer({
     hasTrackedUpRef.current = false; // Reset tracking status on page number change
   }, [pageNumber]);
 
+  // Start interval tracking when component mounts or page changes
+  useEffect(() => {
+    if (pageNumber <= numPages) {
+      const trackingData = {
+        linkId,
+        documentId,
+        viewId,
+        pageNumber: pageNumber,
+        versionNumber,
+        dataroomId,
+        setViewedPages,
+        isPreview,
+      };
+
+      startIntervalTracking(trackingData);
+    }
+
+    return () => {
+      stopIntervalTracking();
+    };
+  }, [
+    pageNumber,
+    numPages,
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    startIntervalTracking,
+    stopIntervalTracking,
+  ]);
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (pageNumber > numPages) return;
 
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
-        startTimeRef.current = Date.now(); // Reset start time when the page becomes visible again
         resetTrackingState();
+
+        // Restart interval tracking
+        if (pageNumber <= numPages) {
+          const trackingData = {
+            linkId,
+            documentId,
+            viewId,
+            pageNumber: pageNumber,
+            versionNumber,
+            dataroomId,
+            setViewedPages,
+            isPreview,
+          };
+          startIntervalTracking(trackingData);
+        }
       } else {
         visibilityRef.current = false;
+        stopIntervalTracking();
         if (pageNumber <= numPages) {
-          const duration = Date.now() - startTimeRef.current;
+          const duration = getActiveDuration();
           trackPageViewSafely(
             {
               linkId,
@@ -208,31 +268,27 @@ export default function PagesHorizontalViewer({
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [pageNumber, numPages]);
-
-  useEffect(() => {
-    startTimeRef.current = Date.now();
-
-    if (visibilityRef.current && pageNumber <= numPages) {
-      const duration = Date.now() - startTimeRef.current;
-      trackPageViewSafely({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: pageNumber,
-        versionNumber,
-        dataroomId,
-        setViewedPages,
-        isPreview,
-      });
-    }
-  }, [pageNumber, numPages]);
+  }, [
+    pageNumber,
+    numPages,
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
+      stopIntervalTracking();
       if (pageNumber <= numPages) {
-        const duration = Date.now() - startTimeRef.current;
+        const duration = getActiveDuration();
         trackPageViewSafely(
           {
             linkId,
@@ -255,7 +311,19 @@ export default function PagesHorizontalViewer({
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [pageNumber, numPages]);
+  }, [
+    pageNumber,
+    numPages,
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    trackPageViewSafely,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   // Add this effect near your other useEffect hooks
   useEffect(() => {
@@ -329,7 +397,7 @@ export default function PagesHorizontalViewer({
     // Preload previous pages every 4 pages in advanced
     preloadImage(pageNumber - 4);
 
-    const duration = Date.now() - startTimeRef.current;
+    const duration = getActiveDuration();
     trackPageViewSafely({
       linkId,
       documentId,
@@ -359,7 +427,7 @@ export default function PagesHorizontalViewer({
     // Preload the next page every 2 pages in advanced
     preloadImage(pageNumber + 2);
 
-    const duration = Date.now() - startTimeRef.current;
+    const duration = getActiveDuration();
     trackPageViewSafely({
       linkId,
       documentId,
@@ -402,7 +470,7 @@ export default function PagesHorizontalViewer({
       const targetPage = parseInt(pageMatch[1]);
       if (targetPage >= 1 && targetPage <= numPages) {
         // Track the current page before jumping
-        const duration = Date.now() - startTimeRef.current;
+        const duration = getActiveDuration();
         trackPageViewSafely({
           linkId,
           documentId,
@@ -753,6 +821,13 @@ export default function PagesHorizontalViewer({
 
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
+        <AwayPoster
+          isVisible={isInactive}
+          inactivityThreshold={
+            getTrackingOptions().inactivityThreshold
+          }
+          onDismiss={updateActivity}
+        />
       </div>
     </>
   );
