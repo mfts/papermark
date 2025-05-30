@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth/next";
 import { errorhandler } from "@/lib/errorHandler";
 import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import prisma from "@/lib/prisma";
+import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 
 import { authOptions } from "../../auth/[...nextauth]";
 
@@ -71,12 +72,23 @@ export default async function handle(
               isPrimary: true,
               type: "sheet",
             },
+            select: {
+              id: true,
+              file: true,
+              storageType: true,
+              contentType: true,
+            },
           },
         },
       });
 
+      const eligibleDocuments = documents.filter(doc => {
+        const primaryVersion = doc.versions[0];
+        return primaryVersion && supportsAdvancedExcelMode(primaryVersion.contentType);
+      });
+
       // Update all documents and their versions
-      const updatePromises = documents.map(async (doc) => {
+      const updatePromises = eligibleDocuments.map(async (doc) => {
         const primaryVersion = doc.versions[0];
         if (!primaryVersion) return;
 
@@ -122,7 +134,7 @@ export default async function handle(
       });
       return {
         team: updatedTeam,
-        updatedDocumentsCount: documents.length,
+        updatedDocumentsCount: eligibleDocuments.length,
       };
     });
     return res.status(200).json({

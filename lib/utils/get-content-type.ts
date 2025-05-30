@@ -100,3 +100,13 @@ export function getExtensionFromContentType(
       return null;
   }
 }
+
+export function supportsAdvancedExcelMode(contentType: string | null | undefined): boolean {
+  if (!contentType) return false;
+
+  return (
+    contentType === "application/vnd.ms-excel" || // .xls
+    contentType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || // .xlsx
+    contentType === "application/vnd.ms-excel.sheet.macroEnabled.12" // .xlsm
+  );
+}

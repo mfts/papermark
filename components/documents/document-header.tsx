@@ -34,6 +34,7 @@ import {
   DocumentWithVersion,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import FileUp from "@/components/shared/icons/file-up";
@@ -742,6 +743,7 @@ export default function DocumentHeader({
                 ))} */}
               {prismaDocument.type === "sheet" &&
                 !prismaDocument.advancedExcelEnabled &&
+                supportsAdvancedExcelMode(primaryVersion.contentType) &&
                 (isBusiness || isDatarooms || isTrial) && (
                   <DropdownMenuItem
                     onClick={() => enableAdvancedExcel(prismaDocument)}
@@ -927,32 +929,35 @@ export default function DocumentHeader({
         />
       )}
 
-      {prismaDocument.type === "sheet" && (isFree || isPro) && (
-        <AlertBanner
-          id="advanced-excel-alert"
-          variant="default"
-          title="Advanced Excel mode"
-          description={
-            <>
-              You can turn on advanced excel mode by{" "}
-              <span
-                className="cursor-pointer underline underline-offset-4 hover:text-primary/80"
-                onClick={() =>
-                  handleUpgradeClick(PlanEnum.Business, "advanced-excel-mode")
-                }
-              >
-                upgrading
-              </span>{" "}
-              to Business plan to preserve the file formatting. This uses the
-              Microsoft Office viewer.
-            </>
-          }
-          onClose={() => handleCloseAlert("advanced-excel-alert")}
-        />
-      )}
+      {prismaDocument.type === "sheet" &&
+        supportsAdvancedExcelMode(primaryVersion.contentType) &&
+        (isFree || isPro) && (
+          <AlertBanner
+            id="advanced-excel-alert"
+            variant="default"
+            title="Advanced Excel mode"
+            description={
+              <>
+                You can turn on advanced excel mode by{" "}
+                <span
+                  className="hover:text-primary/ 80 cursor-pointer underline underline-offset-4"
+                  onClick={() =>
+                    handleUpgradeClick(PlanEnum.Business, "advanced-excel-mode")
+                  }
+                >
+                  upgrading
+                </span>{" "}
+                to Business plan to preserve the file formatting. This uses the
+                Microsoft Office viewer.
+              </>
+            }
+            onClose={() => handleCloseAlert("advanced-excel-alert")}
+          />
+        )}
 
       {prismaDocument.type === "sheet" &&
         !prismaDocument.advancedExcelEnabled &&
+        supportsAdvancedExcelMode(primaryVersion.contentType) &&
         (isBusiness || isDatarooms || isTrial) && (
           <AlertBanner
             id="enable-advanced-excel-alert"

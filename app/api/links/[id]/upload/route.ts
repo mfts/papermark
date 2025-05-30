@@ -4,6 +4,7 @@ import { processDocument } from "@/lib/api/documents/process-document";
 import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
 import { DocumentData } from "@/lib/documents/create-document";
 import prisma from "@/lib/prisma";
+import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 
 export async function POST(
   request: NextRequest,
@@ -91,7 +92,9 @@ export async function POST(
 
     const updatedDocumentData = {
       ...documentData,
-      enableExcelAdvancedMode: link.team?.enableExcelAdvancedMode ?? false,
+      enableExcelAdvancedMode: documentData.supportedFileType === "sheet" &&
+        link.team?.enableExcelAdvancedMode &&
+        supportsAdvancedExcelMode(documentData.contentType),
     };
 
     // 1. Create the document
