@@ -46,13 +46,16 @@ export default async function handle(
                 select: {
                   email: true,
                   name: true,
-                  _count: {
-                    select: {
-                      documents: {
-                        where: { teamId: teamId },
-                      },
-                    },
-                  },
+                },
+              },
+            },
+          },
+          documents: {
+            select: {
+              owner: {
+                select: {
+                  name: true,
+                  id: true,
                 },
               },
             },

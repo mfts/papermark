@@ -314,14 +314,17 @@ export interface TeamDetail {
     role: "ADMIN" | "MANAGER" | "MEMBER";
     status: "ACTIVE" | "BLOCKED_TRIAL_EXPIRED";
     teamId: string;
+    userId: string;
     user: {
       email: string;
       name: string;
-      _count: {
-        documents: number;
-      };
     };
-    userId: string;
+  }[];
+  documents: {
+    owner: {
+      name: string;
+      id: string;
+    };
   }[];
 }
 

@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -10,7 +9,6 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
 import { useInvitations } from "@/lib/swr/use-invitations";
 import useLimits from "@/lib/swr/use-limits";
 import { useGetTeam } from "@/lib/swr/use-team";
@@ -51,9 +49,21 @@ export default function Billing() {
 
   const router = useRouter();
 
+  const documentCountsByUser = useMemo(() => {
+    if (!team?.documents) return {};
+
+    const counts: Record<string, number> = {};
+    team.documents.forEach((document) => {
+      const ownerId = document.owner?.id;
+      if (ownerId) {
+        counts[ownerId] = (counts[ownerId] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [team]);
+
   const getUserDocumentCount = (userId: string) => {
-    return team?.users.find((user) => user.userId === userId)?.user._count
-      .documents;
+    return documentCountsByUser[userId] || 0;
   };
 
   const isCurrentUser = (userId: string) => {
