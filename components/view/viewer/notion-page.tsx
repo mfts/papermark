@@ -94,6 +94,7 @@ export const NotionPage = ({
       pageNumber: pageNumberRef.current,
       versionNumber: versionNumber,
       isPreview: isPreview,
+      dataroomId: navData?.dataroomId || undefined,
     };
 
     startIntervalTracking(trackingData);
@@ -126,6 +127,7 @@ export const NotionPage = ({
           pageNumber: pageNumberRef.current,
           versionNumber: versionNumber,
           isPreview: isPreview,
+          dataroomId: navData?.dataroomId || undefined,
         };
         startIntervalTracking(trackingData);
       } else {
@@ -161,6 +163,7 @@ export const NotionPage = ({
     viewId,
     versionNumber,
     isPreview,
+    navData,
     trackPageViewSafely,
     resetTrackingState,
     startIntervalTracking,
@@ -258,6 +261,7 @@ export const NotionPage = ({
           pageNumber: pageNumberRef.current,
           versionNumber: versionNumber,
           isPreview: isPreview,
+          dataroomId: navData?.dataroomId || undefined,
         },
         true,
       );

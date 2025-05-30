@@ -265,7 +265,6 @@ export default function ImageViewer({
       dataroomId,
       isPreview,
     };
-    console.log("trackingData", trackingData);
     startIntervalTracking(trackingData);
 
     return () => {
