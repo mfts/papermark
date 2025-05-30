@@ -25,22 +25,43 @@ export function AwayPoster({
     const remainingSeconds = seconds % 60;
     
     if (minutes > 0) {
-      return remainingSeconds > 0 ? `${minutes}min ${remainingSeconds}sec` : `${minutes}min`;
+      return remainingSeconds > 0
+        ? `${minutes}min ${remainingSeconds}sec`
+        : `${minutes}min`;
     }
     return `${seconds}sec`;
   };
 
+  if (!isVisible) return null;
+
   return (
-    <Dialog open={isVisible} onOpenChange={(open) => !open && onDismiss?.()}>
-      <DialogContent
+    <>
+      <div
+        className="fixed inset-0 z-[99998] bg-black/50 backdrop-blur-sm"
+        aria-hidden="true"
+      />
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="away-poster-title"
+        aria-describedby="away-poster-description"
         className={cn(
-          "w-full max-w-sm rounded-md border bg-card p-4 text-card-foreground shadow-lg",
-          "absolute bottom-6 left-6",
+          "fixed bottom-4 left-4 right-4 z-[99999] w-full max-w-md rounded-md border bg-card p-4 text-card-foreground shadow-lg",
+          "sm:bottom-6 sm:left-6 sm:right-auto sm:w-auto sm:max-w-lg",
           "animate-in fade-in slide-in-from-bottom",
           className,
         )}
-        onInteractOutside={onDismiss}
       >
+        <h2 id="away-poster-title" className="sr-only">
+          Auto-paused session notification
+        </h2>
+
+        <p id="away-poster-description" className="sr-only">
+          Your session was paused due to inactivity. Click continue or move your
+          mouse to resume.
+        </p>
+
         <div className="space-y-5">
           <div className="flex items-center space-x-2">
             <Badge
@@ -75,7 +96,7 @@ export function AwayPoster({
             Or just move your mouse or press any key to continue
           </p>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </>
   );
 }

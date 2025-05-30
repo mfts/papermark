@@ -159,12 +159,12 @@ export default function AdvancedExcelViewer({
             background: brand?.accentColor || "rgb(3, 7, 18)",
           }}
         />
-        <AwayPoster
-          isVisible={isInactive}
-          inactivityThreshold={getTrackingOptions().inactivityThreshold}
-          onDismiss={updateActivity}
-        />
       </div>
+      <AwayPoster
+        isVisible={isInactive}
+        inactivityThreshold={getTrackingOptions().inactivityThreshold}
+        onDismiss={updateActivity}
+      />
     </>
   );
 }
