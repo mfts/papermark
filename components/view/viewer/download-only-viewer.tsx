@@ -1,37 +1,25 @@
 import { useRouter } from "next/router";
 
+
+
 import { useEffect, useRef } from "react";
 
-import { Brand, DataroomBrand } from "@prisma/client";
+
+
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
+import { getTrackingOptions } from "@/lib/tracking/tracking-config";
+
 import { Button } from "@/components/ui/button";
 
-import { TDocumentData } from "../dataroom/dataroom-view";
+import { ScreenProtector } from "../ScreenProtection";
 import Nav, { TNavData } from "../nav";
+import { PoweredBy } from "../powered-by";
+import { AwayPoster } from "./away-poster";
 
-const trackPageView = async (data: {
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  duration: number;
-  pageNumber: number;
-  versionNumber: number;
-  dataroomId?: string;
-  isPreview?: boolean;
-}) => {
-  // If the view is a preview, do not track the view
-  if (data.isPreview) return;
-
-  await fetch("/api/record_view", {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-};
+import "@/styles/custom-viewer-styles.css";
 
 export default function DownloadOnlyViewer({
   versionNumber,
@@ -45,6 +33,20 @@ export default function DownloadOnlyViewer({
   const router = useRouter();
   const startTimeRef = useRef(Date.now());
   const visibilityRef = useRef<boolean>(true);
+
+  const trackingOptions = getTrackingOptions();
+  const {
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+    isInactive,
+    updateActivity,
+  } = useSafePageViewTracker({
+    ...trackingOptions,
+    externalStartTimeRef: startTimeRef,
+  });
 
   const { linkId, documentId, viewId, isPreview, allowDownload, dataroomId } =
     navData;
@@ -75,20 +77,38 @@ export default function DownloadOnlyViewer({
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
-        startTimeRef.current = Date.now();
-      } else {
-        visibilityRef.current = false;
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView({
+        resetTrackingState();
+
+        // Restart interval tracking
+        const trackingData = {
           linkId,
           documentId,
           viewId,
-          duration,
           pageNumber: 1,
           versionNumber,
           dataroomId,
           isPreview,
-        });
+        };
+        startIntervalTracking(trackingData);
+      } else {
+        visibilityRef.current = false;
+        stopIntervalTracking();
+
+        // Track final duration using activity-aware calculation
+        const duration = getActiveDuration();
+        trackPageViewSafely(
+          {
+            linkId,
+            documentId,
+            viewId,
+            duration,
+            pageNumber: 1,
+            versionNumber,
+            dataroomId,
+            isPreview,
+          },
+          true,
+        );
       }
     };
 
@@ -97,21 +117,37 @@ export default function DownloadOnlyViewer({
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [documentId, linkId, viewId, versionNumber, dataroomId, isPreview]);
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: 1,
-        versionNumber,
-        dataroomId,
-        isPreview,
-      });
+      stopIntervalTracking();
+      const duration = getActiveDuration();
+      trackPageViewSafely(
+        {
+          linkId,
+          documentId,
+          viewId,
+          duration,
+          pageNumber: 1,
+          versionNumber,
+          dataroomId,
+          isPreview,
+        },
+        true,
+      );
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -119,7 +155,44 @@ export default function DownloadOnlyViewer({
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [documentId, linkId, viewId, versionNumber, dataroomId, isPreview]);
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    trackPageViewSafely,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
+
+  useEffect(() => {
+    const trackingData = {
+      linkId,
+      documentId,
+      viewId,
+      pageNumber: 1,
+      versionNumber,
+      dataroomId,
+      isPreview,
+    };
+
+    startIntervalTracking(trackingData);
+
+    return () => {
+      stopIntervalTracking();
+    };
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    startIntervalTracking,
+    stopIntervalTracking,
+  ]);
 
   const downloadFile = async () => {
     if (isPreview) {
@@ -173,6 +246,11 @@ export default function DownloadOnlyViewer({
           )}
         </div>
       </div>
+      <AwayPoster
+        isVisible={isInactive}
+        inactivityThreshold={trackingOptions.inactivityThreshold}
+        onDismiss={updateActivity}
+      />
     </>
   );
 }
