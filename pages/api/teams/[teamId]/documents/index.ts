@@ -11,6 +11,7 @@ import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
+import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -278,7 +279,7 @@ export default async function handle(
           contentType,
           fileSize,
           enableExcelAdvancedMode:
-            fileType === "sheet" && team.enableExcelAdvancedMode,
+            fileType === "sheet" && team.enableExcelAdvancedMode && supportsAdvancedExcelMode(contentType),
         },
         teamId,
         userId,
