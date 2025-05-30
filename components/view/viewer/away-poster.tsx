@@ -22,7 +22,12 @@ export function AwayPoster({
   const formatTime = (ms: number) => {
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
-    return minutes > 0 ? `${minutes}m ${seconds % 60}s` : `${seconds}s`;
+    const remainingSeconds = seconds % 60;
+    
+    if (minutes > 0) {
+      return remainingSeconds > 0 ? `${minutes}min ${remainingSeconds}sec` : `${minutes}min`;
+    }
+    return `${seconds}sec`;
   };
 
   return (
@@ -37,7 +42,7 @@ export function AwayPoster({
         onInteractOutside={onDismiss}
       >
         <div className="space-y-5">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
             <Badge
               variant="outline"
               className="border-orange-400 bg-orange-100 text-orange-600"
@@ -54,8 +59,8 @@ export function AwayPoster({
               We paused to protect your session
             </h3>
             <p className="text-sm text-muted-foreground">
-              You were inactive, so we paused the document preview to keep
-              session safe.
+              You were inactive since {formatTime(inactivityThreshold)}, so we
+              paused the document preview to keep session safe.
             </p>
           </div>
 
