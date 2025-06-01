@@ -49,7 +49,10 @@ export default function DomainSection({
 
   // Check plan eligibility for custom domains
   const canUseCustomDomainForDocument =
-    isBusiness || (limits && limits.customDomainOnPro);
+    isBusiness ||
+    isDatarooms ||
+    isDataroomsPlus ||
+    (limits && limits.customDomainOnPro);
   const canUseCustomDomainForDataroom =
     isDatarooms || isDataroomsPlus || (limits && limits.customDomainInDataroom);
 
