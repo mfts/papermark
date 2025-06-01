@@ -272,11 +272,18 @@ export default function ImageViewer({
                 transformOrigin: scale <= 1 ? "center center" : "left top",
                 minWidth: scale > 1 ? `${100 * scale}%` : "100%",
               }}
-              onContextMenu={(e) => e.preventDefault()}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
             >
               <div className="viewer-container relative my-auto flex w-full justify-center">
                 <img
-                  className="!pointer-events-auto max-h-[calc(100dvh-64px)] object-contain"
+                  className="viewer-image-mobile !pointer-events-auto max-h-[calc(100dvh-64px)] object-contain"
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                   ref={(ref) => {
                     imageRefs.current = ref;
                     if (ref) {
