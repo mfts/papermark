@@ -728,7 +728,10 @@ export default function PagesVerticalViewer({
               >
                 <div
                   className="flex flex-col items-center gap-2"
-                  onContextMenu={(e) => e.preventDefault()}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                 >
                   {pages.map((page, index) =>
                     loadedImages[index] ? (
@@ -743,7 +746,11 @@ export default function PagesVerticalViewer({
                       >
                         <div className="viewer-container relative">
                           <img
-                            className="h-auto w-full object-contain"
+                            className="viewer-image-mobile h-auto w-full object-contain"
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
                             ref={(ref) => {
                               imageRefs.current[index] = ref;
                               if (ref) {

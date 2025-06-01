@@ -49,9 +49,9 @@ export default function DomainSection({
 
   // Check plan eligibility for custom domains
   const canUseCustomDomainForDocument =
-    isBusiness || (limits && limits.customDomainOnPro);
+    isBusiness || isDatarooms || isDataroomsPlus || limits?.customDomainOnPro;
   const canUseCustomDomainForDataroom =
-    isDatarooms || isDataroomsPlus || (limits && limits.customDomainInDataroom);
+    isDatarooms || isDataroomsPlus || limits?.customDomainInDataroom;
 
   // Check if we're editing a link with a custom domain
   const isEditingCustomDomain =

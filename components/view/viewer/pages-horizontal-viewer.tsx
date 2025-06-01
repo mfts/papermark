@@ -553,7 +553,10 @@ export default function PagesHorizontalViewer({
                 transformOrigin: scale <= 1 ? "center center" : "left top",
                 minWidth: scale > 1 ? `${100 * scale}%` : "100%",
               }}
-              onContextMenu={(e) => e.preventDefault()}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
             >
               {pageNumber <= numPagesWithAccountCreation &&
               pages &&
@@ -570,8 +573,12 @@ export default function PagesHorizontalViewer({
                     >
                       <img
                         className={cn(
-                          "!pointer-events-auto max-h-[calc(100dvh-64px)] object-contain",
+                          "viewer-image-mobile !pointer-events-auto max-h-[calc(100dvh-64px)] object-contain",
                         )}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
                         ref={(ref) => {
                           imageRefs.current[index] = ref;
                           if (ref) {

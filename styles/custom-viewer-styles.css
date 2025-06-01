@@ -1,7 +1,25 @@
 .viewer-container img {
-  -webkit-user-drag: none;
-  user-select: none;
-  -moz-user-select: none;
+  /* Prevent long-press context menu on mobile */
+  -webkit-touch-callout: none;
   -webkit-user-select: none;
+  -moz-user-select: none;
   -ms-user-select: none;
+  user-select: none;
+
+  /* Prevent image highlighting */
+  -webkit-tap-highlight-color: transparent;
+
+  /* Disable pointer events for saving */
+  pointer-events: auto;
+}
+
+.viewer-image-mobile {
+  -webkit-user-drag: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  pointer-events: auto !important;
 }
