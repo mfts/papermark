@@ -11,7 +11,6 @@ import { PlanEnum } from "@/ee/stripe/constants";
 import Cookies from "js-cookie";
 import {
   BrushIcon,
-  CircleUserRound,
   CogIcon,
   ContactIcon,
   FolderIcon,
@@ -25,6 +24,7 @@ import useLimits from "@/lib/swr/use-limits";
 import { nFormatter } from "@/lib/utils";
 
 import { NavMain } from "@/components/sidebar/nav-main";
+import { NavPinnedItems } from "@/components/sidebar/nav-pinned-items";
 import { NavUser } from "@/components/sidebar/nav-user";
 import { TeamSwitcher } from "@/components/sidebar/team-switcher";
 import {
@@ -203,8 +203,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           />
         )}
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="gap-y-0">
         <NavMain items={data.navMain} />
+        <NavPinnedItems />
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu className="group-data-[collapsible=icon]:hidden">
