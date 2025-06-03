@@ -789,7 +789,39 @@ export default function PagesVerticalViewer({
                             : undefined,
                         }}
                       >
-                        <div className="viewer-container relative">
+                        <div className="viewer-container relative border-b border-t border-gray-100">
+                          <div
+                            className="pointer-events-none absolute bottom-0 left-0 w-px"
+                            style={{
+                              height: "10%",
+                              background:
+                                "linear-gradient(to top, #f3f4f6, transparent)",
+                            }}
+                          />
+                          <div
+                            className="pointer-events-none absolute bottom-0 right-0 w-px"
+                            style={{
+                              height: "10%",
+                              background:
+                                "linear-gradient(to top, #f3f4f6, transparent)",
+                            }}
+                          />
+                          <div
+                            className="pointer-events-none absolute left-0 top-0 w-px"
+                            style={{
+                              height: "10%",
+                              background:
+                                "linear-gradient(to bottom, #f3f4f6, transparent)",
+                            }}
+                          />
+                          <div
+                            className="pointer-events-none absolute right-0 top-0 w-px"
+                            style={{
+                              height: "10%",
+                              background:
+                                "linear-gradient(to bottom, #f3f4f6, transparent)",
+                            }}
+                          />
                           <img
                             className="viewer-image-mobile h-auto w-full object-contain"
                             onContextMenu={(e) => {
