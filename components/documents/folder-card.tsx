@@ -12,14 +12,16 @@ import {
   FolderPenIcon,
   MoreVertical,
   PackagePlusIcon,
+  Pin,
   TrashIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { usePins } from "@/lib/context/pin-context";
 import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
 import { FolderWithCount } from "@/lib/swr/use-documents";
-import { timeAgo } from "@/lib/utils";
+import { cn, timeAgo } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -65,6 +67,7 @@ export default function FolderCard({
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const { pinnedItems, addPinnedItem, removePinnedItem } = usePins();
 
   const folderPath =
     isDataroom && dataroomId
@@ -75,6 +78,47 @@ export default function FolderCard({
     folder.path.lastIndexOf("/"),
   );
 
+  const isPinned =
+    pinnedItems && Array.isArray(pinnedItems)
+      ? pinnedItems.some((item) =>
+          isDataroom
+            ? item.dataroomFolderId === folder.id
+            : item.folderId === folder.id,
+        )
+      : false;
+
+  const handlePin = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      if (isPinned) {
+        const pinToRemove = pinnedItems.find((item) =>
+          isDataroom
+            ? item.dataroomFolderId === folder.id
+            : item.folderId === folder.id,
+        );
+        if (pinToRemove?.id) {
+          await removePinnedItem(pinToRemove.id);
+          toast.success("Folder unpinned");
+        }
+      } else {
+        await addPinnedItem({
+          pinType: isDataroom ? "DATAROOM_FOLDER" : "FOLDER",
+          ...(isDataroom
+            ? { dataroomFolderId: folder.id, dataroomId }
+            : { folderId: folder.id }),
+          name: folder.name,
+          path: folder.path,
+        });
+        toast.success("Folder pinned");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+    setMenuOpen(false);
+  };
+
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
     if (!openFolder || !addDataroomOpen) {
@@ -83,8 +127,6 @@ export default function FolderCard({
       });
     }
   }, [openFolder, addDataroomOpen]);
-
-
 
   const handleCreateDataroom = (e: any, folderId: string) => {
     e.stopPropagation();
@@ -208,6 +250,12 @@ export default function FolderCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef} className="w-64">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={handlePin} className="group/pin">
+                <Pin
+                  className={cn("mr-2 h-4 w-4", isPinned && "fill-current")}
+                />
+                {isPinned ? "Unpin" : "Pin"}
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={(e) => {
                   e.preventDefault();

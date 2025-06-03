@@ -11,8 +11,8 @@ import {
   FileIcon,
   FolderIcon,
   FolderInputIcon,
-  Layers2Icon,
   MoreVertical,
+  PinIcon,
   ServerIcon,
   TrashIcon,
 } from "lucide-react";
@@ -20,6 +20,7 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { usePins } from "@/lib/context/pin-context";
 import useDatarooms from "@/lib/swr/use-datarooms";
 import useLimits from "@/lib/swr/use-limits";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
@@ -74,12 +75,53 @@ export default function DocumentsCard({
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
 
   const { datarooms } = useDatarooms();
+  const { pinnedItems, addPinnedItem, removePinnedItem } = usePins();
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const { canAddDocuments } = useLimits();
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
+
+  const isPinned =
+    pinnedItems && Array.isArray(pinnedItems)
+      ? pinnedItems.some((item) =>
+          router.pathname.includes("/datarooms/")
+            ? item.dataroomDocumentId === prismaDocument.id
+            : item.documentId === prismaDocument.id,
+        )
+      : false;
+
+  const handlePin = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      if (isPinned) {
+        const pinToRemove = pinnedItems.find(
+          (item) => item.documentId === prismaDocument.id,
+        );
+        if (pinToRemove?.id) {
+          await removePinnedItem(pinToRemove.id);
+          toast.success("Document unpinned");
+        }
+      } else {
+        const dataroomId = router.query.dataroomId as string;
+        await addPinnedItem({
+          pinType: router.pathname.includes("/datarooms/")
+            ? "DATAROOM_DOCUMENT"
+            : "DOCUMENT",
+          ...(router.pathname.includes("/datarooms/")
+            ? { dataroomDocumentId: prismaDocument.id, dataroomId }
+            : { documentId: prismaDocument.id }),
+          name: prismaDocument.name,
+        });
+        toast.success("Document pinned");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+    setMenuOpen(false);
+  };
 
   function handleCopyToClipboard(id: string) {
     copyToClipboard(
@@ -316,6 +358,12 @@ export default function DocumentsCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={handlePin} className="group/pin">
+                <PinIcon
+                  className={cn("mr-2 h-4 w-4", isPinned && "fill-current")}
+                />
+                {isPinned ? "Unpin" : "Pin"}
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
