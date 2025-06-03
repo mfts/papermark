@@ -5,6 +5,8 @@ import React from "react";
 
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
+import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
@@ -15,6 +17,7 @@ import { PoweredBy } from "../powered-by";
 import Question from "../question";
 import Toolbar from "../toolbar";
 import { SVGWatermark } from "../watermark-svg";
+import { AwayPoster } from "./away-poster";
 
 import "@/styles/custom-viewer-styles.css";
 
@@ -45,40 +48,6 @@ const calculateOptimalWidth = (
 
   // For portrait documents, use full width on mobile, min width on desktop
   return isMobile ? containerWidth : minWidth;
-};
-
-const trackPageView = async (data: {
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  duration: number;
-  pageNumber: number;
-  versionNumber: number;
-  dataroomId?: string;
-  setViewedPages?: React.Dispatch<
-    React.SetStateAction<{ pageNumber: number; duration: number }[]>
-  >;
-  isPreview?: boolean;
-}) => {
-  data.setViewedPages &&
-    data.setViewedPages((prevViewedPages) =>
-      prevViewedPages.map((page) =>
-        page.pageNumber === data.pageNumber
-          ? { ...page, duration: page.duration + data.duration }
-          : page,
-      ),
-    );
-
-  // If the view is a preview, do not track the view
-  if (data.isPreview) return;
-
-  await fetch("/api/record_view", {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
 };
 
 export default function PagesVerticalViewer({
@@ -222,28 +191,93 @@ export default function PagesVerticalViewer({
     hasTrackedUpRef.current = false; // Reset tracking status on page number change
   }, [pageNumber]);
 
+  const {
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+    isInactive,
+    updateActivity,
+  } = useSafePageViewTracker({
+    ...getTrackingOptions(),
+    externalStartTimeRef: startTimeRef,
+  });
+
+  useEffect(() => {
+    if (pageNumber <= numPages) {
+      const trackingData = {
+        linkId,
+        documentId,
+        viewId,
+        pageNumber: pageNumber,
+        versionNumber,
+        dataroomId,
+        setViewedPages,
+        isPreview,
+      };
+
+      startIntervalTracking(trackingData);
+    }
+
+    return () => {
+      stopIntervalTracking();
+    };
+  }, [
+    pageNumber,
+    numPages,
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    startIntervalTracking,
+    stopIntervalTracking,
+  ]);
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (pageNumber > numPages) return;
 
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
-        startTimeRef.current = Date.now(); // Reset start time when the page becomes visible again
-      } else {
-        visibilityRef.current = false;
+        resetTrackingState();
+
         if (pageNumber <= numPages) {
-          const duration = Date.now() - startTimeRef.current;
-          trackPageView({
+          const trackingData = {
             linkId,
             documentId,
             viewId,
-            duration,
             pageNumber: pageNumber,
             versionNumber,
             dataroomId,
             setViewedPages,
             isPreview,
-          });
+          };
+          startIntervalTracking(trackingData);
+        }
+      } else {
+        visibilityRef.current = false;
+        stopIntervalTracking();
+
+        // Track final duration using activity-aware calculation
+        if (pageNumber <= numPages) {
+          const duration = getActiveDuration();
+          trackPageViewSafely(
+            {
+              linkId,
+              documentId,
+              viewId,
+              duration,
+              pageNumber: pageNumber,
+              versionNumber,
+              dataroomId,
+              setViewedPages,
+              isPreview,
+            },
+            true,
+          );
         }
       }
     };
@@ -253,42 +287,41 @@ export default function PagesVerticalViewer({
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [pageNumber, numPages]);
-
-  useEffect(() => {
-    startTimeRef.current = Date.now();
-
-    if (visibilityRef.current && pageNumber <= numPages) {
-      const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: pageNumber,
-        versionNumber,
-        dataroomId,
-        setViewedPages,
-        isPreview,
-      });
-    }
-  }, [pageNumber, numPages]);
+  }, [
+    pageNumber,
+    numPages,
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
+      stopIntervalTracking();
       if (pageNumber <= numPages) {
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView({
-          linkId,
-          documentId,
-          viewId,
-          duration,
-          pageNumber: pageNumber,
-          versionNumber,
-          dataroomId,
-          setViewedPages,
-          isPreview,
-        });
+        const duration = getActiveDuration();
+        trackPageViewSafely(
+          {
+            linkId,
+            documentId,
+            viewId,
+            duration,
+            pageNumber: pageNumber,
+            versionNumber,
+            dataroomId,
+            setViewedPages,
+            isPreview,
+          },
+          true,
+        );
       }
     };
 
@@ -297,7 +330,19 @@ export default function PagesVerticalViewer({
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [pageNumber, numPages]);
+  }, [
+    pageNumber,
+    numPages,
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    trackPageViewSafely,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   // Add this effect near your other useEffect hooks
   useEffect(() => {
@@ -401,8 +446,8 @@ export default function PagesVerticalViewer({
 
     if (maxVisiblePage !== pageNumber) {
       if (pageNumber <= numPages) {
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView({
+        const duration = getActiveDuration();
+        trackPageViewSafely({
           linkId,
           documentId,
           viewId,
@@ -455,8 +500,8 @@ export default function PagesVerticalViewer({
     // Preload previous pages
     preloadImage(pageNumber - 4);
 
-    const duration = Date.now() - startTimeRef.current;
-    trackPageView({
+    const duration = getActiveDuration();
+    trackPageViewSafely({
       linkId,
       documentId,
       viewId,
@@ -502,8 +547,8 @@ export default function PagesVerticalViewer({
     // Preload the next page
     preloadImage(pageNumber + 2);
 
-    const duration = Date.now() - startTimeRef.current;
-    trackPageView({
+    const duration = getActiveDuration();
+    trackPageViewSafely({
       linkId,
       documentId,
       viewId,
@@ -558,8 +603,8 @@ export default function PagesVerticalViewer({
       const targetPage = parseInt(pageMatch[1]);
       if (targetPage >= 1 && targetPage <= numPages) {
         // Track the current page before jumping
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView({
+        const duration = getActiveDuration();
+        trackPageViewSafely({
           linkId,
           documentId,
           viewId,
@@ -928,6 +973,13 @@ export default function PagesVerticalViewer({
 
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
+        <AwayPoster
+          isVisible={isInactive}
+          inactivityThreshold={
+            getTrackingOptions().inactivityThreshold || 20000
+          }
+          onDismiss={updateActivity}
+        />
       </div>
     </>
   );
