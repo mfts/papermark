@@ -15,6 +15,7 @@ import {
   FileDownIcon,
   FolderIcon,
   MoonIcon,
+  PinIcon,
   ServerIcon,
   SheetIcon,
   SunIcon,
@@ -97,7 +98,8 @@ export default function DocumentHeader({
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const { refreshPins } = usePins();
+  const { refreshPins, pinnedItems, addPinnedItem, removePinnedItem } =
+    usePins();
   const actionRows: React.ReactNode[][] = [];
 
   if (actions) {
@@ -490,6 +492,27 @@ export default function DocumentHeader({
     }
   };
 
+  const handlePinDocument = () => {
+    () => {
+      const isPinned = pinnedItems.some(
+        (item) => item.documentId === prismaDocument.id,
+      );
+      const pinnedItem = pinnedItems.find(
+        (item) => item.documentId === prismaDocument.id,
+      );
+
+      if (isPinned && pinnedItem?.id) {
+        removePinnedItem(pinnedItem.id);
+      } else {
+        addPinnedItem({
+          pinType: "DOCUMENT",
+          documentId: prismaDocument.id,
+          name: prismaDocument.name,
+        });
+      }
+    };
+  };
+
   const downloadDocument = async (documentVersion: DocumentVersion) => {
     if (documentVersion.type === "notion") {
       toast.error("Notion documents cannot be downloaded.");
@@ -571,6 +594,30 @@ export default function DocumentHeader({
         </div>
 
         <div className="flex items-center gap-x-4 md:gap-x-2">
+          <ButtonTooltip
+            content={
+              pinnedItems.some((item) => item.documentId === prismaDocument.id)
+                ? "Unpin document"
+                : "Pin document"
+            }
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden md:flex"
+              onClick={handlePinDocument}
+            >
+              <PinIcon
+                className={cn(
+                  "h-6 w-6",
+                  pinnedItems.some(
+                    (item) => item.documentId === prismaDocument.id,
+                  ) && "fill-current",
+                )}
+              />
+            </Button>
+          </ButtonTooltip>
+
           {primaryVersion.type !== "notion" &&
             primaryVersion.type !== "sheet" &&
             primaryVersion.type !== "zip" &&
