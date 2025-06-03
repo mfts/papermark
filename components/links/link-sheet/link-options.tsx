@@ -34,6 +34,7 @@ export type LinkUpgradeOptions = {
   state: boolean;
   trigger: string;
   plan?: "Pro" | "Business" | "Data Rooms" | "Data Rooms Plus";
+  highlightItem?: string[];
 };
 
 export const LinkOptions = ({
@@ -68,17 +69,20 @@ export const LinkOptions = ({
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
   const [upgradePlan, setUpgradePlan] = useState<PlanEnum>(PlanEnum.Business);
+  const [highlightItem, setHighlightItem] = useState<string[]>([]);
 
   const handleUpgradeStateChange = ({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => {
     setOpenUpgradeModal(state);
     setTrigger(trigger);
     if (plan) {
       setUpgradePlan(plan as PlanEnum);
     }
+    setHighlightItem(highlightItem || []);
   };
 
   return (
@@ -236,6 +240,7 @@ export const LinkOptions = ({
         open={openUpgradeModal}
         setOpen={setOpenUpgradeModal}
         trigger={trigger}
+        highlightItem={highlightItem}
       />
     </div>
   );

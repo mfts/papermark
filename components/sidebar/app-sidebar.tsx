@@ -100,6 +100,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         disabled: !isBusiness && !isDatarooms && !isDataroomsPlus && !isTrial,
         trigger: "sidebar_datarooms",
         plan: PlanEnum.Business,
+        highlightItem: ["datarooms"],
       },
       {
         title: "Visitors",
@@ -109,6 +110,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         disabled: isFree && !isTrial,
         trigger: "sidebar_visitors",
         plan: PlanEnum.Pro,
+        highlightItem: ["visitors"],
       },
       {
         title: "Branding",

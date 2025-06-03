@@ -7,6 +7,7 @@ import { errorhandler } from "@/lib/errorHandler";
 import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 
 export default async function handle(
   req: NextApiRequest,
@@ -48,10 +49,22 @@ export default async function handle(
           isPrimary: true,
           type: "sheet",
         },
+        select: {
+          id: true,
+          file: true,
+          storageType: true,
+          contentType: true,
+        },
       });
 
       if (!documentVersion) {
         return res.status(404).end("Document not found");
+      }
+
+      if (!supportsAdvancedExcelMode(documentVersion.contentType)) {
+        return res.status(400).json({
+          message: "Advanced mode is only available for Excel files (.xls, .xlsx, .xlsm).",
+        });
       }
 
       await copyFileToBucketServer({

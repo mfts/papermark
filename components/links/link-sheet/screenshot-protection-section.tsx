@@ -17,6 +17,7 @@ export default function ScreenshotProtectionSection({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => void;
 }) {
   const { enableScreenshotProtection } = data;
@@ -49,6 +50,7 @@ export default function ScreenshotProtectionSection({
             state: true,
             trigger: "link_sheet_screenshot_protection_section",
             plan: "Business",
+            highlightItem: ["screenshot"],
           })
         }
       />

@@ -33,6 +33,7 @@ export type LinkUpgradeOptions = {
   state: boolean;
   trigger: string;
   plan?: "Pro" | "Business" | "Data Rooms" | "Data Rooms Plus";
+  highlightItem?: string[];
 };
 
 export const OnboardingLinkOptions = ({
@@ -69,17 +70,20 @@ export const OnboardingLinkOptions = ({
   const [upgradePlan, setUpgradePlan] = useState<PlanEnum>(PlanEnum.Business);
   const [showAdvancedSettings, setShowAdvancedSettings] =
     useState<boolean>(false);
+  const [highlightItem, setHighlightItem] = useState<string[]>([]);
 
   const handleUpgradeStateChange = ({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => {
     setOpenUpgradeModal(state);
     setTrigger(trigger);
     if (plan) {
       setUpgradePlan(plan as PlanEnum);
     }
+    setHighlightItem(highlightItem || []);
   };
 
   // Basic settings that are always shown
@@ -263,6 +267,7 @@ export const OnboardingLinkOptions = ({
         open={openUpgradeModal}
         setOpen={setOpenUpgradeModal}
         trigger={trigger}
+        highlightItem={highlightItem}
       />
     </div>
   );

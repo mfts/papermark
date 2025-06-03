@@ -26,6 +26,7 @@ export default function AllowListSection({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => void;
   presets: LinkPreset | null;
 }) {
@@ -97,6 +98,7 @@ export default function AllowListSection({
               state: true,
               trigger: "link_sheet_allowlist_section",
               plan: "Business",
+              highlightItem: ["allow-block"],
             })
           }
         />

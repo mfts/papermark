@@ -92,17 +92,20 @@ export default function EditPreset() {
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
   const [upgradePlan, setUpgradePlan] = useState<PlanEnum>(PlanEnum.Business);
+  const [highlightItem, setHighlightItem] = useState<string[]>([]);
 
   const handleUpgradeStateChange = ({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => {
     setOpenUpgradeModal(state);
     setTrigger(trigger);
     if (plan) {
       setUpgradePlan(plan as PlanEnum);
     }
+    setHighlightItem(highlightItem || []);
   };
 
   useEffect(() => {
@@ -502,6 +505,7 @@ export default function EditPreset() {
         open={openUpgradeModal}
         setOpen={setOpenUpgradeModal}
         trigger={trigger}
+        highlightItem={highlightItem}
       />
     </AppLayout>
   );

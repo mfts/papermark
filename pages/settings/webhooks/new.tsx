@@ -93,7 +93,6 @@ export default function NewWebhook() {
 
   const createWebhook = async () => {
     if (isFree || isPro) {
-      toast.error("This feature is not available on your plan");
       return;
     }
 
@@ -343,9 +342,10 @@ export default function NewWebhook() {
                   key="create-webhook"
                   clickedPlan={PlanEnum.Business}
                   trigger="create_webhook"
+                  highlightItem={["webhooks"]}
                 >
                   <Button type="submit" disabled={isLoading}>
-                    Create Webhook
+                    Upgrade to Save Webhook
                   </Button>
                 </UpgradePlanModal>
               ) : (
