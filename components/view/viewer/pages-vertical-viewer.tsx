@@ -789,12 +789,7 @@ export default function PagesVerticalViewer({
                             : undefined,
                         }}
                       >
-                        <div
-                          className="viewer-container relative border-b border-t border-gray-100"
-                          style={{
-                            position: "relative",
-                          }}
-                        >
+                        <div className="viewer-container relative border-b border-t border-gray-100">
                           <div
                             className="pointer-events-none absolute bottom-0 left-0 w-px"
                             style={{
