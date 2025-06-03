@@ -1,5 +1,7 @@
 import { useRouter } from "next/router";
 
+
+
 import { useState } from "react";
 
 import {
@@ -49,6 +51,22 @@ import {
 import { useSidebar } from "@/components/ui/sidebar";
 
 import { ButtonTooltip, Tooltip } from "../ui/tooltip";
+
+const getPinnedItemPath = (item: PinnedItem): string => {
+  switch (item.pinType) {
+    case "DOCUMENT":
+    case "DATAROOM_DOCUMENT":
+      return `/documents/${item.documentId}`;
+    case "FOLDER":
+      return `/documents/tree${item.path || ""}`;
+    case "DATAROOM":
+      return `/datarooms/${item.dataroomId}/documents`;
+    case "DATAROOM_FOLDER":
+      return `/datarooms/${item.dataroomId}/documents${item.path || ""}`;
+    default:
+      return "";
+  }
+};
 
 // Helper function to get icon based on PinType
 const getIconForPinType = (pinType: PinType) => {
@@ -101,24 +119,7 @@ function SortablePinnedItem({
 
   const IconComponent = getIconForPinType(item.pinType);
 
-  const getCurrentPath = () => {
-    switch (item.pinType) {
-      case "DOCUMENT":
-        return `/documents/${item.documentId}`;
-      case "FOLDER":
-        return `/documents/tree${item.path || ""}`;
-      case "DATAROOM":
-        return `/datarooms/${item.dataroomId}/documents`;
-      case "DATAROOM_DOCUMENT":
-        return `/datarooms/${item.dataroomId}/documents/${item.dataroomDocumentId}`;
-      case "DATAROOM_FOLDER":
-        return `/datarooms/${item.dataroomId}/documents${item.path || ""}`;
-      default:
-        return "";
-    }
-  };
-
-  const currentPath = getCurrentPath();
+  const currentPath = getPinnedItemPath(item);
   const current =
     router.asPath === currentPath ||
     (currentPath && router.asPath.startsWith(currentPath));
@@ -172,26 +173,11 @@ export function NavPinnedItems() {
   );
 
   const handleItemClick = (item: PinnedItem) => {
-    let path = "";
-    switch (item.pinType) {
-      case "DOCUMENT":
-        path = `/documents/${item.documentId}`;
-        break;
-      case "FOLDER":
-        path = `/documents/tree${item.path || ""}`;
-        break;
-      case "DATAROOM":
-        path = `/datarooms/${item.dataroomId}/documents`;
-        break;
-      case "DATAROOM_DOCUMENT":
-        path = `/datarooms/${item.dataroomId}/documents/${item.dataroomDocumentId}`;
-        break;
-      case "DATAROOM_FOLDER":
-        path = `/datarooms/${item.dataroomId}/documents${item.path || ""}`;
-        break;
-    }
-    if (path) {
+    const path = getPinnedItemPath(item);
+    try {
       router.push(path);
+    } catch (error) {
+      console.error("Failed to navigate to pinned item:", error);
     }
   };
 
@@ -300,6 +286,7 @@ export function NavPinnedItems() {
           </SidebarMenuItem>
         </Collapsible>
       </SidebarMenu>
+
       <SidebarMenu className="hidden space-y-0.5 text-foreground group-data-[collapsible=icon]:flex">
         <SidebarMenuItem>
           <SidebarMenuButton
@@ -312,6 +299,7 @@ export function NavPinnedItems() {
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
+
       <ManagePinsModal open={isManageOpen} onOpenChange={setIsManageOpen} />
     </SidebarGroup>
   );

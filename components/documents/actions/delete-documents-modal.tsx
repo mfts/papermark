@@ -20,7 +20,6 @@ import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 
-
 function DeleteItemsModal({
   showDeleteItemsModal,
   setShowDeleteItemsModal,
@@ -81,7 +80,6 @@ function DeleteItemsModal({
                 `Failed to delete document ${documentId}: ${error.message}`,
               );
             }
-            refreshPins();
             analytics.capture("Document Deleted", {
               team: teamInfo?.currentTeam?.id,
               documentId,
@@ -103,7 +101,6 @@ function DeleteItemsModal({
                 `Failed to delete folder ${folderId}: ${error.message}`,
               );
             }
-            refreshPins();
             analytics.capture("Folder Deleted", {
               team: teamInfo?.currentTeam?.id,
               folderId,
@@ -145,6 +142,9 @@ function DeleteItemsModal({
         await mutate(
           `/api/teams/${teamInfo?.currentTeam?.id}/${folderPathName ? `folders/documents/${folderPathName.join("/")}` : "documents"}`,
         );
+        if (successfullyDeletedItems.length > 0) {
+          refreshPins();
+        }
 
         setDeleting(false);
 

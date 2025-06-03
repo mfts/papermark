@@ -45,7 +45,10 @@ export default function DataroomsPage() {
     isDataroomsPlus ||
     (isBusiness && numDatarooms < limitDatarooms);
 
-  const handlePinClick = async (e: React.MouseEvent, dataroom: any) => {
+  const handlePinClick = async (
+    e: React.MouseEvent,
+    dataroom: { id: string; name: string },
+  ) => {
     e.preventDefault();
     const isPinned =
       pinnedItems && Array.isArray(pinnedItems)

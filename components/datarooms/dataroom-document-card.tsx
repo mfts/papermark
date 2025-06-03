@@ -62,8 +62,8 @@ export default function DataroomDocumentCard({
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
   const router = useRouter();
-  const { pinnedItems, addPinnedItem, removePinnedItem } = usePins();
-      
+  const { pinnedItems, addPinnedItem, removePinnedItem, refreshPins } =
+    usePins();
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
@@ -83,7 +83,7 @@ export default function DataroomDocumentCard({
         )
       : false;
 
-      const handlePin = async (e: React.MouseEvent) => {
+  const handlePin = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     try {
@@ -100,6 +100,7 @@ export default function DataroomDocumentCard({
           pinType: PinType.DATAROOM_DOCUMENT,
           dataroomDocumentId: dataroomDocument.id,
           dataroomId,
+          documentId: dataroomDocument.document.id,
           name: dataroomDocument.document.name,
         });
         toast.success("Document pinned");

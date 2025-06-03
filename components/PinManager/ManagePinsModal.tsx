@@ -40,6 +40,18 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+const getItemId = (item: PinnedItem): string => {
+  return (
+    item.id ||
+    item.documentId ||
+    item.folderId ||
+    item.dataroomId ||
+    item.dataroomDocumentId ||
+    item.dataroomFolderId ||
+    "unknown"
+  );
+};
+
 interface ManagePinsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -77,14 +89,7 @@ function SortablePinItem({
     transition,
     isDragging,
   } = useSortable({
-    id:
-      item.id ||
-      item.documentId ||
-      item.folderId ||
-      item.dataroomId ||
-      item.dataroomDocumentId ||
-      item.dataroomFolderId ||
-      "unknown",
+    id: getItemId(item),
   });
 
   const style = {
@@ -133,7 +138,7 @@ function SortablePinItem({
         variant="ghost"
         size="icon"
         className="h-6 w-6 opacity-0 group-hover:opacity-100"
-        onClick={() => item.id && onRemove(item.id)}
+        onClick={() => onRemove(getItemId(item))}
       >
         <X className="h-3 w-3" />
         <span className="sr-only">Remove {item.name}</span>
@@ -181,22 +186,10 @@ export function ManagePinsModal({ open, onOpenChange }: ManagePinsModalProps) {
     if (!active || !over || active.id === over.id) return;
 
     const oldIndex = pinnedItems.findIndex(
-      (item) =>
-        (item.id ||
-          item.documentId ||
-          item.folderId ||
-          item.dataroomId ||
-          item.dataroomDocumentId ||
-          item.dataroomFolderId) === active.id,
+      (item) => getItemId(item) === active.id,
     );
     const newIndex = pinnedItems.findIndex(
-      (item) =>
-        (item.id ||
-          item.documentId ||
-          item.folderId ||
-          item.dataroomId ||
-          item.dataroomDocumentId ||
-          item.dataroomFolderId) === over.id,
+      (item) => getItemId(item) === over.id,
     );
 
     if (oldIndex === -1 || newIndex === -1) return;
@@ -211,6 +204,7 @@ export function ManagePinsModal({ open, onOpenChange }: ManagePinsModalProps) {
     let path = "";
     switch (item.pinType) {
       case "DOCUMENT":
+      case "DATAROOM_DOCUMENT":
         path = `/documents/${item.documentId}`;
         break;
       case "FOLDER":
@@ -219,29 +213,20 @@ export function ManagePinsModal({ open, onOpenChange }: ManagePinsModalProps) {
       case "DATAROOM":
         path = `/datarooms/${item.dataroomId}/documents`;
         break;
-      case "DATAROOM_DOCUMENT":
-        path = `/datarooms/${item.dataroomId}/documents/${item.dataroomDocumentId}`;
-        break;
       case "DATAROOM_FOLDER":
         path = `/datarooms/${item.dataroomId}/documents${item.path || ""}`;
         break;
     }
-    if (path) {
+    try {
       router.push(path);
       onOpenChange(false);
+    } catch (error) {
+      console.error("Failed to navigate to pinned item:", error);
     }
   };
 
   const activeItem = activeId
-    ? pinnedItems.find(
-        (item) =>
-          (item.id ||
-            item.documentId ||
-            item.folderId ||
-            item.dataroomId ||
-            item.dataroomDocumentId ||
-            item.dataroomFolderId) === activeId,
-      )
+    ? pinnedItems.find((item) => getItemId(item) === activeId)
     : null;
 
   return (
@@ -266,28 +251,14 @@ export function ManagePinsModal({ open, onOpenChange }: ManagePinsModalProps) {
                 >
                   <SortableContext
                     items={pinnedItems.map((item) => ({
-                      id:
-                        item.id ||
-                        item.documentId ||
-                        item.folderId ||
-                        item.dataroomId ||
-                        item.dataroomDocumentId ||
-                        item.dataroomFolderId ||
-                        "unknown",
+                      id: getItemId(item),
                     }))}
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="space-y-1.5">
                       {pinnedItems.map((item) => (
                         <SortablePinItem
-                          key={
-                            item.id ||
-                            item.documentId ||
-                            item.folderId ||
-                            item.dataroomId ||
-                            item.dataroomDocumentId ||
-                            item.dataroomFolderId
-                          }
+                          key={getItemId(item)}
                           item={item}
                           onRemove={removePinnedItem}
                           onItemClick={handleItemClick}

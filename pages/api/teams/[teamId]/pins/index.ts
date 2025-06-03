@@ -36,6 +36,12 @@ export const createPinBodySchema = z.object({
     message: "Must provide the ID field matching the pinType"
 });
 
+export const reorderPinsBodySchema = z.object({
+    pins: z.array(z.object({
+        id: z.string().min(1).describe("The ID of the pin to reorder"),
+    })).min(1).describe("Array of pins with their IDs for reordering"),
+});
+
 export default async function handle(
     req: NextApiRequest,
     res: NextApiResponse,
@@ -94,7 +100,10 @@ export default async function handle(
                     dataroomDocument: {
                         select: {
                             document: {
-                                select: { name: true }
+                                select: {
+                                    id: true,
+                                    name: true
+                                }
                             }
                         }
                     },
@@ -112,7 +121,7 @@ export default async function handle(
             const transformedPins = pins.map(pin => ({
                 id: pin.id,
                 pinType: pin.pinType,
-                documentId: pin.documentId,
+                documentId: pin.documentId || (pin.pinType === "DATAROOM_DOCUMENT" && pin.dataroomDocument?.document ? pin.dataroomDocument.document.id : undefined),
                 folderId: pin.folderId,
                 dataroomId: pin.dataroomId || (pin.pinType === "DATAROOM_FOLDER" ? pin.dataroomFolder?.dataroomId : undefined),
                 dataroomDocumentId: pin.dataroomDocumentId,
@@ -173,7 +182,8 @@ export default async function handle(
             const newPin = await prisma.pin.create({
                 data: {
                     pinType: validatedData.pinType,
-                    documentId: validatedData.pinType === "DOCUMENT" ? validatedData.documentId : null,
+                    documentId: validatedData.pinType === "DOCUMENT" ? validatedData.documentId :
+                        validatedData.pinType === "DATAROOM_DOCUMENT" ? validatedData.documentId : null,
                     folderId: validatedData.pinType === "FOLDER" ? validatedData.folderId : null,
                     dataroomId: validatedData.pinType === "DATAROOM" ? validatedData.dataroomId : null,
                     dataroomDocumentId: validatedData.pinType === "DATAROOM_DOCUMENT" ? validatedData.dataroomDocumentId : null,
@@ -202,7 +212,10 @@ export default async function handle(
                     dataroomDocument: {
                         select: {
                             document: {
-                                select: { name: true }
+                                select: {
+                                    id: true,
+                                    name: true
+                                }
                             }
                         }
                     },
@@ -220,7 +233,7 @@ export default async function handle(
             const response = {
                 id: newPin.id,
                 pinType: newPin.pinType,
-                documentId: newPin.documentId,
+                documentId: newPin.documentId || (newPin.pinType === "DATAROOM_DOCUMENT" && newPin.dataroomDocument?.document ? newPin.dataroomDocument.document.id : undefined),
                 folderId: newPin.folderId,
                 dataroomId: newPin.dataroomId || (newPin.pinType === "DATAROOM_FOLDER" ? newPin.dataroomFolder?.dataroomId : undefined),
                 dataroomDocumentId: newPin.dataroomDocumentId,
@@ -239,7 +252,21 @@ export default async function handle(
 
         } else if (req.method === "PUT") {
             // Reorder pins
-            const { pins } = req.body;
+            const validatedData = reorderPinsBodySchema.parse(req.body);
+            const { pins } = validatedData;
+            const existingPins = await prisma.pin.findMany({
+                where: {
+                    id: { in: pins.map(pin => pin.id) },
+                    teamId: teamId,
+                },
+                select: { id: true },
+            });
+
+            if (existingPins.length !== pins.length) {
+                return res.status(400).json({
+                    error: "One or more pins not found or do not belong to this team.",
+                });
+            }
 
             // Update each pin's order
             await Promise.all(

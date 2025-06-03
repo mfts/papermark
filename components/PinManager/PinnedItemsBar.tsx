@@ -44,6 +44,18 @@ import {
 import { useSidebar } from "../ui/sidebar";
 import { ManagePinsModal } from "./ManagePinsModal";
 
+const getPinItemId = (item: PinnedItem): string => {
+  return (
+    item.id ||
+    item.documentId ||
+    item.folderId ||
+    item.dataroomId ||
+    item.dataroomDocumentId ||
+    item.dataroomFolderId ||
+    "unknown"
+  );
+};
+
 const ItemIcon = ({ type }: { type: PinnedItem["pinType"] }) => {
   switch (type) {
     case "FOLDER":
@@ -72,14 +84,7 @@ function SortablePin({ item, onItemClick, onRemove }: SortablePinProps) {
     transition,
     isDragging,
   } = useSortable({
-    id:
-      item.id ||
-      item.documentId ||
-      item.folderId ||
-      item.dataroomId ||
-      item.dataroomDocumentId ||
-      item.dataroomFolderId ||
-      "unknown",
+    id: getPinItemId(item),
   });
 
   const style = transform
@@ -154,6 +159,7 @@ export function PinnedItemsBar() {
     let path = "";
     switch (item.pinType) {
       case "DOCUMENT":
+      case "DATAROOM_DOCUMENT":
         path = `/documents/${item.documentId}`;
         break;
       case "FOLDER":
@@ -162,15 +168,14 @@ export function PinnedItemsBar() {
       case "DATAROOM":
         path = `/datarooms/${item.dataroomId}/documents`;
         break;
-      case "DATAROOM_DOCUMENT":
-        path = `/datarooms/${item.dataroomId}/documents/${item.dataroomDocumentId}`;
-        break;
       case "DATAROOM_FOLDER":
         path = `/datarooms/${item.dataroomId}/documents${item.path || ""}`;
         break;
     }
-    if (path) {
+    try {
       router.push(path);
+    } catch (error) {
+      console.error("Failed to navigate to pinned item:", error);
     }
   };
 
@@ -191,14 +196,10 @@ export function PinnedItemsBar() {
 
     if (over && active.id !== over.id) {
       const oldIndex = pinnedItems.findIndex(
-        (item) =>
-          (item.id || item.documentId || item.folderId || item.dataroomId) ===
-          active.id,
+        (item) => getPinItemId(item) === active.id,
       );
       const newIndex = pinnedItems.findIndex(
-        (item) =>
-          (item.id || item.documentId || item.folderId || item.dataroomId) ===
-          over.id,
+        (item) => getPinItemId(item) === over.id,
       );
 
       const items = [...pinnedItems];
@@ -209,11 +210,7 @@ export function PinnedItemsBar() {
   };
 
   const activeItem = activeId
-    ? pinnedItems.find(
-        (item) =>
-          (item.id || item.documentId || item.folderId || item.dataroomId) ===
-          activeId,
-      )
+    ? pinnedItems.find((item) => getPinItemId(item) === activeId)
     : null;
 
   if (pinnedItems.length === 0) {
@@ -248,29 +245,13 @@ export function PinnedItemsBar() {
                 >
                   <SortableContext
                     items={pinnedItems.map((item) => ({
-                      id:
-                        item.id ||
-                        item.documentId ||
-                        item.folderId ||
-                        item.dataroomId ||
-                        item.dataroomDocumentId ||
-                        item.dataroomFolderId ||
-                        "unknown",
+                      id: getPinItemId(item),
                     }))}
                     strategy={horizontalListSortingStrategy}
                   >
                     <div className="flex min-w-0 items-center gap-2">
                       {pinnedItems.map((item, index) => (
-                        <Fragment
-                          key={
-                            item.id ||
-                            item.documentId ||
-                            item.folderId ||
-                            item.dataroomId ||
-                            item.dataroomDocumentId ||
-                            item.dataroomFolderId
-                          }
-                        >
+                        <Fragment key={getPinItemId(item)}>
                           <div className="flex items-center">
                             <SortablePin
                               item={item}

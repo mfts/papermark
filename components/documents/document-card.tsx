@@ -98,8 +98,10 @@ export default function DocumentsCard({
     e.stopPropagation();
     try {
       if (isPinned) {
-        const pinToRemove = pinnedItems.find(
-          (item) => item.documentId === prismaDocument.id,
+        const pinToRemove = pinnedItems.find((item) =>
+          router.pathname.includes("/datarooms/")
+            ? item.dataroomDocumentId === prismaDocument.id
+            : item.documentId === prismaDocument.id,
         );
         if (pinToRemove?.id) {
           await removePinnedItem(pinToRemove.id);
@@ -112,7 +114,11 @@ export default function DocumentsCard({
             ? "DATAROOM_DOCUMENT"
             : "DOCUMENT",
           ...(router.pathname.includes("/datarooms/")
-            ? { dataroomDocumentId: prismaDocument.id, dataroomId }
+            ? {
+                dataroomDocumentId: prismaDocument.id,
+                dataroomId,
+                documentId: prismaDocument.id,
+              }
             : { documentId: prismaDocument.id }),
           name: prismaDocument.name,
         });

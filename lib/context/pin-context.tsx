@@ -103,7 +103,7 @@ export function PinProvider({ children }: { children: ReactNode }) {
     if (!currentTeam) return;
 
     const savedState = localStorage.getItem(`papermark-pins-${currentTeam.id}`);
-    if (savedState) {
+    if (savedState && !pins) {
       dispatch({
         type: "LOAD_STATE",
         payload: { ...JSON.parse(savedState), isLoading: true },

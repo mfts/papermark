@@ -493,24 +493,22 @@ export default function DocumentHeader({
   };
 
   const handlePinDocument = () => {
-    () => {
-      const isPinned = pinnedItems.some(
-        (item) => item.documentId === prismaDocument.id,
-      );
-      const pinnedItem = pinnedItems.find(
-        (item) => item.documentId === prismaDocument.id,
-      );
+    const isPinned = pinnedItems.some(
+      (item) => item.documentId === prismaDocument.id,
+    );
+    const pinnedItem = pinnedItems.find(
+      (item) => item.documentId === prismaDocument.id,
+    );
 
-      if (isPinned && pinnedItem?.id) {
-        removePinnedItem(pinnedItem.id);
-      } else {
-        addPinnedItem({
-          pinType: "DOCUMENT",
-          documentId: prismaDocument.id,
-          name: prismaDocument.name,
-        });
-      }
-    };
+    if (isPinned && pinnedItem?.id) {
+      removePinnedItem(pinnedItem.id);
+    } else {
+      addPinnedItem({
+        pinType: "DOCUMENT",
+        documentId: prismaDocument.id,
+        name: prismaDocument.name,
+      });
+    }
   };
 
   const downloadDocument = async (documentVersion: DocumentVersion) => {
