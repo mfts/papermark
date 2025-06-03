@@ -256,7 +256,7 @@ export function ManagePinsModal({ open, onOpenChange }: ManagePinsModalProps) {
         </DialogHeader>
         <div className="relative py-4">
           {pinnedItems.length > 0 ? (
-            <ScrollArea className="h-[350px] w-full" type="always">
+            <ScrollArea className="max-h-[350px] w-full" type="always">
               <div className="w-full">
                 <DndContext
                   sensors={sensors}
