@@ -53,28 +53,47 @@ export default function useDataroomGroups({ documentId }: { documentId?: string 
   };
 }
 
-export function useDataroomGroupLinks() {
+export function useDataroomGroupLinks(
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+  tags?: string[],
+) {
   const router = useRouter();
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const { id, groupId } = router.query as {
     id: string;
     groupId: string;
   };
 
-  const teamInfo = useTeam();
-  const teamId = teamInfo?.currentTeam?.id;
+  const searchParams = new URLSearchParams();
+  searchParams.set("page", page.toString());
+  searchParams.set("limit", limit.toString());
+  if (search) searchParams.set("search", search);
+  if (tags?.length) searchParams.set("tags", tags.join(","));
 
-  const { data: links, error } = useSWR<LinkWithViews[]>(
+  // GET /api/teams/:teamId/datarooms/:id/groups/:groupId/links?page=1&limit=10&search=test&tags=tag1,tag2
+  const { data, error } = useSWR<{
+    links: LinkWithViews[];
+    pagination: {
+      total: number;
+      pages: number;
+    };
+  }>(
     teamId &&
       id &&
-      `/api/teams/${teamId}/datarooms/${id}/groups/${groupId}/links`,
+    groupId &&
+    `/api/teams/${teamId}/datarooms/${id}/groups/${groupId}/links?${searchParams.toString()}`,
     fetcher,
     { dedupingInterval: 10000 },
   );
 
   return {
-    links,
-    loading: !error && !links,
+    links: data?.links,
+    pagination: data?.pagination,
+    loading: !error && !data,
     error,
   };
 }

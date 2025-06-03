@@ -75,6 +75,10 @@ export const DataroomHeader = ({
           isOpen={isLinkSheetOpen}
           setIsOpen={setIsLinkSheetOpen}
           existingLinks={links}
+          page={1}
+          pageSize={10}
+          searchQuery={undefined}
+          tags={undefined}
         />
       </div>
     </section>

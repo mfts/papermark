@@ -5,6 +5,8 @@ import {
   ChevronsRightIcon,
 } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -24,6 +26,7 @@ interface PaginationProps {
   onPageSizeChange: (size: number) => void;
   totalShownItems: number;
   itemName: string;
+  className?: string;
 }
 
 export function Pagination({
@@ -35,9 +38,10 @@ export function Pagination({
   onPageSizeChange,
   totalShownItems,
   itemName,
+  className,
 }: PaginationProps) {
   return (
-    <Card className="mt-4 p-4">
+    <Card className={cn("mt-4 p-4", className)}>
       <div className="flex items-center justify-between">
         <div className="flex-1 text-sm text-muted-foreground">
           Showing <span className="font-bold">{totalShownItems}</span> of{" "}
