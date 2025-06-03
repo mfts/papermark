@@ -63,7 +63,7 @@ export default function DataroomDocumentCard({
     theme === "light" || (theme === "system" && systemTheme === "light");
   const router = useRouter();
   const { pinnedItems, addPinnedItem, removePinnedItem } = usePins();
-
+      
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
@@ -178,6 +178,7 @@ export default function DataroomDocumentCard({
             revalidate: false,
           },
         );
+        refreshPins();
       }),
       {
         loading: "Removing document...",

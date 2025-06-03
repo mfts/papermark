@@ -1,10 +1,13 @@
 import { useState } from "react";
 
+
+
 import { useTeam } from "@/context/team-context";
 import { Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { usePins } from "@/lib/context/pin-context";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 
@@ -29,6 +32,7 @@ import { Input } from "@/components/ui/input";
 export default function Settings() {
   const { dataroom } = useDataroom();
   const teamInfo = useTeam();
+  const { refreshPins } = usePins();
   const teamId = teamInfo?.currentTeam?.id;
   const [isCopied, setIsCopied] = useState(false);
 
@@ -81,6 +85,7 @@ export default function Settings() {
                       mutate(`/api/teams/${teamId}/datarooms`),
                       mutate(`/api/teams/${teamId}/datarooms/${dataroom.id}`),
                     ]);
+                    refreshPins();
                     toast.success("Successfully updated dataroom name!");
                   } else {
                     const { error } = await res.json();

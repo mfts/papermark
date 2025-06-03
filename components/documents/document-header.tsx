@@ -26,6 +26,7 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { usePins } from "@/lib/context/pin-context";
 import { getFile } from "@/lib/files/get-file";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
@@ -96,7 +97,7 @@ export default function DocumentHeader({
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-
+  const { refreshPins } = usePins();
   const actionRows: React.ReactNode[][] = [];
 
   if (actions) {
@@ -170,6 +171,7 @@ export default function DocumentHeader({
         if (response.ok) {
           const { message } = await response.json();
           toast.success(message);
+          refreshPins();
         } else {
           const { message } = await response.json();
           toast.error(message);
@@ -447,6 +449,7 @@ export default function DocumentHeader({
           },
           revalidate: false,
         });
+        refreshPins();
         setIsFirstClick(false);
         setMenuOpen(false);
         router.push("/documents");

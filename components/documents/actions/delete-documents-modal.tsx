@@ -12,12 +12,14 @@ import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
+import { usePins } from "@/lib/context/pin-context";
+
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 
-import { useAnalytics } from "@/lib/analytics";
 
 function DeleteItemsModal({
   showDeleteItemsModal,
@@ -38,7 +40,7 @@ function DeleteItemsModal({
   const folderPathName = router.query.name as string[] | undefined;
   const teamInfo = useTeam();
   const analytics = useAnalytics();
-
+  const { refreshPins } = usePins();
   const [deleting, setDeleting] = useState(false);
   const [isValid, setIsValid] = useState(false);
 
@@ -79,6 +81,7 @@ function DeleteItemsModal({
                 `Failed to delete document ${documentId}: ${error.message}`,
               );
             }
+            refreshPins();
             analytics.capture("Document Deleted", {
               team: teamInfo?.currentTeam?.id,
               documentId,
@@ -100,6 +103,7 @@ function DeleteItemsModal({
                 `Failed to delete folder ${folderId}: ${error.message}`,
               );
             }
+            refreshPins();
             analytics.capture("Folder Deleted", {
               team: teamInfo?.currentTeam?.id,
               folderId,

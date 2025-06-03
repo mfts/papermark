@@ -75,7 +75,8 @@ export default function DocumentsCard({
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
 
   const { datarooms } = useDatarooms();
-  const { pinnedItems, addPinnedItem, removePinnedItem } = usePins();
+  const { pinnedItems, addPinnedItem, removePinnedItem, refreshPins } =
+    usePins();
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const { canAddDocuments } = useLimits();
@@ -190,6 +191,7 @@ export default function DocumentsCard({
           },
           revalidate: false,
         });
+        refreshPins();
       }),
       {
         loading: "Deleting document...",
