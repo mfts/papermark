@@ -35,12 +35,19 @@ export interface PinnedItem {
 interface PinState {
   pinnedItems: PinnedItem[];
   isLoading: boolean;
+  pendingOperations: Set<string>;
 }
 
 type PinAction =
   | { type: "ADD_PINNED_ITEM"; payload: PinnedItem }
   | { type: "REMOVE_PINNED_ITEM"; payload: string }
   | { type: "REORDER_PINNED_ITEMS"; payload: PinnedItem[] }
+  | {
+      type: "UPDATE_PINNED_ITEM";
+      payload: { optimisticItem: PinnedItem; serverItem: PinnedItem };
+    }
+  | { type: "ADD_PENDING_OPERATION"; payload: string }
+  | { type: "REMOVE_PENDING_OPERATION"; payload: string }
   | { type: "LOAD_STATE"; payload: PinState }
   | { type: "SET_LOADING"; payload: boolean };
 
@@ -72,6 +79,39 @@ function pinReducer(state: PinState, action: PinAction): PinState {
         ...state,
         pinnedItems: action.payload,
       };
+    case "UPDATE_PINNED_ITEM":
+      return {
+        ...state,
+        pinnedItems: state.pinnedItems.map((item) => {
+          const isMatch =
+            item.pinType === action.payload.optimisticItem.pinType &&
+            item.name === action.payload.optimisticItem.name &&
+            item.documentId === action.payload.optimisticItem.documentId &&
+            item.folderId === action.payload.optimisticItem.folderId &&
+            item.dataroomId === action.payload.optimisticItem.dataroomId &&
+            item.dataroomDocumentId ===
+              action.payload.optimisticItem.dataroomDocumentId &&
+            item.dataroomFolderId ===
+              action.payload.optimisticItem.dataroomFolderId;
+
+          return isMatch ? action.payload.serverItem : item;
+        }),
+      };
+    case "ADD_PENDING_OPERATION":
+      return {
+        ...state,
+        pendingOperations: new Set([
+          ...state.pendingOperations,
+          action.payload,
+        ]),
+      };
+    case "REMOVE_PENDING_OPERATION":
+      const newPendingOperations = new Set(state.pendingOperations);
+      newPendingOperations.delete(action.payload);
+      return {
+        ...state,
+        pendingOperations: newPendingOperations,
+      };
     case "LOAD_STATE":
       return action.payload;
     case "SET_LOADING":
@@ -88,6 +128,7 @@ export function PinProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(pinReducer, {
     pinnedItems: [],
     isLoading: true,
+    pendingOperations: new Set<string>(),
   });
 
   const { currentTeam } = useTeam();
@@ -113,7 +154,11 @@ export function PinProvider({ children }: { children: ReactNode }) {
     if (pins) {
       dispatch({
         type: "LOAD_STATE",
-        payload: { pinnedItems: pins, isLoading: false },
+        payload: {
+          pinnedItems: pins,
+          isLoading: false,
+          pendingOperations: new Set<string>(),
+        },
       });
     }
   }, [pins, currentTeam]);
@@ -133,8 +178,41 @@ export function PinProvider({ children }: { children: ReactNode }) {
     addPinnedItem: async (item: PinnedItem) => {
       if (!currentTeam) return;
 
+      if (!item.name || !item.pinType) {
+        toast.error("Invalid pin data");
+        return;
+      }
+
+      // Create a unique operation key for this item
+      const operationKey = `pin-${item.pinType}-${item.documentId || item.folderId || item.dataroomId || item.dataroomDocumentId || item.dataroomFolderId}`;
+
+      // Check if this operation is already in progress
+      if (state.pendingOperations.has(operationKey)) {
+        console.log("Pin operation already in progress for this item");
+        return;
+      }
+
+      const hasRequiredId =
+        (item.pinType === "DOCUMENT" && item.documentId) ||
+        (item.pinType === "FOLDER" && item.folderId) ||
+        (item.pinType === "DATAROOM" && item.dataroomId) ||
+        (item.pinType === "DATAROOM_DOCUMENT" && item.documentId) ||
+        (item.pinType === "DATAROOM_FOLDER" && item.dataroomFolderId);
+
+      if (!hasRequiredId) {
+        console.error(
+          `Missing required ID for ${item.pinType
+            .toLowerCase()
+            .replace("_", " ")} pin`,
+        );
+        return;
+      }
+
       // Store the current state for potential rollback
       const previousState = state.pinnedItems;
+
+      // Add to pending operations
+      dispatch({ type: "ADD_PENDING_OPERATION", payload: operationKey });
 
       // Optimistically update the local state
       dispatch({ type: "ADD_PINNED_ITEM", payload: item });
@@ -153,21 +231,49 @@ export function PinProvider({ children }: { children: ReactNode }) {
 
         // If successful, update with the server response
         const newPin = await response.json();
-        await mutate();
+        dispatch({
+          type: "UPDATE_PINNED_ITEM",
+          payload: { optimisticItem: item, serverItem: newPin },
+        });
       } catch (error) {
         // If failed, rollback to previous state
         dispatch({
           type: "LOAD_STATE",
-          payload: { pinnedItems: previousState, isLoading: false },
+          payload: {
+            pinnedItems: previousState,
+            isLoading: false,
+            pendingOperations: state.pendingOperations,
+          },
         });
         toast.error("Failed to pin item");
+      } finally {
+        // Remove from pending operations
+        dispatch({ type: "REMOVE_PENDING_OPERATION", payload: operationKey });
       }
     },
     removePinnedItem: async (id: string) => {
       if (!currentTeam) return;
 
+      if (!id) {
+        console.error("Cannot remove pin: ID is missing");
+        toast.error("Cannot unpin item: invalid pin data");
+        return;
+      }
+
+      // Create a unique operation key for this unpin operation
+      const operationKey = `unpin-${id}`;
+
+      // Check if this operation is already in progress
+      if (state.pendingOperations.has(operationKey)) {
+        console.log("Unpin operation already in progress for this item");
+        return;
+      }
+
       // Store the current state for potential rollback
       const previousState = state.pinnedItems;
+
+      // Add to pending operations
+      dispatch({ type: "ADD_PENDING_OPERATION", payload: operationKey });
 
       // Optimistically update the local state
       dispatch({ type: "REMOVE_PINNED_ITEM", payload: id });
@@ -184,15 +290,20 @@ export function PinProvider({ children }: { children: ReactNode }) {
         if (!response.ok) {
           throw new Error("Failed to remove pin");
         }
-
-        await mutate();
       } catch (error) {
         // If failed, rollback to previous state
         dispatch({
           type: "LOAD_STATE",
-          payload: { pinnedItems: previousState, isLoading: false },
+          payload: {
+            pinnedItems: previousState,
+            isLoading: false,
+            pendingOperations: state.pendingOperations,
+          },
         });
         toast.error("Failed to unpin item");
+      } finally {
+        // Remove from pending operations
+        dispatch({ type: "REMOVE_PENDING_OPERATION", payload: operationKey });
       }
     },
     reorderPinnedItems: async (items: PinnedItem[]) => {
@@ -215,13 +326,15 @@ export function PinProvider({ children }: { children: ReactNode }) {
         if (!response.ok) {
           throw new Error("Failed to reorder pins");
         }
-
-        await mutate();
       } catch (error) {
         // If failed, rollback to previous state
         dispatch({
           type: "LOAD_STATE",
-          payload: { pinnedItems: previousState, isLoading: false },
+          payload: {
+            pinnedItems: previousState,
+            isLoading: false,
+            pendingOperations: state.pendingOperations,
+          },
         });
         toast.error("Failed to reorder pins");
       }
@@ -238,7 +351,11 @@ export function PinProvider({ children }: { children: ReactNode }) {
         const latestPins = await response.json();
         dispatch({
           type: "LOAD_STATE",
-          payload: { pinnedItems: latestPins, isLoading: false },
+          payload: {
+            pinnedItems: latestPins,
+            isLoading: false,
+            pendingOperations: new Set<string>(),
+          },
         });
         localStorage.setItem(
           `papermark-pins-${currentTeam.id}`,
