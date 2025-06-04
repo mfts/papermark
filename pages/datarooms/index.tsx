@@ -4,7 +4,15 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 
 import { PlanEnum } from "@/ee/stripe/constants";
-import { PlusIcon } from "lucide-react";
+import { Pin, PlusIcon } from "lucide-react";
+import { toast } from "sonner";
+
+import { usePins } from "@/lib/context/pin-context";
+import { usePlan } from "@/lib/swr/use-billing";
+import useDatarooms from "@/lib/swr/use-datarooms";
+import useLimits from "@/lib/swr/use-limits";
+import { cn } from "@/lib/utils";
+import { daysLeft } from "@/lib/utils";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { AddDataroomModal } from "@/components/datarooms/add-dataroom-modal";
@@ -21,17 +29,13 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import useDatarooms from "@/lib/swr/use-datarooms";
-import useLimits from "@/lib/swr/use-limits";
-import { daysLeft } from "@/lib/utils";
-
 export default function DataroomsPage() {
   const { datarooms } = useDatarooms();
   const { isFree, isPro, isBusiness, isDatarooms, isDataroomsPlus, isTrial } =
     usePlan();
   const { limits } = useLimits();
   const router = useRouter();
+  const { pinnedItems, addPinnedItem, removePinnedItem } = usePins();
 
   const numDatarooms = datarooms?.length ?? 0;
   const limitDatarooms = limits?.datarooms ?? 1;
@@ -40,6 +44,38 @@ export default function DataroomsPage() {
     isDatarooms ||
     isDataroomsPlus ||
     (isBusiness && numDatarooms < limitDatarooms);
+
+  const handlePinClick = async (
+    e: React.MouseEvent,
+    dataroom: { id: string; name: string },
+  ) => {
+    e.preventDefault();
+    const isPinned =
+      pinnedItems && Array.isArray(pinnedItems)
+        ? pinnedItems.some((item) => item.dataroomId === dataroom.id)
+        : false;
+
+    try {
+      if (isPinned) {
+        const pinToRemove = pinnedItems.find(
+          (item) => item.dataroomId === dataroom.id,
+        );
+        if (pinToRemove?.id) {
+          await removePinnedItem(pinToRemove.id);
+          toast.success("Dataroom unpinned");
+        }
+      } else {
+        await addPinnedItem({
+          pinType: "DATAROOM",
+          dataroomId: dataroom.id,
+          name: dataroom.name,
+        });
+        toast.success("Dataroom pinned");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     if (!isTrial && (isFree || isPro)) router.push("/documents");
@@ -133,6 +169,24 @@ export default function DataroomsPage() {
                         <CardTitle className="truncate">
                           {dataroom.name}
                         </CardTitle>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          onClick={(e) => handlePinClick(e, dataroom)}
+                        >
+                          <Pin
+                            className={cn(
+                              "h-4 w-4",
+                              pinnedItems.some(
+                                (item) => item.dataroomId === dataroom.id,
+                              )
+                                ? "fill-current text-foreground"
+                                : "text-muted-foreground",
+                            )}
+                          />
+                          <span className="sr-only">Pin dataroom</span>
+                        </Button>
                       </div>
                       {/* <CardDescription>{dataroom.pId}</CardDescription> */}
                     </CardHeader>

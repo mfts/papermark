@@ -12,12 +12,13 @@ import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
+import { usePins } from "@/lib/context/pin-context";
+
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
-
-import { useAnalytics } from "@/lib/analytics";
 
 function DeleteDataroomModal({
   dataroomId,
@@ -33,6 +34,7 @@ function DeleteDataroomModal({
   const router = useRouter();
   const teamInfo = useTeam();
   const analytics = useAnalytics();
+  const { refreshPins } = usePins();
 
   const [deleting, setDeleting] = useState(false);
 
@@ -54,6 +56,7 @@ function DeleteDataroomModal({
           await mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
           router.push("/datarooms");
           resolve(null);
+          refreshPins();
         } else {
           setDeleting(false);
           const error = await res.json();

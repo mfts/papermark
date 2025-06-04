@@ -9,6 +9,7 @@ import PlausibleProvider from "next-plausible";
 import { NuqsAdapter } from "nuqs/adapters/next/pages";
 
 import { EXCLUDED_PATHS } from "@/lib/constants";
+import { PinProvider } from "@/lib/context/pin-context";
 
 import { PostHogCustomProvider } from "@/components/providers/posthog-provider";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -86,7 +87,9 @@ export default function App({
                       <Component {...pageProps} />
                     ) : (
                       <TeamProvider>
-                        <Component {...pageProps} />
+                        <PinProvider>
+                          <Component {...pageProps} />
+                        </PinProvider>
                       </TeamProvider>
                     )}
                   </TooltipProvider>

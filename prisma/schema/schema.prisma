@@ -103,6 +103,7 @@ model Team {
   // team settings
   enableExcelAdvancedMode Boolean @default(false) // Enable Excel advanced mode for all documents in the team
 
+  pins Pin[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Tag       Tag[]
@@ -187,6 +188,7 @@ model Document {
   @@index([ownerId])
   @@index([teamId])
   @@index([folderId])
+  pins Pin[] @relation("DocumentPin")
 }
 
 model DocumentVersion {
@@ -403,6 +405,7 @@ model Folder {
 
   @@unique([teamId, path])
   @@index([parentId])
+  pins Pin[] @relation("FolderPin")
 }
 
 model Feedback {
@@ -632,4 +635,47 @@ model TagItem {
   @@index([tagId, linkId])
   @@index([tagId, documentId])
   @@index([tagId, dataroomId])
+}
+
+enum PinType {
+  DOCUMENT
+  FOLDER
+  DATAROOM
+  DATAROOM_DOCUMENT
+  DATAROOM_FOLDER
+}
+
+model Pin {
+  id         String     @id @default(cuid())
+  pinType    PinType
+
+  documentId String? 
+  document   Document?  @relation("DocumentPin", fields: [documentId], references: [id], onDelete: Cascade)
+
+  folderId   String?
+  folder     Folder?    @relation("FolderPin", fields: [folderId], references: [id], onDelete: Cascade)
+
+  dataroomId String?
+  dataroom   Dataroom?  @relation("DataroomPin", fields: [dataroomId], references: [id], onDelete: Cascade)
+
+  dataroomDocumentId String?
+  dataroomDocument   DataroomDocument? @relation("DataroomDocumentPin", fields: [dataroomDocumentId], references: [id], onDelete: Cascade)
+
+  dataroomFolderId String?
+  dataroomFolder   DataroomFolder? @relation("DataroomFolderPin", fields: [dataroomFolderId], references: [id], onDelete: Cascade)
+
+  teamId     String
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  orderIndex Int        @default(0)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@unique([documentId, teamId])
+  @@unique([folderId, teamId])
+  @@unique([dataroomId, teamId])
+  @@unique([dataroomDocumentId, teamId])
+  @@unique([dataroomFolderId, teamId])
+  @@index([teamId])
+  @@index([orderIndex])
 }

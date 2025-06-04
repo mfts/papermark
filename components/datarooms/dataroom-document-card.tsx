@@ -5,17 +5,20 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
+import { PinType } from "@prisma/client";
 import {
   ArchiveXIcon,
   BetweenHorizontalStartIcon,
   FileSlidersIcon,
   FolderInputIcon,
   MoreVertical,
+  Pin,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { usePins } from "@/lib/context/pin-context";
 import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
 import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
@@ -59,7 +62,8 @@ export default function DataroomDocumentCard({
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
   const router = useRouter();
-
+  const { pinnedItems, addPinnedItem, removePinnedItem, refreshPins } =
+    usePins();
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
@@ -71,6 +75,41 @@ export default function DataroomDocumentCard({
 
   // Add state for document processing status
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const isPinned =
+    pinnedItems && Array.isArray(pinnedItems)
+      ? pinnedItems.some(
+          (item) => item.dataroomDocumentId === dataroomDocument.id,
+        )
+      : false;
+
+  const handlePin = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      if (isPinned) {
+        const pinToRemove = pinnedItems.find(
+          (item) => item.dataroomDocumentId === dataroomDocument.id,
+        );
+        if (pinToRemove?.id) {
+          await removePinnedItem(pinToRemove.id);
+          toast.success("Document unpinned");
+        }
+      } else {
+        await addPinnedItem({
+          pinType: PinType.DATAROOM_DOCUMENT,
+          dataroomDocumentId: dataroomDocument.id,
+          dataroomId,
+          documentId: dataroomDocument.document.id,
+          name: dataroomDocument.document.name,
+        });
+        toast.success("Document pinned");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+    setMenuOpen(false);
+  };
 
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
@@ -140,6 +179,7 @@ export default function DataroomDocumentCard({
             revalidate: false,
           },
         );
+        refreshPins();
       }),
       {
         loading: "Removing document...",
@@ -256,6 +296,12 @@ export default function DataroomDocumentCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" ref={dropdownRef}>
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem onClick={handlePin} className="group/pin">
+                  <Pin
+                    className={cn("mr-2 h-4 w-4", isPinned && "fill-current")}
+                  />
+                  {isPinned ? "Unpin" : "Pin"}
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();

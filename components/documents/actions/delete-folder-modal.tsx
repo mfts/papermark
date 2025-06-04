@@ -1,8 +1,13 @@
 import { useCallback, useMemo, useState } from "react";
 
+
+
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+
+
+import { usePins } from "@/lib/context/pin-context";
 import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 
@@ -13,6 +18,7 @@ export function useDeleteFolderModal(
   isDataroom?: boolean,
   dataroomId?: string,
 ) {
+  const { refreshPins } = usePins();
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [folderToDelete, setFolderToDelete] = useState<
     FolderWithCount | DataroomFolderWithCount | null
@@ -50,6 +56,7 @@ export function useDeleteFolderModal(
             mutate(
               `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
             );
+            refreshPins();
             return isDataroom
               ? "Folder removed successfully."
               : `Folder deleted successfully with ${folderToDelete?._count.documents} documents and ${folderToDelete?._count.childFolders} folders`;
@@ -85,6 +92,7 @@ export function useDeleteFolderModal(
     isDataroom,
     dataroomId,
     parentFolderPath,
+    refreshPins,
   ]);
 
   return useMemo(

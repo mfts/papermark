@@ -12,6 +12,7 @@ model Dataroom {
   viewers      Viewer[]
   viewerGroups ViewerGroup[]
   brand        DataroomBrand?
+  pins         Pin[]             @relation("DataroomPin")
 
   // conversation
   conversationsEnabled Boolean        @default(false)
@@ -46,6 +47,8 @@ model DataroomDocument {
 
   uploadedDocuments DocumentUpload[]
 
+  pins Pin[] @relation("DataroomDocumentPin")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -66,6 +69,7 @@ model DataroomFolder {
   dataroom     Dataroom           @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
   orderIndex   Int?
 
+  pins Pin[] @relation("DataroomFolderPin")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

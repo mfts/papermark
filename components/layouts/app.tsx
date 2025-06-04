@@ -11,6 +11,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
+import { PinnedItemsBar } from "../PinManager/PinnedItemsBar";
 import { BlockingModal } from "./blocking-modal";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -20,7 +21,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider defaultOpen={isSidebarOpen}>
       <div className="flex flex-1 flex-col gap-x-1 bg-gray-50 dark:bg-black md:flex-row">
         <AppSidebar />
-        <SidebarInset className="ring-1 ring-gray-200 dark:ring-gray-800">
+        <SidebarInset className="flex flex-col ring-1 ring-gray-200 dark:ring-gray-800">
+          {/* TODO: Don't remove this i need this, I will remove it later */}
+          {/* <PinnedItemsBar /> */}
           <header className="flex h-10 shrink-0 items-center gap-2">
             <div className="flex items-center gap-2 px-4">
               <SidebarTrigger className="-ml-1" />

@@ -4,6 +4,7 @@ import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { z } from "zod";
+import { usePins } from "@/lib/context/pin-context";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +40,7 @@ export function EditFolderModal({
 }) {
   const [folderName, setFolderName] = useState<string>(name);
   const [loading, setLoading] = useState<boolean>(false);
+  const { refreshPins } = usePins();
 
   const teamInfo = useTeam();
   const editFolderSchema = z.object({
@@ -81,6 +83,7 @@ export function EditFolderModal({
         toast.error(message);
         return;
       }
+      refreshPins();
 
       const { parentFolderPath } = await response.json();
 

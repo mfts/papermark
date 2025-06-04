@@ -12,11 +12,12 @@ import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
+import { usePins } from "@/lib/context/pin-context";
+
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Modal } from "@/components/ui/modal";
-
-import { useAnalytics } from "@/lib/analytics";
 
 function RemoveDataroomItemsModal({
   showRemoveDataroomItemsModal,
@@ -39,6 +40,7 @@ function RemoveDataroomItemsModal({
   const folderPathName = router.query.name as string[] | undefined;
   const teamInfo = useTeam();
   const analytics = useAnalytics();
+  const { refreshPins } = usePins();
   const parentFolderPath = folderPathName
     ?.join("/")
     ?.substring(0, folderPathName?.lastIndexOf("/"));
@@ -68,6 +70,7 @@ function RemoveDataroomItemsModal({
               team: teamInfo?.currentTeam?.id,
               documentId,
             });
+            refreshPins();
             return documentId; // Return the ID of the successfully removed document
           }),
         );
@@ -86,6 +89,7 @@ function RemoveDataroomItemsModal({
               team: teamInfo?.currentTeam?.id,
               folderId,
             });
+            refreshPins();
             return folderId; // Return the ID of the successfully removed folder
           }),
         );

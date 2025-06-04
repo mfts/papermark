@@ -12,12 +12,13 @@ import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
+import { usePins } from "@/lib/context/pin-context";
+
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
-
-import { useAnalytics } from "@/lib/analytics";
 
 function DeleteItemsModal({
   showDeleteItemsModal,
@@ -38,7 +39,7 @@ function DeleteItemsModal({
   const folderPathName = router.query.name as string[] | undefined;
   const teamInfo = useTeam();
   const analytics = useAnalytics();
-
+  const { refreshPins } = usePins();
   const [deleting, setDeleting] = useState(false);
   const [isValid, setIsValid] = useState(false);
 
@@ -141,6 +142,9 @@ function DeleteItemsModal({
         await mutate(
           `/api/teams/${teamInfo?.currentTeam?.id}/${folderPathName ? `folders/documents/${folderPathName.join("/")}` : "documents"}`,
         );
+        if (successfullyDeletedItems.length > 0) {
+          refreshPins();
+        }
 
         setDeleting(false);
 
