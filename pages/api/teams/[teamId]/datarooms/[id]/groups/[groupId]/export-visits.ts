@@ -66,6 +66,7 @@ export default async function handler(
         id: true,
         name: true,
         documents: {
+          where: { removedAt: null },
           select: {
             id: true,
             document: {

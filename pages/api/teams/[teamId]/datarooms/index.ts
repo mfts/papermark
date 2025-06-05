@@ -46,7 +46,7 @@ export default async function handle(
         },
         include: {
           _count: {
-            select: { documents: true, views: true },
+            select: { documents: { where: { removedAt: null } }, views: true },
           },
         },
       });

@@ -32,10 +32,10 @@ async function fetchDataroomContents(
   const dataroom = await prisma.dataroom.findUnique({
     where: { id: dataroomId },
     include: {
-      documents: true,
+      documents: { where: { removedAt: null } },
       folders: {
-        where: { parentId: null }, // Only get root folders initially
-        include: { documents: true },
+        where: { parentId: null, removedAt: null }, // Only get root folders initially
+        include: { documents: { where: { removedAt: null } } },
       },
       brand: true,
     },
@@ -50,11 +50,20 @@ async function fetchDataroomContents(
     folderId: string,
   ): Promise<DataroomFolderWithContents> {
     const folder = await prisma.dataroomFolder.findUnique({
-      where: { id: folderId },
+      where: { id: folderId, removedAt: null },
       include: {
-        documents: true,
+        documents: { where: { removedAt: null } },
         childFolders: {
-          include: { documents: true },
+          where: {
+            removedAt: null
+          },
+          include: {
+            documents: {
+              where: {
+                removedAt: null
+              }
+            }
+          },
         },
       },
     });

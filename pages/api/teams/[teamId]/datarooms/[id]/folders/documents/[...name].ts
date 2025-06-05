@@ -50,6 +50,7 @@ export default async function handle(
             dataroomId,
             path,
           },
+          removedAt: null,
         },
         select: {
           id: true,
@@ -65,6 +66,7 @@ export default async function handle(
         where: {
           dataroomId: dataroomId,
           folderId: folder.id,
+          removedAt: null,
         },
         orderBy: [
           { orderIndex: "asc" },
