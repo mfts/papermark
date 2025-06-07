@@ -250,7 +250,10 @@ export default function LinkSheet({
         enableAgreement: preset.enableAgreement || prev.enableAgreement,
         agreementId: preset.agreementId || prev.agreementId,
         enableScreenshotProtection:
-          preset.enableScreenshotProtection || prev.enableScreenshotProtection,
+          preset.enableScreenshotProtection ||
+          prev.enableScreenshotProtection,
+        enableNotification:
+          !!preset.enableNotification,
       };
     });
 

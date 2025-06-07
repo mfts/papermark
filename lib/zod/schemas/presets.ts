@@ -50,6 +50,7 @@ export const presetDataSchema = z.object({
   emailAuthenticated: z.boolean().optional(),
 
   // Additional Options
+  enableNotification: z.boolean(),
   allowDownload: z.boolean().optional(),
   enablePassword: z.boolean(),
   password: z.string().nullable(),
