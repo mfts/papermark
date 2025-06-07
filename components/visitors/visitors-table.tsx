@@ -20,6 +20,10 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import { useDocumentVisits } from "@/lib/swr/use-document";
+import { durationFormat, timeAgo } from "@/lib/utils";
+
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import {
   Collapsible,
@@ -38,11 +42,8 @@ import {
 } from "@/components/ui/table";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import { useDocumentVisits } from "@/lib/swr/use-document";
-import { durationFormat, timeAgo } from "@/lib/utils";
-
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { Pagination } from "../documents/pagination";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -52,14 +53,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "../ui/pagination";
 import { VisitorAvatar } from "./visitor-avatar";
 import VisitorChart from "./visitor-chart";
 import VisitorClicks from "./visitor-clicks";
@@ -78,14 +71,22 @@ export default function VisitorsTable({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const limit = 10; // Set the number of items per page
+  const [pageSize, setPageSize] = useState<number>(10);
 
-  const { views, mutate: mutateViews } = useDocumentVisits(currentPage, limit);
+  const { views, mutate: mutateViews } = useDocumentVisits(
+    currentPage,
+    pageSize,
+  );
   const { plan } = usePlan();
   const isFreePlan = plan === "free";
 
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
 
   const handleArchiveView = async (
     viewId: string,
@@ -149,7 +150,7 @@ export default function VisitorsTable({
                 <TableRow>
                   <TableCell colSpan={5}>
                     <div className="flex h-40 w-full items-center justify-center">
-                      <p>No Data Available</p>
+                      <p>No visits yet. Try sharing a link.</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -268,7 +269,7 @@ export default function VisitorsTable({
                                         {view.verified && (
                                           <BadgeTooltip
                                             content="Verified visitor"
-                                            key="verified"
+                                            key={`verified-${view.id}`}
                                           >
                                             <BadgeCheckIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
                                           </BadgeTooltip>
@@ -276,7 +277,7 @@ export default function VisitorsTable({
                                         {view.internal && (
                                           <BadgeTooltip
                                             content="Internal visitor"
-                                            key="internal"
+                                            key={`internal-${view.id}`}
                                           >
                                             <BadgeInfoIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
                                           </BadgeTooltip>
@@ -284,7 +285,7 @@ export default function VisitorsTable({
                                         {view.agreementResponse && (
                                           <BadgeTooltip
                                             content={`Agreed to ${view.agreementResponse.agreement.name}`}
-                                            key="nda-agreement"
+                                            key={`agreement-${view.id}`}
                                           >
                                             <FileBadgeIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
                                           </BadgeTooltip>
@@ -292,7 +293,7 @@ export default function VisitorsTable({
                                         {view.downloadedAt && (
                                           <BadgeTooltip
                                             content={`Downloaded ${timeAgo(view.downloadedAt)}`}
-                                            key="download"
+                                            key={`download-${view.id}`}
                                           >
                                             <DownloadCloudIcon className="h-4 w-4 text-cyan-500 hover:text-cyan-600" />
                                           </BadgeTooltip>
@@ -300,7 +301,7 @@ export default function VisitorsTable({
                                         {view.dataroomId && (
                                           <BadgeTooltip
                                             content={`Dataroom Visitor`}
-                                            key="download"
+                                            key={`dataroom-${view.id}`}
                                           >
                                             <ServerIcon className="h-4 w-4 text-[#fb7a00] hover:text-[#fb7a00]/90" />
                                           </BadgeTooltip>
@@ -308,7 +309,7 @@ export default function VisitorsTable({
                                         {view.feedbackResponse && (
                                           <BadgeTooltip
                                             content={`${view.feedbackResponse.data.question}: ${view.feedbackResponse.data.answer}`}
-                                            key="feedback"
+                                            key={`feedback-${view.id}`}
                                           >
                                             {view.feedbackResponse.data
                                               .answer === "yes" ? (
@@ -494,62 +495,25 @@ export default function VisitorsTable({
           </TableBody>
         </Table>
       </div>
-      {/* Pagination Controls */}
-      <div className="mt-2 flex w-full items-center">
-        <div className="w-full text-sm">
-          Showing{" "}
-          <span className="font-semibold">
-            {views?.totalViews && views?.totalViews > 10
-              ? 10
-              : views?.totalViews}
-          </span>{" "}
-          of {views?.totalViews} visits
-        </div>
-        <Pagination className="justify-end">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
-              />
-            </PaginationItem>
-            {currentPage !== 1 ? (
-              <PaginationItem>
-                <PaginationLink onClick={() => setCurrentPage(1)}>
-                  {1}
-                </PaginationLink>
-              </PaginationItem>
-            ) : null}
-
-            <PaginationItem>
-              <PaginationLink isActive>{currentPage}</PaginationLink>
-            </PaginationItem>
-
-            {views?.totalViews &&
-            currentPage !== Math.ceil(views?.totalViews / 10) ? (
-              <PaginationItem>
-                <PaginationLink
-                  onClick={() =>
-                    setCurrentPage(Math.ceil(views?.totalViews / 10))
-                  }
-                >
-                  {Math.ceil(views?.totalViews / 10)}
-                </PaginationLink>
-              </PaginationItem>
-            ) : null}
-            <PaginationItem>
-              <PaginationNext
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={
-                  views?.totalViews
-                    ? currentPage === Math.ceil(views?.totalViews / 10)
-                    : true
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+      <Pagination
+        itemName="visits"
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={views?.totalViews || 0}
+        totalPages={
+          views?.totalViews ? Math.ceil(views.totalViews / pageSize) : 0
+        }
+        onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
+        totalShownItems={
+          views?.totalViews
+            ? Math.min(
+                pageSize,
+                views.totalViews - (currentPage - 1) * pageSize,
+              )
+            : 0
+        }
+      />
     </div>
   );
 }

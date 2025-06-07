@@ -100,6 +100,9 @@ model Team {
 
   uploadedDocuments DocumentUpload[]
 
+  // team settings
+  enableExcelAdvancedMode Boolean @default(false) // Enable Excel advanced mode for all documents in the team
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Tag       Tag[]
@@ -125,11 +128,13 @@ enum Role {
 
 model UserTeam {
   role   Role   @default(MEMBER)
+  status String @default("ACTIVE")
   userId String
   teamId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
+  blockedAt DateTime? // When the user was blocked
   notificationPreferences Json? // Format: { yearInReview: { "enabled": false } }
 
   @@id([userId, teamId])

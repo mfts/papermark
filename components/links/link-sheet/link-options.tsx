@@ -24,6 +24,7 @@ import { ProBannerSection } from "@/components/links/link-sheet/pro-banner-secti
 import AgreementSection from "./agreement-section";
 import ConversationSection from "./conversation-section";
 import CustomFieldsSection from "./custom-fields-section";
+import IndexFileSection from "./index-file-section";
 import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
 import UploadSection from "./upload-section";
@@ -33,6 +34,7 @@ export type LinkUpgradeOptions = {
   state: boolean;
   trigger: string;
   plan?: "Pro" | "Business" | "Data Rooms" | "Data Rooms Plus";
+  highlightItem?: string[];
 };
 
 export const LinkOptions = ({
@@ -67,17 +69,20 @@ export const LinkOptions = ({
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
   const [upgradePlan, setUpgradePlan] = useState<PlanEnum>(PlanEnum.Business);
+  const [highlightItem, setHighlightItem] = useState<string[]>([]);
 
   const handleUpgradeStateChange = ({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => {
     setOpenUpgradeModal(state);
     setTrigger(trigger);
     if (plan) {
       setUpgradePlan(plan as PlanEnum);
     }
+    setHighlightItem(highlightItem || []);
   };
 
   return (
@@ -94,6 +99,13 @@ export const LinkOptions = ({
           isAllowed={isTrial || isDatarooms || isDataroomsPlus}
           handleUpgradeStateChange={handleUpgradeStateChange}
           targetId={targetId}
+        />
+      ) : null}
+      {linkType === LinkType.DATAROOM_LINK ? (
+        <IndexFileSection
+          {...{ data, setData }}
+          isAllowed={isDataroomsPlus}
+          handleUpgradeStateChange={handleUpgradeStateChange}
         />
       ) : null}
       <OGSection
@@ -228,6 +240,7 @@ export const LinkOptions = ({
         open={openUpgradeModal}
         setOpen={setOpenUpgradeModal}
         trigger={trigger}
+        highlightItem={highlightItem}
       />
     </div>
   );

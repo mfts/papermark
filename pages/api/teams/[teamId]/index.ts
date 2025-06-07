@@ -41,6 +41,7 @@ export default async function handle(
               role: true,
               teamId: true,
               userId: true,
+              status: true,
               user: {
                 select: {
                   email: true,

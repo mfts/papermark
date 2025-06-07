@@ -87,6 +87,7 @@ export default function DocumentUpload({
             "video/ogg": [], // ".ogg"
             "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
             "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
+            "application/vnd.ms-outlook": [".msg"], // ".msg"
           },
     multiple: false,
     onDropAccepted: (acceptedFiles) => {

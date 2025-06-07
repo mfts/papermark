@@ -35,6 +35,8 @@ export function getSupportedContentType(contentType: string): string | null {
     case "application/vnd.google-earth.kml+xml":
     case "application/vnd.google-earth.kmz":
       return "map";
+    case "application/vnd.ms-outlook":
+      return "email";
     default:
       return null;
   }
@@ -92,7 +94,19 @@ export function getExtensionFromContentType(
       return "kml";
     case "application/vnd.google-earth.kmz":
       return "kmz";
+    case "application/vnd.ms-outlook":
+      return "msg";
     default:
       return null;
   }
+}
+
+export function supportsAdvancedExcelMode(contentType: string | null | undefined): boolean {
+  if (!contentType) return false;
+
+  return (
+    contentType === "application/vnd.ms-excel" || // .xls
+    contentType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || // .xlsx
+    contentType === "application/vnd.ms-excel.sheet.macroEnabled.12" // .xlsm
+  );
 }

@@ -4,11 +4,11 @@ import * as React from "react";
 
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 
+import { cn } from "@/lib/utils";
+
 import Check from "@/components/shared/icons/check";
 import ChevronRight from "@/components/shared/icons/chevron-right";
 import Circle from "@/components/shared/icons/circle";
-
-import { cn } from "@/lib/utils";
 
 const DropdownMenu = DropdownMenuPrimitive.Root;
 

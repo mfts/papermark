@@ -32,6 +32,7 @@ export default function AgreementSection({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => void;
 }) {
   const { agreements } = useAgreements();
@@ -46,7 +47,7 @@ export default function AgreementSection({
         (agreement: Agreement) =>
           !agreement.deletedAt || agreement.id === agreementId,
       ),
-    [agreements],
+    [agreements, agreementId],
   );
 
   useEffect(() => {
@@ -89,6 +90,7 @@ export default function AgreementSection({
             state: true,
             trigger: "link_sheet_agreement_section",
             plan: "Data Rooms",
+            highlightItem: ["nda"],
           })
         }
       />

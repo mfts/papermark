@@ -35,10 +35,7 @@ export default async function handle(
         },
       });
 
-      if (
-        !team ||
-        (team.plan.includes("free") && !team.plan.includes("trial"))
-      ) {
+      if (!team || team.plan === "free") {
         return res.status(404).json({ message: "Team not found" });
       }
 

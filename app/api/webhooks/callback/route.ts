@@ -32,7 +32,7 @@ export const POST = async (req: Request) => {
   );
 
   const webhook = await prisma.webhook.findUnique({
-    where: { id: webhookId },
+    where: { pId: webhookId },
   });
 
   if (!webhook) {

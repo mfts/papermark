@@ -44,6 +44,7 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   isPreview?: boolean;
   ipAddress?: string;
   verificationToken?: string;
+  isTeamMember?: boolean;
 };
 
 export default function DocumentView({
@@ -61,6 +62,7 @@ export default function DocumentView({
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
+  logoOnAccessForm,
   isEmbedded,
 }: {
   link: LinkWithDocument;
@@ -82,6 +84,7 @@ export default function DocumentView({
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
   isEmbedded?: boolean;
+  logoOnAccessForm?: boolean;
 }) {
   const {
     document,
@@ -152,6 +155,7 @@ export default function DocumentView({
           isPreview,
           ipAddress,
           verificationToken,
+          isTeamMember,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("documentViewed"); // track the event
         analytics.identify(
@@ -164,6 +168,7 @@ export default function DocumentView({
           viewerId: viewId,
           viewerEmail: data.email ?? verifiedEmail ?? userEmail,
           isEmbedded,
+          isTeamMember,
         });
 
         // set the verification token to the cookie
@@ -185,6 +190,7 @@ export default function DocumentView({
           fileType,
           isPreview,
           ipAddress,
+          isTeamMember,
         });
         setSubmitted(true);
         setVerificationRequested(false);
@@ -217,12 +223,12 @@ export default function DocumentView({
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
     if (!didMount.current) {
-      if ((!submitted && !isProtected) || token) {
+      if ((!submitted && !isProtected) || token || previewToken) {
         handleSubmission();
       }
       didMount.current = true;
     }
-  }, [submitted, isProtected, token]);
+  }, [submitted, isProtected, token, previewToken]);
 
   // Components to render when email is submitted but verification is pending
   if (verificationRequested) {
@@ -258,6 +264,7 @@ export default function DocumentView({
         disableEditEmail={disableEditEmail}
         useCustomAccessForm={useCustomAccessForm}
         customFields={link.customFields}
+        logoOnAccessForm={logoOnAccessForm}
       />
     );
   }
