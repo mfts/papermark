@@ -76,13 +76,8 @@ export default function EditPreset() {
   const [data, setData] = useState<PRESET_DATA | null>(null);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
-  const {
-    isPro,
-    isBusiness,
-    isDatarooms,
-    isDataroomsPlus,
-    isTrial,
-  } = usePlan();
+  const { isPro, isBusiness, isDatarooms, isDataroomsPlus, isTrial } =
+    usePlan();
   const { limits } = useLimits();
   const allowAdvancedLinkControls = limits
     ? limits?.advancedLinkControlsOnPro
@@ -142,7 +137,7 @@ export default function EditPreset() {
         agreementId: preset.agreementId,
         enableCustomFields: customFields.length > 0,
         customFields: customFields,
-        enableNotification: preset.enableNotification ?? true,
+        enableNotification: preset.enableNotification ?? false,
       });
     }
   }, [preset]);
@@ -383,7 +378,7 @@ export default function EditPreset() {
                   }
                   handleUpgradeStateChange={handleUpgradeStateChange}
                 />
-                
+
                 <AllowNotificationSection
                   data={data as any}
                   setData={setData as any}
