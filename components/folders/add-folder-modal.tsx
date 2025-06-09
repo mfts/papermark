@@ -67,7 +67,7 @@ export function AddFolderModal({
 
   const validation = addFolderSchema.safeParse({ name: folderName });
 
-  const handleSubmit = async (event: any) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     event.stopPropagation();
 

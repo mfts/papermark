@@ -54,6 +54,7 @@ export default async function handle(
           where: {
             dataroomId,
             parentId: null,
+            removedAt: null,
           },
           orderBy: [
             { orderIndex: "asc" },
@@ -63,7 +64,7 @@ export default async function handle(
           ],
           include: {
             _count: {
-              select: { documents: true, childFolders: true },
+              select: { documents: { where: { removedAt: null } }, childFolders: { where: { removedAt: null } } },
             },
           },
         });
@@ -78,7 +79,10 @@ export default async function handle(
           },
           select: {
             documents: {
-              where: { folderId: null },
+              where: {
+                folderId: null,
+                removedAt: null,
+              },
               orderBy: [{ orderIndex: "asc" }, { document: { name: "asc" } }],
               select: {
                 id: true,
@@ -93,8 +97,14 @@ export default async function handle(
               },
             },
             folders: {
+              where: {
+                removedAt: null,
+              },
               include: {
                 documents: {
+                  where: {
+                    removedAt: null,
+                  },
                   select: {
                     id: true,
                     folderId: true,
@@ -128,6 +138,7 @@ export default async function handle(
       const folders = await prisma.dataroomFolder.findMany({
         where: {
           dataroomId,
+          removedAt: null,
         },
         orderBy: [
           { orderIndex: "asc" },
@@ -137,6 +148,9 @@ export default async function handle(
         ],
         include: {
           documents: {
+            where: {
+              removedAt: null,
+            },
             select: {
               id: true,
               folderId: true,
@@ -158,8 +172,14 @@ export default async function handle(
             ],
           },
           childFolders: {
+            where: {
+              removedAt: null,
+            },
             include: {
               documents: {
+                where: {
+                  removedAt: null,
+                },
                 select: {
                   id: true,
                   folderId: true,
@@ -235,6 +255,7 @@ export default async function handle(
             dataroomId: dataroomId,
             path: parentFolderPath,
           },
+          removedAt: null,
         },
         select: {
           id: true,
@@ -259,6 +280,7 @@ export default async function handle(
               dataroomId: dataroomId,
               path: childFolderPath,
             },
+            removedAt: null,
           },
         });
         if (!existingFolder) break;

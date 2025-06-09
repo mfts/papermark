@@ -4,9 +4,10 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
-import { errorhandler } from "@/lib/errorHandler";
+import { createTrashItem } from "@/lib/dataroom/trash";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { ItemType, Prisma } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -63,6 +64,12 @@ export default async function handle(
         where: {
           id: folderId,
           dataroomId: dataroomId,
+          removedAt: null,
+        },
+        select: {
+          id: true,
+          name: true,
+          path: true,
         },
       });
 
@@ -72,12 +79,15 @@ export default async function handle(
         });
       }
 
-      // Delete the folder and its contents recursively
-      await deleteFolderAndContents(folderId);
+      // Delete the folder and its contents recursively within a transaction
+      await prisma.$transaction(async (tx) => {
+        await softDeleteFolderAndContents(tx, folderId, dataroomId, userId);
+      });
 
       return res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
-      errorhandler(error, res);
+      console.error("Error in DELETE folder:", error);
+      return res.status(500).json({ error: error instanceof Error ? error.message : "Failed to delete folder" });
     }
   } else {
     // We only allow DELETE requests
@@ -86,28 +96,124 @@ export default async function handle(
   }
 }
 
-async function deleteFolderAndContents(folderId: string) {
-  const childFoldersToDelete = await prisma.dataroomFolder.findMany({
-    where: {
-      parentId: folderId,
-    },
-  });
-
-  console.log("Deleting folder and contents", childFoldersToDelete);
-
-  for (const folder of childFoldersToDelete) {
-    await deleteFolderAndContents(folder.id);
-  }
-
-  await prisma.dataroomDocument.deleteMany({
-    where: {
-      folderId: folderId,
-    },
-  });
-
-  await prisma.dataroomFolder.delete({
+async function softDeleteFolderAndContents(
+  tx: Prisma.TransactionClient,
+  folderId: string,
+  dataroomId: string,
+  userId: string,
+  parentTrashPath: string | null = null,
+  parentFolderId: string | null = null
+) {
+  const folder = await tx.dataroomFolder.findUnique({
     where: {
       id: folderId,
+      removedAt: null,
+    },
+    select: {
+      id: true,
+      name: true,
+      path: true,
+      parentFolder: {
+        select: {
+          path: true,
+        },
+      },
     },
   });
+
+  if (!folder) {
+    throw new Error("Folder not found");
+  }
+
+  const trashPath = parentTrashPath === null ? `/${slugify(folder.name)}` : `${parentTrashPath}/${slugify(folder.name)}`;
+
+  // First, soft delete the folder itself and create its trash item
+  await tx.dataroomFolder.update({
+    where: {
+      id: folderId,
+      removedAt: null,
+    },
+    data: {
+      removedAt: new Date(),
+    },
+  });
+
+  // Create trash item for the folder before processing children
+  const folderTrashItem = await createTrashItem(tx, {
+    itemId: folder.id,
+    itemType: ItemType.DATAROOM_FOLDER,
+    dataroomId,
+    dataroomFolderId: folder.id,
+    name: folder.name,
+    fullPath: folder.path,
+    userId,
+    trashPath: trashPath,
+    parentId: parentFolderId
+  });
+
+  // Find and soft delete child folders recursively
+  const childFolders = await tx.dataroomFolder.findMany({
+    where: {
+      parentId: folderId,
+      removedAt: null,
+    },
+    select: {
+      id: true,
+      name: true,
+      path: true,
+    },
+  });
+
+  for (const childFolder of childFolders) {
+    await softDeleteFolderAndContents(tx, childFolder.id, dataroomId, userId, trashPath, folder.id);
+  }
+
+  // Find and soft delete documents in this folder
+  const documents = await tx.dataroomDocument.findMany({
+    where: {
+      folderId: folderId,
+      removedAt: null,
+    },
+    select: {
+      id: true,
+      document: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      folder: {
+        select: {
+          path: true,
+        },
+      },
+    },
+  });
+
+  // Soft delete each document and create trash items with current trash path
+  for (const doc of documents) {
+    await tx.dataroomDocument.update({
+      where: {
+        id: doc.id,
+        removedAt: null,
+      },
+      data: {
+        removedAt: new Date(),
+      },
+    });
+
+    await createTrashItem(tx, {
+      itemId: doc.id,
+      itemType: ItemType.DATAROOM_DOCUMENT,
+      dataroomId,
+      dataroomDocumentId: doc.id,
+      name: doc.document.name,
+      fullPath: doc.folder?.path ?? null,
+      userId,
+      trashPath: trashPath,
+      parentId: folder.id
+    });
+  }
+
+  return folderTrashItem;
 }

@@ -9,6 +9,7 @@ import useSWR from "swr";
 
 import { LinkWithViews } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
+import { TrashItem } from "@/components/datarooms/trash/types";
 
 export type DataroomFolderWithCount = DataroomFolder & {
   _count: {
@@ -19,16 +20,16 @@ export type DataroomFolderWithCount = DataroomFolder & {
 
 export function useDataroom() {
   const router = useRouter();
-
   const { id } = router.query as {
     id: string;
   };
-
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
+  const shouldFetch = Boolean(teamId && id);
+
   const { data: dataroom, error } = useSWR<Dataroom>(
-    teamId && id && `/api/teams/${teamId}/datarooms/${id}`,
+    shouldFetch ? `/api/teams/${teamId}/datarooms/${id}` : null,
     fetcher,
     {
       dedupingInterval: 10000,
@@ -45,30 +46,30 @@ export function useDataroom() {
 
   return {
     dataroom,
-    loading: !error && !dataroom,
+    loading: shouldFetch && !error && !dataroom,
     error,
   };
 }
 
 export function useDataroomLinks() {
   const router = useRouter();
-
   const { id } = router.query as {
     id: string;
   };
-
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
+  const shouldFetch = Boolean(teamId && id);
+
   const { data: links, error } = useSWR<LinkWithViews[]>(
-    teamId && id && `/api/teams/${teamId}/datarooms/${id}/links`,
+    shouldFetch ? `/api/teams/${teamId}/datarooms/${id}/links` : null,
     fetcher,
     { dedupingInterval: 10000 },
   );
 
   return {
     links,
-    loading: !error && !links,
+    loading: shouldFetch && !error && !links,
     error,
   };
 }
@@ -87,12 +88,21 @@ export function useDataroomItems({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: folderData, error: folderError } = useSWR<
-    DataroomFolderWithCount[]
-  >(
-    teamId &&
-      id &&
-      `/api/teams/${teamId}/datarooms/${id}/folders${root ? "?root=true" : name ? `/${name.join("/")}` : ""}`,
+  const shouldFetch = Boolean(teamId && id && teamId !== 'undefined' && id !== 'undefined');
+  const folderPath = root ? "?root=true" : name ? `/${name.join("/")}` : "";
+  const documentsPath = name ? `/folders/documents/${name.join("/")}` : "/documents";
+
+  const { data: folderData, error: folderError } = useSWR<DataroomFolderWithCount[]>(
+    shouldFetch ? `/api/teams/${teamId}/datarooms/${id}/folders${folderPath}` : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000,
+    },
+  );  
+
+  const { data: documentData, error: documentError } = useSWR<DataroomFolderDocument[]>(
+    shouldFetch ? `/api/teams/${teamId}/datarooms/${id}${documentsPath}` : null,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -100,22 +110,7 @@ export function useDataroomItems({
     },
   );
 
-  const { data: documentData, error: documentError } = useSWR<
-    DataroomFolderDocument[]
-  >(
-    teamId &&
-      id &&
-      `/api/teams/${teamId}/datarooms/${id}${name ? `/folders/documents/${name.join("/")}` : "/documents"}`,
-
-    fetcher,
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 30000,
-    },
-  );
-
-  const isLoading =
-    !folderData && !documentData && !folderError && !documentError;
+  const isLoading = shouldFetch && !folderData && !documentData && !folderError && !documentError;
   const error = folderError || documentError;
 
   const combinedItems = useMemo(() => {
@@ -141,6 +136,43 @@ export function useDataroomItems({
     documentCount: documentData?.length || 0,
     isLoading,
     error,
+  };
+}
+
+export function useDataroomTrashItems({
+  root,
+  name,
+}: {
+  root?: boolean;
+  name?: string[];
+}) {
+  const router = useRouter();
+  const { id } = router.query as {
+    id: string;
+  };
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
+
+  const { data: folderData, error: folderError } = useSWR<TrashItem[]>(
+    teamId && id && teamId !== 'undefined' && id !== 'undefined' ?
+      `/api/teams/${teamId}/datarooms/${id}/trash${root ? "?root=true" : name ? `/${name.join("/")}` : ""}` :
+      null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000,
+    },
+  );
+
+  const documentCount = folderData?.filter(item => item.itemType === "DATAROOM_DOCUMENT").length || 0;
+  const folderCount = folderData?.filter(item => item.itemType === "DATAROOM_FOLDER").length || 0;
+
+  return {
+    items: folderData,
+    folderCount,
+    documentCount,
+    isLoading: !folderData && !folderError,
+    error: folderError,
   };
 }
 
@@ -187,9 +219,9 @@ export function useDataroomFolders({
   const teamId = teamInfo?.currentTeam?.id;
 
   const { data: folders, error } = useSWR<DataroomFolderWithCount[]>(
-    teamId &&
-      id &&
-      `/api/teams/${teamId}/datarooms/${id}/folders${root ? "?root=true" : name ? `/${name.join("/")}` : ""}`,
+    teamId && id && teamId !== 'undefined' && id !== 'undefined' ?
+      `/api/teams/${teamId}/datarooms/${id}/folders${root ? "?root=true" : name ? `/${name.join("/")}` : ""}` :
+      null,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -220,16 +252,21 @@ export type DataroomFolderWithDocuments = DataroomFolder & {
 export function useDataroomFoldersTree({
   dataroomId,
   include_documents,
+  trash,
 }: {
   dataroomId: string;
   include_documents?: boolean;
+    trash?: boolean;
 }) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
   const { data: folders, error } = useSWR<DataroomFolderWithDocuments[]>(
-    teamId &&
-      `/api/teams/${teamId}/datarooms/${dataroomId}/folders${include_documents ? "?include_documents=true" : ""}`,
+    (teamId && dataroomId && teamId !== 'undefined' && dataroomId !== 'undefined') ?
+      (trash ?
+        `/api/teams/${teamId}/datarooms/${dataroomId}/trash` :
+        `/api/teams/${teamId}/datarooms/${dataroomId}/folders${include_documents ? "?include_documents=true" : ""}`) :
+      null,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -258,6 +295,34 @@ export function useDataroomFolderWithParents({
     teamId &&
     name && !!name.length &&
       `/api/teams/${teamId}/datarooms/${dataroomId}/folders/parents/${name.join("/")}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000,
+    },
+  );
+
+  return {
+    folders,
+    loading: !folders && !error,
+    error,
+  };
+}
+
+export function useDataroomTrashFolderWithParents({
+  name,
+  dataroomId,
+}: {
+  name: string[];
+  dataroomId: string;
+}) {
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
+
+  const { data: folders, error } = useSWR<{ name: string; path: string }[]>(
+    teamId &&
+    name.length > 0 &&
+    `/api/teams/${teamId}/datarooms/${dataroomId}/trash/parents/${name.join("/")}`,
     fetcher,
     {
       revalidateOnFocus: false,

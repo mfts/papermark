@@ -154,7 +154,7 @@ export default function DeckGeneratorUpload() {
     }
   };
 
-  const handleSubmit = async (event: any) => {
+  const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
 
     setIsLoading(true);

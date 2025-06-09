@@ -7,7 +7,6 @@ import { CustomUser } from "@/lib/types";
 import { hashPassword } from "@/lib/utils";
 
 import { authOptions } from "../../auth/[...nextauth]";
-
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -43,7 +42,11 @@ export default async function handle(
               id: true,
               name: true,
               teamId: true,
+              updatedAt: true,
               documents: {
+                where: {
+                  removedAt: null,
+                },
                 select: {
                   id: true,
                   folderId: true,
@@ -68,6 +71,9 @@ export default async function handle(
                 },
               },
               folders: {
+                where: {
+                  removedAt: null,
+                },
                 orderBy: {
                   name: "asc",
                 },

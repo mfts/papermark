@@ -115,6 +115,7 @@ export async function POST(
         where: {
           id: link.uploadFolderId,
           dataroomId,
+          removedAt: null,
         },
         select: {
           id: true,

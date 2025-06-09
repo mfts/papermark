@@ -45,6 +45,7 @@ export default async function handle(
           dataroom: {
             select: {
               folders: {
+                where: { removedAt: null },
                 select: {
                   id: true,
                   name: true,
@@ -52,6 +53,7 @@ export default async function handle(
                 },
               },
               documents: {
+                where: { removedAt: null },
                 select: {
                   id: true,
                   folderId: true,

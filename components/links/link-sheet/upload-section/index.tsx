@@ -43,7 +43,7 @@ function FolderSelectionModal({
     currentFolder,
   );
 
-  const handleSubmit = async (event: any) => {
+  const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
     handleSelectFolder(selectedFolder);

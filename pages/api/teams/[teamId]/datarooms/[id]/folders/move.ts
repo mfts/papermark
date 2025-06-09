@@ -57,6 +57,7 @@ export default async function handle(
           where: {
             id: { in: folderIds },
             dataroomId: dataroomId,
+            removedAt: null,
           },
         });
 
@@ -64,6 +65,7 @@ export default async function handle(
           where: {
             dataroomId: dataroomId,
             parentId: selectedFolder, // Check only inside the target folder can be null
+            removedAt: null,
           },
           select: { name: true },
         });
@@ -85,6 +87,7 @@ export default async function handle(
         const allSubfolders = await prisma.dataroomFolder.findMany({
           where: {
             dataroomId: dataroomId,
+            removedAt: null,
             OR: foldersToMove.map((folder) => ({
               path: { startsWith: folder.path },
             })),
@@ -122,7 +125,7 @@ export default async function handle(
           const newSubfolderPath = `${newParentPath}${relativePath}`;
 
           return prisma.dataroomFolder.update({
-            where: { id: subfolder.id, dataroomId: dataroomId },
+            where: { id: subfolder.id, dataroomId: dataroomId, removedAt: null },
             data: { path: newSubfolderPath },
           });
         });
@@ -132,6 +135,7 @@ export default async function handle(
             where: {
               id: folderId,
               dataroomId: dataroomId,
+              removedAt: null,
             },
             data: {
               parentId: selectedFolder,
@@ -152,7 +156,7 @@ export default async function handle(
       let folder: { path: string } | null = null;
       if (selectedFolder) {
         folder = await prisma.dataroomFolder.findUnique({
-          where: { id: selectedFolder, dataroomId: dataroomId },
+          where: { id: selectedFolder, dataroomId: dataroomId, removedAt: null },
           select: { path: true },
         });
       }

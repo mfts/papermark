@@ -113,6 +113,12 @@ function RemoveDataroomItemsModal({
         mutate(
           `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders`,
         );
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/trash?root=true`,
+        );
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/trash`,
+        );
         setDeleting(false);
         // Deselect only the successfully deleted documents
         setSelectedDocuments((prevSelected) =>
@@ -150,14 +156,14 @@ function RemoveDataroomItemsModal({
             <p>
               <strong>Documents Info</strong>: Existing views will not be
               affected. You can always add removed documents back to the
-              dataroom.
+              dataroom. The documents will be moved to the trash.
             </p>
           )}
           {folderIds.length > 0 && (
             <p>
               <strong>Folders Info</strong>: This will remove the folder and its
               contents from this dataroom. The original documents will remain in
-              your workspace.
+              your workspace. The folder will be moved to the trash.
             </p>
           )}
         </DialogDescription>

@@ -80,6 +80,7 @@ export default async function handle(
       where: {
         id: dataroomDocumentId,
         dataroomId: dataroomId,
+        removedAt: null,
       },
       select: {
         document: {

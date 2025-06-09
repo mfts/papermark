@@ -1,20 +1,26 @@
-import { FilePlusIcon, PlusIcon } from "lucide-react";
+import { FilePlusIcon, Trash2Icon } from "lucide-react";
 
-import { Button } from "../ui/button";
-import { AddDocumentModal } from "./add-document-modal";
-
-export function EmptyDocuments() {
+export function EmptyDocuments({ trash }: { trash?: boolean }) {
   return (
     <div className="text-center">
-      <FilePlusIcon
-        className="mx-auto h-12 w-12 text-muted-foreground"
-        strokeWidth={1}
-      />
+      {trash ? (
+        <Trash2Icon
+          className="mx-auto h-12 w-12 text-muted-foreground"
+          strokeWidth={1}
+        />
+      ) : (
+        <FilePlusIcon
+          className="mx-auto h-12 w-12 text-muted-foreground"
+          strokeWidth={1}
+        />
+      )}
       <h3 className="mt-2 text-sm font-medium text-foreground">
-        No documents here
+        {trash ? "No trash items here" : "No documents here"}
       </h3>
       <p className="mt-1 text-sm text-muted-foreground">
-        Get started by uploading a new document.
+        {trash
+          ? "Items you delete will appear here, and will be deleted permanently after 30 days."
+          : "Get started by uploading a new document."}
       </p>
       {/* <div className="mt-6">
         <AddDocumentModal>

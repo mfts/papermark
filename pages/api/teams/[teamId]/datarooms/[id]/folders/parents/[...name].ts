@@ -45,7 +45,6 @@ export default async function handle(
 
       for (let i = 0; i < name.length; i++) {
         const path = "/" + name.slice(0, i + 1).join("/"); // construct the materialized path
-        console.log("path", path);
 
         const folder = await prisma.dataroomFolder.findUnique({
           where: {
