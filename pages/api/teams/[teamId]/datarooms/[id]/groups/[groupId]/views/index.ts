@@ -19,11 +19,7 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
-    const {
-      teamId,
-      id: dataroomId,
-      groupId,
-    } = req.query as {
+    const { teamId, id: dataroomId, groupId } = req.query as {
       teamId: string;
       id: string;
       groupId: string;
@@ -36,7 +32,7 @@ export default async function handle(
           id: teamId,
           users: {
             some: {
-              userId: userId,
+              userId: (session.user as CustomUser).id,
             },
           },
         },
@@ -49,6 +45,36 @@ export default async function handle(
         return res.status(403).end("Unauthorized to access this team");
       }
 
+      // Get pagination parameters
+      const page = Math.max(1, Number.parseInt(req.query.page as string) || 1);
+      const limit = Math.min(
+        50,
+        Math.max(1, Number.parseInt(req.query.limit as string) || 10),
+      );
+      const search = req.query.search as string;
+
+      // Build where clause for views
+      const where = {
+        viewType: "DATAROOM_VIEW" as const,
+        groupId: groupId,
+        ...(search
+          ? {
+            OR: [
+              { viewerEmail: { contains: search, mode: "insensitive" as const } },
+              { link: { name: { contains: search, mode: "insensitive" as const } } },
+            ],
+          }
+          : {}),
+      };
+
+      // Get total count for pagination
+      const total = await prisma.view.count({
+        where: {
+          ...where,
+          dataroomId: dataroomId,
+        },
+      });
+
       const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: dataroomId,
@@ -60,12 +86,13 @@ export default async function handle(
           name: true,
           views: {
             where: {
-              viewType: "DATAROOM_VIEW",
-              groupId: groupId,
+              ...where,
             },
             orderBy: {
               viewedAt: "desc",
             },
+            skip: (page - 1) * limit,
+            take: limit,
             include: {
               link: {
                 select: {
@@ -111,10 +138,16 @@ export default async function handle(
         };
       });
 
-      return res.status(200).json(returnViews);
+      return res.status(200).json({
+        views: returnViews,
+        pagination: {
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      });
     } catch (error) {
       log({
-        message: `Failed to get views for dataroom: _${dataroomId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        message: `Failed to get views for dataroom: _${dataroomId}_, group: _${groupId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, groupId: ${groupId}, userId: ${userId}}\``,
         type: "error",
       });
       errorhandler(error, res);

@@ -50,26 +50,47 @@ export function useDataroom() {
   };
 }
 
-export function useDataroomLinks() {
+export function useDataroomLinks(
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+  tags?: string[],
+) {
   const router = useRouter();
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const { id } = router.query as {
     id: string;
   };
 
-  const teamInfo = useTeam();
-  const teamId = teamInfo?.currentTeam?.id;
+  const searchParams = new URLSearchParams();
+  searchParams.set("page", page.toString());
+  searchParams.set("limit", limit.toString());
+  if (search) searchParams.set("search", search);
+  if (tags?.length) searchParams.set("tags", tags.join(","));
 
-  const { data: links, error } = useSWR<LinkWithViews[]>(
-    teamId && id && `/api/teams/${teamId}/datarooms/${id}/links`,
+  // GET /api/teams/:teamId/datarooms/:id/links?page=1&limit=10&search=test&tags=tag1,tag2
+  const { data, error, isValidating } = useSWR<{
+    links: LinkWithViews[];
+    pagination: {
+      total: number;
+      pages: number;
+    };
+  }>(
+    teamId && id
+      ? `/api/teams/${teamId}/datarooms/${id}/links?${searchParams.toString()}`
+      : null,
     fetcher,
     { dedupingInterval: 10000 },
   );
 
   return {
-    links,
-    loading: !error && !links,
+    links: data?.links,
+    pagination: data?.pagination,
+    loading: !error && !data,
     error,
+    isValidating
   };
 }
 
@@ -339,17 +360,29 @@ export function useDataroomViewers({ dataroomId }: { dataroomId: string }) {
 export function useDataroomVisits({
   dataroomId,
   groupId,
+  page = 1,
+  limit = 10,
+  search,
 }: {
   dataroomId: string;
   groupId?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
 }) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: views, error } = useSWR<any[]>(
+  const { data, error } = useSWR<{
+    views: any[];
+    pagination: {
+      total: number;
+      pages: number;
+    };
+  }>(
     teamId &&
       dataroomId &&
-      `/api/teams/${teamId}/datarooms/${dataroomId}${groupId ? `/groups/${groupId}` : ""}/views`,
+    `/api/teams/${teamId}/datarooms/${dataroomId}${groupId ? `/groups/${groupId}` : ""}/views?page=${page}&limit=${limit}${search ? `&search=${search}` : ""}`,
     fetcher,
     {
       dedupingInterval: 10000,
@@ -357,8 +390,9 @@ export function useDataroomVisits({
   );
 
   return {
-    views,
-    loading: !error && !views,
+    views: data?.views,
+    pagination: data?.pagination,
+    loading: !error && !data,
     error,
   };
 }

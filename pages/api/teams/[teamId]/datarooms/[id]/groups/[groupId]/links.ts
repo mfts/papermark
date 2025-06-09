@@ -13,7 +13,7 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "GET") {
-    // GET /api/teams/:teamId/datarooms/:id/groups/:groupId/links
+    // GET /api/teams/:teamId/datarooms/:id/groups/:groupId/links?page=1&limit=10&search=test&tags=tag1,tag2
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
@@ -49,15 +49,52 @@ export default async function handle(
         return res.status(403).end("Unauthorized to access this team");
       }
 
+      // Get pagination parameters
+      const page = Math.max(1, Number.parseInt(req.query.page as string) || 1);
+      const limit = Math.min(
+        50,
+        Math.max(1, Number.parseInt(req.query.limit as string) || 10),
+      );
+      const search = req.query.search as string;
+      const tags = (req.query.tags as string)?.split(",").filter(Boolean);
+
+      // Build where clause
+      const where = {
+        groupId: groupId,
+        dataroomId: dataroomId,
+        linkType: "DATAROOM_LINK" as const,
+        ...(search
+          ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" as const } },
+              { slug: { contains: search, mode: "insensitive" as const } },
+            ],
+          }
+          : {}),
+        ...(tags?.length
+          ? {
+            tags: {
+              some: {
+                tag: {
+                  name: { in: tags },
+                },
+              },
+            },
+          }
+          : {}),
+      };
+
+      // Get total count for pagination
+      const total = await prisma.link.count({ where });
+
+      // Get paginated links
       let links = await prisma.link.findMany({
-        where: {
-          groupId: groupId,
-          dataroomId: dataroomId,
-          linkType: "DATAROOM_LINK",
-        },
+        where,
         orderBy: {
           createdAt: "desc",
         },
+        skip: (page - 1) * limit,
+        take: limit,
         include: {
           views: {
             where: {
@@ -121,7 +158,13 @@ export default async function handle(
         );
       }
 
-      return res.status(200).json(extendedLinks);
+      return res.status(200).json({
+        links: extendedLinks,
+        pagination: {
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      });
     } catch (error) {
       log({
         message: `Failed to get links for dataroom: _${dataroomId}_,group: _${groupId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, groupId: ${groupId}, userId: ${userId}}\``,

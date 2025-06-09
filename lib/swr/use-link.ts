@@ -65,9 +65,19 @@ interface ViewWithDuration extends View {
   completionRate: number;
 }
 
-export function useLinkVisits(linkId: string) {
-  const { data: views, error } = useSWR<ViewWithDuration[]>(
-    linkId && `/api/links/${encodeURIComponent(linkId)}/visits`,
+interface Pagination {
+  total: number;
+  pages: number;
+  page: number;
+  limit: number;
+}
+
+export function useLinkVisits(linkId: string, page: number = 1, pageSize: number = 10) {
+  const { data, error } = useSWR<{
+    views: ViewWithDuration[];
+    pagination: Pagination;
+  }>(
+    linkId && `/api/links/${encodeURIComponent(linkId)}/visits?page=${page}&limit=${pageSize}`,
     fetcher,
     {
       dedupingInterval: 10000,
@@ -75,8 +85,9 @@ export function useLinkVisits(linkId: string) {
   );
 
   return {
-    views,
-    loading: !error && !views,
+    views: data?.views,
+    pagination: data?.pagination,
+    loading: !error && !data,
     error,
   };
 }

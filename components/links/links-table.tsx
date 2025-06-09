@@ -15,7 +15,6 @@ import {
   LinkIcon,
   Settings2Icon,
 } from "lucide-react";
-import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
@@ -45,6 +44,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -71,24 +71,29 @@ import LinkSheet, {
 import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
 
+interface LinksTableProps {
+  targetType: "DOCUMENT" | "DATAROOM";
+  links?: LinkWithViews[];
+  primaryVersion?: DocumentVersion;
+  mutateDocument?: () => void;
+  loading?: boolean;
+  page: number;
+  pageSize: number;
+  searchQuery?: string;
+  tags?: string[];
+}
+
 export default function LinksTable({
   targetType,
   links,
   primaryVersion,
   mutateDocument,
-}: {
-  targetType: "DOCUMENT" | "DATAROOM";
-  links?: LinkWithViews[];
-  primaryVersion?: DocumentVersion;
-  mutateDocument?: () => void;
-}) {
-  const [tags, _] = useQueryState<string[]>("tags", {
-    parse: (value: string) => value.split(",").filter(Boolean),
-    serialize: (value: string[]) => value.join(","),
-  });
-
-  const selectedTagNames = useMemo(() => tags ?? [], [tags]);
-
+  loading = false,
+  page = 1,
+  pageSize = 10,
+  searchQuery,
+  tags,
+}: LinksTableProps) {
   const now = Date.now();
   const router = useRouter();
   const { isFree } = usePlan();
@@ -96,6 +101,15 @@ export default function LinksTable({
   const { groupId } = router.query as {
     groupId?: string;
   };
+
+  const getSearchParams = useMemo(() => {
+    const searchParams = new URLSearchParams();
+    searchParams.set("page", page.toString());
+    searchParams.set("limit", pageSize.toString());
+    if (searchQuery) searchParams.set("search", searchQuery);
+    if (tags?.length) searchParams.set("tags", tags.join(","));
+    return searchParams;
+  }, [page, pageSize, searchQuery, tags]);
 
   const { isMobile } = useMediaQuery();
 
@@ -126,14 +140,6 @@ export default function LinksTable({
       };
     });
   }, [links, now]);
-
-  processedLinks = useMemo(() => {
-    if (!links?.length) return [];
-    return processedLinks.filter((link) => {
-      if (selectedTagNames.length === 0) return true;
-      return link.tags.some((tag) => selectedTagNames.includes(tag.name));
-    });
-  }, [links, processedLinks, selectedTagNames]);
 
   const { canAddLinks } = useLimits();
   const { data: features } = useSWR<{
@@ -262,8 +268,11 @@ export default function LinksTable({
     mutate(
       `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
         link.documentId ?? link.dataroomId ?? "",
-      )}/links`,
-      (links || []).concat(duplicatedLink),
+      )}/links?${getSearchParams.toString()}`,
+      (currentData: any) => ({
+        ...currentData,
+        links: [duplicatedLink, ...(currentData?.links || [])],
+      }),
       false,
     );
 
@@ -274,8 +283,11 @@ export default function LinksTable({
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
           duplicatedLink.documentId ?? duplicatedLink.dataroomId ?? "",
-        )}/groups/${duplicatedLink.groupId}/links`,
-        groupLinks.concat(duplicatedLink),
+        )}/groups/${duplicatedLink.groupId}/links?${getSearchParams.toString()}`,
+        (currentData: any) => ({
+          ...currentData,
+          links: [duplicatedLink, ...groupLinks],
+        }),
         false,
       );
     }
@@ -328,8 +340,13 @@ export default function LinksTable({
     mutate(
       `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
         targetId,
-      )}/links`,
-      (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
+      )}/links?${getSearchParams.toString()}`,
+      (currentData: any) => ({
+        ...currentData,
+        links: (currentData?.links || []).map((link: LinkWithViews) =>
+          link.id === linkId ? archivedLink : link,
+        ),
+      }),
       false,
     );
 
@@ -340,8 +357,13 @@ export default function LinksTable({
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
           archivedLink.documentId ?? archivedLink.dataroomId ?? "",
-        )}/groups/${groupId}/links`,
-        groupLinks.map((link) => (link.id === linkId ? archivedLink : link)),
+        )}/groups/${groupId}/links?${getSearchParams.toString()}`,
+        (currentData: any) => ({
+          ...currentData,
+          links: (currentData?.links || []).map((link: LinkWithViews) =>
+            link.id === linkId ? archivedLink : link,
+          ),
+        }),
         false,
       );
     }
@@ -390,7 +412,32 @@ export default function LinksTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {processedLinks && processedLinks.length > 0 ? (
+              {loading ? (
+                Array.from({ length: 3 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="w-[250px]">
+                      <Skeleton className="h-6 w-full" />
+                    </TableCell>
+                    <TableCell className="flex items-center gap-x-2 sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
+                      <Skeleton className="h-6 w-full" />
+                    </TableCell>
+                    {hasAnyTags ? (
+                      <TableCell className="w-[250px] 2xl:w-auto">
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                    ) : null}
+                    <TableCell>
+                      <Skeleton className="h-6 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-24" />
+                    </TableCell>
+                    <TableCell className="text-center sm:text-right">
+                      <Skeleton className="h-8 w-8" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : processedLinks && processedLinks.length > 0 ? (
                 processedLinks
                   .filter((link) => !link.isArchived)
                   .map((link) => (
@@ -735,6 +782,10 @@ export default function LinksTable({
           linkType={`${targetType}_LINK`}
           currentLink={selectedLink.id ? selectedLink : undefined}
           existingLinks={links}
+          page={page}
+          pageSize={pageSize}
+          searchQuery={searchQuery}
+          tags={tags}
         />
 
         {selectedEmbedLink && (

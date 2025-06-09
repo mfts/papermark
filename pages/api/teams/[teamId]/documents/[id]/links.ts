@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { Prisma } from "@prisma/client";
 
 import { getServerSession } from "next-auth/next";
 
@@ -15,17 +16,48 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "GET") {
-    // GET /api/teams/:teamId/documents/:id/links
+    // GET /api/teams/:teamId/documents/:id/links?page=1&limit=10&search=test&tags=tag1,tag2
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
     }
 
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
+    const { page = "1", limit = "10", search, tags } = req.query;
+    const pageNumber = Math.max(1, parseInt(page as string) || 1);
+    const limitNumber = Math.max(1, Math.min(50, parseInt(limit as string) || 10));
+
+    const skip = (pageNumber - 1) * limitNumber;
 
     const userId = (session.user as CustomUser).id;
 
     try {
+      // Build where clause for filtering
+      const where: Prisma.LinkWhereInput = {
+        documentId: docId,
+        teamId: teamId,
+        ...(search && {
+          OR: [
+            { name: { contains: search as string, mode: Prisma.QueryMode.insensitive } },
+            { url: { contains: search as string, mode: Prisma.QueryMode.insensitive } },
+          ],
+        }),
+        ...(tags && {
+          tags: {
+            some: {
+              tag: {
+                name: {
+                  in: (tags as string).split(","),
+                },
+              },
+            },
+          },
+        }),
+      };
+
+      // Get total count for pagination
+      const totalLinks = await prisma.link.count({ where });
+
       const { document } = await getTeamWithUsersAndDocument({
         teamId,
         userId,
@@ -36,9 +68,12 @@ export default async function handle(
             ownerId: true,
             id: true,
             links: {
+              where,
               orderBy: {
                 createdAt: "desc",
               },
+              skip,
+              take: limitNumber,
               include: {
                 views: {
                   orderBy: {
@@ -108,7 +143,15 @@ export default async function handle(
         );
       }
 
-      return res.status(200).json(links);
+      return res.status(200).json({
+        links,
+        pagination: {
+          total: totalLinks,
+          pages: Math.ceil(totalLinks / limitNumber),
+          page: pageNumber,
+          limit: limitNumber,
+        },
+      });
     } catch (error) {
       log({
         message: `Failed to get links for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
