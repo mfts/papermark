@@ -8,9 +8,9 @@ import { ClockIcon, MailIcon } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { verifyJWT } from "@/lib/utils/generate-jwt";
 
-import AcceptInvitationButton from "./AcceptInvitationButton";
+import CleanUrl from "../cleanUrl/CleanUrl";
+import VerificationButton from "../varificationButton/VerificationButton";
 import InvitationStatusContent from "./InvitationStatusContent";
-import CleanUrlOnExpire from "./status/ClientRedirect";
 
 const data = {
   description: "Accept your team invitation on Papermark",
@@ -88,7 +88,7 @@ export default async function VerifyInvitationPage({
   }
   return (
     <>
-      <CleanUrlOnExpire shouldClean={isExpired || isRevoked} />
+      <CleanUrl shouldClean={isExpired || isRevoked} redirectOnAuth />
       <div className="flex h-screen w-full flex-wrap">
         {/* Left part */}
         <div className="flex h-full w-full items-center justify-center bg-white md:w-1/2 lg:w-2/5">
@@ -124,8 +124,9 @@ export default async function VerifyInvitationPage({
               <>
                 <div className="flex flex-col gap-4 px-4 pt-8 sm:px-16">
                   <div className="relative">
-                    <AcceptInvitationButton
+                    <VerificationButton
                       verificationUrl={verification_url}
+                      buttonText="Accept Invitation"
                     />
                   </div>
                   {expiresAt ? (
