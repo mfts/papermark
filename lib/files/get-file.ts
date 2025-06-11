@@ -28,31 +28,56 @@ export const getFile = async ({
 };
 
 const getFileFromS3 = async (key: string) => {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/s3/get-presigned-get-url`,
-    {
+  const isServer = typeof window === 'undefined' && process.env.INTERNAL_API_KEY;
+
+  if (isServer) {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/s3/get-presigned-get-url`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+        },
+        body: JSON.stringify({ key: key }),
+      },
+    );
+
+    if (!response.ok) {
+      try {
+        const error = await response.json();
+        throw new Error(
+          error.message || `Request failed with status ${response.status}`,
+        );
+      } catch (parseError) {
+        // Handle cases where the response isn't valid JSON
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+    }
+
+    const { url } = (await response.json()) as { url: string };
+    return url;
+  } else {
+    const response = await fetch(`/api/file/s3/get-presigned-get-url-proxy`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
       },
       body: JSON.stringify({ key: key }),
-    },
-  );
+    });
 
-  if (!response.ok) {
-    try {
-      const error = await response.json();
-      throw new Error(
-        error.message || `Request failed with status ${response.status}`,
-      );
-    } catch (parseError) {
-      // Handle cases where the response isn't valid JSON
-      throw new Error(`Request failed with status ${response.status}`);
+    if (!response.ok) {
+      try {
+        const error = await response.json();
+        throw new Error(
+          error.message || `Request failed with status ${response.status}`,
+        );
+      } catch (parseError) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
     }
+
+    const { url } = (await response.json()) as { url: string };
+    return url;
   }
-
-  const { url } = (await response.json()) as { url: string };
-
-  return url;
 };
