@@ -36,7 +36,20 @@ export default async function handler(
         );
 
         if (!response.ok) {
-            const error = await response.json();
+            const contentType = response.headers.get("content-type");
+            let error: any;
+
+            if (contentType && contentType.includes("application/json")) {
+                try {
+                    error = await response.json();
+                } catch (parseError) {
+                    error = { message: await response.text() || `Request failed with status ${response.status}` };
+                }
+            } else {
+                const textError = await response.text();
+                error = { message: textError || `Request failed with status ${response.status}` };
+            }
+
             return res.status(response.status).json(error);
         }
 

@@ -27,57 +27,61 @@ export const getFile = async ({
   return url;
 };
 
+
+const fetchPresignedUrl = async (
+  endpoint: string,
+  headers: Record<string, string>,
+  key: string,
+): Promise<string> => {
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ key }),
+  });
+
+  if (!response.ok) {
+    const contentType = response.headers.get("content-type");
+    let errorMessage: string;
+
+    if (contentType && contentType.includes("application/json")) {
+      try {
+        const error = await response.json();
+        errorMessage = error.message || `Request failed with status ${response.status}`;
+      } catch (parseError) {
+        const textError = await response.text();
+        errorMessage = textError || `Request failed with status ${response.status}`;
+      }
+    } else {
+      const textError = await response.text();
+      errorMessage = textError || `Request failed with status ${response.status}`;
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  const { url } = (await response.json()) as { url: string };
+  return url;
+};
+
 const getFileFromS3 = async (key: string) => {
-  const isServer = typeof window === 'undefined' && process.env.INTERNAL_API_KEY;
+  const isServer = typeof window === 'undefined' && !!process.env.INTERNAL_API_KEY;
 
   if (isServer) {
-    const response = await fetch(
+    return fetchPresignedUrl(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/s3/get-presigned-get-url`,
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
-        },
-        body: JSON.stringify({ key: key }),
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
       },
+      key,
     );
-
-    if (!response.ok) {
-      try {
-        const error = await response.json();
-        throw new Error(
-          error.message || `Request failed with status ${response.status}`,
-        );
-      } catch (parseError) {
-        // Handle cases where the response isn't valid JSON
-        throw new Error(`Request failed with status ${response.status}`);
-      }
-    }
-
-    const { url } = (await response.json()) as { url: string };
-    return url;
   } else {
-    const response = await fetch(`/api/file/s3/get-presigned-get-url-proxy`, {
-      method: "POST",
-      headers: {
+    return fetchPresignedUrl(
+      `/api/file/s3/get-presigned-get-url-proxy`,
+      {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ key: key }),
-    });
-
-    if (!response.ok) {
-      try {
-        const error = await response.json();
-        throw new Error(
-          error.message || `Request failed with status ${response.status}`,
-        );
-      } catch (parseError) {
-        throw new Error(`Request failed with status ${response.status}`);
-      }
-    }
-
-    const { url } = (await response.json()) as { url: string };
-    return url;
+      key,
+    );
   }
 };
