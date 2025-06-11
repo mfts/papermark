@@ -1,11 +1,18 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { runs } from "@trigger.dev/sdk/v3";
+import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { sendDataroomChangeNotificationTask } from "@/lib/trigger/dataroom-change-notification";
 import { CustomUser } from "@/lib/types";
+
+export const config = {
+  supportsResponseStreaming: true,
+};
 
 export default async function handle(
   req: NextApiRequest,
@@ -56,8 +63,9 @@ export default async function handle(
         });
       }
 
+      let document;
       try {
-        await prisma.dataroom.update({
+        document = await prisma.dataroom.update({
           where: {
             id: dataroomId,
           },
@@ -68,11 +76,57 @@ export default async function handle(
               },
             },
           },
+          select: {
+            enableChangeNotifications: true,
+            documents: {
+              where: {
+                documentId: docId,
+              },
+              include: {
+                document: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
         });
       } catch (error) {
         return res.status(500).json({
           message: "Document already exists in dataroom!",
         });
+      }
+      const createdDocument = document.documents[0];
+      if (document.enableChangeNotifications && createdDocument) {
+        const allRuns = await runs.list({
+          taskIdentifier: ["send-dataroom-change-notification"],
+          tag: [`dataroom_${dataroomId}`],
+          status: ["DELAYED", "QUEUED"],
+          period: "10m",
+        });
+
+        await Promise.all(allRuns.data.map((run) => runs.cancel(run.id)));
+
+        waitUntil(
+          sendDataroomChangeNotificationTask.trigger(
+            {
+              dataroomId,
+              dataroomDocumentId: createdDocument.id,
+              senderUserId: userId,
+              teamId,
+            },
+            {
+              idempotencyKey: `dataroom-notification-${teamId}-${dataroomId}-${createdDocument.id}`,
+              tags: [
+                `team_${teamId}`,
+                `dataroom_${dataroomId}`,
+                `document_${createdDocument.id}`,
+              ],
+              delay: new Date(Date.now() + 10 * 60 * 1000),
+            },
+          ),
+        );
       }
 
       return res.status(200).json({
