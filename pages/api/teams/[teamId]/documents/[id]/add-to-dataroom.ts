@@ -106,7 +106,14 @@ export default async function handle(
           period: "10m",
         });
 
-        await Promise.all(allRuns.data.map((run) => runs.cancel(run.id)));
+        await Promise.all(
+          allRuns.data.map((run) =>
+            runs.cancel(run.id).catch((error) => {
+              console.error(`Failed to cancel run ${run.id}:`, error);
+              return null;
+            })
+          )
+        );
 
         waitUntil(
           sendDataroomChangeNotificationTask.trigger(
