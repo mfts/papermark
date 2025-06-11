@@ -58,9 +58,13 @@ export default function DomainSection({
     editLink && data.domain && data.domain !== "papermark.com" ? true : false;
 
   const handleDomainChange = (value: string) => {
-    // Prevent changes if editing a link with custom domain
-    if (isEditingCustomDomain) {
-      setDisplayValue(value);
+    const canChangeCustomDomain =
+      linkType === "DOCUMENT_LINK"
+        ? canUseCustomDomainForDocument
+        : canUseCustomDomainForDataroom;
+
+    if (isEditingCustomDomain && !canChangeCustomDomain) {
+      setDisplayValue(data.domain ?? "papermark.com");
       return;
     }
 
