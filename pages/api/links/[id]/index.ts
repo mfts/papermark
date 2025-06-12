@@ -329,6 +329,7 @@ export default async function handle(
           enableWatermark: linkData.enableWatermark || false,
           watermarkConfig: linkData.watermarkConfig || null,
           groupId: linkData.groupId || null,
+          permissionGroupId: linkData.permissionGroupId || null,
           audienceType: linkData.audienceType || LinkAudienceType.GENERAL,
           enableConversation: linkData.enableConversation || false,
           enableUpload: linkData.enableUpload || false,

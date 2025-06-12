@@ -304,7 +304,7 @@ export default function LinksTable({
 
     try {
       // Update the permissions for the existing link
-      await fetch(
+      const res = await fetch(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
         {
           method: "PUT",
@@ -317,6 +317,11 @@ export default function LinksTable({
           }),
         },
       );
+
+      if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error ?? "Failed to update permissions");
+      }
 
       // Refresh the links cache
       const endpointTargetType = `${targetType.toLowerCase()}s`;

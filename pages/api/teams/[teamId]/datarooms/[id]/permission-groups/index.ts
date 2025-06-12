@@ -91,7 +91,7 @@ export default async function handle(
         // Update the link with the permission group
         if (linkId) {
           await tx.link.update({
-            where: { id: linkId },
+            where: { id: linkId, teamId: teamId },
             data: {
               permissionGroupId: permissionGroup.id,
             },

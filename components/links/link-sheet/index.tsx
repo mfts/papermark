@@ -89,7 +89,7 @@ export const DEFAULT_LINK_PROPS = (
   uploadFolderId: null,
   uploadFolderName: "Home",
   enableIndexFile: false,
-  permissions: {},
+  permissions: () => ({}), // lazy factory
   permissionGroupId: null,
 });
 

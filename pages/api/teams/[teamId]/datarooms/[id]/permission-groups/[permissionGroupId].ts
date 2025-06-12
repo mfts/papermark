@@ -188,7 +188,7 @@ export default async function handle(
                 itemType: permission.itemType,
                 canView: permission.view,
                 canDownload: permission.download,
-                canDownloadOriginal: permission.download,
+                canDownloadOriginal: false,
               };
 
               if (existing) {

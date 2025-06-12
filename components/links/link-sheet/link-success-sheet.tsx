@@ -47,13 +47,13 @@ export default function LinkSuccessSheet({
 }: LinkSuccessSheetProps) {
   const [copied, setCopied] = useState(false);
 
+  const linkUrl =
+    link.domainId && link.slug
+      ? `https://${link.domainSlug}/${link.slug}`
+      : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`;
+
   const copyToClipboard = async () => {
     try {
-      const linkUrl =
-        link.domainId && link.slug
-          ? `https://${link.domainSlug}/${link.slug}`
-          : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`;
-
       await navigator.clipboard.writeText(linkUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -63,15 +63,8 @@ export default function LinkSuccessSheet({
   };
 
   const openLink = () => {
-    const linkUrl = link.domainSlug
-      ? `https://${link.domainSlug}/${link.slug}`
-      : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`;
     window.open(linkUrl, "_blank");
   };
-
-  const linkUrl = link.domainSlug
-    ? `https://${link.domainSlug}/${link.slug}`
-    : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`;
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>

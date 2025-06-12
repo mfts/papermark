@@ -526,6 +526,7 @@ export function PermissionsSheet({
                   view: updatedPermissions.view,
                   download: updatedPermissions.download,
                   partialView: false,
+                  partialDownload: false,
                 },
               };
 

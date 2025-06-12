@@ -61,7 +61,7 @@ export const DEFAULT_LINK_PROPS = (
   showBanner: boolean = true,
 ) => ({
   ...BASE_DEFAULT_LINK_PROPS(linkType, groupId, showBanner),
-  permissions: {},
+  permissions: null,
 });
 
 type ItemPermission = Record<
