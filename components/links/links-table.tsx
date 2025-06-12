@@ -14,6 +14,7 @@ import {
   EyeIcon,
   LinkIcon,
   Settings2Icon,
+  ShieldIcon,
 } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { toast } from "sonner";
@@ -68,6 +69,8 @@ import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
 } from "./link-sheet";
+import { DataroomLinkSheet } from "./link-sheet/dataroom-link-sheet";
+import { PermissionsSheet } from "./link-sheet/permissions-sheet";
 import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
 
@@ -93,7 +96,8 @@ export default function LinksTable({
   const router = useRouter();
   const { isFree } = usePlan();
   const teamInfo = useTeam();
-  const { groupId } = router.query as {
+  const { id: targetId, groupId } = router.query as {
+    id: string;
     groupId?: string;
   };
 
@@ -158,6 +162,11 @@ export default function LinksTable({
   const [popoverOpen, setPopoverOpen] = useState<string | null>(null);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
 
+  const [showPermissionsSheet, setShowPermissionsSheet] =
+    useState<boolean>(false);
+  const [editPermissionLink, setEditPermissionLink] =
+    useState<LinkWithViews | null>(null);
+
   const handleCopyToClipboard = (linkString: string) => {
     copyToClipboard(`${linkString}`, "Link copied to clipboard.");
   };
@@ -207,6 +216,7 @@ export default function LinksTable({
       uploadFolderId: link.uploadFolderId ?? null,
       uploadFolderName: link.uploadFolderName ?? "Home",
       enableIndexFile: link.enableIndexFile ?? false,
+      permissionGroupId: link.permissionGroupId ?? null,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
@@ -282,6 +292,47 @@ export default function LinksTable({
 
     toast.success("Link duplicated successfully");
     setIsLoading(false);
+  };
+
+  const handleEditPermissions = (link: LinkWithViews) => {
+    setEditPermissionLink(link);
+    setShowPermissionsSheet(true);
+  };
+
+  const handlePermissionsSave = async (permissions: any) => {
+    if (!editPermissionLink) return;
+
+    try {
+      // Update the permissions for the existing link
+      await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            permissions: permissions,
+            linkId: editPermissionLink.id,
+          }),
+        },
+      );
+
+      // Refresh the links cache
+      const endpointTargetType = `${targetType.toLowerCase()}s`;
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          targetId,
+        )}/links`,
+      );
+
+      setShowPermissionsSheet(false);
+      setEditPermissionLink(null);
+      toast.success("File permissions updated successfully");
+    } catch (error) {
+      console.error("Error updating file permissions:", error);
+      toast.error("Failed to update file permissions");
+    }
   };
 
   const AddLinkButton = () => {
@@ -651,6 +702,14 @@ export default function LinksTable({
                                   <Settings2Icon className="mr-2 h-4 w-4" />
                                   Edit Link
                                 </DropdownMenuItem>
+                                {targetType === "DATAROOM" && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleEditPermissions(link)}
+                                  >
+                                    <ShieldIcon className="mr-2 h-4 w-4" />
+                                    Edit File Permissions
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem
                                   onClick={() => handlePreviewLink(link)}
                                 >
@@ -729,13 +788,39 @@ export default function LinksTable({
           </Table>
         </div>
 
-        <LinkSheet
-          isOpen={isLinkSheetVisible}
-          setIsOpen={setIsLinkSheetVisible}
-          linkType={`${targetType}_LINK`}
-          currentLink={selectedLink.id ? selectedLink : undefined}
-          existingLinks={links}
-        />
+        {targetType === "DATAROOM" ? (
+          <>
+            <DataroomLinkSheet
+              isOpen={isLinkSheetVisible}
+              setIsOpen={setIsLinkSheetVisible}
+              linkType={`${targetType}_LINK`}
+              currentLink={selectedLink.id ? selectedLink : undefined}
+              existingLinks={links}
+            />
+
+            <PermissionsSheet
+              isOpen={showPermissionsSheet}
+              setIsOpen={(open) => {
+                setShowPermissionsSheet(open);
+                if (!open) {
+                  setEditPermissionLink(null);
+                }
+              }}
+              dataroomId={targetId}
+              linkId={editPermissionLink?.id}
+              permissionGroupId={editPermissionLink?.permissionGroupId}
+              onSave={handlePermissionsSave}
+            />
+          </>
+        ) : (
+          <LinkSheet
+            isOpen={isLinkSheetVisible}
+            setIsOpen={setIsLinkSheetVisible}
+            linkType={`${targetType}_LINK`}
+            currentLink={selectedLink.id ? selectedLink : undefined}
+            existingLinks={links}
+          />
+        )}
 
         {selectedEmbedLink && (
           <EmbedCodeModal
