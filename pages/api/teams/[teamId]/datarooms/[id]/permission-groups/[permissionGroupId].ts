@@ -1,11 +1,22 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { ItemType } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
+import { z } from "zod";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+
+// Zod schema for validating permissions
+const itemPermissionSchema = z.object({
+  view: z.boolean(),
+  download: z.boolean(),
+  itemType: z.nativeEnum(ItemType),
+});
+
+const permissionsSchema = z.record(z.string(), itemPermissionSchema);
 
 export default async function handle(
   req: NextApiRequest,
@@ -135,132 +146,143 @@ export default async function handle(
         return res.status(404).json({ error: "Permission group not found" });
       }
 
+      // Validate permissions payload using Zod
+      if (!permissions) {
+        return res.status(400).json({ error: "Permissions are required" });
+      }
+
+      // Validate schema structure
+      const validationResult = permissionsSchema.safeParse(permissions);
+      if (!validationResult.success) {
+        return res.status(400).json({
+          error: "Invalid permissions format",
+          details: validationResult.error.issues,
+        });
+      }
+
+      const validatedPermissions = validationResult.data;
+
       // Update permission group access controls using a transaction
       const updatedPermissionGroup = await prisma.$transaction(async (tx) => {
-        if (permissions && typeof permissions === "object") {
-          // Get existing access controls to determine what needs to be updated vs created
-          const existingControls =
-            await tx.permissionGroupAccessControls.findMany({
-              where: {
-                groupId: permissionGroupId,
-              },
-              select: {
-                itemId: true,
-                itemType: true,
-                canView: true,
-                canDownload: true,
-                canDownloadOriginal: true,
-              },
-            });
-
-          const existingMap = new Map(
-            existingControls.map((control) => [
-              `${control.itemId}-${control.itemType}`,
-              control,
-            ]),
-          );
-
-          const toUpdate: Array<{
-            itemId: string;
-            itemType: any;
-            canView: boolean;
-            canDownload: boolean;
-            canDownloadOriginal: boolean;
-          }> = [];
-
-          const toCreate: Array<{
-            groupId: string;
-            itemId: string;
-            itemType: any;
-            canView: boolean;
-            canDownload: boolean;
-            canDownloadOriginal: boolean;
-          }> = [];
-
-          // Categorize permissions into updates vs creates
-          Object.entries(permissions).forEach(
-            ([itemId, permission]: [string, any]) => {
-              const key = `${itemId}-${permission.itemType}`;
-              const existing = existingMap.get(key);
-
-              const permissionData = {
-                itemId,
-                itemType: permission.itemType,
-                canView: permission.view,
-                canDownload: permission.download,
-                canDownloadOriginal: false,
-              };
-
-              if (existing) {
-                // Check if anything actually changed
-                if (
-                  existing.canView !== permission.view ||
-                  existing.canDownload !== permission.download
-                ) {
-                  toUpdate.push(permissionData);
-                }
-              } else {
-                toCreate.push({
-                  groupId: permissionGroupId,
-                  ...permissionData,
-                });
-              }
+        // Get existing access controls to determine what needs to be updated vs created
+        const existingControls =
+          await tx.permissionGroupAccessControls.findMany({
+            where: {
+              groupId: permissionGroupId,
             },
-          );
+            select: {
+              itemId: true,
+              itemType: true,
+              canView: true,
+              canDownload: true,
+              canDownloadOriginal: true,
+            },
+          });
 
-          // Perform updates
-          if (toUpdate.length > 0) {
-            await Promise.all(
-              toUpdate.map((item) =>
-                tx.permissionGroupAccessControls.updateMany({
-                  where: {
-                    groupId: permissionGroupId,
-                    itemId: item.itemId,
-                    itemType: item.itemType,
-                  },
-                  data: {
-                    canView: item.canView,
-                    canDownload: item.canDownload,
-                    canDownloadOriginal: item.canDownloadOriginal,
-                  },
-                }),
-              ),
-            );
-          }
+        const existingMap = new Map(
+          existingControls.map((control) => [
+            `${control.itemId}-${control.itemType}`,
+            control,
+          ]),
+        );
 
-          // Perform creates
-          if (toCreate.length > 0) {
-            await tx.permissionGroupAccessControls.createMany({
-              data: toCreate,
+        const toUpdate: Array<{
+          itemId: string;
+          itemType: any;
+          canView: boolean;
+          canDownload: boolean;
+          canDownloadOriginal: boolean;
+        }> = [];
+
+        const toCreate: Array<{
+          groupId: string;
+          itemId: string;
+          itemType: any;
+          canView: boolean;
+          canDownload: boolean;
+          canDownloadOriginal: boolean;
+        }> = [];
+
+        // Categorize permissions into updates vs creates
+        Object.entries(validatedPermissions).forEach(([itemId, permission]) => {
+          const key = `${itemId}-${permission.itemType}`;
+          const existing = existingMap.get(key);
+
+          const permissionData = {
+            itemId,
+            itemType: permission.itemType,
+            canView: permission.view,
+            canDownload: permission.download,
+            canDownloadOriginal: false,
+          };
+
+          if (existing) {
+            // Check if anything actually changed
+            if (
+              existing.canView !== permission.view ||
+              existing.canDownload !== permission.download
+            ) {
+              toUpdate.push(permissionData);
+            }
+          } else {
+            toCreate.push({
+              groupId: permissionGroupId,
+              ...permissionData,
             });
           }
+        });
 
-          // Remove permissions that are no longer in the new set
-          const newItemKeys = new Set(
-            Object.entries(permissions).map(
-              ([itemId, permission]: [string, any]) =>
-                `${itemId}-${permission.itemType}`,
+        // Perform updates
+        if (toUpdate.length > 0) {
+          await Promise.all(
+            toUpdate.map((item) =>
+              tx.permissionGroupAccessControls.updateMany({
+                where: {
+                  groupId: permissionGroupId,
+                  itemId: item.itemId,
+                  itemType: item.itemType,
+                },
+                data: {
+                  canView: item.canView,
+                  canDownload: item.canDownload,
+                  canDownloadOriginal: item.canDownloadOriginal,
+                },
+              }),
             ),
           );
+        }
 
-          const toDelete = existingControls.filter(
-            (control) =>
-              !newItemKeys.has(`${control.itemId}-${control.itemType}`),
+        // Perform creates
+        if (toCreate.length > 0) {
+          await tx.permissionGroupAccessControls.createMany({
+            data: toCreate,
+          });
+        }
+
+        // Remove permissions that are no longer in the new set
+        const newItemKeys = new Set(
+          Object.entries(validatedPermissions).map(
+            ([itemId, permission]) => `${itemId}-${permission.itemType}`,
+          ),
+        );
+
+        const toDelete = existingControls.filter(
+          (control) =>
+            !newItemKeys.has(`${control.itemId}-${control.itemType}`),
+        );
+
+        if (toDelete.length > 0) {
+          await Promise.all(
+            toDelete.map((item) =>
+              tx.permissionGroupAccessControls.deleteMany({
+                where: {
+                  groupId: permissionGroupId,
+                  itemId: item.itemId,
+                  itemType: item.itemType,
+                },
+              }),
+            ),
           );
-
-          if (toDelete.length > 0) {
-            await Promise.all(
-              toDelete.map((item) =>
-                tx.permissionGroupAccessControls.deleteMany({
-                  where: {
-                    groupId: permissionGroupId,
-                    itemId: item.itemId,
-                    itemType: item.itemType,
-                  },
-                }),
-              ),
-            );
-          }
         }
 
         // Return the updated permission group with access controls

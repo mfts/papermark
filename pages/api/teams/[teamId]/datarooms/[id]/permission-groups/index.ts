@@ -67,26 +67,36 @@ export default async function handle(
           },
         });
 
-        // Create access controls for each permission
-        const accessControls = [];
-        for (const [itemId, permission] of Object.entries(permissions)) {
-          const perm = permission as {
-            view: boolean;
-            download: boolean;
-            itemType: ItemType;
-          };
-          const accessControl = await tx.permissionGroupAccessControls.create({
-            data: {
+        // Prepare access control data for batch insert
+        const accessControlData = Object.entries(permissions).map(
+          ([itemId, permission]) => {
+            const perm = permission as {
+              view: boolean;
+              download: boolean;
+              itemType: ItemType;
+            };
+            return {
               groupId: permissionGroup.id,
               itemId: itemId,
               itemType: perm.itemType,
               canView: perm.view,
               canDownload: perm.download,
               canDownloadOriginal: false,
-            },
-          });
-          accessControls.push(accessControl);
-        }
+            };
+          },
+        );
+
+        // Create all access controls in a single batch operation
+        await tx.permissionGroupAccessControls.createMany({
+          data: accessControlData,
+        });
+
+        // Fetch the created access controls for return data
+        const accessControls = await tx.permissionGroupAccessControls.findMany({
+          where: {
+            groupId: permissionGroup.id,
+          },
+        });
 
         // Update the link with the permission group
         if (linkId) {

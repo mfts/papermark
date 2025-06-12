@@ -89,7 +89,7 @@ export const DEFAULT_LINK_PROPS = (
   uploadFolderId: null,
   uploadFolderName: "Home",
   enableIndexFile: false,
-  permissions: () => ({}), // lazy factory
+  permissions: {},
   permissionGroupId: null,
 });
 
@@ -131,7 +131,7 @@ export type DEFAULT_LINK_TYPE = {
   uploadFolderId: string | null;
   uploadFolderName: string;
   enableIndexFile: boolean;
-  permissions?: any; // For dataroom links file permissions
+  permissions?: Record<string, unknown> | null; // For dataroom links file permissions
   permissionGroupId?: string | null;
 };
 
