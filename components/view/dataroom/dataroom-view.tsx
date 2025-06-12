@@ -266,7 +266,7 @@ export default function DataroomView({
     return (
       <div className="bg-gray-950">
         <DataroomViewer
-          accessControls={group?.accessControls || []}
+          accessControls={link.accessControls || group?.accessControls || []}
           brand={brand!}
           viewId={viewData.viewId}
           isPreview={viewData.isPreview}

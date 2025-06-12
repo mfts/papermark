@@ -118,6 +118,11 @@ export async function fetchDataroomLinkData({
           accessControls: true,
         },
       },
+      permissionGroup: {
+        select: {
+          accessControls: true,
+        },
+      },
     },
   });
 
@@ -160,7 +165,13 @@ export async function fetchDataroomLinkData({
     accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
   };
 
-  return { linkData, brand };
+  // Extract access controls from either ViewerGroup or PermissionGroup
+  const accessControls =
+    linkData.group?.accessControls ||
+    linkData.permissionGroup?.accessControls ||
+    [];
+
+  return { linkData, brand, accessControls };
 }
 
 export async function fetchDataroomDocumentLinkData({

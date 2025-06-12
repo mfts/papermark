@@ -173,6 +173,8 @@ export default async function handle(
           });
           linkData = data.linkData;
           brand = data.brand;
+          // Include access controls in the link data for the frontend
+          linkData.accessControls = data.accessControls;
         }
         console.timeEnd("get-dataroom-link-data");
       }

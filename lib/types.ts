@@ -6,6 +6,7 @@ import {
   Document,
   DocumentVersion,
   Link,
+  PermissionGroupAccessControls,
   User as PrismaUser,
   View,
   ViewerGroupAccessControls,
@@ -152,6 +153,9 @@ export interface LinkWithDataroom extends Link {
   group?: {
     accessControls: ViewerGroupAccessControls[];
   };
+  accessControls?:
+    | ViewerGroupAccessControls[]
+    | PermissionGroupAccessControls[];
   agreement: Agreement | null;
   customFields: CustomField[];
   enableIndexFile: boolean;
