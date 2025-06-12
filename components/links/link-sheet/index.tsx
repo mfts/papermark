@@ -43,6 +43,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ButtonTooltip } from "@/components/ui/tooltip";
 
 import { CustomFieldData } from "./custom-fields-panel";
+import { type ItemPermission } from "./dataroom-link-sheet";
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
 import TagSection from "./tags/tag-section";
@@ -131,7 +132,7 @@ export type DEFAULT_LINK_TYPE = {
   uploadFolderId: string | null;
   uploadFolderName: string;
   enableIndexFile: boolean;
-  permissions?: Record<string, unknown> | null; // For dataroom links file permissions
+  permissions?: ItemPermission | null; // For dataroom links file permissions
   permissionGroupId?: string | null;
 };
 

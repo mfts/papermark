@@ -64,7 +64,7 @@ export const DEFAULT_LINK_PROPS = (
   permissions: null,
 });
 
-type ItemPermission = Record<
+export type ItemPermission = Record<
   string,
   { view: boolean; download: boolean; itemType: ItemType }
 >;
@@ -700,8 +700,6 @@ export function DataroomLinkSheet({
                             <Select
                               onValueChange={(value) => {
                                 if (value === "add_group") {
-                                  // Open the group sheet
-                                  console.log("add_group redirect");
                                   return;
                                 }
 
