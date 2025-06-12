@@ -7,14 +7,13 @@ import { PlanEnum } from "@/ee/stripe/constants";
 import { DocumentVersion, LinkAudienceType } from "@prisma/client";
 import { isWithinInterval, subMinutes } from "date-fns";
 import {
-  ArchiveIcon,
   BoxesIcon,
   Code2Icon,
   CopyPlusIcon,
   EyeIcon,
+  FileSlidersIcon,
   LinkIcon,
   Settings2Icon,
-  ShieldIcon,
 } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { toast } from "sonner";
@@ -304,41 +303,82 @@ export default function LinksTable({
   const handlePermissionsSave = async (permissions: any) => {
     if (!editPermissionLink) return;
 
-    try {
-      // Update the permissions for the existing link
-      const res = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
+    if (!editPermissionLink.permissionGroupId) {
+      setIsLoading(true);
+      try {
+        const response = await fetch(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              permissions: permissions,
+              linkId: editPermissionLink.id,
+            }),
           },
-          body: JSON.stringify({
-            permissions: permissions,
-            linkId: editPermissionLink.id,
-          }),
-        },
-      );
+        );
 
-      if (!res.ok) {
-        const { error } = await res.json();
-        throw new Error(error ?? "Failed to update permissions");
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to create permission group");
+        }
+
+        // Refresh the links cache
+        const endpointTargetType = `${targetType.toLowerCase()}s`;
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+            targetId,
+          )}/links`,
+        );
+
+        setShowPermissionsSheet(false);
+        setEditPermissionLink(null);
+        toast.success("File permissions updated successfully");
+      } catch (error) {
+        console.error("Error creating permission group:", error);
+        toast.error("Failed to create permission group");
+      } finally {
+        setIsLoading(false);
       }
+    } else {
+      try {
+        // Update the permissions for the existing link
+        const res = await fetch(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              permissions: permissions,
+              linkId: editPermissionLink.id,
+            }),
+          },
+        );
 
-      // Refresh the links cache
-      const endpointTargetType = `${targetType.toLowerCase()}s`;
-      mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
-          targetId,
-        )}/links`,
-      );
+        if (!res.ok) {
+          const { error } = await res.json();
+          throw new Error(error ?? "Failed to update permissions");
+        }
 
-      setShowPermissionsSheet(false);
-      setEditPermissionLink(null);
-      toast.success("File permissions updated successfully");
-    } catch (error) {
-      console.error("Error updating file permissions:", error);
-      toast.error("Failed to update file permissions");
+        // Refresh the links cache
+        const endpointTargetType = `${targetType.toLowerCase()}s`;
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+            targetId,
+          )}/links`,
+        );
+
+        setShowPermissionsSheet(false);
+        setEditPermissionLink(null);
+        toast.success("File permissions updated successfully");
+      } catch (error) {
+        console.error("Error updating file permissions:", error);
+        toast.error("Failed to update file permissions");
+      }
     }
   };
 
@@ -728,14 +768,17 @@ export default function LinksTable({
                                 <Settings2Icon className="mr-2 h-4 w-4" />
                                 Edit Link
                               </DropdownMenuItem>
-                              {targetType === "DATAROOM" && (
-                                <DropdownMenuItem
-                                  onClick={() => handleEditPermissions(link)}
-                                >
-                                  <ShieldIcon className="mr-2 h-4 w-4" />
-                                  Edit File Permissions
-                                </DropdownMenuItem>
-                              )}
+                              {targetType === "DATAROOM" &&
+                                link.audienceType !==
+                                  LinkAudienceType.GROUP && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleEditPermissions(link)}
+                                    disabled={isLoading}
+                                  >
+                                    <FileSlidersIcon className="mr-2 h-4 w-4" />
+                                    Edit File Permissions
+                                  </DropdownMenuItem>
+                                )}
                               <DropdownMenuItem
                                 onClick={() => handlePreviewLink(link)}
                               >
