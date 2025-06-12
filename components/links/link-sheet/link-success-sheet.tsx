@@ -227,7 +227,8 @@ export default function LinkSuccessSheet({
             <div className="rounded-lg border border-dashed border-muted-foreground/25 p-6 text-center">
               <Mail className="mx-auto h-8 w-8 text-muted-foreground/50" />
               <p className="mt-2 text-sm text-muted-foreground">
-                Soon you'll be able to invite team members directly via email
+                Soon you&apos;ll be able to invite team members directly via
+                email
               </p>
             </div>
           </div>
