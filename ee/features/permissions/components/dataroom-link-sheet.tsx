@@ -678,7 +678,7 @@ export function DataroomLinkSheet({
 
                       {/* GROUP LINK */}
                       <TabsContent value={LinkAudienceType.GROUP}>
-                        <div className="space-y-6 pb-10 pt-2">
+                        <div className="space-y-6 pt-2">
                           <div className="space-y-2">
                             <div className="flex w-full items-center justify-between">
                               <Label htmlFor="group-id">Group </Label>
@@ -839,8 +839,25 @@ export function DataroomLinkSheet({
 
             <SheetFooter>
               <div className="flex flex-row-reverse items-center gap-2 pt-2">
+                {linkType === LinkType.DATAROOM_LINK &&
+                  currentLink?.audienceType !== LinkAudienceType.GROUP && (
+                    <Button
+                      type="button"
+                      variant="default"
+                      onClick={(e) => handleSubmit(e, false, true)}
+                    >
+                      Manage Permissions
+                    </Button>
+                  )}
                 <Button
-                  type="submit"
+                  type="button"
+                  variant={
+                    linkType === LinkType.DOCUMENT_LINK ||
+                    (linkType === LinkType.DATAROOM_LINK &&
+                      currentLink?.audienceType === LinkAudienceType.GROUP)
+                      ? "default"
+                      : "outline"
+                  }
                   loading={isSaving}
                   onClick={(e) => handleSubmit(e, false)}
                 >
@@ -848,22 +865,12 @@ export function DataroomLinkSheet({
                 </Button>
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="link"
                   loading={isLoading}
                   onClick={(e) => handleSubmit(e, true)}
                 >
                   {currentLink ? "Update & Preview" : "Save & Preview"}
                 </Button>
-                {linkType === LinkType.DATAROOM_LINK &&
-                  currentLink?.audienceType !== LinkAudienceType.GROUP && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={(e) => handleSubmit(e, false, true)}
-                    >
-                      Manage Permissions
-                    </Button>
-                  )}
               </div>
             </SheetFooter>
           </form>
