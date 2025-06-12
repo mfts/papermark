@@ -60,6 +60,7 @@ import BarChart from "../shared/icons/bar-chart";
 import ChevronDown from "../shared/icons/chevron-down";
 import MoreHorizontal from "../shared/icons/more-horizontal";
 import { Badge } from "../ui/badge";
+import { Label } from "../ui/label";
 import { ButtonTooltip } from "../ui/tooltip";
 import EmbedCodeModal from "./embed-code-modal";
 import LinkActiveControls, {
@@ -490,7 +491,7 @@ export default function LinksTable({
                 ) : null}
                 <TableHead className="w-[250px] sm:w-auto">Views</TableHead>
                 <TableHead>Last Viewed</TableHead>
-                <TableHead className="w-[80px]">Status</TableHead>
+                <TableHead className="w-[80px]">Active</TableHead>
                 <TableHead className="text-center sm:text-right"></TableHead>
               </TableRow>
             </TableHeader>
@@ -504,7 +505,8 @@ export default function LinksTable({
                         className={cn(
                           "group/row",
                           popoverOpen === link.id && "bg-gray-100",
-                          link.isArchived && "bg-gray-50 opacity-50",
+                          link.isArchived &&
+                            "bg-gray-50 opacity-50 dark:bg-gray-700",
                         )}
                       >
                         <TableCell className="w-[250px] truncate font-medium">
@@ -734,8 +736,10 @@ export default function LinksTable({
                           )}
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex items-center justify-center">
+                          <div className="flex items-center justify-center gap-x-1">
                             <Switch
+                              className="data-[state=checked]:bg-primary/80 data-[state=checked]:hover:bg-primary data-[state=unchecked]:hover:bg-muted-foreground/80"
+                              id={`${link.id}-active-switch`}
                               checked={!link.isArchived}
                               onCheckedChange={(checked) =>
                                 handleArchiveLink(
@@ -746,6 +750,12 @@ export default function LinksTable({
                               }
                               disabled={loadingLinks.has(link.id)}
                             />
+                            <Label
+                              className="font-normal"
+                              htmlFor={`${link.id}-active-switch`}
+                            >
+                              {link.isArchived ? "No" : "Yes"}
+                            </Label>
                           </div>
                         </TableCell>
                         <TableCell className="text-center sm:text-right">
