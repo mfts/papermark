@@ -89,6 +89,8 @@ export const DEFAULT_LINK_PROPS = (
   uploadFolderId: null,
   uploadFolderName: "Home",
   enableIndexFile: false,
+  permissions: {},
+  permissionGroupId: null,
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -129,6 +131,8 @@ export type DEFAULT_LINK_TYPE = {
   uploadFolderId: string | null;
   uploadFolderName: string;
   enableIndexFile: boolean;
+  permissions?: any; // For dataroom links file permissions
+  permissionGroupId?: string | null;
 };
 
 export default function LinkSheet({
@@ -250,10 +254,8 @@ export default function LinkSheet({
         enableAgreement: preset.enableAgreement || prev.enableAgreement,
         agreementId: preset.agreementId || prev.agreementId,
         enableScreenshotProtection:
-          preset.enableScreenshotProtection ||
-          prev.enableScreenshotProtection,
-        enableNotification:
-          !!preset.enableNotification,
+          preset.enableScreenshotProtection || prev.enableScreenshotProtection,
+        enableNotification: !!preset.enableNotification,
       };
     });
 
@@ -443,7 +445,7 @@ export default function LinkSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
-      <SheetContent className="flex w-[90%] flex-col justify-between border-l border-gray-200 bg-background px-4 text-foreground dark:border-gray-800 dark:bg-gray-900 sm:w-[600px] sm:max-w-2xl md:px-5">
+      <SheetContent className="flex w-[90%] flex-col justify-between border-l border-gray-200 bg-background px-4 text-foreground dark:border-gray-800 dark:bg-gray-900 sm:w-[800px] sm:max-w-4xl md:px-5">
         <SheetHeader className="text-start">
           <SheetTitle>
             {currentLink
