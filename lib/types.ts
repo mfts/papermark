@@ -1,12 +1,10 @@
 import {
   Agreement,
   CustomField,
-  Dataroom,
   DataroomDocument,
   DataroomFolder,
   Document,
   DocumentVersion,
-  Feedback,
   Link,
   User as PrismaUser,
   View,

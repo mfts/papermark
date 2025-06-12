@@ -196,12 +196,12 @@ export default function UploadSection({
         enabled={enabled}
         action={handleUpload}
         isAllowed={isAllowed}
-        requiredPlan="datarooms"
+        requiredPlan="data rooms plus"
         upgradeAction={() =>
           handleUpgradeStateChange({
             state: true,
             trigger: "link_sheet_upload_section",
-            plan: "Data Rooms",
+            plan: "Data Rooms Plus",
           })
         }
       />
