@@ -71,6 +71,7 @@ export default async function handle(
           enableWatermark: true,
           watermarkConfig: true,
           groupId: true,
+          permissionGroupId: true,
           audienceType: true,
           teamId: true,
           team: {
@@ -152,6 +153,7 @@ export default async function handle(
             linkId: link.id,
             teamId: link.teamId!,
             dataroomDocumentId: documentId,
+            permissionGroupId: link.permissionGroupId || undefined,
             ...(link.audienceType === LinkAudienceType.GROUP &&
               link.groupId && {
                 groupId: link.groupId,
@@ -163,6 +165,7 @@ export default async function handle(
           const data = await fetchDataroomLinkData({
             linkId: link.id,
             teamId: link.teamId!,
+            permissionGroupId: link.permissionGroupId || undefined,
             ...(link.audienceType === LinkAudienceType.GROUP &&
               link.groupId && {
                 groupId: link.groupId,

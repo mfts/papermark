@@ -115,6 +115,7 @@ export async function POST(request: NextRequest) {
         enableWatermark: true,
         watermarkConfig: true,
         groupId: true,
+        permissionGroupId: true,
         audienceType: true,
         allowDownload: true,
         enableConversation: true,
@@ -854,10 +855,13 @@ export async function POST(request: NextRequest) {
 
       // check if viewer can download the document based on group permissions
       let canDownload: boolean = link.allowDownload ?? false;
+      const effectiveGroupId = link.groupId || link.permissionGroupId;
+
       if (
         link.allowDownload &&
-        link.audienceType === LinkAudienceType.GROUP &&
-        link.groupId &&
+        (link.audienceType === LinkAudienceType.GROUP ||
+          link.permissionGroupId) &&
+        effectiveGroupId &&
         documentId &&
         dataroomId
       ) {
@@ -873,18 +877,36 @@ export async function POST(request: NextRequest) {
         if (!dataroomDocument) {
           canDownload = false;
         } else {
-          const groupDocumentPermission =
-            await prisma.viewerGroupAccessControls.findUnique({
-              where: {
-                groupId_itemId: {
-                  groupId: link.groupId,
-                  itemId: dataroomDocument.id,
+          if (link.groupId) {
+            // This is a ViewerGroup (legacy behavior)
+            const groupDocumentPermission =
+              await prisma.viewerGroupAccessControls.findUnique({
+                where: {
+                  groupId_itemId: {
+                    groupId: link.groupId,
+                    itemId: dataroomDocument.id,
+                  },
+                  itemType: ItemType.DATAROOM_DOCUMENT,
                 },
-                itemType: ItemType.DATAROOM_DOCUMENT,
-              },
-              select: { canDownload: true },
-            });
-          canDownload = groupDocumentPermission?.canDownload ?? false;
+                select: { canDownload: true },
+              });
+            canDownload = groupDocumentPermission?.canDownload ?? false;
+          } else if (link.permissionGroupId) {
+            // This is a PermissionGroup (new behavior)
+            const permissionGroupDocumentPermission =
+              await prisma.permissionGroupAccessControls.findUnique({
+                where: {
+                  groupId_itemId: {
+                    groupId: link.permissionGroupId,
+                    itemId: dataroomDocument.id,
+                  },
+                  itemType: ItemType.DATAROOM_DOCUMENT,
+                },
+                select: { canDownload: true },
+              });
+            canDownload =
+              permissionGroupDocumentPermission?.canDownload ?? false;
+          }
         }
       }
 
