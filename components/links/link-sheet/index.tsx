@@ -461,7 +461,7 @@ export default function LinkSheet({
         >
           <ScrollArea className="flex-grow">
             <div className="h-0 flex-1">
-              <div className="flex flex-1 flex-col justify-between">
+              <div className="flex flex-1 flex-col justify-between pb-6">
                 <div className="divide-y divide-gray-200">
                   <Tabs
                     value={data.audienceType}
@@ -496,7 +496,7 @@ export default function LinkSheet({
 
                     <TabsContent value={LinkAudienceType.GENERAL}>
                       {/* GENERAL LINK */}
-                      <div className="space-y-6 pb-10 pt-2">
+                      <div className="space-y-6 pt-2">
                         <div className="space-y-2">
                           <Label htmlFor="link-name">Link Name</Label>
                           <Input
@@ -517,12 +517,6 @@ export default function LinkSheet({
                             {...{ data, setData, domains }}
                             linkType={linkType}
                             editLink={!!currentLink}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <TagSection
-                            {...{ data, setData }}
-                            teamId={teamInfo?.currentTeam?.id as string}
                           />
                         </div>
 
@@ -585,7 +579,7 @@ export default function LinkSheet({
 
                     <TabsContent value={LinkAudienceType.GROUP}>
                       {/* GROUP LINK */}
-                      <div className="space-y-6 pb-10 pt-2">
+                      <div className="space-y-6 pt-2">
                         <div className="space-y-2">
                           <div className="flex w-full items-center justify-between">
                             <Label htmlFor="group-id">Group </Label>
@@ -675,12 +669,6 @@ export default function LinkSheet({
                             editLink={!!currentLink}
                           />
                         </div>
-                        <div className="space-y-2">
-                          <TagSection
-                            {...{ data, setData }}
-                            teamId={teamInfo?.currentTeam?.id as string}
-                          />
-                        </div>
 
                         {/* Preset Selector for Group links - only show when creating a new link */}
                         {!currentLink &&
@@ -739,6 +727,15 @@ export default function LinkSheet({
                       </div>
                     </TabsContent>
                   </Tabs>
+                </div>
+
+                <Separator className="mb-6 mt-2" />
+
+                <div className="space-y-2">
+                  <TagSection
+                    {...{ data, setData }}
+                    teamId={teamInfo?.currentTeam?.id as string}
+                  />
                 </div>
               </div>
             </div>
