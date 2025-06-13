@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { ItemType, PermissionGroupAccessControls } from "@prisma/client";
 import {
   ColumnDef,
@@ -15,6 +16,7 @@ import {
   ArrowDownToLineIcon,
   ChevronDown,
   ChevronRight,
+  CrownIcon,
   EyeIcon,
   EyeOffIcon,
   File,
@@ -23,9 +25,12 @@ import {
 } from "lucide-react";
 import useSWR from "swr";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroomFoldersTree } from "@/lib/swr/use-dataroom";
 import { cn, fetcher } from "@/lib/utils";
 
+import PlanBadge from "@/components/billing/plan-badge";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import CloudDownloadOff from "@/components/shared/icons/cloud-download-off";
 import { Button } from "@/components/ui/button";
 import {
@@ -343,6 +348,11 @@ export function PermissionsSheet({
   // initialPermissions = [],
 }: PermissionsSheetProps) {
   const { currentTeamId } = useTeam();
+  const { isDatarooms, isDataroomsPlus, isTrial } = usePlan();
+
+  // Check if custom permissions are allowed
+  const canSetCustomPermissions = isDatarooms || isDataroomsPlus || isTrial;
+
   const { folders, loading } = useDataroomFoldersTree({
     dataroomId,
     include_documents: true,
@@ -903,17 +913,40 @@ export function PermissionsSheet({
           <div className="mb-6 rounded-lg border bg-card p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <h4 className="text-sm font-medium">Share Entire Dataroom</h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-medium">Share Entire Dataroom</h4>
+                  {!canSetCustomPermissions && (
+                    <UpgradePlanModal
+                      clickedPlan={PlanEnum.DataRooms}
+                      trigger="dataroom_permissions_sheet_toggle"
+                    >
+                      <button
+                        type="button"
+                        className="inline-flex cursor-pointer rounded-md transition-colors hover:bg-muted/50"
+                      >
+                        <PlanBadge plan={PlanEnum.DataRooms} />
+                      </button>
+                    </UpgradePlanModal>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground">
                   When enabled, all files and folders will be visible and
-                  accessible. Turn off to set specific permissions for
-                  individual items.
+                  accessible. <br />
+                  Turn off to set specific permissions for individual items.
                 </p>
               </div>
-              <Switch
-                checked={shareEntireDataroom}
-                onCheckedChange={handleShareEntireDataroomToggle}
-              />
+              {!canSetCustomPermissions ? (
+                <Switch
+                  checked={true}
+                  className="cursor-not-allowed opacity-50"
+                  onCheckedChange={undefined}
+                />
+              ) : (
+                <Switch
+                  checked={shareEntireDataroom}
+                  onCheckedChange={handleShareEntireDataroomToggle}
+                />
+              )}
             </div>
           </div>
 
@@ -921,7 +954,7 @@ export function PermissionsSheet({
           <div
             className={cn(
               "rounded-md border",
-              shareEntireDataroom && "opacity-50",
+              (shareEntireDataroom || !canSetCustomPermissions) && "opacity-50",
             )}
           >
             <Table>
@@ -971,7 +1004,9 @@ export function PermissionsSheet({
                           >
                             <div
                               className={cn(
-                                shareEntireDataroom && "pointer-events-none",
+                                (shareEntireDataroom ||
+                                  !canSetCustomPermissions) &&
+                                  "pointer-events-none",
                               )}
                             >
                               {flexRender(
