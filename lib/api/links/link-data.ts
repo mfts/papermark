@@ -1,4 +1,8 @@
-import { ItemType, ViewerGroupAccessControls } from "@prisma/client";
+import {
+  ItemType,
+  PermissionGroupAccessControls,
+  ViewerGroupAccessControls,
+} from "@prisma/client";
 
 import prisma from "@/lib/prisma";
 import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
@@ -7,22 +11,41 @@ export async function fetchDataroomLinkData({
   linkId,
   teamId,
   groupId,
+  permissionGroupId,
 }: {
   linkId: string;
   teamId: string;
   groupId?: string;
+  permissionGroupId?: string;
 }) {
-  let groupPermissions: ViewerGroupAccessControls[] = [];
+  let groupPermissions:
+    | ViewerGroupAccessControls[]
+    | PermissionGroupAccessControls[] = [];
   let documentIds: string[] = [];
   let folderIds: string[] = [];
 
-  if (groupId) {
-    groupPermissions = await prisma.viewerGroupAccessControls.findMany({
-      where: {
-        groupId,
-        OR: [{ canView: true }, { canDownload: true }],
-      },
-    });
+  const effectiveGroupId = groupId || permissionGroupId;
+
+  if (effectiveGroupId) {
+    // Check if this is a ViewerGroup (legacy) or PermissionGroup
+    // First try to find ViewerGroup permissions (for backwards compatibility)
+    if (groupId) {
+      // This is a ViewerGroup (legacy behavior)
+      groupPermissions = await prisma.viewerGroupAccessControls.findMany({
+        where: {
+          groupId: groupId,
+          OR: [{ canView: true }, { canDownload: true }],
+        },
+      });
+    } else if (permissionGroupId) {
+      // This is a PermissionGroup (new behavior)
+      groupPermissions = await prisma.permissionGroupAccessControls.findMany({
+        where: {
+          groupId: permissionGroupId,
+          OR: [{ canView: true }, { canDownload: true }],
+        },
+      });
+    }
 
     documentIds = groupPermissions
       .filter(
@@ -44,7 +67,7 @@ export async function fetchDataroomLinkData({
           teamId: true,
           documents: {
             where:
-              groupPermissions.length > 0 || groupId
+              groupPermissions.length > 0 || effectiveGroupId
                 ? { id: { in: documentIds } }
                 : undefined,
             select: {
@@ -83,7 +106,7 @@ export async function fetchDataroomLinkData({
           },
           folders: {
             where:
-              groupPermissions.length > 0 || groupId
+              groupPermissions.length > 0 || effectiveGroupId
                 ? { id: { in: folderIds } }
                 : undefined,
             orderBy: [{ orderIndex: "asc" }, { name: "asc" }],
@@ -91,6 +114,11 @@ export async function fetchDataroomLinkData({
         },
       },
       group: {
+        select: {
+          accessControls: true,
+        },
+      },
+      permissionGroup: {
         select: {
           accessControls: true,
         },
@@ -137,7 +165,13 @@ export async function fetchDataroomLinkData({
     accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
   };
 
-  return { linkData, brand };
+  // Extract access controls from either ViewerGroup or PermissionGroup
+  const accessControls =
+    linkData.group?.accessControls ||
+    linkData.permissionGroup?.accessControls ||
+    [];
+
+  return { linkData, brand, accessControls };
 }
 
 export async function fetchDataroomDocumentLinkData({
@@ -145,24 +179,49 @@ export async function fetchDataroomDocumentLinkData({
   teamId,
   dataroomDocumentId,
   groupId,
+  permissionGroupId,
 }: {
   linkId: string;
   teamId: string;
   dataroomDocumentId: string;
   groupId?: string;
+  permissionGroupId?: string;
 }) {
-  if (groupId) {
-    const groupPermissions = await prisma.viewerGroupAccessControls.findMany({
-      where: {
-        groupId,
-        itemId: dataroomDocumentId,
-        itemType: ItemType.DATAROOM_DOCUMENT,
-        OR: [{ canView: true }, { canDownload: true }],
-      },
-    });
+  let groupPermissions:
+    | ViewerGroupAccessControls[]
+    | PermissionGroupAccessControls[] = [];
 
-    // if it's a group link, we need to check if the document is in the group
-    if (!groupPermissions || groupPermissions.length === 0) {
+  const effectiveGroupId = groupId || permissionGroupId;
+
+  if (effectiveGroupId) {
+    let hasAccess = false;
+
+    if (groupId) {
+      // This is a ViewerGroup (legacy behavior)
+      groupPermissions = await prisma.viewerGroupAccessControls.findMany({
+        where: {
+          groupId: groupId,
+          itemId: dataroomDocumentId,
+          itemType: ItemType.DATAROOM_DOCUMENT,
+          OR: [{ canView: true }, { canDownload: true }],
+        },
+      });
+      hasAccess = groupPermissions.length > 0;
+    } else if (permissionGroupId) {
+      // This is a PermissionGroup (new behavior)
+      groupPermissions = await prisma.permissionGroupAccessControls.findMany({
+        where: {
+          groupId: permissionGroupId,
+          itemId: dataroomDocumentId,
+          itemType: ItemType.DATAROOM_DOCUMENT,
+          OR: [{ canView: true }, { canDownload: true }],
+        },
+      });
+      hasAccess = groupPermissions.length > 0;
+    }
+
+    // if it's a group/permission link, we need to check if the document is accessible
+    if (!hasAccess) {
       throw new Error("Document not found in group");
     }
   }

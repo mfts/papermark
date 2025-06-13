@@ -39,6 +39,7 @@ export default async function handle(
               enableWatermark: true,
               watermarkConfig: true,
               name: true,
+              permissionGroupId: true,
             },
           },
           groupId: true,
@@ -115,14 +116,27 @@ export default async function handle(
       let downloadFolders = view.dataroom.folders;
       let downloadDocuments = view.dataroom.documents;
 
-      // if groupId is not null,
-      // we should find the group permissions
-      // and reduce the number of documents and folders to download
-      if (view.groupId) {
-        const groupPermissions =
-          await prisma.viewerGroupAccessControls.findMany({
+      // Check permissions based on groupId (ViewerGroup) or permissionGroupId (PermissionGroup)
+      const effectiveGroupId = view.groupId || view.link.permissionGroupId;
+
+      if (effectiveGroupId) {
+        let groupPermissions: any[] = [];
+
+        if (view.groupId) {
+          // This is a ViewerGroup (legacy behavior)
+          groupPermissions = await prisma.viewerGroupAccessControls.findMany({
             where: { groupId: view.groupId, canDownload: true },
           });
+        } else if (view.link.permissionGroupId) {
+          // This is a PermissionGroup (new behavior)
+          groupPermissions =
+            await prisma.permissionGroupAccessControls.findMany({
+              where: {
+                groupId: view.link.permissionGroupId,
+                canDownload: true,
+              },
+            });
+        }
 
         const permittedFolderIds = groupPermissions
           .filter(
