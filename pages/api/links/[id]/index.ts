@@ -138,6 +138,7 @@ export default async function handle(
           customFields: [], // reset custom fields for free plan
           enableAgreement: false,
           enableWatermark: false,
+          permissionGroupId: null,
         }),
       };
 
