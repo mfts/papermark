@@ -10,7 +10,7 @@ import {
   LinkPreset,
   LinkType,
 } from "@prisma/client";
-import { RefreshCwIcon } from "lucide-react";
+import { EyeIcon, RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import useSWR from "swr";
@@ -51,7 +51,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ButtonTooltip } from "@/components/ui/tooltip";
+import { BadgeTooltip, ButtonTooltip } from "@/components/ui/tooltip";
 
 import { PermissionsSheet } from "./permissions-sheet";
 
@@ -863,14 +863,19 @@ export function DataroomLinkSheet({
                 >
                   {currentLink ? "Update Link" : "Save Link"}
                 </Button>
-                <Button
-                  type="button"
-                  variant="link"
-                  loading={isLoading}
-                  onClick={(e) => handleSubmit(e, true)}
+                <BadgeTooltip
+                  content={currentLink ? "Update & Preview" : "Save & Preview"}
                 >
-                  {currentLink ? "Update & Preview" : "Save & Preview"}
-                </Button>
+                  <Button
+                    type="button"
+                    variant="link"
+                    loading={isLoading}
+                    onClick={(e) => handleSubmit(e, true)}
+                    className="flex items-center gap-2"
+                  >
+                    <EyeIcon className="h-4 w-4" />
+                  </Button>
+                </BadgeTooltip>
               </div>
             </SheetFooter>
           </form>
