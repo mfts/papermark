@@ -1,5 +1,3 @@
-VERSION 1
-
 DESCRIPTION >
     Get all click events for a specific view
 
@@ -18,3 +16,5 @@ SQL >
     WHERE document_id = {{ String(document_id, required=True) }}
         AND view_id = {{ String(view_id, required=True) }}
     ORDER BY timestamp ASC
+
+TYPE endpoint
