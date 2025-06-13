@@ -86,7 +86,7 @@ export default function LinkSuccessSheet({
             <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
               <div className="flex-1 truncate font-mono text-sm">{linkUrl}</div>
               <Button
-                variant="outline"
+                variant="default"
                 size="sm"
                 onClick={copyToClipboard}
                 className="shrink-0"
@@ -236,9 +236,6 @@ export default function LinkSuccessSheet({
 
         <SheetFooter>
           <div className="flex flex-row-reverse items-center gap-2 pt-2">
-            <Button type="button" onClick={() => setIsOpen(false)}>
-              Close
-            </Button>
             <Button type="button" variant="outline" onClick={onCreateAnother}>
               Create Another Link
             </Button>
