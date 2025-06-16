@@ -161,6 +161,12 @@ export function AddDomainModal({
     }
   }, 500);
 
+  useEffect(() => {
+    return () => {
+      validateDomain.cancel();
+    };
+  }, [validateDomain]);
+
   const handleDomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDomain(e.target.value);
     validateDomain(e.target.value);
