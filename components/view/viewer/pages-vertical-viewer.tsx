@@ -871,7 +871,7 @@ export default function PagesVerticalViewer({
                         {page.pageLinks ? (
                           <map name={`page-map-${index + 1}`}>
                             {page.pageLinks
-                              .filter((link) => !link.href.includes(".gif"))
+                              .filter((link) => !link.href.endsWith(".gif"))
                               .map((link, linkIndex) => (
                                 <area
                                   key={linkIndex}
@@ -902,7 +902,7 @@ export default function PagesVerticalViewer({
 
                         {page.pageLinks
                           ? page.pageLinks
-                              .filter((link) => link.href.includes(".gif"))
+                              .filter((link) => link.href.endsWith(".gif"))
                               .map((link, linkIndex) => {
                                 const [x1, y1, x2, y2] = scaleCoordinates(
                                   link.coords,
