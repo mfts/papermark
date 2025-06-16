@@ -38,10 +38,12 @@ interface BadgeProps
   extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof statusBadgeVariants> {
   icon?: Icon;
+  iconClassName?: string;
 }
 
 function StatusBadge({
   className,
+  iconClassName,
   variant,
   icon,
   children,
@@ -54,7 +56,7 @@ function StatusBadge({
       className={cn(statusBadgeVariants({ variant }), className)}
       {...props}
     >
-      {Icon && <Icon className="h-3 w-3 shrink-0" />}
+      {Icon && <Icon className={cn("h-3 w-3 shrink-0", iconClassName)} />}
       {children}
     </span>
   );
