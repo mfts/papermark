@@ -1,5 +1,7 @@
 import { useRouter } from "next/router";
 
+
+
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -461,6 +463,33 @@ export default function UploadZone({
 
       let filesToBePassedToOnDrop: FileWithPaths[] = [];
 
+      const countFilesInFolder = async (
+        entry: FileSystemEntry,
+      ): Promise<number> => {
+        if (isSystemFile(entry.name)) {
+          return 0;
+        }
+
+        if (entry.isDirectory) {
+          const dirReader = (entry as FileSystemDirectoryEntry).createReader();
+          const subEntries = await new Promise<FileSystemEntry[]>((resolve) =>
+            dirReader.readEntries(resolve),
+          );
+
+          const filteredSubEntries = subEntries.filter(
+            (subEntry) => !isSystemFile(subEntry.name),
+          );
+
+          let totalFiles = 0;
+          for (const subEntry of filteredSubEntries) {
+            totalFiles += await countFilesInFolder(subEntry);
+          }
+          return totalFiles;
+        } else if (entry.isFile) {
+          return 1;
+        }
+        return 0;
+      };
       /** *********** START OF `traverseFolder` *********** */
       const traverseFolder = async (
         entry: FileSystemEntry,
@@ -643,15 +672,41 @@ export default function UploadZone({
       if ("dataTransfer" in event && event.dataTransfer) {
         const items = event.dataTransfer.items;
 
-        const fileResults = await Promise.all(
-          Array.from(items, (item) => {
-            // MDN Note: This function is implemented as webkitGetAsEntry() in non-WebKit browsers including Firefox at this time; it may be renamed to getAsEntry() in the future, so you should code defensively, looking for both.
+        // MDN Note: This function is implemented as webkitGetAsEntry() in non-WebKit browsers including Firefox at this time; it may be renamed to getAsEntry() in the future, so you should code defensively, looking for both.
+        // PRE-VALIDATION: Count files before creating any folders
+        let totalFileCount = 0;
+        const entries = Array.from(items)
+          .map((item) => {
             const entry =
               (typeof item?.webkitGetAsEntry === "function" &&
                 item.webkitGetAsEntry()) ??
               (typeof (item as any)?.getAsEntry === "function" &&
                 (item as any).getAsEntry()) ??
               null;
+            return entry;
+          })
+          .filter(Boolean);
+
+        for (const entry of entries) {
+          if (entry) {
+            totalFileCount += await countFilesInFolder(entry);
+          }
+        }
+
+        const maxFiles = fileSizeLimits.maxFiles ?? 150;
+        if (totalFileCount > maxFiles) {
+          toast.error(
+            `Folder contains too many files (${totalFileCount}). Please upload folders with no more than ${maxFiles} files total.`,
+            {
+              description:
+                "Consider splitting large folders into smaller ones or uploading files individually.",
+            },
+          );
+          return [];
+        }
+
+        const fileResults = await Promise.all(
+          entries.map((entry) => {
             return entry ? traverseFolder(entry) : [];
           }),
         );
@@ -674,7 +729,7 @@ export default function UploadZone({
 
       return filesToBePassedToOnDrop;
     },
-    [folderPathName, endpointTargetType, teamInfo],
+    [folderPathName, endpointTargetType, teamInfo, fileSizeLimits],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
