@@ -45,8 +45,6 @@ async function hasSiteConfigured(domain: string): Promise<boolean> {
             getConfigResponse(domain),
         ]);
 
-        console.log('domainJson, configJson', domainJson, configJson);
-
         if (domainJson?.error?.code === "not_found") {
             return false;
         }
