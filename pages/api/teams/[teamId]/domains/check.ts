@@ -49,10 +49,10 @@ async function hasSiteConfigured(domain: string): Promise<boolean> {
             return false;
         }
 
-        if (configJson.conflicts.length > 0) {
+        if (configJson?.conflicts?.length > 0) {
             return true;
         }
-        if (domainJson.verified) {
+        if (domainJson?.verified) {
             return true;
         }
 
