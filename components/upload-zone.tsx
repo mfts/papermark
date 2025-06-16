@@ -472,11 +472,16 @@ export default function UploadZone({
 
         if (entry.isDirectory) {
           const dirReader = (entry as FileSystemDirectoryEntry).createReader();
-          const subEntries = await new Promise<FileSystemEntry[]>((resolve) =>
-            dirReader.readEntries(resolve),
-          );
+          const allEntries: FileSystemEntry[] = [];
+          let batch: FileSystemEntry[];
+          do {
+            batch = await new Promise<FileSystemEntry[]>((resolve) =>
+              dirReader.readEntries(resolve),
+            );
+            allEntries.push(...batch);
+          } while (batch.length > 0);
 
-          const filteredSubEntries = subEntries.filter(
+          const filteredSubEntries = allEntries.filter(
             (subEntry) => !isSystemFile(subEntry.name),
           );
 
@@ -552,11 +557,16 @@ export default function UploadZone({
               const dirReader = (
                 entry as FileSystemDirectoryEntry
               ).createReader();
-              const subEntries = await new Promise<FileSystemEntry[]>(
-                (resolve) => dirReader.readEntries(resolve),
-              );
+              const allEntries: FileSystemEntry[] = [];
+              let batch: FileSystemEntry[];
+              do {
+                batch = await new Promise<FileSystemEntry[]>((resolve) =>
+                  dirReader.readEntries(resolve),
+                );
+                allEntries.push(...batch);
+              } while (batch.length > 0);
 
-              const filteredSubEntries = subEntries.filter(
+              const filteredSubEntries = allEntries.filter(
                 (subEntry) => !isSystemFile(subEntry.name),
               );
               for (const subEntry of filteredSubEntries) {
@@ -583,11 +593,16 @@ export default function UploadZone({
               const dirReader = (
                 entry as FileSystemDirectoryEntry
               ).createReader();
-              const subEntries = await new Promise<FileSystemEntry[]>(
-                (resolve) => dirReader.readEntries(resolve),
-              );
+              const allEntries: FileSystemEntry[] = [];
+              let batch: FileSystemEntry[];
+              do {
+                batch = await new Promise<FileSystemEntry[]>((resolve) =>
+                  dirReader.readEntries(resolve),
+                );
+                allEntries.push(...batch);
+              } while (batch.length > 0);
 
-              const filteredSubEntries = subEntries.filter(
+              const filteredSubEntries = allEntries.filter(
                 (subEntry) => !isSystemFile(subEntry.name),
               );
 
