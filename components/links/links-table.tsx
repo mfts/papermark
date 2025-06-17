@@ -7,11 +7,11 @@ import { PlanEnum } from "@/ee/stripe/constants";
 import { DocumentVersion, LinkAudienceType } from "@prisma/client";
 import { isWithinInterval, subMinutes } from "date-fns";
 import {
-  ArchiveIcon,
   BoxesIcon,
   Code2Icon,
   CopyPlusIcon,
   EyeIcon,
+  FileSlidersIcon,
   LinkIcon,
   Settings2Icon,
 } from "lucide-react";
@@ -45,6 +45,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -59,6 +60,7 @@ import BarChart from "../shared/icons/bar-chart";
 import ChevronDown from "../shared/icons/chevron-down";
 import MoreHorizontal from "../shared/icons/more-horizontal";
 import { Badge } from "../ui/badge";
+import { Label } from "../ui/label";
 import { ButtonTooltip } from "../ui/tooltip";
 import EmbedCodeModal from "./embed-code-modal";
 import LinkActiveControls, {
@@ -68,6 +70,8 @@ import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
 } from "./link-sheet";
+import { DataroomLinkSheet } from "./link-sheet/dataroom-link-sheet";
+import { PermissionsSheet } from "./link-sheet/permissions-sheet";
 import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
 
@@ -93,7 +97,8 @@ export default function LinksTable({
   const router = useRouter();
   const { isFree } = usePlan();
   const teamInfo = useTeam();
-  const { groupId } = router.query as {
+  const { id: targetId, groupId } = router.query as {
+    id: string;
     groupId?: string;
   };
 
@@ -146,6 +151,7 @@ export default function LinksTable({
   );
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loadingLinks, setLoadingLinks] = useState<Set<string>>(new Set());
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
   const [selectedLink, setSelectedLink] = useState<DEFAULT_LINK_TYPE>(
     DEFAULT_LINK_PROPS(`${targetType}_LINK`, groupId),
@@ -157,6 +163,11 @@ export default function LinksTable({
   } | null>(null);
   const [popoverOpen, setPopoverOpen] = useState<string | null>(null);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const [showPermissionsSheet, setShowPermissionsSheet] =
+    useState<boolean>(false);
+  const [editPermissionLink, setEditPermissionLink] =
+    useState<LinkWithViews | null>(null);
 
   const handleCopyToClipboard = (linkString: string) => {
     copyToClipboard(`${linkString}`, "Link copied to clipboard.");
@@ -207,6 +218,7 @@ export default function LinksTable({
       uploadFolderId: link.uploadFolderId ?? null,
       uploadFolderName: link.uploadFolderName ?? "Home",
       enableIndexFile: link.enableIndexFile ?? false,
+      permissionGroupId: link.permissionGroupId ?? null,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
@@ -284,6 +296,93 @@ export default function LinksTable({
     setIsLoading(false);
   };
 
+  const handleEditPermissions = (link: LinkWithViews) => {
+    setEditPermissionLink(link);
+    setShowPermissionsSheet(true);
+  };
+
+  const handlePermissionsSave = async (permissions: any) => {
+    if (!editPermissionLink) return;
+
+    if (!editPermissionLink.permissionGroupId) {
+      setIsLoading(true);
+      try {
+        const response = await fetch(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              permissions: permissions,
+              linkId: editPermissionLink.id,
+            }),
+          },
+        );
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to create permission group");
+        }
+
+        // Refresh the links cache
+        const endpointTargetType = `${targetType.toLowerCase()}s`;
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+            targetId,
+          )}/links`,
+        );
+
+        setShowPermissionsSheet(false);
+        setEditPermissionLink(null);
+        toast.success("File permissions updated successfully");
+      } catch (error) {
+        console.error("Error creating permission group:", error);
+        toast.error("Failed to create permission group");
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      try {
+        // Update the permissions for the existing link
+        const res = await fetch(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              permissions: permissions,
+              linkId: editPermissionLink.id,
+            }),
+          },
+        );
+
+        if (!res.ok) {
+          const { error } = await res.json();
+          throw new Error(error ?? "Failed to update permissions");
+        }
+
+        // Refresh the links cache
+        const endpointTargetType = `${targetType.toLowerCase()}s`;
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+            targetId,
+          )}/links`,
+        );
+
+        setShowPermissionsSheet(false);
+        setEditPermissionLink(null);
+        toast.success("File permissions updated successfully");
+      } catch (error) {
+        console.error("Error updating file permissions:", error);
+        toast.error("Failed to update file permissions");
+      }
+    }
+  };
+
   const AddLinkButton = () => {
     if (!canAddLinks) {
       return (
@@ -305,58 +404,64 @@ export default function LinksTable({
     targetId: string,
     isArchived: boolean,
   ) => {
-    setIsLoading(true);
+    setLoadingLinks((prev) => new Set(prev).add(linkId));
 
-    const response = await fetch(`/api/links/${linkId}/archive`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        isArchived: !isArchived,
-      }),
-    });
+    try {
+      const response = await fetch(`/api/links/${linkId}/archive`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          isArchived: !isArchived,
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    const archivedLink = await response.json();
-    const endpointTargetType = `${targetType.toLowerCase()}s`; // "documents" or "datarooms"
+      const archivedLink = await response.json();
+      const endpointTargetType = `${targetType.toLowerCase()}s`; // "documents" or "datarooms"
 
-    // Update the archived link in the list of links
-    mutate(
-      `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
-        targetId,
-      )}/links`,
-      (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
-      false,
-    );
-
-    // Update the group-specific links cache if this is a group link
-    if (!!groupId) {
-      const groupLinks =
-        links?.filter((link) => link.groupId === groupId) || [];
+      // Update the archived link in the list of links
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
-          archivedLink.documentId ?? archivedLink.dataroomId ?? "",
-        )}/groups/${groupId}/links`,
-        groupLinks.map((link) => (link.id === linkId ? archivedLink : link)),
+          targetId,
+        )}/links`,
+        (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
         false,
       );
+
+      // Update the group-specific links cache if this is a group link
+      if (!!groupId) {
+        const groupLinks =
+          links?.filter((link) => link.groupId === groupId) || [];
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+            archivedLink.documentId ?? archivedLink.dataroomId ?? "",
+          )}/groups/${groupId}/links`,
+          groupLinks.map((link) => (link.id === linkId ? archivedLink : link)),
+          false,
+        );
+      }
+
+      toast.success(
+        !isArchived
+          ? "Link successfully archived"
+          : "Link successfully reactivated",
+      );
+    } catch (error) {
+      console.error("Error archiving link:", error);
+      toast.error("Failed to update link status");
+    } finally {
+      setLoadingLinks((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(linkId);
+        return newSet;
+      });
     }
-
-    toast.success(
-      !isArchived
-        ? "Link successfully archived"
-        : "Link successfully reactivated",
-    );
-    setIsLoading(false);
   };
-
-  const archivedLinksCount = links
-    ? links.filter((link) => link.isArchived).length
-    : 0;
 
   const hasAnyTags = useMemo(
     () =>
@@ -386,188 +491,158 @@ export default function LinksTable({
                 ) : null}
                 <TableHead className="w-[250px] sm:w-auto">Views</TableHead>
                 <TableHead>Last Viewed</TableHead>
+                <TableHead className="w-[80px]">Active</TableHead>
                 <TableHead className="text-center sm:text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {processedLinks && processedLinks.length > 0 ? (
-                processedLinks
-                  .filter((link) => !link.isArchived)
-                  .map((link) => (
-                    <Collapsible key={link.id} asChild>
-                      <>
-                        <TableRow
-                          key={link.id}
-                          className={cn(
-                            "group/row",
-                            popoverOpen === link.id && "bg-gray-100",
-                          )}
-                        >
-                          <TableCell className="w-[250px] truncate font-medium">
-                            <div className="flex items-center gap-x-2">
-                              {link.groupId ? (
-                                <ButtonTooltip content="Group Link">
-                                  <BoxesIcon className="size-4" />
-                                </ButtonTooltip>
-                              ) : null}
-                              {link.name || `Link #${link.id.slice(-5)}`}
-                              {link.isNew && !link.isUpdated && (
-                                <Badge
-                                  variant="outline"
-                                  className="border-emerald-600/80 text-emerald-600/80"
-                                >
-                                  New
-                                </Badge>
+                processedLinks.map((link) => (
+                  <Collapsible key={link.id} asChild>
+                    <>
+                      <TableRow
+                        key={link.id}
+                        className={cn(
+                          "group/row",
+                          popoverOpen === link.id && "bg-gray-100",
+                          link.isArchived &&
+                            "bg-gray-50 opacity-50 dark:bg-gray-700",
+                        )}
+                      >
+                        <TableCell className="w-[250px] truncate font-medium">
+                          <div className="flex items-center gap-x-2">
+                            {link.groupId ? (
+                              <ButtonTooltip content="Group Link">
+                                <BoxesIcon className="size-4" />
+                              </ButtonTooltip>
+                            ) : null}
+                            {link.name || `Link #${link.id.slice(-5)}`}
+                            {link.isNew && !link.isUpdated && (
+                              <Badge
+                                variant="outline"
+                                className="border-emerald-600/80 text-emerald-600/80"
+                              >
+                                New
+                              </Badge>
+                            )}
+                            {link.isUpdated && (
+                              <Badge
+                                variant="outline"
+                                className="border-blue-500/80 text-blue-500/80"
+                              >
+                                Updated
+                              </Badge>
+                            )}
+                            {link.domainId && isFree ? (
+                              <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
+                                Inactive
+                              </span>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                        <TableCell className="flex items-center gap-x-2 sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
+                          <div
+                            className={cn(
+                              `group/cell relative flex w-full items-center gap-x-4 overflow-hidden truncate rounded-sm px-3 py-1.5 text-center text-secondary-foreground transition-all group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 md:py-1`,
+                              link.domainId && isFree
+                                ? "bg-destructive hover:bg-red-700 hover:dark:bg-red-200"
+                                : "bg-secondary hover:bg-emerald-700 hover:dark:bg-emerald-200",
+                              popoverOpen === link.id &&
+                                "ring-1 ring-gray-400 dark:ring-gray-100",
+                            )}
+                          >
+                            {/* Progress bar */}
+                            {primaryVersion &&
+                              !primaryVersion.hasPages &&
+                              ["pdf", "slides", "docs", "cad"].includes(
+                                primaryVersion.type!,
+                              ) && (
+                                <FileProcessStatusBar
+                                  documentVersionId={primaryVersion.id}
+                                  className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
+                                  // @ts-ignore: mutateDocument is not present on datarooms but on document pages
+                                  mutateDocument={mutateDocument}
+                                />
                               )}
-                              {link.isUpdated && (
-                                <Badge
-                                  variant="outline"
-                                  className="border-blue-500/80 text-blue-500/80"
-                                >
-                                  Updated
-                                </Badge>
-                              )}
-                              {link.domainId && isFree ? (
-                                <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
-                                  Inactive
-                                </span>
-                              ) : null}
+
+                            <div className="flex w-full whitespace-nowrap text-sm group-hover/cell:opacity-0">
+                              {link.domainId
+                                ? `https://${link.domainSlug}/${link.slug}`
+                                : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`}
                             </div>
-                          </TableCell>
-                          <TableCell className="flex items-center gap-x-2 sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
-                            <div
-                              className={cn(
-                                `group/cell relative flex w-full items-center gap-x-4 overflow-hidden truncate rounded-sm px-3 py-1.5 text-center text-secondary-foreground transition-all group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 md:py-1`,
-                                link.domainId && isFree
-                                  ? "bg-destructive hover:bg-red-700 hover:dark:bg-red-200"
-                                  : "bg-secondary hover:bg-emerald-700 hover:dark:bg-emerald-200",
-                                popoverOpen === link.id &&
-                                  "ring-1 ring-gray-400 dark:ring-gray-100",
-                              )}
+
+                            {link.domainId && isFree ? (
+                              <button
+                                className="absolute bottom-0 left-0 right-0 top-0 z-10 hidden w-full whitespace-nowrap text-center text-sm group-hover/cell:block group-hover/cell:text-primary-foreground"
+                                onClick={() => router.push("/settings/billing")}
+                                title="Upgrade to activate link"
+                              >
+                                Upgrade to activate link
+                              </button>
+                            ) : (
+                              <button
+                                className="absolute bottom-0 left-0 right-0 top-0 z-10 hidden w-full whitespace-nowrap text-center text-xs group-hover/cell:block group-hover/cell:text-primary-foreground sm:text-sm"
+                                onClick={() =>
+                                  handleCopyToClipboard(
+                                    link.domainId
+                                      ? `https://${link.domainSlug}/${link.slug}`
+                                      : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`,
+                                  )
+                                }
+                                title="Copy & Share"
+                              >
+                                Copy & Share
+                              </button>
+                            )}
+                          </div>
+                          <ButtonTooltip content="Preview link">
+                            <Button
+                              variant={"link"}
+                              size={"icon"}
+                              className="group h-7 w-8"
+                              onClick={() => handlePreviewLink(link)}
                             >
-                              {/* Progress bar */}
-                              {primaryVersion &&
-                                !primaryVersion.hasPages &&
-                                ["pdf", "slides", "docs", "cad"].includes(
-                                  primaryVersion.type!,
-                                ) && (
-                                  <FileProcessStatusBar
-                                    documentVersionId={primaryVersion.id}
-                                    className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
-                                    // @ts-ignore: mutateDocument is not present on datarooms but on document pages
-                                    mutateDocument={mutateDocument}
-                                  />
-                                )}
-
-                              <div className="flex w-full whitespace-nowrap text-sm group-hover/cell:opacity-0">
-                                {link.domainId
-                                  ? `https://${link.domainSlug}/${link.slug}`
-                                  : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`}
-                              </div>
-
-                              {link.domainId && isFree ? (
-                                <button
-                                  className="absolute bottom-0 left-0 right-0 top-0 z-10 hidden w-full whitespace-nowrap text-center text-sm group-hover/cell:block group-hover/cell:text-primary-foreground"
-                                  onClick={() =>
-                                    router.push("/settings/billing")
-                                  }
-                                  title="Upgrade to activate link"
-                                >
-                                  Upgrade to activate link
-                                </button>
-                              ) : (
-                                <button
-                                  className="absolute bottom-0 left-0 right-0 top-0 z-10 hidden w-full whitespace-nowrap text-center text-xs group-hover/cell:block group-hover/cell:text-primary-foreground sm:text-sm"
-                                  onClick={() =>
-                                    handleCopyToClipboard(
-                                      link.domainId
-                                        ? `https://${link.domainSlug}/${link.slug}`
-                                        : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`,
-                                    )
-                                  }
-                                  title="Copy & Share"
-                                >
-                                  Copy & Share
-                                </button>
-                              )}
-                            </div>
-                            <ButtonTooltip content="Preview link">
+                              <span className="sr-only">Preview link</span>
+                              <EyeIcon className="text-gray-400 group-hover:text-gray-500" />
+                            </Button>
+                          </ButtonTooltip>
+                          {isMobile ? (
+                            <ButtonTooltip content="Edit link">
                               <Button
                                 variant={"link"}
                                 size={"icon"}
                                 className="group h-7 w-8"
-                                onClick={() => handlePreviewLink(link)}
+                                onClick={() => handleEditLink(link)}
                               >
-                                <span className="sr-only">Preview link</span>
-                                <EyeIcon className="text-gray-400 group-hover:text-gray-500" />
+                                <span className="sr-only">Edit link</span>
+                                <Settings2Icon className="text-gray-400 group-hover:text-gray-500" />
                               </Button>
                             </ButtonTooltip>
-                            {isMobile ? (
-                              <ButtonTooltip content="Edit link">
+                          ) : (
+                            <Popover
+                              open={popoverOpen === link.id}
+                              onOpenChange={() => {}}
+                            >
+                              <PopoverTrigger asChild>
                                 <Button
-                                  variant={"link"}
-                                  size={"icon"}
-                                  className="group h-7 w-8"
-                                  onClick={() => handleEditLink(link)}
-                                >
-                                  <span className="sr-only">Edit link</span>
-                                  <Settings2Icon className="text-gray-400 group-hover:text-gray-500" />
-                                </Button>
-                              </ButtonTooltip>
-                            ) : (
-                              <Popover
-                                open={popoverOpen === link.id}
-                                onOpenChange={() => {}}
-                              >
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="link"
-                                    className={cn(
-                                      "h-7 font-normal hover:no-underline focus-visible:ring-0 focus-visible:ring-offset-0",
-                                      popoverOpen === link.id
-                                        ? "text-foreground"
-                                        : "text-muted-foreground hover:text-foreground",
-                                    )}
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      handleEditLink(link);
-                                    }}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onMouseEnter={() => {
-                                      hoverTimeout.current = setTimeout(
-                                        () => setPopoverOpen(link.id),
-                                        250,
-                                      );
-                                    }}
-                                    onMouseLeave={() => {
-                                      if (hoverTimeout.current)
-                                        clearTimeout(hoverTimeout.current);
-
-                                      // Add delay before closing to prevent flickering
-                                      hoverTimeout.current = setTimeout(
-                                        () => setPopoverOpen(null),
-                                        100,
-                                      );
-                                    }}
-                                  >
-                                    <Settings2Icon strokeWidth={1.75} />
-                                    <span className="whitespace-nowrap">
-                                      {countActiveSettings(link)}{" "}
-                                      {countActiveSettings(link) === 1
-                                        ? "control"
-                                        : "controls"}
-                                    </span>
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                  side="top"
-                                  align="start"
-                                  className="w-56 p-0"
+                                  variant="link"
+                                  className={cn(
+                                    "h-7 font-normal hover:no-underline focus-visible:ring-0 focus-visible:ring-offset-0",
+                                    popoverOpen === link.id
+                                      ? "text-foreground"
+                                      : "text-muted-foreground hover:text-foreground",
+                                  )}
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleEditLink(link);
+                                  }}
+                                  onMouseDown={(e) => e.preventDefault()}
                                   onMouseEnter={() => {
-                                    if (hoverTimeout.current)
-                                      clearTimeout(hoverTimeout.current);
-                                    setPopoverOpen(link.id);
+                                    hoverTimeout.current = setTimeout(
+                                      () => setPopoverOpen(link.id),
+                                      250,
+                                    );
                                   }}
                                   onMouseLeave={() => {
                                     if (hoverTimeout.current)
@@ -580,135 +655,185 @@ export default function LinksTable({
                                     );
                                   }}
                                 >
-                                  <LinkActiveControls
-                                    link={link}
-                                    onEditClick={(e) => {
-                                      e.preventDefault();
-                                      handleEditLink(link);
-                                    }}
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            )}
-                          </TableCell>
-                          {hasAnyTags ? (
-                            <TableCell className="w-[250px] 2xl:w-auto">
-                              <TagColumn link={link} />
-                            </TableCell>
-                          ) : null}
-                          <TableCell>
-                            <CollapsibleTrigger
-                              disabled={
-                                Number(nFormatter(link._count.views)) === 0 ||
-                                targetType === "DATAROOM"
-                              }
-                            >
-                              <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
-                                <BarChart className="h-4 w-4 text-muted-foreground" />
-                                <p className="whitespace-nowrap text-sm text-muted-foreground">
-                                  {nFormatter(link._count.views)}
-                                  <span className="ml-1 hidden sm:inline-block">
-                                    views
+                                  <Settings2Icon strokeWidth={1.75} />
+                                  <span className="whitespace-nowrap">
+                                    {countActiveSettings(link)}{" "}
+                                    {countActiveSettings(link) === 1
+                                      ? "control"
+                                      : "controls"}
                                   </span>
-                                </p>
-                                {Number(nFormatter(link._count.views)) > 0 &&
-                                targetType !== "DATAROOM" ? (
-                                  <ChevronDown className="chevron h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
-                                ) : null}
-                              </div>
-                            </CollapsibleTrigger>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {link.views[0] ? (
-                              <time
-                                dateTime={new Date(
-                                  link.views[0].viewedAt,
-                                ).toISOString()}
-                              >
-                                {timeAgo(link.views[0].viewedAt)}
-                              </time>
-                            ) : (
-                              "-"
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center sm:text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0 group-hover/row:ring-1 group-hover/row:ring-gray-200 group-hover/row:dark:ring-gray-700"
-                                >
-                                  <span className="sr-only">Open menu</span>
-                                  <MoreHorizontal className="h-4 w-4" />
                                 </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() => handleEditLink(link)}
-                                >
-                                  <Settings2Icon className="mr-2 h-4 w-4" />
-                                  Edit Link
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handlePreviewLink(link)}
-                                >
-                                  <EyeIcon className="mr-2 h-4 w-4" />
-                                  Preview Link
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  disabled={!canAddLinks}
-                                  onClick={() => handleDuplicateLink(link)}
-                                >
-                                  <CopyPlusIcon className="mr-2 h-4 w-4" />
-                                  Duplicate Link
-                                </DropdownMenuItem>
-                                {features?.embedding ? (
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setSelectedEmbedLink({
-                                        id: link.id,
-                                        name:
-                                          link.name ||
-                                          `Link #${link.id.slice(-5)}`,
-                                      });
-                                      setEmbedModalOpen(true);
-                                    }}
-                                  >
-                                    <Code2Icon className="mr-2 h-4 w-4" />
-                                    Get Embed Code
-                                  </DropdownMenuItem>
-                                ) : null}
-                                <DropdownMenuItem
-                                  className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-                                  onClick={() =>
-                                    handleArchiveLink(
-                                      link.id,
-                                      link.documentId ?? link.dataroomId ?? "",
-                                      link.isArchived,
-                                    )
-                                  }
-                                >
-                                  <ArchiveIcon className="mr-2 h-4 w-4" />
-                                  Archive
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                side="top"
+                                align="start"
+                                className="w-56 p-0"
+                                onMouseEnter={() => {
+                                  if (hoverTimeout.current)
+                                    clearTimeout(hoverTimeout.current);
+                                  setPopoverOpen(link.id);
+                                }}
+                                onMouseLeave={() => {
+                                  if (hoverTimeout.current)
+                                    clearTimeout(hoverTimeout.current);
+
+                                  // Add delay before closing to prevent flickering
+                                  hoverTimeout.current = setTimeout(
+                                    () => setPopoverOpen(null),
+                                    100,
+                                  );
+                                }}
+                              >
+                                <LinkActiveControls
+                                  link={link}
+                                  onEditClick={(e) => {
+                                    e.preventDefault();
+                                    handleEditLink(link);
+                                  }}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                        </TableCell>
+                        {hasAnyTags ? (
+                          <TableCell className="w-[250px] 2xl:w-auto">
+                            <TagColumn link={link} />
                           </TableCell>
-                        </TableRow>
-                        <CollapsibleContent asChild>
-                          <LinksVisitors
-                            linkName={link.name || "No link name"}
-                            linkId={link.id}
-                          />
-                        </CollapsibleContent>
-                      </>
-                    </Collapsible>
-                  ))
+                        ) : null}
+                        <TableCell>
+                          <CollapsibleTrigger
+                            disabled={
+                              Number(nFormatter(link._count.views)) === 0 ||
+                              targetType === "DATAROOM"
+                            }
+                          >
+                            <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
+                              <BarChart className="h-4 w-4 text-muted-foreground" />
+                              <p className="whitespace-nowrap text-sm text-muted-foreground">
+                                {nFormatter(link._count.views)}
+                                <span className="ml-1 hidden sm:inline-block">
+                                  views
+                                </span>
+                              </p>
+                              {Number(nFormatter(link._count.views)) > 0 &&
+                              targetType !== "DATAROOM" ? (
+                                <ChevronDown className="chevron h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                              ) : null}
+                            </div>
+                          </CollapsibleTrigger>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {link.views[0] ? (
+                            <time
+                              dateTime={new Date(
+                                link.views[0].viewedAt,
+                              ).toISOString()}
+                            >
+                              {timeAgo(link.views[0].viewedAt)}
+                            </time>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-x-1">
+                            <Switch
+                              className="data-[state=checked]:bg-primary/80 data-[state=checked]:hover:bg-primary data-[state=unchecked]:hover:bg-muted-foreground/80"
+                              id={`${link.id}-active-switch`}
+                              checked={!link.isArchived}
+                              onCheckedChange={(checked) =>
+                                handleArchiveLink(
+                                  link.id,
+                                  link.documentId ?? link.dataroomId ?? "",
+                                  checked,
+                                )
+                              }
+                              disabled={loadingLinks.has(link.id)}
+                            />
+                            <Label
+                              className="font-normal"
+                              htmlFor={`${link.id}-active-switch`}
+                            >
+                              {link.isArchived ? "No" : "Yes"}
+                            </Label>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center sm:text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                className="h-8 w-8 p-0 group-hover/row:ring-1 group-hover/row:ring-gray-200 group-hover/row:dark:ring-gray-700"
+                              >
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleEditLink(link)}
+                              >
+                                <Settings2Icon className="mr-2 h-4 w-4" />
+                                Edit Link
+                              </DropdownMenuItem>
+                              {targetType === "DATAROOM" &&
+                                link.audienceType !==
+                                  LinkAudienceType.GROUP && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleEditPermissions(link)}
+                                    disabled={isLoading}
+                                  >
+                                    <FileSlidersIcon className="mr-2 h-4 w-4" />
+                                    Edit File Permissions
+                                  </DropdownMenuItem>
+                                )}
+                              <DropdownMenuItem
+                                onClick={() => handlePreviewLink(link)}
+                              >
+                                <EyeIcon className="mr-2 h-4 w-4" />
+                                Preview Link
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                disabled={!canAddLinks}
+                                onClick={() => handleDuplicateLink(link)}
+                              >
+                                <CopyPlusIcon className="mr-2 h-4 w-4" />
+                                Duplicate Link
+                              </DropdownMenuItem>
+                              {features?.embedding ? (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedEmbedLink({
+                                      id: link.id,
+                                      name:
+                                        link.name ||
+                                        `Link #${link.id.slice(-5)}`,
+                                    });
+                                    setEmbedModalOpen(true);
+                                  }}
+                                >
+                                  <Code2Icon className="mr-2 h-4 w-4" />
+                                  Get Embed Code
+                                </DropdownMenuItem>
+                              ) : null}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                      <CollapsibleContent asChild>
+                        <LinksVisitors
+                          linkName={link.name || "No link name"}
+                          linkId={link.id}
+                        />
+                      </CollapsibleContent>
+                    </>
+                  </Collapsible>
+                ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5}>
+                  <TableCell colSpan={hasAnyTags ? 7 : 6}>
                     <div className="flex w-full flex-col items-center justify-center gap-4 rounded-xl py-4">
                       <div className="hidden rounded-full sm:block">
                         <div
@@ -729,13 +854,39 @@ export default function LinksTable({
           </Table>
         </div>
 
-        <LinkSheet
-          isOpen={isLinkSheetVisible}
-          setIsOpen={setIsLinkSheetVisible}
-          linkType={`${targetType}_LINK`}
-          currentLink={selectedLink.id ? selectedLink : undefined}
-          existingLinks={links}
-        />
+        {targetType === "DATAROOM" ? (
+          <>
+            <DataroomLinkSheet
+              isOpen={isLinkSheetVisible}
+              setIsOpen={setIsLinkSheetVisible}
+              linkType={`${targetType}_LINK`}
+              currentLink={selectedLink.id ? selectedLink : undefined}
+              existingLinks={links}
+            />
+
+            <PermissionsSheet
+              isOpen={showPermissionsSheet}
+              setIsOpen={(open: boolean) => {
+                setShowPermissionsSheet(open);
+                if (!open) {
+                  setEditPermissionLink(null);
+                }
+              }}
+              dataroomId={targetId}
+              linkId={editPermissionLink?.id}
+              permissionGroupId={editPermissionLink?.permissionGroupId}
+              onSave={handlePermissionsSave}
+            />
+          </>
+        ) : (
+          <LinkSheet
+            isOpen={isLinkSheetVisible}
+            setIsOpen={setIsLinkSheetVisible}
+            linkType={`${targetType}_LINK`}
+            currentLink={selectedLink.id ? selectedLink : undefined}
+            existingLinks={links}
+          />
+        )}
 
         {selectedEmbedLink && (
           <EmbedCodeModal
@@ -744,152 +895,6 @@ export default function LinksTable({
             linkId={selectedEmbedLink.id}
             linkName={selectedEmbedLink.name}
           />
-        )}
-
-        {archivedLinksCount > 0 && (
-          <Collapsible asChild>
-            <>
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="mx-auto mt-4 flex h-8 items-center justify-center gap-x-1 text-gray-400 [&[data-state=open]>svg.chevron]:rotate-180"
-                >
-                  {archivedLinksCount} Archived Links
-                  <ChevronDown className="chevron h-4 w-4 text-gray-400 transition-transform duration-200" />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-2">
-                <div>
-                  <h2 className="mb-2 md:mb-4">Archived Links</h2>
-                </div>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
-                        <TableHead>Name</TableHead>
-                        <TableHead className="w-[150px] sm:w-[200px] md:w-[250px]">
-                          Link
-                        </TableHead>
-                        <TableHead>Views</TableHead>
-                        {hasAnyTags ? (
-                          <TableHead className="w-[250px] 2xl:w-auto">
-                            Tags
-                          </TableHead>
-                        ) : null}
-                        <TableHead>Last Viewed</TableHead>
-                        <TableHead className="ftext-center sm:text-right"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {processedLinks &&
-                        processedLinks
-                          .filter((link) => link.isArchived)
-                          .map((link) => (
-                            <>
-                              <TableRow key={link.id} className="group/row">
-                                <TableCell className="w-[180px] truncate">
-                                  {link.name || "No link name"}
-                                  {link.isNew && !link.isUpdated && (
-                                    <Badge
-                                      variant="outline"
-                                      className="animate-pulse border-transparent bg-emerald-500/15 text-emerald-600 transition-colors hover:bg-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    >
-                                      New
-                                    </Badge>
-                                  )}
-                                  {link.isUpdated && (
-                                    <Badge
-                                      variant="outline"
-                                      className="border-blue-500/30 text-blue-500"
-                                    >
-                                      Updated
-                                    </Badge>
-                                  )}
-                                </TableCell>
-                                <TableCell className="max-w-[250px] sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
-                                  <div className="flex items-center gap-x-4 whitespace-nowrap rounded-sm bg-secondary px-3 py-1.5 text-xs text-secondary-foreground sm:py-1 sm:text-sm">
-                                    {link.domainId
-                                      ? `https://${link.domainSlug}/${link.slug}`
-                                      : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`}
-                                  </div>
-                                </TableCell>
-                                {hasAnyTags ? (
-                                  <TableCell className="w-[250px] 2xl:w-auto">
-                                    <div className="flex items-center gap-x-2">
-                                      <TagColumn link={link} />
-                                    </div>
-                                  </TableCell>
-                                ) : null}
-                                <TableCell>
-                                  <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
-                                    <BarChart className="h-4 w-4 text-gray-400" />
-                                    <p className="whitespace-nowrap text-sm text-gray-400">
-                                      {nFormatter(link._count.views)}
-                                      <span className="ml-1 hidden sm:inline-block">
-                                        views
-                                      </span>
-                                    </p>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="text-sm text-gray-400">
-                                  {link.views[0] ? (
-                                    <time
-                                      dateTime={new Date(
-                                        link.views[0].viewedAt,
-                                      ).toISOString()}
-                                    >
-                                      {timeAgo(link.views[0].viewedAt)}
-                                    </time>
-                                  ) : (
-                                    "-"
-                                  )}
-                                </TableCell>
-                                <TableCell className="text-center sm:text-right">
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        className="h-8 w-8 p-0"
-                                      >
-                                        <span className="sr-only">
-                                          Open menu
-                                        </span>
-                                        <MoreHorizontal className="h-4 w-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuLabel>
-                                        Actions
-                                      </DropdownMenuLabel>
-
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem
-                                        className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-                                        onClick={() =>
-                                          handleArchiveLink(
-                                            link.id,
-                                            link.documentId ??
-                                              link.dataroomId ??
-                                              "",
-                                            link.isArchived,
-                                          )
-                                        }
-                                      >
-                                        Reactivate
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </TableCell>
-                              </TableRow>
-                            </>
-                          ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CollapsibleContent>
-            </>
-          </Collapsible>
         )}
       </div>
     </>
