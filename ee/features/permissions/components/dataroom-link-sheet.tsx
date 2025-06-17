@@ -20,7 +20,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { useDomains } from "@/lib/swr/use-domains";
 import useLimits from "@/lib/swr/use-limits";
-import { LinkWithViews, WatermarkConfig } from "@/lib/types";
+import { LinkWithViews } from "@/lib/types";
 import { convertDataUrlToFile, fetcher, uploadImage } from "@/lib/utils";
 
 import {

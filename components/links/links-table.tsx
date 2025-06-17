@@ -625,6 +625,12 @@ export default function LinksTable({
                               <EyeIcon className="text-gray-400 group-hover:text-gray-500" />
                             </Button>
                           </ButtonTooltip>
+                          {targetType === "DATAROOM" &&
+                            link.permissionGroupId && (
+                              <ButtonTooltip content="Limited File Access">
+                                <FileSlidersIcon className="text-gray-400 group-hover:text-gray-500" />
+                              </ButtonTooltip>
+                            )}
                           {isMobile ? (
                             <ButtonTooltip content="Edit link">
                               <Button
