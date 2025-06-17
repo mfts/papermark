@@ -91,6 +91,9 @@ export default function DocumentUpload({
           },
     multiple: false,
     onDropAccepted: (acceptedFiles) => {
+      if (acceptedFiles.length === 0) {
+        return;
+      }
       const file = acceptedFiles[0];
       const fileType = file.type;
       const fileSizeLimitMB = getFileSizeLimit(fileType, fileSizeLimits); // in MB
