@@ -307,9 +307,69 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
+  } else if (req.method === "DELETE") {
+    // DELETE /api/teams/:teamId/datarooms/:id/permission-groups/:permissionGroupId
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauthorized");
+    }
+
+    const {
+      teamId,
+      id: dataroomId,
+      permissionGroupId,
+    } = req.query as {
+      teamId: string;
+      id: string;
+      permissionGroupId: string;
+    };
+
+    const userId = (session.user as CustomUser).id;
+
+    try {
+      // Verify team membership
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: { userId },
+          },
+        },
+      });
+
+      if (!team) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      // Verify permission group exists and belongs to dataroom
+      const permissionGroup = await prisma.permissionGroup.findUnique({
+        where: {
+          id: permissionGroupId,
+          dataroomId: dataroomId,
+          teamId: teamId,
+        },
+      });
+
+      if (!permissionGroup) {
+        return res.status(404).json({ error: "Permission group not found" });
+      }
+
+      // Delete the permission group (this will cascade delete the access controls)
+      await prisma.permissionGroup.delete({
+        where: {
+          id: permissionGroupId,
+        },
+      });
+
+      return res
+        .status(200)
+        .json({ message: "Permission group deleted successfully" });
+    } catch (error) {
+      errorhandler(error, res);
+    }
   }
 
-  // We only allow GET requests
-  res.setHeader("Allow", ["GET", "PUT"]);
+  // We only allow GET, PUT, and DELETE requests
+  res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
   return res.status(405).end(`Method ${req.method} Not Allowed`);
 }
