@@ -36,7 +36,7 @@ export default async function handler(
         }
 
         // Check if the user is part of the team
-        const team = await prisma.team.findUnique({
+        const team = await prisma.team.findFirst({
             where: {
                 id: teamId,
                 users: {
@@ -55,15 +55,15 @@ export default async function handler(
         const dataroom = await prisma.dataroom.findUnique({
             where: {
                 id: dataroomId,
-                teamId,
             },
             select: {
                 id: true,
+                teamId: true,
                 defaultGroupPermission: true,
             },
         });
 
-        if (!dataroom) {
+        if (!dataroom || dataroom.teamId !== teamId) {
             return res.status(404).json({ message: "Dataroom not found" });
         }
 

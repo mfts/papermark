@@ -99,7 +99,7 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const team = await prisma.team.findUnique({
+      const team = await prisma.team.findFirst({
         where: {
           id: teamId,
           users: {

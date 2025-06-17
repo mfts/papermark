@@ -50,7 +50,9 @@ export default function PermissionSettings({
     pId: string;
     defaultGroupPermission: DefaultGroupPermissionStrategy;
   }>(
-    dataroomId ? `/api/teams/${teamId}/datarooms/${dataroomId}` : null,
+    teamId && dataroomId
+      ? `/api/teams/${teamId}/datarooms/${dataroomId}`
+      : null,
     fetcher,
   );
 

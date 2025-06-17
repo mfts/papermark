@@ -18,7 +18,7 @@ export const useDataroomPermissions = () => {
 
         try {
             const response = await fetch(
-                `/api/teams/${teamId}/datarooms/${dataroomId}/groups/apply-default-permissions`,
+                `/api/teams/${encodeURIComponent(teamId)}/datarooms/${encodeURIComponent(dataroomId)}/groups/apply-default-permissions`,
                 {
                     method: "POST",
                     headers: {
@@ -63,7 +63,7 @@ export const useDataroomPermissions = () => {
 
         try {
             const response = await fetch(
-                `/api/teams/${teamId}/datarooms/${dataroomId}/groups/inherit-parent-permissions`,
+                `/api/teams/${encodeURIComponent(teamId)}/datarooms/${encodeURIComponent(dataroomId)}/groups/inherit-parent-permissions`,
                 {
                     method: "POST",
                     headers: {

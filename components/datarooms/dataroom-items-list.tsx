@@ -552,8 +552,7 @@ export function DataroomItemsList({
       dataroomDocumentId: string;
     }[],
   ) => {
-    const hasGroups = viewerGroups && viewerGroups.length > 0;
-    if (!hasGroups) return;
+    if (viewerGroups && viewerGroups.length === 0) return;
 
     const defaultPermission =
       dataroom?.defaultGroupPermission || "ask_every_time";

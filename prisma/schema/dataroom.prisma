@@ -110,8 +110,8 @@ model ViewerGroup {
   conversations Conversation[]
 
   // default group permission setting
-  defaultCanView     Boolean? @default(false)
-  defaultCanDownload Boolean? @default(false)
+  defaultCanView     Boolean @default(false)
+  defaultCanDownload Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

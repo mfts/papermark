@@ -5,5 +5,5 @@ CREATE TYPE "DefaultGroupPermissionStrategy" AS ENUM ('ask_every_time', 'inherit
 ALTER TABLE "Dataroom" ADD COLUMN     "defaultGroupPermission" "DefaultGroupPermissionStrategy" NOT NULL DEFAULT 'ask_every_time';
 
 -- AlterTable
-ALTER TABLE "ViewerGroup" ADD COLUMN     "defaultCanDownload" BOOLEAN DEFAULT false,
-ADD COLUMN     "defaultCanView" BOOLEAN DEFAULT false;
+ALTER TABLE "ViewerGroup" ADD COLUMN     "defaultCanDownload" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "defaultCanView" BOOLEAN NOT NULL DEFAULT false;
