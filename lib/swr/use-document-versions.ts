@@ -64,57 +64,69 @@ export function useDocumentVersions(documentId?: string, page: number = 1, limit
 export function useDocumentVersionActions(documentId: string) {
     const teamInfo = useTeam();
     const teamId = teamInfo?.currentTeam?.id;
-    const router = useRouter();
 
     const deleteVersion = async (versionId: string) => {
         if (!teamId) return;
 
         try {
-            const response = await fetch(
+            const promise = fetch(
                 `/api/teams/${teamId}/documents/${documentId}/versions/${versionId}`,
                 {
-                    method: "DELETE",
+                    method: 'DELETE',
                 }
             );
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || "Failed to delete version");
+            await toast.promise(promise, {
+                loading: 'Deleting document version...',
+                success: 'Document version deleted successfully',
+                error: (err: Error) =>
+                    err.message || 'Failed to delete version',
+            });
+
+            const res = await promise;
+
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.message || 'Failed to delete version');
             }
 
-            toast.success("Document version deleted successfully");
             return true;
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Failed to delete version");
             return false;
         }
     };
 
     const promoteVersion = async (versionId: string) => {
         if (!teamId) return;
-        // TODO: recheck this
+
         try {
-            const response = await fetch(
+            const promise = fetch(
                 `/api/teams/${teamId}/documents/${documentId}/versions/${versionId}`,
                 {
-                    method: "PUT",
+                    method: 'PUT',
                     headers: {
-                        "Content-Type": "application/json",
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ action: "promote" }),
+                    body: JSON.stringify({ action: 'promote' }),
                 }
             );
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || "Failed to promote version");
-            }
+            await toast.promise(promise, {
+                loading: 'Promoting document version...',
+                success: 'Document version promoted to primary successfully',
+                error: (err: Error) =>
+                    err.message || 'Failed to promote version',
+            });
 
-            toast.success("Document version promoted to primary successfully");
+            const res = await promise;
+
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.message || 'Failed to promote version');
+            }
 
             return true;
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Failed to promote version");
             return false;
         }
     };
@@ -123,28 +135,35 @@ export function useDocumentVersionActions(documentId: string) {
         if (!teamId) return;
 
         try {
-            const response = await fetch(
+            const promise = fetch(
                 `/api/teams/${teamId}/documents/${documentId}/versions/${versionId}?download=true`
             );
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || "Failed to generate download URL");
+            await toast.promise(promise, {
+                loading: 'Preparing download...',
+                success: 'Download started',
+                error: (err: Error) =>
+                    err.message || 'Failed to download version',
+            });
+
+            const res = await promise;
+
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(
+                    error.message || 'Failed to generate download URL'
+                );
             }
 
-            const data = await response.json();
-
-            const link = document.createElement("a");
+            const data = await res.json();
+            const link = document.createElement('a');
             link.href = data.downloadUrl;
             link.download = data.fileName;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
-            toast.success("Download started");
             return true;
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Failed to download version");
             return false;
         }
     };
