@@ -326,6 +326,9 @@ export default function LinksTable({
           throw new Error(error.error || "Failed to create permission group");
         }
 
+        const { permissionGroup: newPermissionGroup, _ } =
+          await response.json();
+
         // Refresh the links cache
         const endpointTargetType = `${targetType.toLowerCase()}s`;
         mutate(
@@ -333,6 +336,15 @@ export default function LinksTable({
             targetId,
           )}/links`,
         );
+
+        // Cache the new permission group data
+        if (newPermissionGroup?.id) {
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${newPermissionGroup.id}`,
+            newPermissionGroup,
+            false,
+          );
+        }
 
         setShowPermissionsSheet(false);
         setEditPermissionLink(null);
@@ -372,6 +384,13 @@ export default function LinksTable({
             targetId,
           )}/links`,
         );
+
+        // Invalidate the permission group cache
+        if (editPermissionLink.permissionGroupId) {
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+          );
+        }
 
         setShowPermissionsSheet(false);
         setEditPermissionLink(null);

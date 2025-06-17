@@ -333,7 +333,7 @@ export function DataroomLinkSheet({
     if (permissions && typeof permissions === "object") {
       if (isUpdating && currentLink?.permissionGroupId) {
         // Update existing permission group
-        await fetch(
+        const response = await fetch(
           `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
           {
             method: "PUT",
@@ -345,9 +345,16 @@ export function DataroomLinkSheet({
             }),
           },
         );
+
+        if (response.ok) {
+          // Invalidate the permission group cache
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
+          );
+        }
       } else {
         // Create new permission group
-        await fetch(
+        const response = await fetch(
           `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups`,
           {
             method: "POST",
@@ -360,6 +367,22 @@ export function DataroomLinkSheet({
             }),
           },
         );
+
+        if (response.ok) {
+          const { permissionGroup: newPermissionGroup, _ } =
+            await response.json();
+          // Cache the new permission group data
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${newPermissionGroup.id}`,
+            newPermissionGroup,
+            false,
+          );
+
+          // Update the link with the new permission group ID
+          if (newPermissionGroup.id) {
+            link.permissionGroupId = newPermissionGroup.id;
+          }
+        }
       }
     }
   };
