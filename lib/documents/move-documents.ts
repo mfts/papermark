@@ -23,11 +23,16 @@ export const moveDocumentToFolder = async ({
   // Optimistically update the UI by removing the documents from current folder
   mutate(
     key,
-    (documents: any) => {
-      if (!documents) return documents;
+    (data: any) => {
+      if (!data) return data;
 
-      // Filter out the documents that are being moved
-      const updatedDocuments = documents.filter(
+      if (data && data.documents) {
+        const updatedDocuments = data.documents.filter(
+          (doc: any) => !documentIds.includes(doc.id),
+        );
+        return { ...data, documents: updatedDocuments };
+      }
+      const updatedDocuments = data.filter(
         (doc: any) => !documentIds.includes(doc.id),
       );
 
