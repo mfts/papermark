@@ -37,6 +37,13 @@ export default async function handle(
                     id: true,
                     name: true,
                     advancedExcelEnabled: true,
+                    links: {
+                        select: {
+                            id: true,
+                            slug: true,
+                            domainSlug: true,
+                        },
+                    },
                     versions: {
                         select: {
                             numPages: true,
@@ -135,17 +142,26 @@ export default async function handle(
                         data: { isPrimary: true },
                     });
 
-                    // TODO: recheck this
-                    // // Update the main document fields to match the new primary version
-                    // await tx.document.update({
-                    //     where: { id: documentId },
-                    //     data: {
-                    //         file: version.file,
-                    //         type: version.type,
-                    //         numPages: version.type === "sheet" ? 1 : version.numPages,
-                    //     },
-                    // });
+                    await tx.document.update({
+                        where: { id: documentId },
+                        data: {
+                            file: version.file,
+                            type: version.type,
+                            storageType: version.storageType,
+                            advancedExcelEnabled: document?.advancedExcelEnabled,
+                            numPages: document?.advancedExcelEnabled && version.type === "sheet" ? 1 : version.numPages,
+                        },
+                    });
                 });
+
+                if (document?.links) {
+                    for (const link of document.links) {
+                        if (link.domainSlug && link.slug) {
+                            await res.revalidate(`/view/domains/${link.domainSlug}/${link.slug}`);
+                        }
+                        await res.revalidate(`/view/${link.id}`);
+                    }
+                }
 
                 log({
                     message: `Document version ${version.versionNumber} promoted to primary for document: ${documentId}`,

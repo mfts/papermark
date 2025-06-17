@@ -210,9 +210,6 @@ export function DocumentVersionManager({
                       Primary
                     </Badge>
                   )}
-                  <Badge variant="outline" className="text-xs">
-                    {version.type}
-                  </Badge>
                 </div>
 
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -340,7 +337,6 @@ export function DocumentVersionManager({
             <AlertDialogDescription className="text-sm">
               This will make version {selectedVersion?.versionNumber} the
               primary version. All links to this document will use this version.
-              The page will refresh to reflect the changes.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
