@@ -27,9 +27,11 @@ import { toast } from "sonner";
 
 import { moveDataroomDocumentToFolder } from "@/lib/documents/move-dataroom-documents";
 import { moveDataroomFolderToFolder } from "@/lib/documents/move-dataroom-folders";
+import { useDataroomPermissions } from "@/lib/hooks/use-dataroom-permissions";
 import {
   DataroomFolderDocument,
   DataroomFolderWithCount,
+  useDataroom,
 } from "@/lib/swr/use-dataroom";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
@@ -75,7 +77,10 @@ export function DataroomItemsList({
   documentCount: number;
 }) {
   const { viewerGroups } = useDataroomGroups();
+  const { dataroom } = useDataroom();
   const { isMobile } = useMediaQuery();
+  const { applyDefaultPermissions, inheritParentPermissions } =
+    useDataroomPermissions();
 
   const [uploads, setUploads] = useState<UploadState[]>([]);
   const [rejectedFiles, setRejectedFiles] = useState<RejectedFile[]>([]);
@@ -547,11 +552,48 @@ export function DataroomItemsList({
       dataroomDocumentId: string;
     }[],
   ) => {
-    if (viewerGroups && viewerGroups.length > 0) {
+    const hasGroups = viewerGroups && viewerGroups.length > 0;
+    if (!hasGroups) return;
+
+    const defaultPermission =
+      dataroom?.defaultGroupPermission || "ask_every_time";
+    if (defaultPermission === "ask_every_time" && files.length > 0) {
       setUploadedFiles(files);
       setShowGroupPermissions(true);
+      return;
     }
-    return;
+
+    if (defaultPermission === "inherit_from_parent") {
+      const isRootLevel = !folderPathName || folderPathName.length === 0;
+      if (isRootLevel) {
+        setUploadedFiles(files);
+        setShowGroupPermissions(true);
+      } else {
+        const documentIds = files.map((file) => file.documentId);
+        inheritParentPermissions(
+          dataroomId,
+          documentIds,
+          folderPathName.join("/"),
+        ).catch((error) => {
+          console.error("Failed to inherit parent permissions:", error);
+          toast.error("Failed to inherit parent permissions");
+        });
+      }
+      return;
+    }
+
+    if (defaultPermission === "use_default_permissions") {
+      const documentIds = files.map((file) => file.documentId);
+      applyDefaultPermissions(dataroomId, documentIds).catch((error) => {
+        console.error("Failed to apply default permissions:", error);
+        toast.error("Failed to apply default permissions");
+      });
+      return;
+    }
+
+    if (defaultPermission === "no_permissions") {
+      return;
+    }
   };
 
   return (

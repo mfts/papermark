@@ -89,14 +89,31 @@ export default async function handle(
       groupId: string;
     };
 
-    const { name, domains, allowAll } = req.body as {
+    const { name, defaultCanView, defaultCanDownload, allowAll, domains } = req.body as {
       name?: string;
-      domains?: string[];
+      defaultCanView?: boolean;
+      defaultCanDownload?: boolean;
       allowAll?: boolean;
+      domains?: string[];
     };
     const userId = (session.user as CustomUser).id;
 
     try {
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: {
+              userId: userId,
+            },
+          },
+        },
+      });
+
+      if (!team) {
+        return res.status(401).end("Unauthorized");
+      }
+
       const group = await prisma.viewerGroup.update({
         where: {
           id: groupId,
@@ -112,6 +129,8 @@ export default async function handle(
         },
         data: {
           ...(name && { name }),
+          ...(typeof defaultCanView === "boolean" && { defaultCanView }),
+          ...(typeof defaultCanDownload === "boolean" && { defaultCanDownload }),
           ...(typeof allowAll === "boolean" && { allowAll }),
           ...(domains && { domains }),
         },

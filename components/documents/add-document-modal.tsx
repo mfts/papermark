@@ -16,7 +16,9 @@ import {
   createNewDocumentVersion,
 } from "@/lib/documents/create-document";
 import { putFile } from "@/lib/files/put-file";
+import { useDataroomPermissions } from "@/lib/hooks/use-dataroom-permissions";
 import { usePlan } from "@/lib/swr/use-billing";
+import { useDataroom } from "@/lib/swr/use-dataroom";
 import useLimits from "@/lib/swr/use-limits";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
@@ -80,8 +82,11 @@ export function AddDocumentModal({
   const teamInfo = useTeam();
   const { canAddDocuments } = useLimits();
   const { plan, isFree, isTrial } = usePlan();
-
+  const { dataroom } = useDataroom();
   const teamId = teamInfo?.currentTeam?.id as string;
+
+  const { applyDefaultPermissions, inheritParentPermissions } =
+    useDataroomPermissions();
 
   useEffect(() => {
     if (openModal) setIsOpen(openModal);
@@ -136,6 +141,11 @@ export function AddDocumentModal({
       return undefined;
     }
   };
+
+  const toastErrorMessage = () =>
+    toast.error(
+      "Failed to apply default permissions. Update the group permissions in the group settings.",
+    );
 
   const handleFileUpload = async (
     event: FormEvent<HTMLFormElement>,
@@ -230,14 +240,69 @@ export function AddDocumentModal({
               };
 
             if (dataroomDocument.dataroom._count.viewerGroups > 0) {
-              setShowGroupPermissions(true);
-              setUploadedFiles([
-                {
-                  documentId: document.id,
-                  dataroomDocumentId: dataroomDocument.id,
-                  fileName: document.name,
-                },
-              ]);
+              const defaultPermission =
+                dataroom?.defaultGroupPermission || "ask_every_time";
+
+              if (defaultPermission === "ask_every_time") {
+                setShowGroupPermissions(true);
+                setUploadedFiles([
+                  {
+                    documentId: document.id,
+                    dataroomDocumentId: dataroomDocument.id,
+                    fileName: document.name,
+                  },
+                ]);
+              } else if (defaultPermission === "inherit_from_parent") {
+                const isRootLevel =
+                  !currentFolderPath || currentFolderPath.length === 0;
+                if (isRootLevel) {
+                  setShowGroupPermissions(true);
+                  setUploadedFiles([
+                    {
+                      documentId: document.id,
+                      dataroomDocumentId: dataroomDocument.id,
+                      fileName: document.name,
+                    },
+                  ]);
+                } else {
+                  try {
+                    const result = await inheritParentPermissions(
+                      dataroomId,
+                      [document.id],
+                      currentFolderPath?.join("/"),
+                    );
+                    if (!result.success) {
+                      console.error(
+                        "Failed to inherit parent permissions:",
+                        result.error,
+                      );
+                      toastErrorMessage();
+                    }
+                  } catch (error) {
+                    console.error(
+                      "Failed to inherit parent permissions:",
+                      error,
+                    );
+                    toastErrorMessage();
+                  }
+                }
+              } else if (defaultPermission === "use_default_permissions") {
+                try {
+                  const result = await applyDefaultPermissions(dataroomId, [
+                    document.id,
+                  ]);
+                  if (!result.success) {
+                    toastErrorMessage();
+                    console.error(
+                      "Failed to apply default permissions:",
+                      result.error,
+                    );
+                  }
+                } catch (error) {
+                  console.error("Failed to apply default permissions:", error);
+                  toastErrorMessage();
+                }
+              }
             }
           }
 
@@ -384,14 +449,67 @@ export function AddDocumentModal({
             };
 
           if (dataroomDocument.dataroom._count.viewerGroups > 0) {
-            setShowGroupPermissions(true);
-            setUploadedFiles([
-              {
-                documentId: document.id,
-                dataroomDocumentId: dataroomDocument.id,
-                fileName: document.name,
-              },
-            ]);
+            const defaultPermission =
+              dataroom?.defaultGroupPermission || "ask_every_time";
+
+            if (defaultPermission === "ask_every_time") {
+              setShowGroupPermissions(true);
+              setUploadedFiles([
+                {
+                  documentId: document.id,
+                  dataroomDocumentId: dataroomDocument.id,
+                  fileName: document.name,
+                },
+              ]);
+            } else if (defaultPermission === "inherit_from_parent") {
+              const isRootLevel =
+                !currentFolderPath || currentFolderPath.length === 0;
+              if (isRootLevel) {
+                setShowGroupPermissions(true);
+                setUploadedFiles([
+                  {
+                    documentId: document.id,
+                    dataroomDocumentId: dataroomDocument.id,
+                    fileName: document.name,
+                  },
+                ]);
+              } else {
+                // For subfolder uploads, inherit permissions from parent folder automatically
+                try {
+                  const result = await inheritParentPermissions(
+                    dataroomId,
+                    [document.id],
+                    currentFolderPath?.join("/"),
+                  );
+                  if (!result.success) {
+                    toastErrorMessage();
+                    console.error(
+                      "Failed to inherit parent permissions:",
+                      result.error,
+                    );
+                  }
+                } catch (error) {
+                  console.error("Failed to inherit parent permissions:", error);
+                  toastErrorMessage();
+                }
+              }
+            } else if (defaultPermission === "use_default_permissions") {
+              try {
+                const result = await applyDefaultPermissions(dataroomId, [
+                  document.id,
+                ]);
+                if (!result.success) {
+                  console.error(
+                    "Failed to apply default permissions:",
+                    result.error,
+                  );
+                  toastErrorMessage();
+                }
+              } catch (error) {
+                console.error("Failed to apply default permissions:", error);
+                toastErrorMessage();
+              }
+            }
           }
         }
 

@@ -25,6 +25,9 @@ model Dataroom {
 
   // notification settings
   enableChangeNotifications Boolean @default(false)
+  
+  // default group permission setting
+  defaultGroupPermission DefaultGroupPermissionStrategy @default(ask_every_time)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -104,6 +107,10 @@ model ViewerGroup {
   views         View[]
   conversations Conversation[]
 
+  // default group permission setting
+  defaultCanView     Boolean? @default(false)
+  defaultCanDownload Boolean? @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -149,4 +156,11 @@ model ViewerGroupAccessControls {
 enum ItemType {
   DATAROOM_DOCUMENT
   DATAROOM_FOLDER
+}
+
+enum DefaultGroupPermissionStrategy {
+  ask_every_time
+  inherit_from_parent
+  use_default_permissions
+  no_permissions
 }

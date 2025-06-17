@@ -7,6 +7,7 @@ import { errorhandler } from "@/lib/errorHandler";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { DefaultGroupPermissionStrategy } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -96,9 +97,10 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      const { name, enableChangeNotifications } = req.body as {
+      const { name, enableChangeNotifications, defaultGroupPermission } = req.body as {
         name?: string;
         enableChangeNotifications?: boolean;
+        defaultGroupPermission?: DefaultGroupPermissionStrategy;
       };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
@@ -123,6 +125,7 @@ export default async function handle(
           ...(typeof enableChangeNotifications === "boolean" && {
             enableChangeNotifications,
           }),
+          ...(defaultGroupPermission && { defaultGroupPermission }),
         },
       });
 
