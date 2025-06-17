@@ -773,8 +773,11 @@ export function PermissionsSheet({
       setShareEntireDataroom(effectivePermissions.length === 0);
       setPendingChanges({});
 
-      // Reset the UI to show full access for new links (when no effective permissions)
+      // For new links (no existing permissions), default to "share entire dataroom" on
+      // But if they turn it off, they'll start with no permissions selected (opt-in approach)
+      // For existing links, show the current permissions state
       if (effectivePermissions.length === 0) {
+        // New link - start with full access shown but toggle is on
         setData((prevData) => {
           const resetToFullAccess = (items: FileOrFolder[]): FileOrFolder[] => {
             return items.map((item) => ({
@@ -825,10 +828,28 @@ export function PermissionsSheet({
         return updateAllItems(prevData);
       });
     } else {
-      // When turning off, don't automatically set all items to viewable
-      // Let the user manually select what they want
-      // Just ensure we have some changes to track
+      // When turning off, reset all permissions to false so user must opt-in
       setPendingChanges({});
+      setData((prevData) => {
+        const resetToNoAccess = (items: FileOrFolder[]): FileOrFolder[] => {
+          return items.map((item) => {
+            return {
+              ...item,
+              permissions: {
+                view: false,
+                download: false,
+                partialView: false,
+                partialDownload: false,
+              },
+              subItems: item.subItems
+                ? resetToNoAccess(item.subItems)
+                : undefined,
+            };
+          });
+        };
+
+        return resetToNoAccess(prevData);
+      });
     }
   };
 
@@ -902,9 +923,8 @@ export function PermissionsSheet({
         <SheetHeader className="text-start">
           <SheetTitle>Manage File Permissions</SheetTitle>
           <p className="text-sm text-muted-foreground">
-            Configure which files can be viewed and downloaded through this
-            link. Use the toggle below to share all dataroom contents or set
-            specific permissions.
+            Use the toggle below to share all dataroom contents or set specific
+            permissions.
           </p>
         </SheetHeader>
 
@@ -930,9 +950,9 @@ export function PermissionsSheet({
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  When enabled, all files and folders will be visible and
-                  accessible. <br />
                   Turn off to set specific permissions for individual items.
+                  When turned off, no items are selected by default - you must
+                  choose what to share.
                 </p>
               </div>
               {!canSetCustomPermissions ? (
