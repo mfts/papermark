@@ -299,12 +299,27 @@ export function DataroomLinkSheet({
     // Handle permissions
     if (permissions === null && isUpdating && currentLink?.permissionGroupId) {
       // Delete the permission group - database will set permissionGroupId to null automatically
-      await fetch(
+      const deleteResponse = await fetch(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
         {
           method: "DELETE",
         },
       );
+
+      if (!deleteResponse.ok) {
+        // Handle error with toast message
+        try {
+          const errorData = await deleteResponse.json();
+          toast.error(errorData.error || "Failed to delete permission group");
+        } catch {
+          toast.error("Failed to delete permission group");
+        }
+        setIsSaving(false);
+        return;
+      }
+
+      // Show success message
+      toast.success("Permission group deleted successfully");
 
       // Refresh the links cache
       mutate(
@@ -313,9 +328,11 @@ export function DataroomLinkSheet({
         )}/links`,
       );
 
-      // Invalidate the permission group cache
+      // Clear the permission group cache instead of invalidating to avoid 404
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
+        undefined,
+        false,
       );
     } else if (permissions !== null) {
       // Only handle permission group operations if we're not deleting
