@@ -7,13 +7,49 @@ import {
 import prisma from "@/lib/prisma";
 import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 
+// Helper function to get all parent folder IDs for given folder IDs
+async function getAllParentFolderIds(
+  folderIds: string[],
+  dataroomId: string,
+): Promise<string[]> {
+  if (folderIds.length === 0) return [];
+
+  const allRequiredFolderIds = new Set(folderIds);
+
+  // Get all folders in the dataroom to build the hierarchy
+  const allFolders = await prisma.dataroomFolder.findMany({
+    where: { dataroomId },
+    select: { id: true, parentId: true },
+  });
+
+  // Use Map for O(1) parent lookup: folderId -> parentId
+  // This is more efficient than Set because we need key-value relationship for traversal
+  const folderMap = new Map(
+    allFolders.map((folder) => [folder.id, folder.parentId]),
+  );
+
+  // For each accessible folder, traverse up to find all parent folders
+  for (const folderId of folderIds) {
+    let currentId: string | null = folderId;
+
+    while (currentId) {
+      allRequiredFolderIds.add(currentId);
+      currentId = folderMap.get(currentId) || null;
+    }
+  }
+
+  return Array.from(allRequiredFolderIds);
+}
+
 export async function fetchDataroomLinkData({
   linkId,
+  dataroomId,
   teamId,
   groupId,
   permissionGroupId,
 }: {
   linkId: string;
+  dataroomId: string | null;
   teamId: string;
   groupId?: string;
   permissionGroupId?: string;
@@ -23,6 +59,7 @@ export async function fetchDataroomLinkData({
     | PermissionGroupAccessControls[] = [];
   let documentIds: string[] = [];
   let folderIds: string[] = [];
+  let allRequiredFolderIds: string[] = [];
 
   const effectiveGroupId = groupId || permissionGroupId;
 
@@ -55,6 +92,14 @@ export async function fetchDataroomLinkData({
     folderIds = groupPermissions
       .filter((permission) => permission.itemType === ItemType.DATAROOM_FOLDER)
       .map((permission) => permission.itemId);
+
+    // Include parent folders if we have group permissions and they're actually being applied
+    // This ensures that if a group has access to a subfolder, all parent folders
+    // are also included to maintain proper hierarchy (even without explicit permissions)
+    allRequiredFolderIds = folderIds;
+    if (dataroomId && folderIds.length > 0) {
+      allRequiredFolderIds = await getAllParentFolderIds(folderIds, dataroomId);
+    }
   }
 
   const linkData = await prisma.link.findUnique({
@@ -107,7 +152,7 @@ export async function fetchDataroomLinkData({
           folders: {
             where:
               groupPermissions.length > 0 || effectiveGroupId
-                ? { id: { in: folderIds } }
+                ? { id: { in: allRequiredFolderIds } }
                 : undefined,
             orderBy: [{ orderIndex: "asc" }, { name: "asc" }],
           },
