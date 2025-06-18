@@ -26,6 +26,7 @@ export default function DenyListSection({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => void;
   presets: LinkPreset | null;
 }) {
@@ -96,6 +97,7 @@ export default function DenyListSection({
               state: true,
               trigger: "link_sheet_denylist_section",
               plan: "Business",
+              highlightItem: ["allow-block"],
             })
           }
         />

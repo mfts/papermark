@@ -1,0 +1,963 @@
+import Link from "next/link";
+import { useRouter } from "next/router";
+
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import {
+  ItemType,
+  LinkAudienceType,
+  LinkPreset,
+  LinkType,
+} from "@prisma/client";
+import { EyeIcon, RefreshCwIcon } from "lucide-react";
+import { toast } from "sonner";
+import { mutate } from "swr";
+import useSWR from "swr";
+
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
+import { useDomains } from "@/lib/swr/use-domains";
+import useLimits from "@/lib/swr/use-limits";
+import { LinkWithViews } from "@/lib/types";
+import { convertDataUrlToFile, fetcher, uploadImage } from "@/lib/utils";
+
+import {
+  DEFAULT_LINK_PROPS as BASE_DEFAULT_LINK_PROPS,
+  DEFAULT_LINK_TYPE as BASE_DEFAULT_LINK_TYPE,
+} from "@/components/links/link-sheet";
+import DomainSection from "@/components/links/link-sheet/domain-section";
+import { LinkOptions } from "@/components/links/link-sheet/link-options";
+import LinkSuccessSheet from "@/components/links/link-sheet/link-success-sheet";
+import TagSection from "@/components/links/link-sheet/tags/tag-section";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BadgeTooltip, ButtonTooltip } from "@/components/ui/tooltip";
+
+import { PermissionsSheet } from "./permissions-sheet";
+
+export const DEFAULT_LINK_PROPS = (
+  linkType: LinkType,
+  groupId: string | null = null,
+  showBanner: boolean = true,
+) => ({
+  ...BASE_DEFAULT_LINK_PROPS(linkType, groupId, showBanner),
+  permissions: null,
+});
+
+export type ItemPermission = Record<
+  string,
+  { view: boolean; download: boolean; itemType: ItemType }
+>;
+
+export type DEFAULT_LINK_TYPE = BASE_DEFAULT_LINK_TYPE & {
+  permissions?: ItemPermission | null;
+};
+
+export function DataroomLinkSheet({
+  isOpen,
+  setIsOpen,
+  linkType,
+  currentLink,
+  existingLinks,
+}: {
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+  linkType: LinkType;
+  currentLink?: DEFAULT_LINK_TYPE;
+  existingLinks?: LinkWithViews[];
+}) {
+  const router = useRouter();
+  const { id: targetId, groupId } = router.query as {
+    id: string;
+    groupId?: string;
+  };
+
+  const { domains } = useDomains();
+
+  const {
+    viewerGroups,
+    loading: isLoadingGroups,
+    mutate: mutateGroups,
+  } = useDataroomGroups();
+  const teamInfo = useTeam();
+  const { isFree, isPro, isBusiness, isDatarooms, isDataroomsPlus, isTrial } =
+    usePlan();
+  const { limits } = useLimits();
+  const analytics = useAnalytics();
+  const [data, setData] = useState<DEFAULT_LINK_TYPE>(
+    DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms),
+  );
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [currentPreset, setCurrentPreset] = useState<LinkPreset | null>(null);
+  const [showPermissionsSheet, setShowPermissionsSheet] =
+    useState<boolean>(false);
+  const [pendingLinkData, setPendingLinkData] =
+    useState<DEFAULT_LINK_TYPE | null>(null);
+  const [showSuccessSheet, setShowSuccessSheet] = useState<boolean>(false);
+  const [createdLink, setCreatedLink] = useState<LinkWithViews | null>(null);
+  const [hasCustomPermissions, setHasCustomPermissions] =
+    useState<boolean>(false);
+
+  const isPresetsAllowed =
+    (isPro && limits?.advancedLinkControlsOnPro) ||
+    isBusiness ||
+    isDatarooms ||
+    isDataroomsPlus;
+
+  // Presets
+  const { data: presets } = useSWR<LinkPreset[]>(
+    teamInfo?.currentTeam?.id
+      ? `/api/teams/${teamInfo.currentTeam.id}/presets`
+      : null,
+    fetcher,
+    {
+      dedupingInterval: 10000,
+    },
+  );
+
+  useEffect(() => {
+    setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms));
+  }, [currentLink]);
+
+  const handlePreviewLink = async (link: LinkWithViews) => {
+    if (link.domainId && isFree) {
+      toast.error("You need to upgrade to preview this link");
+      return;
+    }
+
+    setIsLoading(true);
+    const response = await fetch(`/api/links/${link.id}/preview`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      toast.error("Failed to generate preview link");
+      setIsLoading(false);
+      return;
+    }
+
+    const { previewToken } = await response.json();
+    const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}?previewToken=${previewToken}`;
+    setIsLoading(false);
+    const linkElement = document.createElement("a");
+    linkElement.href = previewLink;
+    linkElement.target = "_blank";
+    document.body.appendChild(linkElement);
+    linkElement.click();
+
+    setTimeout(() => {
+      document.body.removeChild(linkElement);
+    }, 100);
+  };
+
+  const applyPreset = (presetId: string) => {
+    const preset = presets?.find((p) => p.id === presetId);
+    if (!preset) return;
+
+    setData((prev) => {
+      return {
+        ...prev,
+        name: prev.name, // Keep existing name
+        domain: prev.domain, // Keep existing domain
+        slug: prev.slug, // Keep existing slug
+        emailProtected: preset.emailProtected ?? prev.emailProtected,
+        emailAuthenticated:
+          preset.emailAuthenticated ?? prev.emailAuthenticated,
+        allowList: preset.allowList || prev.allowList,
+        denyList: preset.denyList || prev.denyList,
+        password: preset.password || prev.password,
+        enableCustomMetatag:
+          preset.enableCustomMetaTag ?? prev.enableCustomMetatag,
+        metaTitle: preset.metaTitle || prev.metaTitle,
+        metaDescription: preset.metaDescription || prev.metaDescription,
+        metaImage: preset.metaImage || prev.metaImage,
+        metaFavicon: preset.metaFavicon || prev.metaFavicon,
+        allowDownload: preset.allowDownload || prev.allowDownload,
+        enableAgreement: preset.enableAgreement || prev.enableAgreement,
+        agreementId: preset.agreementId || prev.agreementId,
+        enableScreenshotProtection:
+          preset.enableScreenshotProtection || prev.enableScreenshotProtection,
+        enableNotification: !!preset.enableNotification,
+      };
+    });
+
+    setCurrentPreset(preset);
+  };
+
+  const handlePermissionsSave = async (permissions: ItemPermission | null) => {
+    if (!pendingLinkData) return;
+
+    setIsSaving(true);
+
+    try {
+      // Use the unified function for both new and existing links
+      await createOrUpdateLinkWithPermissions(
+        pendingLinkData,
+        permissions,
+        false,
+        true,
+      );
+
+      // Close the sheets and show success
+      setIsOpen(false);
+      setShowPermissionsSheet(false);
+      setPendingLinkData(null);
+    } catch (error) {
+      console.error("Error creating/updating link with permissions:", error);
+      setIsSaving(false);
+    }
+  };
+
+  const createOrUpdateLinkWithPermissions = async (
+    linkData: DEFAULT_LINK_TYPE,
+    permissions: ItemPermission | null,
+    shouldPreview: boolean = false,
+    showSuccess: boolean = false,
+  ) => {
+    // Upload the image if it's a data URL
+    let blobUrl: string | null =
+      linkData.metaImage && linkData.metaImage.startsWith("data:")
+        ? null
+        : linkData.metaImage;
+    if (linkData.metaImage && linkData.metaImage.startsWith("data:")) {
+      // Convert the data URL to a blob
+      const blob = convertDataUrlToFile({ dataUrl: linkData.metaImage });
+      // Upload the blob to vercel storage
+      blobUrl = await uploadImage(blob);
+    }
+
+    // Upload meta favicon if it's a data URL
+    let blobUrlFavicon: string | null =
+      linkData.metaFavicon && linkData.metaFavicon.startsWith("data:")
+        ? null
+        : linkData.metaFavicon;
+    if (linkData.metaFavicon && linkData.metaFavicon.startsWith("data:")) {
+      const blobFavicon = convertDataUrlToFile({
+        dataUrl: linkData.metaFavicon,
+      });
+      blobUrlFavicon = await uploadImage(blobFavicon);
+    }
+
+    let endpoint = "/api/links";
+    let method = "POST";
+    const isUpdating = !!currentLink?.id;
+
+    if (isUpdating) {
+      endpoint = `/api/links/${currentLink.id}`;
+      method = "PUT";
+    }
+
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...linkData,
+        metaImage: blobUrl,
+        metaFavicon: blobUrlFavicon,
+        targetId: targetId,
+        linkType: linkType,
+        teamId: teamInfo?.currentTeam?.id,
+      }),
+    });
+
+    if (!response.ok) {
+      // handle error with toast message
+      const { error } = await response.json();
+      toast.error(error);
+      setIsSaving(false);
+      return;
+    }
+
+    const returnedLink = await response.json();
+
+    // Handle permissions
+    if (permissions === null && isUpdating && currentLink?.permissionGroupId) {
+      // Delete the permission group - database will set permissionGroupId to null automatically
+      const deleteResponse = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!deleteResponse.ok) {
+        // Handle error with toast message
+        try {
+          const errorData = await deleteResponse.json();
+          toast.error(errorData.error || "Failed to delete permission group");
+        } catch {
+          toast.error("Failed to delete permission group");
+        }
+        setIsSaving(false);
+        return;
+      }
+
+      // Show success message
+      toast.success("Permission group deleted successfully");
+
+      // Refresh the links cache
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${encodeURIComponent(
+          targetId,
+        )}/links`,
+      );
+
+      // Clear the permission group cache instead of invalidating to avoid 404
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
+        undefined,
+        false,
+      );
+    } else if (permissions !== null) {
+      // Only handle permission group operations if we're not deleting
+      await handlePermissionGroupOperations(
+        returnedLink,
+        permissions,
+        isUpdating,
+      );
+    }
+
+    // Handle UI updates and notifications
+    await handlePostSaveOperations(
+      returnedLink,
+      isUpdating,
+      showSuccess,
+      shouldPreview,
+      permissions,
+    );
+
+    setData(DEFAULT_LINK_PROPS(linkType, groupId));
+    setIsSaving(false);
+  };
+
+  const handlePermissionGroupOperations = async (
+    link: any,
+    permissions: ItemPermission,
+    isUpdating: boolean,
+  ) => {
+    // Create/update permission group with the provided permissions
+    if (isUpdating && currentLink?.permissionGroupId) {
+      // Update existing permission group
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            permissions: permissions,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        // Invalidate the permission group cache
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
+        );
+      }
+    } else {
+      // Create new permission group
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            permissions: permissions,
+            linkId: link.id,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        const { permissionGroup: newPermissionGroup, _ } =
+          await response.json();
+        // Cache the new permission group data
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${newPermissionGroup.id}`,
+          newPermissionGroup,
+          false,
+        );
+
+        // Update the link with the new permission group ID
+        if (newPermissionGroup.id) {
+          link.permissionGroupId = newPermissionGroup.id;
+        }
+      }
+    }
+  };
+
+  const handlePostSaveOperations = async (
+    returnedLink: any,
+    isUpdating: boolean,
+    showSuccess: boolean,
+    shouldPreview: boolean,
+    permissions: ItemPermission | null,
+  ) => {
+    const endpointTargetType = `${linkType.replace("_LINK", "").toLowerCase()}s`; // "documents" or "datarooms"
+
+    if (isUpdating) {
+      setIsOpen(false);
+      // Update the link in the list of links
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          targetId,
+        )}/links`,
+        (existingLinks || []).map((link) =>
+          link.id === currentLink!.id ? returnedLink : link,
+        ),
+        false,
+      );
+
+      // Handle group changes
+      if (!!groupId && returnedLink.audienceType === LinkAudienceType.GROUP) {
+        // If we're viewing a group page
+        if (currentLink!.groupId !== returnedLink.groupId) {
+          // If the link's group has changed
+          if (currentLink!.groupId === groupId) {
+            // If the link was in the current group but is now in a different group
+            // Remove it from the current group's view
+            const groupLinks =
+              existingLinks?.filter(
+                (link) =>
+                  link.id !== currentLink!.id && link.groupId === groupId,
+              ) || [];
+
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+                targetId,
+              )}/groups/${groupId}/links`,
+              groupLinks,
+              false,
+            );
+          } else if (returnedLink.groupId === groupId) {
+            // If the link was in a different group but is now in the current group
+            // Add it to the current group's view
+            const groupLinks =
+              existingLinks?.filter((link) => link.groupId === groupId) || [];
+
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+                targetId,
+              )}/groups/${groupId}/links`,
+              [returnedLink, ...groupLinks],
+              false,
+            );
+          }
+        } else if (returnedLink.groupId === groupId) {
+          // If the link's group hasn't changed and it's in the current group
+          // Update it in the current group's view
+          const groupLinks =
+            existingLinks?.filter((link) => link.groupId === groupId) || [];
+
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+              targetId,
+            )}/groups/${groupId}/links`,
+            groupLinks.map((link) =>
+              link.id === currentLink!.id ? returnedLink : link,
+            ),
+            false,
+          );
+        }
+      }
+
+      toast.success("Link updated successfully");
+    } else {
+      // Add the new link to the list of links
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          targetId,
+        )}/links`,
+        [returnedLink, ...(existingLinks || [])],
+        false,
+      );
+
+      // Also update the group-specific links cache if this is a group link
+      if (
+        !!groupId &&
+        returnedLink.audienceType === LinkAudienceType.GROUP &&
+        returnedLink.groupId === groupId
+      ) {
+        const groupLinks =
+          existingLinks?.filter((link) => link.groupId === groupId) || [];
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+            targetId,
+          )}/groups/${groupId}/links`,
+          [returnedLink, ...groupLinks],
+          false,
+        );
+      }
+
+      analytics.capture("Link Added", {
+        linkId: returnedLink.id,
+        targetId,
+        linkType,
+        customDomain: returnedLink.domainSlug,
+      });
+
+      if (showSuccess) {
+        // Show success sheet instead of closing
+        setIsOpen(false);
+        setShowPermissionsSheet(false);
+        setPendingLinkData(null);
+        setCreatedLink(returnedLink);
+        setHasCustomPermissions(
+          permissions !== null &&
+            permissions &&
+            Object.keys(permissions).length > 0,
+        );
+        setShowSuccessSheet(true);
+      } else {
+        setIsOpen(false);
+        setShowPermissionsSheet(false);
+        setPendingLinkData(null);
+        toast.success("Link created successfully");
+      }
+    }
+
+    if (shouldPreview) {
+      await handlePreviewLink(returnedLink);
+    }
+  };
+
+  // Remove the old createLinkWithPermissions function and replace it with a simple wrapper
+  const createLinkWithPermissions = async (
+    linkData: DEFAULT_LINK_TYPE,
+    shouldPreview: boolean = false,
+    showSuccess: boolean = false,
+  ) => {
+    // For backward compatibility, extract permissions from linkData
+    const permissions = linkData.permissions || null;
+    await createOrUpdateLinkWithPermissions(
+      linkData,
+      permissions,
+      shouldPreview,
+      showSuccess,
+    );
+  };
+
+  const handleSubmit = async (
+    event: any,
+    shouldPreview: boolean = false,
+    shouldManagePermissions: boolean = false,
+  ) => {
+    event.preventDefault();
+
+    if (shouldManagePermissions && linkType === LinkType.DATAROOM_LINK) {
+      // Store the link data and show permissions sheet
+      setPendingLinkData(data);
+      setShowPermissionsSheet(true);
+      return;
+    }
+
+    // Use the refactored function
+    await createLinkWithPermissions(data, shouldPreview);
+  };
+
+  const handleCreateAnother = () => {
+    // Close success sheet and open new link sheet
+    setShowSuccessSheet(false);
+    setCreatedLink(null);
+    setHasCustomPermissions(false);
+    setData(DEFAULT_LINK_PROPS(linkType, groupId));
+    setIsOpen(true);
+  };
+
+  return (
+    <>
+      <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
+        <SheetContent className="flex w-[90%] flex-col justify-between border-l border-gray-200 bg-background px-4 text-foreground dark:border-gray-800 dark:bg-gray-900 sm:w-[800px] sm:max-w-4xl md:px-5">
+          <SheetHeader className="text-start">
+            <SheetTitle>
+              {currentLink
+                ? `Edit ${currentLink.audienceType === LinkAudienceType.GROUP ? "group" : ""} link`
+                : "Create a new link"}
+            </SheetTitle>
+          </SheetHeader>
+
+          <form
+            className="flex grow flex-col"
+            onSubmit={(e) => handleSubmit(e, false)}
+          >
+            <ScrollArea className="flex-grow">
+              <div className="h-0 flex-1">
+                <div className="flex flex-1 flex-col justify-between pb-6">
+                  <div className="divide-y divide-gray-200">
+                    <Tabs
+                      value={data.audienceType}
+                      onValueChange={(value) =>
+                        setData({
+                          ...data,
+                          audienceType: value as LinkAudienceType,
+                        })
+                      }
+                    >
+                      {/* {linkType === LinkType.DATAROOM_LINK && !!!currentLink ? (
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value={LinkAudienceType.GENERAL}>
+                          General
+                        </TabsTrigger>
+                        {isDatarooms || isDataroomsPlus || isTrial ? (
+                          <TabsTrigger value={LinkAudienceType.GROUP}>
+                            Group
+                          </TabsTrigger>
+                        ) : (
+                          <UpgradePlanModal
+                            clickedPlan={PlanEnum.DataRooms}
+                            trigger="add_group_link"
+                          >
+                            <div className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all">
+                              Group
+                            </div>
+                          </UpgradePlanModal>
+                        )}
+                      </TabsList>
+                    ) : null} */}
+
+                      {/* GENERAL LINK */}
+                      <TabsContent value={LinkAudienceType.GENERAL}>
+                        <div className="space-y-6 pt-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="link-name">Link Name</Label>
+                            <Input
+                              type="text"
+                              name="link-name"
+                              id="link-name"
+                              placeholder="Recipient's Organization"
+                              value={data.name || ""}
+                              className="focus:ring-inset"
+                              onChange={(e) =>
+                                setData({ ...data, name: e.target.value })
+                              }
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <DomainSection
+                              {...{ data, setData, domains }}
+                              linkType={linkType}
+                              editLink={!!currentLink}
+                            />
+                          </div>
+
+                          {/* Preset Selector - only show when creating a new link */}
+                          {!currentLink &&
+                            isPresetsAllowed &&
+                            presets &&
+                            presets.length > 0 && (
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor="preset">Link Preset</Label>
+                                  <Link
+                                    href="/settings/presets"
+                                    className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                  >
+                                    Manage
+                                  </Link>
+                                </div>
+                                <Select onValueChange={applyPreset}>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select a preset" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {presets.map((preset) => (
+                                      <SelectItem
+                                        key={preset.id}
+                                        value={preset.id}
+                                      >
+                                        {preset.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">
+                                  Apply a preset to quickly configure link
+                                  settings
+                                </p>
+                              </div>
+                            )}
+
+                          <div className="relative flex items-center">
+                            <Separator className="absolute bg-muted-foreground" />
+                            <div className="relative mx-auto">
+                              <span className="bg-background px-2 text-sm text-muted-foreground dark:bg-gray-900">
+                                Link Options
+                              </span>
+                            </div>
+                          </div>
+
+                          <LinkOptions
+                            data={data}
+                            setData={setData}
+                            targetId={targetId}
+                            linkType={linkType}
+                            editLink={!!currentLink}
+                            currentPreset={currentPreset}
+                          />
+                        </div>
+                      </TabsContent>
+
+                      {/* GROUP LINK */}
+                      <TabsContent value={LinkAudienceType.GROUP}>
+                        <div className="space-y-6 pt-2">
+                          <div className="space-y-2">
+                            <div className="flex w-full items-center justify-between">
+                              <Label htmlFor="group-id">Group </Label>
+                              <ButtonTooltip content="Refresh groups">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    await mutateGroups();
+                                  }}
+                                >
+                                  <RefreshCwIcon className="h-4 w-4" />
+                                </Button>
+                              </ButtonTooltip>
+                            </div>
+                            <Select
+                              onValueChange={(value) => {
+                                if (value === "add_group") {
+                                  return;
+                                }
+
+                                setData({ ...data, groupId: value });
+                              }}
+                              defaultValue={data.groupId ?? undefined}
+                            >
+                              <SelectTrigger className="focus:ring-offset-3 flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-gray-400 sm:text-sm sm:leading-6">
+                                <SelectValue placeholder="Select an group" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {isLoadingGroups ? (
+                                  <SelectItem value="loading" disabled>
+                                    Loading groups...
+                                  </SelectItem>
+                                ) : viewerGroups && viewerGroups.length > 0 ? (
+                                  viewerGroups.map(({ id, name, _count }) => (
+                                    <SelectItem key={id} value={id}>
+                                      {name}{" "}
+                                      <span className="text-muted-foreground">
+                                        ({_count.members} members)
+                                      </span>
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value="no-groups" disabled>
+                                    No groups available
+                                  </SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="link-name">Link Name</Label>
+
+                            <Input
+                              type="text"
+                              name="link-name"
+                              id="link-name"
+                              placeholder={
+                                viewerGroups?.find(
+                                  (group) => group.id === data.groupId,
+                                )?.name
+                                  ? `${
+                                      viewerGroups?.find(
+                                        (group) => group.id === data.groupId,
+                                      )?.name
+                                    } Link`
+                                  : "Group Link"
+                              }
+                              value={data.name || ""}
+                              className="focus:ring-inset"
+                              onChange={(e) =>
+                                setData({ ...data, name: e.target.value })
+                              }
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <DomainSection
+                              {...{ data, setData, domains }}
+                              linkType={linkType}
+                              editLink={!!currentLink}
+                            />
+                          </div>
+
+                          {/* Preset Selector for Group links - only show when creating a new link */}
+                          {!currentLink &&
+                            isPresetsAllowed &&
+                            presets &&
+                            presets.length > 0 && (
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor="preset">Link Preset</Label>
+                                  <Link
+                                    href="/settings/presets"
+                                    className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                  >
+                                    Manage
+                                  </Link>
+                                </div>
+                                <Select onValueChange={applyPreset}>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select a preset" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {presets.map((preset) => (
+                                      <SelectItem
+                                        key={preset.id}
+                                        value={preset.id}
+                                      >
+                                        {preset.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">
+                                  Apply a preset to quickly configure link
+                                  settings
+                                </p>
+                              </div>
+                            )}
+
+                          <div className="relative flex items-center">
+                            <Separator className="absolute bg-muted-foreground" />
+                            <div className="relative mx-auto">
+                              <span className="bg-background px-2 text-sm text-muted-foreground dark:bg-gray-900">
+                                Link Options
+                              </span>
+                            </div>
+                          </div>
+
+                          <LinkOptions
+                            data={data}
+                            setData={setData}
+                            targetId={targetId}
+                            linkType={linkType}
+                            editLink={!!currentLink}
+                            currentPreset={currentPreset}
+                          />
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+                  <Separator className="mb-6 mt-2" />
+
+                  <div className="space-y-2">
+                    <TagSection
+                      {...{ data, setData }}
+                      teamId={teamInfo?.currentTeam?.id as string}
+                    />
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+
+            <SheetFooter>
+              <div className="flex flex-row-reverse items-center gap-2 pt-2">
+                {linkType === LinkType.DATAROOM_LINK &&
+                  currentLink?.audienceType !== LinkAudienceType.GROUP && (
+                    <Button
+                      type="button"
+                      variant="default"
+                      onClick={(e) => handleSubmit(e, false, true)}
+                    >
+                      Manage Permissions
+                    </Button>
+                  )}
+                <Button
+                  type="button"
+                  variant={
+                    linkType === LinkType.DOCUMENT_LINK ||
+                    (linkType === LinkType.DATAROOM_LINK &&
+                      currentLink?.audienceType === LinkAudienceType.GROUP)
+                      ? "default"
+                      : "outline"
+                  }
+                  loading={isSaving}
+                  onClick={(e) => handleSubmit(e, false)}
+                >
+                  {currentLink ? "Update Link" : "Save Link"}
+                </Button>
+                <BadgeTooltip
+                  content={currentLink ? "Update & Preview" : "Save & Preview"}
+                >
+                  <Button
+                    type="button"
+                    variant="link"
+                    loading={isLoading}
+                    onClick={(e) => handleSubmit(e, true)}
+                    className="flex items-center gap-2"
+                  >
+                    <EyeIcon className="h-4 w-4" />
+                  </Button>
+                </BadgeTooltip>
+              </div>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+
+        <PermissionsSheet
+          isOpen={showPermissionsSheet}
+          setIsOpen={(open) => {
+            setShowPermissionsSheet(open);
+            if (!open) {
+              setShowSuccessSheet(true);
+            }
+          }}
+          dataroomId={targetId}
+          linkId={currentLink?.id ?? undefined}
+          permissionGroupId={currentLink?.permissionGroupId ?? undefined}
+          onSave={handlePermissionsSave}
+        />
+      </Sheet>
+
+      {createdLink && (
+        <LinkSuccessSheet
+          isOpen={showSuccessSheet}
+          setIsOpen={setShowSuccessSheet}
+          link={createdLink}
+          hasCustomPermissions={hasCustomPermissions}
+          onCreateAnother={handleCreateAnother}
+        />
+      )}
+    </>
+  );
+}

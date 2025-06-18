@@ -4,6 +4,7 @@ import React from "react";
 import {
   DataroomBrand,
   DataroomFolder,
+  PermissionGroupAccessControls,
   ViewerGroupAccessControls,
 } from "@prisma/client";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
@@ -101,7 +102,7 @@ export default function DataroomViewer({
   isPreview?: boolean;
   folderId: string | null;
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
-  accessControls: ViewerGroupAccessControls[];
+  accessControls: ViewerGroupAccessControls[] | PermissionGroupAccessControls[];
   viewerId?: string;
   viewData: DEFAULT_DATAROOM_VIEW_TYPE;
   enableIndexFile?: boolean;

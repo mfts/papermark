@@ -20,6 +20,7 @@ import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 import AgreementSection from "@/components/links/link-sheet/agreement-section";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
 import AllowListSection from "@/components/links/link-sheet/allow-list-section";
+import AllowNotificationSection from "@/components/links/link-sheet/allow-notification-section";
 import { CustomFieldData } from "@/components/links/link-sheet/custom-fields-panel";
 import CustomFieldsSection from "@/components/links/link-sheet/custom-fields-section";
 import DenyListSection from "@/components/links/link-sheet/deny-list-section";
@@ -75,14 +76,8 @@ export default function EditPreset() {
   const [data, setData] = useState<PRESET_DATA | null>(null);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
-  const {
-    isStarter,
-    isPro,
-    isBusiness,
-    isDatarooms,
-    isDataroomsPlus,
-    isTrial,
-  } = usePlan();
+  const { isPro, isBusiness, isDatarooms, isDataroomsPlus, isTrial } =
+    usePlan();
   const { limits } = useLimits();
   const allowAdvancedLinkControls = limits
     ? limits?.advancedLinkControlsOnPro
@@ -92,17 +87,20 @@ export default function EditPreset() {
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
   const [upgradePlan, setUpgradePlan] = useState<PlanEnum>(PlanEnum.Business);
+  const [highlightItem, setHighlightItem] = useState<string[]>([]);
 
   const handleUpgradeStateChange = ({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => {
     setOpenUpgradeModal(state);
     setTrigger(trigger);
     if (plan) {
       setUpgradePlan(plan as PlanEnum);
     }
+    setHighlightItem(highlightItem || []);
   };
 
   useEffect(() => {
@@ -139,6 +137,7 @@ export default function EditPreset() {
         agreementId: preset.agreementId,
         enableCustomFields: customFields.length > 0,
         customFields: customFields,
+        enableNotification: preset.enableNotification ?? false,
       });
     }
   }, [preset]);
@@ -185,6 +184,7 @@ export default function EditPreset() {
           enableScreenshotProtection: data.enableScreenshotProtection,
           enableCustomFields: data.enableCustomFields,
           customFields: data.customFields,
+          enableNotification: data.enableNotification,
         }),
       });
 
@@ -379,6 +379,11 @@ export default function EditPreset() {
                   handleUpgradeStateChange={handleUpgradeStateChange}
                 />
 
+                <AllowNotificationSection
+                  data={data as any}
+                  setData={setData as any}
+                />
+
                 <AllowDownloadSection
                   data={data as any}
                   setData={setData as any}
@@ -502,6 +507,7 @@ export default function EditPreset() {
         open={openUpgradeModal}
         setOpen={setOpenUpgradeModal}
         trigger={trigger}
+        highlightItem={highlightItem}
       />
     </AppLayout>
   );

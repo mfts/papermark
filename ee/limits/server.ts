@@ -13,6 +13,7 @@ import {
 
 // Function to determine if a plan is free or free+drtrial
 const isFreePlan = (plan: string) => plan === "free" || plan === "free+drtrial";
+const isTrialPlan = (plan: string) => plan.includes("drtrial");
 
 // Function to get the base plan from a plan string
 const getBasePlan = (plan: string) => plan.split("+")[0];
@@ -99,6 +100,7 @@ export async function getLimits({
     let parsedData = configSchema.parse(team.limits);
 
     const basePlan = getBasePlan(team.plan);
+    const isTrial = isTrialPlan(team.plan);
     const defaultLimits = planLimitsMap[basePlan];
 
     // Adjust limits based on the plan if they're at the default value
@@ -107,6 +109,9 @@ export async function getLimits({
         ...defaultLimits,
         ...parsedData,
         usage: { documents: documentCount, links: linkCount, users: userCount },
+        ...(isTrial && {
+          users: 3,
+        }),
       };
     } else {
       return {
@@ -122,12 +127,15 @@ export async function getLimits({
   } catch (error) {
     // if no limits set or parsing fails, return default limits based on the plan
     const basePlan = getBasePlan(team.plan);
+    const isTrial = isTrialPlan(team.plan);
     const defaultLimits = planLimitsMap[basePlan] || FREE_PLAN_LIMITS;
-
     return {
       ...defaultLimits,
       conversationsInDataroom: false,
       usage: { documents: documentCount, links: linkCount, users: userCount },
+      ...(isTrial && {
+        users: 3,
+      }),
     };
   }
 }

@@ -30,6 +30,7 @@ export default function WatermarkSection({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => void;
   presets: LinkPreset | null;
 }) {
@@ -97,6 +98,7 @@ export default function WatermarkSection({
             state: true,
             trigger: "link_sheet_watermark_section",
             plan: "Data Rooms",
+            highlightItem: ["watermark"],
           })
         }
       />

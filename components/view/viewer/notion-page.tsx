@@ -10,6 +10,8 @@ import { NotionRenderer } from "react-notion-x";
 // core styles shared by all of react-notion-x (required)
 import "react-notion-x/src/styles.css";
 
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
+import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 import { NotionTheme } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { determineTextColor } from "@/lib/utils/determine-text-color";
@@ -24,6 +26,7 @@ import { Portal } from "@/components/ui/portal";
 
 import { ScreenProtector } from "../../view/ScreenProtection";
 import Nav, { TNavData } from "../../view/nav";
+import { AwayPoster } from "./away-poster";
 
 // custom styles for notion
 import "@/styles/custom-notion-styles.css";
@@ -47,9 +50,8 @@ export const NotionPage = ({
   screenshotProtectionEnabled: boolean;
   navData: TNavData;
 }) => {
-  const { isPreview, linkId, documentId, viewId, brand, dataroomId } = navData;
+  const { isPreview, linkId, documentId, viewId, brand } = navData;
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
-  const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [subPageId, setSubPageId] = useQueryState("pageid", {
     history: "push",
@@ -69,31 +71,105 @@ export const NotionPage = ({
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
   const visibilityRef = useRef<boolean>(true);
+  const trackingOptions = getTrackingOptions();
+  const {
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+    isInactive,
+    updateActivity,
+  } = useSafePageViewTracker({
+    ...trackingOptions,
+    externalStartTimeRef: startTimeRef,
+  });
+
+  // Start interval tracking when component mounts
+  useEffect(() => {
+    const trackingData = {
+      linkId: linkId,
+      documentId: documentId,
+      viewId: viewId,
+      pageNumber: pageNumberRef.current,
+      versionNumber: versionNumber,
+      isPreview: isPreview,
+      dataroomId: navData?.dataroomId || undefined,
+    };
+
+    startIntervalTracking(trackingData);
+
+    return () => {
+      stopIntervalTracking();
+    };
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    isPreview,
+    startIntervalTracking,
+    stopIntervalTracking,
+  ]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
         startTimeRef.current = Date.now(); // Reset start time when page becomes visible
+        resetTrackingState();
+
+        // Restart interval tracking
+        const trackingData = {
+          linkId: linkId,
+          documentId: documentId,
+          viewId: viewId,
+          pageNumber: pageNumberRef.current,
+          versionNumber: versionNumber,
+          isPreview: isPreview,
+          dataroomId: navData?.dataroomId || undefined,
+        };
+        startIntervalTracking(trackingData);
       } else {
         visibilityRef.current = false;
-        const duration = Date.now() - startTimeRef.current;
-        if (duration > 0) {
-          trackPageView(duration);
-        }
+        stopIntervalTracking();
+
+        // Track final duration using activity-aware calculation
+        const duration = getActiveDuration();
+        trackPageViewSafely(
+          {
+            linkId: linkId,
+            documentId: documentId,
+            viewId: viewId,
+            duration: duration,
+            pageNumber: pageNumberRef.current,
+            versionNumber: versionNumber,
+            isPreview: isPreview,
+            dataroomId: navData?.dataroomId || undefined,
+          },
+          true,
+        );
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      if (visibilityRef.current) {
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView(duration); // Also capture duration if component unmounts while visible
-      }
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    isPreview,
+    navData,
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   // Add this effect near your other useEffect hooks
   useEffect(() => {
@@ -174,8 +250,21 @@ export const NotionPage = ({
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      const duration = Date.now() - startTimeRef.current;
-      trackPageView(duration);
+      stopIntervalTracking();
+      const duration = getActiveDuration();
+      trackPageViewSafely(
+        {
+          linkId: linkId,
+          documentId: documentId,
+          viewId: viewId,
+          duration: duration,
+          pageNumber: pageNumberRef.current,
+          versionNumber: versionNumber,
+          isPreview: isPreview,
+          dataroomId: navData?.dataroomId || undefined,
+        },
+        true,
+      );
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -183,26 +272,16 @@ export const NotionPage = ({
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [subPageId]);
-
-  async function trackPageView(duration: number = 0) {
-    if (isPreview) return;
-
-    await fetch("/api/record_view", {
-      method: "POST",
-      body: JSON.stringify({
-        linkId: linkId,
-        documentId: documentId,
-        viewId: viewId,
-        duration: duration,
-        pageNumber: pageNumberRef.current,
-        versionNumber: versionNumber,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    isPreview,
+    trackPageViewSafely,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   // // Function to calculate scroll percentage
   // const calculateScrollPercentage = () => {
@@ -381,6 +460,11 @@ export const NotionPage = ({
         />
       </div>
       {screenshotProtectionEnabled ? <ScreenProtector /> : null}
+      <AwayPoster
+        isVisible={isInactive}
+        inactivityThreshold={getTrackingOptions().inactivityThreshold}
+        onDismiss={updateActivity}
+      />
     </div>
   );
 };

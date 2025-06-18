@@ -32,6 +32,7 @@ export default function OGSection({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => void;
   editLink: boolean;
   presets: LinkPreset | null;
@@ -74,34 +75,6 @@ export default function OGSection({
   useEffect(() => {
     setEnabled(enableCustomMetatag);
   }, [enableCustomMetatag]);
-
-  // useEffect(() => {
-  //   if (
-  //     presets?.enableCustomMetaTag &&
-  //     !(metaTitle || metaDescription || metaImage || metaFavicon)
-  //   ) {
-  //     const preset = presets;
-  //     if (preset) {
-  //       setData((prev) => ({
-  //         ...prev,
-  //         metaFavicon: prev.metaFavicon || preset.metaFavicon,
-  //         metaImage: prev.metaImage || preset.metaImage,
-  //         metaTitle: prev.metaTitle || preset.metaTitle,
-  //         metaDescription: prev.metaDescription || preset.metaDescription,
-  //         enableCustomMetatag: !editLink && true,
-  //       }));
-  //     }
-  //   }
-  // }, [
-  //   presets,
-  //   setData,
-  //   editLink,
-  //   metaFavicon,
-  //   enableCustomMetatag,
-  //   metaTitle,
-  //   metaDescription,
-  //   metaImage,
-  // ]);
 
   const handleCustomMetatag = async () => {
     const updatedCustomMetatag = !enabled;
@@ -164,8 +137,8 @@ export default function OGSection({
   return (
     <div className="pb-5">
       <LinkItem
-        tooltipContent="Customize how your content appears when shared on social media."
-        title="Custom social media cards"
+        tooltipContent="Customize how your links look when shared."
+        title="Custom Link Preview"
         link="https://www.papermark.com/help/article/change-social-media-cards"
         enabled={enableCustomMetatag}
         action={handleCustomMetatag}
@@ -176,6 +149,7 @@ export default function OGSection({
             state: true,
             trigger: "link_sheet_og_section",
             plan: "Business",
+            highlightItem: ["custom-social-cards"],
           })
         }
         resetAction={resetMetatags}

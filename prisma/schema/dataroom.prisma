@@ -13,6 +13,8 @@ model Dataroom {
   viewerGroups ViewerGroup[]
   brand        DataroomBrand?
 
+  permissionGroups PermissionGroup[]
+
   // conversation
   conversationsEnabled Boolean        @default(false)
   conversations        Conversation[]
@@ -152,4 +154,45 @@ model ViewerGroupAccessControls {
 enum ItemType {
   DATAROOM_DOCUMENT
   DATAROOM_FOLDER
+}
+
+model PermissionGroup {
+  id String @id @default(cuid())
+  name String
+  description String?
+
+  links Link[]
+  accessControls PermissionGroupAccessControls[]
+
+  dataroomId String
+  dataroom Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  teamId String
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dataroomId])
+  @@index([teamId])
+}
+
+model PermissionGroupAccessControls {
+  id String @id @default(cuid())
+  groupId String
+  group PermissionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // Access control for items (documents or dataroom items)
+  itemId String // This can be a document ID or a dataroom item ID
+  itemType ItemType // Enum: DATAROOM_DOCUMENT, DATAROOM_FOLDER
+
+  // Granular permissions
+  canView Boolean @default(true)
+  canDownload Boolean @default(false)
+  canDownloadOriginal Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([groupId, itemId])
+  @@index([groupId])
 }

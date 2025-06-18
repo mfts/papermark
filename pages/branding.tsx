@@ -392,6 +392,7 @@ export default function Branding() {
                       <UpgradePlanModal
                         clickedPlan={PlanEnum.Pro}
                         trigger={"branding_page"}
+                        highlightItem={["custom-branding"]}
                       >
                         <Button>Upgrade to Save Branding</Button>
                       </UpgradePlanModal>
