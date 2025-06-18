@@ -138,6 +138,7 @@ export default async function handle(
         include: {
           documents: {
             select: {
+              orderIndex: true,
               id: true,
               folderId: true,
               document: {
@@ -161,6 +162,7 @@ export default async function handle(
             include: {
               documents: {
                 select: {
+                  orderIndex: true,
                   id: true,
                   folderId: true,
                   document: {
