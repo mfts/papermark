@@ -164,6 +164,7 @@ export default async function handle(
         } else {
           const data = await fetchDataroomLinkData({
             linkId: link.id,
+            dataroomId: link.dataroomId,
             teamId: link.teamId!,
             permissionGroupId: link.permissionGroupId || undefined,
             ...(link.audienceType === LinkAudienceType.GROUP &&
