@@ -26,6 +26,33 @@ export const sortItemsByIndexAndName = <
   });
 };
 
+export const sortByIndexThenName = <
+  T extends {
+    orderIndex: number | null;
+    name?: string;
+    document?: { name: string };
+  },
+>(
+  items: T[],
+): T[] => {
+  return items.sort((a, b) => {
+    if (a.orderIndex !== null && b.orderIndex !== null) {
+      if (a.orderIndex !== b.orderIndex) {
+        return a.orderIndex - b.orderIndex;
+      }
+    }
+    if (a.orderIndex !== null && b.orderIndex === null) {
+      return -1;
+    }
+    if (a.orderIndex === null && b.orderIndex !== null) {
+      return 1;
+    }
+    const nameA = a.name || a.document?.name || "";
+    const nameB = b.name || b.document?.name || "";
+    return nameA.localeCompare(nameB);
+  });
+};
+
 // Helper function to extract the numerical part of a string
 const getNumber = (str: string): number => {
   const match = str.match(/^\d+/);
