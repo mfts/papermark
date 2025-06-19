@@ -1,6 +1,9 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useDocumentCache } from "./useDocumentCache";
+import { useSession } from "next-auth/react";
+import { useTeam } from "@/context/team-context";
+import { CustomUser } from "@/lib/types";
 
 interface DocumentTab {
     id: string;
@@ -18,9 +21,22 @@ export function useDocumentTabs() {
         updateDocument,
         isInitialized
     } = useDocumentCache();
+    const { data: session } = useSession();
+    const { currentTeam } = useTeam();
+
+    const getStorageKey = () => {
+        const user = session?.user as CustomUser;
+        if (!user?.id || !currentTeam?.id) {
+            return null;
+        }
+        return `documentTabs_${user.id}_${currentTeam.id}`;
+    };
 
     useEffect(() => {
-        const savedTabs = localStorage.getItem("documentTabs");
+        const storageKey = getStorageKey();
+        if (!storageKey) return;
+
+        const savedTabs = localStorage.getItem(storageKey);
         if (savedTabs) {
             const parsedTabs = JSON.parse(savedTabs);
             const persistentTabs = parsedTabs.filter((tab: DocumentTab) => !tab.isTemporary);
@@ -36,20 +52,23 @@ export function useDocumentTabs() {
                 }
             }
         }
-    }, [isInitialized]);
+    }, [isInitialized, session, currentTeam]);
 
     useEffect(() => {
+        const storageKey = getStorageKey();
+        if (!storageKey) return;
+
         if (tabs.length > 0) {
             const persistentTabs = tabs.filter(tab => !tab.isTemporary);
             if (persistentTabs.length > 0) {
-                localStorage.setItem("documentTabs", JSON.stringify(persistentTabs));
+                localStorage.setItem(storageKey, JSON.stringify(persistentTabs));
             } else {
-                localStorage.removeItem("documentTabs");
+                localStorage.removeItem(storageKey);
             }
         } else {
-            localStorage.removeItem("documentTabs");
+            localStorage.removeItem(storageKey);
         }
-    }, [tabs]);
+    }, [tabs, session, currentTeam]);
 
     useEffect(() => {
         const handleRouteChange = () => {
