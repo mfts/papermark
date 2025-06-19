@@ -1,13 +1,12 @@
-VERSION 1
-
 DESCRIPTION >
-    Get all video events for a specific view 
+    Get all video views for a specific document
 
-NODE get_view_video_events
+NODE get_document_video_views
 SQL >
     %
     SELECT
         timestamp,
+        view_id,
         event_type,
         start_time,
         end_time,
@@ -16,9 +15,8 @@ SQL >
         is_muted,
         is_focused,
         is_fullscreen
-    FROM video_views
+    FROM video_views__v1
     WHERE document_id = {{String(document_id, required=True)}}
-    AND view_id = {{String(view_id, required=True)}}
     ORDER BY timestamp ASC
 
-
+TYPE endpoint
