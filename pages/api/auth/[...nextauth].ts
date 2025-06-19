@@ -17,6 +17,13 @@ import { generateChecksum } from "@/lib/utils/generate-checksum";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
+function getMainDomainUrl(): string {
+  if (process.env.NODE_ENV === "development") {
+    return process.env.NEXTAUTH_URL || "http://localhost:3000";
+  }
+  return process.env.NEXTAUTH_URL || "https://app.papermark.com";
+}
+
 // This function can run for a maximum of 180 seconds
 export const config = {
   maxDuration: 180,
@@ -54,18 +61,37 @@ export const authOptions: NextAuthOptions = {
     }),
     EmailProvider({
       async sendVerificationRequest({ identifier, url }) {
+        const hasValidNextAuthUrl = !!process.env.NEXTAUTH_URL;
+        let finalUrl = url;
+
+        if (!hasValidNextAuthUrl) {
+          const mainDomainUrl = getMainDomainUrl();
+          const urlObj = new URL(url);
+          const mainDomainObj = new URL(mainDomainUrl);
+          urlObj.hostname = mainDomainObj.hostname;
+          urlObj.protocol = mainDomainObj.protocol;
+          urlObj.port = mainDomainObj.port || '';
+
+          finalUrl = urlObj.toString();
+        }
+
         if (process.env.NODE_ENV === "development") {
-          const checksum = generateChecksum(url);
+          const checksum = generateChecksum(finalUrl);
           const verificationUrlParams = new URLSearchParams({
-            verification_url: url,
+            verification_url: finalUrl,
             checksum,
           });
-          const verificationUrl = `${process.env.NEXTAUTH_URL}/verify?${verificationUrlParams}`;
+
+          const baseUrl = hasValidNextAuthUrl
+            ? process.env.NEXTAUTH_URL
+            : getMainDomainUrl();
+
+          const verificationUrl = `${baseUrl}/verify?${verificationUrlParams}`;
           console.log("[Login URL]", verificationUrl);
           return;
         } else {
           await sendVerificationRequestEmail({
-            url,
+            url: finalUrl,
             email: identifier,
           });
         }
