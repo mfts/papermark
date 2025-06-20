@@ -17,6 +17,7 @@ import {
   FolderIcon,
   HouseIcon,
   Loader,
+  MailIcon,
   ServerIcon,
 } from "lucide-react";
 
@@ -111,6 +112,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         trigger: "sidebar_visitors",
         plan: PlanEnum.Pro,
         highlightItem: ["visitors"],
+      },
+      {
+        title: "Access Requests",
+        url: "/access-requests",
+        icon: MailIcon,
+        current: router.pathname.includes("access-requests"),
+        disabled: isFree && !isTrial,
+        trigger: "sidebar_access_requests",
+        plan: PlanEnum.Pro,
+        highlightItem: ["access-requests"],
       },
       {
         title: "Branding",
