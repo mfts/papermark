@@ -10,27 +10,35 @@ interface CacheEntry {
 }
 
 const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours - documents rarely change frequently
-const CLEANUP_INTERVAL = 90 * 60 * 1000; // 1.5 hours - less frequent cleanup for IndexedDB
-const MAX_STORAGE_DURATION = 15 * 24 * 60 * 60 * 1000; // 7 days - keep documents longer
+const CLEANUP_INTERVAL = 120 * 60 * 60 * 1000; // 2 hours - less frequent cleanup for IndexedDB
+const MAX_STORAGE_DURATION = 15 * 24 * 60 * 60 * 1000; // 15 days - keep documents longer
 const STALE_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours - use stale cache if API fails
 
-export function useDocumentCache() {
-    const [isInitialized, setIsInitialized] = useState(false);
-    const cleanupIntervalRef = useRef<NodeJS.Timeout | null>(null);
+let globalInitialized = false;
+let globalInitPromise: Promise<void> | null = null;
+let cleanupInterval: NodeJS.Timeout | null = null;
 
-    // Initialize IndexedDB and set up cleanup
-    useEffect(() => {
-        const initDB = async () => {
-            try {
-                await documentIndexedDB.init();
-                setIsInitialized(true);
-                console.log('Document cache initialized with IndexedDB');
+const initializeDocumentCache = async (): Promise<void> => {
+    if (globalInitialized) {
+        return Promise.resolve();
+    }
 
-                // Clean up very old documents immediately (older than 7 days)
-                await documentIndexedDB.clearExpiredDocuments(MAX_STORAGE_DURATION);
+    if (globalInitPromise) {
+        return globalInitPromise;
+    }
 
-                // Set up periodic cleanup - run every hour
-                cleanupIntervalRef.current = setInterval(async () => {
+    globalInitPromise = (async () => {
+        try {
+            await documentIndexedDB.init();
+            globalInitialized = true;
+            console.log('Document cache initialized with IndexedDB');
+
+            // Clean up very old documents immediately (older than 7 days)
+            await documentIndexedDB.clearExpiredDocuments(MAX_STORAGE_DURATION);
+
+            // Set up periodic cleanup
+            if (!cleanupInterval) {
+                cleanupInterval = setInterval(async () => {
                     try {
                         await documentIndexedDB.clearExpiredDocuments(MAX_STORAGE_DURATION);
                         // Also clean up storage if it gets too large
@@ -39,20 +47,36 @@ export function useDocumentCache() {
                         console.error('Failed to clean up expired documents:', error);
                     }
                 }, CLEANUP_INTERVAL);
-
-            } catch (error) {
-                console.error('Failed to initialize document cache:', error);
-                setIsInitialized(true);
             }
-        };
 
-        initDB();
+        } catch (error) {
+            console.error('Failed to initialize document cache:', error);
+            globalInitialized = true;
+            globalInitPromise = null;
+            throw error;
+        }
+    })();
 
-        return () => {
-            if (cleanupIntervalRef.current) {
-                clearInterval(cleanupIntervalRef.current);
-            }
-        };
+    return globalInitPromise;
+};
+
+export function useDocumentCache() {
+    const [isInitialized, setIsInitialized] = useState(globalInitialized);
+
+    // Initialize IndexedDB and set up cleanup
+    useEffect(() => {
+        if (!globalInitialized) {
+            initializeDocumentCache()
+                .then(() => {
+                    setIsInitialized(true);
+                })
+                .catch((error) => {
+                    console.error('Cache initialization failed:', error);
+                    setIsInitialized(true);
+                });
+        } else {
+            setIsInitialized(true);
+        }
     }, []);
 
     const getDocument = useCallback(async (id: string): Promise<CacheEntry | null> => {
@@ -62,7 +86,6 @@ export function useDocumentCache() {
         }
 
         if (!isInitialized) {
-            console.log('IndexedDB not initialized yet');
             return null;
         }
 
@@ -70,7 +93,6 @@ export function useDocumentCache() {
             const cached = await documentIndexedDB.getDocument(id);
 
             if (!cached) {
-                console.log('Document not found in IndexedDB:', id);
                 return null;
             }
 
@@ -83,8 +105,6 @@ export function useDocumentCache() {
                     await documentIndexedDB.deleteDocument(id);
                     return null;
                 }
-
-                console.log('Using stale cache for document (will refresh in background):', id);
                 // Mark for background refresh
                 cached.isStale = true;
             } else {
@@ -125,13 +145,12 @@ export function useDocumentCache() {
         }
 
         try {
-            console.log('Storing document in IndexedDB:', id);
+            // Storing document in IndexedDB
             await documentIndexedDB.setDocument(id, {
                 document: data.document,
                 primaryVersion: data.primaryVersion,
                 links: data.links || [],
             });
-            console.log('Document stored successfully in IndexedDB:', id);
         } catch (error) {
             console.error('Failed to store document in IndexedDB:', error);
         }
@@ -145,8 +164,6 @@ export function useDocumentCache() {
         if (!isInitialized) return false;
 
         try {
-            console.log('Updating document in IndexedDB:', id);
-
             // update that respects version numbers
             const wasUpdated = await documentIndexedDB.updateDocumentIfNewer(id, {
                 document: data.document,
@@ -166,7 +183,6 @@ export function useDocumentCache() {
 
         try {
             await documentIndexedDB.deleteDocument(id);
-            console.log('Document removed from IndexedDB:', id);
         } catch (error) {
             console.error('Failed to remove document from IndexedDB:', error);
         }
@@ -198,7 +214,6 @@ export function useDocumentCache() {
             console.error('Failed to clear cache:', error);
         }
     }, [isInitialized]);
-
 
     return {
         getDocument,

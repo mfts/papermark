@@ -21,13 +21,35 @@ class DocumentIndexedDB {
     private storeName = 'documents';
     private db: IDBDatabase | null = null;
     private maxStorageSize = 100 * 1024 * 1024; // 100MB limit
+    private isInitializing = false;
+    private initPromise: Promise<void> | null = null;
 
     async init(): Promise<void> {
+        if (this.db) {
+            return Promise.resolve();
+        }
+
+        if (this.isInitializing && this.initPromise) {
+            return this.initPromise;
+        }
+
+        this.isInitializing = true;
+        this.initPromise = this._performInit();
+
+        try {
+            await this.initPromise;
+        } finally {
+            this.isInitializing = false;
+        }
+    }
+
+    private _performInit(): Promise<void> {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.dbName, this.version);
 
             request.onerror = () => {
                 console.error('Failed to open IndexedDB:', request.error);
+                this.initPromise = null;
                 reject(request.error);
             };
 
@@ -50,10 +72,14 @@ class DocumentIndexedDB {
         });
     }
 
-    async getDocument(id: string): Promise<DocumentData | null> {
+    private async ensureInit(): Promise<void> {
         if (!this.db) {
             await this.init();
         }
+    }
+
+    async getDocument(id: string): Promise<DocumentData | null> {
+        await this.ensureInit();
 
         return new Promise((resolve, reject) => {
             const transaction = this.db!.transaction([this.storeName], 'readonly');
@@ -68,10 +94,8 @@ class DocumentIndexedDB {
             request.onsuccess = () => {
                 const result = request.result as DocumentStore;
                 if (result) {
-                    console.log('Found document in IndexedDB:', id);
                     resolve(result.data);
                 } else {
-                    console.log('Document not found in IndexedDB:', id);
                     resolve(null);
                 }
             };
@@ -79,9 +103,7 @@ class DocumentIndexedDB {
     }
 
     async setDocument(id: string, data: Omit<DocumentData, 'timestamp' | 'version' | 'isStale'>): Promise<void> {
-        if (!this.db) {
-            await this.init();
-        }
+        await this.ensureInit();
 
         const documentData: DocumentData = {
             ...data,
@@ -101,7 +123,6 @@ class DocumentIndexedDB {
             };
 
             request.onsuccess = () => {
-                console.log('Document stored in IndexedDB:', id);
                 resolve();
             };
         });
@@ -136,9 +157,7 @@ class DocumentIndexedDB {
     }
 
     async deleteDocument(id: string): Promise<void> {
-        if (!this.db) {
-            await this.init();
-        }
+        await this.ensureInit();
 
         return new Promise((resolve, reject) => {
             const transaction = this.db!.transaction([this.storeName], 'readwrite');
@@ -158,9 +177,7 @@ class DocumentIndexedDB {
     }
 
     async getAllDocuments(): Promise<DocumentStore[]> {
-        if (!this.db) {
-            await this.init();
-        }
+        await this.ensureInit();
 
         return new Promise((resolve, reject) => {
             const transaction = this.db!.transaction([this.storeName], 'readonly');
@@ -179,9 +196,7 @@ class DocumentIndexedDB {
     }
 
     async clearExpiredDocuments(maxAge: number = 7 * 24 * 60 * 60 * 1000): Promise<void> {
-        if (!this.db) {
-            await this.init();
-        }
+        await this.ensureInit();
 
         const cutoffTime = Date.now() - maxAge;
 
@@ -190,6 +205,8 @@ class DocumentIndexedDB {
             const store = transaction.objectStore(this.storeName);
             const index = store.index('timestamp');
             const request = index.openCursor(IDBKeyRange.upperBound(cutoffTime));
+
+            let deletedCount = 0;
 
             request.onerror = () => {
                 console.error('Failed to clear expired documents:', request.error);
@@ -200,9 +217,9 @@ class DocumentIndexedDB {
                 const cursor = request.result;
                 if (cursor) {
                     cursor.delete();
+                    deletedCount++;
                     cursor.continue();
                 } else {
-                    console.log('Cleared expired documents from IndexedDB');
                     resolve();
                 }
             };
@@ -210,9 +227,7 @@ class DocumentIndexedDB {
     }
 
     async clearAllDocuments(): Promise<void> {
-        if (!this.db) {
-            await this.init();
-        }
+        await this.ensureInit();
 
         return new Promise((resolve, reject) => {
             const transaction = this.db!.transaction([this.storeName], 'readwrite');

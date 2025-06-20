@@ -32,7 +32,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </header>
           <TrialBanner />
           <BlockingModal />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1" id="main-content">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>

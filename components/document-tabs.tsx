@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 
 import {
   DndContext,
@@ -150,8 +150,40 @@ function SortableTab({
   );
 }
 
+function useMainContentWidth() {
+  const [width, setWidth] = useState<number | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+
+  useEffect(() => {
+    const mainContent = document.getElementById("main-content");
+    if (!mainContent) return;
+
+    const updateWidth = () => {
+      const rect = mainContent.getBoundingClientRect();
+      setWidth(rect.width);
+    };
+    updateWidth();
+    if (window.ResizeObserver) {
+      resizeObserverRef.current = new ResizeObserver(() => {
+        updateWidth();
+      });
+      resizeObserverRef.current.observe(mainContent);
+    }
+    window.addEventListener("resize", updateWidth);
+
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      }
+      window.removeEventListener("resize", updateWidth);
+    };
+  }, []);
+  return width;
+}
+
 export function DocumentTabs() {
   const { state } = useSidebar();
+  const mainContentWidth = useMainContentWidth();
   const {
     tabs,
     activeId,
@@ -250,14 +282,22 @@ export function DocumentTabs() {
       : null;
   const showPlusButton = isOnDocumentPage() && isCurrentTabTemporary();
 
+  const dynamicStyle = mainContentWidth
+    ? { width: `${mainContentWidth}px` }
+    : {};
+  const fallbackClassName = !mainContentWidth
+    ? state === "expanded"
+      ? "w-screen md:w-[calc(100vw-var(--sidebar-width)-12px)]"
+      : "w-screen md:w-[calc(100vw-var(--sidebar-width-icon)-28px)]"
+    : "";
+
   return (
     <div
       className={cn(
         "flex h-7 shrink-0 items-center border-b border-border",
-        state === "expanded"
-          ? "w-screen md:w-[calc(100vw-var(--sidebar-width)-12px)]"
-          : "w-screen md:w-[calc(100vw-var(--sidebar-width-icon)-28px)]",
+        fallbackClassName,
       )}
+      style={dynamicStyle}
     >
       <div className="relative flex w-full items-center px-3">
         <ScrollArea className="w-full" type="always">
