@@ -4,7 +4,10 @@ import { z } from "zod";
 import { VIDEO_EVENT_TYPES } from "../constants";
 import { WEBHOOK_TRIGGERS } from "../webhook/constants";
 
-const tb = new Tinybird({ token: process.env.TINYBIRD_TOKEN! });
+const tb = new Tinybird({
+  token: process.env.TINYBIRD_TOKEN!,
+  baseUrl: process.env.TINYBIRD_HOST || 'https://api.tinybird.co',
+});
 
 export const publishPageView = tb.buildIngestEndpoint({
   datasource: "page_views__v3",
