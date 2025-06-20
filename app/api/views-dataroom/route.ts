@@ -269,7 +269,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Check if email is denied to visit the link
-      if (link.denyList && link.denyList.length > 0) {
+      if (email && typeof email === 'string' && email.includes('@') && link.denyList && link.denyList.length > 0) {
         // Extract the domain from the email address
         const emailDomain = email.substring(email.lastIndexOf("@"));
 
@@ -322,9 +322,11 @@ export async function POST(request: NextRequest) {
           );
 
           // Extract domain from email
-          const emailDomain = email.substring(email.lastIndexOf("@"));
+          const emailDomain = email && typeof email === 'string' && email.includes('@')
+            ? email.substring(email.lastIndexOf("@"))
+            : '';
           // Check domain access
-          const hasDomainAccess = group.domains.some(
+          const hasDomainAccess = emailDomain && group.domains.some(
             (domain) => domain === emailDomain,
           );
 
@@ -510,7 +512,7 @@ export async function POST(request: NextRequest) {
 
       // Check if email is allowed to visit the link (after all verification is complete)
       // This check should happen for all users, regardless of team membership
-      if (!isTeamMember && email && link.allowList && link.allowList.length > 0) {
+      if (!isTeamMember && email && typeof email === 'string' && email.includes('@') && link.allowList && link.allowList.length > 0) {
         // Extract the domain from the email address
         const emailDomain = email.substring(email.lastIndexOf("@"));
 

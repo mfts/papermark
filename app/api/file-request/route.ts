@@ -16,7 +16,6 @@ export async function POST(request: NextRequest) {
         }
 
         const { success } = await ratelimit(5, "1 m").limit(`access-request:${email}`);
-        console.log("success", success);
         if (!success) {
             return NextResponse.json(
                 { message: "Too many requests. Please try again later." },
@@ -101,6 +100,30 @@ export async function POST(request: NextRequest) {
                     (denied.startsWith("@") && emailDomain === denied)
                 );
             });
+        }
+
+        const existingRequest = await prisma.accessRequest.findUnique({
+            where: {
+                email_linkId: {
+                    email,
+                    linkId,
+                }
+            },
+            select: {
+                status: true,
+                requestedAt: true,
+            }
+        });
+
+        if (existingRequest) {
+            const statusMessage = existingRequest.status === "PENDING"
+                ? "An access request for this email is already pending review."
+                : "An access request for this email has already been submitted.";
+
+            return NextResponse.json(
+                { message: statusMessage },
+                { status: 400 }
+            );
         }
 
         // Create access request record

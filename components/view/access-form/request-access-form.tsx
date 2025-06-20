@@ -67,7 +67,7 @@ export default function RequestAccessForm({
         }}
       >
         {/* Light Navbar */}
-        {logoOnAccessForm && brand && brand.logo && (
+        {logoOnAccessForm && brand && brand.logo && typeof brand.logo === 'string' && (
           <nav
             className="w-full"
             style={{
@@ -76,7 +76,7 @@ export default function RequestAccessForm({
           >
             <div className="flex h-16 items-center justify-start px-2 sm:px-6 lg:px-8">
               <img
-                src={brand.logo as string}
+                src={brand.logo}
                 alt="Brand Logo"
                 className="h-16 w-auto object-contain"
               />
@@ -136,7 +136,7 @@ export default function RequestAccessForm({
       }}
     >
       {/* Light Navbar */}
-      {logoOnAccessForm && brand && brand.logo && (
+      {logoOnAccessForm && brand && brand.logo && typeof brand.logo === 'string' && (
         <nav
           className="w-full"
           style={{
@@ -145,7 +145,7 @@ export default function RequestAccessForm({
         >
           <div className="flex h-16 items-center justify-start px-2 sm:px-6 lg:px-8">
             <img
-              src={brand.logo as string}
+              src={brand.logo}
               alt="Brand Logo"
               className="h-16 w-auto object-contain"
             />

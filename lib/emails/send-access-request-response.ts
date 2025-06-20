@@ -32,6 +32,6 @@ export const sendAccessRequestResponse = async ({
         return { success: true, data };
     } catch (error) {
         console.error("Error sending access request email:", error);
-        throw error;
+        return { success: false, error: error };
     }
 }; 

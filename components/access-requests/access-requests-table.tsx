@@ -1,5 +1,4 @@
 import { useState } from "react";
-import React from "react";
 
 import { useTeam } from "@/context/team-context";
 import { AccessRequest, AccessRequestStatus } from "@prisma/client";
@@ -76,6 +75,18 @@ type AccessRequestWithDetails = AccessRequest & {
     email: string;
   };
 };
+
+interface AccessRequestApprovalResponse extends AccessRequestWithDetails {
+  notificationMessage?: string;
+}
+
+interface AccessRequestDenyResponse {
+  success: boolean;
+}
+
+interface AccessRequestDeleteResponse {
+  success: boolean;
+}
 
 const getStatusVariant = (status: AccessRequestStatus) => {
   switch (status) {
@@ -155,7 +166,7 @@ export function AccessRequestsTable({
       if (!response.ok) {
         throw new Error("Failed to approve access request");
       }
-      const result = await response.json();
+      const result: AccessRequestApprovalResponse = await response.json();
       mutate(`/api/teams/${currentTeam.id}/access-requests`);
       setApproveDialog({ open: false, request: null });
 
@@ -190,7 +201,8 @@ export function AccessRequestsTable({
         throw new Error("Failed to deny access request");
       }
       mutate(`/api/teams/${currentTeam.id}/access-requests`);
-      return response.json();
+      const result: AccessRequestDenyResponse = await response.json();
+      return result;
     });
 
     toast.promise(denyPromise, {
@@ -219,7 +231,8 @@ export function AccessRequestsTable({
         throw new Error("Failed to delete access request");
       }
       mutate(`/api/teams/${currentTeam.id}/access-requests`);
-      return response.json();
+      const result: AccessRequestDeleteResponse = await response.json();
+      return result;
     });
 
     toast.promise(deletePromise, {
