@@ -80,6 +80,8 @@ model Link {
 
   tags TagItem[]
 
+  accessRequests AccessRequest[]
+
   @@unique([domainSlug, slug])
   @@index([documentId])
   @@index([teamId])

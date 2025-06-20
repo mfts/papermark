@@ -268,28 +268,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check if email is allowed to visit the link
-      if (link.allowList && link.allowList.length > 0) {
-        // Extract the domain from the email address
-        const emailDomain = email.substring(email.lastIndexOf("@"));
-
-        // Determine if the email or its domain is allowed
-        const isAllowed = link.allowList.some((allowed) => {
-          return (
-            allowed === email ||
-            (allowed.startsWith("@") && emailDomain === allowed)
-          );
-        });
-
-        // Deny access if the email is not allowed
-        if (!isAllowed) {
-          return NextResponse.json(
-            { message: "Unauthorized access" },
-            { status: 403 },
-          );
-        }
-      }
-
       // Check if email is denied to visit the link
       if (link.denyList && link.denyList.length > 0) {
         // Extract the domain from the email address
@@ -303,11 +281,15 @@ export async function POST(request: NextRequest) {
           );
         });
 
-        // Deny access if the email is denied
+        // Allow denied emails to request access instead of blocking them
         if (isDenied) {
           return NextResponse.json(
-            { message: "Unauthorized access" },
-            { status: 403 },
+            {
+              type: "request-access",
+              message: "Your email is not authorized to access this content. You can request access from the content owner.",
+              email: email
+            },
+            { status: 200 },
           );
         }
       }
@@ -348,8 +330,12 @@ export async function POST(request: NextRequest) {
 
           if (!isMember && !hasDomainAccess) {
             return NextResponse.json(
-              { message: "Unauthorized access" },
-              { status: 403 },
+              {
+                type: "request-access",
+                message: "Your email is not authorized to access this content. You can request access from the content owner.",
+                email: email
+              },
+              { status: 200 },
             );
           }
         }
@@ -520,6 +506,33 @@ export async function POST(request: NextRequest) {
 
       if (link.emailAuthenticated && dataroomVerified) {
         isEmailVerified = true;
+      }
+
+      // Check if email is allowed to visit the link (after all verification is complete)
+      // This check should happen for all users, regardless of team membership
+      if (!isTeamMember && email && link.allowList && link.allowList.length > 0) {
+        // Extract the domain from the email address
+        const emailDomain = email.substring(email.lastIndexOf("@"));
+
+        // Determine if the email or its domain is allowed
+        const isAllowed = link.allowList.some((allowed) => {
+          return (
+            allowed === email ||
+            (allowed.startsWith("@") && emailDomain === allowed)
+          );
+        });
+
+        // If email is not in allow list, return request access response
+        if (!isAllowed) {
+          return NextResponse.json(
+            {
+              type: "request-access",
+              message: "Your email is not authorized to access this content. You can request access from the content owner.",
+              email: email
+            },
+            { status: 200 },
+          );
+        }
       }
     }
 

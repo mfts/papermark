@@ -1,0 +1,27 @@
+model AccessRequest {
+  id          String   @id @default(cuid())
+  email       String
+  message     String?  // Optional message from requester
+  linkId      String
+  link        Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  status      AccessRequestStatus @default(PENDING)
+  requestedAt DateTime @default(now())
+  respondedAt DateTime?
+  respondedBy String?  // User ID who approved/denied the request
+  approver    User?    @relation(fields: [respondedBy], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([email, linkId]) // One request per email per link
+  @@index([teamId])
+  @@index([linkId])
+  @@index([status])
+}
+
+enum AccessRequestStatus {
+  PENDING
+  APPROVED
+  DENIED
+} 

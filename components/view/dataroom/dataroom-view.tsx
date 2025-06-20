@@ -17,6 +17,7 @@ import AccessForm, {
 } from "@/components/view/access-form";
 
 import EmailVerificationMessage from "../access-form/email-verification-form";
+import RequestAccessForm from "../access-form/request-access-form";
 import DataroomViewer from "../viewer/dataroom-viewer";
 
 export type TSupportedDocumentSimpleType =
@@ -97,6 +98,8 @@ export default function DataroomView({
   );
   const [verificationRequested, setVerificationRequested] =
     useState<boolean>(false);
+  const [requestAccessRequested, setRequestAccessRequested] =
+    useState<boolean>(false);
   const [verificationToken, setVerificationToken] = useState<string | null>(
     token ?? null,
   );
@@ -131,6 +134,10 @@ export default function DataroomView({
 
       if (fetchData.type === "email-verification") {
         setVerificationRequested(true);
+        setIsLoading(false);
+      } else if (fetchData.type === "request-access") {
+        setVerificationRequested(false);
+        setRequestAccessRequested(true);
         setIsLoading(false);
       } else {
         const {
@@ -226,6 +233,18 @@ export default function DataroomView({
         setCode={setCode}
         isInvalidCode={isInvalidCode}
         setIsInvalidCode={setIsInvalidCode}
+      />
+    );
+  }
+
+  if (requestAccessRequested) {
+    return (
+      <RequestAccessForm
+        email={data.email || verifiedEmail || userEmail || ""}
+        linkId={link.id}
+        brand={brand}
+        useCustomAccessForm={useCustomAccessForm}
+        logoOnAccessForm={logoOnAccessForm}
       />
     );
   }
