@@ -131,23 +131,51 @@ export default function DocumentsCard({
       return;
     }
 
+    const page = Number(queryParams["page"]) || 1;
+    const pageSize = Number(queryParams["limit"]) || 10;
+
+    const queryParts = [];
+    if (searchQuery) queryParts.push(`query=${searchQuery}`);
+    if (sortQuery) queryParts.push(`sort=${sortQuery}`);
+
+    const paginationParams =
+      searchQuery || sortQuery ? `&page=${page}&limit=${pageSize}` : "";
+    if (paginationParams) queryParts.push(paginationParams.substring(1));
+    const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+
     const endpoint = currentFolderPath
       ? `/folders/documents/${currentFolderPath.join("/")}`
-      : "/documents";
+      : `/documents${queryString}`;
 
     toast.promise(
       fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`, {
         method: "DELETE",
       }).then(() => {
-        mutate(`/api/teams/${teamInfo?.currentTeam?.id}${endpoint}`, null, {
-          populateCache: (_, docs) => {
-            return docs.filter(
-              (doc: DocumentWithLinksAndLinkCountAndViewCount) =>
-                doc.id !== documentId,
-            );
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}${endpoint}`,
+          (currentData: any) => {
+            if (!currentData) return currentData;
+
+            if (Array.isArray(currentData)) {
+              return currentData.filter(
+                (doc: DocumentWithLinksAndLinkCountAndViewCount) =>
+                  doc.id !== documentId,
+              );
+            } else if (currentData.documents) {
+              return {
+                ...currentData,
+                documents: currentData.documents.filter(
+                  (doc: DocumentWithLinksAndLinkCountAndViewCount) =>
+                    doc.id !== documentId,
+                ),
+              };
+            }
+            return currentData;
           },
-          revalidate: false,
-        });
+          {
+            revalidate: false,
+          },
+        );
       }),
       {
         loading: "Deleting document...",

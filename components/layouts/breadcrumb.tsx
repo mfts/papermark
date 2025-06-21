@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 
 import { BreadcrumbComponent as DataroomBreadcrumb } from "@/components/datarooms/dataroom-breadcrumb";
 import {
@@ -51,7 +51,7 @@ const SingleDocumentBreadcrumb = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
                   {folders.slice(0, -1).map((folder, index) => (
-                    <DropdownMenuItem key={index}>
+                    <DropdownMenuItem key={`${folder.path}-${index}`}>
                       <Link
                         href={`/documents/tree${folder.path}`}
                         className="w-full"
@@ -78,8 +78,8 @@ const SingleDocumentBreadcrumb = () => {
           </>
         ) : (
           folders?.map((folder, index) => (
-            <>
-              <BreadcrumbItem key={`item-${index}`}>
+            <React.Fragment key={`${folder.path}-${index}`}>
+              <BreadcrumbItem>
                 <BreadcrumbLink asChild>
                   <Link
                     href={`/documents/tree${folder.path}`}
@@ -89,8 +89,8 @@ const SingleDocumentBreadcrumb = () => {
                   </Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator key={`sep-${index}`} />
-            </>
+              <BreadcrumbSeparator />
+            </React.Fragment>
           ))
         )}
         {document && (
@@ -261,7 +261,7 @@ const DocumentsBreadcrumb = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
                   {folders.slice(0, -2).map((folder, index) => (
-                    <DropdownMenuItem key={index}>
+                    <DropdownMenuItem key={`${folder.path}-${index}`}>
                       <Link
                         href={`/documents/tree${folder.path}`}
                         className="w-full"
@@ -293,7 +293,7 @@ const DocumentsBreadcrumb = () => {
           </>
         ) : (
           folders?.map((folder, index) => (
-            <>
+            <React.Fragment key={`${folder.path}-${index}`}>
               <BreadcrumbItem key={`item-${index}`}>
                 {index === folders.length - 1 ? (
                   <BreadcrumbPage className="max-w-[200px] truncate">
@@ -311,7 +311,7 @@ const DocumentsBreadcrumb = () => {
                 )}
               </BreadcrumbItem>
               {index < folders.length - 1 && <BreadcrumbSeparator />}
-            </>
+            </React.Fragment>
           ))
         )}
       </BreadcrumbList>

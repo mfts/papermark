@@ -138,9 +138,33 @@ function DeleteItemsModal({
         await mutate(
           `/api/teams/${teamInfo?.currentTeam?.id}/folders${parentFolderPath}`,
         );
-        await mutate(
-          `/api/teams/${teamInfo?.currentTeam?.id}/${folderPathName ? `folders/documents/${folderPathName.join("/")}` : "documents"}`,
-        );
+
+        if (folderPathName && folderPathName.length > 0) {
+          await mutate(
+            `/api/teams/${
+              teamInfo?.currentTeam?.id
+            }/folders/documents/${folderPathName.join("/")}`,
+          );
+        } else {
+          const { search, sort, page, limit } = router.query;
+          const queryParts = [];
+          if (search) queryParts.push(`query=${search}`);
+          if (sort) queryParts.push(`sort=${sort}`);
+
+          const pageNum = Number(page) || 1;
+          const limitNum = Number(limit) || 10;
+
+          const paginationParams =
+            search || sort ? `&page=${pageNum}&limit=${limitNum}` : "";
+
+          if (paginationParams) queryParts.push(paginationParams.substring(1));
+          const queryString =
+            queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+
+          await mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/documents${queryString}`,
+          );
+        }
 
         setDeleting(false);
 
