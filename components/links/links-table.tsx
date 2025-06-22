@@ -186,6 +186,8 @@ export default function LinksTable({
       allowDownload: link.allowDownload ? link.allowDownload : false,
       allowList: link.allowList,
       denyList: link.denyList,
+      allowAccessGroupId: link.allowAccessGroupId,
+      blockAccessGroupId: link.blockAccessGroupId ?? null,
       enableNotification: link.enableNotification
         ? link.enableNotification
         : false,

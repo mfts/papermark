@@ -64,6 +64,8 @@ export const DEFAULT_LINK_PROPS = (
   allowDownload: false,
   allowList: [],
   denyList: [],
+  allowAccessGroupId: null,
+  blockAccessGroupId: null,
   enableNotification: true,
   enableFeedback: false,
   enableScreenshotProtection: false,
@@ -106,6 +108,8 @@ export type DEFAULT_LINK_TYPE = {
   allowDownload: boolean;
   allowList: string[];
   denyList: string[];
+  allowAccessGroupId: string | null;
+  blockAccessGroupId: string | null;
   enableNotification: boolean;
   enableFeedback: boolean;
   enableScreenshotProtection: boolean;
@@ -244,6 +248,8 @@ export default function LinkSheet({
           preset.emailAuthenticated ?? prev.emailAuthenticated,
         allowList: preset.allowList || prev.allowList,
         denyList: preset.denyList || prev.denyList,
+        allowAccessGroupId: preset.allowAccessGroupId || prev.allowAccessGroupId,
+        blockAccessGroupId: preset.blockAccessGroupId || prev.blockAccessGroupId,
         password: preset.password || prev.password,
         enableCustomMetatag:
           preset.enableCustomMetaTag ?? prev.enableCustomMetatag,

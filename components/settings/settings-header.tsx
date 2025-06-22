@@ -53,6 +53,11 @@ export function SettingsHeader() {
             segment: "presets",
           },
           {
+            label: "Access Control",
+            href: `/settings/access-control`,
+            segment: "access-control",
+          },
+          {
             label: "Tags",
             href: `/settings/tags`,
             segment: "tags",
