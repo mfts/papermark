@@ -179,7 +179,7 @@ export default function AccessGroupSection({
               <p className="text-sm text-muted-foreground">
                 No {typePlaceholder} list groups created yet.{" "}
                 <Link
-                  href="/settings/access-control"
+                  href={`/settings/access-groups/new?type=${type}`}
                   className="font-medium text-primary hover:underline"
                 >
                   Create your first group

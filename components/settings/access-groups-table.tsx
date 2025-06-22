@@ -1,14 +1,23 @@
 import { useRouter } from "next/router";
 
+
+
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { MoreHorizontalIcon, PenIcon, PlusIcon, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  MoreHorizontalIcon,
+  PenIcon,
+  PlusIcon,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
-import { fetcher } from "@/lib/utils";
+import { fetcher, nFormatter, timeAgo } from "@/lib/utils";
 
+import { Pagination } from "@/components/documents/pagination";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +54,37 @@ type AccessGroup = {
   updatedAt: string;
 };
 
+type AccessGroupsResponse = {
+  groups: AccessGroup[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+};
+
+type AccessGroupLink = {
+  id: string;
+  name: string;
+  slug: string;
+  createdAt: string;
+  updatedAt: string;
+  document?: {
+    id: string;
+    name: string;
+  };
+  dataroom?: {
+    id: string;
+    name: string;
+  };
+  _count: {
+    views: number;
+  };
+};
+
 type AccessGroupsTableProps = {
   type: "allow" | "block";
   isAllowed: boolean;
@@ -59,21 +99,27 @@ export default function AccessGroupsTable({
   const router = useRouter();
   const teamInfo = useTeam();
 
-  const {
-    data: accessGroups,
-    isLoading,
-    mutate,
-  } = useSWR<AccessGroup[]>(
-    teamInfo?.currentTeam?.id && isAllowed
-      ? `/api/teams/${teamInfo.currentTeam.id}/access-groups?type=${type.toUpperCase()}`
-      : null,
-    fetcher,
-  );
-
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedGroupForDeletion, setSelectedGroupForDeletion] =
     useState<AccessGroup | null>(null);
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  const {
+    data: accessGroupsResponse,
+    isLoading,
+    mutate,
+  } = useSWR<AccessGroupsResponse>(
+    teamInfo?.currentTeam?.id && isAllowed
+      ? `/api/teams/${teamInfo.currentTeam.id}/access-groups?type=${type.toUpperCase()}&page=${currentPage}&limit=${pageSize}`
+      : null,
+    fetcher,
+  );
+
+  const accessGroups = accessGroupsResponse?.groups || [];
+  const pagination = accessGroupsResponse?.pagination;
 
   const handleDeleteClick = (group: AccessGroup) => {
     setSelectedGroupForDeletion(group);
@@ -138,6 +184,97 @@ export default function AccessGroupsTable({
   };
 
   const displayText = getDisplayText();
+
+  // Component to display links for a specific group
+  const GroupLinksSection = ({ group }: { group: AccessGroup }) => {
+    const { data: links, isLoading: linksLoading } = useSWR<AccessGroupLink[]>(
+      teamInfo?.currentTeam?.id && expandedGroups.has(group.id)
+        ? `/api/teams/${teamInfo.currentTeam.id}/access-groups/${group.id}/links`
+        : null,
+      fetcher,
+    );
+
+    const linkCount = getLinkCount(group);
+
+    const toggleExpanded = () => {
+      const newExpanded = new Set(expandedGroups);
+      if (newExpanded.has(group.id)) {
+        newExpanded.delete(group.id);
+      } else {
+        newExpanded.add(group.id);
+      }
+      setExpandedGroups(newExpanded);
+    };
+
+    if (linkCount === 0) {
+      return (
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Used in links:</span>
+          <Badge variant="outline">0 links</Badge>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        <button
+          onClick={toggleExpanded}
+          className="flex w-full items-center justify-between text-sm transition-opacity hover:opacity-70"
+        >
+          <span className="text-muted-foreground">Used in links:</span>
+          <div className="flex items-center space-x-1">
+            <Badge variant="outline">{linkCount} links</Badge>
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+                expandedGroups.has(group.id) ? "rotate-180" : ""
+              }`}
+            />
+          </div>
+        </button>
+
+        {expandedGroups.has(group.id) && (
+          <div className="border-l-2 border-gray-200 pl-3 dark:border-gray-700">
+            {linksLoading ? (
+              <div className="space-y-1">
+                {[...Array(2)].map((_, i) => (
+                  <Skeleton key={i} className="h-4 w-full" />
+                ))}
+              </div>
+            ) : links && links.length > 0 ? (
+              <div className="space-y-2">
+                {links.map((link, index) => (
+                  <div
+                    key={link.id}
+                    className="flex items-center space-x-3 rounded-md bg-gray-50 p-2 dark:bg-gray-800/50"
+                  >
+                    <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-medium text-muted-foreground dark:bg-gray-700">
+                      {index + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-foreground">
+                        {link.name || "Untitled"}
+                      </div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">
+                        {link.dataroom ? "Dataroom" : "Document"}:{" "}
+                        {link.dataroom?.name || link.document?.name}
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0 pr-4 text-xs text-muted-foreground">
+                      {nFormatter(link._count.views)} views
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                No links found
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   if (!isAllowed) {
     return (
@@ -258,14 +395,7 @@ export default function AccessGroupsTable({
                           </div>
                         </div>
                       )}
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          Used in links:
-                        </span>
-                        <Badge variant="outline">
-                          {getLinkCount(group)} links
-                        </Badge>
-                      </div>
+                      <GroupLinksSection group={group} />
                     </div>
                   </CardContent>
                 </Card>
@@ -299,6 +429,25 @@ export default function AccessGroupsTable({
           </Card>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {pagination && pagination.total > 0 && (
+        <Pagination
+          currentPage={pagination.page}
+          pageSize={pagination.limit}
+          totalItems={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setCurrentPage(1);
+          }}
+          totalShownItems={Math.min(
+            pagination.limit,
+            pagination.total - (pagination.page - 1) * pagination.limit,
+          )}
+          itemName={`${type} list groups`}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

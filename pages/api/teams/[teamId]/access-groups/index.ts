@@ -19,9 +19,11 @@ export default async function handle(
             return res.status(401).end("Unauthorized");
         }
 
-        const { teamId, type } = req.query as {
+        const { teamId, type, page, limit } = req.query as {
             teamId: string;
             type?: "ALLOW" | "BLOCK";
+            page?: string;
+            limit?: string;
         };
         const userId = (session.user as CustomUser).id;
 
@@ -52,6 +54,14 @@ export default async function handle(
                 whereClause.type = type;
             }
 
+            const pageNumber = parseInt(page || "1", 10);
+            const pageSize = parseInt(limit || "10", 10);
+            const skip = (pageNumber - 1) * pageSize;
+
+            const totalCount = await prisma.accessGroup.count({
+                where: whereClause,
+            });
+
             const accessGroups = await prisma.accessGroup.findMany({
                 where: whereClause,
                 include: {
@@ -65,9 +75,23 @@ export default async function handle(
                 orderBy: {
                     createdAt: "desc",
                 },
+                skip: skip,
+                take: pageSize,
             });
 
-            return res.status(200).json(accessGroups);
+            const totalPages = Math.ceil(totalCount / pageSize);
+
+            return res.status(200).json({
+                groups: accessGroups,
+                pagination: {
+                    page: pageNumber,
+                    limit: pageSize,
+                    total: totalCount,
+                    totalPages: totalPages,
+                    hasNext: pageNumber < totalPages,
+                    hasPrev: pageNumber > 1,
+                },
+            });
         } catch (error) {
             log({
                 message: `Failed to get access groups for team: _${teamId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}, type: ${type}}\``,
