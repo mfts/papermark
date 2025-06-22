@@ -6,9 +6,11 @@ import { motion } from "motion/react";
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { sanitizeAllowDenyList } from "@/lib/utils";
 
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { DEFAULT_LINK_TYPE } from ".";
+import AccessGroupSection from "./access-group-section";
 import LinkItem from "./link-item";
 import { LinkUpgradeOptions } from "./link-options";
 
@@ -30,11 +32,11 @@ export default function AllowListSection({
   }: LinkUpgradeOptions) => void;
   presets: LinkPreset | null;
 }) {
-  const { emailProtected, allowList } = data;
+  const { emailProtected, allowList, allowAccessGroupId } = data;
 
-  // Initialize enabled state based on whether allowList is not null and not empty
+  // Initialize enabled state based on whether allowList is not null and not empty OR group is selected
   const [enabled, setEnabled] = useState<boolean>(
-    !!allowList && allowList.length > 0,
+    (!!allowList && allowList.length > 0) || !!allowAccessGroupId,
   );
   const [allowListInput, setAllowListInput] = useState<string>(
     allowList?.join("\n") || "",
@@ -51,11 +53,23 @@ export default function AllowListSection({
   }, [allowListInput, emailProtected, enabled, setData]);
 
   useEffect(() => {
-    if (isAllowed && presets?.allowList && presets.allowList.length > 0) {
-      setEnabled(true);
-      setAllowListInput(presets.allowList.join("\n") || "");
+    if (isAllowed && presets) {
+      // Load preset data if available
+      if (presets.allowList && presets.allowList.length > 0) {
+        setEnabled(true);
+        setAllowListInput(presets.allowList.join("\n") || "");
+      }
+
+      // Load access group ID from preset
+      if (presets.allowAccessGroupId) {
+        setEnabled(true);
+        setData((prevData) => ({
+          ...prevData,
+          allowAccessGroupId: presets.allowAccessGroupId,
+        }));
+      }
     }
-  }, [presets, isAllowed]);
+  }, [presets, isAllowed, setData]);
 
   const handleEnableAllowList = () => {
     const updatedEnabled = !enabled;
@@ -72,6 +86,7 @@ export default function AllowListSection({
       setData((prevData) => ({
         ...prevData,
         allowList: [],
+        allowAccessGroupId: null,
       }));
     }
   };
@@ -88,7 +103,7 @@ export default function AllowListSection({
         <LinkItem
           title="Allow specified viewers"
           link="https://www.papermark.com/help/article/allow-list"
-          tooltipContent="Restrict access to a selected group of viewers. Enter allowed emails or domains."
+          tooltipContent="Restrict access to a selected group of viewers. Choose an allow list group or enter individual emails/domains. Manage groups in Settings → Access Control."
           enabled={enabled}
           isAllowed={isAllowed}
           action={handleEnableAllowList}
@@ -105,18 +120,39 @@ export default function AllowListSection({
 
         {enabled && (
           <motion.div
-            className="mt-1 block w-full"
+            className="mt-1 block w-full space-y-4"
             {...FADE_IN_ANIMATION_SETTINGS}
           >
-            <Textarea
-              className="focus:ring-inset"
-              rows={5}
-              placeholder={`Enter allowed emails/domains, one per line, e.g.
+            {/* Access Group Selection */}
+            <AccessGroupSection
+              type="ALLOW"
+              data={data}
+              setData={setData}
+              isAllowed={isAllowed}
+              groupIdField="allowAccessGroupId"
+            />
+
+            {/* Individual Emails Section */}
+            <div className="space-y-2">
+              <Label>
+                Additional Individual Emails/Domains{" "}
+                {!allowAccessGroupId && "(Required)"}
+              </Label>
+              <Textarea
+                className="focus:ring-inset"
+                rows={5}
+                placeholder={`Enter additional allowed emails/domains, one per line, e.g.
 marc@papermark.io
 @example.org`}
-              value={allowListInput}
-              onChange={handleAllowListChange}
-            />
+                value={allowListInput}
+                onChange={handleAllowListChange}
+              />
+              <p className="text-xs text-muted-foreground">
+                {allowAccessGroupId
+                  ? "Add individual emails/domains in addition to the selected group."
+                  : "Enter allowed emails/domains, one per line. Use @domain.com format to allow entire domains."}
+              </p>
+            </div>
           </motion.div>
         )}
       </div>

@@ -80,6 +80,12 @@ model Link {
 
   tags TagItem[]
 
+  // access groups
+  allowAccessGroupId String?
+  allowAccessGroup   AccessGroup? @relation("AllowListGroup", fields: [allowAccessGroupId], references: [id], onDelete: SetNull)
+  blockAccessGroupId String?
+  blockAccessGroup   AccessGroup? @relation("BlockListGroup", fields: [blockAccessGroupId], references: [id], onDelete: SetNull)
+
   @@unique([domainSlug, slug])
   @@index([documentId])
   @@index([teamId])
@@ -119,6 +125,12 @@ model LinkPreset {
 
   enableCustomFields Boolean? @default(false)
   customFields       Json? //[{type: "SHORT_TEXT", identifier: "name", label: "Name", required: true}]
+
+  // access groups
+  allowAccessGroupId String?
+  allowAccessGroup   AccessGroup? @relation("AllowListPreset", fields: [allowAccessGroupId], references: [id], onDelete: SetNull)
+  blockAccessGroupId String?
+  blockAccessGroup   AccessGroup? @relation("BlockListPreset", fields: [blockAccessGroupId], references: [id], onDelete: SetNull)
 
   isDefault Boolean @default(false)
 

@@ -117,6 +117,8 @@ export default function NewPreset() {
           denyList: data.denyList,
           enableAllowList: data.allowList ? data.allowList.length > 0 : false,
           enableDenyList: data.denyList ? data.denyList.length > 0 : false,
+          allowAccessGroupId: data.allowAccessGroupId,
+          blockAccessGroupId: data.blockAccessGroupId,
           password: data.password,
           enablePassword: !!data.password,
           enableCustomMetaTag: data.enableCustomMetatag,

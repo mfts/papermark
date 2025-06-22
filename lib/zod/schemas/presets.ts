@@ -42,8 +42,10 @@ export const presetDataSchema = z.object({
   // Viewer Access Control
   enableAllowList: z.boolean(),
   allowList: z.array(z.string()),
+  allowAccessGroupId: z.string().nullable().optional(),
   enableDenyList: z.boolean(),
   denyList: z.array(z.string()),
+  blockAccessGroupId: z.string().nullable().optional(),
 
   // Email Protection
   emailProtected: z.boolean(),

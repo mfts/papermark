@@ -576,7 +576,8 @@ export const sanitizeAllowDenyList = (list: string): string[] => {
     .split("\n")
     .map((item) => item.trim().replace(/,$/, "").toLowerCase()) // Trim whitespace and remove trailing commas and lowercase
     .filter((item) => item !== "") // Remove empty items
-    .filter((item) => emailRegex.test(item) || domainRegex.test(item)); // Remove items that don't match email or domain regex
+    .filter((item) => emailRegex.test(item) || domainRegex.test(item)) // Remove items that don't match email or domain regex
+    .filter((item, index, array) => array.indexOf(item) === index); // Remove duplicates
 };
 
 export function hexToRgb(hex: string) {

@@ -80,6 +80,7 @@ model Team {
   viewers      Viewer[]
 
   permissionGroups PermissionGroup[]
+  accessGroups     AccessGroup[]
 
   links Link[]
   views View[]
@@ -634,4 +635,31 @@ model TagItem {
   @@index([tagId, linkId])
   @@index([tagId, documentId])
   @@index([tagId, dataroomId])
+}
+
+enum AccessGroupType {
+  ALLOW
+  BLOCK
+}
+
+model AccessGroup {
+  id          String          @id @default(cuid())
+  name        String
+  type        AccessGroupType
+  teamId      String
+  team        Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  emailList   String[]
+  
+  allowLinks  Link[]          @relation("AllowListGroup")
+  blockLinks  Link[]          @relation("BlockListGroup")
+  
+  allowLinkPresets LinkPreset[] @relation("AllowListPreset")
+  blockLinkPresets LinkPreset[] @relation("BlockListPreset")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([teamId])
+  @@index([type])
 }
