@@ -23,8 +23,7 @@ async function fetchAndCacheDurations(
     const parsedDurations = typeof cachedDurations === 'string' ? JSON.parse(cachedDurations) : cachedDurations;
     durationsMap = parsedDurations;
   } else {
-    const batchSize = 5;
-
+    const batchSize = 10; 
     for (let i = 0; i < groupedViews.length; i += batchSize) {
       const batch = groupedViews.slice(i, i + batchSize);
 
@@ -82,7 +81,7 @@ export default async function handle(
 
     // Parse pagination parameters
     const currentPage = parseInt(page || "1", 10);
-    const limit = parseInt(pageSize || "10", 10);
+    const limit = Math.min(parseInt(pageSize || "10", 10), 100); // Cap at 100 for performance
     const offset = (currentPage - 1) * limit;
 
     // Parse sorting parameters
@@ -103,6 +102,7 @@ export default async function handle(
             },
           },
         },
+        select: { id: true, plan: true },
       });
 
       if (!team || team.plan === "free") {
@@ -123,34 +123,9 @@ export default async function handle(
         return res.status(404).json({ message: "Viewer not found" });
       }
 
-      // Create cache key for this specific query
-      const cacheKey = `viewer-data:${teamId}:${id}:${currentPage}:${limit}:${sort}:${order}`;
+      // Enhanced cache key
+      const cacheKey = `viewer-details:${teamId}:${id}:${currentPage}:${limit}:${sort}:${order}:v2`;
 
-      // If withDuration=true, try to get cached data from Redis first
-      if (withDuration === "true") {
-        const cachedData = await redis.get(cacheKey);
-
-        if (cachedData) {
-          try {
-            const groupedViews = typeof cachedData === 'string' ? JSON.parse(cachedData) : cachedData;
-
-            if (!groupedViews || groupedViews.length === 0) {
-              return res.status(200).json({ durations: {} });
-            }
-
-            // Try to get cached durations from Redis
-            const durationCacheKey = `durations:${teamId}:${id}:${currentPage}:${limit}:${sort}:${order}`;
-            const durationsMap = await fetchAndCacheDurations(groupedViews, teamId, id, durationCacheKey);
-
-            return res.status(200).json({ durations: durationsMap });
-
-          } catch (error) {
-            console.error("Error processing cached data:", error);
-          }
-        }
-      }
-
-      // Optimize: Use different approaches based on sort type
       let groupedViews: Array<{
         documentId: string;
         viewCount: number;
@@ -162,23 +137,38 @@ export default async function handle(
         totalDuration?: number;
       }>;
 
-      const orderDirection = order?.toUpperCase() || "DESC";
+      let orderByClause: Prisma.Sql;
+      if (sort === "lastViewed") {
+        orderByClause = order === "desc"
+          ? Prisma.sql`"lastViewed" DESC`
+          : Prisma.sql`"lastViewed" ASC`;
+      } else if (sort === "viewCount") {
+        orderByClause = order === "desc"
+          ? Prisma.sql`"viewCount" DESC, "lastViewed" DESC`
+          : Prisma.sql`"viewCount" ASC, "lastViewed" DESC`;
+      } else {
+        orderByClause = Prisma.sql`"lastViewed" DESC`;
+      }
 
       if (sort === "totalDuration") {
         const allDocuments = await prisma.$queryRaw`
-          SELECT 
-            v."documentId",
-            COUNT(v.id)::int as "viewCount",
-            MAX(v."viewedAt") as "lastViewed",
-            d.name as "documentName",
-            d.type as "documentType",
-            d."contentType" as "documentContentType",
-            ARRAY_AGG(v.id) as "viewIds"
-          FROM "View" v
-          INNER JOIN "Document" d ON v."documentId" = d.id
-          WHERE v."viewerId" = ${id}
-            AND v."documentId" IS NOT NULL
-          GROUP BY v."documentId", d.name, d.type, d."contentType"
+          WITH viewer_documents AS (
+            SELECT 
+              v."documentId",
+              COUNT(v.id)::int as "viewCount",
+              MAX(v."viewedAt") as "lastViewed",
+              d.name as "documentName",
+              d.type as "documentType",
+              d."contentType" as "documentContentType",
+              ARRAY_AGG(v.id ORDER BY v."viewedAt" DESC) as "viewIds"
+            FROM "View" v
+            INNER JOIN "Document" d ON v."documentId" = d.id
+            WHERE v."viewerId" = ${id}
+              AND v."documentId" IS NOT NULL
+            GROUP BY v."documentId", d.name, d.type, d."contentType"
+          )
+          SELECT * FROM viewer_documents
+          ORDER BY "lastViewed" DESC
         ` as Array<{
           documentId: string;
           viewCount: number;
@@ -189,8 +179,7 @@ export default async function handle(
           viewIds: string[];
         }>;
 
-        // Check for cached durations in Redis for totalDuration sorting
-        const durationCacheKey = `durations:${teamId}:${id}:all:${sort}:${order}`;
+        const durationCacheKey = `durations:${teamId}:${id}:all:duration-sort`;
         const durationsMap = await fetchAndCacheDurations(allDocuments, teamId, id, durationCacheKey);
 
         const documentsWithDurations = allDocuments.map(doc => ({
@@ -198,7 +187,7 @@ export default async function handle(
           totalDuration: durationsMap[doc.documentId] || 0
         }));
 
-        // Sort by duration
+        // Sort by duration efficiently
         documentsWithDurations.sort((a, b) => {
           return order === "asc"
             ? a.totalDuration - b.totalDuration
@@ -209,33 +198,25 @@ export default async function handle(
         groupedViews = documentsWithDurations.slice(offset, offset + limit);
 
       } else {
-        let orderClause;
-        switch (sort) {
-          case "lastViewed":
-            orderClause = `MAX(v."viewedAt") ${orderDirection === "ASC" ? "ASC" : "DESC"}`;
-            break;
-          case "viewCount":
-            orderClause = `COUNT(v.id) ${orderDirection === "ASC" ? "ASC" : "DESC"}`;
-            break;
-          default:
-            orderClause = `MAX(v."viewedAt") ${orderDirection === "ASC" ? "ASC" : "DESC"}`;
-        }
-
+        // Optimized query leveraging our performance indexes
         groupedViews = await prisma.$queryRaw`
-          SELECT 
-            v."documentId",
-            COUNT(v.id)::int as "viewCount",
-            MAX(v."viewedAt") as "lastViewed",
-            d.name as "documentName",
-            d.type as "documentType",
-            d."contentType" as "documentContentType",
-            ARRAY_AGG(v.id) as "viewIds"
-          FROM "View" v
-          INNER JOIN "Document" d ON v."documentId" = d.id
-          WHERE v."viewerId" = ${id}
-            AND v."documentId" IS NOT NULL
-          GROUP BY v."documentId", d.name, d.type, d."contentType"
-          ORDER BY ${Prisma.raw(orderClause)}
+          WITH viewer_documents AS (
+            SELECT 
+              v."documentId",
+              COUNT(v.id)::int as "viewCount",
+              MAX(v."viewedAt") as "lastViewed",
+              d.name as "documentName",
+              d.type as "documentType",
+              d."contentType" as "documentContentType",
+              ARRAY_AGG(v.id ORDER BY v."viewedAt" DESC) as "viewIds"
+            FROM "View" v
+            INNER JOIN "Document" d ON v."documentId" = d.id
+            WHERE v."viewerId" = ${id}
+              AND v."documentId" IS NOT NULL
+            GROUP BY v."documentId", d.name, d.type, d."contentType"
+          )
+          SELECT * FROM viewer_documents
+          ORDER BY ${orderByClause}
           LIMIT ${limit}
           OFFSET ${offset}
         ` as Array<{
@@ -249,7 +230,6 @@ export default async function handle(
         }>;
       }
 
-      // Get total count for pagination
       const totalCountResult = await prisma.$queryRaw`
         SELECT COUNT(DISTINCT v."documentId")::int as count
         FROM "View" v
@@ -260,17 +240,14 @@ export default async function handle(
       const totalItems = totalCountResult[0]?.count || 0;
       const totalPages = Math.ceil(totalItems / limit);
 
-      // Cache the grouped views to Redis (only if not withDuration call)
-      if (withDuration !== "true") {
-        await redis.set(cacheKey, JSON.stringify(groupedViews), { ex: 300 });
-      }
-
       // If withDuration=true, return only duration data for faster response
       if (withDuration === "true") {
         try {
           const durationCacheKey = `durations:${teamId}:${id}:${currentPage}:${limit}:${sort}:${order}`;
           const durationsMap = await fetchAndCacheDurations(groupedViews, teamId, id, durationCacheKey);
 
+          // Add cache headers
+          res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
           return res.status(200).json({ durations: durationsMap });
 
         } catch (error) {
@@ -314,8 +291,14 @@ export default async function handle(
         },
       };
 
+      if (withDuration !== "true") {
+        await redis.set(cacheKey, JSON.stringify(formattedViews), { ex: 600 }); // 10 min cache
+      }
+      res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
+
       return res.status(200).json(newViewer);
     } catch (error) {
+      console.error('Viewer Details API Error:', error);
       errorhandler(error, res);
     }
   } else {

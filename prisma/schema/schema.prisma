@@ -298,6 +298,8 @@ model View {
   @@index([dataroomViewId])
   @@index([viewerId])
   @@index([teamId])
+  @@index([viewedAt(sort: Desc)]) // Performance optimization for date aggregations
+  @@index([viewerId, documentId]) // Performance optimization for joins with filtering
 }
 
 enum ViewType {

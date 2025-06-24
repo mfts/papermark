@@ -60,6 +60,7 @@ export default function useViewers(
     data: response,
     isValidating,
     error,
+    mutate,
   } = useSWR<ViewersResponse>(
     teamId
       ? `/api/teams/${teamId}/viewers?${queryString}`
@@ -67,8 +68,13 @@ export default function useViewers(
     fetcher,
     {
       revalidateOnFocus: false,
+      revalidateIfStale: false,
+      revalidateOnReconnect: false,
       dedupingInterval: 30000,
       keepPreviousData: true,
+      refreshInterval: 0,
+      errorRetryCount: 2,
+      errorRetryInterval: 5000,
     },
   );
 
@@ -80,5 +86,6 @@ export default function useViewers(
     loading: !response && !error,
     isFiltered: !!searchQuery,
     error,
+    mutate,
   };
 }
