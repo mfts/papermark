@@ -2,7 +2,10 @@ import ErrorPage from "next/error";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
+import { usePlan } from "@/lib/swr/use-billing";
+import useViewer from "@/lib/swr/use-viewer";
 
 import AppLayout from "@/components/layouts/app";
 import {
@@ -18,14 +21,38 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ContactsDocumentsTable } from "@/components/visitors/contacts-document-table";
 import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import useViewer from "@/lib/swr/use-viewer";
-
 export default function VisitorDetailPage() {
   const router = useRouter();
   const { isFree, isTrial } = usePlan();
-  const { viewer, error } = useViewer();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState("lastViewed");
+  const [sortOrder, setSortOrder] = useState("desc");
+
+  const { viewer, durations, loadingDurations, error } = useViewer(
+    currentPage,
+    pageSize,
+    sortBy,
+    sortOrder,
+  );
   const views = viewer?.views;
+  const pagination = viewer?.pagination;
+  const sorting = viewer?.sorting;
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (newSortBy: string, newSortOrder: string) => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+    setCurrentPage(1);
+  };
 
   useEffect(() => {
     if (isFree && !isTrial) router.push("/documents");
@@ -56,8 +83,16 @@ export default function VisitorDetailPage() {
       </div>
 
       <div className="relative p-4 pt-0 sm:mx-4 sm:mt-4">
-        {/* @ts-ignore */}
-        <ContactsDocumentsTable views={views} />
+        <ContactsDocumentsTable
+          views={views}
+          durations={durations}
+          loadingDurations={loadingDurations}
+          pagination={pagination}
+          sorting={sorting}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          onSortChange={handleSortChange}
+        />
       </div>
     </AppLayout>
   );
