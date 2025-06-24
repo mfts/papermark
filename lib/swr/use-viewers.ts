@@ -41,12 +41,20 @@ export default function useViewers(
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const queryParams = router.query;
-  const searchQuery = queryParams["search"];
+  const routerQuery = router.query;
+  const searchQuery = routerQuery["search"];
 
-  const searchParam = searchQuery ? `&query=${searchQuery}` : "";
-  const paginationParam = `page=${page}&pageSize=${pageSize}`;
-  const sortingParam = `&sortBy=${sortBy}&sortOrder=${sortOrder}`;
+  const queryParams = new URLSearchParams();
+  queryParams.append('page', page.toString());
+  queryParams.append('pageSize', pageSize.toString());
+  queryParams.append('sortBy', sortBy);
+  queryParams.append('sortOrder', sortOrder);
+
+  if (searchQuery && typeof searchQuery === 'string') {
+    queryParams.append('query', searchQuery);
+  }
+
+  const queryString = queryParams.toString();
 
   const {
     data: response,
@@ -54,7 +62,7 @@ export default function useViewers(
     error,
   } = useSWR<ViewersResponse>(
     teamId
-      ? `/api/teams/${teamId}/viewers?${paginationParam}${searchParam}${sortingParam}`
+      ? `/api/teams/${teamId}/viewers?${queryString}`
       : null,
     fetcher,
     {

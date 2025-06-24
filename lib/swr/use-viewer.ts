@@ -49,11 +49,15 @@ export default function useViewer(
 
   const { id } = router.query;
 
-  const paginationParam = `page=${page}&pageSize=${pageSize}`;
-  const sortingParam = `&sortBy=${sortBy}&sortOrder=${sortOrder}`;
+  const queryParams = new URLSearchParams();
+  queryParams.append('page', page.toString());
+  queryParams.append('pageSize', pageSize.toString());
+  queryParams.append('sortBy', sortBy);
+  queryParams.append('sortOrder', sortOrder);
+  const queryString = queryParams.toString();
 
   const { data: viewer, error } = useSWR<ViewerWithViews>(
-    teamId && id ? `/api/teams/${teamId}/viewers/${id}?${paginationParam}${sortingParam}` : null,
+    teamId && id ? `/api/teams/${teamId}/viewers/${id}?${queryString}` : null,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -62,11 +66,11 @@ export default function useViewer(
     }
   );
 
-  const shouldFetchDurations = viewer && viewer.views && viewer.views.length > 0;
+  const shouldFetchDurations = (viewer?.views?.length ?? 0) > 0;
 
   const { data: durationsResponse, isLoading: loadingDurations, error: durationsError } = useSWR<{ durations: Record<string, number> }>(
     shouldFetchDurations
-      ? `/api/teams/${teamId}/viewers/${id}?${paginationParam}${sortingParam}&withDuration=true`
+      ? `/api/teams/${teamId}/viewers/${id}?${queryString}&withDuration=true`
       : null,
     fetcher,
     {

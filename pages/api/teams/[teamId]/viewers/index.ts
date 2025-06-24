@@ -56,8 +56,6 @@ export default async function handle(
         return res.status(404).json({ error: "Team not found" });
       }
 
-      const orderDirection = order?.toUpperCase() || "DESC";
-
       const searchCondition = query
         ? Prisma.sql`AND LOWER(v.email) LIKE LOWER(${`%${query}%`})`
         : Prisma.empty;
@@ -71,10 +69,19 @@ export default async function handle(
         lastViewed: Date | null;
       }>;
 
-      // Optimized query - only get essential data
-      const orderClause = sort === "lastViewed"
-        ? `view_stats."lastViewed" ${orderDirection} NULLS LAST`
-        : `COALESCE(view_stats."totalVisits", 0) ${orderDirection}, v."createdAt" DESC`;
+      const getOrderClause = (sortField: string, sortOrder: string): Prisma.Sql => {
+        const key = `${sortField}_${sortOrder}`;
+
+        const orderByWhitelist: Record<string, Prisma.Sql> = {
+          lastViewed_asc: Prisma.sql`view_stats."lastViewed" ASC NULLS LAST`,
+          lastViewed_desc: Prisma.sql`view_stats."lastViewed" DESC NULLS LAST`,
+          totalVisits_asc: Prisma.sql`COALESCE(view_stats."totalVisits", 0) ASC, v."createdAt" DESC`,
+          totalVisits_desc: Prisma.sql`COALESCE(view_stats."totalVisits", 0) DESC, v."createdAt" DESC`,
+        };
+
+        return orderByWhitelist[key] || orderByWhitelist.lastViewed_desc;
+      };
+      const orderClause = getOrderClause(sort || 'lastViewed', order || 'desc');
 
       viewers = await prisma.$queryRaw`
         SELECT 
@@ -96,7 +103,7 @@ export default async function handle(
         ) view_stats ON v.id = view_stats."viewerId"
         WHERE v."teamId" = ${teamId}
           ${searchCondition}
-        ORDER BY ${Prisma.raw(orderClause)}
+        ORDER BY ${orderClause}
         LIMIT ${limit}
         OFFSET ${offset}
       `;

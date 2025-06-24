@@ -10,6 +10,55 @@ import { getDocumentDurationPerViewer } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 import { Prisma } from "@prisma/client";
 
+async function fetchAndCacheDurations(
+  groupedViews: Array<{ documentId: string; viewIds: string[] }>,
+  teamId: string,
+  viewerId: string,
+  cacheKey: string
+): Promise<Record<string, number>> {
+  let durationsMap: Record<string, number> = {};
+  const cachedDurations = await redis.get(cacheKey);
+
+  if (cachedDurations) {
+    const parsedDurations = typeof cachedDurations === 'string' ? JSON.parse(cachedDurations) : cachedDurations;
+    durationsMap = parsedDurations;
+  } else {
+    const batchSize = 5;
+
+    for (let i = 0; i < groupedViews.length; i += batchSize) {
+      const batch = groupedViews.slice(i, i + batchSize);
+
+      const batchPromises = batch.map(async (view) => {
+        try {
+          const durationResult = await getDocumentDurationPerViewer({
+            documentId: view.documentId,
+            viewIds: view.viewIds.join(","),
+          });
+          return {
+            documentId: view.documentId,
+            totalDuration: durationResult.data[0]?.sum_duration || 0,
+          };
+        } catch (error) {
+          console.error(`Error fetching duration for document ${view.documentId}:`, error);
+          return {
+            documentId: view.documentId,
+            totalDuration: 0,
+          };
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      batchResults.forEach(result => {
+        durationsMap[result.documentId] = result.totalDuration;
+      });
+    }
+
+    await redis.set(cacheKey, JSON.stringify(durationsMap), { ex: 600 });
+  }
+
+  return durationsMap;
+}
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -91,46 +140,7 @@ export default async function handle(
 
             // Try to get cached durations from Redis
             const durationCacheKey = `durations:${teamId}:${id}:${currentPage}:${limit}:${sort}:${order}`;
-            let durationsMap: Record<string, number> = {};
-            const cachedDurations = await redis.get(durationCacheKey);
-
-            if (cachedDurations) {
-              const parsedDurations = typeof cachedDurations === 'string' ? JSON.parse(cachedDurations) : cachedDurations;
-              durationsMap = parsedDurations;
-            } else {
-              // Process durations in smaller batches
-              const batchSize = 5;
-
-              for (let i = 0; i < groupedViews.length; i += batchSize) {
-                const batch = groupedViews.slice(i, i + batchSize);
-
-                const batchPromises = batch.map(async (view: any) => {
-                  try {
-                    const durationResult = await getDocumentDurationPerViewer({
-                      documentId: view.documentId,
-                      viewIds: view.viewIds.join(","),
-                    });
-                    return {
-                      documentId: view.documentId,
-                      totalDuration: durationResult.data[0]?.sum_duration || 0,
-                    };
-                  } catch (error) {
-                    console.error(`Error fetching duration for document ${view.documentId}:`, error);
-                    return {
-                      documentId: view.documentId,
-                      totalDuration: 0,
-                    };
-                  }
-                });
-
-                const batchResults = await Promise.all(batchPromises);
-                batchResults.forEach(result => {
-                  durationsMap[result.documentId] = result.totalDuration;
-                });
-              }
-
-              await redis.set(durationCacheKey, JSON.stringify(durationsMap), { ex: 600 });
-            }
+            const durationsMap = await fetchAndCacheDurations(groupedViews, teamId, id, durationCacheKey);
 
             return res.status(200).json({ durations: durationsMap });
 
@@ -181,38 +191,12 @@ export default async function handle(
 
         // Check for cached durations in Redis for totalDuration sorting
         const durationCacheKey = `durations:${teamId}:${id}:all:${sort}:${order}`;
-        let documentsWithDurations;
-        const cachedDurations = await redis.get(durationCacheKey);
+        const durationsMap = await fetchAndCacheDurations(allDocuments, teamId, id, durationCacheKey);
 
-        if (cachedDurations) {
-          const parsedDurations = typeof cachedDurations === 'string' ? JSON.parse(cachedDurations) : cachedDurations;
-          documentsWithDurations = allDocuments.map(doc => ({
-            ...doc,
-            totalDuration: parsedDurations[doc.documentId] || 0
-          }));
-        } else {
-          documentsWithDurations = await Promise.all(
-            allDocuments.map(async (doc) => {
-              try {
-                const durationResult = await getDocumentDurationPerViewer({
-                  documentId: doc.documentId,
-                  viewIds: doc.viewIds.join(","),
-                });
-                const totalDuration = durationResult.data[0]?.sum_duration || 0;
-                return { ...doc, totalDuration };
-              } catch (error) {
-                console.error(`Error fetching duration for document ${doc.documentId}:`, error);
-                return { ...doc, totalDuration: 0 };
-              }
-            })
-          );
-
-          // Cache durations to Redis for 10 minutes
-          const durationsMap = Object.fromEntries(
-            documentsWithDurations.map(doc => [doc.documentId, doc.totalDuration])
-          );
-          await redis.set(durationCacheKey, JSON.stringify(durationsMap), { ex: 600 });
-        }
+        const documentsWithDurations = allDocuments.map(doc => ({
+          ...doc,
+          totalDuration: durationsMap[doc.documentId] || 0
+        }));
 
         // Sort by duration
         documentsWithDurations.sort((a, b) => {
@@ -285,46 +269,7 @@ export default async function handle(
       if (withDuration === "true") {
         try {
           const durationCacheKey = `durations:${teamId}:${id}:${currentPage}:${limit}:${sort}:${order}`;
-          let durationsMap: Record<string, number> = {};
-          const cachedDurations = await redis.get(durationCacheKey);
-
-          if (cachedDurations) {
-            const parsedDurations = typeof cachedDurations === 'string' ? JSON.parse(cachedDurations) : cachedDurations;
-            durationsMap = parsedDurations;
-          } else {
-            const batchSize = 5;
-
-            for (let i = 0; i < groupedViews.length; i += batchSize) {
-              const batch = groupedViews.slice(i, i + batchSize);
-
-              const batchPromises = batch.map(async (view) => {
-                try {
-                  const durationResult = await getDocumentDurationPerViewer({
-                    documentId: view.documentId,
-                    viewIds: view.viewIds.join(","),
-                  });
-                  return {
-                    documentId: view.documentId,
-                    totalDuration: durationResult.data[0]?.sum_duration || 0,
-                  };
-                } catch (error) {
-                  console.error(`Error fetching duration for document ${view.documentId}:`, error);
-                  return {
-                    documentId: view.documentId,
-                    totalDuration: 0,
-                  };
-                }
-              });
-
-              const batchResults = await Promise.all(batchPromises);
-              batchResults.forEach(result => {
-                durationsMap[result.documentId] = result.totalDuration;
-              });
-            }
-
-            // Cache durations to Redis
-            await redis.set(durationCacheKey, JSON.stringify(durationsMap), { ex: 600 });
-          }
+          const durationsMap = await fetchAndCacheDurations(groupedViews, teamId, id, durationCacheKey);
 
           return res.status(200).json({ durations: durationsMap });
 
