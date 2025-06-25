@@ -15,6 +15,7 @@ import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
+import { useDisablePrint } from "@/components/view/hooks/use-disable-print";
 
 import EmailVerificationMessage from "../access-form/email-verification-form";
 import DataroomViewer from "../viewer/dataroom-viewer";
@@ -73,6 +74,7 @@ export default function DataroomView({
   preview?: boolean;
   logoOnAccessForm?: boolean;
 }) {
+  useDisablePrint();
   const {
     linkType,
     dataroom,
