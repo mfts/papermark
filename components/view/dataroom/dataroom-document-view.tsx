@@ -16,7 +16,7 @@ import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
-import { useDisablePrint } from "@/components/view/hooks/use-disable-print";
+import { useDisablePrint } from "@/lib/hooks/use-disable-print";
 
 import EmailVerificationMessage from "../access-form/email-verification-form";
 import ViewData, { TViewDocumentData } from "../view-data";
