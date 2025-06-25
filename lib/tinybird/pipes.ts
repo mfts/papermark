@@ -92,6 +92,36 @@ export const getViewUserAgent = tb.buildPipe({
   }),
 });
 
+export const getDataroomViewUserAgent = tb.buildPipe({
+  pipe: "get_dataroom_useragent_per_view__v1",
+  parameters: z.object({
+    viewId: z.string(),
+    since: z.number(),
+  }),
+  data: z.object({
+    country: z.string(),
+    city: z.string(),
+    browser: z.string(),
+    os: z.string(),
+    device: z.string(),
+  }),
+});
+
+export const getVideoViewUserAgent = tb.buildPipe({
+  pipe: "get_video_useragent_per_view__v1",
+  parameters: z.object({
+    viewId: z.string(),
+    since: z.number(),
+  }),
+  data: z.object({
+    country: z.string(),
+    city: z.string(),
+    browser: z.string(),
+    os: z.string(),
+    device: z.string(),
+  }),
+});
+
 export const getTotalDataroomDuration = tb.buildPipe({
   pipe: "get_total_dataroom_duration__v1",
   parameters: z.object({

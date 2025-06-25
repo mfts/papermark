@@ -1,0 +1,20 @@
+VERSION 1
+
+NODE endpoint
+SQL >
+    %
+    SELECT
+        country,
+        city,
+        browser,
+        os,
+        device
+    FROM
+        pm_click_events__v1
+    WHERE
+        view_id = {{ String(viewId, required=True) }}
+        AND dataroom_id IS NOT NULL
+        AND timestamp >= {{ Int64(since, required=True) }}
+    ORDER BY
+        timestamp ASC
+    LIMIT 1
