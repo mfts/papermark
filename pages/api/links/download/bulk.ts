@@ -1,9 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
 import { ItemType, ViewType } from "@prisma/client";
 
-import { getLambdaClient } from "@/lib/files/aws-client";
+import { getLambdaClientForTeam } from "@/lib/files/aws-client";
 import prisma from "@/lib/prisma";
 import { getIpAddress } from "@/lib/utils/ip";
 
@@ -45,6 +46,7 @@ export default async function handle(
           groupId: true,
           dataroom: {
             select: {
+              teamId: true,
               folders: {
                 select: {
                   id: true,
@@ -293,13 +295,18 @@ export default async function handle(
         return res.status(404).json({ error: "No files to download" });
       }
 
-      const client = getLambdaClient();
+      // Get team-specific storage configuration
+      const teamId = view.dataroom!.teamId;
+      const [client, storageConfig] = await Promise.all([
+        getLambdaClientForTeam(teamId),
+        getTeamStorageConfigById(teamId),
+      ]);
 
       const params = {
         FunctionName: `bulk-download-zip-creator-${process.env.NODE_ENV === "development" ? "dev" : "prod"}`, // Use the name you gave your Lambda function
         InvocationType: InvocationType.RequestResponse,
         Payload: JSON.stringify({
-          sourceBucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
+          sourceBucket: storageConfig.bucket,
           fileKeys: fileKeys,
           folderStructure: folderStructure,
           watermarkConfig: view.link.enableWatermark
