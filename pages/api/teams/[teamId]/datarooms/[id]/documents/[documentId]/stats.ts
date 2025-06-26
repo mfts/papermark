@@ -72,6 +72,7 @@ export default async function handle(
                 select: {
                   versionNumber: true,
                   numPages: true,
+                  type: true,
                 },
               },
               team: {
@@ -134,13 +135,19 @@ export default async function handle(
           id: view.id,
         }));
 
-      const duration = await getTotalAvgPageDuration({
-        documentId: documentId,
-        excludedLinkIds: "",
-        excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
-        since: 0,
-      });
+      const isVideo = dataroomDocument.document.versions[0]?.type === "video";
 
+      let duration;
+      if (isVideo) {
+        duration = { data: [] };
+      } else {
+        duration = await getTotalAvgPageDuration({
+          documentId: documentId,
+          excludedLinkIds: "",
+          excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
+          since: 0,
+        });
+      }
       const stats = {
         views: filteredViews,
         duration,
@@ -148,7 +155,9 @@ export default async function handle(
         groupedReactions: [], // INFO: hiding this as not relevant
         totalViews: filteredViews.length,
         completionRate: 0,
-        totalPagesMax: dataroomDocument.document.versions[0].numPages,
+        totalPagesMax: isVideo ? 0 : (dataroomDocument.document.versions[0].numPages || 0),
+        documentType: dataroomDocument.document.versions[0]?.type,
+        documentVersions: dataroomDocument.document.versions,
       };
 
       return res.status(200).json(stats);
