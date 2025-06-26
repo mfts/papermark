@@ -95,7 +95,7 @@ export async function getTeamStorageConfigById(
 
     return getStorageConfig(storageRegion);
   } catch (error) {
-    console.warn(`Failed to resolve storage region for team ${teamId}:`, error);
+    console.warn("Failed to resolve storage region for team %s:", teamId, error);
     return getStorageConfig(); // Default to EU region on error
   }
 }
