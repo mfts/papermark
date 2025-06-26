@@ -587,9 +587,7 @@ export async function POST(request: NextRequest) {
 
         if (documentVersion.type === "sheet") {
           if (useAdvancedExcelViewer) {
-            if (documentVersion.file.includes("https://")) {
-              documentVersion.file = documentVersion.file;
-            } else {
+            if (!documentVersion.file.includes("https://")) {
               // Get team-specific storage config for advanced distribution host
               const storageConfig = await getTeamStorageConfigById(
                 link.teamId!,
