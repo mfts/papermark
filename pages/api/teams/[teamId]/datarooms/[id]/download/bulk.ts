@@ -1,10 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
 import { getServerSession } from "next-auth";
 
-import { getLambdaClient } from "@/lib/files/aws-client";
+import { getLambdaClientForTeam } from "@/lib/files/aws-client";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -176,13 +177,15 @@ export default async function handler(
         }
       });
 
-      const client = getLambdaClient();
+      // Get team-specific Lambda client and storage config
+      const client = await getLambdaClientForTeam(teamId);
+      const storageConfig = await getTeamStorageConfigById(teamId);
 
       const params = {
         FunctionName: `bulk-download-zip-creator-${process.env.NODE_ENV === "development" ? "dev" : "prod"}`, // Use the name you gave your Lambda function
         InvocationType: InvocationType.RequestResponse,
         Payload: JSON.stringify({
-          sourceBucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
+          sourceBucket: storageConfig.bucket,
           fileKeys: fileKeys,
           folderStructure: folderStructure,
         }),
