@@ -303,7 +303,7 @@ export default async function handle(
       ]);
 
       const params = {
-        FunctionName: `bulk-download-zip-creator-${process.env.NODE_ENV === "development" ? "dev" : "prod"}`, // Use the name you gave your Lambda function
+        FunctionName: storageConfig.lambdaFunctionName,
         InvocationType: InvocationType.RequestResponse,
         Payload: JSON.stringify({
           sourceBucket: storageConfig.bucket,

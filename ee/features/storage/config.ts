@@ -11,6 +11,7 @@ export interface StorageConfig {
   advancedDistributionHost?: string;
   distributionKeyId?: string;
   distributionKeyContents?: string;
+  lambdaFunctionName?: string;
 }
 
 export type StorageRegion = "eu-central-1" | "us-east-2";
@@ -74,6 +75,8 @@ export function getStorageConfig(storageRegion?: string): StorageConfig {
       process.env[`NEXT_PRIVATE_UPLOAD_DISTRIBUTION_KEY_ID${suffix}`],
     distributionKeyContents:
       process.env[`NEXT_PRIVATE_UPLOAD_DISTRIBUTION_KEY_CONTENTS${suffix}`],
+    lambdaFunctionName:
+      process.env[`NEXT_PRIVATE_LAMBDA_FUNCTION_NAME${suffix}`],
   };
 }
 
@@ -95,7 +98,11 @@ export async function getTeamStorageConfigById(
 
     return getStorageConfig(storageRegion);
   } catch (error) {
-    console.warn("Failed to resolve storage region for team %s:", teamId, error);
+    console.warn(
+      "Failed to resolve storage region for team %s:",
+      teamId,
+      error,
+    );
     return getStorageConfig(); // Default to EU region on error
   }
 }
