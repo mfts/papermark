@@ -68,6 +68,11 @@ export function SettingsHeader() {
             segment: "webhooks",
           },
           {
+            label: "Integrations",
+            href: `/settings/integrations`,
+            segment: "integrations",
+          },
+          {
             label: "Tokens",
             href: `/settings/tokens`,
             segment: "tokens",
