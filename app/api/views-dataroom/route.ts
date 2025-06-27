@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { ItemType, LinkAudienceType } from "@prisma/client";
 import { ipAddress, waitUntil } from "@vercel/functions";
@@ -813,9 +814,15 @@ export async function POST(request: NextRequest) {
           useAdvancedExcelViewer = document?.advancedExcelEnabled ?? false;
 
           if (useAdvancedExcelViewer) {
-            documentVersion.file = documentVersion.file.includes("https://")
-              ? documentVersion.file
-              : `https://${process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST}/${documentVersion.file}`;
+            if (documentVersion.file.includes("https://")) {
+              documentVersion.file = documentVersion.file;
+            } else {
+              // Get team-specific storage config for advanced distribution host
+              const storageConfig = await getTeamStorageConfigById(
+                link.teamId!,
+              );
+              documentVersion.file = `https://${storageConfig.advancedDistributionHost}/${documentVersion.file}`;
+            }
           } else {
             const fileUrl = await getFile({
               data: documentVersion.file,

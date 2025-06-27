@@ -63,13 +63,15 @@ export default async function handle(
 
       if (!supportsAdvancedExcelMode(documentVersion.contentType)) {
         return res.status(400).json({
-          message: "Advanced mode is only available for Excel files (.xls, .xlsx, .xlsm).",
+          message:
+            "Advanced mode is only available for Excel files (.xls, .xlsx, .xlsm).",
         });
       }
 
       await copyFileToBucketServer({
         filePath: documentVersion.file,
         storageType: documentVersion.storageType,
+        teamId,
       });
 
       const documentPromise = prisma.document.update({

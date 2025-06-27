@@ -4,7 +4,7 @@ import slugify from "@sindresorhus/slugify";
 import path from "node:path";
 import { Readable } from "stream";
 
-import { getS3Client } from "./aws-client";
+import { getTeamS3ClientAndConfig } from "./aws-client";
 
 type StreamFile = {
   name: string;
@@ -21,7 +21,7 @@ export const streamFileServer = async ({
   teamId: string;
   docId: string;
 }) => {
-  const client = getS3Client();
+  const { client, config } = await getTeamS3ClientAndConfig(teamId);
 
   // Get the basename and extension for the file
   const { name, ext } = path.parse(file.name);
@@ -31,7 +31,7 @@ export const streamFileServer = async ({
   const params = {
     client,
     params: {
-      Bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
+      Bucket: config.bucket,
       Key: key,
       Body: file.stream,
       ContentType: file.type,
