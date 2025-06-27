@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { errorhandler, TeamError } from "@/lib/errorHandler";
+import { TeamError, errorhandler } from "@/lib/errorHandler";
 import { deleteFile } from "@/lib/files/delete-file-server";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
@@ -197,7 +197,11 @@ export default async function handle(
       if (documentVersions.type !== "notion") {
         // delete the files from storage
         for (const version of documentVersions.versions) {
-          await deleteFile({ type: version.storageType, data: version.file });
+          await deleteFile({
+            type: version.storageType,
+            data: version.file,
+            teamId,
+          });
         }
       }
 

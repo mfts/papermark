@@ -2,6 +2,75 @@
   --bg-color: rgb(25, 25, 25);
 }
 
+/* Disable user selection for all text content */
+.notion-page,
+.notion-text,
+.notion-h1,
+.notion-h2,
+.notion-h3,
+.notion-h4,
+.notion-h5,
+.notion-h6,
+.notion-header,
+.notion-sub_header,
+.notion-sub_sub_header,
+.notion-quote,
+.notion-callout,
+.notion-toggle,
+.notion-list,
+.notion-numbered-list,
+.notion-to_do,
+.notion-code,
+.notion-simple-table,
+.notion-table,
+.notion-column-list,
+.notion-bookmark,
+.notion-embed,
+.notion-database {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Disable image dragging */
+.notion-image,
+.notion-asset,
+img {
+  /* Prevent long-press context menu on mobile */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  /* Prevent image highlighting */
+  -webkit-tap-highlight-color: transparent;
+
+  /* Disable pointer events for saving */
+  pointer-events: auto;
+}
+
+/* Re-enable pointer events for links to keep them clickable */
+.notion-link,
+.notion-link *,
+a,
+a * {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Ensure buttons and interactive elements remain clickable */
+button,
+input,
+select,
+textarea,
+.notion-toggle-button,
+.notion-page-icon {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
 .notion-simple-table {
   width: 100%;
 }

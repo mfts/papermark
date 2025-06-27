@@ -668,7 +668,7 @@ export default function PagesHorizontalViewer({
                       {page.pageLinks ? (
                         <map name={`page-map-${index + 1}`}>
                           {page.pageLinks
-                            .filter((link) => !link.href.includes(".gif"))
+                            .filter((link) => !link.href.endsWith(".gif"))
                             .map((link, index) => (
                               <area
                                 key={index}
@@ -698,7 +698,7 @@ export default function PagesHorizontalViewer({
                       {/** Automatically Render Overlays **/}
                       {page.pageLinks
                         ? page.pageLinks
-                            .filter((link) => link.href.includes(".gif"))
+                            .filter((link) => link.href.endsWith(".gif"))
                             .map((link, linkIndex) => {
                               const [x1, y1, x2, y2] = scaleCoordinates(
                                 link.coords,
@@ -830,9 +830,7 @@ export default function PagesHorizontalViewer({
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
         <AwayPoster
           isVisible={isInactive}
-          inactivityThreshold={
-            getTrackingOptions().inactivityThreshold
-          }
+          inactivityThreshold={getTrackingOptions().inactivityThreshold}
           onDismiss={updateActivity}
         />
       </div>

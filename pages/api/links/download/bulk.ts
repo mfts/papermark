@@ -1,9 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
 import { ItemType, ViewType } from "@prisma/client";
 
-import { getLambdaClient } from "@/lib/files/aws-client";
+import { getLambdaClientForTeam } from "@/lib/files/aws-client";
 import prisma from "@/lib/prisma";
 import { getIpAddress } from "@/lib/utils/ip";
 
@@ -39,11 +40,13 @@ export default async function handle(
               enableWatermark: true,
               watermarkConfig: true,
               name: true,
+              permissionGroupId: true,
             },
           },
           groupId: true,
           dataroom: {
             select: {
+              teamId: true,
               folders: {
                 select: {
                   id: true,
@@ -115,14 +118,27 @@ export default async function handle(
       let downloadFolders = view.dataroom.folders;
       let downloadDocuments = view.dataroom.documents;
 
-      // if groupId is not null,
-      // we should find the group permissions
-      // and reduce the number of documents and folders to download
-      if (view.groupId) {
-        const groupPermissions =
-          await prisma.viewerGroupAccessControls.findMany({
+      // Check permissions based on groupId (ViewerGroup) or permissionGroupId (PermissionGroup)
+      const effectiveGroupId = view.groupId || view.link.permissionGroupId;
+
+      if (effectiveGroupId) {
+        let groupPermissions: any[] = [];
+
+        if (view.groupId) {
+          // This is a ViewerGroup (legacy behavior)
+          groupPermissions = await prisma.viewerGroupAccessControls.findMany({
             where: { groupId: view.groupId, canDownload: true },
           });
+        } else if (view.link.permissionGroupId) {
+          // This is a PermissionGroup (new behavior)
+          groupPermissions =
+            await prisma.permissionGroupAccessControls.findMany({
+              where: {
+                groupId: view.link.permissionGroupId,
+                canDownload: true,
+              },
+            });
+        }
 
         const permittedFolderIds = groupPermissions
           .filter(
@@ -279,13 +295,18 @@ export default async function handle(
         return res.status(404).json({ error: "No files to download" });
       }
 
-      const client = getLambdaClient();
+      // Get team-specific storage configuration
+      const teamId = view.dataroom!.teamId;
+      const [client, storageConfig] = await Promise.all([
+        getLambdaClientForTeam(teamId),
+        getTeamStorageConfigById(teamId),
+      ]);
 
       const params = {
-        FunctionName: `bulk-download-zip-creator-${process.env.NODE_ENV === "development" ? "dev" : "prod"}`, // Use the name you gave your Lambda function
+        FunctionName: storageConfig.lambdaFunctionName,
         InvocationType: InvocationType.RequestResponse,
         Payload: JSON.stringify({
-          sourceBucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
+          sourceBucket: storageConfig.bucket,
           fileKeys: fileKeys,
           folderStructure: folderStructure,
           watermarkConfig: view.link.enableWatermark

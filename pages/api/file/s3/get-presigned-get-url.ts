@@ -5,10 +5,8 @@ import { getSignedUrl as getCloudfrontSignedUrl } from "@aws-sdk/cloudfront-sign
 import { getSignedUrl as getS3SignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { ONE_HOUR, ONE_SECOND } from "@/lib/constants";
-import { getS3Client } from "@/lib/files/aws-client";
+import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
 import { log } from "@/lib/utils";
-
-const client = getS3Client();
 
 export default async function handler(
   req: NextApiRequest,
@@ -44,16 +42,28 @@ export default async function handler(
   const { key } = req.body as { key: string };
 
   try {
-    if (process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_DOMAIN) {
+    // Extract teamId from key (format: teamId/docId/filename)
+    const teamId = key.split("/")[0];
+    if (!teamId) {
+      log({
+        message: `Invalid key format: ${key}`,
+        type: "error",
+      });
+      return res.status(400).json({ error: "Invalid key format" });
+    }
+
+    const { client, config } = await getTeamS3ClientAndConfig(teamId);
+
+    if (config.distributionHost) {
       const distributionUrl = new URL(
         key,
-        `${process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_DOMAIN}`,
+        `https://${config.distributionHost}`,
       );
 
       const url = getCloudfrontSignedUrl({
         url: distributionUrl.toString(),
-        keyPairId: `${process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_KEY_ID}`,
-        privateKey: `${process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_KEY_CONTENTS}`,
+        keyPairId: `${config.distributionKeyId}`,
+        privateKey: `${config.distributionKeyContents}`,
         dateLessThan: new Date(Date.now() + ONE_HOUR).toISOString(),
       });
 
@@ -61,7 +71,7 @@ export default async function handler(
     }
 
     const getObjectCommand = new GetObjectCommand({
-      Bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
+      Bucket: config.bucket,
       Key: key,
     });
 

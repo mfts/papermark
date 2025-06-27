@@ -30,19 +30,20 @@ export default async function handle(
           viewType: { equals: ViewType.DATAROOM_VIEW },
         },
         select: {
+          id: true,
+          viewedAt: true,
+          viewerEmail: true,
           viewerId: true,
           verified: true,
-          id: true,
-          viewerEmail: true,
-          viewedAt: true,
           link: {
             select: {
-              enableWatermark: true,
               allowDownload: true,
               expiresAt: true,
+              isArchived: true,
+              enableWatermark: true,
               watermarkConfig: true,
               name: true,
-              isArchived: true,
+              permissionGroupId: true,
             },
           },
           groupId: true,
@@ -50,17 +51,17 @@ export default async function handle(
             select: {
               id: true,
               documents: {
-                where: {
-                  documentId: documentId,
-                },
+                where: { document: { id: documentId } },
                 select: {
                   id: true,
                   document: {
                     select: {
+                      id: true,
                       name: true,
                       versions: {
                         where: { isPrimary: true },
                         select: {
+                          id: true,
                           type: true,
                           file: true,
                           storageType: true,
@@ -114,14 +115,27 @@ export default async function handle(
 
       let downloadDocuments = view.dataroom.documents;
 
-      // if groupId is not null,
-      // we should find the group permissions
-      // and reduce the number of documents and folders to download
-      if (view.groupId) {
-        const groupPermissions =
-          await prisma.viewerGroupAccessControls.findMany({
+      // Check permissions based on groupId (ViewerGroup) or permissionGroupId (PermissionGroup)
+      const effectiveGroupId = view.groupId || view.link.permissionGroupId;
+
+      if (effectiveGroupId) {
+        let groupPermissions: any[] = [];
+
+        if (view.groupId) {
+          // This is a ViewerGroup (legacy behavior)
+          groupPermissions = await prisma.viewerGroupAccessControls.findMany({
             where: { groupId: view.groupId, canDownload: true },
           });
+        } else if (view.link.permissionGroupId) {
+          // This is a PermissionGroup (new behavior)
+          groupPermissions =
+            await prisma.permissionGroupAccessControls.findMany({
+              where: {
+                groupId: view.link.permissionGroupId,
+                canDownload: true,
+              },
+            });
+        }
 
         const permittedDocumentIds = groupPermissions
           .filter(

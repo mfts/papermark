@@ -79,6 +79,8 @@ model Team {
   viewerGroups ViewerGroup[]
   viewers      Viewer[]
 
+  permissionGroups PermissionGroup[]
+
   links Link[]
   views View[]
 
