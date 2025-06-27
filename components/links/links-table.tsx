@@ -304,6 +304,45 @@ export default function LinksTable({
   const handlePermissionsSave = async (permissions: any) => {
     if (!editPermissionLink) return;
 
+    // Handle the case where user wants to share entire dataroom (permissions === null)
+    if (permissions === null && editPermissionLink.permissionGroupId) {
+      // Delete the permission group - database will set permissionGroupId to null automatically
+      try {
+        const deleteResponse = await fetch(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+          {
+            method: "DELETE",
+          },
+        );
+
+        if (!deleteResponse.ok) {
+          const { error } = await deleteResponse.json();
+          throw new Error(error ?? "Failed to delete permission group");
+        }
+
+        // Refresh the links cache
+        const endpointTargetType = `${targetType.toLowerCase()}s`;
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+            targetId,
+          )}/links`,
+        );
+
+        // Invalidate the permission group cache
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+        );
+
+        setShowPermissionsSheet(false);
+        setEditPermissionLink(null);
+        toast.success("File permissions updated successfully");
+      } catch (error) {
+        console.error("Error updating file permissions:", error);
+        toast.error("Failed to update file permissions");
+      }
+      return;
+    }
+
     if (!editPermissionLink.permissionGroupId) {
       setIsLoading(true);
       try {
@@ -326,6 +365,9 @@ export default function LinksTable({
           throw new Error(error.error || "Failed to create permission group");
         }
 
+        const { permissionGroup: newPermissionGroup, _ } =
+          await response.json();
+
         // Refresh the links cache
         const endpointTargetType = `${targetType.toLowerCase()}s`;
         mutate(
@@ -333,6 +375,15 @@ export default function LinksTable({
             targetId,
           )}/links`,
         );
+
+        // Cache the new permission group data
+        if (newPermissionGroup?.id) {
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${newPermissionGroup.id}`,
+            newPermissionGroup,
+            false,
+          );
+        }
 
         setShowPermissionsSheet(false);
         setEditPermissionLink(null);
@@ -372,6 +423,13 @@ export default function LinksTable({
             targetId,
           )}/links`,
         );
+
+        // Invalidate the permission group cache
+        if (editPermissionLink.permissionGroupId) {
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+          );
+        }
 
         setShowPermissionsSheet(false);
         setEditPermissionLink(null);
@@ -606,6 +664,12 @@ export default function LinksTable({
                               <EyeIcon className="text-gray-400 group-hover:text-gray-500" />
                             </Button>
                           </ButtonTooltip>
+                          {targetType === "DATAROOM" &&
+                            link.permissionGroupId && (
+                              <ButtonTooltip content="Limited File Access">
+                                <FileSlidersIcon className="text-gray-400 group-hover:text-gray-500" />
+                              </ButtonTooltip>
+                            )}
                           {isMobile ? (
                             <ButtonTooltip content="Edit link">
                               <Button
