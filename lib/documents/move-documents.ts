@@ -23,18 +23,22 @@ export const moveDocumentToFolder = async ({
   // Optimistically update the UI by removing the documents from current folder
   mutate(
     key,
-    (documents: any) => {
-      if (!documents) return documents;
-
-      // Filter out the documents that are being moved
-      const updatedDocuments = documents.filter(
-        (doc: any) => !documentIds.includes(doc.id),
-      );
-
-      // Return the updated list of documents
-      return updatedDocuments;
+    (data: any) => {
+      if (Array.isArray(data?.documents)) {
+        const updatedDocuments = data.documents.filter(
+          (doc: any) => !documentIds.includes(doc.id),
+        );
+        return { ...data, documents: updatedDocuments };
+      }
+      if (Array.isArray(data)) {
+        const updatedDocuments = data.filter(
+          (doc: any) => !documentIds.includes(doc.id),
+        );
+        return updatedDocuments;
+      }
+      return data;
     },
-    false,
+    { revalidate: false },
   );
   // Instant Update the UI
   const folderKey = `/api/teams/${teamId}${folderPathName ? `/folders/${folderPathName.join("/")}` : "/folders?root=true"}`;
@@ -42,19 +46,18 @@ export const moveDocumentToFolder = async ({
     mutate(
       folderKey,
       (folder: any) => {
-        if (!folder) return folder;
-        // Filter out the folder that are being moved
-        interface Folder {
-          id: string;
+        if (Array.isArray(folder)) {
+          interface Folder {
+            id: string;
+          }
+          const updatedFolder: Folder[] = folder.filter(
+            (f: Folder) => !folderIds.includes(f.id),
+          );
+          return updatedFolder;
         }
-
-        const updatedFolder: Folder[] = folder.filter(
-          (f: Folder) => !folderIds.includes(f.id),
-        );
-        // Return the updated list of folder
-        return updatedFolder;
+        return folder; 
       },
-      false,
+      { revalidate: false },
     );
   }
   try {
