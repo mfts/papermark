@@ -12,5 +12,5 @@ SQL >
     FROM
         pm_click_events__v1
     WHERE
-        viewId = {{ String(viewId, required=True) }}
+        view_id = {{ String(viewId, required=True) }}
     LIMIT 1
