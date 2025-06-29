@@ -53,7 +53,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import VideoVisitorUserAgent from "./video-visitor-useragent";
 import { VisitorAvatar } from "./visitor-avatar";
 import VisitorChart from "./visitor-chart";
 import VisitorClicks from "./visitor-clicks";
@@ -413,11 +412,7 @@ export default function VisitorsTable({
                                 />
                               )}
                               {!isFreePlan ? (
-                                isVideo ? (
-                                  <VideoVisitorUserAgent viewId={view.id} />
-                                ) : (
-                                  <VisitorUserAgent viewId={view.id} />
-                                )
+                                <VisitorUserAgent viewId={view.id} />
                               ) : (
                                 <VisitorUserAgentPlaceholder />
                               )}

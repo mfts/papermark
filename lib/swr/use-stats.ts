@@ -108,31 +108,3 @@ export function useVisitorUserAgent(viewId: string) {
     error,
   };
 }
-
-export function useVideoVisitorUserAgent(viewId: string) {
-  const router = useRouter();
-  const teamInfo = useTeam();
-
-  const { id: documentId } = router.query as {
-    id: string;
-  };
-
-  const { data: userAgent, error } = useSWRImmutable<{
-    country: string;
-    city: string;
-    os: string;
-    browser: string;
-    device: string;
-  }>(
-    documentId &&
-    viewId &&
-    `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}/views/${viewId}/video-user-agent`,
-    fetcher,
-  );
-
-  return {
-    userAgent,
-    loading: !error && !userAgent,
-    error,
-  };
-}

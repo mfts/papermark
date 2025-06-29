@@ -76,7 +76,7 @@ export const getTotalViewerDuration = tb.buildPipe({
   }),
 });
 
-export const getViewUserAgent = tb.buildPipe({
+export const getViewUserAgent_v2 = tb.buildPipe({
   pipe: "get_useragent_per_view__v2",
   parameters: z.object({
     documentId: z.string(),
@@ -92,26 +92,10 @@ export const getViewUserAgent = tb.buildPipe({
   }),
 });
 
-export const getDataroomViewUserAgent = tb.buildPipe({
-  pipe: "get_dataroom_useragent_per_view__v1",
+export const getViewUserAgent = tb.buildPipe({
+  pipe: "get_useragent_per_view__v3",
   parameters: z.object({
     viewId: z.string(),
-    since: z.number(),
-  }),
-  data: z.object({
-    country: z.string(),
-    city: z.string(),
-    browser: z.string(),
-    os: z.string(),
-    device: z.string(),
-  }),
-});
-
-export const getVideoViewUserAgent = tb.buildPipe({
-  pipe: "get_video_useragent_per_view__v1",
-  parameters: z.object({
-    viewId: z.string(),
-    since: z.number(),
   }),
   data: z.object({
     country: z.string(),

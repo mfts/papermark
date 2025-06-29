@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getDataroomViewUserAgent } from "@/lib/tinybird";
+import { getViewUserAgent } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(
@@ -54,9 +54,8 @@ export default async function handle(
       if (team.plan.includes("free")) {
         return res.status(403).end("Forbidden");
       }
-      const userAgent = await getDataroomViewUserAgent({
+      const userAgent = await getViewUserAgent({
         viewId: viewId,
-        since: 0,
       });
 
       const userAgentData = userAgent.data[0];
