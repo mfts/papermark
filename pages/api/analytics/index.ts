@@ -253,6 +253,7 @@ export default async function handler(
             domainSlug: true,
             domainId: true,
             documentId: true,
+            expiresAt: true,
             _count: {
               select: {
                 views: {
@@ -337,6 +338,7 @@ export default async function handler(
               views: link._count.views,
               avgDuration,
               lastViewed: link.views[0]?.viewedAt || null,
+              isExpired: !!link.expiresAt && link.expiresAt < new Date(),
             };
           }),
         );
