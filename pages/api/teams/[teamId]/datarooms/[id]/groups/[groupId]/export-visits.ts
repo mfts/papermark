@@ -4,7 +4,11 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
-import { getViewPageDuration, getViewUserAgent } from "@/lib/tinybird";
+import {
+  getViewPageDuration,
+  getViewUserAgent,
+  getViewUserAgent_v2,
+} from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 
 export default async function handler(
@@ -251,13 +255,21 @@ export default async function handler(
 
     // Get user agent data for all views
     const userAgentData = await Promise.all(
-      documentViews.map((view) =>
-        getViewUserAgent({
-          documentId: view.document?.id!,
+      documentViews.map(async (view) => {
+        const result = await getViewUserAgent({
           viewId: view.id,
-          since: 0,
-        }),
-      ),
+        });
+
+        if (!result || result.rows === 0) {
+          return getViewUserAgent_v2({
+            documentId: view.document?.id!,
+            viewId: view.id,
+            since: 0,
+          });
+        }
+
+        return result;
+      }),
     );
 
     // Process each view and add to CSV rows
