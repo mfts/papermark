@@ -145,12 +145,15 @@ export function DataroomSortableList({
       }
 
       // Update local data using SWR's mutate
+      const baseKey = `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}`;
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders${folderPathName ? `/${folderPathName.join(" / ")}` : "?root=true"}`,
+        `${baseKey}/folders${folderPathName ? `/${folderPathName.join("/")}` : "?root=true"}`,
       );
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}${folderPathName ? `/folders/documents/${folderPathName.join("/")}` : "/documents"}`,
+        `${baseKey}${folderPathName ? `/folders/documents/${folderPathName.join("/")}` : "/documents"}`,
       );
+      mutate(`${baseKey}/folders`);
+      mutate(`${baseKey}/folders?include_documents=true`);
       setIsReordering(false);
       toast.success("Index saved successfully");
     } catch (error) {

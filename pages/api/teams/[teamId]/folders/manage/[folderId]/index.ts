@@ -64,7 +64,7 @@ export default async function handle(
       }
 
       // Delete the folder and its contents
-      await deleteFolderAndContents(folderId);
+      await deleteFolderAndContents(folderId, teamId);
 
       return res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
@@ -77,7 +77,7 @@ export default async function handle(
   }
 }
 
-async function deleteFolderAndContents(folderId: string) {
+async function deleteFolderAndContents(folderId: string, teamId: string) {
   const childFoldersToDelete = await prisma.folder.findMany({
     where: {
       parentId: folderId,
@@ -85,7 +85,7 @@ async function deleteFolderAndContents(folderId: string) {
   });
 
   for (const childFolder of childFoldersToDelete) {
-    await deleteFolderAndContents(childFolder.id);
+    await deleteFolderAndContents(childFolder.id, teamId);
   }
 
   // Delete all documents in the folder
@@ -110,7 +110,11 @@ async function deleteFolderAndContents(folderId: string) {
 
   documents.map(async (documentVersions: { versions: any }) => {
     for (const version of documentVersions.versions) {
-      await deleteFile({ type: version.storageType, data: version.file });
+      await deleteFile({
+        type: version.storageType,
+        data: version.file,
+        teamId,
+      });
     }
   });
 
