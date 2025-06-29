@@ -22,6 +22,7 @@ export const DataroomSessionSchema = z.object({
   viewerId: z.string().optional(),
   expiresAt: z.number(),
   ipAddress: z.string(),
+  verified: z.boolean(),
 });
 
 // Generate TypeScript type from Zod schema
@@ -32,6 +33,7 @@ async function createDataroomSession(
   linkId: string,
   viewId: string,
   ipAddress: string,
+  verified: boolean,
   viewerId?: string,
 ): Promise<{ token: string; expiresAt: number }> {
   const sessionToken = crypto.randomBytes(32).toString("hex");
@@ -44,6 +46,7 @@ async function createDataroomSession(
     viewerId,
     expiresAt,
     ipAddress,
+    verified,
   };
 
   // Validate session data before storing
