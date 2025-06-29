@@ -431,6 +431,28 @@ export default function DataroomBrandPage() {
                           </span>
                         </Label>
                         <div className="flex space-x-1">
+                          <Popover>
+                            <PopoverTrigger>
+                              <div
+                                className="h-9 w-9 cursor-pointer rounded-md shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                                style={{ backgroundColor: accentColor }}
+                              />
+                            </PopoverTrigger>
+                            <PopoverContent>
+                              <HexColorPicker
+                                color={accentColor}
+                                onChange={setAccentColor}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <HexColorInput
+                            className="flex h-9 w-full rounded-md border-0 bg-background px-3 py-2 text-sm shadow-sm ring-1 ring-muted-foreground placeholder:text-muted-foreground focus:border-0 focus:ring-1 focus:ring-gray-300"
+                            color={accentColor}
+                            onChange={setAccentColor}
+                            prefixed
+                          />
+                        </div>
+                        <div className="mt-2 flex space-x-1">
                           <div
                             className="relative h-9 w-9 cursor-pointer rounded-md bg-white shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
                             onClick={() => setAccentColor("#ffffff")}
