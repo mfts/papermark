@@ -81,7 +81,6 @@ export default function VisitorsTable({
   const isFreePlan = plan === "free";
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
