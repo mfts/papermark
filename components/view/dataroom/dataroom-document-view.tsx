@@ -126,22 +126,6 @@ export default function DataroomDocumentView({
   const [code, setCode] = useState<string | null>(null);
   const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
 
-  useEffect(() => {
-    const checkDataroomSession = () => {
-      const dataroomSessionFlag =
-        Cookies.get(`pm_drs_flag_${link.id}`) ||
-        (link.domainSlug && Cookies.get(`pm_drs_flag_${link.domainSlug}`));
-
-      const hasVerificationToken = !!token;
-
-      if (dataroomSessionFlag || hasVerificationToken) {
-        setDataroomVerified(true);
-      }
-    };
-
-    checkDataroomSession();
-  }, [link.id, link.domainSlug, token]);
-
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
     const response = await fetch("/api/views-dataroom", {
