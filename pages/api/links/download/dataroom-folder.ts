@@ -1,10 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
 import { ItemType, ViewType } from "@prisma/client";
 import slugify from "@sindresorhus/slugify";
 
-import { getLambdaClient } from "@/lib/files/aws-client";
+import { getLambdaClientForTeam } from "@/lib/files/aws-client";
 import prisma from "@/lib/prisma";
 
 export const config = {
@@ -44,6 +45,7 @@ export default async function handler(
         viewedAt: true,
         link: {
           select: {
+            teamId: true,
             allowDownload: true,
             expiresAt: true,
             isArchived: true,
@@ -253,12 +255,17 @@ export default async function handler(
       };
     }
 
-    const client = getLambdaClient();
+    // Get team-specific storage configuration
+    const [client, storageConfig] = await Promise.all([
+      getLambdaClientForTeam(view.link.teamId!),
+      getTeamStorageConfigById(view.link.teamId!),
+    ]);
+
     const params = {
       FunctionName: `bulk-download-zip-creator-${process.env.NODE_ENV === "development" ? "dev" : "prod"}`,
       InvocationType: InvocationType.RequestResponse,
       Payload: JSON.stringify({
-        sourceBucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
+        sourceBucket: storageConfig.bucket,
         fileKeys,
         folderStructure,
       }),
