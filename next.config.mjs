@@ -181,8 +181,11 @@ function prepareRemotePatterns() {
     { protocol: "https", hostname: "faisalman.github.io" },
     // special document pages
     { protocol: "https", hostname: "d36r2enbzam0iu.cloudfront.net" },
+    // us special storage
+    { protocol: "https", hostname: "d35vw2hoyyl88.cloudfront.net" },
   ];
 
+  // Default region patterns
   if (process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST) {
     patterns.push({
       protocol: "https",
@@ -194,6 +197,21 @@ function prepareRemotePatterns() {
     patterns.push({
       protocol: "https",
       hostname: process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST,
+    });
+  }
+
+  // US region patterns
+  if (process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST_US) {
+    patterns.push({
+      protocol: "https",
+      hostname: process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST_US,
+    });
+  }
+
+  if (process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST_US) {
+    patterns.push({
+      protocol: "https",
+      hostname: process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST_US,
     });
   }
 

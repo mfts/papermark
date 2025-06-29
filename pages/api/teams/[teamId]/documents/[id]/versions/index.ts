@@ -172,6 +172,7 @@ export default async function handle(
         await copyFileToBucketServer({
           filePath: version.file,
           storageType: version.storageType,
+          teamId,
         });
       }
 
