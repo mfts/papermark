@@ -16,6 +16,7 @@ import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
+import { useDisablePrint } from "@/lib/hooks/use-disable-print";
 
 import EmailVerificationMessage from "../access-form/email-verification-form";
 import ViewData, { TViewDocumentData } from "../view-data";
@@ -97,6 +98,7 @@ export default function DataroomDocumentView({
   preview?: boolean;
   logoOnAccessForm?: boolean;
 }) {
+  useDisablePrint();
   const {
     linkType,
     emailProtected,
