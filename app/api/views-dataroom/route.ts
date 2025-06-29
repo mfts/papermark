@@ -5,6 +5,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { ItemType, LinkAudienceType } from "@prisma/client";
 import { ipAddress, waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth";
+
 import { hashToken } from "@/lib/api/auth/token";
 import {
   DataroomSession,
@@ -209,6 +210,11 @@ export async function POST(request: NextRequest) {
         linkId,
         link.dataroomId!,
       );
+
+      // If we have a dataroom session, use its verified status
+      if (dataroomSession) {
+        isEmailVerified = dataroomSession.verified;
+      }
     }
 
     // If there is no session, then we need to check if the link is protected and enforce the checks
@@ -564,6 +570,8 @@ export async function POST(request: NextRequest) {
           where: { id: viewer.id },
           data: { verified: isEmailVerified },
         });
+        // Update the viewer object to reflect the new verified status
+        viewer.verified = isEmailVerified;
       }
     }
 
@@ -661,6 +669,7 @@ export async function POST(request: NextRequest) {
             linkId,
             newDataroomView?.id!,
             ipAddress(request) ?? LOCALHOST_IP,
+            isEmailVerified,
             viewer?.id,
           );
 
@@ -907,7 +916,7 @@ export async function POST(request: NextRequest) {
             ? documentVersion.file
             : undefined,
         pages: documentPages ? documentPages : undefined,
-        notionData: undefined, 
+        notionData: undefined,
         sheetData:
           documentVersion &&
           documentVersion.type === "sheet" &&
@@ -945,13 +954,14 @@ export async function POST(request: NextRequest) {
 
       const response = NextResponse.json(returnObject, { status: 200 });
 
-      // Create a dataroom session token if a dataroom session doesn't exist yet// Create a dataroom session token if a dataroom session doesn't exist yet
+      // Create a dataroom session token if a dataroom session doesn't exist yet
       if (!dataroomSession && !isPreview) {
         const newDataroomSession = await createDataroomSession(
           dataroomId,
           linkId,
           dataroomView?.id!,
           ipAddress(request) ?? LOCALHOST_IP,
+          isEmailVerified,
           viewer?.id,
         );
 
