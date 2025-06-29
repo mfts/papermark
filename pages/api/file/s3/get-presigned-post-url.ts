@@ -7,13 +7,11 @@ import { getServerSession } from "next-auth";
 import path from "node:path";
 
 import { ONE_HOUR, ONE_SECOND } from "@/lib/constants";
-import { getS3Client } from "@/lib/files/aws-client";
+import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
-
-const client = getS3Client();
 
 export default async function handler(
   req: NextApiRequest,
@@ -58,8 +56,10 @@ export default async function handler(
     const slugifiedName = slugify(name) + ext;
     const key = `${team.id}/${docId}/${slugifiedName}`;
 
+    const { client, config } = await getTeamS3ClientAndConfig(team.id);
+
     const putObjectCommand = new PutObjectCommand({
-      Bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
+      Bucket: config.bucket,
       Key: key,
       ContentType: contentType,
       ContentDisposition: `attachment; filename="${slugifiedName}"`,

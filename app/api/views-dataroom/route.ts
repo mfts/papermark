@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { ItemType, LinkAudienceType } from "@prisma/client";
 import { ipAddress, waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth";
-import { parsePageId } from "notion-utils";
-
 import { hashToken } from "@/lib/api/auth/token";
 import {
   DataroomSession,
@@ -16,8 +15,6 @@ import { PreviewSession, verifyPreviewSession } from "@/lib/auth/preview-auth";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
-import notion from "@/lib/notion";
-import { addSignedUrls } from "@/lib/notion/utils";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { parseSheet } from "@/lib/sheet";
@@ -749,11 +746,8 @@ export async function POST(request: NextRequest) {
       }
 
       // if document version has pages, then return pages
-      // otherwise, check if notion document,
-      // if notion, return recordMap and theme from document version file
       // otherwise, return file from document version
       let documentPages, documentVersion;
-      let recordMap, theme;
       let sheetData;
 
       if (hasPages) {
@@ -812,23 +806,6 @@ export async function POST(request: NextRequest) {
             type: documentVersion.storageType,
           });
         }
-
-        if (documentVersion.type === "notion") {
-          // get theme `mode` param from document version file
-          const modeMatch = documentVersion.file.match(/[?&]mode=(dark|light)/);
-          theme = modeMatch ? modeMatch[1] : undefined;
-
-          let notionPageId = parsePageId(documentVersion.file, { uuid: false });
-          if (!notionPageId) {
-            notionPageId = "";
-          }
-
-          const pageId = notionPageId;
-          recordMap = await notion.getPage(pageId, { signFileUrls: false });
-          // TODO: separately sign the file urls until PR merged and published; ref: https://github.com/NotionX/react-notion-x/issues/580#issuecomment-2542823817
-          await addSignedUrls({ recordMap });
-        }
-
         if (documentVersion.type === "sheet") {
           const document = await prisma.document.findUnique({
             where: { id: documentId },
@@ -837,9 +814,15 @@ export async function POST(request: NextRequest) {
           useAdvancedExcelViewer = document?.advancedExcelEnabled ?? false;
 
           if (useAdvancedExcelViewer) {
-            documentVersion.file = documentVersion.file.includes("https://")
-              ? documentVersion.file
-              : `https://${process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST}/${documentVersion.file}`;
+            if (documentVersion.file.includes("https://")) {
+              documentVersion.file = documentVersion.file;
+            } else {
+              // Get team-specific storage config for advanced distribution host
+              const storageConfig = await getTeamStorageConfigById(
+                link.teamId!,
+              );
+              documentVersion.file = `https://${storageConfig.advancedDistributionHost}/${documentVersion.file}`;
+            }
           } else {
             const fileUrl = await getFile({
               data: documentVersion.file,
@@ -924,7 +907,7 @@ export async function POST(request: NextRequest) {
             ? documentVersion.file
             : undefined,
         pages: documentPages ? documentPages : undefined,
-        notionData: recordMap ? { recordMap, theme } : undefined,
+        notionData: undefined, 
         sheetData:
           documentVersion &&
           documentVersion.type === "sheet" &&
@@ -935,9 +918,7 @@ export async function POST(request: NextRequest) {
           ? documentVersion.type
           : documentPages
             ? "pdf"
-            : recordMap
-              ? "notion"
-              : undefined,
+            : undefined,
         watermarkConfig: link.enableWatermark
           ? link.watermarkConfig
           : undefined,
