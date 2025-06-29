@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getViewUserAgent } from "@/lib/tinybird";
+import { getViewUserAgent, getViewUserAgent_v2 } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(
@@ -55,11 +55,28 @@ export default async function handle(
         return res.status(403).end("Forbidden");
       }
 
-      const userAgent = await getViewUserAgent({
-        documentId: docId,
+      let userAgent: {
+        rows?: number | undefined;
+        data: {
+          country: string;
+          city: string;
+          browser: string;
+          os: string;
+          device: string;
+        }[];
+      };
+
+      userAgent = await getViewUserAgent({
         viewId: viewId,
-        since: 0,
       });
+
+      if (!userAgent || userAgent.rows === 0) {
+        userAgent = await getViewUserAgent_v2({
+          documentId: docId,
+          viewId: viewId,
+          since: 0,
+        });
+      }
 
       const userAgentData = userAgent.data[0];
       // Include country and city for business and datarooms plans
