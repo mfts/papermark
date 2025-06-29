@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 
 import {
   DownloadCloudIcon,
@@ -62,7 +63,7 @@ export default function DataroomVisitHistory({
         ))}
       {documentViews ? (
         documentViews.map((view) => (
-          <>
+          <Fragment key={view.id}>
             {/* Show viewed row */}
             <TableRow key={`${view.id}-viewed`}>
               <TableCell>
@@ -126,7 +127,7 @@ export default function DataroomVisitHistory({
                 </TableCell>
               </TableRow>
             )}
-          </>
+          </Fragment>
         ))
       ) : (
         <TableRow>
