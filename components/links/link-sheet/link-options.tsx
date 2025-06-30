@@ -233,7 +233,7 @@ export const LinkOptions = ({
               isAllowed={
                 isTrial ||
                 isDataroomsPlus ||
-                (isDatarooms && limits?.dataroomUpload!)
+                (isDatarooms && limits?.dataroomUpload === true)
               }
               handleUpgradeStateChange={handleUpgradeStateChange}
               targetId={targetId}
