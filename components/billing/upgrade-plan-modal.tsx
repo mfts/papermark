@@ -9,8 +9,7 @@ import { getStripe } from "@/ee/stripe/client";
 import { Feature, PlanEnum, getPlanFeatures } from "@/ee/stripe/constants";
 import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
 import { PLANS } from "@/ee/stripe/utils";
-import { CheckIcon, Users2Icon, CircleHelpIcon } from "lucide-react";
-import { toast } from "sonner";
+import { CheckIcon, CircleHelpIcon, Users2Icon } from "lucide-react";
 
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
@@ -20,11 +19,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import {
+  BadgeTooltip,
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-  BadgeTooltip,
 } from "@/components/ui/tooltip";
 
 // Start Data Room Trial Button Component
@@ -32,7 +31,7 @@ const StartDataRoomTrialButton = ({ teamId }: { teamId?: string }) => {
   const router = useRouter();
 
   const handleStartTrial = () => {
-    router.push('/welcome?type=dataroom-trial');
+    router.push("/welcome?type=dataroom-trial");
   };
 
   return (
@@ -382,8 +381,8 @@ export function UpgradePlanModal({
             >
               See all plans
             </Link>
-            {trigger === "sidebar_datarooms" && 
-             ((teamPlan === "free" && !isTrial) || (teamPlan === "pro" && !isTrial)) && (
+            {((teamPlan === "free" && !isTrial) ||
+              (teamPlan === "pro" && !isTrial)) && (
               <>
                 <span>|</span>
                 <StartDataRoomTrialButton teamId={teamId} />
