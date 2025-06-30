@@ -40,7 +40,7 @@ export default function IndexFileSection({
         link="https://www.papermark.com/help/article/link-settings"
         action={handleEnableIndexFile}
         isAllowed={isAllowed}
-        requiredPlan="Data Rooms Plus"
+        requiredPlan="data rooms plus"
         upgradeAction={() =>
           handleUpgradeStateChange({
             state: true,
