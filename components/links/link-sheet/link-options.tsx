@@ -230,7 +230,11 @@ export const LinkOptions = ({
           {linkType === LinkType.DATAROOM_LINK && targetId ? (
             <UploadSection
               {...{ data, setData }}
-              isAllowed={isTrial || isDataroomsPlus}
+              isAllowed={
+                isTrial ||
+                isDataroomsPlus ||
+                (isDatarooms && limits?.dataroomUpload!)
+              }
               handleUpgradeStateChange={handleUpgradeStateChange}
               targetId={targetId}
             />
