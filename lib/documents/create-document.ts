@@ -1,6 +1,6 @@
 import { DocumentStorageType } from "@prisma/client";
 
-export type DocumentData = {
+export interface DocumentData {
   name: string;
   key: string;
   storageType: DocumentStorageType;
@@ -8,6 +8,7 @@ export type DocumentData = {
   supportedFileType: string; // papermark types: "pdf", "sheet", "docs", "slides", "map", "zip"
   fileSize: number | undefined; // file size in bytes
   numPages?: number;
+  googleDriveFileId?: string;
   enableExcelAdvancedMode?: boolean;
 };
 
@@ -18,6 +19,7 @@ export const createDocument = async ({
   folderPathName,
   createLink = false,
   token,
+  googleDriveFileId
 }: {
   documentData: DocumentData;
   teamId: string;
@@ -25,6 +27,7 @@ export const createDocument = async ({
   folderPathName?: string;
   createLink?: boolean;
   token?: string;
+    googleDriveFileId?: string;
 }) => {
   // create a document in the database with the blob url
   const response = await fetch(
@@ -45,6 +48,7 @@ export const createDocument = async ({
         contentType: documentData.contentType,
         createLink: createLink,
         fileSize: documentData.fileSize,
+        googleDriveFileId: googleDriveFileId,
       }),
     },
   );

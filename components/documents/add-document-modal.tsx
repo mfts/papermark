@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-
-
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { FormEvent, useEffect, useState } from "react";
 
 
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
+import { CheckCircleIcon, Loader2, UploadCloud } from "lucide-react";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -16,6 +16,8 @@ import { mutate } from "swr";
 
 
 import { useAnalytics } from "@/lib/analytics";
+import { SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
+import { useUpload } from "@/lib/context/upload-context";
 import {
   DocumentData,
   createDocument,
@@ -27,6 +29,11 @@ import useLimits from "@/lib/swr/use-limits";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
 import DocumentUpload from "@/components/document-upload";
+import GoogleDriveIntegration from "@/components/integrations/google-drive/google-drive";
+import { useGoogleDriveStatus } from "@/components/integrations/google-drive/google-drive";
+import GoogleDrivePicker, {
+  GoogleDriveFile,
+} from "@/components/integrations/google-drive/google-drive-picker";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -47,6 +54,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { SetGroupPermissionsModal } from "../datarooms/groups/set-group-permissions-modal";
+import { ConfirmationDialog } from "../ui/confirmation-dialog";
+
+export interface ProcessedFile {
+  folderId: string;
+  folderName: string;
+  parentFolderId: string | null;
+  files: Array<{
+    fileId: string;
+    fileName: string;
+    fileType: string;
+    parentId?: string;
+    folderPathName?: string;
+  }>;
+  children?: ProcessedFile[];
+}
+
+export interface Files {
+  fileId: string;
+  fileName: string;
+  fileType: string;
+  folderPathName: string | undefined;
+}
 
 interface DataroomDocument {
   id: string;
@@ -75,6 +104,25 @@ export function AddDocumentModal({
   const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
+  const { startUpload } = useUpload();
+  const [selectedGoogleDriveFile, setSelectedGoogleDriveFile] = useState<{
+    id: string;
+    name: string;
+    mimeType: string;
+    size: number;
+  } | null>(null);
+  const teamInfo = useTeam();
+  const { canAddDocuments } = useLimits();
+  const { plan, trial } = usePlan();
+  const isFreePlan = plan === "free";
+  const isTrial = !!trial;
+  const {
+    isConnected,
+    googleDriveIntegration,
+    isLoading,
+    mutate: mutateGoogleDriveIntegration,
+  } = useGoogleDriveStatus();
+
   const [showGroupPermissions, setShowGroupPermissions] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<
     {
@@ -83,12 +131,14 @@ export function AddDocumentModal({
       fileName: string;
     }[]
   >([]);
-  const teamInfo = useTeam();
-  const { canAddDocuments } = useLimits();
-  const { plan, isFree, isTrial } = usePlan();
-
   const teamId = teamInfo?.currentTeam?.id as string;
-
+  const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+  const [confirmDialogData, setConfirmDialogData] = useState<{
+    totalFiles: number;
+    totalFolders: number;
+    treeStructure: ProcessedFile;
+    filesList: Files[];
+  } | null>(null);
   useEffect(() => {
     if (openModal) setIsOpen(openModal);
   }, [openModal]);
@@ -453,9 +503,180 @@ export function AddDocumentModal({
     }
   };
 
+  const processItems = async (
+    items: GoogleDriveFile[],
+    processedFiles?: ProcessedFile,
+  ): Promise<{ processedFiles: ProcessedFile; files: Files[] }> => {
+    let rootFolderFiles: Files[] = [];
+    const folderIds: string[] = [];
+
+    for (const item of items) {
+      if (item.type === "folder") {
+        folderIds.push(item.id);
+      } else {
+        rootFolderFiles.push({
+          fileId: item.id,
+          fileName: item.name,
+          fileType: item.mimeType,
+          folderPathName: currentFolderPath?.join("/"),
+        });
+      }
+    }
+    let children: ProcessedFile[] = [];
+    let files: Files[] = [];
+    if (folderIds.length > 0) {
+      try {
+        const response = await fetch(
+          "/api/integrations/google-drive/list-files",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              folderIds,
+              folderPathName: currentFolderPath?.join("/"),
+              teamId,
+              dataroomId,
+            }),
+          },
+        );
+        if (!response.ok) {
+          const error = await response.json();
+          if (error.requiresReconnect) {
+            toast.error("Google Drive connection expired. Please reconnect.");
+            const fallbackProcessedFiles: ProcessedFile = processedFiles || {
+              folderId: "root",
+              folderName: "Root",
+              parentFolderId: null,
+              files: rootFolderFiles,
+              children: [],
+            };
+            return {
+              processedFiles: fallbackProcessedFiles,
+              files: [...rootFolderFiles, ...files],
+            };
+          }
+          throw new Error(error.message || "Failed to list files");
+        }
+        const data: { tree: ProcessedFile[]; files: Files[] } =
+          await response.json();
+        files = [...rootFolderFiles, ...data.files];
+        children.push(...data.tree);
+      } catch (error) {
+        console.error("Error processing Google Drive file:", error);
+        toast.error("Failed to process file from Google Drive");
+        const fallbackProcessedFiles: ProcessedFile = processedFiles || {
+          folderId: "root",
+          folderName: "Root",
+          parentFolderId: null,
+          files: rootFolderFiles,
+          children: [],
+        };
+        return {
+          processedFiles: fallbackProcessedFiles,
+          files: [...rootFolderFiles, ...files],
+        };
+      }
+    }
+    if (folderIds.length === 0) {
+      files = [...rootFolderFiles];
+    }
+    processedFiles = {
+      folderId: "root",
+      folderName: "Root",
+      parentFolderId: null,
+      files: rootFolderFiles,
+      children: children,
+    };
+    return { processedFiles, files: files };
+  };
+
+  const handleGoogleDriveFileSelect = async (files: GoogleDriveFile[]) => {
+    if (!files.length) {
+      toast.error("No files selected from Google Drive");
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const processPromise = processItems(files);
+      toast.promise(processPromise, {
+        loading: "Getting files from Google Drive...",
+        success: "Files processed successfully",
+        error: "Failed to process files from Google Drive",
+      });
+
+      const { processedFiles: treeStructure, files: filesList } =
+        await processPromise;
+
+      // Count files and folders
+      const totalFiles = filesList.length;
+      const totalFolders = countFolders(treeStructure);
+      setConfirmDialogData({
+        totalFiles,
+        totalFolders,
+        treeStructure,
+        filesList,
+      });
+      setShowConfirmDialog(true);
+      setUploading(false);
+    } catch (error) {
+      console.error("Error processing Google Drive files:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to process files from Google Drive";
+      toast.error(errorMessage);
+      setUploading(false);
+    }
+  };
+
+  const handleUploadConfirm = async () => {
+    if (!confirmDialogData) return;
+    setIsOpen(false);
+    setUploading(true);
+    try {
+      await startUpload({
+        treeFiles: confirmDialogData.treeStructure,
+        path: currentFolderPath?.join("/"),
+        dataroomId,
+        filesList: confirmDialogData.filesList,
+        teamId,
+      });
+      setAddDocumentModalOpen && setAddDocumentModalOpen(false);
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to upload files";
+      toast.error(errorMessage);
+    } finally {
+      setUploading(false);
+      setShowConfirmDialog(false);
+      setConfirmDialogData(null);
+    }
+  };
+
+  // Helper function to count folders in the tree structure
+  const countFolders = useCallback((tree: ProcessedFile): number => {
+    let count = 0;
+    if (tree.children && tree.children.length > 0) {
+      count += tree.children.length;
+      tree.children.forEach((child) => {
+        count += countFolders(child);
+      });
+    }
+    return count;
+  }, []);
+
+  const handleGoogleDriveError = (error: Error) => {
+    console.error("Google Drive error:", error);
+    toast.error("Failed to select file from Google Drive");
+  };
+
   const clearModelStates = () => {
     currentFile !== null && setCurrentFile(null);
     notionLink !== null && setNotionLink(null);
+    selectedGoogleDriveFile !== null && setSelectedGoogleDriveFile(null);
     setIsOpen(!isOpen);
     setAddDocumentModalOpen && setAddDocumentModalOpen(!isOpen);
   };
@@ -495,8 +716,9 @@ export function AddDocumentModal({
           </DialogDescription>
           <Tabs defaultValue="document">
             {!newVersion ? (
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="document">Document</TabsTrigger>
+                <TabsTrigger value="google-drive">Google Drive</TabsTrigger>
                 <TabsTrigger value="notion">Notion Page</TabsTrigger>
               </TabsList>
             ) : (
@@ -516,7 +738,7 @@ export function AddDocumentModal({
                     ) : (
                       <span>
                         After you upload the document, create a shareable link.{" "}
-                        {isFree && !isTrial ? (
+                        {isFreePlan && !isTrial ? (
                           <>
                             Upload larger files and more{" "}
                             <Link
@@ -580,6 +802,54 @@ export function AddDocumentModal({
                 </CardContent>
               </Card>
             </TabsContent>
+            <TabsContent value="google-drive">
+              <Card className="rounded-lg shadow-lg">
+                <CardHeader className="space-y-3">
+                  <CardTitle className="flex items-center text-xl font-bold">
+                    <UploadCloud className="mr-2 text-blue-500" />
+                    {newVersion
+                      ? `Upload from Google Drive`
+                      : `Import from Google Drive`}
+                  </CardTitle>
+                  <CardDescription className="text-sm text-muted-foreground">
+                    {isConnected || !isLoading
+                      ? "Select a file from your Google Drive to import"
+                      : "Sync your Google Drive account to import files"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isConnected ? (
+                    <div className="flex flex-col items-center space-y-6">
+                      <div className="flex w-full items-center space-x-2 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+                        <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                        <span>
+                          <span className="font-medium">
+                            Google Drive connected.
+                          </span>{" "}
+                          Select a file to import.
+                        </span>
+                      </div>
+                      <GoogleDrivePicker
+                        onFileSelect={handleGoogleDriveFileSelect}
+                        onError={handleGoogleDriveError}
+                        accessToken={
+                          googleDriveIntegration?.integration.accessToken || ""
+                        }
+                        isConnected={isConnected}
+                        setAddDocumentModalOpen={setIsOpen}
+                        fileTypes={SUPPORTED_DOCUMENT_MIME_TYPES}
+                        isDriveLoading={isLoading}
+                        mutate={mutateGoogleDriveIntegration}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center space-y-4">
+                      <GoogleDriveIntegration className="flex-col gap-y-6" />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
             {!newVersion && (
               <TabsContent value="notion">
                 <Card>
@@ -632,7 +902,22 @@ export function AddDocumentModal({
           </Tabs>
         </DialogContent>
       </Dialog>
-
+      {confirmDialogData && (
+        <ConfirmationDialog
+          isOpen={showConfirmDialog}
+          onClose={() => {
+            setShowConfirmDialog(false);
+            setConfirmDialogData(null);
+          }}
+          onConfirm={handleUploadConfirm}
+          title="Confirm Upload"
+          totalFiles={confirmDialogData.totalFiles}
+          totalFolders={confirmDialogData.totalFolders}
+          confirmText="Upload"
+          cancelText="Cancel"
+          loading={uploading}
+        />
+      )}
       {showGroupPermissions && dataroomId && (
         <SetGroupPermissionsModal
           open={showGroupPermissions}

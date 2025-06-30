@@ -3,13 +3,16 @@ import * as tus from "tus-js-client";
 import { decodeBase64Url } from "../utils/decode-base64url";
 
 type ResumableUploadParams = {
-  file: File;
+  file: File | Buffer;
+  fileName?: string;
+  fileType?: string;
   onProgress?: (bytesUploaded: number, bytesTotal: number) => void;
   onError?: (error: Error | tus.DetailedError) => void;
   ownerId: string;
   teamId: string;
   numPages: number;
   relativePath: string;
+  googleDriveFileId?: string | null;
 };
 
 type UploadResult = {
@@ -21,38 +24,45 @@ type UploadResult = {
   numPages: number;
   ownerId: string;
   teamId: string;
+  googleDriveFileId?: string | null; // Google Drive folder ID
 };
 
 export function resumableUpload({
   file,
+  fileName,
+  fileType,
   onProgress,
   onError,
   ownerId,
   teamId,
   numPages,
   relativePath,
+  googleDriveFileId,
 }: ResumableUploadParams) {
   return new Promise<{ upload: tus.Upload; complete: Promise<UploadResult> }>(
     (resolve, reject) => {
+      if (!(file instanceof File) && !fileName) {
+        throw new Error("fileName is required!");
+      }
       let completeResolve: (
         value: UploadResult | PromiseLike<UploadResult>,
       ) => void;
       const complete = new Promise<UploadResult>((res) => {
         completeResolve = res;
       });
-
       const upload = new tus.Upload(file, {
         endpoint: `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/tus`,
         retryDelays: [0, 3000, 5000, 10000],
         uploadDataDuringCreation: true,
         removeFingerprintOnSuccess: true,
         metadata: {
-          fileName: file.name,
-          contentType: file.type,
+          fileName: fileName || (file instanceof File && file.name) || "unnamed-file",
+          contentType: fileType || (file instanceof File && file.type) || "application/octet-stream", 
           numPages: String(numPages),
           teamId: teamId,
           ownerId: ownerId,
           relativePath: relativePath,
+          googleDriveFileId: googleDriveFileId || "",
         },
         chunkSize: 4 * 1024 * 1024,
         onError: (error) => {
@@ -82,11 +92,12 @@ export function resumableUpload({
             id: newId,
             url: upload.url!,
             relativePath,
-            fileName: file.name,
-            fileType: file.type,
+            fileName: fileName || (file instanceof File && file.name) || "unnamed-file",
+            fileType: fileType || (file instanceof File && file.type) || "application/octet-stream",
             numPages,
             ownerId,
             teamId,
+            googleDriveFileId,
           });
         },
       });
