@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradeButton } from "../ui/upgrade-button";
 
 export function AddDomainModal({
   open,
@@ -116,17 +117,16 @@ export function AddDomainModal({
   ) {
     if (children) {
       return (
-        <UpgradePlanModal
+        <UpgradeButton
+          text="Add Domain"
           clickedPlan={
             linkType === "DATAROOM_LINK"
               ? PlanEnum.DataRooms
               : PlanEnum.Business
           }
-          trigger={"add_domain_overview"}
           highlightItem={["custom-domain"]}
-        >
-          <Button>Upgrade to Add Domain</Button>
-        </UpgradePlanModal>
+          trigger="add_domain_overview"
+        />
       );
     } else {
       return (

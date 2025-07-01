@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -24,8 +24,6 @@ import {
   Download,
   DownloadCloudIcon,
   FileBadgeIcon,
-  FileDigitIcon,
-  MoreHorizontalIcon,
   ServerIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
@@ -38,11 +36,6 @@ import { cn, durationFormat, fetcher, timeAgo } from "@/lib/utils";
 import { downloadCSV } from "@/lib/utils/csv";
 
 import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Gauge } from "@/components/ui/gauge";
 import {
   Table,
@@ -55,13 +48,7 @@ import {
 import { BadgeTooltip } from "@/components/ui/tooltip";
 import { DataTablePagination } from "@/components/visitors/data-table-pagination";
 import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
-import VisitorChart from "@/components/visitors/visitor-chart";
-import VisitorClicks from "@/components/visitors/visitor-clicks";
-import VisitorCustomFields from "@/components/visitors/visitor-custom-fields";
-import VisitorUserAgent from "@/components/visitors/visitor-useragent";
-import VisitorVideoChart from "@/components/visitors/visitor-video-chart";
-
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradeButton } from "../ui/upgrade-button";
 
 interface View {
   id: string;
@@ -341,20 +328,15 @@ export default function ViewsTable({
   };
 
   const UpgradeOrExportButton = () => {
-    const [open, setOpen] = useState(false);
     if (isFree && !isTrial) {
       return (
-        <>
-          <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-            Upgrade to Export
-          </Button>
-          <UpgradePlanModal
-            clickedPlan={PlanEnum.Pro}
-            trigger="dashboard_views_export"
-            open={open}
-            setOpen={setOpen}
-          />
-        </>
+        <UpgradeButton
+          text="Export"
+          clickedPlan={PlanEnum.Pro}
+          trigger="dashboard_views_export"
+          variant="outline"
+          size="sm"
+        />
       );
     } else {
       return (

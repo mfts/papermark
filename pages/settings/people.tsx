@@ -16,7 +16,6 @@ import { useTeams } from "@/lib/swr/use-teams";
 import { CustomUser } from "@/lib/types";
 
 import { AddSeatModal } from "@/components/billing/add-seat-modal";
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import Folder from "@/components/shared/icons/folder";
@@ -31,7 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { UpgradeButton } from "@/components/ui/upgrade-button";
 export default function Billing() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
     useState<boolean>(false);
@@ -239,14 +238,11 @@ export default function Billing() {
                 </p>
               </div>
               {showUpgradePlanModal ? (
-                <UpgradePlanModal
+                <UpgradeButton
+                  text="Invite Members"
                   clickedPlan={PlanEnum.Pro}
-                  trigger={"invite_team_members"}
-                >
-                  <Button className="whitespace-nowrap px-1 text-xs sm:px-4 sm:text-sm">
-                    Upgrade to invite members
-                  </Button>
-                </UpgradePlanModal>
+                  trigger="invite_team_members"
+                />
               ) : showInvite ? (
                 <AddTeamMembers
                   open={isTeamMemberInviteModalOpen}

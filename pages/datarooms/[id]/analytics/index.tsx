@@ -100,7 +100,7 @@ export default function DataroomAnalyticsPage() {
                   description="Get detailed insights into document engagement, completion rates, and visitor behavior patterns across your dataroom."
                   requiredPlan={PlanEnum.DataRooms}
                   trigger="dataroom_analytics_tab"
-                  upgradeButtonText="Upgrade to Data Rooms"
+                  upgradeButtonText="Data Rooms"
                 >
                   <MockAnalyticsTable />
                 </FeaturePreview>

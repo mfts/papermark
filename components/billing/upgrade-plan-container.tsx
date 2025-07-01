@@ -4,6 +4,9 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
+
+import { usePlan } from "@/lib/swr/use-billing";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,8 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-import { usePlan } from "@/lib/swr/use-billing";
+import { UpgradeButton } from "@/components/ui/upgrade-button";
 
 export default function UpgradePlanContainer() {
   const router = useRouter();
@@ -56,9 +58,14 @@ export default function UpgradePlanContainer() {
   const ButtonList = () => {
     if (isFree) {
       return (
-        <Link href="/settings/upgrade">
-          <Button>Upgrade Plan</Button>
-        </Link>
+        <UpgradeButton
+          text=""
+          customText="Update plan"
+          clickedPlan={PlanEnum.Business}
+          trigger="upgrade_plan"
+          useModal={false}
+          onClick={() => router.push("/settings/upgrade")}
+        />
       );
     } else {
       return (

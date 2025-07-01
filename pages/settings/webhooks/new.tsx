@@ -22,6 +22,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { UpgradeButton } from "@/components/ui/upgrade-button";
 
 interface WebhookEvent {
   id: string;
@@ -338,16 +339,15 @@ export default function NewWebhook() {
 
             <div className="flex space-x-4">
               {isFree || isPro ? (
-                <UpgradePlanModal
-                  key="create-webhook"
+                <UpgradeButton
+                  text="Save Webhook"
                   clickedPlan={PlanEnum.Business}
                   trigger="create_webhook"
                   highlightItem={["webhooks"]}
-                >
-                  <Button type="submit" disabled={isLoading}>
-                    Upgrade to Save Webhook
-                  </Button>
-                </UpgradePlanModal>
+                  type="submit"
+                  disabled={isLoading}
+                  key="create-webhook"
+                />
               ) : (
                 <Button type="submit" disabled={isLoading}>
                   {isLoading ? "Creating..." : "Create Webhook"}

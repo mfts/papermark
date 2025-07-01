@@ -39,8 +39,8 @@ import { DataTablePagination } from "@/components/visitors/data-table-pagination
 import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher, timeAgo } from "@/lib/utils";
 import { downloadCSV } from "@/lib/utils/csv";
+import { UpgradeButton } from "../ui/upgrade-button";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 interface Document {
   id: string;
@@ -221,20 +221,15 @@ export default function DocumentsTable({
   };
 
   const UpgradeOrExportButton = () => {
-    const [open, setOpen] = useState(false);
     if (isFree && !isTrial) {
       return (
-        <>
-          <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-            Upgrade to Export
-          </Button>
-          <UpgradePlanModal
-            clickedPlan={PlanEnum.Pro}
-            trigger="dashboard_documents_export"
-            open={open}
-            setOpen={setOpen}
-          />
-        </>
+        <UpgradeButton
+          text="Export"
+          clickedPlan={PlanEnum.Pro}
+          trigger="dashboard_documents_export"
+          variant="outline"
+          size="sm"
+        />
       );
     } else {
       return (
@@ -251,7 +246,7 @@ export default function DocumentsTable({
       <div className="flex justify-end">
         <UpgradeOrExportButton />
       </div>
-      <div className="rounded-xl border overflow-x-auto">
+      <div className="overflow-x-auto rounded-xl border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
