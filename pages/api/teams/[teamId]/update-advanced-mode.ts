@@ -42,7 +42,7 @@ export default async function handle(
           },
         },
       });
-      if (!team || team.plan.includes("free")) {
+      if (!team || (team.plan.includes("free") && !team.plan.includes("trial"))) {
         return res.status(401).json({ error: "Unauthorized" });
       }
 
