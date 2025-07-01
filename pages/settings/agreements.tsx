@@ -9,17 +9,24 @@ import { useAgreements } from "@/lib/swr/use-agreements";
 import { usePlan } from "@/lib/swr/use-billing";
 
 import AgreementCard from "@/components/agreements/agreement-card";
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import AgreementSheet from "@/components/links/link-sheet/agreement-panel";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Button } from "@/components/ui/button";
 import { BadgeTooltip } from "@/components/ui/tooltip";
+import { createUpgradeButton } from "@/components/ui/upgrade-button";
+
+
+const AgreementsUpgradeButton = createUpgradeButton(
+  "Create Agreements",
+  PlanEnum.Business,
+  "nda_agreements_page",
+  { highlightItem: ["nda"] },
+);
 
 export default function NdaAgreements() {
   const { agreements, loading, error } = useAgreements();
   const teamInfo = useTeam();
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -66,12 +73,7 @@ export default function NdaAgreements() {
                   Create agreement
                 </Button>
               ) : (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowUpgradeModal(true)}
-                >
-                  Upgrade
-                </Button>
+                <AgreementsUpgradeButton />
               )}
             </ul>
           </div>
@@ -124,24 +126,16 @@ export default function NdaAgreements() {
                   Create NDA agreement
                 </Button>
               ) : (
-                <Button
+                <AgreementsUpgradeButton
+                  text="Create NDA Agreements"
+                  trigger="nda_agreements_page_empty_state"
                   variant="outline"
-                  onClick={() => setShowUpgradeModal(true)}
-                >
-                  Upgrade to create NDA agreements
-                </Button>
+                />
               )}
             </div>
           )}
         </div>
       </main>
-      <UpgradePlanModal
-        clickedPlan={PlanEnum.Business}
-        trigger="nda_agreements_page"
-        open={showUpgradeModal}
-        setOpen={setShowUpgradeModal}
-        highlightItem={["nda"]}
-      />
       <AgreementSheet isOpen={isOpen} setIsOpen={setIsOpen} />
     </AppLayout>
   );

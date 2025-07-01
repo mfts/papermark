@@ -5,8 +5,6 @@ import { LockIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -14,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { UpgradeButton } from "@/components/ui/upgrade-button";
 
 interface FeaturePreviewProps {
   /**
@@ -91,11 +90,13 @@ export function FeaturePreview({
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <UpgradePlanModal clickedPlan={requiredPlan} trigger={trigger}>
-              <Button size="lg" className="w-full">
-                {upgradeButtonText}
-              </Button>
-            </UpgradePlanModal>
+            <UpgradeButton
+              text={upgradeButtonText}
+              clickedPlan={requiredPlan}
+              trigger={trigger}
+              size="lg"
+              className="w-full"
+            />
           </CardContent>
         </Card>
       </div>
