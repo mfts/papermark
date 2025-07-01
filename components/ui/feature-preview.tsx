@@ -67,7 +67,7 @@ export function FeaturePreview({
   trigger,
   children,
   className,
-  upgradeButtonText = "Upgrade to unlock",
+  upgradeButtonText = "Unlock",
 }: FeaturePreviewProps) {
   return (
     <div className={cn("relative", className)}>
