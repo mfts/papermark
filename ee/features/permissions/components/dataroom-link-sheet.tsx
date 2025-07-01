@@ -544,6 +544,10 @@ export function DataroomLinkSheet({
         setShowPermissionsSheet(false);
         setPendingLinkData(null);
         toast.success("Link created successfully");
+        const isOnPermissionsPage = router.asPath.includes("/permissions");
+        if (linkType === LinkType.DATAROOM_LINK && !isOnPermissionsPage) {
+          router.push(`/datarooms/${targetId}/permissions`);
+        }
       }
     }
 
