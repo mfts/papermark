@@ -5,7 +5,7 @@ import { match } from "ts-pattern";
 
 import { newId } from "@/lib/id-helper";
 
-import { getS3Client } from "./aws-client";
+import { getTeamS3ClientAndConfig } from "./aws-client";
 
 export const copyFileServer = async ({
   teamId,
@@ -73,12 +73,17 @@ const copyFileInS3Server = async ({
   const fromLocation = `${teamId}/${fromDocId}/`;
   const toLocation = `${teamId}/${toDocId}/`;
 
-  const response = await copyFolder({
-    fromBucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET as string,
-    fromLocation: fromLocation,
-    toBucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET as string,
-    toLocation: toLocation,
-  });
+  const { config } = await getTeamS3ClientAndConfig(teamId);
+
+  const response = await copyFolder(
+    {
+      fromBucket: config.bucket,
+      fromLocation: fromLocation,
+      toBucket: config.bucket,
+      toLocation: toLocation,
+    },
+    teamId,
+  );
 
   console.log("response", response);
 
@@ -89,18 +94,21 @@ const copyFileInS3Server = async ({
 };
 
 // copies all items in a folder on s3
-async function copyFolder({
-  fromBucket,
-  fromLocation,
-  toBucket = fromBucket,
-  toLocation,
-}: {
-  fromBucket: string;
-  fromLocation: string;
-  toBucket: string;
-  toLocation: string;
-}) {
-  const client = getS3Client();
+async function copyFolder(
+  {
+    fromBucket,
+    fromLocation,
+    toBucket = fromBucket,
+    toLocation,
+  }: {
+    fromBucket: string;
+    fromLocation: string;
+    toBucket: string;
+    toLocation: string;
+  },
+  teamId: string,
+) {
+  const { client } = await getTeamS3ClientAndConfig(teamId);
   let count = 0;
   const recursiveCopy = async function (token?: string) {
     const listCommand = new ListObjectsV2Command({

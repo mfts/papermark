@@ -11,6 +11,7 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { PanelLeftIcon, XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { sortByIndexThenName } from "@/lib/utils/sort-items-by-index-name";
 
 import { ViewFolderTree } from "@/components/datarooms/folders";
 import {
@@ -175,7 +176,8 @@ export default function DataroomViewer({
           };
         }),
     ];
-    return mixedItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+
+    return sortByIndexThenName(mixedItems);
   }, [folders, documents, folderId, accessControls, allowDownload]);
 
   const renderItem = (item: FolderOrDocument) => {

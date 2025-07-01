@@ -54,30 +54,16 @@ export default async function handle(
       if (team.plan.includes("free")) {
         return res.status(403).end("Forbidden");
       }
-
-      const view = await prisma.view.findMany({
-        where: {
-          dataroomId: dataroomId,
-          dataroomViewId: viewId,
-        },
-        select: {
-          id: true,
-          documentId: true,
-        },
-        take: 1,
-      });
-
-      if (!view || !view[0].documentId) {
-        return res.status(404).end("Not Found");
-      }
-
       const userAgent = await getViewUserAgent({
-        documentId: view[0].documentId,
-        viewId: view[0].id,
-        since: 0,
+        viewId: viewId,
       });
 
       const userAgentData = userAgent.data[0];
+
+      if (!userAgentData) {
+        return res.status(404).end("No user agent data found");
+      }
+
       // Include country and city for business and datarooms plans
       if (team.plan.includes("business") || team.plan.includes("datarooms")) {
         return res.status(200).json(userAgentData);
@@ -90,7 +76,7 @@ export default async function handle(
       errorhandler(error, res);
     }
   } else {
-    // We only allow GET and POST requests
+    // We only allow GET requests
     res.setHeader("Allow", ["GET"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }

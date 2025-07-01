@@ -9,10 +9,15 @@ import {
   useDataroomFoldersTree,
 } from "@/lib/swr/use-dataroom";
 import { cn } from "@/lib/utils";
+import { sortByIndexThenName } from "@/lib/utils/sort-items-by-index-name";
 
 import { FileTree } from "@/components/ui/nextra-filetree";
 
 import { buildNestedFolderStructure } from "./utils";
+
+type MixedItem =
+  | (DataroomFolderWithDocuments & { itemType: "folder" })
+  | (DataroomFolderWithDocuments["documents"][0] & { itemType: "document" });
 
 const FolderComponent = memo(
   ({
@@ -24,30 +29,43 @@ const FolderComponent = memo(
   }) => {
     const router = useRouter();
 
-    // Memoize the rendering of the current folder's documents
-    const documents = useMemo(
-      () =>
-        folder.documents.map((doc) => (
-          <FileTree.File
-            key={doc.id}
-            name={doc.document.name}
-            onToggle={() => router.push(`/documents/${doc.document.id}`)}
-          />
-        )),
-      [folder.documents, dataroomId, router.query.name],
-    );
+    const mixedItems = useMemo(() => {
+      const allItems: MixedItem[] = [
+        ...(folder.childFolders || []).map((f) => ({
+          ...f,
+          itemType: "folder" as const,
+        })),
+        ...(folder.documents || []).map((d) => ({
+          ...d,
+          itemType: "document" as const,
+        })),
+      ];
 
-    // Recursively render child folders if they exist
-    const childFolders = useMemo(
+      return sortByIndexThenName(allItems);
+    }, [folder.childFolders, folder.documents]);
+
+    const renderedItems = useMemo(
       () =>
-        folder.childFolders.map((childFolder) => (
-          <FolderComponent
-            key={childFolder.id}
-            dataroomId={dataroomId}
-            folder={childFolder}
-          />
-        )),
-      [folder.childFolders, dataroomId],
+        mixedItems.map((item: MixedItem) => {
+          if (item.itemType === "folder") {
+            return (
+              <FolderComponent
+                key={item.id}
+                dataroomId={dataroomId}
+                folder={item}
+              />
+            );
+          } else {
+            return (
+              <FileTree.File
+                key={item.id}
+                name={item.document.name}
+                onToggle={() => router.push(`/documents/${item.document.id}`)}
+              />
+            );
+          }
+        }),
+      [mixedItems, dataroomId, router],
     );
 
     const isActive =
@@ -75,8 +93,7 @@ const FolderComponent = memo(
         childActive={isChildActive}
         onToggle={handleFolderClick}
       >
-        {childFolders}
-        {documents}
+        {renderedItems}
       </FileTree.Folder>
     );
   },

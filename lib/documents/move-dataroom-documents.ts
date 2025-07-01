@@ -90,7 +90,7 @@ export const moveDataroomDocumentToFolder = async ({
     mutate(
       `/api/teams/${teamId}/datarooms/${dataroomId}${newPath ? `/folders/documents/${newPath}` : "/documents"}`,
     );
-
+    mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/folders`);
     toast.success(
       `${updatedCount} document${updatedCount > 1 ? "s" : ""} moved successfully`,
     );
