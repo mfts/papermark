@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
+import { z } from "zod";
 
 import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
@@ -62,14 +63,22 @@ export default async function handle(
       return res.status(401).json("Unauthorized");
     }
 
+    const schema = z.object({
+      domain: z.string(),
+      redirect: z.string().url().optional().or(z.literal("")),
+    });
+
+    const const_safeParse = schema.safeParse(req.body);
+    if (!const_safeParse.success) {
+      return res.status(400).json({ message: "Invalid request body" });
+    }
+    const { domain, redirect } = const_safeParse.data;
+
     try {
       await getTeamWithDomain({
         teamId,
         userId,
       });
-
-      // Assuming data is an object with `domain` properties
-      const { domain } = req.body;
 
       // Sanitize domain by removing whitespace, protocol, and paths
       const sanitizedDomain = domain
@@ -105,6 +114,7 @@ export default async function handle(
       const response = await prisma.domain.create({
         data: {
           slug: sanitizedDomain,
+          rootRedirect: redirect,
           userId,
           teamId,
         },
