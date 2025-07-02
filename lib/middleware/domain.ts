@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { BLOCKED_PATHNAMES, PAPPERMARK_HEADERS } from "@/lib/constants";
+import { BLOCKED_PATHNAMES, PAPERMARK_HEADERS } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 
 export default async function DomainMiddleware(req: NextRequest) {
@@ -18,12 +18,11 @@ export default async function DomainMiddleware(req: NextRequest) {
 
       if (domain?.rootRedirect) {
         return NextResponse.redirect(domain.rootRedirect, {
+          status: 301,
           headers: {
-            ...PAPPERMARK_HEADERS,
-            "X-Robots-Tag": "googlebot: noindex",
-            Referer: req.url,
+            ...PAPERMARK_HEADERS,
+            "X-Robots-Tag": "noindex",
           },
-          status: 302,
         });
       }
     }
@@ -66,7 +65,7 @@ export default async function DomainMiddleware(req: NextRequest) {
   return NextResponse.rewrite(url, {
     headers: {
       "X-Robots-Tag": "noindex",
-      ...PAPPERMARK_HEADERS,
+      ...PAPERMARK_HEADERS,
     },
   });
 }

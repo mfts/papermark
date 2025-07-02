@@ -186,12 +186,17 @@ export function AddDomainModal({
       }),
     redirect: z
       .string()
-      .url()
       .optional()
-      .or(z.literal(""))
-      .refine((data) => data === "" || data?.includes("://"), {
-        message: "Please enter a valid URL",
-      }),
+      .refine((data) => !data || z.string().url().safeParse(data).success, {
+        message: "Please enter a valid URL (https:// or http://)",
+      })
+      .refine(
+        (data) =>
+          !data || data.startsWith("http://") || data.startsWith("https://"),
+        {
+          message: "URL must start with http:// or https://",
+        },
+      ),
   });
 
   const handleSubmit = async (event: any) => {
@@ -236,7 +241,7 @@ export function AddDomainModal({
     const newDomain = await response.json();
 
     analytics.capture("Domain Added", { slug: domain });
-    toast.success("Domain added successfully! 🎉");
+    toast.success("Domain added successfully!");
 
     // Update local data with the new link
     onAddition && onAddition(newDomain);
@@ -368,6 +373,7 @@ export function AddDomainModal({
             id="redirect"
             placeholder="https://your-link.com"
             className="mb-4 mt-1 w-full"
+            value={redirect}
             onChange={(e) => setRedirect(e.target.value)}
           />
           <DialogFooter>

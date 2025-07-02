@@ -10,7 +10,7 @@ export const STAGGER_CHILD_VARIANTS = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, type: "spring" } },
 };
 
-export const PAPPERMARK_HEADERS = {
+export const PAPERMARK_HEADERS = {
   "x-powered-by": "Papermark.io - Document sharing infrastructure for the modern web",
 };
 
