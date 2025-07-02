@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { BLOCKED_PATHNAMES } from "@/lib/constants";
+import { BLOCKED_PATHNAMES, PAPPERMARK_HEADERS } from "@/lib/constants";
+import prisma from "@/lib/prisma";
 
 export default async function DomainMiddleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
@@ -8,6 +9,25 @@ export default async function DomainMiddleware(req: NextRequest) {
 
   // If it's the root path, redirect to papermark.com/home
   if (path === "/") {
+    if (host) {
+      const domain = await prisma.domain.findUnique({
+        where: {
+          slug: host,
+        },
+      });
+
+      if (domain?.rootRedirect) {
+        return NextResponse.redirect(domain.rootRedirect, {
+          headers: {
+            ...PAPPERMARK_HEADERS,
+            "X-Robots-Tag": "googlebot: noindex",
+            Referer: req.url,
+          },
+          status: 302,
+        });
+      }
+    }
+
     if (host === "guide.permithealth.com") {
       return NextResponse.redirect(
         new URL("https://guide.permithealth.com/faq", req.url),
@@ -46,8 +66,7 @@ export default async function DomainMiddleware(req: NextRequest) {
   return NextResponse.rewrite(url, {
     headers: {
       "X-Robots-Tag": "noindex",
-      "X-Powered-By":
-        "Papermark.io - Document sharing infrastructure for the modern web",
+      ...PAPPERMARK_HEADERS,
     },
   });
 }

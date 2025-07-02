@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
-import { Loader } from "lucide-react";
+import { BadgeInfoIcon, Loader } from "lucide-react";
 import { toast } from "sonner";
 import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/ui/status-badge";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { BadgeTooltip } from "../ui/tooltip";
 
 type DomainCheckStatus =
   | "invalid"
@@ -101,6 +102,7 @@ export function AddDomainModal({
   children?: React.ReactNode;
 }) {
   const [domain, setDomain] = useState<string>("");
+  const [redirect, setRedirect] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [domainStatus, setDomainStatus] = useState<DomainStatus>("idle");
   const [validationMessage, setValidationMessage] = useState<string>("");
@@ -182,13 +184,24 @@ export function AddDomainModal({
       .refine((name) => !name.toLowerCase().includes("papermark"), {
         message: "Domain cannot contain 'papermark'",
       }),
+    redirect: z
+      .string()
+      .url()
+      .optional()
+      .or(z.literal(""))
+      .refine((data) => data === "" || data?.includes("://"), {
+        message: "Please enter a valid URL",
+      }),
   });
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    const validation = addDomainSchema.safeParse({ name: domain });
+    const validation = addDomainSchema.safeParse({
+      name: domain,
+      redirect,
+    });
     if (!validation.success) {
       return toast.error(validation.error.errors[0].message);
     }
@@ -207,6 +220,7 @@ export function AddDomainModal({
         },
         body: JSON.stringify({
           domain: domain,
+          redirect: redirect,
         }),
       },
     );
@@ -339,7 +353,23 @@ export function AddDomainModal({
               )}
             </div>
           )}
-
+          <div className="flex items-center gap-1">
+            <Label htmlFor="redirect" className="opacity-80">
+              Root Redirect URL (optional)
+            </Label>
+            <BadgeTooltip
+              content="The URL to redirect to when a user visits the root of your domain (e.g., docs.yourdomain.com)"
+              key="redirect"
+            >
+              <BadgeInfoIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
+            </BadgeTooltip>
+          </div>
+          <Input
+            id="redirect"
+            placeholder="https://your-link.com"
+            className="mb-4 mt-1 w-full"
+            onChange={(e) => setRedirect(e.target.value)}
+          />
           <DialogFooter>
             <Button
               type="submit"
