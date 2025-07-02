@@ -116,9 +116,12 @@ SearchBox.displayName = "SearchBox";
 export function SearchBoxPersisted({
   urlParam = "search",
   ...props
-}: { urlParam?: string } & Partial<SearchBoxProps>) {
+}: {
+  urlParam?: string;
+} & Partial<SearchBoxProps>) {
   const router = useRouter();
   const queryParams = router.query;
+  const isInitialMount = useRef(true);
 
   const initial =
     typeof queryParams[urlParam] === "string" ? queryParams[urlParam] : "";
@@ -127,6 +130,14 @@ export function SearchBoxPersisted({
   const [debouncedValue, setDebouncedValue] = useState(initial);
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (!router.isReady) {
+      return;
+    }
+
     const currentQuery = { ...router.query };
 
     if (debouncedValue === "") {
