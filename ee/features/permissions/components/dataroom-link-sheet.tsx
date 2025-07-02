@@ -120,6 +120,7 @@ export function DataroomLinkSheet({
     useState<boolean>(false);
 
   const isPresetsAllowed =
+    isTrial ||
     (isPro && limits?.advancedLinkControlsOnPro) ||
     isBusiness ||
     isDatarooms ||

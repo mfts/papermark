@@ -22,7 +22,7 @@ interface Webhook {
 
 export default function WebhookSettings() {
   const teamInfo = useTeam();
-  const { isFree, isPro } = usePlan();
+  const { isFree, isPro, isTrial } = usePlan();
   const teamId = teamInfo?.currentTeam?.id;
 
   const { data: webhooks } = useSWR<Webhook[]>(
@@ -39,7 +39,9 @@ export default function WebhookSettings() {
             <div className="space-y-1">
               <h3 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
                 Webhooks{" "}
-                {isFree || isPro ? <PlanBadge plan="Business" /> : null}
+                {(isFree || isPro) && !isTrial ? (
+                  <PlanBadge plan="Business" />
+                ) : null}
               </h3>
               <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
                 Send data to external services when events happen in Papermark

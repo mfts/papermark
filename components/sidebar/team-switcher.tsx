@@ -5,6 +5,7 @@ import * as React from "react";
 import { useLimits } from "@/ee/limits/swr-handler";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { ChevronsUpDown, UserRoundPlusIcon } from "lucide-react";
+import { usePlan } from "@/lib/swr/use-billing";
 import { Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +44,7 @@ export function TeamSwitcher({
     React.useState<boolean>(false);
   const { isMobile } = useSidebar();
   const { canAddUsers, showUpgradePlanModal } = useLimits();
+  const { isTrial } = usePlan();
 
   const switchTeam = (team: Team) => {
     localStorage.setItem("currentTeamId", team.id);
@@ -115,7 +117,7 @@ export function TeamSwitcher({
       <SidebarMenuItem>
         {showUpgradePlanModal ? (
           <UpgradePlanModal
-            clickedPlan={PlanEnum.Pro}
+            clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
             trigger={"invite_team_members"}
           >
             <SidebarMenuButton

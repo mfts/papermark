@@ -931,7 +931,7 @@ export default function DocumentHeader({
 
       {prismaDocument.type === "sheet" &&
         supportsAdvancedExcelMode(primaryVersion.contentType) &&
-        (isFree || isPro) && (
+        (isFree || isPro) && !isTrial && (
           <AlertBanner
             id="advanced-excel-alert"
             variant="default"

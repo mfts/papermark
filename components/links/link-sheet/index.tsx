@@ -175,6 +175,7 @@ export default function LinkSheet({
   const [currentPreset, setCurrentPreset] = useState<LinkPreset | null>(null);
 
   const isPresetsAllowed =
+    isTrial ||
     (isPro && limits?.advancedLinkControlsOnPro) ||
     isBusiness ||
     isDatarooms ||

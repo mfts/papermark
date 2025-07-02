@@ -32,7 +32,7 @@ export default function WebhookDetail() {
   const router = useRouter();
   const { id } = router.query;
   const teamInfo = useTeam();
-  const { isFree, isPro } = usePlan();
+  const { isFree, isPro, isTrial } = usePlan();
   const teamId = teamInfo?.currentTeam?.id;
   const [isEditing, setIsEditing] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -64,7 +64,7 @@ export default function WebhookDetail() {
   }, [webhook]);
 
   const handleUpdate = async () => {
-    if (isFree || isPro) {
+    if ((isFree || isPro) && !isTrial) {
       toast.error("This feature is not available on your plan");
       return;
     }
@@ -359,7 +359,7 @@ export default function WebhookDetail() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          if (isFree || isPro) {
+                          if ((isFree || isPro) && !isTrial) {
                             toast.error(
                               "This feature is not available on your plan",
                             );

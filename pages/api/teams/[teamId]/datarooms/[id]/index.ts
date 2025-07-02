@@ -103,10 +103,12 @@ export default async function handle(
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
       const isDataroomsPlus = team.plan.includes("datarooms-plus");
+      const isTrial = team.plan.includes("drtrial");
 
       if (
         enableChangeNotifications !== undefined &&
         !isDataroomsPlus &&
+        !isTrial &&
         !featureFlags.roomChangeNotifications
       ) {
         return res.status(403).json({

@@ -24,7 +24,7 @@ export default function Presets() {
   const router = useRouter();
   const teamInfo = useTeam();
 
-  const { isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
+  const { isBusiness, isDatarooms, isDataroomsPlus, isTrial } = usePlan();
 
   const {
     data: presets,
@@ -56,7 +56,7 @@ export default function Presets() {
                 </BadgeTooltip>
               </p>
             </div>
-            {isBusiness || isDatarooms || isDataroomsPlus ? (
+            {isTrial || isBusiness || isDatarooms || isDataroomsPlus ? (
               <Button onClick={() => router.push("/settings/presets/new")}>
                 <PlusIcon className="mr-1.5 h-4 w-4" />
                 Create Preset
@@ -86,7 +86,7 @@ export default function Presets() {
                   when creating links.
                 </p>
               </div>
-              {isBusiness || isDatarooms || isDataroomsPlus ? (
+              {isTrial || isBusiness || isDatarooms || isDataroomsPlus ? (
                 <Button
                   variant="outline"
                   onClick={() => router.push("/settings/presets/new")}
