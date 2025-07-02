@@ -173,6 +173,8 @@ const SettingsBreadcrumb = () => {
         return "Domains";
       case "/settings/presets":
         return "Presets";
+      case "/settings/access-control":
+        return "Access Control";
       case "/settings/billing":
         return "Billing";
       case "/settings/tokens":
@@ -333,6 +335,20 @@ const VisitorsBreadcrumb = () => {
   );
 };
 
+const AccessRequestsBreadcrumb = () => {
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href="/access-requests">Access Requests</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+};
+
 const SingleVisitorBreadcrumb = () => {
   const { viewer } = useViewer();
 
@@ -473,6 +489,10 @@ export const AppBreadcrumb = () => {
     // Single visitor route
     if (path === "/visitors/[id]" && id) {
       return <SingleVisitorBreadcrumb />;
+    }
+
+    if (path === "/access-requests") {
+      return <AccessRequestsBreadcrumb />;
     }
 
     return null;

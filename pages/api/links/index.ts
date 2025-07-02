@@ -154,6 +154,8 @@ export default async function handler(
             metaFavicon: linkData.metaFavicon || null,
             allowList: linkData.allowList,
             denyList: linkData.denyList,
+            allowAccessGroupId: linkData.allowAccessGroupId || null,
+            blockAccessGroupId: linkData.blockAccessGroupId || null,
             audienceType: linkData.audienceType,
             groupId:
               linkData.audienceType === LinkAudienceType.GROUP

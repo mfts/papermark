@@ -6,9 +6,11 @@ import { motion } from "motion/react";
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { sanitizeAllowDenyList } from "@/lib/utils";
 
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { DEFAULT_LINK_TYPE } from ".";
+import AccessGroupSection from "./access-group-section";
 import LinkItem from "./link-item";
 import { LinkUpgradeOptions } from "./link-options";
 
@@ -30,10 +32,11 @@ export default function DenyListSection({
   }: LinkUpgradeOptions) => void;
   presets: LinkPreset | null;
 }) {
-  const { emailProtected, denyList } = data;
-  // Initialize enabled state based on whether denyList is not null and not empty
+  const { emailProtected, denyList, blockAccessGroupId } = data;
+
+  // Initialize enabled state based on whether denyList is not null and not empty OR group is selected
   const [enabled, setEnabled] = useState<boolean>(
-    !!denyList && denyList.length > 0,
+    (!!denyList && denyList.length > 0) || !!blockAccessGroupId,
   );
   const [denyListInput, setDenyListInput] = useState<string>(
     denyList?.join("\n") || "",
@@ -50,11 +53,23 @@ export default function DenyListSection({
   }, [denyListInput, enabled, emailProtected, setData]);
 
   useEffect(() => {
-    if (isAllowed && presets?.denyList && presets.denyList.length > 0) {
-      setEnabled(true);
-      setDenyListInput(presets.denyList?.join("\n") || "");
+    if (isAllowed && presets) {
+      // Load preset data if available
+      if (presets.denyList && presets.denyList.length > 0) {
+        setEnabled(true);
+        setDenyListInput(presets.denyList?.join("\n") || "");
+      }
+
+      // Load access group ID from preset
+      if (presets.blockAccessGroupId) {
+        setEnabled(true);
+        setData((prevData) => ({
+          ...prevData,
+          blockAccessGroupId: presets.blockAccessGroupId,
+        }));
+      }
     }
-  }, [presets, isAllowed]);
+  }, [presets, isAllowed, setData]);
 
   const handleEnableDenyList = () => {
     const updatedEnabled = !enabled;
@@ -71,6 +86,7 @@ export default function DenyListSection({
       setData((prevData) => ({
         ...prevData,
         denyList: [],
+        blockAccessGroupId: null,
       }));
     }
   };
@@ -104,18 +120,39 @@ export default function DenyListSection({
 
         {enabled && (
           <motion.div
-            className="mt-1 block w-full"
+            className="mt-1 block w-full space-y-4"
             {...FADE_IN_ANIMATION_SETTINGS}
           >
-            <Textarea
-              className="focus:ring-inset"
-              rows={5}
-              placeholder={`Enter blocked emails/domains, one per line, e.g.
+            {/* Access Group Selection */}
+            <AccessGroupSection
+              type="BLOCK"
+              data={data}
+              setData={setData}
+              isAllowed={isAllowed}
+              groupIdField="blockAccessGroupId"
+            />
+
+            {/* Individual Emails Section */}
+            <div className="space-y-2">
+              <Label>
+                Additional Individual Emails/Domains{" "}
+                {!blockAccessGroupId && "(Required)"}
+              </Label>
+              <Textarea
+                className="focus:ring-inset"
+                rows={5}
+                placeholder={`Enter additional blocked emails/domains, one per line, e.g.
 marc@papermark.io
 @example.org`}
-              value={denyListInput}
-              onChange={handleDenyListChange}
-            />
+                value={denyListInput}
+                onChange={handleDenyListChange}
+              />
+              <p className="text-xs text-muted-foreground">
+                {blockAccessGroupId
+                  ? "Add individual emails/domains in addition to the selected group."
+                  : "Enter blocked emails/domains, one per line. Use @domain.com format to block entire domains."}
+              </p>
+            </div>
           </motion.div>
         )}
       </div>

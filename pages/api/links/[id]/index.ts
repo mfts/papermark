@@ -62,6 +62,8 @@ export default async function handle(
           watermarkConfig: true,
           groupId: true,
           permissionGroupId: true,
+          allowAccessGroupId: true,
+          blockAccessGroupId: true,
           audienceType: true,
           dataroomId: true,
           teamId: true,
@@ -136,6 +138,8 @@ export default async function handle(
       const returnLink = {
         ...link,
         ...linkData,
+        allowAccessGroupId: link.allowAccessGroupId,
+        blockAccessGroupId: link.blockAccessGroupId,
         dataroomId: undefined,
         ...(teamPlan === "free" && {
           customFields: [], // reset custom fields for free plan
@@ -276,6 +280,8 @@ export default async function handle(
           allowDownload: linkData.allowDownload,
           allowList: linkData.allowList,
           denyList: linkData.denyList,
+          allowAccessGroupId: linkData.allowAccessGroupId || null,
+          blockAccessGroupId: linkData.blockAccessGroupId || null,
           expiresAt: exat,
           domainId: domainObj?.id || null,
           domainSlug: domain || null,
