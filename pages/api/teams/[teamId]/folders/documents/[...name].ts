@@ -138,12 +138,6 @@ export default async function handle(
         });
       }
 
-      if (sort === "name") {
-        sortedDocuments = documents.sort((a, b) =>
-          a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-        );
-      }
-
       const documentsWithFolderList = sortedDocuments.map((doc) => {
         const folderList = doc.folder
           ? doc.folder.path.split("/").filter(Boolean)
