@@ -326,6 +326,13 @@ export default function LinksTable({
           `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
             targetId,
           )}/links`,
+          (currentLinks: LinkWithViews[] | undefined) =>
+            (currentLinks || []).map((link: LinkWithViews) =>
+              link.id === editPermissionLink.id
+                ? { ...link, permissionGroupId: null }
+                : link,
+            ),
+          false,
         );
 
         // Invalidate the permission group cache
