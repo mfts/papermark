@@ -1,19 +1,50 @@
 import { useRouter } from "next/router";
 
-import { useEffect } from "react";
+
+
+import { useEffect, useState } from "react";
+
+import { usePlan } from "@/lib/swr/use-billing";
+import useViewers from "@/lib/swr/use-viewers";
 
 import AppLayout from "@/components/layouts/app";
 import { SearchBoxPersisted } from "@/components/search-box";
 import { Separator } from "@/components/ui/separator";
 import { ContactsTable } from "@/components/visitors/contacts-table";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import useViewers from "@/lib/swr/use-viewers";
-
 export default function Visitors() {
   const router = useRouter();
   const { isFree, isTrial } = usePlan();
-  const { viewers, isValidating, isFiltered } = useViewers();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState("lastViewed");
+  const [sortOrder, setSortOrder] = useState("desc");
+
+  const { viewers, pagination, isValidating } = useViewers(
+    currentPage,
+    pageSize,
+    sortBy,
+    sortOrder,
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (newSortBy: string, newSortOrder: string) => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+    setCurrentPage(1);
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [router.query.search]);
 
   useEffect(() => {
     if (isFree && !isTrial) router.push("/documents");
@@ -47,8 +78,14 @@ export default function Visitors() {
       </div>
 
       <div className="relative p-4 pt-0 sm:mx-4 sm:mt-4">
-        {/* @ts-ignore */}
-        <ContactsTable viewers={viewers} />
+        <ContactsTable
+          viewers={viewers}
+          pagination={pagination}
+          sorting={{ sortBy, sortOrder }}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          onSortChange={handleSortChange}
+        />
       </div>
     </AppLayout>
   );
