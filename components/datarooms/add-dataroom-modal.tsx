@@ -44,7 +44,7 @@ export function AddDataroomModal({
   const { isFree, isPro } = usePlan();
   const analytics = useAnalytics();
   const dataroomSchema = z.object({
-    name: z.string().min(3, {
+    name: z.string().trim().min(3, {
       message: "Please provide a dataroom name with at least 3 characters.",
     }),
   });
@@ -140,7 +140,7 @@ export function AddDataroomModal({
             id="dataroom-name"
             placeholder="ACME Aquisition"
             className="mb-4 mt-1 w-full"
-            onChange={(e) => setDataroomName(e.target.value.trim())}
+            onChange={(e) => setDataroomName(e.target.value)}
           />
           <DialogFooter>
             <Button type="submit" className="h-9 w-full" loading={loading}>
