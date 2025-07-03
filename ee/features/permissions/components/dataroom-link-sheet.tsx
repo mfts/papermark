@@ -220,6 +220,7 @@ export function DataroomLinkSheet({
         permissions,
         false,
         true,
+        true,
       );
 
       // Close the sheets and show success
@@ -237,6 +238,7 @@ export function DataroomLinkSheet({
     permissions: ItemPermission | null,
     shouldPreview: boolean = false,
     showSuccess: boolean = false,
+    isPermissionUpdate: boolean = false,
   ) => {
     // Upload the image if it's a data URL
     let blobUrl: string | null =
@@ -297,7 +299,12 @@ export function DataroomLinkSheet({
     const returnedLink = await response.json();
 
     // Handle permissions
-    if (permissions === null && isUpdating && currentLink?.permissionGroupId) {
+    if (
+      isPermissionUpdate &&
+      permissions === null &&
+      isUpdating &&
+      currentLink?.permissionGroupId
+    ) {
       // Delete the permission group - database will set permissionGroupId to null automatically
       const deleteResponse = await fetch(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
@@ -318,6 +325,8 @@ export function DataroomLinkSheet({
         return;
       }
 
+      returnedLink.permissionGroupId = null;
+
       // Show success message
       toast.success("Permission group deleted successfully");
 
@@ -335,7 +344,7 @@ export function DataroomLinkSheet({
         false,
       );
     } else if (permissions !== null) {
-      // Only handle permission group operations if we're not deleting
+      // Only handle permission group operations if we have specific permissions to set
       await handlePermissionGroupOperations(
         returnedLink,
         permissions,
@@ -569,6 +578,7 @@ export function DataroomLinkSheet({
       permissions,
       shouldPreview,
       showSuccess,
+      false,
     );
   };
 
