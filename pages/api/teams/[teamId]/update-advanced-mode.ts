@@ -42,7 +42,10 @@ export default async function handle(
           },
         },
       });
-      if (!team || team.plan.includes("free")) {
+
+      const isUnauthorized = team && ["free", "starter", "pro"].includes(team.plan);
+
+      if (isUnauthorized) {
         return res.status(401).json({ error: "Unauthorized" });
       }
 
