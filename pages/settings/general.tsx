@@ -32,7 +32,7 @@ export default function General() {
   const handleExcelAdvancedModeChange = async (data: {
     enableExcelAdvancedMode: string;
   }) => {
-    if (isFree && data.enableExcelAdvancedMode === "true") {
+    if ((isFree || isPro) && data.enableExcelAdvancedMode === "true") {
       showUpgradeModal(PlanEnum.Business, "advanced-excel-mode");
       return;
     }
