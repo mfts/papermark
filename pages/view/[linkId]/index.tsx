@@ -181,13 +181,20 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       }
 
       const { teamId } = link.dataroom;
+      let lastUpdatedAt = new Date(link.dataroom.updatedAt).getTime();
 
-      const lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
-        return Math.max(
-          max,
-          new Date(doc.document.versions[0].updatedAt).getTime(),
-        );
-      }, 0);
+      if (link.dataroom.documents && link.dataroom.documents.length > 0) {
+        lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
+          const versionTime = new Date(
+            doc.document.versions[0].updatedAt,
+          ).getTime();
+          return Math.max(max, versionTime);
+        }, 0);
+      } else if (link.dataroom.folders && link.dataroom.folders.length > 0) {
+        lastUpdatedAt = link.dataroom.folders.reduce((max, folder) => {
+          return Math.max(max, new Date(folder.updatedAt).getTime());
+        }, 0);
+      }
 
       return {
         props: {
