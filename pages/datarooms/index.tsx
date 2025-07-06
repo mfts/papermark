@@ -148,8 +148,7 @@ export default function DataroomsPage() {
 
           <TabsContent value="my-datarooms" className="space-y-4">
             <ul className="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-2 xl:grid-cols-3">
-              {datarooms &&
-                datarooms.map((dataroom) => (
+              {datarooms?.map((dataroom) => (
                   <Link
                     key={dataroom.id}
                     href={`/datarooms/${dataroom.id}/documents`}

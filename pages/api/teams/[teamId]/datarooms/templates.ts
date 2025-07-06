@@ -6,12 +6,6 @@ import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
-// Template dataroom IDs from Papermark Templates account
-const TEMPLATE_DATAROOM_IDS = [
-    "cmclsvtli0001jp04xhvtsbc8",
-    "cmcnpybt1000sjx04zz2p34kn",
-];
-
 export default async function handle(
     req: NextApiRequest,
     res: NextApiResponse,
@@ -44,9 +38,7 @@ export default async function handle(
 
             const templates = await prisma.dataroom.findMany({
                 where: {
-                    id: {
-                        in: TEMPLATE_DATAROOM_IDS,
-                    },
+                    isTemplate: true,
                 },
                 include: {
                     brand: {

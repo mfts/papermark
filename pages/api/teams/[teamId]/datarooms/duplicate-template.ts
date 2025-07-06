@@ -7,6 +7,7 @@ import {
     DataroomBrand,
     DataroomDocument,
     DataroomFolder,
+    Prisma,
 } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
@@ -25,22 +26,14 @@ interface DataroomFolderWithContents extends DataroomFolder {
     childFolders: DataroomFolderWithContents[];
 }
 
-// Template dataroom IDs from Papermark Templates account
-const TEMPLATE_DATAROOM_IDS = [
-    "cmclsvtli0001jp04xhvtsbc8",
-    "cmcnpybt1000sjx04zz2p34kn",
-];
-
 async function fetchTemplateDataroomContents(
     templateId: string,
 ): Promise<DataroomWithContents> {
-
-    if (!TEMPLATE_DATAROOM_IDS.includes(templateId)) {
-        throw new Error(`Invalid template ID: ${templateId}`);
-    }
-
-    const dataroom = await prisma.dataroom.findUnique({
-        where: { id: templateId },
+    const dataroom = await prisma.dataroom.findFirst({
+        where: {
+            id: templateId,
+            isTemplate: true,
+        },
         include: {
             documents: true,
             folders: {
@@ -102,11 +95,12 @@ async function fetchTemplateDataroomContents(
 
 // Recursive function to duplicate folders and documents
 async function duplicateFolders(
+    tx: Prisma.TransactionClient,
     dataroomId: string,
     folder: DataroomFolderWithContents,
     parentFolderId?: string,
 ) {
-    const newFolder = await prisma.dataroomFolder.create({
+    const newFolder = await tx.dataroomFolder.create({
         data: {
             name: folder.name,
             path: folder.path,
@@ -117,9 +111,9 @@ async function duplicateFolders(
     });
 
     // Duplicate documents for the current folder
-    await Promise.allSettled(
+    const documentCreationResults = await Promise.allSettled(
         folder.documents.map((doc) =>
-            prisma.dataroomDocument.create({
+            tx.dataroomDocument.create({
                 data: {
                     documentId: doc.documentId,
                     dataroomId: dataroomId,
@@ -129,12 +123,38 @@ async function duplicateFolders(
         ),
     );
 
+    documentCreationResults.forEach((result) => {
+        if (result.status === "rejected") {
+            console.error(
+                `Failed to create dataroom document for folder ${folder.name}:`,
+                result.reason,
+            );
+        }
+    });
+
+    if (documentCreationResults.some((result) => result.status === "rejected")) {
+        throw new Error("Failed to create one or more documents.");
+    }
+
     // Duplicate child folders recursively
-    await Promise.allSettled(
+    const folderDuplicationResults = await Promise.allSettled(
         folder.childFolders.map((childFolder) =>
-            duplicateFolders(dataroomId, childFolder, newFolder.id),
+            duplicateFolders(tx, dataroomId, childFolder, newFolder.id),
         ),
     );
+
+    folderDuplicationResults.forEach((result) => {
+        if (result.status === "rejected") {
+            console.error(
+                `Failed to duplicate child folder for parent ${folder.name}:`,
+                result.reason,
+            );
+        }
+    });
+
+    if (folderDuplicationResults.some((result) => result.status === "rejected")) {
+        throw new Error("Failed to duplicate one or more folders.");
+    }
 }
 
 export default async function handle(
@@ -207,30 +227,35 @@ export default async function handle(
             // Fetch the template dataroom structure
             const templateContents = await fetchTemplateDataroomContents(templateId);
 
-            // Create a new data room from the template
             const pId = newId("dataroom");
-            const newDataroom = await prisma.dataroom.create({
-                data: {
-                    pId: pId,
-                    name: name || `${templateContents.name} (Copy)`,
-                    teamId: teamId,
-                    documents: {
-                        create: templateContents.documents.map((doc) => ({
-                            documentId: doc.documentId,
-                        })),
+            const newDataroom = await prisma.$transaction(async (tx) => {
+                const createdDataroom = await tx.dataroom.create({
+                    data: {
+                        pId: pId,
+                        name: name || `${templateContents.name} (Copy)`,
+                        teamId: teamId,
+                        documents: {
+                            create: templateContents.documents.map((doc) => ({
+                                documentId: doc.documentId,
+                            })),
+                        },
+                        folders: {
+                            create: [],
+                        },
                     },
-                    folders: {
-                        create: [],
-                    },
-                },
-            });
+                });
 
-            // Duplicate folders and their contents
-            await Promise.all(
-                templateContents.folders
-                    .filter((folder) => !folder.parentId)
-                    .map((folder) => duplicateFolders(newDataroom.id, folder)),
-            );
+                // Duplicate folders and their contents
+                await Promise.all(
+                    templateContents.folders
+                        .filter((folder) => !folder.parentId)
+                        .map((folder) =>
+                            duplicateFolders(tx, createdDataroom.id, folder),
+                        ),
+                );
+
+                return createdDataroom;
+            });
 
             res.status(201).json(newDataroom);
         } catch (error) {
