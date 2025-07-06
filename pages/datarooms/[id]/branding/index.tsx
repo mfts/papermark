@@ -8,6 +8,7 @@ import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import AppLayout from "@/components/layouts/app";
@@ -25,10 +26,12 @@ import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { useDataroomBrand } from "@/lib/swr/use-brand";
 import { useDataroom } from "@/lib/swr/use-dataroom";
-import { cn, convertDataUrlToFile, uploadImage } from "@/lib/utils";
-
-const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
-
+import {
+  DEFAULT_BANNER_IMAGE,
+  cn,
+  convertDataUrlToFile,
+  uploadImage,
+} from "@/lib/utils";
 export default function DataroomBrandPage() {
   const router = useRouter();
   const teamInfo = useTeam();

@@ -6,7 +6,7 @@ import { DataroomBrand } from "@prisma/client";
 import { BadgeInfoIcon, Download, MessagesSquareIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { formatDate } from "@/lib/utils";
+import { DEFAULT_BANNER_IMAGE, formatDate } from "@/lib/utils";
 
 import {
   ButtonTooltip,
@@ -18,8 +18,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { Button } from "../../ui/button";
 import { ConversationSidebar } from "../conversations/sidebar";
-
-const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
 
 export default function DataroomNav({
   allowDownload,

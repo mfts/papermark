@@ -27,6 +27,7 @@ model Dataroom {
 
   // notification settings
   enableChangeNotifications Boolean @default(false)
+  isTemplate                  Boolean        @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
