@@ -89,21 +89,6 @@ export default async function handle(
         },
       });
 
-      const pId = newId("dataroom");
-
-      const dataroom = await prisma.dataroom.create({
-        data: {
-          name: name,
-          teamId: teamId,
-          pId: pId,
-        },
-      });
-
-      const dataroomWithCount = {
-        ...dataroom,
-        _count: { documents: 0 },
-      };
-
       /** Emails
        *
        * 1. Send welcome email
@@ -124,7 +109,7 @@ export default async function handle(
         ),
       );
 
-      res.status(201).json(dataroomWithCount);
+      res.status(201).json({ success: true, teamId });
     } catch (error) {
       console.error("Request error", error);
       res.status(500).json({ error: "Error creating dataroom" });

@@ -747,3 +747,6 @@ export const parseDateTime = (str: Date | string) => {
   if (str instanceof Date) return str;
   return chrono.parseDate(str);
 };
+
+
+export const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
