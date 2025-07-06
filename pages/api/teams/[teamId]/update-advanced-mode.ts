@@ -43,10 +43,16 @@ export default async function handle(
         },
       });
 
-      const isUnauthorized = team && ["free", "starter", "pro"].includes(team.plan);
+      if (!team) {
+        return res.status(404).json({ error: "Team not found." });
+      }
 
-      if (isUnauthorized) {
-        return res.status(401).json({ error: "Unauthorized" });
+      const isPlanRestricted = ["free", "starter", "pro"].includes(team.plan);
+
+      if (isPlanRestricted) {
+        return res
+          .status(403)
+          .json({ error: "Your current plan does not allow this feature." });
       }
 
       // Update team limits
