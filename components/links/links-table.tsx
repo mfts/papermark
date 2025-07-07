@@ -141,14 +141,6 @@ export default function LinksTable({
   }, [links, processedLinks, selectedTagNames]);
 
   const { canAddLinks } = useLimits();
-  const { data: features } = useSWR<{
-    embedding: boolean;
-  }>(
-    teamInfo?.currentTeam?.id
-      ? `/api/feature-flags?teamId=${teamInfo.currentTeam.id}`
-      : null,
-    fetcher,
-  );
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingLinks, setLoadingLinks] = useState<Set<string>>(new Set());
@@ -873,7 +865,6 @@ export default function LinksTable({
                                 <CopyPlusIcon className="mr-2 h-4 w-4" />
                                 Duplicate Link
                               </DropdownMenuItem>
-                              {features?.embedding ? (
                                 <DropdownMenuItem
                                   onClick={() => {
                                     setSelectedEmbedLink({
@@ -888,7 +879,6 @@ export default function LinksTable({
                                   <Code2Icon className="mr-2 h-4 w-4" />
                                   Get Embed Code
                                 </DropdownMenuItem>
-                              ) : null}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
