@@ -1,7 +1,5 @@
 import { useRouter } from "next/router";
 
-
-
 import { useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -26,8 +24,6 @@ import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, fetcher, nFormatter, timeAgo } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
-
-
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
@@ -58,15 +54,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-
-
 import FileProcessStatusBar from "../documents/file-process-status-bar";
 import BarChart from "../shared/icons/bar-chart";
 import ChevronDown from "../shared/icons/chevron-down";
 import MoreHorizontal from "../shared/icons/more-horizontal";
 import { Badge } from "../ui/badge";
 import { ButtonTooltip } from "../ui/tooltip";
-import PreviewButton from "./Preview";
 import EmbedCodeModal from "./embed-code-modal";
 import LinkActiveControls, {
   countActiveSettings,
@@ -77,6 +70,7 @@ import LinkSheet, {
 } from "./link-sheet";
 import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
+import { PreviewButton } from "./preview-button";
 
 const isDocumentProcessing = (version?: DocumentVersion) => {
   if (!version) return false;

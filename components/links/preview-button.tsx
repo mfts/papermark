@@ -41,4 +41,4 @@ const PreviewButton = ({
   );
 };
 
-export default PreviewButton;
+export { PreviewButton };
