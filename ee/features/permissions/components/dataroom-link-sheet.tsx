@@ -588,6 +588,7 @@ export function DataroomLinkSheet({
     shouldManagePermissions: boolean = false,
   ) => {
     event.preventDefault();
+    setIsSaving(true);
 
     if (shouldManagePermissions && linkType === LinkType.DATAROOM_LINK) {
       // Store the link data and show permissions sheet
