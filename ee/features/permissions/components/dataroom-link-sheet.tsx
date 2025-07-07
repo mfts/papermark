@@ -748,7 +748,7 @@ export function DataroomLinkSheet({
                         <div className="space-y-6 pt-2">
                           <div className="space-y-2">
                             <div className="flex w-full items-center justify-between">
-                              <Label htmlFor="group-id">Group </Label>
+                              <Label htmlFor="group-id">Group</Label>
                               <ButtonTooltip content="Refresh groups">
                                 <Button
                                   size="icon"
@@ -907,7 +907,7 @@ export function DataroomLinkSheet({
             <SheetFooter>
               <div className="flex flex-row-reverse items-center gap-2 pt-2">
                 {linkType === LinkType.DATAROOM_LINK &&
-                  currentLink?.audienceType !== LinkAudienceType.GROUP && (
+                  data?.audienceType !== LinkAudienceType.GROUP && (
                     <Button
                       type="button"
                       variant="default"
