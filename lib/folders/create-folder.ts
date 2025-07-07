@@ -108,15 +108,20 @@ export async function createFolderInBoth({
   teamId: string;
   dataroomId: string;
   name: string;
-    parentMainDocsPath?: string;
-    parentDataroomPath?: string;
+  parentMainDocsPath?: string;
+  parentDataroomPath?: string;
   setRejectedFiles: (files: { fileName: string; message: string }[]) => void;
   analytics: any;
 }): Promise<{ dataroomPath: string; mainDocsPath: string }> {
   try {
     const [dataroomResponse, mainDocsResponse] = await Promise.all([
-      createFolderInDataroom({ teamId, dataroomId, name, path: parentDataroomPath }),
-      createFolderInMainDocs({ teamId, name, path: parentMainDocsPath })
+      createFolderInDataroom({
+        teamId,
+        dataroomId,
+        name,
+        path: parentDataroomPath,
+      }),
+      createFolderInMainDocs({ teamId, name, path: parentMainDocsPath }),
     ]);
 
     // Track analytics
@@ -141,12 +146,15 @@ export async function createFolderInBoth({
       mainDocsPath: mainDocsResponse.path,
     };
   } catch (error) {
-    console.error("An error occurred while creating the folder in both locations: ", error);
+    console.error(
+      "An error occurred while creating the folder in both locations: ",
+      error,
+    );
     setRejectedFiles([
       {
         fileName: name,
         message:
-          error instanceof Error ? error.message : "Failed to create synced folder",
+          error instanceof Error ? error.message : "Failed to create folder",
       },
     ]);
     throw error;
