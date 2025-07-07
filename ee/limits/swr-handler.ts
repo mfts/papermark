@@ -2,10 +2,10 @@ import { useTeam } from "@/context/team-context";
 import useSWR from "swr";
 import { z } from "zod";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher } from "@/lib/utils";
 
 import { configSchema } from "./server";
-import { usePlan } from "@/lib/swr/use-billing";
 
 export type LimitProps = z.infer<typeof configSchema> & {
   usage: {
@@ -13,7 +13,7 @@ export type LimitProps = z.infer<typeof configSchema> & {
     links: number;
     users: number;
   };
-  dataroomUpload?: boolean;
+  dataroomUpload: boolean;
 };
 
 export function useLimits() {
@@ -34,7 +34,8 @@ export function useLimits() {
     : true;
   const canAddLinks = data?.links ? data?.usage?.links < data?.links : true;
   const canAddUsers = data?.users ? data?.usage?.users < data?.users : true;
-  const showUpgradePlanModal = (isFree && !isTrial) || (isTrial && !canAddUsers);
+  const showUpgradePlanModal =
+    (isFree && !isTrial) || (isTrial && !canAddUsers);
 
   return {
     showUpgradePlanModal,

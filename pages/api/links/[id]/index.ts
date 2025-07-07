@@ -61,7 +61,9 @@ export default async function handle(
           enableWatermark: true,
           watermarkConfig: true,
           groupId: true,
+          permissionGroupId: true,
           audienceType: true,
+          dataroomId: true,
           teamId: true,
           team: {
             select: {
@@ -114,7 +116,9 @@ export default async function handle(
         console.time("get-dataroom-link-data");
         const data = await fetchDataroomLinkData({
           linkId: id,
+          dataroomId: link.dataroomId,
           teamId: link.teamId!,
+          permissionGroupId: link.permissionGroupId || undefined,
           ...(link.audienceType === LinkAudienceType.GROUP &&
             link.groupId && {
               groupId: link.groupId,
@@ -122,6 +126,8 @@ export default async function handle(
         });
         linkData = data.linkData;
         brand = data.brand;
+        // Include access controls in the link data for the frontend
+        linkData.accessControls = data.accessControls;
         console.timeEnd("get-dataroom-link-data");
       }
 
@@ -130,10 +136,12 @@ export default async function handle(
       const returnLink = {
         ...link,
         ...linkData,
+        dataroomId: undefined,
         ...(teamPlan === "free" && {
           customFields: [], // reset custom fields for free plan
           enableAgreement: false,
           enableWatermark: false,
+          permissionGroupId: null,
         }),
       };
 
@@ -325,6 +333,7 @@ export default async function handle(
           enableWatermark: linkData.enableWatermark || false,
           watermarkConfig: linkData.watermarkConfig || null,
           groupId: linkData.groupId || null,
+          permissionGroupId: linkData.permissionGroupId || null,
           audienceType: linkData.audienceType || LinkAudienceType.GENERAL,
           enableConversation: linkData.enableConversation || false,
           enableUpload: linkData.enableUpload || false,

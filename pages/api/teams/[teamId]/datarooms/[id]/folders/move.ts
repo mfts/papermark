@@ -136,6 +136,7 @@ export default async function handle(
             data: {
               parentId: selectedFolder,
               path: folderPathUpdates.get(folderId),
+              orderIndex: null,
             },
           }),
         );

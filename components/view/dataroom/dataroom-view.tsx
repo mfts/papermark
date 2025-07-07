@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useAnalytics } from "@/lib/analytics";
 import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
 import { LinkWithDataroom } from "@/lib/types";
+import { useDisablePrint } from "@/lib/hooks/use-disable-print";
 
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
@@ -73,6 +74,7 @@ export default function DataroomView({
   preview?: boolean;
   logoOnAccessForm?: boolean;
 }) {
+  useDisablePrint();
   const {
     linkType,
     dataroom,
@@ -266,7 +268,7 @@ export default function DataroomView({
     return (
       <div className="bg-gray-950">
         <DataroomViewer
-          accessControls={group?.accessControls || []}
+          accessControls={link.accessControls || group?.accessControls || []}
           brand={brand!}
           viewId={viewData.viewId}
           isPreview={viewData.isPreview}

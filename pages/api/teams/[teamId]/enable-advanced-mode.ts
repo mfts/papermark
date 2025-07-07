@@ -82,9 +82,12 @@ export default async function handle(
         },
       });
 
-      const eligibleDocuments = documents.filter(doc => {
+      const eligibleDocuments = documents.filter((doc) => {
         const primaryVersion = doc.versions[0];
-        return primaryVersion && supportsAdvancedExcelMode(primaryVersion.contentType);
+        return (
+          primaryVersion &&
+          supportsAdvancedExcelMode(primaryVersion.contentType)
+        );
       });
 
       // Update all documents and their versions
@@ -97,6 +100,7 @@ export default async function handle(
           await copyFileToBucketServer({
             filePath: primaryVersion.file,
             storageType: primaryVersion.storageType,
+            teamId: teamId as string,
           });
 
           // Update document and version when enabling

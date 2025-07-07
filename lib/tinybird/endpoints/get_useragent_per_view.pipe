@@ -1,4 +1,4 @@
-VERSION 1
+VERSION 3
 
 NODE endpoint
 SQL >
@@ -10,11 +10,7 @@ SQL >
         os,
         device
     FROM
-        page_views__v3
+        pm_click_events__v1
     WHERE
-        documentId = {{ String(documentId, required=True) }}
-        AND viewId = {{ String(viewId, required=True) }}
-        AND time >= {{ Int64(since, required=True) }}
-    ORDER BY
-        viewId, time ASC
+        view_id = {{ String(viewId, required=True) }}
     LIMIT 1

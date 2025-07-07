@@ -75,6 +75,7 @@ export default async function handle(
         domainId: true,
         domainSlug: true,
         groupId: true,
+        permissionGroupId: true,
         dataroom: {
           select: {
             id: true,
@@ -128,6 +129,35 @@ export default async function handle(
         .filter((control) => control.itemType === ItemType.DATAROOM_DOCUMENT)
         .map((control) => control.itemId);
       const allowedFolders = groupAccessControls
+        .filter((control) => control.itemType === ItemType.DATAROOM_FOLDER)
+        .map((control) => control.itemId);
+
+      link.dataroom.documents = link.dataroom.documents.filter((doc) =>
+        allowedDocuments.includes(doc.id),
+      );
+      link.dataroom.folders = link.dataroom.folders.filter((folder) =>
+        allowedFolders.includes(folder.id),
+      );
+    }
+
+    // Check if the link has permission group restrictions and filter accordingly
+    if (link.permissionGroupId) {
+      const permissionGroupAccessControls =
+        await prisma.permissionGroupAccessControls.findMany({
+          where: {
+            groupId: link.permissionGroupId,
+            OR: [{ canView: true }, { canDownload: true }],
+          },
+          select: {
+            itemId: true,
+            itemType: true,
+          },
+        });
+
+      const allowedDocuments = permissionGroupAccessControls
+        .filter((control) => control.itemType === ItemType.DATAROOM_DOCUMENT)
+        .map((control) => control.itemId);
+      const allowedFolders = permissionGroupAccessControls
         .filter((control) => control.itemType === ItemType.DATAROOM_FOLDER)
         .map((control) => control.itemId);
 

@@ -95,6 +95,7 @@ export async function sendLinkCreatedWebhook({
       documentId: link.documentId,
       dataroomId: link.dataroomId,
       groupId: link.groupId,
+      permissionGroupId: link.permissionGroupId,
       linkType: link.linkType,
       teamId: teamId,
       createdAt: link.createdAt.toISOString(),

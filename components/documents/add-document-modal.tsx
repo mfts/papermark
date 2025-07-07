@@ -1,13 +1,19 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
+
+
 import { FormEvent, useEffect, useState } from "react";
+
+
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
 import { mutate } from "swr";
+
+
 
 import { useAnalytics } from "@/lib/analytics";
 import {
@@ -259,6 +265,7 @@ export function AddDocumentModal({
         }
 
         if (!newVersion) {
+          mutate(`/api/teams/${teamId}/documents`);
           toast.success("Document uploaded. Redirecting to document page...");
 
           analytics.capture("Document Added", {

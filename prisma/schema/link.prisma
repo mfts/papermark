@@ -50,6 +50,10 @@ model Link {
   groupId      String?
   group        ViewerGroup?     @relation(fields: [groupId], references: [id], onDelete: SetNull)
 
+  // granular permissions
+  permissionGroupId String?
+  permissionGroup PermissionGroup? @relation(fields: [permissionGroupId], references: [id], onDelete: SetNull)
+
   // custom metatags
   metaTitle           String? // This will be the meta title of the link
   metaDescription     String? // This will be the meta description of the link
@@ -94,21 +98,22 @@ model LinkPreset {
   metaImage           String? // This will be the meta image of the link 
   metaFavicon         String? // This will be the meta favicon of the link
 
-  emailProtected     Boolean?  @default(true)
-  emailAuthenticated Boolean?  @default(false)
-  allowDownload      Boolean?  @default(false)
-  enableAllowList    Boolean?  @default(false)
-  allowList          String[]
-  enableDenyList     Boolean?  @default(false)
-  denyList           String[]
-  expiresIn          Int?  // how many days from link creation until it expires in seconds
-  enableScreenshotProtection Boolean? @default(false)
-  expiresAt          DateTime?
-  enablePassword     Boolean?  @default(false)
-  password           String?
-  enableWatermark    Boolean?  @default(false)
-  watermarkConfig    Json? //{text: "Confidential", isTiled: false, color: "#000000", fontSize: 12, opacity: 0.5, rotation: 30, position: "top-right"}
-  
+  enableNotification         Boolean?  @default(false)
+  emailProtected             Boolean?  @default(true)
+  emailAuthenticated         Boolean?  @default(false)
+  allowDownload              Boolean?  @default(false)
+  enableAllowList            Boolean?  @default(false)
+  allowList                  String[]
+  enableDenyList             Boolean?  @default(false)
+  denyList                   String[]
+  expiresIn                  Int? // how many days from link creation until it expires in seconds
+  enableScreenshotProtection Boolean?  @default(false)
+  expiresAt                  DateTime?
+  enablePassword             Boolean?  @default(false)
+  password                   String?
+  enableWatermark            Boolean?  @default(false)
+  watermarkConfig            Json? //{text: "Confidential", isTiled: false, color: "#000000", fontSize: 12, opacity: 0.5, rotation: 30, position: "top-right"}
+
   enableAgreement Boolean? @default(false)
   agreementId     String?
 

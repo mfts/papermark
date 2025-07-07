@@ -9,6 +9,7 @@ import {
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { z } from "zod";
 
 import {
   DocumentData,
@@ -33,6 +34,15 @@ import {
 
 import LinkItem from "../link-item";
 
+// Add the validation schema
+const agreementUrlSchema = z
+  .string()
+  .min(1, "URL is required")
+  .url("Please enter a valid URL")
+  .refine((url) => url.startsWith("https://"), {
+    message: "URL must start with https://",
+  });
+
 export default function AgreementSheet({
   defaultData,
   isOpen,
@@ -51,6 +61,10 @@ export default function AgreementSheet({
   const [data, setData] = useState({ name: "", link: "", requireName: true });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
+
+  // Add validation state
+  const [urlError, setUrlError] = useState<string>("");
+  const [isUrlValid, setIsUrlValid] = useState<boolean>(true);
 
   useEffect(() => {
     if (defaultData) {
@@ -138,13 +152,47 @@ export default function AgreementSheet({
     }
   };
 
+  // Add URL validation function
+  const validateUrl = (url: string) => {
+    if (!url.trim()) {
+      setUrlError("");
+      setIsUrlValid(true);
+      return;
+    }
+
+    try {
+      agreementUrlSchema.parse(url);
+      setUrlError("");
+      setIsUrlValid(true);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        setUrlError(firstError?.message || "Invalid URL");
+        setIsUrlValid(false);
+      }
+    }
+  };
+
+  // Modify handleSubmit to include validation
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     e.stopPropagation();
+
     if (isOnlyView) {
       handleClose(false);
       toast.error("Agreement cannot be created in view mode");
       return;
+    }
+
+    // Validate URL before submitting
+    try {
+      agreementUrlSchema.parse(data.link);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError?.message || "Please enter a valid URL");
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -161,12 +209,10 @@ export default function AgreementSheet({
       });
 
       if (!response.ok) {
-        // handle error with toast message
         toast.error("Error creating agreement");
         return;
       }
 
-      // Update the agreements list
       mutate(`/api/teams/${teamId}/agreements`);
     } catch (error) {
       console.error(error);
@@ -238,29 +284,38 @@ export default function AgreementSheet({
                 <div className="w-full space-y-2">
                   <Label htmlFor="link">Link to an agreement</Label>
                   <Input
-                    className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                    className={`flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset placeholder:text-muted-foreground focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 ${
+                      !isUrlValid
+                        ? "ring-red-500 focus:ring-red-500"
+                        : "ring-input focus:ring-gray-400"
+                    }`}
                     id="link"
-                    type="url"
-                    pattern="https://.*"
+                    type="text" // Changed from "url" to avoid browser validation conflicts
                     name="link"
                     required
                     autoComplete="off"
                     data-1p-ignore
                     placeholder="https://www.papermark.com/nda"
                     value={data.link || ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const newValue = e.target.value;
                       setData({
                         ...data,
-                        link: e.target.value,
-                      })
-                    }
-                    onInvalid={(e) =>
-                      e.currentTarget.setCustomValidity(
-                        "Please enter a valid URL starting with https://",
-                      )
-                    }
+                        link: newValue,
+                      });
+                      // Validate on change with debouncing
+                      validateUrl(newValue);
+                    }}
+                    onBlur={(e) => {
+                      // Validate on blur for immediate feedback
+                      validateUrl(e.target.value);
+                    }}
                     disabled={isOnlyView}
                   />
+                  {/* Display validation error */}
+                  {urlError && (
+                    <p className="mt-1 text-sm text-red-500">{urlError}</p>
+                  )}
                 </div>
 
                 {!isOnlyView ? (
@@ -287,7 +342,11 @@ export default function AgreementSheet({
                     Close
                   </Button>
                 ) : (
-                  <Button type="submit" loading={isLoading}>
+                  <Button
+                    type="submit"
+                    loading={isLoading}
+                    disabled={!isUrlValid && data.link.trim() !== ""}
+                  >
                     Create Agreement
                   </Button>
                 )}

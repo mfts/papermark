@@ -55,6 +55,7 @@ export default async function handle(
       },
       data: {
         folderId: folderId,
+        orderIndex: null,
       },
     });
 
