@@ -142,6 +142,21 @@ export default function DataroomViewer({
           const folderDocuments = documents.filter(
             (doc) => doc.folderId === folder.id,
           );
+
+          const lastUpdatedDocument = folderDocuments.reduce(
+            (latest, doc) => {
+              const docDate = new Date(doc.versions[0].updatedAt);
+              return docDate > latest ? docDate : latest;
+            },
+            new Date(0),
+          );
+
+          const folderUpdatedAt = new Date(folder.updatedAt);
+          const effectiveUpdatedAt =
+            lastUpdatedDocument > folderUpdatedAt
+              ? lastUpdatedDocument
+              : folderUpdatedAt;
+
           const allDocumentsCanDownload =
             folderDocuments.length > 0 &&
             folderDocuments.every((doc) => {
@@ -156,6 +171,7 @@ export default function DataroomViewer({
 
           return {
             ...folder,
+            updatedAt: effectiveUpdatedAt,
             itemType: "folder",
             allowDownload: allowDownload && allDocumentsCanDownload,
           };
