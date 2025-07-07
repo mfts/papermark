@@ -133,6 +133,73 @@ export default function DataroomViewer({
     });
   }, [documents, accessControls, allowDownload]);
 
+  // Efficiently calculate effective updatedAt for all folders in a single pass
+  const folderEffectiveUpdatedAt = useMemo(() => {
+    const effectiveUpdatedAt = new Map<string, Date>();
+
+    // Create maps for fast lookups
+    const folderChildren = new Map<string, string[]>();
+    const folderDocuments = new Map<string, DataroomDocument[]>();
+
+    // Build folder hierarchy map
+    folders.forEach((folder) => {
+      const parentId = folder.parentId || "root";
+      if (!folderChildren.has(parentId)) {
+        folderChildren.set(parentId, []);
+      }
+      folderChildren.get(parentId)!.push(folder.id);
+    });
+
+    // Build document map
+    documents.forEach((doc) => {
+      const folderId = doc.folderId || "root";
+      if (!folderDocuments.has(folderId)) {
+        folderDocuments.set(folderId, []);
+      }
+      folderDocuments.get(folderId)!.push(doc);
+    });
+
+    // Calculate effective updatedAt bottom-up (post-order traversal)
+    const calculateEffectiveUpdatedAt = (folderId: string): Date => {
+      // Return cached result if already calculated
+      if (effectiveUpdatedAt.has(folderId)) {
+        return effectiveUpdatedAt.get(folderId)!;
+      }
+
+      const folder = folders.find((f) => f.id === folderId);
+      if (!folder) return new Date(0);
+
+      let maxDate = new Date(folder.updatedAt);
+
+      // Check documents in this folder
+      const docsInFolder = folderDocuments.get(folderId) || [];
+      docsInFolder.forEach((doc) => {
+        if (doc.versions && doc.versions.length > 0) {
+          const docDate = new Date(doc.versions[0].updatedAt);
+          if (docDate > maxDate) maxDate = docDate;
+        }
+      });
+
+      // Check child folders recursively
+      const childFolderIds = folderChildren.get(folderId) || [];
+      childFolderIds.forEach((childId) => {
+        const childDate = calculateEffectiveUpdatedAt(childId);
+        if (childDate > maxDate) maxDate = childDate;
+      });
+
+      // Cache and return result
+      effectiveUpdatedAt.set(folderId, maxDate);
+      return maxDate;
+    };
+
+    // Calculate for all folders
+    folders.forEach((folder) => {
+      calculateEffectiveUpdatedAt(folder.id);
+    });
+
+    return effectiveUpdatedAt;
+  }, [folders, documents]);
+
   // create a mixedItems array with folders and documents of the current folder and memoize it
   const mixedItems = useMemo(() => {
     const mixedItems: FolderOrDocument[] = [
@@ -142,6 +209,12 @@ export default function DataroomViewer({
           const folderDocuments = documents.filter(
             (doc) => doc.folderId === folder.id,
           );
+
+          // Get pre-calculated effective updatedAt
+          const effectiveUpdatedAt =
+            folderEffectiveUpdatedAt.get(folder.id) ||
+            new Date(folder.updatedAt);
+
           const allDocumentsCanDownload =
             folderDocuments.length > 0 &&
             folderDocuments.every((doc) => {
@@ -156,6 +229,7 @@ export default function DataroomViewer({
 
           return {
             ...folder,
+            updatedAt: effectiveUpdatedAt,
             itemType: "folder",
             allowDownload: allowDownload && allDocumentsCanDownload,
           };
@@ -178,7 +252,14 @@ export default function DataroomViewer({
     ];
 
     return sortByIndexThenName(mixedItems);
-  }, [folders, documents, folderId, accessControls, allowDownload]);
+  }, [
+    folders,
+    documents,
+    folderId,
+    accessControls,
+    allowDownload,
+    folderEffectiveUpdatedAt,
+  ]);
 
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
