@@ -74,6 +74,15 @@ import { DataroomLinkSheet } from "./link-sheet/dataroom-link-sheet";
 import { PermissionsSheet } from "./link-sheet/permissions-sheet";
 import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
+import { PreviewButton } from "./preview-button";
+
+const isDocumentProcessing = (version?: DocumentVersion) => {
+  if (!version) return false;
+  return (
+    !version.hasPages &&
+    ["pdf", "slides", "docs", "cad"].includes(version.type!)
+  );
+};
 
 export default function LinksTable({
   targetType,
@@ -221,6 +230,13 @@ export default function LinksTable({
   const handlePreviewLink = async (link: LinkWithViews) => {
     if (link.domainId && isFree) {
       toast.error("You need to upgrade to preview this link");
+      return;
+    }
+
+    if (isDocumentProcessing(primaryVersion)) {
+      toast.error(
+        "Document is still processing. Please wait a moment and try again.",
+      );
       return;
     }
 
@@ -609,11 +625,8 @@ export default function LinksTable({
                             )}
                           >
                             {/* Progress bar */}
-                            {primaryVersion &&
-                              !primaryVersion.hasPages &&
-                              ["pdf", "slides", "docs", "cad"].includes(
-                                primaryVersion.type!,
-                              ) && (
+                            {isDocumentProcessing(primaryVersion) &&
+                              primaryVersion && (
                                 <FileProcessStatusBar
                                   documentVersionId={primaryVersion.id}
                                   className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
@@ -652,17 +665,11 @@ export default function LinksTable({
                               </button>
                             )}
                           </div>
-                          <ButtonTooltip content="Preview link">
-                            <Button
-                              variant={"link"}
-                              size={"icon"}
-                              className="group h-7 w-8"
-                              onClick={() => handlePreviewLink(link)}
-                            >
-                              <span className="sr-only">Preview link</span>
-                              <EyeIcon className="text-gray-400 group-hover:text-gray-500" />
-                            </Button>
-                          </ButtonTooltip>
+                          <PreviewButton
+                            link={link}
+                            isProcessing={isDocumentProcessing(primaryVersion)}
+                            onPreview={handlePreviewLink}
+                          />
                           {targetType === "DATAROOM" &&
                             link.permissionGroupId && (
                               <ButtonTooltip content="Limited File Access">
@@ -865,20 +872,19 @@ export default function LinksTable({
                                 <CopyPlusIcon className="mr-2 h-4 w-4" />
                                 Duplicate Link
                               </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setSelectedEmbedLink({
-                                      id: link.id,
-                                      name:
-                                        link.name ||
-                                        `Link #${link.id.slice(-5)}`,
-                                    });
-                                    setEmbedModalOpen(true);
-                                  }}
-                                >
-                                  <Code2Icon className="mr-2 h-4 w-4" />
-                                  Get Embed Code
-                                </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedEmbedLink({
+                                    id: link.id,
+                                    name:
+                                      link.name || `Link #${link.id.slice(-5)}`,
+                                  });
+                                  setEmbedModalOpen(true);
+                                }}
+                              >
+                                <Code2Icon className="mr-2 h-4 w-4" />
+                                Get Embed Code
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
