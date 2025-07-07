@@ -24,8 +24,7 @@ export async function sendDocumentCreatedWebhook({
 
     if (
       team?.plan === "free" ||
-      team?.plan === "pro" ||
-      team?.plan.includes("trial")
+      team?.plan === "pro"
     ) {
       // team is not on paid plan, so we don't need to send webhooks
       return;

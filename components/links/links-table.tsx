@@ -104,7 +104,7 @@ export default function LinksTable({
 
   const now = Date.now();
   const router = useRouter();
-  const { isFree } = usePlan();
+  const { isFree, isTrial } = usePlan();
   const teamInfo = useTeam();
   const { id: targetId, groupId } = router.query as {
     id: string;
@@ -459,7 +459,10 @@ export default function LinksTable({
   const AddLinkButton = () => {
     if (!canAddLinks) {
       return (
-        <UpgradePlanModal clickedPlan={PlanEnum.Pro} trigger={"limit_add_link"}>
+        <UpgradePlanModal
+          clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
+          trigger={"limit_add_link"}
+        >
           <Button>Upgrade to Create Link</Button>
         </UpgradePlanModal>
       );

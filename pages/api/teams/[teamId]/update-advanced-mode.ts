@@ -48,8 +48,9 @@ export default async function handle(
       }
 
       const isPlanRestricted = ["free", "starter", "pro"].includes(team.plan);
+      const isTrial = team.plan.includes("trial");
 
-      if (isPlanRestricted) {
+      if (isPlanRestricted && !isTrial) {
         return res
           .status(403)
           .json({ error: "Your current plan does not allow this feature." });

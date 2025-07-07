@@ -34,6 +34,7 @@ export default function General() {
   }) => {
     if (
       (isFree || isPro || isStarter) &&
+      !isTrial &&
       data.enableExcelAdvancedMode === "true"
     ) {
       showUpgradeModal(PlanEnum.Business, "advanced-excel-mode");
