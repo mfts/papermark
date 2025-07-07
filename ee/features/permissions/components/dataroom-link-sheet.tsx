@@ -221,6 +221,7 @@ export function DataroomLinkSheet({
         permissions,
         false,
         true,
+        true,
       );
 
       // Close the sheets and show success
@@ -238,6 +239,7 @@ export function DataroomLinkSheet({
     permissions: ItemPermission | null,
     shouldPreview: boolean = false,
     showSuccess: boolean = false,
+    isPermissionUpdate: boolean = false,
   ) => {
     // Upload the image if it's a data URL
     let blobUrl: string | null =
@@ -298,7 +300,12 @@ export function DataroomLinkSheet({
     const returnedLink = await response.json();
 
     // Handle permissions
-    if (permissions === null && isUpdating && currentLink?.permissionGroupId) {
+    if (
+      isPermissionUpdate &&
+      permissions === null &&
+      isUpdating &&
+      currentLink?.permissionGroupId
+    ) {
       // Delete the permission group - database will set permissionGroupId to null automatically
       const deleteResponse = await fetch(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
@@ -319,6 +326,8 @@ export function DataroomLinkSheet({
         return;
       }
 
+      returnedLink.permissionGroupId = null;
+
       // Show success message
       toast.success("Permission group deleted successfully");
 
@@ -336,7 +345,7 @@ export function DataroomLinkSheet({
         false,
       );
     } else if (permissions !== null) {
-      // Only handle permission group operations if we're not deleting
+      // Only handle permission group operations if we have specific permissions to set
       await handlePermissionGroupOperations(
         returnedLink,
         permissions,
@@ -545,6 +554,10 @@ export function DataroomLinkSheet({
         setShowPermissionsSheet(false);
         setPendingLinkData(null);
         toast.success("Link created successfully");
+        const isOnPermissionsPage = router.asPath.includes("/permissions");
+        if (linkType === LinkType.DATAROOM_LINK && !isOnPermissionsPage) {
+          router.push(`/datarooms/${targetId}/permissions`);
+        }
       }
     }
 
@@ -566,6 +579,7 @@ export function DataroomLinkSheet({
       permissions,
       shouldPreview,
       showSuccess,
+      false,
     );
   };
 
@@ -575,6 +589,7 @@ export function DataroomLinkSheet({
     shouldManagePermissions: boolean = false,
   ) => {
     event.preventDefault();
+    setIsSaving(true);
 
     if (shouldManagePermissions && linkType === LinkType.DATAROOM_LINK) {
       // Store the link data and show permissions sheet
@@ -735,7 +750,7 @@ export function DataroomLinkSheet({
                         <div className="space-y-6 pt-2">
                           <div className="space-y-2">
                             <div className="flex w-full items-center justify-between">
-                              <Label htmlFor="group-id">Group </Label>
+                              <Label htmlFor="group-id">Group</Label>
                               <ButtonTooltip content="Refresh groups">
                                 <Button
                                   size="icon"
@@ -894,7 +909,7 @@ export function DataroomLinkSheet({
             <SheetFooter>
               <div className="flex flex-row-reverse items-center gap-2 pt-2">
                 {linkType === LinkType.DATAROOM_LINK &&
-                  currentLink?.audienceType !== LinkAudienceType.GROUP && (
+                  data?.audienceType !== LinkAudienceType.GROUP && (
                     <Button
                       type="button"
                       variant="default"
@@ -908,7 +923,7 @@ export function DataroomLinkSheet({
                   variant={
                     linkType === LinkType.DOCUMENT_LINK ||
                     (linkType === LinkType.DATAROOM_LINK &&
-                      currentLink?.audienceType === LinkAudienceType.GROUP)
+                      data?.audienceType === LinkAudienceType.GROUP)
                       ? "default"
                       : "outline"
                   }

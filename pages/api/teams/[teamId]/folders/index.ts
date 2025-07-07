@@ -105,10 +105,6 @@ export default async function handle(
     const { teamId } = req.query as { teamId: string };
     const { name, path } = req.body as { name: string; path: string };
 
-    // const childFolderPath = path
-    //   ? "/" + path + "/" + slugify(name)
-    //   : "/" + slugify(name);
-
     const parentFolderPath = path ? "/" + path : "/";
 
     try {

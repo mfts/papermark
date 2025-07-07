@@ -18,7 +18,7 @@ export default function General() {
   const analytics = useAnalytics();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const { isFree, isPro, isTrial } = usePlan();
+  const { isFree, isPro, isTrial, isStarter } = usePlan();
   const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
   const [planModalTrigger, setPlanModalTrigger] = useState<string>("");
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
@@ -32,7 +32,11 @@ export default function General() {
   const handleExcelAdvancedModeChange = async (data: {
     enableExcelAdvancedMode: string;
   }) => {
-    if (isFree && !isTrial && data.enableExcelAdvancedMode === "true") {
+    if (
+      (isFree || isPro || isStarter) &&
+      !isTrial &&
+      data.enableExcelAdvancedMode === "true"
+    ) {
       showUpgradeModal(PlanEnum.Business, "advanced-excel-mode");
       return;
     }
