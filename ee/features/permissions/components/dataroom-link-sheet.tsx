@@ -922,7 +922,7 @@ export function DataroomLinkSheet({
                   variant={
                     linkType === LinkType.DOCUMENT_LINK ||
                     (linkType === LinkType.DATAROOM_LINK &&
-                      currentLink?.audienceType === LinkAudienceType.GROUP)
+                      data?.audienceType === LinkAudienceType.GROUP)
                       ? "default"
                       : "outline"
                   }
