@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { runs } from "@trigger.dev/sdk/v3";
+import { logger, runs } from "@trigger.dev/sdk/v3";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
@@ -12,6 +12,7 @@ import { sendDataroomChangeNotificationTask } from "@/lib/trigger/dataroom-chang
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
+import { hashToken } from "@/lib/api/auth/token";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -97,25 +98,53 @@ export default async function handle(
     }
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/datarooms/:id/documents
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
     const { teamId, id: dataroomId } = req.query as {
       teamId: string;
       id: string;
     };
+    // Check for API token first
+    const authHeader = req.headers.authorization;
+    let userId: string;
+    let token: string | null = null;
 
-    const userId = (session.user as CustomUser).id;
+    if (authHeader?.startsWith("Bearer ")) {
+      token = authHeader.replace("Bearer ", "");
+      const hashedToken = hashToken(token);
+
+      // Look up token in database
+      const restrictedToken = await prisma.restrictedToken.findUnique({
+        where: { hashedKey: hashedToken },
+        select: { userId: true, teamId: true },
+      });
+
+      // Check if token exists
+      if (!restrictedToken) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      // Check if token is for the correct team
+      if (restrictedToken.teamId !== teamId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      userId = restrictedToken.userId;
+    } else {
+      // Fall back to session auth
+      const session = await getServerSession(req, res, authOptions);
+      if (!session) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      userId = (session.user as CustomUser).id;
+    }
 
     // Assuming data is an object with `name` and `description` properties
-    const { documentId, folderPathName } = req.body as {
+    const { documentId, folderPathName, googleDriveFileId, delay } = req.body as {
       documentId: string;
       folderPathName?: string;
+      googleDriveFileId?: string;
+      delay?: string;
     };
-
+    const delayMs = delay ? parseInt(delay) : 10 * 60 * 1000; // default delay is 10 minutes
     try {
       // Check if the user is part of the team
       const team = await prisma.team.findUnique({
@@ -150,6 +179,7 @@ export default async function handle(
           documentId,
           dataroomId,
           folderId: folder?.id,
+          googleDriveFileId,
         },
         include: {
           dataroom: {
@@ -194,7 +224,7 @@ export default async function handle(
                 `dataroom_${dataroomId}`,
                 `document_${document.id}`,
               ],
-              delay: new Date(Date.now() + 10 * 60 * 1000), // 10 minute delay
+              delay: new Date(Date.now() + delayMs),
             },
           ),
         );

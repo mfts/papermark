@@ -29,6 +29,24 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
+model GoogleDriveIntegration {
+  id                    String   @id @default(cuid())
+  userId                String
+  email                 String?
+  name                  String?
+  picture               String?
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String   @db.Text
+  refreshToken          String   @db.Text
+  expiresAt             DateTime
+  refreshTokenExpiresAt DateTime
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([userId])
+  @@index([userId])
+}
+
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
@@ -58,6 +76,7 @@ model User {
   endsAt         DateTime? // Stripe subscription end date
 
   restrictedTokens RestrictedToken[]
+  googleDriveIntegration GoogleDriveIntegration?
 
   // conversation
   participatedConversations ConversationParticipant[]
@@ -176,6 +195,7 @@ model Document {
   versions             DocumentVersion[]
   chats                Chat[]
 
+  googleDriveFileId String?
   folderId String? // Optional Folder ID for documents in folders
   folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
@@ -400,6 +420,7 @@ model Folder {
   teamId       String
   team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
+  googleDriveFolderId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

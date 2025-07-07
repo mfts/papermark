@@ -12,6 +12,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  // api/file/browser-upload  
   const body = req.body as HandleUploadBody;
 
   try {
