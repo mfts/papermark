@@ -143,13 +143,13 @@ export default function DataroomViewer({
             (doc) => doc.folderId === folder.id,
           );
 
-          const lastUpdatedDocument = folderDocuments.reduce(
-            (latest, doc) => {
+          const lastUpdatedDocument = folderDocuments.reduce((latest, doc) => {
+            if (doc.versions && doc.versions.length > 0) {
               const docDate = new Date(doc.versions[0].updatedAt);
               return docDate > latest ? docDate : latest;
-            },
-            new Date(0),
-          );
+            }
+            return latest;
+          }, new Date(0));
 
           const folderUpdatedAt = new Date(folder.updatedAt);
           const effectiveUpdatedAt =
