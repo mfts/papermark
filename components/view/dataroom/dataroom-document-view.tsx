@@ -16,6 +16,7 @@ import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
+import { useDisablePrint } from "@/lib/hooks/use-disable-print";
 
 import EmailVerificationMessage from "../access-form/email-verification-form";
 import ViewData, { TViewDocumentData } from "../view-data";
@@ -75,6 +76,7 @@ export default function DataroomDocumentView({
   useCustomAccessForm,
   isEmbedded,
   preview,
+  logoOnAccessForm,
 }: {
   link: LinkWithDataroomDocument;
   userEmail: string | null | undefined;
@@ -94,7 +96,9 @@ export default function DataroomDocumentView({
   useCustomAccessForm?: boolean;
   isEmbedded?: boolean;
   preview?: boolean;
+  logoOnAccessForm?: boolean;
 }) {
+  useDisablePrint();
   const {
     linkType,
     emailProtected,
@@ -306,6 +310,7 @@ export default function DataroomDocumentView({
         useCustomAccessForm={useCustomAccessForm}
         brand={brand}
         customFields={link.customFields}
+        logoOnAccessForm={logoOnAccessForm}
       />
     );
   }

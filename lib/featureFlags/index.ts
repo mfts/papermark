@@ -4,11 +4,12 @@ export type BetaFeatures =
   | "tokens"
   | "incomingWebhooks"
   | "roomChangeNotifications"
-  | "embedding"
   | "webhooks"
   | "conversations"
   | "dataroomUpload"
-  | "inDocumentLinks";
+  | "inDocumentLinks"
+  | "usStorage";
+
 type BetaFeaturesRecord = Record<BetaFeatures, string[]>;
 
 export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
@@ -16,11 +17,11 @@ export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
     tokens: false,
     incomingWebhooks: false,
     roomChangeNotifications: false,
-    embedding: false,
     webhooks: false,
     conversations: false,
     dataroomUpload: false,
     inDocumentLinks: false,
+    usStorage: false,
   };
 
   // Return all features as true if edge config is not available

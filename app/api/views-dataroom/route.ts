@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { ItemType, LinkAudienceType } from "@prisma/client";
 import { ipAddress, waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth";
-import { parsePageId } from "notion-utils";
 
 import { hashToken } from "@/lib/api/auth/token";
 import {
@@ -16,8 +16,6 @@ import { PreviewSession, verifyPreviewSession } from "@/lib/auth/preview-auth";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
-import notion from "@/lib/notion";
-import { addSignedUrls } from "@/lib/notion/utils";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { parseSheet } from "@/lib/sheet";
@@ -115,6 +113,7 @@ export async function POST(request: NextRequest) {
         enableWatermark: true,
         watermarkConfig: true,
         groupId: true,
+        permissionGroupId: true,
         audienceType: true,
         allowDownload: true,
         enableConversation: true,
@@ -211,6 +210,11 @@ export async function POST(request: NextRequest) {
         linkId,
         link.dataroomId!,
       );
+
+      // If we have a dataroom session, use its verified status
+      if (dataroomSession) {
+        isEmailVerified = dataroomSession.verified;
+      }
     }
 
     // If there is no session, then we need to check if the link is protected and enforce the checks
@@ -566,6 +570,8 @@ export async function POST(request: NextRequest) {
           where: { id: viewer.id },
           data: { verified: isEmailVerified },
         });
+        // Update the viewer object to reflect the new verified status
+        viewer.verified = isEmailVerified;
       }
     }
 
@@ -663,6 +669,7 @@ export async function POST(request: NextRequest) {
             linkId,
             newDataroomView?.id!,
             ipAddress(request) ?? LOCALHOST_IP,
+            isEmailVerified,
             viewer?.id,
           );
 
@@ -748,11 +755,8 @@ export async function POST(request: NextRequest) {
       }
 
       // if document version has pages, then return pages
-      // otherwise, check if notion document,
-      // if notion, return recordMap and theme from document version file
       // otherwise, return file from document version
       let documentPages, documentVersion;
-      let recordMap, theme;
       let sheetData;
 
       if (hasPages) {
@@ -811,23 +815,6 @@ export async function POST(request: NextRequest) {
             type: documentVersion.storageType,
           });
         }
-
-        if (documentVersion.type === "notion") {
-          // get theme `mode` param from document version file
-          const modeMatch = documentVersion.file.match(/[?&]mode=(dark|light)/);
-          theme = modeMatch ? modeMatch[1] : undefined;
-
-          let notionPageId = parsePageId(documentVersion.file, { uuid: false });
-          if (!notionPageId) {
-            notionPageId = "";
-          }
-
-          const pageId = notionPageId;
-          recordMap = await notion.getPage(pageId, { signFileUrls: false });
-          // TODO: separately sign the file urls until PR merged and published; ref: https://github.com/NotionX/react-notion-x/issues/580#issuecomment-2542823817
-          await addSignedUrls({ recordMap });
-        }
-
         if (documentVersion.type === "sheet") {
           const document = await prisma.document.findUnique({
             where: { id: documentId },
@@ -836,9 +823,15 @@ export async function POST(request: NextRequest) {
           useAdvancedExcelViewer = document?.advancedExcelEnabled ?? false;
 
           if (useAdvancedExcelViewer) {
-            documentVersion.file = documentVersion.file.includes("https://")
-              ? documentVersion.file
-              : `https://${process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST}/${documentVersion.file}`;
+            if (documentVersion.file.includes("https://")) {
+              documentVersion.file = documentVersion.file;
+            } else {
+              // Get team-specific storage config for advanced distribution host
+              const storageConfig = await getTeamStorageConfigById(
+                link.teamId!,
+              );
+              documentVersion.file = `https://${storageConfig.advancedDistributionHost}/${documentVersion.file}`;
+            }
           } else {
             const fileUrl = await getFile({
               data: documentVersion.file,
@@ -854,10 +847,13 @@ export async function POST(request: NextRequest) {
 
       // check if viewer can download the document based on group permissions
       let canDownload: boolean = link.allowDownload ?? false;
+      const effectiveGroupId = link.groupId || link.permissionGroupId;
+
       if (
         link.allowDownload &&
-        link.audienceType === LinkAudienceType.GROUP &&
-        link.groupId &&
+        (link.audienceType === LinkAudienceType.GROUP ||
+          link.permissionGroupId) &&
+        effectiveGroupId &&
         documentId &&
         dataroomId
       ) {
@@ -873,18 +869,36 @@ export async function POST(request: NextRequest) {
         if (!dataroomDocument) {
           canDownload = false;
         } else {
-          const groupDocumentPermission =
-            await prisma.viewerGroupAccessControls.findUnique({
-              where: {
-                groupId_itemId: {
-                  groupId: link.groupId,
-                  itemId: dataroomDocument.id,
+          if (link.groupId) {
+            // This is a ViewerGroup (legacy behavior)
+            const groupDocumentPermission =
+              await prisma.viewerGroupAccessControls.findUnique({
+                where: {
+                  groupId_itemId: {
+                    groupId: link.groupId,
+                    itemId: dataroomDocument.id,
+                  },
+                  itemType: ItemType.DATAROOM_DOCUMENT,
                 },
-                itemType: ItemType.DATAROOM_DOCUMENT,
-              },
-              select: { canDownload: true },
-            });
-          canDownload = groupDocumentPermission?.canDownload ?? false;
+                select: { canDownload: true },
+              });
+            canDownload = groupDocumentPermission?.canDownload ?? false;
+          } else if (link.permissionGroupId) {
+            // This is a PermissionGroup (new behavior)
+            const permissionGroupDocumentPermission =
+              await prisma.permissionGroupAccessControls.findUnique({
+                where: {
+                  groupId_itemId: {
+                    groupId: link.permissionGroupId,
+                    itemId: dataroomDocument.id,
+                  },
+                  itemType: ItemType.DATAROOM_DOCUMENT,
+                },
+                select: { canDownload: true },
+              });
+            canDownload =
+              permissionGroupDocumentPermission?.canDownload ?? false;
+          }
         }
       }
 
@@ -902,7 +916,7 @@ export async function POST(request: NextRequest) {
             ? documentVersion.file
             : undefined,
         pages: documentPages ? documentPages : undefined,
-        notionData: recordMap ? { recordMap, theme } : undefined,
+        notionData: undefined,
         sheetData:
           documentVersion &&
           documentVersion.type === "sheet" &&
@@ -913,9 +927,7 @@ export async function POST(request: NextRequest) {
           ? documentVersion.type
           : documentPages
             ? "pdf"
-            : recordMap
-              ? "notion"
-              : undefined,
+            : undefined,
         watermarkConfig: link.enableWatermark
           ? link.watermarkConfig
           : undefined,
@@ -942,13 +954,14 @@ export async function POST(request: NextRequest) {
 
       const response = NextResponse.json(returnObject, { status: 200 });
 
-      // Create a dataroom session token if a dataroom session doesn't exist yet// Create a dataroom session token if a dataroom session doesn't exist yet
+      // Create a dataroom session token if a dataroom session doesn't exist yet
       if (!dataroomSession && !isPreview) {
         const newDataroomSession = await createDataroomSession(
           dataroomId,
           linkId,
           dataroomView?.id!,
           ipAddress(request) ?? LOCALHOST_IP,
+          isEmailVerified,
           viewer?.id,
         );
 

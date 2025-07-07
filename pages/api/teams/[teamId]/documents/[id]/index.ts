@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { errorhandler } from "@/lib/errorHandler";
+import { TeamError, errorhandler } from "@/lib/errorHandler";
 import { deleteFile } from "@/lib/files/delete-file-server";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
@@ -52,6 +52,13 @@ export default async function handle(
                     name: true,
                   },
                 },
+                folder: {
+                  select: {
+                    id: true,
+                    name: true,
+                    path: true,
+                  },
+                },
               },
             },
           },
@@ -59,7 +66,10 @@ export default async function handle(
       });
 
       if (!document || !document.versions || document.versions.length === 0) {
-        return res.status(404).end("Document not found");
+        return res.status(404).json({
+          error: "Not Found",
+          message: "The requested document does not exist",
+        });
       }
 
       const pages = await prisma.documentPage.findMany({
@@ -85,6 +95,12 @@ export default async function handle(
 
       return res.status(200).json({ ...document, hasPageLinks });
     } catch (error) {
+      if (error instanceof TeamError) {
+        return res.status(404).json({
+          error: "Not Found",
+          message: error.message,
+        });
+      }
       errorhandler(error, res);
     }
   } else if (req.method === "PUT") {
@@ -181,7 +197,11 @@ export default async function handle(
       if (documentVersions.type !== "notion") {
         // delete the files from storage
         for (const version of documentVersions.versions) {
-          await deleteFile({ type: version.storageType, data: version.file });
+          await deleteFile({
+            type: version.storageType,
+            data: version.file,
+            teamId,
+          });
         }
       }
 

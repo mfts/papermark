@@ -69,8 +69,10 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
       { id: "folder", text: "Folder organization" },
       { id: "uploads", text: "Large file uploads" },
       { id: "video", text: "Video sharing and analytics" },
+      { id: "visitors", text: "Visitors analytics" },
       { id: "file-types-basic", text: "More file types: ppt, docx, excel" },
       { id: "branding", text: "Remove Papermark branding" },
+      { id: "custom-branding", text: "Custom branding" },
       { id: "retention", text: "1-year analytics retention" },
     ],
   },
@@ -83,7 +85,11 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
         isUsers: true,
         usersIncluded: 3,
       },
-      { id: "datarooms", text: "Unlimited light data rooms" },
+      { 
+        id: "datarooms", 
+        text: "Unlimited light data rooms",
+        tooltip: "Light data rooms include only basic security settings for sharing your data room, described in Business plan. "
+      },
       { id: "documents", text: "1000 documents per data room" },
       {
         id: "custom-domain",
@@ -92,6 +98,7 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
       },
       { id: "folder-levels", text: "Unlimited folder levels" },
       { id: "multi-file", text: "Multi-file sharing" },
+      { id: "custom-social-cards", text: "Custom social media cards" },
       { id: "screenshot", text: "Screenshot protection" },
       { id: "email-verify", text: "Require email verification" },
       { id: "allow-block", text: "Allow/Block list" },

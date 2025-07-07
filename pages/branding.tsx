@@ -32,7 +32,7 @@ export default function Branding() {
   const teamInfo = useTeam();
   const router = useRouter();
   const { brand } = useBrand();
-  const { plan } = usePlan();
+  const { plan, isTrial } = usePlan();
 
   const [brandColor, setBrandColor] = useState<string>("#000000");
   const [accentColor, setAccentColor] = useState<string>("#030712");
@@ -388,10 +388,11 @@ export default function Branding() {
                     </div>
                   </CardContent>
                   <CardFooter className="border-t p-6">
-                    {plan === "free" ? (
+                    {plan === "free" && !isTrial ? (
                       <UpgradePlanModal
                         clickedPlan={PlanEnum.Pro}
                         trigger={"branding_page"}
+                        highlightItem={["custom-branding"]}
                       >
                         <Button>Upgrade to Save Branding</Button>
                       </UpgradePlanModal>

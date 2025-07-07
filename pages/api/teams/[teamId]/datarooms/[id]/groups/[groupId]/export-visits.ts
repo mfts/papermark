@@ -4,8 +4,16 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
-import { getViewPageDuration, getViewUserAgent } from "@/lib/tinybird";
+import {
+  getViewPageDuration,
+  getViewUserAgent,
+  getViewUserAgent_v2,
+} from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
+
+export const config = {
+  maxDuration: 180,
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -249,15 +257,34 @@ export default async function handler(
       ].join(","),
     );
 
-    // Get user agent data for all views
-    const userAgentData = await Promise.all(
-      documentViews.map((view) =>
-        getViewUserAgent({
-          documentId: view.document?.id!,
+    // Create a map of viewId to userAgent data for efficient lookup
+    const userAgentDataMap = new Map();
+
+    await Promise.all(
+      documentViews.map(async (view) => {
+        const result = await getViewUserAgent({
           viewId: view.id,
-          since: 0,
-        }),
-      ),
+        });
+
+        let userAgentResult;
+        if (!result || result.rows === 0) {
+          // Only call v2 if document and its id exist
+          if (view.document?.id) {
+            userAgentResult = await getViewUserAgent_v2({
+              documentId: view.document.id,
+              viewId: view.id,
+              since: 0,
+            });
+          } else {
+            // Set default empty result if document/id is missing
+            userAgentResult = { data: [] };
+          }
+        } else {
+          userAgentResult = result;
+        }
+
+        userAgentDataMap.set(view.id, userAgentResult);
+      }),
     );
 
     // Process each view and add to CSV rows
@@ -291,7 +318,16 @@ export default async function handler(
         );
       } else {
         // Add a row for each document view
-        view.documentViews.forEach((docView, index) => {
+        view.documentViews.forEach((docView) => {
+          // Find the corresponding document view to get the correct viewId
+          const correspondingDocView = documentViews.find(
+            (dv) => dv.viewedAt.toISOString() === docView.viewedAt,
+          );
+
+          const userAgentData = correspondingDocView
+            ? userAgentDataMap.get(correspondingDocView.id)
+            : { data: [] };
+
           csvRows.push(
             [
               view.dataroomViewedAt,
@@ -310,11 +346,11 @@ export default async function handler(
               (docView.duration / 1000).toFixed(1),
               docView.completionRate,
               docView.documentVersion,
-              userAgentData[index]?.data[0]?.browser || "NaN",
-              userAgentData[index]?.data[0]?.os || "NaN",
-              userAgentData[index]?.data[0]?.device || "NaN",
-              userAgentData[index]?.data[0]?.country || "NaN",
-              userAgentData[index]?.data[0]?.city || "NaN",
+              userAgentData?.data[0]?.browser || "NaN",
+              userAgentData?.data[0]?.os || "NaN",
+              userAgentData?.data[0]?.device || "NaN",
+              userAgentData?.data[0]?.country || "NaN",
+              userAgentData?.data[0]?.city || "NaN",
             ].join(","),
           );
         });

@@ -49,18 +49,22 @@ export default function DomainSection({
 
   // Check plan eligibility for custom domains
   const canUseCustomDomainForDocument =
-    isBusiness || (limits && limits.customDomainOnPro);
+    isBusiness || isDatarooms || isDataroomsPlus || limits?.customDomainOnPro;
   const canUseCustomDomainForDataroom =
-    isDatarooms || isDataroomsPlus || (limits && limits.customDomainInDataroom);
+    isDatarooms || isDataroomsPlus || limits?.customDomainInDataroom;
 
   // Check if we're editing a link with a custom domain
   const isEditingCustomDomain =
     editLink && data.domain && data.domain !== "papermark.com" ? true : false;
 
   const handleDomainChange = (value: string) => {
-    // Prevent changes if editing a link with custom domain
-    if (isEditingCustomDomain) {
-      setDisplayValue(value);
+    const canChangeCustomDomain =
+      linkType === "DOCUMENT_LINK"
+        ? canUseCustomDomainForDocument
+        : canUseCustomDomainForDataroom;
+
+    if (isEditingCustomDomain && !canChangeCustomDomain) {
+      setDisplayValue(data.domain ?? "papermark.com");
       return;
     }
 
@@ -320,6 +324,7 @@ export default function DomainSection({
             ? "select_custom_domain_dataroom"
             : "select_custom_domain_document"
         }
+        highlightItem={["custom-domain"]}
       />
     </>
   );

@@ -4,12 +4,14 @@ import React from "react";
 import {
   DataroomBrand,
   DataroomFolder,
+  PermissionGroupAccessControls,
   ViewerGroupAccessControls,
 } from "@prisma/client";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { PanelLeftIcon, XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { sortByIndexThenName } from "@/lib/utils/sort-items-by-index-name";
 
 import { ViewFolderTree } from "@/components/datarooms/folders";
 import {
@@ -101,7 +103,7 @@ export default function DataroomViewer({
   isPreview?: boolean;
   folderId: string | null;
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
-  accessControls: ViewerGroupAccessControls[];
+  accessControls: ViewerGroupAccessControls[] | PermissionGroupAccessControls[];
   viewerId?: string;
   viewData: DEFAULT_DATAROOM_VIEW_TYPE;
   enableIndexFile?: boolean;
@@ -174,7 +176,8 @@ export default function DataroomViewer({
           };
         }),
     ];
-    return mixedItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+
+    return sortByIndexThenName(mixedItems);
   }, [folders, documents, folderId, accessControls, allowDownload]);
 
   const renderItem = (item: FolderOrDocument) => {
@@ -338,7 +341,9 @@ export default function DataroomViewer({
                 </div>
               </div>
               <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
-                {mixedItems.map(renderItem)}
+                {mixedItems.map((item) => (
+                  <li key={item.id}>{renderItem(item)}</li>
+                ))}
               </ul>
             </div>
             <ScrollBar orientation="vertical" />

@@ -19,6 +19,7 @@ import AccessForm, {
 
 import EmailVerificationMessage from "./access-form/email-verification-form";
 import ViewData, { TViewDocumentData } from "./view-data";
+import { useDisablePrint } from "@/lib/hooks/use-disable-print";
 
 type RowData = { [key: string]: any };
 type SheetData = {
@@ -62,6 +63,7 @@ export default function DocumentView({
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
+  logoOnAccessForm,
   isEmbedded,
 }: {
   link: LinkWithDocument;
@@ -83,7 +85,9 @@ export default function DocumentView({
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
   isEmbedded?: boolean;
+  logoOnAccessForm?: boolean;
 }) {
+  useDisablePrint();
   const {
     document,
     emailProtected,
@@ -262,6 +266,7 @@ export default function DocumentView({
         disableEditEmail={disableEditEmail}
         useCustomAccessForm={useCustomAccessForm}
         customFields={link.customFields}
+        logoOnAccessForm={logoOnAccessForm}
       />
     );
   }

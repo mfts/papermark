@@ -204,9 +204,9 @@ export default function DataroomNav({
       </div>
 
       {/* Banner section */}
-      <div className="relative h-[30vh]">
+      <div className="relative h-[20vh] sm:h-auto sm:max-h-80">
         <img
-          className="h-[30vh] w-full object-cover"
+          className="h-full w-full object-cover sm:max-h-80 sm:object-contain xl:object-cover"
           src={brand?.banner || DEFAULT_BANNER_IMAGE}
           alt="Banner"
           width={1920}

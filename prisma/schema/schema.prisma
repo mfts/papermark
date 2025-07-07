@@ -79,6 +79,8 @@ model Team {
   viewerGroups ViewerGroup[]
   viewers      Viewer[]
 
+  permissionGroups PermissionGroup[]
+
   links Link[]
   views View[]
 
@@ -99,6 +101,9 @@ model Team {
   conversations Conversation[]
 
   uploadedDocuments DocumentUpload[]
+
+  // team settings
+  enableExcelAdvancedMode Boolean @default(false) // Enable Excel advanced mode for all documents in the team
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -125,11 +130,13 @@ enum Role {
 
 model UserTeam {
   role   Role   @default(MEMBER)
+  status String @default("ACTIVE")
   userId String
   teamId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
+  blockedAt               DateTime? // When the user was blocked
   notificationPreferences Json? // Format: { yearInReview: { "enabled": false } }
 
   @@id([userId, teamId])
@@ -172,8 +179,8 @@ model Document {
   folderId String? // Optional Folder ID for documents in folders
   folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
-  datarooms   DataroomDocument[] // Datarooms associated with this document
-  tags TagItem[]
+  datarooms DataroomDocument[] // Datarooms associated with this document
+  tags      TagItem[]
 
   // upload external documents
   uploadedDocument DocumentUpload[]
@@ -289,7 +296,10 @@ model View {
   @@index([documentId])
   @@index([dataroomId])
   @@index([dataroomViewId])
+  @@index([viewerId])
   @@index([teamId])
+  @@index([viewedAt(sort: Desc)]) // Performance optimization for date aggregations
+  @@index([viewerId, documentId]) // Performance optimization for joins with filtering
 }
 
 enum ViewType {
@@ -586,19 +596,19 @@ enum TagType {
 }
 
 model Tag {
-  id          String       @id @default(cuid())
+  id          String  @id @default(cuid())
   name        String
   color       String
   description String?
 
-  teamId      String
-  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  
-  items       TagItem[]
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
-  createdBy   String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  items TagItem[]
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([teamId, name])
   @@index([teamId])
@@ -607,22 +617,22 @@ model Tag {
 }
 
 model TagItem {
-  id        String           @id @default(cuid())
-  tagId     String
-  tag       Tag              @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  itemType      TagType
+  id       String  @id @default(cuid())
+  tagId    String
+  tag      Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  itemType TagType
 
   // tag can be linked to a link, document or dataroom
-  linkId String?
-  link   Link?   @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  linkId     String?
+  link       Link?     @relation(fields: [linkId], references: [id], onDelete: Cascade)
   documentId String?
   document   Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
   dataroomId String?
   dataroom   Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
 
   taggedBy  String?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tagId, linkId])
   @@index([tagId, documentId])

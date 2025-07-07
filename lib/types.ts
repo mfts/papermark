@@ -1,13 +1,12 @@
 import {
   Agreement,
   CustomField,
-  Dataroom,
   DataroomDocument,
   DataroomFolder,
   Document,
   DocumentVersion,
-  Feedback,
   Link,
+  PermissionGroupAccessControls,
   User as PrismaUser,
   View,
   ViewerGroupAccessControls,
@@ -49,6 +48,11 @@ export interface DocumentWithVersion extends Document {
     dataroom: {
       id: string;
       name: string;
+    };
+    folder: {
+      id: string;
+      name: string;
+      path: string;
     };
   }[];
   hasPageLinks: boolean;
@@ -149,6 +153,9 @@ export interface LinkWithDataroom extends Link {
   group?: {
     accessControls: ViewerGroupAccessControls[];
   };
+  accessControls?:
+    | ViewerGroupAccessControls[]
+    | PermissionGroupAccessControls[];
   agreement: Agreement | null;
   customFields: CustomField[];
   enableIndexFile: boolean;
@@ -299,25 +306,27 @@ export interface Team {
   logo?: React.ElementType;
   plan?: string;
   createdAt?: Date;
+  enableExcelAdvancedMode?: boolean;
 }
 
 export interface TeamDetail {
   id: string;
   name: string;
-  documents: {
-    owner: {
-      id: string;
-      name: string;
-    };
-  }[];
   users: {
     role: "ADMIN" | "MANAGER" | "MEMBER";
+    status: "ACTIVE" | "BLOCKED_TRIAL_EXPIRED";
     teamId: string;
+    userId: string;
     user: {
       email: string;
       name: string;
     };
-    userId: string;
+  }[];
+  documents: {
+    owner: {
+      name: string;
+      id: string;
+    };
   }[];
 }
 

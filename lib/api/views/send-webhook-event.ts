@@ -1,4 +1,3 @@
-import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { sendWebhooks } from "@/lib/webhook/send-webhooks";
@@ -22,9 +21,18 @@ export async function sendLinkViewWebhook({
       throw new Error("Missing required parameters");
     }
 
-    const features = await getFeatureFlags({ teamId });
-    if (!features.webhooks) {
-      // webhooks are not enabled for this team
+    // check if team is on paid plan
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      select: { plan: true },
+    });
+
+    if (
+      team?.plan === "free" ||
+      team?.plan === "pro" ||
+      team?.plan.includes("trial")
+    ) {
+      // team is not on paid plan, so we don't need to send webhooks
       return;
     }
 
@@ -88,6 +96,7 @@ export async function sendLinkViewWebhook({
       documentId: link.documentId,
       dataroomId: link.dataroomId,
       groupId: link.groupId,
+      permissionGroupId: link.permissionGroupId,
       linkType: link.linkType,
       teamId: teamId,
       createdAt: link.createdAt.toISOString(),

@@ -114,64 +114,70 @@ export default function ViewPage() {
             <div className="space-y-4">
               <div className="text-sm text-muted-foreground">Home</div>
               <ul className="grid gap-4">
-                <FolderCard
-                  folder={{
-                    id: "1",
-                    name: "Marketing",
-                    parentId: null,
-                    dataroomId: "1",
-                    orderIndex: 0,
-                    path: "/",
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                  }}
-                  dataroomId="1"
-                  setFolderId={() => {}}
-                  isPreview={false}
-                  linkId="1"
-                  allowDownload={false}
-                />
+                <li key="1">
+                  <FolderCard
+                    folder={{
+                      id: "1",
+                      name: "Marketing",
+                      parentId: null,
+                      dataroomId: "1",
+                      orderIndex: 0,
+                      path: "/",
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                    }}
+                    dataroomId="1"
+                    setFolderId={() => {}}
+                    isPreview={false}
+                    linkId="1"
+                    allowDownload={false}
+                  />
+                </li>
 
-                <FolderCard
-                  folder={{
-                    id: "2",
-                    name: "Sales",
-                    parentId: null,
-                    dataroomId: "1",
-                    orderIndex: 1,
-                    path: "/",
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                  }}
-                  dataroomId="1"
-                  setFolderId={() => {}}
-                  isPreview={false}
-                  linkId="1"
-                  allowDownload={false}
-                />
+                <li key="2">
+                  <FolderCard
+                    folder={{
+                      id: "2",
+                      name: "Sales",
+                      parentId: null,
+                      dataroomId: "1",
+                      orderIndex: 1,
+                      path: "/",
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                    }}
+                    dataroomId="1"
+                    setFolderId={() => {}}
+                    isPreview={false}
+                    linkId="1"
+                    allowDownload={false}
+                  />
+                </li>
 
-                <DocumentCard
-                  document={{
-                    id: "1",
-                    name: "Q4 Report.pdf",
-                    dataroomDocumentId: "1",
-                    downloadOnly: false,
-                    canDownload: false,
-                    versions: [
-                      {
-                        id: "1",
-                        type: "pdf",
-                        versionNumber: 1,
-                        hasPages: true,
-                        isVertical: true,
-                        updatedAt: new Date(),
-                      },
-                    ],
-                  }}
-                  linkId="1"
-                  isPreview={false}
-                  allowDownload={false}
-                />
+                <li key="3">
+                  <DocumentCard
+                    document={{
+                      id: "1",
+                      name: "Q4 Report.pdf",
+                      dataroomDocumentId: "1",
+                      downloadOnly: false,
+                      canDownload: false,
+                      versions: [
+                        {
+                          id: "1",
+                          type: "pdf",
+                          versionNumber: 1,
+                          hasPages: true,
+                          isVertical: true,
+                          updatedAt: new Date(),
+                        },
+                      ],
+                    }}
+                    linkId="1"
+                    isPreview={false}
+                    allowDownload={false}
+                  />
+                </li>
               </ul>
             </div>
           </div>

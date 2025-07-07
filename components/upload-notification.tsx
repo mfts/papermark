@@ -72,35 +72,38 @@ export function UploadNotificationDrawer({
             {uploads.map((upload, index) => (
               <div
                 key={index}
-                className="px-4 py-3 hover:bg-gray-100 hover:dark:bg-gray-900"
+                className="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800/50"
               >
-                <a
-                  href={`/documents/${upload.documentId}`}
-                  className="flex items-center justify-between"
-                >
-                  <span className="w-72 truncate">{upload.fileName}</span>
-                  {upload.progress === 100 ? (
+                {upload.progress === 100 && upload.documentId ? (
+                  <a
+                    href={`/documents/${upload.documentId}`}
+                    className="flex items-center justify-between group"
+                  >
+                    <span className="w-72 truncate text-sm">{upload.fileName}</span>
                     <CheckIcon
                       className="h-6 w-6 rounded-full bg-emerald-500 p-1 text-background"
                       strokeWidth={3}
                     />
-                  ) : (
+                  </a>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <span className="w-72 truncate text-sm text-gray-500 dark:text-gray-400">{upload.fileName}</span>
                     <Gauge
                       value={upload.progress}
                       size={"xs"}
                       showValue={true}
                     />
-                  )}
-                </a>
+                  </div>
+                )}
               </div>
             ))}
             {rejectedFiles.map((rejected, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between px-4 py-3 text-destructive hover:bg-gray-100 hover:dark:bg-gray-900"
+                className="flex items-center justify-between px-4 py-2.5 text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-gray-800/50"
               >
-                <span>{rejected.fileName}</span>
-                <span>{rejected.message}</span>
+                <span className="w-72 truncate">{rejected.fileName}</span>
+                <span className="text-xs">{rejected.message}</span>
               </div>
             ))}
           </div>
