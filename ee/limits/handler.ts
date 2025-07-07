@@ -3,9 +3,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
-import prisma from "@/lib/prisma";
 
 import { getFeatureFlags } from "@/lib/featureFlags";
+import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(
@@ -23,6 +23,7 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
+      // TODO: move this to a cache layer
       const team = await prisma.team.findUnique({
         where: {
           id: teamId,
