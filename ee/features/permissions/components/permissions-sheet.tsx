@@ -108,7 +108,7 @@ const createColumns = (extra: ColumnExtra): ColumnDef<FileOrFolder>[] => [
           ) : (
             <File className="mr-2 h-5 w-5 shrink-0" />
           )}
-          <span className={cn("truncate", isRoot && "font-semibold")}>
+          <span className={cn("max-w-[400px] truncate", isRoot && "font-semibold")}>
             {row.original.name}
           </span>
         </div>
