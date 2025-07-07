@@ -1,19 +1,14 @@
-"use client";
-
 import { useRouter } from "next/router";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import React from "react";
 
 import {
   ColumnDef,
   ExpandedState,
-  SortingState,
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import {
@@ -22,6 +17,10 @@ import {
   ChevronsUpDownIcon,
 } from "lucide-react";
 
+import { durationFormat, timeAgo } from "@/lib/utils";
+import { fileIcon } from "@/lib/utils/get-file-icon";
+
+import { Pagination } from "@/components/documents/pagination";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -33,215 +32,230 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { durationFormat, timeAgo } from "@/lib/utils";
-import { fileIcon } from "@/lib/utils/get-file-icon";
-
-import { DataTablePagination } from "./data-table-pagination";
-
-type DocumentView = {
+type ViewerView = {
   documentId: string;
   document: {
-    name: string;
-    type: string;
+    name: string | null;
+    type: string | null;
   };
   lastViewed: Date;
   totalDuration: number;
   viewCount: number;
 };
 
-const columns: ColumnDef<DocumentView>[] = [
-  {
-    accessorKey: "document",
-    header: "Document Name",
-    cell: ({ row }) => {
-      const view = row.original;
-      return (
-        <div className="flex items-center overflow-visible sm:space-x-3">
-          {fileIcon({
-            fileType: view.document.type ?? "",
-            className: "h-7 w-7",
-            isLight: true,
-          })}
-          <div className="min-w-0 flex-1">
-            <div className="focus:outline-none">
-              <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
-                {view.document.name}
-              </p>
-            </div>
-          </div>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "lastViewed",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className={
-            column.getIsSorted()
-              ? "text-nowrap font-medium"
-              : "text-nowrap font-normal"
-          }
-        >
-          Last Viewed
-          {column.getIsSorted() === "asc" ? (
-            <ChevronUpIcon className="ml-2 h-4 w-4" />
-          ) : column.getIsSorted() === "desc" ? (
-            <ChevronDownIcon className="ml-2 h-4 w-4" />
-          ) : (
-            <ChevronsUpDownIcon className="ml-2 h-4 w-4" />
-          )}
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const view = row.original;
-      return (
-        <time dateTime={new Date(view.lastViewed).toISOString()}>
-          {timeAgo(view.lastViewed)}
-        </time>
-      );
-    },
-    sortingFn: (rowA, rowB) => {
-      return (
-        new Date(rowB.original.lastViewed).getTime() -
-        new Date(rowA.original.lastViewed).getTime()
-      );
-    },
-  },
-  {
-    accessorKey: "totalDuration",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className={
-            column.getIsSorted()
-              ? "text-nowrap font-medium"
-              : "text-nowrap font-normal"
-          }
-        >
-          Time Spent
-          {column.getIsSorted() === "asc" ? (
-            <ChevronUpIcon className="ml-2 h-4 w-4" />
-          ) : column.getIsSorted() === "desc" ? (
-            <ChevronDownIcon className="ml-2 h-4 w-4" />
-          ) : (
-            <ChevronsUpDownIcon className="ml-2 h-4 w-4" />
-          )}
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const view = row.original;
-      return (
-        <div className="text-sm text-muted-foreground">
-          {durationFormat(view.totalDuration)}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "viewCount",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className={
-            column.getIsSorted()
-              ? "text-nowrap font-medium"
-              : "text-nowrap font-normal"
-          }
-        >
-          Visits
-          {column.getIsSorted() === "asc" ? (
-            <ChevronUpIcon className="ml-2 h-4 w-4" />
-          ) : column.getIsSorted() === "desc" ? (
-            <ChevronDownIcon className="ml-2 h-4 w-4" />
-          ) : (
-            <ChevronsUpDownIcon className="ml-2 h-4 w-4" />
-          )}
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const view = row.original;
-      return (
-        <div className="text-sm text-muted-foreground">{view.viewCount}</div>
-      );
-    },
-  },
-  // INFO: disable for now until we have more details
-  // {
-  //   id: "expander",
-  //   header: () => null,
-  //   cell: ({ row }) => {
-  //     return (
-  //       <Button
-  //         variant="ghost"
-  //         onClick={() => {
-  //           row.toggleExpanded();
-  //         }}
-  //         className="p-0"
-  //       >
-  //         {row.getIsExpanded() ? (
-  //           <ChevronUpIcon className="h-4 w-4" />
-  //         ) : (
-  //           <ChevronDownIcon className="h-4 w-4" />
-  //         )}
-  //       </Button>
-  //     );
-  //   },
-  // },
-];
-
 export function ContactsDocumentsTable({
   views,
+  durations = {},
+  loadingDurations = false,
+  pagination,
+  sorting,
+  onPageChange,
+  onPageSizeChange,
+  onSortChange,
 }: {
-  views: DocumentView[] | null | undefined;
+  views: ViewerView[] | null | undefined;
+  durations?: Record<string, number>;
+  loadingDurations?: boolean;
+  pagination?: {
+    currentPage: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+  sorting?: {
+    sortBy: string;
+    sortOrder: string;
+  };
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
+  onSortChange?: (sortBy: string, sortOrder: string) => void;
 }) {
   const router = useRouter();
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "lastViewed", desc: false },
-  ]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
 
   const data = useMemo(() => views || [], [views]);
+
+  const handlePageChange = (page: number) => {
+    if (onPageChange) {
+      onPageChange(page);
+    }
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    if (onPageSizeChange) {
+      onPageSizeChange(size);
+    }
+  };
+
+  const handleSort = useCallback(
+    (columnId: string) => {
+      if (!onSortChange) return;
+
+      const currentSortBy = sorting?.sortBy;
+      const currentSortOrder = sorting?.sortOrder;
+
+      let newSortOrder = "desc";
+      if (currentSortBy === columnId) {
+        if (currentSortOrder === "desc") {
+          newSortOrder = "asc";
+        } else if (currentSortOrder === "asc") {
+          onSortChange("lastViewed", "desc");
+          return;
+        }
+      }
+
+      onSortChange(columnId, newSortOrder);
+    },
+    [onSortChange, sorting?.sortBy, sorting?.sortOrder],
+  );
+
+  const getSortIcon = useCallback(
+    (columnId: string) => {
+      const currentSortBy = sorting?.sortBy;
+      const currentSortOrder = sorting?.sortOrder;
+
+      if (currentSortBy !== columnId) {
+        return <ChevronsUpDownIcon className="ml-2 h-4 w-4" />;
+      }
+
+      return currentSortOrder === "asc" ? (
+        <ChevronUpIcon className="ml-2 h-4 w-4" />
+      ) : (
+        <ChevronDownIcon className="ml-2 h-4 w-4" />
+      );
+    },
+    [sorting?.sortBy, sorting?.sortOrder],
+  );
+
+  const getSortClass = useCallback(
+    (columnId: string) => {
+      const currentSortBy = sorting?.sortBy;
+      return currentSortBy === columnId
+        ? "text-nowrap font-medium"
+        : "text-nowrap font-normal";
+    },
+    [sorting?.sortBy],
+  );
+
+  const columns: ColumnDef<ViewerView>[] = useMemo(
+    () => [
+      {
+        accessorKey: "document",
+        header: "Document Name",
+        cell: ({ row }) => {
+          const view = row.original;
+          return (
+            <div className="flex items-center overflow-visible sm:space-x-3">
+              {fileIcon({
+                fileType: view.document.type ?? "",
+                className: "h-7 w-7",
+                isLight: true,
+              })}
+              <div className="min-w-0 flex-1">
+                <div className="focus:outline-none">
+                  <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
+                    {view.document.name}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "lastViewed",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => handleSort("lastViewed")}
+              className={getSortClass("lastViewed")}
+            >
+              Last Viewed
+              {getSortIcon("lastViewed")}
+            </Button>
+          );
+        },
+        cell: ({ row }) => {
+          const view = row.original;
+          return (
+            <time dateTime={new Date(view.lastViewed).toISOString()}>
+              {timeAgo(view.lastViewed)}
+            </time>
+          );
+        },
+        sortingFn: (rowA, rowB) => {
+          return (
+            new Date(rowB.original.lastViewed).getTime() -
+            new Date(rowA.original.lastViewed).getTime()
+          );
+        },
+      },
+      {
+        accessorKey: "totalDuration",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => handleSort("totalDuration")}
+              className={getSortClass("totalDuration")}
+            >
+              Time Spent
+              {getSortIcon("totalDuration")}
+            </Button>
+          );
+        },
+        cell: ({ row }) => {
+          const view = row.original;
+          const duration = durations[view.documentId] ?? view.totalDuration;
+          const isLoading = loadingDurations && !(view.documentId in durations);
+
+          if (isLoading) {
+            return <Skeleton className="h-4 w-16" />;
+          }
+
+          return (
+            <div className="text-sm text-muted-foreground">
+              {durationFormat(duration)}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "viewCount",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => handleSort("viewCount")}
+              className={getSortClass("viewCount")}
+            >
+              Visits
+              {getSortIcon("viewCount")}
+            </Button>
+          );
+        },
+        cell: ({ row }) => {
+          const view = row.original;
+          return <span>{view.viewCount}</span>;
+        },
+      },
+    ],
+    [durations, loadingDurations, handleSort, getSortIcon, getSortClass],
+  );
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
-    onSortingChange: (updater) => {
-      setSorting((old) => {
-        const newSorting =
-          typeof updater === "function" ? updater(old) : updater;
-        if (newSorting.length > 0) {
-          const [{ id, desc }] = newSorting;
-          const prevSorting = old.find((s) => s.id === id);
-          if (prevSorting) {
-            if (prevSorting.desc && !desc) {
-              // If it was descending and now ascending, reset
-              return [];
-            }
-          }
-        }
-        return newSorting;
-      });
-    },
     onExpandedChange: setExpanded,
     state: {
-      sorting,
       expanded,
     },
+    manualPagination: true,
   });
 
   if (!views) {
@@ -254,7 +268,6 @@ export function ContactsDocumentsTable({
               <TableHead>Last Viewed</TableHead>
               <TableHead>Time Spent</TableHead>
               <TableHead>Visits</TableHead>
-              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -274,9 +287,6 @@ export function ContactsDocumentsTable({
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-[50px]" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-4" />
                 </TableCell>
               </TableRow>
             ))}
@@ -313,36 +323,22 @@ export function ContactsDocumentsTable({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <React.Fragment key={row.id}>
-                  <TableRow
-                    key={row.id}
-                    onClick={() => handleRowClick(row.original.documentId)}
-                    className="cursor-pointer"
-                  >
-                    {row.getVisibleCells().map((cell) => (
+                <TableRow
+                  key={row.id}
+                  onClick={() => handleRowClick(row.original.documentId)}
+                  className="cursor-pointer"
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    return (
                       <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
                         )}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                  {row.getIsExpanded() && (
-                    <TableRow>
-                      <TableCell colSpan={columns.length}>
-                        {/* Placeholder for expanded content */}
-                        <div className="p-4">
-                          <h4 className="mb-2 font-semibold">
-                            Additional Details
-                          </h4>
-                          <p>Chart placeholder</p>
-                          <p>Rows of all visits placeholder</p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </React.Fragment>
+                    );
+                  })}
+                </TableRow>
               ))
             ) : (
               <TableRow>
@@ -350,14 +346,26 @@ export function ContactsDocumentsTable({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No visits yet.
+                  No documents viewed yet.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} name="document" />
+
+      {pagination && pagination.totalItems > 0 && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          pageSize={pagination.pageSize}
+          totalItems={pagination.totalItems}
+          totalPages={pagination.totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          totalShownItems={data.length}
+          itemName="documents"
+        />
+      )}
     </div>
   );
 }
