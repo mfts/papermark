@@ -1,3 +1,5 @@
+import { useSearchParams } from "next/navigation";
+
 import { useMemo } from "react";
 import React from "react";
 
@@ -14,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { sortByIndexThenName } from "@/lib/utils/sort-items-by-index-name";
 
 import { ViewFolderTree } from "@/components/datarooms/folders";
+import { SearchBoxPersisted } from "@/components/search-box";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -115,6 +118,9 @@ export default function DataroomViewer({
     folders: DataroomFolder[];
   };
 
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams?.get("search")?.toLowerCase() || "";
+
   const breadcrumbFolders = useMemo(
     () => getParentFolders(folderId, folders),
     [folderId, folders],
@@ -202,6 +208,26 @@ export default function DataroomViewer({
 
   // create a mixedItems array with folders and documents of the current folder and memoize it
   const mixedItems = useMemo(() => {
+    // If there's a search query, filter documents by name across all folders
+    if (searchQuery) {
+      return (documents || [])
+        .filter((doc) => doc.name.toLowerCase().includes(searchQuery))
+        .map((doc) => {
+          const accessControl = accessControls.find(
+            (access) => access.itemId === doc.dataroomDocumentId,
+          );
+
+          return {
+            ...doc,
+            itemType: "document",
+            canDownload:
+              (accessControl?.canDownload ?? true) &&
+              doc.versions[0].type !== "notion",
+          };
+        })
+        .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+    }
+
     const mixedItems: FolderOrDocument[] = [
       ...(folders || [])
         .filter((folder) => folder.parentId === folderId)
@@ -259,6 +285,7 @@ export default function DataroomViewer({
     accessControls,
     allowDownload,
     folderEffectiveUpdatedAt,
+    searchQuery,
   ]);
 
   const renderItem = (item: FolderOrDocument) => {
@@ -400,6 +427,7 @@ export default function DataroomViewer({
                   </Breadcrumb>
 
                   <div className="flex items-center gap-x-2">
+                    <SearchBoxPersisted inputClassName="h-9" />
                     {enableIndexFile && viewId && viewerId && (
                       <IndexFileDialog
                         linkId={linkId}
@@ -421,10 +449,19 @@ export default function DataroomViewer({
                   </div>
                 </div>
               </div>
+
               <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
-                {mixedItems.map((item) => (
-                  <li key={item.id}>{renderItem(item)}</li>
-                ))}
+                {mixedItems.length === 0 ? (
+                  <li className="py-6 text-center text-muted-foreground">
+                    {searchQuery
+                      ? "No documents match your search."
+                      : "No items available."}
+                  </li>
+                ) : (
+                  mixedItems.map((item) => (
+                    <li key={item.id}>{renderItem(item)}</li>
+                  ))
+                )}
               </ul>
             </div>
             <ScrollBar orientation="vertical" />
