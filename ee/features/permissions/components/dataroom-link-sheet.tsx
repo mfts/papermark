@@ -573,6 +573,7 @@ export function DataroomLinkSheet({
     showSuccess: boolean = false,
   ) => {
     // For backward compatibility, extract permissions from linkData
+    setIsSaving(true);
     const permissions = linkData.permissions || null;
     await createOrUpdateLinkWithPermissions(
       linkData,
@@ -589,7 +590,6 @@ export function DataroomLinkSheet({
     shouldManagePermissions: boolean = false,
   ) => {
     event.preventDefault();
-    setIsSaving(true);
 
     if (shouldManagePermissions && linkType === LinkType.DATAROOM_LINK) {
       // Store the link data and show permissions sheet
@@ -597,7 +597,6 @@ export function DataroomLinkSheet({
       setShowPermissionsSheet(true);
       return;
     }
-
     // Use the refactored function
     await createLinkWithPermissions(data, shouldPreview);
   };
