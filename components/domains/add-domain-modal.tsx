@@ -256,7 +256,7 @@ export function AddDomainModal({
   const badgeLabel = STATUS_LABEL[domainStatus];
 
   const isSubmitDisabled =
-    loading || !["available", "has site"].includes(domainStatus);
+    loading || !["available"].includes(domainStatus);
 
   // If the team is
   // - on a free plan
