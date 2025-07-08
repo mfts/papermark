@@ -1,6 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { Agreement, LinkPreset } from "@prisma/client";
 import { motion } from "motion/react";
+
+import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
+import { useAgreements } from "@/lib/swr/use-agreements";
 
 import {
   Select,
@@ -9,9 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import { useAgreements } from "@/lib/swr/use-agreements";
 
 import { DEFAULT_LINK_TYPE } from ".";
 import AgreementSheet from "./agreement-panel";
@@ -31,6 +32,7 @@ export default function AgreementSection({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => void;
 }) {
   const { agreements } = useAgreements();
@@ -38,6 +40,15 @@ export default function AgreementSection({
   const [enabled, setEnabled] = useState<boolean>(false);
   const [isAgreementSheetVisible, setIsAgreementSheetVisible] =
     useState<boolean>(false);
+
+  const filteredAgreements = useMemo(
+    () =>
+      agreements.filter(
+        (agreement: Agreement) =>
+          !agreement.deletedAt || agreement.id === agreementId,
+      ),
+    [agreements, agreementId],
+  );
 
   useEffect(() => {
     setEnabled(enableAgreement!);
@@ -68,7 +79,7 @@ export default function AgreementSection({
     <div className="pb-5">
       <LinkItem
         title="Require NDA to view"
-        link="https://www.papermark.io/help/article/require-nda-to-view"
+        link="https://www.papermark.com/help/article/require-nda-to-view"
         tooltipContent="Users must acknowledge an agreement to access the content."
         enabled={enabled}
         action={handleAgreement}
@@ -79,6 +90,7 @@ export default function AgreementSection({
             state: true,
             trigger: "link_sheet_agreement_section",
             plan: "Data Rooms",
+            highlightItem: ["nda"],
           })
         }
       />
@@ -98,8 +110,8 @@ export default function AgreementSection({
                   <SelectValue placeholder="Select an agreement" />
                 </SelectTrigger>
                 <SelectContent>
-                  {agreements &&
-                    agreements.map(({ id, name }) => (
+                  {filteredAgreements &&
+                    filteredAgreements.map(({ id, name }) => (
                       <SelectItem key={id} value={id}>
                         {name}
                       </SelectItem>

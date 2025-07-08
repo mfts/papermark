@@ -8,12 +8,18 @@ import { TeamContextType } from "@/context/team-context";
 import {
   ArchiveXIcon,
   BetweenHorizontalStartIcon,
+  FileSlidersIcon,
   FolderInputIcon,
   MoreVertical,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
+
+import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
+import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
+import { cn, nFormatter, timeAgo } from "@/lib/utils";
+import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import BarChart from "@/components/shared/icons/bar-chart";
 import { Button } from "@/components/ui/button";
@@ -26,13 +32,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
-import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { cn, nFormatter, timeAgo } from "@/lib/utils";
-import { fileIcon } from "@/lib/utils/get-file-icon";
-
 import { AddToDataroomModal } from "../documents/add-document-to-dataroom-modal";
 import FileProcessStatusBar from "../documents/file-process-status-bar";
+import { SetGroupPermissionsModal } from "./groups/set-group-permissions-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type DocumentsCardProps = {
@@ -51,6 +53,8 @@ export default function DataroomDocumentCard({
   isSelected,
   isHovered,
 }: DocumentsCardProps) {
+  const [groupPermissionOpen, setGroupPermissionOpen] =
+    useState<boolean>(false);
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
@@ -214,6 +218,12 @@ export default function DataroomDocumentCard({
                     <p className="truncate">{`${dataroomDocument.document._count.versions} Versions`}</p>
                   </>
                 ) : null}
+                {dataroomDocument.document.isExternalUpload ? (
+                  <>
+                    <p>•</p>
+                    <p className="truncate">Added by external collaborator</p>
+                  </>
+                ) : null}
               </div>
             </div>
           </div>
@@ -263,6 +273,15 @@ export default function DataroomDocumentCard({
                 >
                   <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
                   Copy to other dataroom
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setGroupPermissionOpen(true);
+                  }}
+                >
+                  <FileSlidersIcon className="mr-2 h-4 w-4" />
+                  Set Group Permissions
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
 
@@ -318,7 +337,22 @@ export default function DataroomDocumentCard({
           setOpen={setMoveFolderOpen}
           dataroomId={dataroomDocument.dataroomId}
           documentIds={[dataroomDocument.id]}
-          documentName={dataroomDocument.document.name}
+          itemName={dataroomDocument.document.name}
+          folderIds={[]}
+        />
+      ) : null}
+      {groupPermissionOpen ? (
+        <SetGroupPermissionsModal
+          open={groupPermissionOpen}
+          setOpen={setGroupPermissionOpen}
+          dataroomId={dataroomId}
+          uploadedFiles={[
+            {
+              documentId: dataroomDocument.id,
+              dataroomDocumentId: dataroomDocument.id,
+              fileName: dataroomDocument.document.name,
+            },
+          ]}
         />
       ) : null}
     </>

@@ -1,16 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { DocumentStorageType } from "@prisma/client";
-import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
-import { version } from "os";
 
 import { errorhandler } from "@/lib/errorHandler";
 import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
+import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 
 export default async function handle(
   req: NextApiRequest,
@@ -52,15 +49,29 @@ export default async function handle(
           isPrimary: true,
           type: "sheet",
         },
+        select: {
+          id: true,
+          file: true,
+          storageType: true,
+          contentType: true,
+        },
       });
 
       if (!documentVersion) {
         return res.status(404).end("Document not found");
       }
 
+      if (!supportsAdvancedExcelMode(documentVersion.contentType)) {
+        return res.status(400).json({
+          message:
+            "Advanced mode is only available for Excel files (.xls, .xlsx, .xlsm).",
+        });
+      }
+
       await copyFileToBucketServer({
         filePath: documentVersion.file,
         storageType: documentVersion.storageType,
+        teamId,
       });
 
       const documentPromise = prisma.document.update({

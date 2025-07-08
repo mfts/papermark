@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 
+import { LinkPreset } from "@prisma/client";
 import { motion } from "motion/react";
-
-import { Textarea } from "@/components/ui/textarea";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { sanitizeAllowDenyList } from "@/lib/utils";
+
+import { Textarea } from "@/components/ui/textarea";
 
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
@@ -16,6 +17,7 @@ export default function AllowListSection({
   setData,
   isAllowed,
   handleUpgradeStateChange,
+  presets,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
@@ -24,7 +26,9 @@ export default function AllowListSection({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => void;
+  presets: LinkPreset | null;
 }) {
   const { emailProtected, allowList } = data;
 
@@ -45,6 +49,13 @@ export default function AllowListSection({
       allowList: emailProtected && enabled ? newAllowList : [],
     }));
   }, [allowListInput, emailProtected, enabled, setData]);
+
+  useEffect(() => {
+    if (isAllowed && presets?.allowList && presets.allowList.length > 0) {
+      setEnabled(true);
+      setAllowListInput(presets.allowList.join("\n") || "");
+    }
+  }, [presets, isAllowed]);
 
   const handleEnableAllowList = () => {
     const updatedEnabled = !enabled;
@@ -76,7 +87,7 @@ export default function AllowListSection({
       <div className="flex flex-col space-y-4">
         <LinkItem
           title="Allow specified viewers"
-          link="https://www.papermark.io/help/article/allow-list"
+          link="https://www.papermark.com/help/article/allow-list"
           tooltipContent="Restrict access to a selected group of viewers. Enter allowed emails or domains."
           enabled={enabled}
           isAllowed={isAllowed}
@@ -87,6 +98,7 @@ export default function AllowListSection({
               state: true,
               trigger: "link_sheet_allowlist_section",
               plan: "Business",
+              highlightItem: ["allow-block"],
             })
           }
         />
@@ -99,7 +111,9 @@ export default function AllowListSection({
             <Textarea
               className="focus:ring-inset"
               rows={5}
-              placeholder="Enter allowed emails/domains, one per line, e.g.                                      marc@papermark.io                                                                                   @example.org"
+              placeholder={`Enter allowed emails/domains, one per line, e.g.
+marc@papermark.io
+@example.org`}
               value={allowListInput}
               onChange={handleAllowListChange}
             />

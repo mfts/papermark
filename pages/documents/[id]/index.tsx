@@ -5,6 +5,10 @@ import { useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import { useDocument, useDocumentLinks } from "@/lib/swr/use-document";
+import useLimits from "@/lib/swr/use-limits";
+
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import DocumentHeader from "@/components/documents/document-header";
 import { StatsComponent } from "@/components/documents/stats";
@@ -12,13 +16,9 @@ import VideoAnalytics from "@/components/documents/video-analytics";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import LinksTable from "@/components/links/links-table";
-import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import VisitorsTable from "@/components/visitors/visitors-table";
-
-import { useDocument, useDocumentLinks } from "@/lib/swr/use-document";
-import useLimits from "@/lib/swr/use-limits";
 
 export default function DocumentPage() {
   const {
@@ -29,14 +29,11 @@ export default function DocumentPage() {
   } = useDocument();
   const { links } = useDocumentLinks();
   const teamInfo = useTeam();
+  const { isTrial } = usePlan();
 
   const { canAddLinks } = useLimits();
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
-
-  if (error && error.status === 404) {
-    return <ErrorPage statusCode={404} />;
-  }
 
   if (error && error.status === 400) {
     return <ErrorPage statusCode={400} />;
@@ -45,7 +42,10 @@ export default function DocumentPage() {
   const AddLinkButton = () => {
     if (!canAddLinks) {
       return (
-        <UpgradePlanModal clickedPlan={PlanEnum.Pro} trigger={"limit_add_link"}>
+        <UpgradePlanModal
+          clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
+          trigger={"limit_add_link"}
+        >
           <Button className="flex h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm">
             Upgrade to Create Link
           </Button>

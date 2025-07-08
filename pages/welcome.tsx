@@ -6,6 +6,8 @@ import { useState } from "react";
 import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 
+import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import Dataroom from "@/components/welcome/dataroom";
 import DataroomTrial from "@/components/welcome/dataroom-trial";
@@ -15,8 +17,6 @@ import Next from "@/components/welcome/next";
 import NotionForm from "@/components/welcome/notion-form";
 import Select from "@/components/welcome/select";
 import Upload from "@/components/welcome/upload";
-
-import { cn } from "@/lib/utils";
 
 export default function Welcome() {
   const router = useRouter();

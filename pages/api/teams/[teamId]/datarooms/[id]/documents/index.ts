@@ -74,6 +74,7 @@ export default async function handle(
               versions: {
                 select: { id: true, hasPages: true },
               },
+              isExternalUpload: true,
               _count: {
                 select: {
                   views: { where: { dataroomId } },
@@ -153,20 +154,20 @@ export default async function handle(
         include: {
           dataroom: {
             select: {
+              enableChangeNotifications: true,
               links: {
                 select: { id: true },
                 orderBy: { createdAt: "desc" },
                 take: 1,
               },
+              _count: { select: { viewerGroups: true } },
             },
           },
         },
       });
 
-      // Check if the team has the change notification feature flag enabled
-      const featureFlags = await getFeatureFlags({ teamId });
-
-      if (featureFlags.roomChangeNotifications) {
+      // Check if the team has the dataroom change notification enabled
+      if (document.dataroom.enableChangeNotifications) {
         // Get all delayed and queued runs for this dataroom
         const allRuns = await runs.list({
           taskIdentifier: ["send-dataroom-change-notification"],

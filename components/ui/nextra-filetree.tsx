@@ -5,7 +5,7 @@
  * https://github.com/shuding/nextra/blob/main/packages/nextra/src/components/file-tree.tsx
  *
  */
-import {
+import React, {
   createContext,
   memo,
   useCallback,
@@ -40,6 +40,7 @@ interface FolderProps {
   onToggle?: (open: boolean) => void;
   className?: string;
   children: ReactNode;
+  disable?: boolean;
 }
 
 interface FileProps {
@@ -52,7 +53,7 @@ interface FileProps {
 function Tree({ children }: { children: ReactNode }): ReactElement {
   return (
     <div className={cn("nextra-filetree !mt-0 w-full select-none text-sm")}>
-      <div className="block rounded-lg">{children}</div>
+      <div className="block space-y-1 rounded-lg">{children}</div>
     </div>
   );
 }
@@ -79,6 +80,7 @@ const Folder = memo<FolderProps>(
     defaultOpen = false,
     onToggle,
     className,
+    disable,
   }) => {
     const indent = useIndent();
     const [isOpen, setIsOpen] = useState(defaultOpen || childActive);
@@ -106,9 +108,15 @@ const Folder = memo<FolderProps>(
     );
 
     const isFolderOpen = open === undefined ? isOpen : open;
+    const hasChildren = React.Children.count(children) > 0;
 
     return (
-      <li className="flex w-full list-none flex-col">
+      <li
+        className={cn(
+          "flex w-full list-none flex-col",
+          hasChildren && "space-y-1",
+        )}
+      >
         <div
           title={name}
           className={cn(
@@ -116,6 +124,7 @@ const Folder = memo<FolderProps>(
             "rounded-md text-foreground duration-100 hover:bg-gray-100 hover:dark:bg-muted",
             "px-3 py-1.5 leading-6",
             active && "bg-gray-100 font-semibold dark:bg-muted",
+            disable && "pointer-events-none cursor-auto opacity-50",
             className,
           )}
           onClick={handleFolderClick}

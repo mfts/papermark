@@ -9,7 +9,12 @@ import { getStripe } from "@/ee/stripe/client";
 import { Feature, PlanEnum, getPlanFeatures } from "@/ee/stripe/constants";
 import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
 import { PLANS } from "@/ee/stripe/utils";
-import { CheckIcon, Users2Icon } from "lucide-react";
+import { CheckIcon, Users2Icon, CircleHelpIcon } from "lucide-react";
+import { toast } from "sonner";
+
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+import { capitalize, cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -19,11 +24,26 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
+  BadgeTooltip,
 } from "@/components/ui/tooltip";
 
-import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
-import { capitalize, cn } from "@/lib/utils";
+// Start Data Room Trial Button Component
+const StartDataRoomTrialButton = ({ teamId }: { teamId?: string }) => {
+  const router = useRouter();
+
+  const handleStartTrial = () => {
+    router.push('/welcome?type=dataroom-trial');
+  };
+
+  return (
+    <span
+      onClick={handleStartTrial}
+      className="cursor-pointer underline underline-offset-4 hover:text-foreground"
+    >
+      Start free Data Room trial
+    </span>
+  );
+};
 
 // Feature rendering component
 const FeatureItem = ({ feature }: { feature: Feature }) => {
@@ -57,7 +77,14 @@ const FeatureItem = ({ feature }: { feature: Feature }) => {
   return (
     <div className={cn("text-sm", baseClasses)}>
       <CheckIcon className="mr-3 h-5 w-5 flex-shrink-0 text-[#fb7a00]" />
-      <span>{feature.text}</span>
+      <div className="flex items-center gap-2">
+        <span>{feature.text}</span>
+        {feature.tooltip && (
+          <BadgeTooltip content={feature.tooltip}>
+            <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+          </BadgeTooltip>
+        )}
+      </div>
     </div>
   );
 };
@@ -76,8 +103,8 @@ const PlanSelector = ({
         className={cn(
           "flex-1 rounded-md px-3 py-1 text-sm transition-colors",
           !value
-            ? "bg-gray-300 text-foreground"
-            : "text-gray-600 hover:text-gray-900",
+            ? "bg-gray-300 text-foreground dark:bg-gray-600 dark:text-white"
+            : "text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white",
         )}
         onClick={() => onChange(false)}
       >
@@ -87,8 +114,8 @@ const PlanSelector = ({
         className={cn(
           "flex-1 rounded-md px-3 py-1 text-sm transition-colors",
           value
-            ? "bg-gray-900 text-white"
-            : "text-gray-600 hover:text-gray-900",
+            ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+            : "text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white",
         )}
         onClick={() => onChange(true)}
       >
@@ -103,12 +130,14 @@ export function UpgradePlanModal({
   trigger,
   open,
   setOpen,
+  highlightItem,
   children,
 }: {
   clickedPlan: PlanEnum;
   trigger?: string;
   open?: boolean;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  highlightItem?: string[];
   children?: React.ReactNode;
 }) {
   const router = useRouter();
@@ -116,7 +145,7 @@ export function UpgradePlanModal({
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const { plan: teamPlan, isCustomer, isOldAccount } = usePlan();
+  const { plan: teamPlan, isCustomer, isOldAccount, isTrial } = usePlan();
   const analytics = useAnalytics();
   const [showDataRoomsPlus, setShowDataRoomsPlus] = useState(false);
 
@@ -223,7 +252,7 @@ export function UpgradePlanModal({
                       "absolute right-2 top-2 rounded px-2 py-1 text-xs text-white",
                       planOption === PlanEnum.Business && "bg-[#fb7a00]",
                       displayPlanName === PlanEnum.DataRoomsPlus &&
-                        "bg-gray-900",
+                        "bg-gray-900 dark:bg-gray-100 dark:text-gray-900",
                     )}
                   >
                     {planOption === PlanEnum.Business && "Most popular"}
@@ -261,7 +290,12 @@ export function UpgradePlanModal({
                 <ul className="mb-6 mt-2 space-y-2 text-sm leading-6 text-gray-600 dark:text-muted-foreground">
                   {planFeatures.features.map((feature, i) => (
                     <li key={i}>
-                      <FeatureItem feature={feature} />
+                      <FeatureItem
+                        feature={{
+                          ...feature,
+                          isHighlighted: highlightItem?.includes(feature.id),
+                        }}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -341,12 +375,21 @@ export function UpgradePlanModal({
         <div className="flex flex-col items-center text-center text-sm text-muted-foreground">
           All plans include unlimited viewers and page by page document
           analytics.
-          <Link
-            href="/settings/upgrade"
-            className="underline underline-offset-4 hover:text-foreground"
-          >
-            See all plans
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/settings/upgrade"
+              className="underline underline-offset-4 hover:text-foreground"
+            >
+              See all plans
+            </Link>
+            {trigger === "sidebar_datarooms" && 
+             ((teamPlan === "free" && !isTrial) || (teamPlan === "pro" && !isTrial)) && (
+              <>
+                <span>|</span>
+                <StartDataRoomTrialButton teamId={teamId} />
+              </>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -20,6 +20,10 @@ import {
   ServerIcon,
 } from "lucide-react";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
+import { nFormatter } from "@/lib/utils";
+
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavUser } from "@/components/sidebar/nav-user";
 import { TeamSwitcher } from "@/components/sidebar/team-switcher";
@@ -31,10 +35,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
-import { nFormatter } from "@/lib/utils";
 
 import ProAnnualBanner from "../billing/pro-annual-banner";
 import ProBanner from "../billing/pro-banner";
@@ -100,6 +100,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         disabled: !isBusiness && !isDatarooms && !isDataroomsPlus && !isTrial,
         trigger: "sidebar_datarooms",
         plan: PlanEnum.Business,
+        highlightItem: ["datarooms"],
       },
       {
         title: "Visitors",
@@ -109,6 +110,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         disabled: isFree && !isTrial,
         trigger: "sidebar_visitors",
         plan: PlanEnum.Pro,
+        highlightItem: ["visitors"],
       },
       {
         title: "Branding",
@@ -144,6 +146,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             current: router.pathname.includes("settings/domains"),
           },
           {
+            title: "Webhooks",
+            url: "/settings/webhooks",
+            current: router.pathname.includes("settings/webhooks"),
+          },
+          {
             title: "Billing",
             url: "/settings/billing",
             current: router.pathname.includes("settings/billing"),
@@ -164,10 +171,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     >
       <SidebarHeader className="gap-y-8">
         <p className="hidden w-full justify-center text-2xl font-bold tracking-tighter text-black group-data-[collapsible=icon]:inline-flex dark:text-white">
-          <Link href="/documents">P</Link>
+          <Link href="/dashboard">P</Link>
         </p>
         <p className="ml-2 flex items-center text-2xl font-bold tracking-tighter text-black group-data-[collapsible=icon]:hidden dark:text-white">
-          <Link href="/documents">Papermark</Link>
+          <Link href="/dashboard">Papermark</Link>
           {userPlan && !isFree && !isDataroomsPlus ? (
             <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
               {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}

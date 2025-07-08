@@ -7,7 +7,11 @@ export const FADE_IN_ANIMATION_SETTINGS = {
 
 export const STAGGER_CHILD_VARIANTS = {
   hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, type: "spring" } },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, type: "spring" as const },
+  },
 };
 
 export const PAPERMARK_HEADERS = {
@@ -87,6 +91,7 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "video/ogg", // .ogg
   "application/vnd.google-earth.kml+xml", // .kml
   "application/vnd.google-earth.kmz", // .kmz
+  "application/vnd.ms-outlook", // .msg
 ];
 
 export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
@@ -100,6 +105,7 @@ export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "zip",
   "video",
   "map",
+  "email",
 ] as const;
 
 export const VIDEO_EVENT_TYPES = [
@@ -412,3 +418,5 @@ export const EU_COUNTRY_CODES = [
   "SI",
   "SK",
 ];
+
+export const SYSTEM_FILES = [".DS_Store", "Thumbs.db", "node_modules"];

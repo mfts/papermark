@@ -1,10 +1,15 @@
 import { NextApiRequest } from "next";
+import { cookies } from "next/headers";
+import { NextRequest } from "next/server";
 
+import { ipAddress } from "@vercel/functions";
+import { parse } from "cookie";
 import crypto from "crypto";
 import { z } from "zod";
 
 import { redis } from "@/lib/redis";
 
+import { LOCALHOST_IP } from "../utils/geo";
 import { getIpAddress } from "../utils/ip";
 
 const COOKIE_EXPIRATION_TIME = 23 * 60 * 60 * 1000; // 23 hours
@@ -17,6 +22,7 @@ export const DataroomSessionSchema = z.object({
   viewerId: z.string().optional(),
   expiresAt: z.number(),
   ipAddress: z.string(),
+  verified: z.boolean(),
 });
 
 // Generate TypeScript type from Zod schema
@@ -27,6 +33,7 @@ async function createDataroomSession(
   linkId: string,
   viewId: string,
   ipAddress: string,
+  verified: boolean,
   viewerId?: string,
 ): Promise<{ token: string; expiresAt: number }> {
   const sessionToken = crypto.randomBytes(32).toString("hex");
@@ -39,6 +46,7 @@ async function createDataroomSession(
     viewerId,
     expiresAt,
     ipAddress,
+    verified,
   };
 
   // Validate session data before storing
@@ -58,13 +66,13 @@ async function createDataroomSession(
 }
 
 async function verifyDataroomSession(
-  req: NextApiRequest,
+  request: NextRequest,
   linkId: string,
   dataroomId: string,
 ): Promise<DataroomSession | null> {
   if (!dataroomId) return null;
 
-  const sessionToken = req.cookies[`pm_drs_${linkId}`];
+  const sessionToken = cookies().get(`pm_drs_${linkId}`)?.value;
   if (!sessionToken) return null;
 
   const session = await redis.get(`dataroom_session:${sessionToken}`);
@@ -79,9 +87,59 @@ async function verifyDataroomSession(
       return null;
     }
 
-    const ipAddress = getIpAddress(req.headers);
+    const ipAddressValue = ipAddress(request) ?? LOCALHOST_IP;
 
-    if (ipAddress !== sessionData.ipAddress) {
+    if (ipAddressValue !== sessionData.ipAddress) {
+      await redis.del(`dataroom_session:${sessionToken}`);
+      return null;
+    }
+
+    // Check if the session is for the correct link and dataroom
+    if (
+      sessionData.linkId !== linkId ||
+      sessionData.dataroomId !== dataroomId
+    ) {
+      await redis.del(`dataroom_session:${sessionToken}`);
+      return null;
+    }
+
+    return sessionData;
+  } catch (error) {
+    console.log("error", error);
+    // If validation fails, delete invalid session and return null
+    await redis.del(`dataroom_session:${sessionToken}`);
+    return null;
+  }
+}
+
+export async function verifyDataroomSessionInPagesRouter(
+  req: NextApiRequest,
+  linkId: string,
+  dataroomId: string,
+): Promise<DataroomSession | null> {
+  if (!dataroomId) return null;
+
+  // Get cookies from request headers
+  const cookies = parse(req.headers.cookie || "");
+  const sessionToken = cookies[`pm_drs_${linkId}`];
+  if (!sessionToken) return null;
+
+  const session = await redis.get(`dataroom_session:${sessionToken}`);
+  if (!session) return null;
+
+  try {
+    const sessionData = DataroomSessionSchema.parse(session);
+
+    // Check if session is expired
+    if (sessionData.expiresAt < Date.now()) {
+      await redis.del(`dataroom_session:${sessionToken}`);
+      return null;
+    }
+
+    // Get IP address from request
+    const ipAddressValue = getIpAddress(req.headers) ?? LOCALHOST_IP;
+
+    if (ipAddressValue !== sessionData.ipAddress) {
       await redis.del(`dataroom_session:${sessionToken}`);
       return null;
     }

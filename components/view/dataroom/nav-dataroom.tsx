@@ -1,65 +1,58 @@
-import Image from "next/image";
 import Link from "next/link";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { DataroomBrand } from "@prisma/client";
-import { ArrowUpRight, Download } from "lucide-react";
+import { BadgeInfoIcon, Download, MessagesSquareIcon } from "lucide-react";
 import { toast } from "sonner";
 
+import { formatDate } from "@/lib/utils";
+
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  ButtonTooltip,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { timeAgo } from "@/lib/utils";
-
-import PapermarkSparkle from "../../shared/icons/papermark-sparkle";
 import { Button } from "../../ui/button";
-import { TDocumentData } from "./dataroom-view";
+import { ConversationSidebar } from "../conversations/sidebar";
+
+const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
 
 export default function DataroomNav({
-  pageNumber,
-  numPages,
   allowDownload,
-  assistantEnabled,
   brand,
   viewId,
   linkId,
-  type,
-  embeddedLinks,
-  isDataroom,
-  setDocumentData,
   dataroom,
   isPreview,
+  dataroomId,
+  viewerId,
+  conversationsEnabled,
+  isTeamMember,
 }: {
-  pageNumber?: number;
-  numPages?: number;
   allowDownload?: boolean;
-  assistantEnabled?: boolean;
   brand?: Partial<DataroomBrand>;
-  embeddedLinks?: string[];
   viewId?: string;
   linkId?: string;
-  type?: "pdf" | "notion";
-  isDataroom?: boolean;
-  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   dataroom?: any;
   isPreview?: boolean;
+  dataroomId?: string;
+  viewerId?: string;
+  conversationsEnabled?: boolean;
+  isTeamMember?: boolean;
 }) {
   const [loading, setLoading] = useState<boolean>(false);
+  const [showConversations, setShowConversations] = useState<boolean>(false);
 
   const downloadDataroom = async () => {
     if (isPreview) {
       toast.error("You cannot download datarooms in preview mode.");
       return;
     }
-    if (!allowDownload || type === "notion") return;
+    if (!allowDownload) return;
     setLoading(true);
     try {
       toast.promise(
@@ -74,7 +67,17 @@ export default function DataroomNav({
           loading: "Downloading dataroom...",
           success: async (response) => {
             const { downloadUrl } = await response.json();
-            window.open(downloadUrl, "_blank");
+
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.rel = "noopener noreferrer";
+            document.body.appendChild(link);
+            link.click();
+
+            setTimeout(() => {
+              document.body.removeChild(link);
+            }, 100);
+
             return "Dataroom downloaded successfully.";
           },
           error: (error) => {
@@ -92,6 +95,31 @@ export default function DataroomNav({
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Toggle conversations with 'c' key
+      if (
+        e.key === "c" &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        conversationsEnabled &&
+        !showConversations // if conversations are already open, don't toggle them
+      ) {
+        e.preventDefault();
+        setShowConversations((prev) => !prev);
+      }
+
+      if (e.key === "Escape" && showConversations) {
+        e.preventDefault();
+        setShowConversations(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [conversationsEnabled, showConversations]);
+
   return (
     <nav
       className="bg-black"
@@ -108,13 +136,10 @@ export default function DataroomNav({
                   className="h-16 w-36 object-contain"
                   src={brand.logo}
                   alt="Logo"
-                  // fill
-                  // quality={100}
-                  // priority
                 />
               ) : (
                 <Link
-                  href="https://www.papermark.io"
+                  href={`https://www.papermark.com/home?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
                   target="_blank"
                   className="text-2xl font-bold tracking-tighter text-white"
                 >
@@ -122,107 +147,94 @@ export default function DataroomNav({
                 </Link>
               )}
             </div>
-            {isDataroom && setDocumentData ? (
-              <div>
-                <Button
-                  onClick={() => setDocumentData(null)}
-                  className="text-sm font-medium text-white"
-                  variant="link"
-                >
-                  Dataroom Home
-                </Button>
-              </div>
-            ) : null}
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center space-x-4 pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-            {embeddedLinks && embeddedLinks.length > 0 ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <Button className="bg-gray-900 text-sm font-medium text-white hover:bg-gray-900/80">
-                    Links on Page
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="space-y-2" align="end">
-                  <DropdownMenuLabel>Links on current page</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {embeddedLinks.map((link, index) => (
-                    <Link
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      key={index}
+            {isTeamMember ? (
+              <TooltipProvider delayDuration={100}>
+                <Tooltip defaultOpen>
+                  <TooltipTrigger asChild>
+                    <Button
+                      className="size-8 bg-gray-900 text-white hover:bg-gray-900/80 sm:size-10"
+                      size="icon"
                     >
-                      <DropdownMenuItem className="group h-10">
-                        <span className="w-[200px] truncate group-focus:overflow-x-auto group-focus:text-clip">
-                          {link}
-                        </span>
-                        <DropdownMenuShortcut className="pl-2 opacity-0 group-hover:opacity-60 group-focus:opacity-60">
-                          <ArrowUpRight />
-                        </DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                    </Link>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      <BadgeInfoIcon className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs text-wrap text-center">
+                      Skipped verification because you are a team member; no
+                      analytics will be collected
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             ) : null}
-            {assistantEnabled ? (
-              <Link href={`/view/${linkId}/chat`}>
-                <Button
-                  className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
-                  variant={"special"}
-                  size={"icon"}
-                  style={{
-                    backgroundSize: "200% auto",
-                  }}
-                  title="Open AI Document Assistant"
-                >
-                  <PapermarkSparkle className="h-5 w-5" />
-                </Button>
-              </Link>
-            ) : null}
+            {conversationsEnabled && (
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => setShowConversations(!showConversations)}
+                      className="size-8 bg-gray-900 text-white hover:bg-gray-900/80 sm:size-10"
+                      size="icon"
+                    >
+                      <MessagesSquareIcon className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Toggle conversations</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             {allowDownload ? (
-              <Button
-                onClick={downloadDataroom}
-                className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
-                size="icon"
-                title="Download Dataroom"
-                loading={loading}
-              >
-                <Download className="h-5 w-5" />
-              </Button>
-            ) : null}
-            {pageNumber && numPages ? (
-              <div className="flex h-10 items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white">
-                <span>{pageNumber}</span>
-                <span className="text-gray-400"> / {numPages}</span>
-              </div>
+              <ButtonTooltip content="Download Dataroom">
+                <Button
+                  onClick={downloadDataroom}
+                  className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
+                  size="icon"
+                  loading={loading}
+                >
+                  <Download className="h-5 w-5" />
+                </Button>
+              </ButtonTooltip>
             ) : null}
           </div>
         </div>
       </div>
-      {brand && brand.banner ? (
-        <div className="relative h-[30vh]">
-          <img
-            className="h-[30vh] w-full object-cover"
-            src={brand.banner}
-            alt="Banner"
-            width={1920}
-            height={320}
-            // quality={100}
-            // priority
-          />
-          <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
-            <div className="px-5 py-2 sm:px-10">
-              <div className="text-3xl">{dataroom.name}</div>
-              <time
-                className="text-sm"
-                dateTime={new Date(dataroom.lastUpdatedAt).toISOString()}
-              >
-                {`Last updated ${timeAgo(dataroom.lastUpdatedAt)}`}
-              </time>
-            </div>
+
+      {/* Banner section */}
+      <div className="relative h-[20vh] sm:h-auto sm:max-h-80">
+        <img
+          className="h-full w-full object-cover sm:max-h-80 sm:object-contain xl:object-cover"
+          src={brand?.banner || DEFAULT_BANNER_IMAGE}
+          alt="Banner"
+          width={1920}
+          height={320}
+        />
+        <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
+          <div className="px-5 py-2 sm:px-10">
+            <div className="text-3xl">{dataroom.name}</div>
+            <time
+              className="text-sm"
+              dateTime={new Date(dataroom.lastUpdatedAt).toISOString()}
+            >
+              {`Last updated ${formatDate(dataroom.lastUpdatedAt)}`}
+            </time>
           </div>
         </div>
+      </div>
+
+      {conversationsEnabled && showConversations ? (
+        <ConversationSidebar
+          dataroomId={dataroomId}
+          viewId={viewId || ""}
+          viewerId={viewerId}
+          linkId={linkId!}
+          isEnabled={true}
+          isOpen={showConversations}
+          onOpenChange={setShowConversations}
+        />
       ) : null}
     </nav>
   );

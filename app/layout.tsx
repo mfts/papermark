@@ -15,7 +15,7 @@ const data = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.papermark.io"),
+  metadataBase: new URL("https://www.papermark.com"),
   title: data.title,
   description: data.description,
   openGraph: {

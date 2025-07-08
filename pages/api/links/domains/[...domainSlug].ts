@@ -33,6 +33,7 @@ export default async function handle(
     }
 
     try {
+      console.time("get-link");
       const link = await prisma.link.findUnique({
         where: {
           domainSlug_slug: {
@@ -50,11 +51,13 @@ export default async function handle(
           enableCustomMetatag: true,
           enableFeedback: true,
           enableScreenshotProtection: true,
+          enableIndexFile: true,
           metaTitle: true,
           metaDescription: true,
           metaImage: true,
           metaFavicon: true,
           enableQuestion: true,
+          dataroomId: true,
           linkType: true,
           feedback: {
             select: {
@@ -68,6 +71,7 @@ export default async function handle(
           enableWatermark: true,
           watermarkConfig: true,
           groupId: true,
+          permissionGroupId: true,
           audienceType: true,
           teamId: true,
           team: {
@@ -92,6 +96,7 @@ export default async function handle(
           },
         },
       });
+      console.timeEnd("get-link");
 
       // if link not found, return 404
       if (!link) {
@@ -133,18 +138,22 @@ export default async function handle(
       let linkData: any;
 
       if (linkType === "DOCUMENT_LINK") {
+        console.time("get-document-link-data");
         const data = await fetchDocumentLinkData({
           linkId: link.id,
           teamId: link.teamId!,
         });
         linkData = data.linkData;
         brand = data.brand;
+        console.timeEnd("get-document-link-data");
       } else if (linkType === "DATAROOM_LINK") {
+        console.time("get-dataroom-link-data");
         if (documentId) {
           const data = await fetchDataroomDocumentLinkData({
             linkId: link.id,
             teamId: link.teamId!,
             dataroomDocumentId: documentId,
+            permissionGroupId: link.permissionGroupId || undefined,
             ...(link.audienceType === LinkAudienceType.GROUP &&
               link.groupId && {
                 groupId: link.groupId,
@@ -155,7 +164,9 @@ export default async function handle(
         } else {
           const data = await fetchDataroomLinkData({
             linkId: link.id,
+            dataroomId: link.dataroomId,
             teamId: link.teamId!,
+            permissionGroupId: link.permissionGroupId || undefined,
             ...(link.audienceType === LinkAudienceType.GROUP &&
               link.groupId && {
                 groupId: link.groupId,
@@ -163,7 +174,10 @@ export default async function handle(
           });
           linkData = data.linkData;
           brand = data.brand;
+          // Include access controls in the link data for the frontend
+          linkData.accessControls = data.accessControls;
         }
+        console.timeEnd("get-dataroom-link-data");
       }
 
       // remove document and domain from link
@@ -177,6 +191,7 @@ export default async function handle(
           customFields: [], // reset custom fields for free plan
           enableAgreement: false,
           enableWatermark: false,
+          permissionGroupId: null,
         }),
       };
 

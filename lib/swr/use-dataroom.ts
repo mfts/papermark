@@ -1,6 +1,7 @@
 import { useRouter } from "next/router";
 
 import { useMemo } from "react";
+import { toast } from "sonner";
 
 import { useTeam } from "@/context/team-context";
 import { Dataroom, DataroomDocument, DataroomFolder } from "@prisma/client";
@@ -8,6 +9,7 @@ import useSWR from "swr";
 
 import { LinkWithViews } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
+import { sortByIndexThenName } from "@/lib/utils/sort-items-by-index-name";
 
 export type DataroomFolderWithCount = DataroomFolder & {
   _count: {
@@ -29,7 +31,17 @@ export function useDataroom() {
   const { data: dataroom, error } = useSWR<Dataroom>(
     teamId && id && `/api/teams/${teamId}/datarooms/${id}`,
     fetcher,
-    { dedupingInterval: 10000 },
+    {
+      dedupingInterval: 10000,
+      onError: (err) => {
+        if (err.status === 404) {
+          toast.error("Dataroom not found", {
+            description: "The dataroom you're looking for doesn't exist or has been moved.",
+          });
+          router.replace("/datarooms");
+        }
+      }
+    },
   );
 
   return {
@@ -117,8 +129,7 @@ export function useDataroomItems({
       })),
       ...(documentData || []).map((doc) => ({ ...doc, itemType: "document" })),
     ];
-
-    return allItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+    return sortByIndexThenName(allItems);
   }, [folderData, documentData]);
 
   return {
@@ -196,6 +207,7 @@ export function useDataroomFolders({
 export type DataroomFolderWithDocuments = DataroomFolder & {
   childFolders: DataroomFolderWithDocuments[];
   documents: {
+    orderIndex: number | null;
     id: string;
     folderId: string;
     document: {
@@ -245,7 +257,7 @@ export function useDataroomFolderWithParents({
 
   const { data: folders, error } = useSWR<{ name: string; path: string }[]>(
     teamId &&
-      name &&
+    name && !!name.length &&
       `/api/teams/${teamId}/datarooms/${dataroomId}/folders/parents/${name.join("/")}`,
     fetcher,
     {
@@ -267,6 +279,7 @@ export type DataroomFolderDocument = DataroomDocument & {
     name: string;
     type: string;
     versions?: { id: string; hasPages: boolean }[];
+    isExternalUpload?: boolean;
     _count: {
       views: number;
       versions: number;
@@ -361,6 +374,12 @@ type DataroomDocumentViewHistory = {
   };
 };
 
+type DataroomDocumentUploadViewHistory = {
+  uploadedAt: string;
+  documentId: string;
+  originalFilename: string;
+};
+
 export function useDataroomVisitHistory({
   viewId,
   dataroomId,
@@ -371,7 +390,10 @@ export function useDataroomVisitHistory({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: documentViews, error } = useSWR<DataroomDocumentViewHistory[]>(
+  const { data, error } = useSWR<{
+    documentViews: DataroomDocumentViewHistory[];
+    uploadedDocumentViews: DataroomDocumentUploadViewHistory[];
+  }>(
     teamId &&
       dataroomId &&
       `/api/teams/${teamId}/datarooms/${dataroomId}/views/${viewId}/history`,
@@ -382,8 +404,9 @@ export function useDataroomVisitHistory({
   );
 
   return {
-    documentViews,
-    loading: !error && !documentViews,
+    documentViews: data?.documentViews,
+    uploadedDocumentViews: data?.uploadedDocumentViews,
+    loading: !error && !data,
     error,
   };
 }

@@ -1,22 +1,53 @@
+import { useRouter } from "next/router";
+
 import { useTeam } from "@/context/team-context";
 import { FolderPlusIcon, PlusIcon } from "lucide-react";
+
+import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
+import { handleInvitationStatus } from "@/lib/utils";
 
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { DocumentsList } from "@/components/documents/documents-list";
 import SortButton from "@/components/documents/filters/sort-button";
+import { Pagination } from "@/components/documents/pagination";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
 import { SearchBoxPersisted } from "@/components/search-box";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
-
 export default function Documents() {
+  const router = useRouter();
   const teamInfo = useTeam();
+  const queryParams = router.query;
+  const currentPage = Number(queryParams["page"]) || 1;
+  const pageSize = Number(queryParams["limit"]) || 10;
+  const invitation = queryParams["invitation"] as "accepted" | "teamMember";
 
-  const { folders } = useRootFolders();
-  const { documents, isValidating, isFiltered } = useDocuments();
+  // Handle invitation status
+  if (invitation) {
+    handleInvitationStatus(invitation, queryParams, router);
+  }
+
+  const { folders, loading: foldersLoading } = useRootFolders();
+  const { documents, pagination, isValidating, isFiltered, loading } =
+    useDocuments();
+
+  const updatePagination = (newPage?: number, newPageSize?: number) => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (newPage) params.set("page", newPage.toString());
+    if (newPageSize) {
+      params.set("limit", newPageSize.toString());
+      params.set("page", "1");
+    }
+
+    router.push(`/documents?${params.toString()}`, undefined, {
+      shallow: true,
+    });
+  };
+
+  const displayFolders = isFiltered ? [] : folders;
 
   return (
     <AppLayout>
@@ -68,9 +99,24 @@ export default function Documents() {
 
         <DocumentsList
           documents={documents}
-          folders={isFiltered ? [] : folders}
+          folders={displayFolders}
           teamInfo={teamInfo}
+          loading={loading}
+          foldersLoading={foldersLoading}
         />
+
+        {isFiltered && pagination && (
+          <Pagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={pagination.total}
+            totalShownItems={documents.length}
+            totalPages={pagination.pages}
+            onPageChange={updatePagination}
+            onPageSizeChange={(size) => updatePagination(undefined, size)}
+            itemName="documents"
+          />
+        )}
       </div>
     </AppLayout>
   );

@@ -5,6 +5,10 @@ import { PlanEnum } from "@/ee/stripe/constants";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,10 +21,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
@@ -123,6 +123,7 @@ export function AddDomainModal({
               : PlanEnum.Business
           }
           trigger={"add_domain_overview"}
+          highlightItem={["custom-domain"]}
         >
           <Button>Upgrade to Add Domain</Button>
         </UpgradePlanModal>
@@ -138,6 +139,7 @@ export function AddDomainModal({
           open={open}
           setOpen={setOpen}
           trigger={"add_domain_link_sheet"}
+          highlightItem={["custom-domain"]}
         />
       );
     }

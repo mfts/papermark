@@ -17,6 +17,7 @@ interface DataroomDocumentWithVersion {
   id: string;
   folderId: string | null;
   orderIndex: number | null;
+  updatedAt: Date;
   createdAt: Date;
   document: {
     id: string;
@@ -99,6 +100,7 @@ export async function generateDataroomIndex(
         size: formatBytes(latestVersion?.fileSize ?? 0),
         onlineUrl: `${baseUrl}/d/${doc.id}`,
         mimeType: latestVersion?.type,
+        version: latestVersion?.versionNumber,
       };
       entries.push(entry);
       indexData.totalFiles++;
@@ -147,12 +149,16 @@ export async function generateDataroomIndex(
       name: doc.document.name,
       type: "File",
       path: "/",
-      lastUpdated: latestVersion?.updatedAt || new Date(),
+      lastUpdated:
+        doc.updatedAt > latestVersion?.updatedAt
+          ? doc.updatedAt
+          : latestVersion?.updatedAt || new Date(),
       createdAt: doc.createdAt,
       pages: latestVersion?.numPages ?? 0,
       size: formatBytes(latestVersion?.fileSize ?? 0),
       onlineUrl: `${baseUrl}/d/${doc.id}`,
       mimeType: latestVersion?.type || "unknown",
+      version: latestVersion?.versionNumber,
     });
     indexData.totalFiles++;
     indexData.totalSize += latestVersion?.fileSize ?? 0;
@@ -179,6 +185,7 @@ export async function generateDataroomIndex(
         { header: "Name", key: "name", width: 30 },
         { header: "Type", key: "type", width: 10 },
         { header: "Path", key: "path", width: 40 },
+        { header: "Version", key: "version", width: 8 },
         { header: "Pages", key: "pages", width: 8 },
         { header: "Size", key: "size", width: 8 },
         { header: "Online Link", key: "onlineUrl", width: 50 },
@@ -246,6 +253,7 @@ export async function generateDataroomIndex(
           entry.name,
           entry.type,
           entry.path,
+          entry.version,
           entry.pages,
           entry.size,
           entry.onlineUrl,
@@ -265,7 +273,7 @@ export async function generateDataroomIndex(
 
         // Add hyperlink to Online URL
         if (entry.onlineUrl) {
-          const cell = row.getCell(6); // Online URL column
+          const cell = row.getCell(7); // online link column
           cell.value = {
             text: entry.onlineUrl,
             hyperlink: entry.onlineUrl,
@@ -320,6 +328,7 @@ export async function generateDataroomIndex(
           "Name",
           "Type",
           "Path",
+          "Version",
           "Pages",
           "Size",
           "Online Link",
@@ -331,6 +340,7 @@ export async function generateDataroomIndex(
           entry.name,
           entry.type,
           entry.path,
+          entry.version,
           entry.pages,
           entry.size,
           entry.onlineUrl,

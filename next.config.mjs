@@ -17,8 +17,14 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/documents",
+        destination: "/dashboard",
         permanent: false,
+        has: [
+          {
+            type: "host",
+            value: process.env.NEXT_PUBLIC_APP_BASE_HOST,
+          },
+        ],
       },
       {
         source: "/view/cm2xiaxzo000d147xszm9q72o",
@@ -169,12 +175,17 @@ function prepareRemotePatterns() {
     // papermark img
     { protocol: "https", hostname: "www.papermark.io" },
     { protocol: "https", hostname: "app.papermark.io" },
+    { protocol: "https", hostname: "www.papermark.com" },
+    { protocol: "https", hostname: "app.papermark.com" },
     // useragent img
     { protocol: "https", hostname: "faisalman.github.io" },
     // special document pages
     { protocol: "https", hostname: "d36r2enbzam0iu.cloudfront.net" },
+    // us special storage
+    { protocol: "https", hostname: "d35vw2hoyyl88.cloudfront.net" },
   ];
 
+  // Default region patterns
   if (process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST) {
     patterns.push({
       protocol: "https",
@@ -186,6 +197,21 @@ function prepareRemotePatterns() {
     patterns.push({
       protocol: "https",
       hostname: process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST,
+    });
+  }
+
+  // US region patterns
+  if (process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST_US) {
+    patterns.push({
+      protocol: "https",
+      hostname: process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST_US,
+    });
+  }
+
+  if (process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST_US) {
+    patterns.push({
+      protocol: "https",
+      hostname: process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST_US,
     });
   }
 

@@ -32,7 +32,7 @@ export default function Branding() {
   const teamInfo = useTeam();
   const router = useRouter();
   const { brand } = useBrand();
-  const { plan } = usePlan();
+  const { plan, isTrial } = usePlan();
 
   const [brandColor, setBrandColor] = useState<string>("#000000");
   const [accentColor, setAccentColor] = useState<string>("#030712");
@@ -185,7 +185,7 @@ export default function Branding() {
                   linkText="Click here"
                   content="How to customize document branding?"
                   key="branding"
-                  link="https://www.papermark.io/help/article/document-branding"
+                  link="https://www.papermark.com/help/article/document-branding"
                 >
                   <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
                 </BadgeTooltip>
@@ -388,10 +388,11 @@ export default function Branding() {
                     </div>
                   </CardContent>
                   <CardFooter className="border-t p-6">
-                    {plan === "free" ? (
+                    {plan === "free" && !isTrial ? (
                       <UpgradePlanModal
                         clickedPlan={PlanEnum.Pro}
                         trigger={"branding_page"}
+                        highlightItem={["custom-branding"]}
                       >
                         <Button>Upgrade to Save Branding</Button>
                       </UpgradePlanModal>
@@ -457,7 +458,7 @@ export default function Branding() {
                                 </svg>
                               </div>
                               <span className="whitespace-normal text-xs text-muted-foreground">
-                                papermark.io/view/...
+                                papermark.com/view/...
                               </span>
                             </div>
                           </div>
@@ -531,7 +532,7 @@ export default function Branding() {
                                 </svg>
                               </div>
                               <span className="whitespace-normal text-xs text-muted-foreground">
-                                papermark.io/view/...
+                                papermark.com/view/...
                               </span>
                             </div>
                           </div>

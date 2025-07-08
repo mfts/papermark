@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { useEffect, useRef, useState } from "react";
@@ -6,14 +7,16 @@ import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { Document, DocumentVersion } from "@prisma/client";
 import {
-  AlertCircleIcon,
+  ArrowRightIcon,
   BetweenHorizontalStartIcon,
+  ChevronRight,
   CloudDownloadIcon,
   DownloadIcon,
   FileDownIcon,
+  FolderIcon,
   MoonIcon,
+  ServerIcon,
   SheetIcon,
-  Sparkles,
   SunIcon,
   TrashIcon,
   ViewIcon,
@@ -23,10 +26,26 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { getFile } from "@/lib/files/get-file";
+import { usePlan } from "@/lib/swr/use-billing";
+import useDatarooms from "@/lib/swr/use-datarooms";
+import {
+  DocumentWithLinksAndLinkCountAndViewCount,
+  DocumentWithVersion,
+} from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
+import { fileIcon } from "@/lib/utils/get-file-icon";
+
 import FileUp from "@/components/shared/icons/file-up";
 import MoreVertical from "@/components/shared/icons/more-vertical";
 import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,13 +55,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { getFile } from "@/lib/files/get-file";
-import { usePlan } from "@/lib/swr/use-billing";
-import useDatarooms from "@/lib/swr/use-datarooms";
-import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { cn } from "@/lib/utils";
-import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import PlanBadge from "../billing/plan-badge";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
@@ -60,7 +72,7 @@ export default function DocumentHeader({
   teamId,
   actions,
 }: {
-  prismaDocument: Document & { hasPageLinks?: boolean };
+  prismaDocument: DocumentWithVersion;
   primaryVersion: DocumentVersion;
   teamId: string;
   actions?: React.ReactNode[];
@@ -93,6 +105,9 @@ export default function DocumentHeader({
       actionRows.push(actions.slice(i, i + 3));
     }
   }
+
+  // Check if document is in any datarooms
+  const dataroomCount = prismaDocument.datarooms?.length || 0;
 
   const handleUpgradeClick = (plan: PlanEnum, trigger: string) => {
     setSelectedPlan(plan);
@@ -273,26 +288,30 @@ export default function DocumentHeader({
   };
 
   const enableAdvancedExcel = async (document: Document) => {
-    try {
-      const response = await fetch(
-        `/api/teams/${teamId}/documents/${document.id}/advanced-mode`,
-        { method: "POST", headers: { "Content-Type": "application/json" } },
-      );
-      if (!response.ok) {
-        const { message } = await response.json();
-        toast.error(message);
-      } else {
+    toast.promise(
+      fetch(`/api/teams/${teamId}/documents/${document.id}/advanced-mode`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }).then(async (response) => {
+        if (!response.ok) {
+          const { message } = await response.json();
+          throw new Error(message);
+        }
         const { message } = await response.json();
         plausible("advancedExcelEnabled", {
           props: { documentId: document.id },
         }); // track the event
+        mutate(`/api/teams/${teamId}/documents/${document.id}`);
         handleCloseAlert("enable-advanced-excel-alert");
-        toast.success(message);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("An error occurred. Please try again.");
-    }
+        return message;
+      }),
+      {
+        loading: "Enabling advanced Excel mode...",
+        success: (message) => message,
+        error: (error) =>
+          error.message || "Failed to enable advanced Excel mode",
+      },
+    );
   };
 
   // export method to fetch the visits data and convert to csv.
@@ -313,17 +332,21 @@ export default function DocumentHeader({
 
       // Create and download the CSV file
       const blob = new Blob([data.visits], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
       const link = window.document.createElement("a");
       link.href = url;
       link.setAttribute(
         "download",
         `${data.documentName}_visits_${formattedTime}.csv`,
       );
+      link.rel = "noopener noreferrer";
       window.document.body.appendChild(link);
       link.click();
-      window.document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        window.document.body.removeChild(link);
+      }, 100);
 
       toast.success("CSV file downloaded successfully");
     } catch (error) {
@@ -579,21 +602,24 @@ export default function DocumentHeader({
               openModal={openAddDocModal}
               setAddDocumentModalOpen={setOpenAddDocModal}
             >
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenAddDocModal(true);
-                }}
-                className="hidden md:flex"
-              >
-                <FileUp className="h-6 w-6" />
-              </Button>
+              <ButtonTooltip content="Upload new version">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenAddDocModal(true);
+                  }}
+                  className="hidden md:flex"
+                >
+                  <FileUp className="h-6 w-6" />
+                </Button>
+              </ButtonTooltip>
             </AddDocumentModal>
           )}
 
-          {prismaDocument.type !== "notion" &&
+          {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
+          {/* {prismaDocument.type !== "notion" &&
             prismaDocument.type !== "sheet" &&
             prismaDocument.type !== "zip" &&
             prismaDocument.type !== "video" &&
@@ -608,7 +634,7 @@ export default function DocumentHeader({
               >
                 <PapermarkSparkle className="h-5 w-5" />
               </Button>
-            )}
+            )} */}
 
           <div className="flex items-center gap-x-1">
             {actionRows.map((row, i) => (
@@ -661,7 +687,8 @@ export default function DocumentHeader({
                     </DropdownMenuItem>
                   )}
 
-                {prismaDocument.type !== "notion" &&
+                {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
+                {/* {prismaDocument.type !== "notion" &&
                   prismaDocument.type !== "sheet" &&
                   prismaDocument.type !== "zip" &&
                   primaryVersion.type !== "video" && (
@@ -688,11 +715,12 @@ export default function DocumentHeader({
                         Open AI Assistant
                       </DropdownMenuItem>
                     </>
-                  )}
+                  )} */}
 
                 <DropdownMenuSeparator />
               </DropdownMenuGroup>
-              {primaryVersion.type !== "notion" &&
+              {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
+              {/* {primaryVersion.type !== "notion" &&
                 primaryVersion.type !== "sheet" &&
                 primaryVersion.type !== "zip" &&
                 primaryVersion.type !== "video" &&
@@ -712,9 +740,10 @@ export default function DocumentHeader({
                   >
                     <Sparkles className="mr-2 h-4 w-4" /> Disable Assistant
                   </DropdownMenuItem>
-                ))}
+                ))} */}
               {prismaDocument.type === "sheet" &&
                 !prismaDocument.advancedExcelEnabled &&
+                supportsAdvancedExcelMode(primaryVersion.contentType) &&
                 (isBusiness || isDatarooms || isTrial) && (
                   <DropdownMenuItem
                     onClick={() => enableAdvancedExcel(prismaDocument)}
@@ -731,7 +760,9 @@ export default function DocumentHeader({
               )}
 
               {primaryVersion.type !== "notion" &&
-                primaryVersion.type !== "zip" && (
+                primaryVersion.type !== "zip" &&
+                primaryVersion.type !== "map" &&
+                primaryVersion.type !== "email" && (
                   <DropdownMenuItem
                     onClick={() =>
                       isFree
@@ -817,6 +848,64 @@ export default function DocumentHeader({
         </div>
       </div>
 
+      {/* Datarooms collapsible section */}
+      {dataroomCount > 0 && (
+        <div className="mb-2">
+          <Collapsible className="w-full">
+            <CollapsibleTrigger className="flex w-full items-center text-sm font-medium">
+              <div className="flex items-center space-x-2 [&[data-state=open]>svg.chevron]:rotate-180">
+                <ChevronRight className="h-4 w-4 transition-transform duration-200" />
+                <ServerIcon className="h-4 w-4 text-[#fb7a00]" />
+                <span>
+                  In {dataroomCount} dataroom{dataroomCount > 1 ? "s" : ""}
+                </span>
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-6 pt-2">
+              <ul className="space-y-1">
+                {prismaDocument.datarooms?.map((item) => (
+                  <li
+                    key={item.dataroom.id}
+                    className="flex items-center space-x-2 text-sm"
+                  >
+                    <ArrowRightIcon className="h-3.5 w-3.5" />
+                    <Link
+                      href={`/datarooms/${item.dataroom.id}/documents`}
+                      className="hover:underline"
+                    >
+                      {item.dataroom.name}
+                    </Link>
+                    {item.folder ? (
+                      <Link
+                        href={`/datarooms/${item.dataroom.id}/documents/${item.folder.path}`}
+                        className="flex flex-row items-center space-x-2 hover:underline"
+                        title={`Folder: ${item.folder.name}`}
+                      >
+                        <ArrowRightIcon className="h-3.5 w-3.5" />
+                        <FolderIcon className="mr-1 h-4 w-4" />
+                        <span className="ml-1 truncate">
+                          {item.folder.name}
+                        </span>
+                      </Link>
+                    ) : (
+                      <Link
+                        href={`/datarooms/${item.dataroom.id}/documents`}
+                        className="flex flex-row items-center space-x-2 hover:underline"
+                        title="Home"
+                      >
+                        <ArrowRightIcon className="h-3.5 w-3.5" />
+                        <FolderIcon className="mr-1 h-4 w-4" />
+                        <span className="ml-1 truncate">Home</span>
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+      )}
+
       {isFree && prismaDocument.hasPageLinks && (
         <AlertBanner
           id="in-document-links-alert"
@@ -840,32 +929,35 @@ export default function DocumentHeader({
         />
       )}
 
-      {prismaDocument.type === "sheet" && (isFree || isPro) && (
-        <AlertBanner
-          id="advanced-excel-alert"
-          variant="default"
-          title="Advanced Excel mode"
-          description={
-            <>
-              You can turn on advanced excel mode by{" "}
-              <span
-                className="cursor-pointer underline underline-offset-4 hover:text-primary/80"
-                onClick={() =>
-                  handleUpgradeClick(PlanEnum.Business, "advanced-excel-mode")
-                }
-              >
-                upgrading
-              </span>{" "}
-              to Business plan to preserve the file formatting. This uses the
-              Microsoft Office viewer.
-            </>
-          }
-          onClose={() => handleCloseAlert("advanced-excel-alert")}
-        />
-      )}
+      {prismaDocument.type === "sheet" &&
+        supportsAdvancedExcelMode(primaryVersion.contentType) &&
+        (isFree || isPro) && !isTrial && (
+          <AlertBanner
+            id="advanced-excel-alert"
+            variant="default"
+            title="Advanced Excel mode"
+            description={
+              <>
+                You can turn on advanced excel mode by{" "}
+                <span
+                  className="hover:text-primary/ 80 cursor-pointer underline underline-offset-4"
+                  onClick={() =>
+                    handleUpgradeClick(PlanEnum.Business, "advanced-excel-mode")
+                  }
+                >
+                  upgrading
+                </span>{" "}
+                to Business plan to preserve the file formatting. This uses the
+                Microsoft Office viewer.
+              </>
+            }
+            onClose={() => handleCloseAlert("advanced-excel-alert")}
+          />
+        )}
 
       {prismaDocument.type === "sheet" &&
         !prismaDocument.advancedExcelEnabled &&
+        supportsAdvancedExcelMode(primaryVersion.contentType) &&
         (isBusiness || isDatarooms || isTrial) && (
           <AlertBanner
             id="enable-advanced-excel-alert"

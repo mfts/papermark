@@ -4,13 +4,16 @@ import React from "react";
 import "@/public/vendor/handsontable/handsontable.full.min.css";
 import { Brand, DataroomBrand } from "@prisma/client";
 
-import { Button } from "@/components/ui/button";
-
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
+import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 import { cn } from "@/lib/utils";
+
+import { Button } from "@/components/ui/button";
 
 import { ScreenProtector } from "../ScreenProtection";
 import { TDocumentData } from "../dataroom/dataroom-view";
-import Nav from "../nav";
+import Nav, { TNavData } from "../nav";
+import { AwayPoster } from "./away-poster";
 
 // Define the type for the JSON data
 type RowData = { [key: string]: any };
@@ -20,54 +23,16 @@ type SheetData = {
   rowData: RowData[];
 };
 
-const trackPageView = async (data: {
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  duration: number;
-  pageNumber: number;
-  versionNumber: number;
-  dataroomId?: string;
-  isPreview?: boolean;
-}) => {
-  // If the view is a preview, do not track the view
-  if (data.isPreview) return;
-
-  await fetch("/api/record_view", {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-};
-
 export default function ExcelViewer({
-  linkId,
-  viewId,
-  documentId,
-  documentName,
   versionNumber,
   sheetData,
-  allowDownload,
   screenshotProtectionEnabled,
-  brand,
-  dataroomId,
-  setDocumentData,
-  isPreview,
+  navData,
 }: {
-  linkId: string;
-  viewId?: string;
-  documentId: string;
-  documentName: string;
   versionNumber: number;
   sheetData: SheetData[];
-  allowDownload: boolean;
   screenshotProtectionEnabled: boolean;
-  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
-  dataroomId?: string;
-  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
-  isPreview?: boolean;
+  navData: TNavData;
 }) {
   const [availableWidth, setAvailableWidth] = useState<number>(200);
   const [availableHeight, setAvailableHeight] = useState<number>(200);
@@ -75,6 +40,24 @@ export default function ExcelViewer({
   const [selectedSheetIndex, setSelectedSheetIndex] = useState<number>(0);
 
   const [isWindowFocused, setIsWindowFocused] = useState(true);
+
+  const { linkId, documentId, viewId, isPreview, dataroomId } = navData;
+
+  const startTimeRef = useRef(Date.now());
+  const visibilityRef = useRef<boolean>(true);
+
+  const {
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+    isInactive,
+    updateActivity,
+  } = useSafePageViewTracker({
+    ...getTrackingOptions(),
+    externalStartTimeRef: startTimeRef,
+  });
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -99,8 +82,6 @@ export default function ExcelViewer({
   const containerRef = useRef<HTMLDivElement>(null);
   // @ts-ignore - Handsontable import has not types
   const hotInstanceRef = useRef<Handsontable | null>(null);
-  const startTimeRef = useRef(Date.now());
-  const visibilityRef = useRef<boolean>(true);
 
   const calculateSize = () => {
     if (containerRef.current) {
@@ -137,32 +118,99 @@ export default function ExcelViewer({
     };
   }, [screenshotProtectionEnabled]);
 
+  // Start interval tracking when component mounts
+  useEffect(() => {
+    const trackingData = {
+      linkId,
+      documentId,
+      viewId,
+      pageNumber: selectedSheetIndex + 1,
+      versionNumber,
+      dataroomId,
+      isPreview,
+    };
+
+    startIntervalTracking(trackingData);
+
+    return () => {
+      stopIntervalTracking();
+    };
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    startIntervalTracking,
+    stopIntervalTracking,
+  ]);
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
-        startTimeRef.current = Date.now(); // Reset start time when page becomes visible
-      } else {
-        visibilityRef.current = false;
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView({
+        resetTrackingState();
+
+        // Restart interval tracking
+        const trackingData = {
           linkId,
           documentId,
           viewId,
-          duration,
           pageNumber: selectedSheetIndex + 1,
           versionNumber,
           dataroomId,
-        });
+          isPreview,
+        };
+        startIntervalTracking(trackingData);
+      } else {
+        visibilityRef.current = false;
+        stopIntervalTracking();
+
+        // Track final duration using activity-aware calculation
+        const duration = getActiveDuration();
+        trackPageViewSafely(
+          {
+            linkId,
+            documentId,
+            viewId,
+            duration,
+            pageNumber: selectedSheetIndex + 1,
+            versionNumber,
+            dataroomId,
+            isPreview,
+          },
+          true,
+        );
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      if (visibilityRef.current) {
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView({
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [
+    selectedSheetIndex,
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      stopIntervalTracking();
+      const duration = getActiveDuration();
+      trackPageViewSafely(
+        {
           linkId,
           documentId,
           viewId,
@@ -170,27 +218,10 @@ export default function ExcelViewer({
           pageNumber: selectedSheetIndex + 1,
           versionNumber,
           dataroomId,
-        }); // Also capture duration if component unmounts while visible
-        startTimeRef.current = Date.now();
-      }
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [selectedSheetIndex]);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (!visibilityRef.current) return;
-
-      const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: selectedSheetIndex + 1,
-        versionNumber,
-        dataroomId,
-      });
+          isPreview,
+        },
+        true,
+      );
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -198,7 +229,18 @@ export default function ExcelViewer({
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [selectedSheetIndex]);
+  }, [
+    selectedSheetIndex,
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    trackPageViewSafely,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   useEffect(() => {
     if (handsontableLoaded && sheetData.length) {
@@ -242,18 +284,7 @@ export default function ExcelViewer({
 
   return (
     <>
-      <Nav
-        brand={brand}
-        documentName={documentName}
-        isDataroom={dataroomId ? true : false}
-        setDocumentData={setDocumentData}
-        type="sheet"
-        isPreview={isPreview}
-        allowDownload={allowDownload}
-        linkId={linkId}
-        documentId={documentId}
-        viewId={viewId}
-      />
+      <Nav type="sheet" navData={navData} />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
         className={cn(
@@ -282,6 +313,13 @@ export default function ExcelViewer({
           ))}
         </div>
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
+        <AwayPoster
+          isVisible={isInactive}
+          inactivityThreshold={
+            getTrackingOptions().inactivityThreshold || 20000
+          }
+          onDismiss={updateActivity}
+        />
       </div>
     </>
   );

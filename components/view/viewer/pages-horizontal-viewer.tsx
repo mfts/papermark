@@ -3,84 +3,41 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 
-import { Brand, DataroomBrand } from "@prisma/client";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
+import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/lib/utils/use-media-query";
-
-import "@/styles/custom-viewer-styles.css";
 
 import { ScreenProtector } from "../ScreenProtection";
-import { TDocumentData } from "../dataroom/dataroom-view";
-import Nav from "../nav";
+import Nav, { TNavData } from "../nav";
 import { PoweredBy } from "../powered-by";
 import Question from "../question";
 import Toolbar from "../toolbar";
 import ViewDurationSummary from "../visitor-graph";
 import { SVGWatermark } from "../watermark-svg";
+import { AwayPoster } from "./away-poster";
+
+import "@/styles/custom-viewer-styles.css";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 5;
 
-const trackPageView = async (data: {
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  duration: number;
-  pageNumber: number;
-  versionNumber: number;
-  dataroomId?: string;
-  setViewedPages?: React.Dispatch<
-    React.SetStateAction<{ pageNumber: number; duration: number }[]>
-  >;
-  isPreview?: boolean;
-}) => {
-  data.setViewedPages &&
-    data.setViewedPages((prevViewedPages) =>
-      prevViewedPages.map((page) =>
-        page.pageNumber === data.pageNumber
-          ? { ...page, duration: page.duration + data.duration }
-          : page,
-      ),
-    );
-
-  // If the view is a preview, do not track the view
-  if (data.isPreview) return;
-
-  await fetch("/api/record_view", {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-};
-
 export default function PagesHorizontalViewer({
   pages,
-  linkId,
-  documentId,
-  viewId,
-  assistantEnabled,
-  allowDownload,
   feedbackEnabled,
   screenshotProtectionEnabled,
   versionNumber,
-  brand,
-  documentName,
-  dataroomId,
-  setDocumentData,
   showPoweredByBanner,
   showAccountCreationSlide,
   enableQuestion = false,
   feedback,
   viewerEmail,
-  isPreview,
   watermarkConfig,
   ipAddress,
   linkName,
+  navData,
 }: {
   pages: {
     file: string;
@@ -89,18 +46,9 @@ export default function PagesHorizontalViewer({
     pageLinks: { href: string; coords: string }[];
     metadata: { width: number; height: number; scaleFactor: number };
   }[];
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  assistantEnabled?: boolean;
-  allowDownload: boolean;
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
   versionNumber: number;
-  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
-  documentName?: string;
-  dataroomId?: string;
-  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   showPoweredByBanner?: boolean;
   showAccountCreationSlide?: boolean;
   enableQuestion?: boolean | null;
@@ -109,11 +57,14 @@ export default function PagesHorizontalViewer({
     data: { question: string; type: string };
   } | null;
   viewerEmail?: string;
-  isPreview?: boolean;
   watermarkConfig?: WatermarkConfig | null;
   ipAddress?: string;
   linkName?: string;
+  navData: TNavData;
 }) {
+  const { isMobile, isPreview, linkId, documentId, viewId, dataroomId, brand } =
+    navData;
+
   const router = useRouter();
   const { status: sessionStatus } = useSession();
 
@@ -158,7 +109,6 @@ export default function PagesHorizontalViewer({
   const pageNumberRef = useRef<number>(pageNumber);
   const visibilityRef = useRef<boolean>(true);
   const containerRef = useRef<HTMLDivElement>(null);
-  const scrollActionRef = useRef<boolean>(false);
   const hasTrackedDownRef = useRef<boolean>(false);
   const hasTrackedUpRef = useRef<boolean>(false);
   const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
@@ -166,8 +116,18 @@ export default function PagesHorizontalViewer({
   const [imageDimensions, setImageDimensions] = useState<
     Record<number, { width: number; height: number }>
   >({});
-
-  const { isMobile } = useMediaQuery();
+  const {
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+    isInactive,
+    updateActivity,
+  } = useSafePageViewTracker({
+    ...getTrackingOptions(),
+    externalStartTimeRef: startTimeRef,
+  });
 
   const scaleCoordinates = (coords: string, scaleFactor: number) => {
     return coords
@@ -225,28 +185,80 @@ export default function PagesHorizontalViewer({
     hasTrackedUpRef.current = false; // Reset tracking status on page number change
   }, [pageNumber]);
 
+  // Start interval tracking when component mounts or page changes
+  useEffect(() => {
+    if (pageNumber <= numPages) {
+      const trackingData = {
+        linkId,
+        documentId,
+        viewId,
+        pageNumber: pageNumber,
+        versionNumber,
+        dataroomId,
+        setViewedPages,
+        isPreview,
+      };
+
+      startIntervalTracking(trackingData);
+    }
+
+    return () => {
+      stopIntervalTracking();
+    };
+  }, [
+    pageNumber,
+    numPages,
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    startIntervalTracking,
+    stopIntervalTracking,
+  ]);
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (pageNumber > numPages) return;
 
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
-        startTimeRef.current = Date.now(); // Reset start time when the page becomes visible again
-      } else {
-        visibilityRef.current = false;
+        resetTrackingState();
+
+        // Restart interval tracking
         if (pageNumber <= numPages) {
-          const duration = Date.now() - startTimeRef.current;
-          trackPageView({
+          const trackingData = {
             linkId,
             documentId,
             viewId,
-            duration,
             pageNumber: pageNumber,
             versionNumber,
             dataroomId,
             setViewedPages,
             isPreview,
-          });
+          };
+          startIntervalTracking(trackingData);
+        }
+      } else {
+        visibilityRef.current = false;
+        stopIntervalTracking();
+        if (pageNumber <= numPages) {
+          const duration = getActiveDuration();
+          trackPageViewSafely(
+            {
+              linkId,
+              documentId,
+              viewId,
+              duration,
+              pageNumber: pageNumber,
+              versionNumber,
+              dataroomId,
+              setViewedPages,
+              isPreview,
+            },
+            true,
+          );
         }
       }
     };
@@ -256,42 +268,41 @@ export default function PagesHorizontalViewer({
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [pageNumber, numPages]);
-
-  useEffect(() => {
-    startTimeRef.current = Date.now();
-
-    if (visibilityRef.current && pageNumber <= numPages) {
-      const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: pageNumber,
-        versionNumber,
-        dataroomId,
-        setViewedPages,
-        isPreview,
-      });
-    }
-  }, [pageNumber, numPages]);
+  }, [
+    pageNumber,
+    numPages,
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
+      stopIntervalTracking();
       if (pageNumber <= numPages) {
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView({
-          linkId,
-          documentId,
-          viewId,
-          duration,
-          pageNumber: pageNumber,
-          versionNumber,
-          dataroomId,
-          setViewedPages,
-          isPreview,
-        });
+        const duration = getActiveDuration();
+        trackPageViewSafely(
+          {
+            linkId,
+            documentId,
+            viewId,
+            duration,
+            pageNumber: pageNumber,
+            versionNumber,
+            dataroomId,
+            setViewedPages,
+            isPreview,
+          },
+          true,
+        );
       }
     };
 
@@ -300,7 +311,19 @@ export default function PagesHorizontalViewer({
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [pageNumber, numPages]);
+  }, [
+    pageNumber,
+    numPages,
+    linkId,
+    documentId,
+    viewId,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    trackPageViewSafely,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   // Add this effect near your other useEffect hooks
   useEffect(() => {
@@ -374,8 +397,8 @@ export default function PagesHorizontalViewer({
     // Preload previous pages every 4 pages in advanced
     preloadImage(pageNumber - 4);
 
-    const duration = Date.now() - startTimeRef.current;
-    trackPageView({
+    const duration = getActiveDuration();
+    trackPageViewSafely({
       linkId,
       documentId,
       viewId,
@@ -404,8 +427,8 @@ export default function PagesHorizontalViewer({
     // Preload the next page every 2 pages in advanced
     preloadImage(pageNumber + 2);
 
-    const duration = Date.now() - startTimeRef.current;
-    trackPageView({
+    const duration = getActiveDuration();
+    trackPageViewSafely({
       linkId,
       documentId,
       viewId,
@@ -447,8 +470,8 @@ export default function PagesHorizontalViewer({
       const targetPage = parseInt(pageMatch[1]);
       if (targetPage >= 1 && targetPage <= numPages) {
         // Track the current page before jumping
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView({
+        const duration = getActiveDuration();
+        trackPageViewSafely({
           linkId,
           documentId,
           viewId,
@@ -540,29 +563,16 @@ export default function PagesHorizontalViewer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [containerRef.current, pageNumber, imageDimensions]);
 
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(false);
-
   return (
     <>
       <Nav
         pageNumber={pageNumber}
         numPages={numPagesWithAccountCreation}
-        assistantEnabled={assistantEnabled}
-        allowDownload={allowDownload}
-        brand={brand}
-        viewId={viewId}
-        linkId={linkId}
-        documentId={documentId}
-        documentName={documentName}
         embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
-        isDataroom={!!dataroomId}
-        setDocumentData={setDocumentData}
-        isMobile={isMobile}
-        isPreview={isPreview}
         hasWatermark={!!watermarkConfig}
         handleZoomIn={handleZoomIn}
         handleZoomOut={handleZoomOut}
+        navData={navData}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
@@ -586,7 +596,10 @@ export default function PagesHorizontalViewer({
                 transformOrigin: scale <= 1 ? "center center" : "left top",
                 minWidth: scale > 1 ? `${100 * scale}%` : "100%",
               }}
-              onContextMenu={(e) => e.preventDefault()}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
             >
               {pageNumber <= numPagesWithAccountCreation &&
               pages &&
@@ -603,8 +616,12 @@ export default function PagesHorizontalViewer({
                     >
                       <img
                         className={cn(
-                          "!pointer-events-auto max-h-[calc(100dvh-64px)] object-contain",
+                          "viewer-image-mobile !pointer-events-auto max-h-[calc(100dvh-64px)] object-contain",
                         )}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
                         ref={(ref) => {
                           imageRefs.current[index] = ref;
                           if (ref) {
@@ -622,7 +639,7 @@ export default function PagesHorizontalViewer({
                         src={
                           loadedImages[index]
                             ? page.file
-                            : "https://www.papermark.io/_static/blank.gif"
+                            : "https://www.papermark.com/_static/blank.gif"
                         }
                         alt={`Page ${index + 1}`}
                       />
@@ -651,7 +668,7 @@ export default function PagesHorizontalViewer({
                       {page.pageLinks ? (
                         <map name={`page-map-${index + 1}`}>
                           {page.pageLinks
-                            .filter((link) => !link.href.includes(".gif"))
+                            .filter((link) => !link.href.endsWith(".gif"))
                             .map((link, index) => (
                               <area
                                 key={index}
@@ -681,7 +698,7 @@ export default function PagesHorizontalViewer({
                       {/** Automatically Render Overlays **/}
                       {page.pageLinks
                         ? page.pageLinks
-                            .filter((link) => link.href.includes(".gif"))
+                            .filter((link) => link.href.endsWith(".gif"))
                             .map((link, linkIndex) => {
                               const [x1, y1, x2, y2] = scaleCoordinates(
                                 link.coords,
@@ -725,6 +742,7 @@ export default function PagesHorizontalViewer({
                   style={{ height: "calc(100dvh - 64px)" }}
                 >
                   <Question
+                    accentColor={brand?.accentColor}
                     feedback={feedback}
                     viewId={viewId}
                     submittedFeedback={submittedFeedback}
@@ -810,6 +828,11 @@ export default function PagesHorizontalViewer({
 
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
+        <AwayPoster
+          isVisible={isInactive}
+          inactivityThreshold={getTrackingOptions().inactivityThreshold}
+          onDismiss={updateActivity}
+        />
       </div>
     </>
   );

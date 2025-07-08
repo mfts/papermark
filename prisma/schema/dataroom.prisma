@@ -1,0 +1,195 @@
+model Dataroom {
+  id           String             @id @default(cuid())
+  pId          String             @unique // This is the generated public ID for the dataroom dr_1234
+  name         String
+  description  String?
+  teamId       String
+  team         Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  documents    DataroomDocument[]
+  folders      DataroomFolder[]
+  links        Link[]
+  views        View[]
+  viewers      Viewer[]
+  viewerGroups ViewerGroup[]
+  brand        DataroomBrand?
+
+  permissionGroups PermissionGroup[]
+
+  // conversation
+  conversationsEnabled Boolean        @default(false)
+  conversations        Conversation[]
+
+  // upload external documents
+  uploadedDocuments DocumentUpload[]
+
+  // tags
+  tags TagItem[]
+
+  // notification settings
+  enableChangeNotifications Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+}
+
+model DataroomDocument {
+  id         String          @id @default(cuid())
+  dataroomId String
+  dataroom   Dataroom        @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  documentId String
+  document   Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  folderId   String?
+  folder     DataroomFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  orderIndex Int?
+
+  conversations Conversation[]
+
+  uploadedDocuments DocumentUpload[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([dataroomId, documentId])
+  @@index([folderId])
+  @@index([dataroomId, folderId, orderIndex])
+}
+
+model DataroomFolder {
+  id           String             @id @default(cuid())
+  name         String
+  path         String // the materialized path to the folder; starts always with "/"
+  parentId     String?
+  documents    DataroomDocument[]
+  childFolders DataroomFolder[]   @relation("SubFolders")
+  parentFolder DataroomFolder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: SetNull)
+  dataroomId   String
+  dataroom     Dataroom           @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  orderIndex   Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([dataroomId, path])
+  @@index([parentId])
+  @@index([dataroomId, parentId, orderIndex])
+}
+
+model DataroomBrand {
+  id          String   @id @default(cuid())
+  logo        String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  banner      String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  brandColor  String? // This should be a reference to the brand color
+  accentColor String? // This should be a reference to the accent color
+  dataroomId  String   @unique
+  dataroom    Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ViewerGroup {
+  id             String                      @id @default(cuid())
+  name           String
+  members        ViewerGroupMembership[]
+  domains        String[]
+  links          Link[]
+  accessControls ViewerGroupAccessControls[]
+  allowAll       Boolean                     @default(false)
+
+  dataroomId String
+  dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  teamId     String
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  views         View[]
+  conversations Conversation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dataroomId])
+  @@index([teamId])
+}
+
+model ViewerGroupMembership {
+  id       String      @id @default(cuid())
+  viewerId String
+  viewer   Viewer      @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  groupId  String
+  group    ViewerGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([viewerId, groupId])
+  @@index([viewerId])
+  @@index([groupId])
+}
+
+model ViewerGroupAccessControls {
+  id      String      @id @default(cuid())
+  groupId String
+  group   ViewerGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // Access control for items (documents or dataroom items)
+  itemId   String // This can be a document ID or a dataroom item ID
+  itemType ItemType // Enum: DATAROOM_DOCUMENT, DATAROOM_FOLDER
+
+  // Granular permissions
+  canView     Boolean @default(true)
+  canDownload Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([groupId, itemId])
+  @@index([groupId])
+}
+
+enum ItemType {
+  DATAROOM_DOCUMENT
+  DATAROOM_FOLDER
+}
+
+model PermissionGroup {
+  id String @id @default(cuid())
+  name String
+  description String?
+
+  links Link[]
+  accessControls PermissionGroupAccessControls[]
+
+  dataroomId String
+  dataroom Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  teamId String
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dataroomId])
+  @@index([teamId])
+}
+
+model PermissionGroupAccessControls {
+  id String @id @default(cuid())
+  groupId String
+  group PermissionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // Access control for items (documents or dataroom items)
+  itemId String // This can be a document ID or a dataroom item ID
+  itemType ItemType // Enum: DATAROOM_DOCUMENT, DATAROOM_FOLDER
+
+  // Granular permissions
+  canView Boolean @default(true)
+  canDownload Boolean @default(false)
+  canDownloadOriginal Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([groupId, itemId])
+  @@index([groupId])
+}

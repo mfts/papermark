@@ -53,6 +53,7 @@ export default async function handle(
         enableWatermark: true,
         watermarkConfig: true,
         groupId: true,
+        permissionGroupId: true,
         audienceType: true,
         dataroomId: true,
         teamId: true,
@@ -94,13 +95,12 @@ export default async function handle(
       linkId: id,
       teamId: link.teamId!,
       dataroomDocumentId: dataroomDocumentId,
+      permissionGroupId: link.permissionGroupId || undefined,
       ...(link.audienceType === LinkAudienceType.GROUP &&
         link.groupId && {
           groupId: link.groupId,
         }),
     });
-
-    console.log("data documents", data.linkData.dataroom?.documents[0]);
 
     linkData = data.linkData;
     brand = data.brand;
@@ -115,6 +115,7 @@ export default async function handle(
         customFields: [], // reset custom fields for free plan
         enableAgreement: false,
         enableWatermark: false,
+        permissionGroupId: null,
       }),
     };
 

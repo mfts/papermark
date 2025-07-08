@@ -1,74 +1,111 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
-import { Brand, DataroomBrand } from "@prisma/client";
+import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
+import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 
-import { TDocumentData } from "../dataroom/dataroom-view";
-import Nav from "../nav";
-
-const trackPageView = async (data: {
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  duration: number;
-  pageNumber: number;
-  versionNumber: number;
-  dataroomId?: string;
-  isPreview?: boolean;
-}) => {
-  // If the view is a preview, do not track the view
-  if (data.isPreview) return;
-
-  await fetch("/api/record_view", {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-};
+import Nav, { TNavData } from "../nav";
+import { AwayPoster } from "./away-poster";
 
 export default function AdvancedExcelViewer({
   file,
-  viewId,
-  linkId,
-  documentId,
-  documentName,
-  allowDownload,
   versionNumber,
-  brand,
-  dataroomId,
-  setDocumentData,
-  isPreview,
+  navData,
 }: {
-  linkId: string;
-  viewId?: string;
-  documentId: string;
-  documentName: string;
-  versionNumber: number;
   file: string;
-  allowDownload: boolean;
-  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
-  dataroomId?: string;
-  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
-  isPreview?: boolean;
+  versionNumber: number;
+  navData: TNavData;
 }) {
-  const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
-  const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
+  const { linkId, documentId, viewId, isPreview, dataroomId, brand } = navData;
+  const pageNumber = 1;
 
   const startTimeRef = useRef(Date.now());
-  const pageNumberRef = useRef<number>(pageNumber);
   const visibilityRef = useRef<boolean>(true);
+
+  const {
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+    isInactive,
+    updateActivity,
+  } = useSafePageViewTracker({
+    ...getTrackingOptions(),
+    externalStartTimeRef: startTimeRef,
+  });
+
+  // Start interval tracking when component mounts
+  useEffect(() => {
+    const trackingData = {
+      linkId,
+      documentId,
+      viewId,
+      pageNumber,
+      versionNumber,
+      dataroomId,
+      isPreview,
+    };
+
+    startIntervalTracking(trackingData);
+
+    return () => {
+      stopIntervalTracking();
+    };
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    pageNumber,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    startIntervalTracking,
+    stopIntervalTracking,
+  ]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
-        startTimeRef.current = Date.now(); // Reset start time when page becomes visible
+        resetTrackingState();
+        const trackingData = {
+          linkId,
+          documentId,
+          viewId,
+          pageNumber,
+          versionNumber,
+          dataroomId,
+          isPreview,
+        };
+        startIntervalTracking(trackingData);
       } else {
         visibilityRef.current = false;
-        const duration = Date.now() - startTimeRef.current;
+        stopIntervalTracking();
+        const duration = getActiveDuration();
         if (duration > 0) {
-          trackPageView({
+          trackPageViewSafely(
+            {
+              linkId,
+              documentId,
+              viewId,
+              duration,
+              pageNumber,
+              versionNumber,
+              dataroomId,
+              isPreview,
+            },
+            true,
+          );
+        }
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      stopIntervalTracking();
+      const duration = getActiveDuration();
+      if (duration > 0) {
+        trackPageViewSafely(
+          {
             linkId,
             documentId,
             viewId,
@@ -77,45 +114,37 @@ export default function AdvancedExcelViewer({
             versionNumber,
             dataroomId,
             isPreview,
-          });
-        }
+          },
+          true,
+        );
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      if (visibilityRef.current) {
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView({
-          linkId,
-          documentId,
-          viewId,
-          duration,
-          pageNumber,
-          versionNumber,
-          dataroomId,
-          isPreview,
-        }); // Also capture duration if component unmounts while visible
-      }
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, []);
+  }, [
+    linkId,
+    documentId,
+    viewId,
+    pageNumber,
+    versionNumber,
+    dataroomId,
+    isPreview,
+    trackPageViewSafely,
+    resetTrackingState,
+    startIntervalTracking,
+    stopIntervalTracking,
+    getActiveDuration,
+  ]);
 
   return (
     <>
-      <Nav
-        brand={brand}
-        documentName={documentName}
-        isDataroom={dataroomId ? true : false}
-        setDocumentData={setDocumentData}
-        type="sheet"
-        isPreview={isPreview}
-        allowDownload={allowDownload}
-        linkId={linkId}
-        documentId={documentId}
-        viewId={viewId}
-      />
+      <Nav type="sheet" navData={navData} />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
         className="relative mx-2 flex h-screen flex-col sm:mx-6 lg:mx-8"
@@ -131,6 +160,11 @@ export default function AdvancedExcelViewer({
           }}
         />
       </div>
+      <AwayPoster
+        isVisible={isInactive}
+        inactivityThreshold={getTrackingOptions().inactivityThreshold}
+        onDismiss={updateActivity}
+      />
     </>
   );
 }

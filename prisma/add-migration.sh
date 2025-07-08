@@ -50,7 +50,7 @@ mkdir -p "prisma/migrations/${migration_name}" || {
 # Generate migration
 npx prisma migrate diff \
     --from-migrations prisma/migrations \
-    --to-schema-datamodel prisma/schema.prisma \
+    --to-schema-datasource prisma/schema \
     --shadow-database-url "postgresql://${USER}@localhost:5432/papermark-shadow-db" \
     --script > "prisma/migrations/${migration_name}/migration.sql" || {
     echo "Failed to generate migration"

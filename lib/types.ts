@@ -1,15 +1,15 @@
 import {
   Agreement,
   CustomField,
-  Dataroom,
   DataroomDocument,
   DataroomFolder,
   Document,
   DocumentVersion,
-  Feedback,
   Link,
+  PermissionGroupAccessControls,
   User as PrismaUser,
   View,
+  ViewerGroupAccessControls,
 } from "@prisma/client";
 import { User as NextAuthUser } from "next-auth";
 import { z } from "zod";
@@ -28,8 +28,14 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
     links: number;
     views: number;
     versions: number;
+    datarooms: number;
   };
   links: Link[];
+  folder: {
+    name: string;
+    path: string;
+  };
+  folderList: string[];
 }
 
 export interface DocumentWithVersion extends Document {
@@ -38,6 +44,17 @@ export interface DocumentWithVersion extends Document {
     name: string;
     path: string;
   };
+  datarooms: {
+    dataroom: {
+      id: string;
+      name: string;
+    };
+    folder: {
+      id: string;
+      name: string;
+      path: string;
+    };
+  }[];
   hasPageLinks: boolean;
 }
 
@@ -48,6 +65,8 @@ export interface LinkWithViews extends Link {
   views: View[];
   feedback: { id: true; data: { question: string; type: string } } | null;
   customFields: CustomField[];
+  tags: TagProps[];
+  uploadFolderName: string | undefined;
 }
 
 export interface LinkWithDocument extends Link {
@@ -111,6 +130,7 @@ export interface LinkWithDataroom extends Link {
     documents: {
       id: string;
       folderId: string | null;
+      updatedAt: Date;
       orderIndex: number | null;
       document: {
         id: string;
@@ -122,6 +142,7 @@ export interface LinkWithDataroom extends Link {
           hasPages: boolean;
           file: string;
           isVertical: boolean;
+          updatedAt: Date;
         }[];
       };
     }[];
@@ -129,8 +150,15 @@ export interface LinkWithDataroom extends Link {
     lastUpdatedAt: Date;
     createdAt: Date;
   };
+  group?: {
+    accessControls: ViewerGroupAccessControls[];
+  };
+  accessControls?:
+    | ViewerGroupAccessControls[]
+    | PermissionGroupAccessControls[];
   agreement: Agreement | null;
   customFields: CustomField[];
+  enableIndexFile: boolean;
 }
 
 export interface Geo {
@@ -265,6 +293,11 @@ export type AnalyticsEvents =
       event: "Stripe Billing Portal Clicked";
       teamId: string;
       action?: string;
+    }
+  | {
+      event: "User Sign In Attempted";
+      email: string | undefined;
+      userId: string;
     };
 
 export interface Team {
@@ -272,25 +305,28 @@ export interface Team {
   name?: string;
   logo?: React.ElementType;
   plan?: string;
+  createdAt?: Date;
+  enableExcelAdvancedMode?: boolean;
 }
 
 export interface TeamDetail {
   id: string;
   name: string;
-  documents: {
-    owner: {
-      id: string;
-      name: string;
-    };
-  }[];
   users: {
     role: "ADMIN" | "MANAGER" | "MEMBER";
+    status: "ACTIVE" | "BLOCKED_TRIAL_EXPIRED";
     teamId: string;
+    userId: string;
     user: {
       email: string;
       name: string;
     };
-    userId: string;
+  }[];
+  documents: {
+    owner: {
+      name: string;
+      id: string;
+    };
   }[];
 }
 
@@ -333,3 +369,31 @@ export type BasePlan =
   | "datarooms"
   | "datarooms-plus"
   | "enterprise";
+
+export const tagColors = [
+  "red",
+  "yellow",
+  "green",
+  "blue",
+  "purple",
+  "pink",
+  "slate",
+  "fuchsia",
+] as const;
+
+export type TagColorProps = (typeof tagColors)[number];
+
+export interface TagsWithTotalCount {
+  tags: TagProps[];
+  totalCount: number;
+}
+
+export interface TagProps {
+  id: string;
+  name: string;
+  description: string | null;
+  color: TagColorProps | string;
+  _count?: {
+    items: number;
+  };
+}

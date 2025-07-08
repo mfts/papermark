@@ -12,7 +12,7 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "PATCH") {
-    // POST /api/teams/:teamId/update-name
+    // PATCH /api/teams/:teamId/update-name
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
@@ -61,8 +61,8 @@ export default async function handle(
       return res.status(500).json((error as Error).message);
     }
   } else {
-    // We only allow POST requests
-    res.setHeader("Allow", "[POST]");
+    // We only allow PATCH requests
+    res.setHeader("Allow", "[PATCH]");
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

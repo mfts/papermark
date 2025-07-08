@@ -27,6 +27,8 @@ import { useDataroomBrand } from "@/lib/swr/use-brand";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { cn, convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
+const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
+
 export default function DataroomBrandPage() {
   const router = useRouter();
   const teamInfo = useTeam();
@@ -36,7 +38,7 @@ export default function DataroomBrandPage() {
   const [brandColor, setBrandColor] = useState<string>("#000000");
   const [accentColor, setAccentColor] = useState<string>("#FFFFFF");
   const [logo, setLogo] = useState<string | null>(null);
-  const [banner, setBanner] = useState<string | null>(null);
+  const [banner, setBanner] = useState<string | null>(DEFAULT_BANNER_IMAGE);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [bannerBlobUrl, setBannerBlobUrl] = useState<string | null>(null);
 
@@ -101,7 +103,7 @@ export default function DataroomBrandPage() {
       setBrandColor(brand.brandColor || "#000000");
       setAccentColor(brand.accentColor || "#FFFFFF");
       setLogo(brand.logo || null);
-      setBanner(brand.banner || null);
+      setBanner(brand.banner || DEFAULT_BANNER_IMAGE);
     }
   }, [brand]);
 
@@ -174,7 +176,7 @@ export default function DataroomBrandPage() {
     );
     if (res.ok) {
       setLogo(null);
-      setBanner(null);
+      setBanner(DEFAULT_BANNER_IMAGE);
       setBrandColor("#000000");
       setIsLoading(false);
       toast.success("Branding reset successfully");
@@ -207,7 +209,7 @@ export default function DataroomBrandPage() {
                 linkText="Click here"
                 content="How to customize data room branding?"
                 key="branding"
-                link="https://www.papermark.io/help/article/dataroom-branding"
+                link="https://www.papermark.com/help/article/dataroom-branding"
               >
                 <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
               </BadgeTooltip>
@@ -547,7 +549,7 @@ export default function DataroomBrandPage() {
                                 </svg>
                               </div>
                               <span className="whitespace-normal text-xs text-muted-foreground">
-                                papermark.io/dataroom/...
+                                papermark.com/dataroom/...
                               </span>
                             </div>
                           </div>
@@ -622,7 +624,7 @@ export default function DataroomBrandPage() {
                                 </svg>
                               </div>
                               <span className="whitespace-normal text-xs text-muted-foreground">
-                                papermark.io/view/...
+                                papermark.com/view/...
                               </span>
                             </div>
                           </div>
@@ -696,7 +698,7 @@ export default function DataroomBrandPage() {
                                 </svg>
                               </div>
                               <span className="whitespace-normal text-xs text-muted-foreground">
-                                papermark.io/view/...
+                                papermark.com/view/...
                               </span>
                             </div>
                           </div>

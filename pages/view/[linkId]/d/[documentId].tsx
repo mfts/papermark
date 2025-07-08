@@ -10,13 +10,13 @@ import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import CustomMetaTag from "@/components/view/custom-metatag";
-import DataroomDocumentView from "@/components/view/dataroom/dataroom-document-view";
-
 import notion from "@/lib/notion";
 import { addSignedUrls } from "@/lib/notion/utils";
 import { CustomUser, LinkWithDataroomDocument, NotionTheme } from "@/lib/types";
+
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import CustomMetaTag from "@/components/view/custom-metatag";
+import DataroomDocumentView from "@/components/view/dataroom/dataroom-document-view";
 
 type DataroomDocumentLinkData = {
   linkType: "DATAROOM_LINK";
@@ -43,6 +43,7 @@ type DataroomDocumentProps = {
   showAccountCreationSlide: boolean;
   useAdvancedExcelViewer: boolean;
   useCustomAccessForm: boolean;
+  logoOnAccessForm: boolean;
 };
 
 export default function DataroomDocumentViewPage({
@@ -53,6 +54,7 @@ export default function DataroomDocumentViewPage({
   showAccountCreationSlide,
   useAdvancedExcelViewer,
   useCustomAccessForm,
+  logoOnAccessForm,
 }: DataroomDocumentProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -165,6 +167,7 @@ export default function DataroomDocumentViewPage({
         previewToken={previewToken}
         disableEditEmail={!!disableEditEmail}
         useCustomAccessForm={useCustomAccessForm}
+        logoOnAccessForm={logoOnAccessForm}
         token={storedToken}
         verifiedEmail={verifiedEmail}
         preview={!!preview}
@@ -248,7 +251,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
           metaDescription: link.metaDescription,
           metaImage: link.metaImage,
           metaFavicon: link.metaFavicon ?? "/favicon.ico",
-          metaUrl: `https://www.papermark.io/view/${linkId}`,
+          metaUrl: `https://www.papermark.com/view/${linkId}`,
         },
         showPoweredByBanner: false,
         showAccountCreationSlide: false,
@@ -257,6 +260,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
           teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
           teamId === "clup33by90000oewh4rfvp2eg" ||
           teamId === "cm76hfyvy0002q623hmen99pf",
+        logoOnAccessForm: teamId === "cm7nlkrhm0000qgh0nvyrrywr",
       },
       revalidate: brand || recordMap ? 10 : false,
     };

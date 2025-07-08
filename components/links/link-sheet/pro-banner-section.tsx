@@ -17,6 +17,7 @@ export function ProBannerSection({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => void;
 }) {
   const { showBanner } = data;
@@ -45,6 +46,7 @@ export function ProBannerSection({
             state: true,
             trigger: "link_sheet_hide_pro_banner_section",
             plan: "Pro",
+            highlightItem: ["branding"],
           })
         }
       />

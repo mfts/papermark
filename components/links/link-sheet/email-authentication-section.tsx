@@ -17,9 +17,10 @@ export default function EmailAuthenticationSection({
     state,
     trigger,
     plan,
+    highlightItem,
   }: LinkUpgradeOptions) => void;
 }) {
-  const { emailProtected, emailAuthenticated } = data;
+  const { emailProtected, emailAuthenticated, enableConversation } = data;
   const [enabled, setEnabled] = useState<boolean>(emailAuthenticated);
 
   useEffect(() => {
@@ -32,6 +33,9 @@ export default function EmailAuthenticationSection({
       ...data,
       emailProtected: updatedEmailAuthentication ? true : emailProtected,
       emailAuthenticated: updatedEmailAuthentication,
+      enableConversation: updatedEmailAuthentication
+        ? enableConversation
+        : false,
     });
     setEnabled(updatedEmailAuthentication);
   };
@@ -40,7 +44,7 @@ export default function EmailAuthenticationSection({
     <div className="pb-5">
       <LinkItem
         title="Require email verification"
-        link="https://www.papermark.io/help/article/require-email-verification"
+        link="https://www.papermark.com/help/article/require-email-verification"
         tooltipContent="Users must verify their email before accessing the content."
         enabled={enabled}
         action={handleEnableAuthentication}
@@ -51,6 +55,7 @@ export default function EmailAuthenticationSection({
             state: true,
             trigger: "link_sheet_email_auth_section",
             plan: "Business",
+            highlightItem: ["email-verify"],
           })
         }
       />

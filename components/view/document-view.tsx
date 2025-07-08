@@ -8,17 +8,18 @@ import { usePlausible } from "next-plausible";
 import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
 
+import { useAnalytics } from "@/lib/analytics";
+import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
+
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
 
-import { useAnalytics } from "@/lib/analytics";
-import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
-
-import EmailVerificationMessage from "./email-verification-form";
+import EmailVerificationMessage from "./access-form/email-verification-form";
 import ViewData, { TViewDocumentData } from "./view-data";
+import { useDisablePrint } from "@/lib/hooks/use-disable-print";
 
 type RowData = { [key: string]: any };
 type SheetData = {
@@ -44,6 +45,7 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   isPreview?: boolean;
   ipAddress?: string;
   verificationToken?: string;
+  isTeamMember?: boolean;
 };
 
 export default function DocumentView({
@@ -61,6 +63,7 @@ export default function DocumentView({
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
+  logoOnAccessForm,
   isEmbedded,
 }: {
   link: LinkWithDocument;
@@ -82,7 +85,9 @@ export default function DocumentView({
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
   isEmbedded?: boolean;
+  logoOnAccessForm?: boolean;
 }) {
+  useDisablePrint();
   const {
     document,
     emailProtected,
@@ -152,6 +157,7 @@ export default function DocumentView({
           isPreview,
           ipAddress,
           verificationToken,
+          isTeamMember,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("documentViewed"); // track the event
         analytics.identify(
@@ -164,6 +170,7 @@ export default function DocumentView({
           viewerId: viewId,
           viewerEmail: data.email ?? verifiedEmail ?? userEmail,
           isEmbedded,
+          isTeamMember,
         });
 
         // set the verification token to the cookie
@@ -185,6 +192,7 @@ export default function DocumentView({
           fileType,
           isPreview,
           ipAddress,
+          isTeamMember,
         });
         setSubmitted(true);
         setVerificationRequested(false);
@@ -217,12 +225,12 @@ export default function DocumentView({
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
     if (!didMount.current) {
-      if ((!submitted && !isProtected) || token) {
+      if ((!submitted && !isProtected) || token || previewToken) {
         handleSubmission();
       }
       didMount.current = true;
     }
-  }, [submitted, isProtected, token]);
+  }, [submitted, isProtected, token, previewToken]);
 
   // Components to render when email is submitted but verification is pending
   if (verificationRequested) {
@@ -258,6 +266,7 @@ export default function DocumentView({
         disableEditEmail={disableEditEmail}
         useCustomAccessForm={useCustomAccessForm}
         customFields={link.customFields}
+        logoOnAccessForm={logoOnAccessForm}
       />
     );
   }

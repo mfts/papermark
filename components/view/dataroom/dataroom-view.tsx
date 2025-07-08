@@ -6,18 +6,19 @@ import { DataroomBrand } from "@prisma/client";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
 
+import { useAnalytics } from "@/lib/analytics";
+import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
+import { LinkWithDataroom } from "@/lib/types";
+import { useDisablePrint } from "@/lib/hooks/use-disable-print";
+
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
 
-import { useAnalytics } from "@/lib/analytics";
-import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
-import { LinkWithDataroom } from "@/lib/types";
-
-import DataroomViewer from "../DataroomViewer";
-import EmailVerificationMessage from "../email-verification-form";
+import EmailVerificationMessage from "../access-form/email-verification-form";
+import DataroomViewer from "../viewer/dataroom-viewer";
 
 export type TSupportedDocumentSimpleType =
   (typeof SUPPORTED_DOCUMENT_SIMPLE_TYPES)[number];
@@ -33,10 +34,15 @@ export type TDocumentData = {
   isVertical?: boolean;
 };
 
-type DEFAULT_DATAROOM_VIEW_TYPE = {
+export type DEFAULT_DATAROOM_VIEW_TYPE = {
   viewId?: string;
   isPreview?: boolean;
   verificationToken?: string;
+  viewerEmail?: string;
+  viewerId?: string;
+  conversationsEnabled?: boolean;
+  enableVisitorUpload?: boolean;
+  isTeamMember?: boolean;
 };
 
 export default function DataroomView({
@@ -50,6 +56,7 @@ export default function DataroomView({
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
+  logoOnAccessForm,
   isEmbedded,
   preview,
 }: {
@@ -65,13 +72,16 @@ export default function DataroomView({
   useCustomAccessForm?: boolean;
   isEmbedded?: boolean;
   preview?: boolean;
+  logoOnAccessForm?: boolean;
 }) {
+  useDisablePrint();
   const {
     linkType,
     dataroom,
     emailProtected,
     password: linkPassword,
     enableAgreement,
+    group,
   } = link;
 
   const analytics = useAnalytics();
@@ -125,19 +135,28 @@ export default function DataroomView({
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
-        const { viewId, isPreview, verificationToken } =
-          fetchData as DEFAULT_DATAROOM_VIEW_TYPE;
+        const {
+          viewId,
+          isPreview,
+          verificationToken,
+          viewerEmail,
+          viewerId,
+          conversationsEnabled,
+          enableVisitorUpload,
+          isTeamMember,
+        } = fetchData as DEFAULT_DATAROOM_VIEW_TYPE;
 
         analytics.identify(
-          userEmail ?? verifiedEmail ?? data.email ?? undefined,
+          userEmail ?? viewerEmail ?? verifiedEmail ?? data.email ?? undefined,
         );
         analytics.capture("Link Viewed", {
           linkId: link.id,
           dataroomId: dataroom?.id,
           linkType: linkType,
-          viewerId: viewId,
-          viewerEmail: data.email ?? verifiedEmail ?? userEmail,
+          viewerId: viewerId,
+          viewerEmail: viewerEmail ?? data.email ?? verifiedEmail ?? userEmail,
           isEmbedded,
+          isTeamMember,
         });
 
         // set the verification token to the cookie
@@ -154,6 +173,11 @@ export default function DataroomView({
         setViewData({
           viewId,
           isPreview,
+          viewerEmail,
+          viewerId,
+          conversationsEnabled,
+          enableVisitorUpload,
+          isTeamMember,
         });
         setSubmitted(true);
         setVerificationRequested(false);
@@ -186,12 +210,12 @@ export default function DataroomView({
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
     if (!didMount.current) {
-      if ((!submitted && !isProtected) || token || preview) {
+      if ((!submitted && !isProtected) || token || preview || previewToken) {
         handleSubmission();
         didMount.current = true;
       }
     }
-  }, [submitted, isProtected, token, preview]);
+  }, [submitted, isProtected, token, preview, previewToken]);
 
   // Components to render when email is submitted but verification is pending
   if (verificationRequested) {
@@ -227,6 +251,7 @@ export default function DataroomView({
         useCustomAccessForm={useCustomAccessForm}
         brand={brand}
         customFields={link.customFields}
+        logoOnAccessForm={logoOnAccessForm}
       />
     );
   }
@@ -243,14 +268,26 @@ export default function DataroomView({
     return (
       <div className="bg-gray-950">
         <DataroomViewer
+          accessControls={link.accessControls || group?.accessControls || []}
           brand={brand!}
           viewId={viewData.viewId}
           isPreview={viewData.isPreview}
           linkId={link.id}
           dataroom={dataroom}
           allowDownload={link.allowDownload!}
+          enableIndexFile={link.enableIndexFile}
           folderId={folderId}
           setFolderId={setFolderId}
+          viewerId={viewData.viewerId}
+          viewData={viewData}
+          isEmbedded={isEmbedded}
+          viewerEmail={
+            viewData.viewerEmail ??
+            data.email ??
+            verifiedEmail ??
+            userEmail ??
+            undefined
+          }
         />
       </div>
     );

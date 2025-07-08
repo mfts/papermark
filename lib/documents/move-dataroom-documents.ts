@@ -7,12 +7,14 @@ export const moveDataroomDocumentToFolder = async ({
   folderPathName,
   dataroomId,
   teamId,
+  folderIds,
 }: {
   documentIds: string[];
   folderId: string;
   folderPathName: string[] | undefined;
   dataroomId: string;
   teamId?: string;
+  folderIds: string[];
 }) => {
   if (!teamId) {
     toast.error("Team is required to move documents");
@@ -37,6 +39,23 @@ export const moveDataroomDocumentToFolder = async ({
     },
     false,
   );
+  const folderKey = `/api/teams/${teamId}/datarooms/${dataroomId}${folderPathName ? `/folders/${folderPathName.join("/")}` : "/folders?root=true"}`;
+
+  // Optimistically update the UI by removing the folder from current folders
+  mutate(
+    folderKey,
+    (folder: any) => {
+      if (!folder) return folder;
+
+      // Filter out the folder that are being moved
+      const updatedFolder = folder.filter(
+        (doc: any) => !folderIds.includes(doc.id),
+      );
+      // Return the updated list of folder
+      return updatedFolder;
+    },
+    false,
+  );
 
   try {
     // Make the API call to move the document
@@ -57,6 +76,9 @@ export const moveDataroomDocumentToFolder = async ({
 
     // Update local data using SWR's mutate
     mutate(key);
+    if (folderIds) {
+      mutate(folderKey);
+    }
     // update folder document counts in current path
     mutate(
       `/api/teams/${teamId}/datarooms/${dataroomId}/folders${folderPathName ? `/${folderPathName.join("/")}` : "?root=true"}`,
@@ -68,7 +90,7 @@ export const moveDataroomDocumentToFolder = async ({
     mutate(
       `/api/teams/${teamId}/datarooms/${dataroomId}${newPath ? `/folders/documents/${newPath}` : "/documents"}`,
     );
-
+    mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/folders`);
     toast.success(
       `${updatedCount} document${updatedCount > 1 ? "s" : ""} moved successfully`,
     );
@@ -76,5 +98,8 @@ export const moveDataroomDocumentToFolder = async ({
     toast.error("Failed to move documents");
     // Revert the UI back to the previous state
     mutate(key);
+    if (folderIds) {
+      mutate(folderKey);
+    }
   }
 };

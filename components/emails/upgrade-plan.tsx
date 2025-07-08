@@ -21,7 +21,7 @@ interface UpgradePlanEmailProps {
 
 const UpgradePlanEmail = ({
   name,
-  planType = "Pro",
+  planType = "pro",
 }: UpgradePlanEmailProps) => {
   const previewText = `The document sharing infrastructure for the modern web`;
 
@@ -30,21 +30,30 @@ const UpgradePlanEmail = ({
       "Custom branding",
       "Unlimited link views",
       "Folder organization",
-      "2 team members",
+      "1 team member",
     ],
     business: [
       "Custom domains on document links",
-      "Unlimited document uploads",
-      "1 data room for multi-file sharing",
+      "Unlimited data rooms for multi-file sharing",
+      "Advanced access controls",
       "3 team members",
     ],
     datarooms: [
       "Custom domains on data room links",
       "Unlimited data rooms",
       "Unlimited document uploads",
+      "3 team members",
+    ],
+    "datarooms-plus": [
+      "Custom domains on data room links",
+      "Unlimited data rooms",
+      "Q&A module",
       "5 team members",
     ],
   };
+
+  const planTypeText = planType.toLowerCase();
+  const planFeatures = features[planTypeText];
 
   return (
     <Html>
@@ -63,7 +72,7 @@ const UpgradePlanEmail = ({
               Hey{name && ` ${name}`}!
             </Text>
             <Text className="text-sm">
-              My name is Marc, and I&apos;m the creator of Papermark. I wanted
+              My name is Marc, and I&apos;m the founder of Papermark. I wanted
               to personally reach out to thank you for upgrading to Papermark{" "}
               {planType}!
             </Text>
@@ -82,7 +91,7 @@ const UpgradePlanEmail = ({
             <Text className="text-sm leading-6 text-black">
               On the {planType} plan, you now have access to:
             </Text>
-            {features[planType.toLowerCase()].map(
+            {planFeatures?.map(
               (feature: string, index: number) => (
                 <Text key={index} className="ml-1 text-sm leading-4 text-black">
                   ◆ {feature}
@@ -93,10 +102,15 @@ const UpgradePlanEmail = ({
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`${process.env.NEXT_PUBLIC_BASE_URL}/documents`}
+                href={`${process.env.NEXT_PUBLIC_BASE_URL}/${
+                  planTypeText.includes("datarooms") ? "datarooms" : "documents"
+                }`}
                 style={{ padding: "12px 20px" }}
               >
-                Share your documents
+                Share your{" "}
+                {planTypeText.includes("datarooms")
+                  ? "data rooms"
+                  : "documents"}
               </Button>
             </Section>
             <Section>
@@ -111,11 +125,11 @@ const UpgradePlanEmail = ({
               <Text className="text-xs">
                 © {new Date().getFullYear()}{" "}
                 <a
-                  href="https://www.papermark.io"
+                  href="https://www.papermark.com"
                   className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
                   target="_blank"
                 >
-                  papermark.io
+                  papermark.com
                 </a>
               </Text>
               <Text className="text-xs">

@@ -6,36 +6,60 @@ export const moveDocumentToFolder = async ({
   folderId,
   folderPathName,
   teamId,
+  folderIds,
 }: {
   documentIds: string[];
   folderId: string;
   folderPathName?: string[];
   teamId?: string;
+  folderIds?: string[];
 }) => {
   if (!teamId) {
     toast.error("Team is required to move documents");
     return;
   }
 
-  console.log("moving documents to folder", documentIds, folderId);
   const key = `/api/teams/${teamId}${folderPathName ? `/folders/documents/${folderPathName.join("/")}` : "/documents"}`;
   // Optimistically update the UI by removing the documents from current folder
   mutate(
     key,
-    (documents: any) => {
-      if (!documents) return documents;
-
-      // Filter out the documents that are being moved
-      const updatedDocuments = documents.filter(
-        (doc: any) => !documentIds.includes(doc.id),
-      );
-
-      // Return the updated list of documents
-      return updatedDocuments;
+    (data: any) => {
+      if (Array.isArray(data?.documents)) {
+        const updatedDocuments = data.documents.filter(
+          (doc: any) => !documentIds.includes(doc.id),
+        );
+        return { ...data, documents: updatedDocuments };
+      }
+      if (Array.isArray(data)) {
+        const updatedDocuments = data.filter(
+          (doc: any) => !documentIds.includes(doc.id),
+        );
+        return updatedDocuments;
+      }
+      return data;
     },
-    false,
+    { revalidate: false },
   );
-
+  // Instant Update the UI
+  const folderKey = `/api/teams/${teamId}${folderPathName ? `/folders/${folderPathName.join("/")}` : "/folders?root=true"}`;
+  if (folderIds) {
+    mutate(
+      folderKey,
+      (folder: any) => {
+        if (Array.isArray(folder)) {
+          interface Folder {
+            id: string;
+          }
+          const updatedFolder: Folder[] = folder.filter(
+            (f: Folder) => !folderIds.includes(f.id),
+          );
+          return updatedFolder;
+        }
+        return folder; 
+      },
+      { revalidate: false },
+    );
+  }
   try {
     // Make the API call to move the document
     const response = await fetch(`/api/teams/${teamId}/documents/move`, {
@@ -52,13 +76,17 @@ export const moveDocumentToFolder = async ({
 
     // Update local data using SWR's mutate
     mutate(key);
+    if (folderIds) {
+      mutate(folderKey);
+    }
     // update folder document counts in current path
     mutate(
       `/api/teams/${teamId}/folders${folderPathName ? `/${folderPathName.join("/")}` : "?root=true"}`,
     );
     // update documents in new folder (or home)
-    newPath && mutate(`/api/teams/${teamId}/folders${newPath}`);
-
+    mutate(
+      `/api/teams/${teamId}${newPath ? `/folders/documents/${newPath}` : "/documents"}`,
+    );
     toast.success(
       `${updatedCount} document${updatedCount > 1 ? "s" : ""} moved successfully`,
     );
@@ -66,5 +94,8 @@ export const moveDocumentToFolder = async ({
     toast.error("Failed to move documents");
     // Revert the UI back to the previous state
     mutate(key);
+    if (folderIds) {
+      mutate(folderKey);
+    }
   }
 };

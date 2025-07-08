@@ -44,35 +44,36 @@ export default function TeamInvitation({
               <span className="font-semibold">{teamName}</span> team on{" "}
               <span className="font-semibold">Papermark</span>.
             </Text>
-            <Section className="mb-[32px] mt-[32px] text-center">
+            <Section className="my-8 text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`${url}`}
+                href={url}
                 style={{ padding: "12px 20px" }}
               >
                 Join the team
               </Button>
             </Section>
-            <Text className="text-sm text-black">
-              or copy and paste this URL into your browser: <br />
-              {`${url}`}
+            <Text className="text-sm leading-6 text-black">
+              or copy and paste this URL into your browser:
             </Text>
-            <Text className="text-sm text-gray-400">Marc from Papermark</Text>
+            <Text className="max-w-sm flex-wrap break-words font-medium text-purple-600 no-underline">
+              {url.replace(/^https?:\/\//, "")}
+            </Text>
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">
                 © {new Date().getFullYear()}{" "}
                 <a
-                  href="https://www.papermark.io"
+                  href="https://www.papermark.com"
                   className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
                   target="_blank"
                 >
-                  papermark.io
+                  papermark.com
                 </a>
               </Text>
               <Text className="text-xs">
                 If you have any feedback or questions about this email, simply
-                reply to it. I&apos;d love to hear from you!
+                reply to it.
               </Text>
             </Section>
           </Container>

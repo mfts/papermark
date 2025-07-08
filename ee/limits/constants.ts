@@ -64,5 +64,6 @@ export const DATAROOMS_PLUS_PLAN_LIMITS = {
   datarooms: 1000,
   customDomainOnPro: true,
   customDomainInDataroom: true,
+  conversationsInDataroom: true,
   advancedLinkControlsOnPro: false,
 };

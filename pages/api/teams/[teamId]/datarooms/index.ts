@@ -83,6 +83,9 @@ export default async function handle(
               "business+old",
               "datarooms+old",
               "datarooms-plus+old",
+              "datarooms+drtrial", 
+              "business+drtrial", 
+              "datarooms-plus+drtrial"
             ],
           },
           users: {

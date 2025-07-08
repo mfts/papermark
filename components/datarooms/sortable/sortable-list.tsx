@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
 import {
@@ -22,15 +22,16 @@ import { CheckIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import DataroomDocumentCard from "@/components/datarooms/dataroom-document-card";
-import FolderCard from "@/components/documents/folder-card";
-import { Button } from "@/components/ui/button";
-import { Portal } from "@/components/ui/portal";
-
 import {
   DataroomFolderDocument,
   DataroomFolderWithCount,
 } from "@/lib/swr/use-dataroom";
+
+import DataroomDocumentCard from "@/components/datarooms/dataroom-document-card";
+import { useDeleteFolderModal } from "@/components/documents/actions/delete-folder-modal";
+import FolderCard from "@/components/documents/folder-card";
+import { Button } from "@/components/ui/button";
+import { Portal } from "@/components/ui/portal";
 
 import { SortableItem } from "./sortable-item";
 
@@ -53,6 +54,27 @@ export function DataroomSortableList({
 }) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [items, setItems] = useState<FolderOrDocument[]>(mixedItems ?? []);
+
+  const { setDeleteModalOpen, setFolderToDelete, DeleteFolderModal } =
+    useDeleteFolderModal(teamInfo, true, dataroomId);
+
+  const handleDeleteFolder = useCallback(
+    (folderId: string) => {
+      const folderToDelete = items.find(
+        (f) => f.id === folderId && f.itemType === "folder",
+      );
+      if (folderToDelete && folderToDelete.itemType === "folder") {
+        const { itemType, ...folder } = folderToDelete;
+        setFolderToDelete(folder);
+        setDeleteModalOpen(true);
+        setItems((prevItems) =>
+          prevItems.filter((item) => item.id !== folderId),
+        );
+      }
+      setItems((prevItems) => prevItems.filter((item) => item.id !== folderId));
+    },
+    [items, setFolderToDelete, setDeleteModalOpen, setItems],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -123,12 +145,15 @@ export function DataroomSortableList({
       }
 
       // Update local data using SWR's mutate
+      const baseKey = `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}`;
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders${folderPathName ? `/${folderPathName.join(" / ")}` : "?root=true"}`,
+        `${baseKey}/folders${folderPathName ? `/${folderPathName.join("/")}` : "?root=true"}`,
       );
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}${folderPathName ? `/folders/documents/${folderPathName.join("/")}` : "/documents"}`,
+        `${baseKey}${folderPathName ? `/folders/documents/${folderPathName.join("/")}` : "/documents"}`,
       );
+      mutate(`${baseKey}/folders`);
+      mutate(`${baseKey}/folders?include_documents=true`);
       setIsReordering(false);
       toast.success("Index saved successfully");
     } catch (error) {
@@ -149,8 +174,9 @@ export function DataroomSortableList({
           <FolderCard
             folder={item}
             teamInfo={teamInfo}
-            isDataroom={!!dataroomId}
+            isDataroom
             dataroomId={dataroomId}
+            onDelete={handleDeleteFolder}
           />
         ) : (
           <DataroomDocumentCard
@@ -197,8 +223,9 @@ export function DataroomSortableList({
                 <FolderCard
                   folder={activeItem}
                   teamInfo={teamInfo}
-                  isDataroom={!!dataroomId}
+                  isDataroom
                   dataroomId={dataroomId}
+                  onDelete={handleDeleteFolder}
                 />
               ) : (
                 <DataroomDocumentCard
@@ -223,6 +250,7 @@ export function DataroomSortableList({
           Save index
         </Button>
       </Portal>
+      <DeleteFolderModal />
     </div>
   );
 }

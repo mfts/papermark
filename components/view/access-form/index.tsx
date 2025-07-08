@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 
 import { Brand, CustomField, DataroomBrand } from "@prisma/client";
 
-import { Button } from "@/components/ui/button";
-
 import { determineTextColor } from "@/lib/utils/determine-text-color";
+
+import { Button } from "@/components/ui/button";
 
 import AgreementSection from "./agreement-section";
 import CustomFieldsSection from "./custom-fields-section";
@@ -42,6 +42,7 @@ export default function AccessForm({
   disableEditEmail,
   useCustomAccessForm,
   customFields,
+  logoOnAccessForm,
 }: {
   data: DEFAULT_ACCESS_FORM_TYPE;
   email: string | null | undefined;
@@ -59,6 +60,7 @@ export default function AccessForm({
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
   customFields?: Partial<CustomField>[];
+  logoOnAccessForm?: boolean;
 }) {
   const [isEmailValid, setIsEmailValid] = useState(true);
 
@@ -98,13 +100,31 @@ export default function AccessForm({
 
   return (
     <div
-      className="flex h-full min-h-dvh flex-col justify-between pb-4 pt-12"
+      className="flex h-full min-h-dvh flex-col justify-between pb-4"
       style={{
         backgroundColor:
           brand && brand.accentColor ? brand.accentColor : "black",
       }}
     >
-      <div className="flex flex-1 flex-col px-6 pb-12 lg:px-8">
+      {/* Light Navbar */}
+      {logoOnAccessForm && brand && brand.logo && (
+        <nav
+          className="w-full"
+          style={{
+            backgroundColor: brand.brandColor ? brand.brandColor : "black",
+          }}
+        >
+          <div className="flex h-16 items-center justify-start px-2 sm:px-6 lg:px-8">
+            <img
+              src={brand.logo as string}
+              alt="Brand Logo"
+              className="h-16 w-auto object-contain"
+            />
+          </div>
+        </nav>
+      )}
+
+      <div className="flex flex-1 flex-col px-6 pb-12 pt-8 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <h1
             className="mt-10 text-2xl font-bold leading-9 tracking-tight text-white"
@@ -172,7 +192,7 @@ export default function AccessForm({
           <p className="text-center text-sm tracking-tight text-gray-500">
             This document is securely shared with you using{" "}
             <a
-              href="https://www.papermark.io"
+              href="https://www.papermark.com"
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold"

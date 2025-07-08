@@ -29,8 +29,14 @@ export default async function handle(
     return;
   }
 
-  const { viewId } = req.body as {
+  const { viewId, locationData } = req.body as {
     viewId: string;
+    locationData: {
+      continent: string | null;
+      country: string;
+      region: string;
+      city: string;
+    };
   };
 
   let view: {
@@ -42,11 +48,15 @@ export default async function handle(
       teamId: string | null;
       id: string;
       name: string;
+      ownerId: string | null;
     } | null;
     dataroom: {
       teamId: string | null;
       id: string;
       name: string;
+    } | null;
+    team: {
+      plan: string | null;
     } | null;
   } | null;
 
@@ -70,6 +80,7 @@ export default async function handle(
             teamId: true,
             id: true,
             name: true,
+            ownerId: true,
           },
         },
         dataroom: {
@@ -77,6 +88,11 @@ export default async function handle(
             teamId: true,
             id: true,
             name: true,
+          },
+        },
+        team: {
+          select: {
+            plan: true,
           },
         },
       },
@@ -101,10 +117,11 @@ export default async function handle(
       ? view.document!.teamId!
       : view.dataroom!.teamId!;
 
-  // Get all team members who are admins or managers to be notified
+  // Get all active team members who are admins or managers to be notified
   const users = await prisma.userTeam.findMany({
     where: {
       role: { in: ["ADMIN", "MANAGER"] },
+      status: "ACTIVE",
       teamId: teamId,
     },
     select: {
@@ -117,11 +134,57 @@ export default async function handle(
     },
   });
 
+  // Get the active owner of the document
+  let ownerEmail: string | null = null;
+  if (view.document?.ownerId) {
+    const ownerUser = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId: view.document!.ownerId!,
+          teamId: teamId,
+        },
+        status: "ACTIVE",
+      },
+      select: {
+        user: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
+
+    ownerEmail = ownerUser?.user.email || null;
+  }
+
+  const includeLocation =
+    !view.team?.plan?.includes("free") &&
+    !view.team?.plan?.includes("starter") &&
+    !view.team?.plan?.includes("pro");
+
+  const locationString =
+    locationData.country === "US"
+      ? `${locationData.city}, ${locationData.region}, ${locationData.country}`
+      : `${locationData.city}, ${locationData.country}`;
+
   // POST /api/jobs/send-notification
   try {
     const adminEmail = users.find((user) => user.role === "ADMIN")?.user.email;
 
     if (view.viewType === "DOCUMENT_VIEW") {
+      const teamMembers = users
+        .map((user) => user.user.email!)
+        .filter((email) => email !== adminEmail);
+
+      // Add ownerEmail to teamMembers if it exists and isn't already included
+      if (
+        ownerEmail &&
+        ownerEmail !== adminEmail &&
+        !teamMembers.includes(ownerEmail)
+      ) {
+        teamMembers.push(ownerEmail);
+      }
+
       // send email to document owner that document
       await sendViewedDocumentEmail({
         ownerEmail: adminEmail!,
@@ -129,9 +192,8 @@ export default async function handle(
         documentName: view.document!.name,
         linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
         viewerEmail: view.viewerEmail,
-        teamMembers: users
-          .map((user) => user.user.email!)
-          .filter((email) => email !== adminEmail),
+        teamMembers,
+        locationString: includeLocation ? locationString : undefined,
       });
     } else {
       // send email to dataroom owner that dataroom
@@ -140,9 +202,11 @@ export default async function handle(
         dataroomId: view.dataroom!.id,
         dataroomName: view.dataroom!.name,
         viewerEmail: view.viewerEmail,
+        linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
         teamMembers: users
           .map((user) => user.user.email!)
           .filter((email) => email !== adminEmail),
+        locationString: includeLocation ? locationString : undefined,
       });
     }
 
