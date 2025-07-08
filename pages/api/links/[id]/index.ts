@@ -341,6 +341,7 @@ export default async function handle(
           uploadFolderId: linkData.uploadFolderId || null,
         },
         include: {
+          customFields: true,
           views: {
             orderBy: {
               viewedAt: "desc",
