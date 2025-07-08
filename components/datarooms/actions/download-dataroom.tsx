@@ -3,8 +3,7 @@ import { useState } from "react";
 import { DownloadIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { ButtonTooltip } from "@/components/ui/tooltip";
+import { ResponsiveButton } from "@/components/responsive-button";
 
 export default function DownloadDataroomButton({
   teamId,
@@ -57,16 +56,13 @@ export default function DownloadDataroomButton({
     }
   };
   return (
-    <ButtonTooltip content="Download Dataroom" sideOffset={4}>
-      <Button
-        onClick={downloadDataroom}
-        variant="outline"
-        className=""
-        size="sm"
-        loading={isLoading}
-      >
-        <DownloadIcon />
-      </Button>
-    </ButtonTooltip>
+    <ResponsiveButton
+      icon={<DownloadIcon className="h-4 w-4" />}
+      text="Download"
+      onClick={downloadDataroom}
+      variant="outline"
+      size="sm"
+      loading={isLoading}
+    />
   );
 }
