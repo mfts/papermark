@@ -15,6 +15,7 @@ import { useDataroomLinks } from "@/lib/swr/use-dataroom";
 import { IndexFileFormat } from "@/lib/types/index-file";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { ResponsiveButton } from "@/components/responsive-button";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -135,10 +136,13 @@ export default function GenerateIndexDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" disabled={disabled}>
-          <FileSlidersIcon />
-          Generate Index File
-        </Button>
+        <ResponsiveButton
+          icon={<FileSlidersIcon className="h-4 w-4" />}
+          text="Generate Index"
+          variant="outline"
+          size="sm"
+          disabled={disabled}
+        />
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
