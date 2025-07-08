@@ -120,6 +120,7 @@ export function AddDomainModal({
 
   const resetState = () => {
     setDomain("");
+    setRedirect("");
     setDomainStatus("idle");
     setValidationMessage("");
     setLoading(false);
