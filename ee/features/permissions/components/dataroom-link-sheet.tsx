@@ -273,7 +273,9 @@ export function DataroomLinkSheet({
       endpoint = `/api/links/${currentLink.id}`;
       method = "PUT";
     }
-
+    const customFields = linkData.customFields?.filter((field) =>
+      field.label.trim(),
+    );
     const response = await fetch(endpoint, {
       method: method,
       headers: {
@@ -281,6 +283,7 @@ export function DataroomLinkSheet({
       },
       body: JSON.stringify({
         ...linkData,
+        customFields: customFields,
         metaImage: blobUrl,
         metaFavicon: blobUrlFavicon,
         targetId: targetId,
