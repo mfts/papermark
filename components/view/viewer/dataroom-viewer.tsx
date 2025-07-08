@@ -450,6 +450,21 @@ export default function DataroomViewer({
                 </div>
               </div>
 
+              {/* Search results banner */}
+              {searchQuery && (
+                <div className="mt-4 rounded-md border border-muted/50 bg-muted px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-medium text-muted-foreground">
+                      Search results for &quot;{searchQuery}&quot;
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      ({mixedItems.length} result
+                      {mixedItems.length !== 1 ? "s" : ""} across all folders)
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
                 {mixedItems.length === 0 ? (
                   <li className="py-6 text-center text-muted-foreground">
