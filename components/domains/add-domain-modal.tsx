@@ -74,17 +74,17 @@ const getValidationMessage = (status: DomainStatus, domain: string) => {
     case "checking":
       return `Checking availability for ${domain}...`;
     case "available":
-      return `${domain} is ready to connect for document sharing.`;
+      return `${domain} is ready to connect to Papermark.`;
     case "conflict":
       return `${domain} is already in use.`;
     case "has site":
-      return `${domain} is currently pointing to an existing website. Only proceed if you're sure you want to use this domain for document sharing.`;
+      return `${domain} is currently pointing to an existing website. Only proceed if you're sure you want to use this domain with Papermark.`;
     case "invalid":
       return "Please enter a valid domain format (e.g., docs.yourdomain.com)";
     case "error":
       return "Failed to validate domain. Please try again.";
     default:
-      return "";
+      return "Enter a domain to check its availability.";
   }
 };
 
@@ -212,7 +212,7 @@ export function AddDomainModal({
       return toast.error(validation.error.errors[0].message);
     }
 
-    if (!["available", "has site"].includes(domainStatus)) {
+    if (!["available"].includes(domainStatus)) {
       return toast.error("Please enter a valid and available domain");
     }
 

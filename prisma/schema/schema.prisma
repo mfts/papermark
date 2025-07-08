@@ -253,6 +253,7 @@ model Domain {
 
   @@index([userId])
   @@index([teamId])
+  @@index([slug])
 }
 
 model View {
