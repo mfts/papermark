@@ -10,10 +10,7 @@ export function useBreakpoint(breakpoint: number) {
 
     handleResize();
     window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+      return () => window.removeEventListener('resize', handleResize);
   }, [breakpoint]);
 
   return isSmaller;
