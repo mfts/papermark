@@ -108,6 +108,20 @@ model Team {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Tag       Tag[]
+
+  ignoredDomains IgnoredDomain[]
+}
+
+model IgnoredDomain {
+  id      String   @id @default(cuid())
+  domains String[] @default([])
+  team    Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
 }
 
 model Brand {

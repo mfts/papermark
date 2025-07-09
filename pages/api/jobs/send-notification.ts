@@ -117,6 +117,28 @@ export default async function handle(
       ? view.document!.teamId!
       : view.dataroom!.teamId!;
 
+  if (view.viewerEmail) {
+    const viewerDomain = view.viewerEmail.split('@').pop();
+    if (viewerDomain) {
+      const ignoredDomainRecord = await prisma.ignoredDomain.findFirst({
+        where: {
+          teamId,
+        },
+        select: {
+          domains: true,
+        },
+      });
+
+      if (ignoredDomainRecord?.domains) {
+        const ignoredDomainList = ignoredDomainRecord.domains.map(d => d.startsWith('@') ? d.substring(1) : d);
+
+        if (ignoredDomainList.includes(viewerDomain)) {
+          return res.status(200).json({ message: "Notification skipped for ignored domain.", viewId });
+        }
+      }
+    }
+  }
+
   // Get all active team members who are admins or managers to be notified
   const users = await prisma.userTeam.findMany({
     where: {
