@@ -574,7 +574,7 @@ export const sanitizeList = (list: string, mode: FilterMode = "both"): string[] 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const domainRegex = /^@[^\s@]+\.[^\s@]+$/;
 
-  return list
+  const sanitized = list
     .split("\n")
     .map((item) => item.trim().replace(/,$/, "").toLowerCase())
     .filter((item) => item !== "")
@@ -583,6 +583,8 @@ export const sanitizeList = (list: string, mode: FilterMode = "both"): string[] 
       if (mode === "domain") return domainRegex.test(item);
       return emailRegex.test(item) || domainRegex.test(item);
     });
+
+  return [...new Set(sanitized)];
 };
 
 export function hexToRgb(hex: string) {

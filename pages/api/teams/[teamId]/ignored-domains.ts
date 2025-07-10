@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { sanitizeList } from "@/lib/utils";
 import { authOptions } from "../../auth/[...nextauth]";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -67,13 +68,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
                 return res.status(400).json({ error: "Invalid domains list" });
             }
 
-            const uniqueDomains: string[] = [
-                ...new Set(
-                    domains
-                        .map((d: any) => (typeof d === "string" ? d.trim() : ""))
-                        .filter(Boolean),
-                ),
-            ];
+            const uniqueDomains = sanitizeList(domains.join("\n"), "domain");
 
             await prisma.$transaction([
                 prisma.ignoredDomain.deleteMany({ where: { teamId } }),
