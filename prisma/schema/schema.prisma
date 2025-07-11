@@ -109,20 +109,9 @@ model Team {
   updatedAt DateTime @updatedAt
   Tag       Tag[]
 
-  ignoredDomains IgnoredDomain[]
+  ignoredDomains String[] // Domains that are ignored for the team
 }
 
-model IgnoredDomain {
-  id      String   @id @default(cuid())
-  domains String[] @default([])
-  team    Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId  String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([teamId])
-}
 
 model Brand {
   id          String  @id @default(cuid())

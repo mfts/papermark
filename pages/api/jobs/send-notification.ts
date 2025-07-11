@@ -57,6 +57,7 @@ export default async function handle(
     } | null;
     team: {
       plan: string | null;
+      ignoredDomains: string[] | null;
     } | null;
   } | null;
 
@@ -93,6 +94,7 @@ export default async function handle(
         team: {
           select: {
             plan: true,
+            ignoredDomains: true,
           },
         },
       },
@@ -118,22 +120,18 @@ export default async function handle(
       : view.dataroom!.teamId!;
 
   if (view.viewerEmail) {
-    const viewerDomain = view.viewerEmail.split('@').pop();
+    const viewerDomain = view.viewerEmail.split("@").pop();
     if (viewerDomain) {
-      const ignoredDomainRecord = await prisma.ignoredDomain.findFirst({
-        where: {
-          teamId,
-        },
-        select: {
-          domains: true,
-        },
-      });
-
-      if (ignoredDomainRecord?.domains) {
-        const ignoredDomainList = ignoredDomainRecord.domains.map(d => d.startsWith('@') ? d.substring(1) : d);
+      if (view?.team?.ignoredDomains) {
+        const ignoredDomainList = view.team.ignoredDomains.map((d) =>
+          d.startsWith("@") ? d.substring(1) : d,
+        );
 
         if (ignoredDomainList.includes(viewerDomain)) {
-          return res.status(200).json({ message: "Notification skipped for ignored domain.", viewId });
+          return res.status(200).json({
+            message: "Notification skipped for ignored domain.",
+            viewId,
+          });
         }
       }
     }
