@@ -27,6 +27,7 @@ import DownloadOnlyViewer from "./viewer/download-only-viewer";
 import ImageViewer from "./viewer/image-viewer";
 import PagesHorizontalViewer from "./viewer/pages-horizontal-viewer";
 import PagesVerticalViewer from "./viewer/pages-vertical-viewer";
+import { UrlsViewer } from "./viewer/urls-viewer";
 import VideoViewer from "./viewer/video-viewer";
 
 const ExcelViewer = dynamic(
@@ -76,7 +77,6 @@ export default function ViewData({
   canDownload?: boolean;
 }) {
   const { isMobile } = useMediaQuery();
-
   const navData: TNavData = {
     viewId: viewData.viewId,
     isPreview: viewData.isPreview,
@@ -100,8 +100,14 @@ export default function ViewData({
   };
 
   // Calculate allowDownload once for all components
-
-  return notionData?.recordMap ? (
+  return viewData.fileType === "urls" ? (
+    <UrlsViewer
+      urls={document.versions[0].contentUrls}
+      versionNumber={document.versions[0].versionNumber}
+      screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      navData={navData}
+    />
+  ) : notionData?.recordMap ? (
     <NotionPage
       recordMap={notionData.recordMap}
       versionNumber={document.versions[0].versionNumber}

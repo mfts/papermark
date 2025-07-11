@@ -17,6 +17,7 @@ import {
   MoonIcon,
   ServerIcon,
   SheetIcon,
+  SquarePenIcon,
   SunIcon,
   TrashIcon,
   ViewIcon,
@@ -65,6 +66,7 @@ import { ButtonTooltip } from "../ui/tooltip";
 import { AddDocumentModal } from "./add-document-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 import AlertBanner from "./alert";
+import { EditUrlsModal } from "./edit-urls-modal";
 
 export default function DocumentHeader({
   prismaDocument,
@@ -91,6 +93,7 @@ export default function DocumentHeader({
   const [addDataRoomOpen, setAddDataRoomOpen] = useState<boolean>(false);
   const [addDocumentVersion, setAddDocumentVersion] = useState<boolean>(false);
   const [openAddDocModal, setOpenAddDocModal] = useState<boolean>(false);
+  const [editUrlsModalOpen, setEditUrlsModalOpen] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const [planModalTrigger, setPlanModalTrigger] = useState<string>("");
   const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
@@ -569,53 +572,69 @@ export default function DocumentHeader({
         </div>
 
         <div className="flex items-center gap-x-4 md:gap-x-2">
-          {primaryVersion.type !== "notion" &&
-            primaryVersion.type !== "sheet" &&
-            primaryVersion.type !== "zip" &&
-            primaryVersion.type !== "video" &&
-            (!orientationLoading ? (
-              <ButtonTooltip content="Change orientation">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="hidden md:flex"
-                  onClick={changeDocumentOrientation}
-                  title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
-                >
-                  <PortraitLandscape
-                    className={cn(
-                      "h-6 w-6",
-                      !primaryVersion.isVertical && "-rotate-90 transform",
-                    )}
-                  />
-                </Button>
-              </ButtonTooltip>
-            ) : (
-              <div className="hidden md:flex">
-                <LoadingSpinner className="h-6 w-6" />
-              </div>
-            ))}
+          {primaryVersion.type === "urls" ? (
+            <ButtonTooltip content="Edit URLs">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="flex"
+                onClick={() => setEditUrlsModalOpen(true)}
+              >
+                <SquarePenIcon className="h-6 w-6" />
+                <span className="sr-only">Edit URLs</span>
+              </Button>
+            </ButtonTooltip>
+          ) : (
+            <>
+              {primaryVersion.type !== "notion" &&
+                primaryVersion.type !== "sheet" &&
+                primaryVersion.type !== "zip" &&
+                primaryVersion.type !== "video" &&
+                (!orientationLoading ? (
+                  <ButtonTooltip content="Change orientation">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hidden md:flex"
+                      onClick={changeDocumentOrientation}
+                      title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
+                    >
+                      <PortraitLandscape
+                        className={cn(
+                          "h-6 w-6",
+                          !primaryVersion.isVertical && "-rotate-90 transform",
+                        )}
+                      />
+                    </Button>
+                  </ButtonTooltip>
+                ) : (
+                  <div className="hidden md:flex">
+                    <LoadingSpinner className="h-6 w-6" />
+                  </div>
+                ))}
 
-          {primaryVersion.type !== "notion" && (
-            <AddDocumentModal
-              newVersion
-              openModal={openAddDocModal}
-              setAddDocumentModalOpen={setOpenAddDocModal}
-            >
-              <ButtonTooltip content="Upload new version">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenAddDocModal(true);
-                  }}
-                  className="hidden md:flex"
+              {primaryVersion.type !== "notion" && (
+                <AddDocumentModal
+                  newVersion
+                  openModal={openAddDocModal}
+                  setAddDocumentModalOpen={setOpenAddDocModal}
                 >
-                  <FileUp className="h-6 w-6" />
-                </Button>
-              </ButtonTooltip>
-            </AddDocumentModal>
+                  <ButtonTooltip content="Upload new version">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenAddDocModal(true);
+                      }}
+                      className="hidden md:flex"
+                    >
+                      <FileUp className="h-6 w-6" />
+                    </Button>
+                  </ButtonTooltip>
+                </AddDocumentModal>
+              )}
+            </>
           )}
 
           {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
@@ -665,8 +684,14 @@ export default function DocumentHeader({
               ref={dropdownRef}
             >
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuGroup className="block md:hidden">
-                {prismaDocument.type !== "notion" &&
+              <DropdownMenuGroup className="block">
+                {prismaDocument.type === "urls" ? (
+                  <DropdownMenuItem onClick={() => setEditUrlsModalOpen(true)}>
+                    <SquarePenIcon className="mr-2 h-4 w-4" />
+                    Edit URLs
+                  </DropdownMenuItem>
+                ) : (
+                  prismaDocument.type !== "notion" &&
                   primaryVersion.type !== "video" && (
                     <DropdownMenuItem>
                       <AddDocumentModal
@@ -685,8 +710,8 @@ export default function DocumentHeader({
                         </button>
                       </AddDocumentModal>
                     </DropdownMenuItem>
-                  )}
-
+                  )
+                )}
                 {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
                 {/* {prismaDocument.type !== "notion" &&
                   prismaDocument.type !== "sheet" &&
@@ -716,7 +741,6 @@ export default function DocumentHeader({
                       </DropdownMenuItem>
                     </>
                   )} */}
-
                 <DropdownMenuSeparator />
               </DropdownMenuGroup>
               {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
@@ -760,6 +784,7 @@ export default function DocumentHeader({
               )}
 
               {primaryVersion.type !== "notion" &&
+                primaryVersion.type !== "urls" &&
                 primaryVersion.type !== "zip" &&
                 primaryVersion.type !== "map" &&
                 primaryVersion.type !== "email" && (
@@ -825,6 +850,7 @@ export default function DocumentHeader({
 
               {/* Download latest version */}
               {primaryVersion.type !== "notion" &&
+                primaryVersion.type !== "urls" &&
                 primaryVersion.type !== "video" && (
                   <DropdownMenuItem
                     onClick={() => downloadDocument(primaryVersion)}
@@ -931,7 +957,8 @@ export default function DocumentHeader({
 
       {prismaDocument.type === "sheet" &&
         supportsAdvancedExcelMode(primaryVersion.contentType) &&
-        (isFree || isPro) && !isTrial && (
+        (isFree || isPro) &&
+        !isTrial && (
           <AlertBanner
             id="advanced-excel-alert"
             variant="default"
@@ -995,6 +1022,16 @@ export default function DocumentHeader({
           trigger={planModalTrigger}
           open={planModalOpen}
           setOpen={setPlanModalOpen}
+        />
+      ) : null}
+
+      {editUrlsModalOpen ? (
+        <EditUrlsModal
+          documentId={prismaDocument.id}
+          currentUrls={prismaDocument.contentUrls}
+          documentName={prismaDocument.name}
+          open={editUrlsModalOpen}
+          onOpenChange={setEditUrlsModalOpen}
         />
       ) : null}
     </header>

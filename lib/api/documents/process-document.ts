@@ -41,6 +41,7 @@ export const processDocument = async ({
     fileSize,
     numPages,
     enableExcelAdvancedMode,
+    contentUrls,
   } = documentData;
 
   // Get passed type property or alternatively, the file extension and save it as the type
@@ -89,6 +90,7 @@ export const processDocument = async ({
       teamId: teamId,
       advancedExcelEnabled: enableExcelAdvancedMode,
       downloadOnly: isDownloadOnly,
+      ...(contentUrls && { contentUrls }),
       ...(createLink && {
         links: {
           create: {
@@ -101,6 +103,7 @@ export const processDocument = async ({
           file: key,
           originalFile: key,
           contentType: contentType,
+          ...(contentUrls && { contentUrls }),
           type: type,
           storageType,
           numPages: numPages,

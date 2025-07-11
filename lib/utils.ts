@@ -123,7 +123,7 @@ export function bytesToSize(bytes: number) {
   return `${Math.round(sizeInCurrentUnit)} ${sizes[i]}`;
 }
 
-const isValidUrl = (url: string) => {
+export const isValidUrl = (url: string) => {
   try {
     new URL(url);
     return true;

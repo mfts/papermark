@@ -157,6 +157,7 @@ model Document {
   name                 String
   description          String?
   file                 String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  contentUrls          String[] @default([]) // This should be a reference to the content URLs of the document
   originalFile         String? // This should be a reference to the original file like pptx, xlsx, etc. (S3, Google Cloud Storage, etc.)
   type                 String? // This should be a reference to the file type (pdf, sheet, etc.)
   contentType          String? // This should be the actual contentType of the file like application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, etc.
@@ -197,6 +198,7 @@ model DocumentVersion {
   document      Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId    String
   file          String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  contentUrls   String[] @default([]) // This should be a reference to the content URLs of the document
   originalFile  String? // This should be a reference to the original file like pptx, xlsx, etc. (S3, Google Cloud Storage, etc.)
   type          String? // This should be a reference to the file type (pdf, docx, etc.)
   contentType   String? // This should be the actual contentType of the file like application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, etc.

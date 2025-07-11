@@ -78,6 +78,7 @@ export interface LinkWithDocument extends Link {
       hasPages: boolean;
       file: string;
       isVertical: boolean;
+      contentUrls: string[];
     }[];
     team: {
       plan: string;
@@ -98,6 +99,7 @@ export interface LinkWithDataroomDocument extends Link {
   dataroomDocument: DataroomDocument & {
     document: Document & {
       versions: {
+        contentUrls: string[];
         id: string;
         versionNumber: number;
         type: string;
@@ -136,6 +138,7 @@ export interface LinkWithDataroom extends Link {
         id: string;
         name: string;
         versions: {
+          contentUrls: string[];
           id: string;
           versionNumber: number;
           type: string;

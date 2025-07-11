@@ -5,7 +5,6 @@ import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
 
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Skeleton } from "../ui/skeleton";
 
 type ClickEvent = {
   timestamp: string;
@@ -37,7 +36,7 @@ export default function VisitorClicks({
 
   if (error) {
     return (
-      <Card>
+      <Card className="mt-2">
         <CardHeader>
           <CardTitle className="text-base font-medium">Link Clicks</CardTitle>
         </CardHeader>
@@ -55,7 +54,7 @@ export default function VisitorClicks({
   }
 
   return (
-    <Card>
+    <Card className="mt-2">
       <CardHeader>
         <CardTitle className="text-base font-medium">Link Clicks</CardTitle>
       </CardHeader>

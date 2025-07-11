@@ -1,19 +1,13 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-
-
 import { FormEvent, useEffect, useState } from "react";
-
-
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
 import { mutate } from "swr";
-
-
 
 import { useAnalytics } from "@/lib/analytics";
 import {
@@ -22,6 +16,7 @@ import {
   createNewDocumentVersion,
 } from "@/lib/documents/create-document";
 import { putFile } from "@/lib/files/put-file";
+import { useUrlDocument } from "@/lib/hooks/urls/use-url-document";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
@@ -32,6 +27,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -42,8 +38,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UrlInput } from "@/components/ui/url-input";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { SetGroupPermissionsModal } from "../datarooms/groups/set-group-permissions-modal";
@@ -142,6 +140,25 @@ export function AddDocumentModal({
       return undefined;
     }
   };
+
+  const {
+    urls: urlLinkFromHook,
+    invalidUrls: invalidUrlsFromHook,
+    handleUrlChange,
+    docName: docNameFromHook,
+    setDocName: setDocNameFromHook,
+    uploading: urlUploading,
+    handleCreateUrlDocument,
+    resetAll,
+    isUrlInputValid,
+  } = useUrlDocument({
+    isDataroom,
+    dataroomId,
+    newVersion,
+    canAddDocuments,
+    currentFolderPath,
+    addDocumentToDataroom,
+  });
 
   const handleFileUpload = async (
     event: FormEvent<HTMLFormElement>,
@@ -453,9 +470,33 @@ export function AddDocumentModal({
     }
   };
 
+  const handleUrlsUpload = async (
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
+    event.preventDefault();
+
+    const result = await handleCreateUrlDocument();
+    if (result?.showGroupPermissions) {
+      setShowGroupPermissions(true);
+      setUploadedFiles([
+        {
+          documentId: result.document.id,
+          dataroomDocumentId: result.dataroomDocument.id,
+          fileName: result.document.name,
+        },
+      ]);
+      return;
+    }
+    if (result?.document) {
+      setIsOpen(false);
+      setAddDocumentModalOpen && setAddDocumentModalOpen(false);
+    }
+  };
+
   const clearModelStates = () => {
     currentFile !== null && setCurrentFile(null);
     notionLink !== null && setNotionLink(null);
+    resetAll();
     setIsOpen(!isOpen);
     setAddDocumentModalOpen && setAddDocumentModalOpen(!isOpen);
   };
@@ -495,9 +536,10 @@ export function AddDocumentModal({
           </DialogDescription>
           <Tabs defaultValue="document">
             {!newVersion ? (
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="document">Document</TabsTrigger>
                 <TabsTrigger value="notion">Notion Page</TabsTrigger>
+                <TabsTrigger value="url">URLs</TabsTrigger>
               </TabsList>
             ) : (
               <TabsList className="grid w-full grid-cols-1">
@@ -629,6 +671,50 @@ export function AddDocumentModal({
                 </Card>
               </TabsContent>
             )}
+            {!newVersion && (
+              <TabsContent value="url">
+                <form onSubmit={handleUrlsUpload}>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Share URLs as Documents</CardTitle>
+                      <CardDescription>
+                        Provide a link to share as a document. After you submit
+                        the URL, a shareable link you can generate and share.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-1">
+                        <Label htmlFor="doc-name">Document Name</Label>
+                        <Input
+                          id="doc-name"
+                          name="doc-name"
+                          placeholder="Enter the document name"
+                          value={docNameFromHook || ""}
+                          onChange={(e) => setDocNameFromHook(e.target.value)}
+                        />
+                      </div>
+                      <UrlInput
+                        value={urlLinkFromHook}
+                        onChange={handleUrlChange}
+                        invalidUrls={invalidUrlsFromHook}
+                      />
+                    </CardContent>
+                    <CardFooter className="flex justify-center">
+                      <Button
+                        type="submit"
+                        className="w-full lg:w-1/2"
+                        loading={urlUploading}
+                        disabled={
+                          urlUploading || !docNameFromHook || !isUrlInputValid()
+                        }
+                      >
+                        {urlUploading ? "Uploading URLs..." : "Upload URLs"}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </form>
+              </TabsContent>
+            )}
           </Tabs>
         </DialogContent>
       </Dialog>
@@ -641,6 +727,7 @@ export function AddDocumentModal({
           uploadedFiles={uploadedFiles}
           onComplete={() => {
             setShowGroupPermissions(false);
+            setIsOpen(false);
             setAddDocumentModalOpen?.(false);
             setUploadedFiles([]);
           }}
