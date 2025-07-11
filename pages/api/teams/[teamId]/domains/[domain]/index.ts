@@ -27,7 +27,7 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     if (!domain) {
-      return res.status(400).json("Domain is required for deletion");
+      return res.status(400).json("A domain is required for deletion");
     }
 
     try {
@@ -85,7 +85,7 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     if (!domain) {
-      return res.status(400).json("Domain is required for deletion");
+      return res.status(400).json("A domain is required for deletion");
     }
 
     try {
