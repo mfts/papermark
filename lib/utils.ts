@@ -568,15 +568,23 @@ export function decryptEncrpytedPassword(password: string): string {
   return decrypted;
 }
 
-export const sanitizeAllowDenyList = (list: string): string[] => {
+type FilterMode = "email" | "domain" | "both";
+
+export const sanitizeList = (list: string, mode: FilterMode = "both"): string[] => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const domainRegex = /^@[^\s@]+\.[^\s@]+$/;
 
-  return list
+  const sanitized = list
     .split("\n")
-    .map((item) => item.trim().replace(/,$/, "").toLowerCase()) // Trim whitespace and remove trailing commas and lowercase
-    .filter((item) => item !== "") // Remove empty items
-    .filter((item) => emailRegex.test(item) || domainRegex.test(item)); // Remove items that don't match email or domain regex
+    .map((item) => item.trim().replace(/,$/, "").toLowerCase())
+    .filter((item) => item !== "")
+    .filter((item) => {
+      if (mode === "email") return emailRegex.test(item);
+      if (mode === "domain") return domainRegex.test(item);
+      return emailRegex.test(item) || domainRegex.test(item);
+    });
+
+  return [...new Set(sanitized)];
 };
 
 export function hexToRgb(hex: string) {

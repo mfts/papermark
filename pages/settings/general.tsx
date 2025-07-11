@@ -11,6 +11,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import DeleteTeam from "@/components/settings/delete-team";
+import IgnoredDomainsForm from "@/components/settings/ignored-domains-form";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Form } from "@/components/ui/form";
 
@@ -145,6 +146,7 @@ export default function General() {
             handleSubmit={handleExcelAdvancedModeChange}
             plan={(isFree && !isTrial) || isPro ? "Business" : undefined}
           />
+          <IgnoredDomainsForm />
 
           <DeleteTeam />
         </div>
