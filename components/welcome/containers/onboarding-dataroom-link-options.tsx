@@ -18,6 +18,7 @@ import PasswordSection from "@/components/links/link-sheet/password-section";
 import { ProBannerSection } from "@/components/links/link-sheet/pro-banner-section";
 import QuestionSection from "@/components/links/link-sheet/question-section";
 import ScreenshotProtectionSection from "@/components/links/link-sheet/screenshot-protection-section";
+import SecuredByPapermarkSection from "@/components/links/link-sheet/secured-by-papermark-section";
 import WatermarkSection from "@/components/links/link-sheet/watermark-section";
 import ChevronDown from "@/components/shared/icons/chevron-down";
 
@@ -84,6 +85,11 @@ export const OnboardingDataroomLinkOptions = ({
         setData={setData}
         isAllowed={true}
         handleUpgradeStateChange={() => {}}
+        presets={currentPreset}
+      />
+      <SecuredByPapermarkSection
+        data={data}
+        setData={setData}
         presets={currentPreset}
       />
       <div className="mb-4 mt-2">

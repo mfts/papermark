@@ -288,6 +288,7 @@ export default function DataroomView({
             userEmail ??
             undefined
           }
+          securedByPapermark={!!link.securedByPapermark}
         />
       </div>
     );

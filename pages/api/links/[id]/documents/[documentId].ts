@@ -47,6 +47,7 @@ export default async function handle(
             data: true,
           },
         },
+        securedByPapermark: true,
         enableAgreement: true,
         agreement: true,
         showBanner: true,
