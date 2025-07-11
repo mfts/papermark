@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { getRecursiveFolderCounts } from "@/lib/dataroom/get-recursive-folder-docs-count";
 
 export default async function handle(
   req: NextApiRequest,
@@ -68,7 +69,20 @@ export default async function handle(
           },
         });
 
-        return res.status(200).json(folders);
+        const foldersWithRecursiveCounts = await Promise.all(
+          folders.map(async (folder) => {
+            const recursiveCounts = await getRecursiveFolderCounts(prisma, folder.id);
+            return {
+              ...folder,
+              _count: {
+                documents: recursiveCounts.documents,
+                childFolders: recursiveCounts.childFolders,
+              },
+            };
+          })
+        );
+
+        return res.status(200).json(foldersWithRecursiveCounts);
       }
 
       if (include_documents === "true") {
