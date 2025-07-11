@@ -1028,7 +1028,7 @@ export default function DocumentHeader({
       {editUrlsModalOpen ? (
         <EditUrlsModal
           documentId={prismaDocument.id}
-          currentUrls={prismaDocument.contentUrls}
+          currentUrls={prismaDocument.contentUrls || []}
           documentName={prismaDocument.name}
           open={editUrlsModalOpen}
           onOpenChange={setEditUrlsModalOpen}

@@ -48,7 +48,7 @@ export function useUrlDocument(options: UseUrlDocumentOptions = {}) {
         resetUrls,
     } = useUrls({ initialUrls });
 
-    const createUrlDocument = async (): Promise<any> => {
+    const createUrlDocument = async (): Promise<any | null> => {
         if (!canAddDocuments) {
             toast.error("You have reached the maximum number of documents.");
             return null;
@@ -100,7 +100,7 @@ export function useUrlDocument(options: UseUrlDocumentOptions = {}) {
         } catch (error) {
             console.error("An error occurred while processing the URLs document: ", error);
             toast.error(
-                "Oops! Can't access the URLs document. Please double-check it's set to 'Public'.",
+                "An error occurred while creating the URLs document. Please try again.",
             );
             return null;
         } finally {

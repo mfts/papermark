@@ -84,10 +84,14 @@ export default async function handle(
                 });
             });
 
-            // Revalidate the document
-            await fetch(
-                `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${documentId}`,
-            );
+
+            try {
+                await fetch(
+                    `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${documentId}`,
+                );
+            } catch (revalidateError) {
+                console.error("Failed to revalidate document:", revalidateError);
+            }
 
             return res.status(200).json({
                 message: "Document URLs updated successfully",

@@ -2,13 +2,16 @@ import React, { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { isValidUrl } from "@/lib/utils";
 
+const MAX_URLS_LIMIT = 100;
+
 interface UseUrlsOptions {
     initialUrls?: string[];
     debounceMs?: number;
+    maxUrls?: number;
 }
 
 export function useUrls(options: UseUrlsOptions = {}) {
-    const { initialUrls = [], debounceMs = 300 } = options;
+    const { initialUrls = [], debounceMs = 300, maxUrls = MAX_URLS_LIMIT } = options;
 
     const [urls, setUrls] = useState(initialUrls.join("\n"));
     const [invalidUrls, setInvalidUrls] = useState<string[]>([]);
@@ -17,7 +20,8 @@ export function useUrls(options: UseUrlsOptions = {}) {
         return value
             .split(/[\n,]/) // Split on both newlines and commas
             .map((url) => url.trim())
-            .filter(Boolean);
+            .filter(Boolean)
+            .slice(0, maxUrls);
     };
 
     const debouncedUrlValidation = useDebouncedCallback((value: string) => {
@@ -54,6 +58,14 @@ export function useUrls(options: UseUrlsOptions = {}) {
         return allUrls.length > 0 && allUrls.length === validUrls.length;
     };
 
+    const getUrlCount = () => {
+        return parseUrls(urls).length;
+    };
+
+    const isLimitReached = () => {
+        return getUrlCount() >= maxUrls;
+    };
+
     const resetUrls = (newUrls?: string[]) => {
         const urlsToSet = newUrls || initialUrls;
         setUrls(urlsToSet.join("\n"));
@@ -69,6 +81,9 @@ export function useUrls(options: UseUrlsOptions = {}) {
         hasValidUrls,
         hasInvalidUrls,
         isUrlInputValid,
+        getUrlCount,
+        isLimitReached,
+        maxUrls,
         resetUrls,
         setUrls,
     };

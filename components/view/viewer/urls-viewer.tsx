@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import React from "react";
 
 import { ExternalLink, Link } from "lucide-react";
+import { toast } from "sonner";
 
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { getTrackingOptions } from "@/lib/tracking/tracking-config";
@@ -84,6 +85,7 @@ export const UrlsViewer = ({
     viewId,
     versionNumber,
     isPreview,
+    navData?.dataroomId,
     startIntervalTracking,
     stopIntervalTracking,
   ]);
@@ -219,7 +221,10 @@ export const UrlsViewer = ({
       console.error("Failed to record link click:", error);
     }
 
-    window.open(url, "_blank", "noopener,noreferrer");
+    const newWindow = window.open(url, "_blank", "noopener,noreferrer");
+    if (!newWindow) {
+      toast.error("Please allow popups to open links");
+    }
   };
 
   const filtered = useMemo(
