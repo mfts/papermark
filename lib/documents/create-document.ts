@@ -9,6 +9,7 @@ export type DocumentData = {
   fileSize: number | undefined; // file size in bytes
   numPages?: number;
   enableExcelAdvancedMode?: boolean;
+  contentUrls?: string[];
 };
 
 export const createDocument = async ({

@@ -438,7 +438,7 @@ export default function VisitorsTable({
                                   versionNumber={view.versionNumber}
                                 />
                               )}
-                              {!isFreePlan && primaryVersion.type === "pdf" ? (
+                              {!isFreePlan && primaryVersion.type && ["pdf", "urls"].includes(primaryVersion.type) ? (
                                 <VisitorClicks
                                   teamId={view.teamId!}
                                   documentId={view.documentId!}

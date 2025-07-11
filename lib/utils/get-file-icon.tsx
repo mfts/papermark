@@ -1,4 +1,4 @@
-import { FileIcon, MailIcon } from "lucide-react";
+import { FileIcon, LinkIcon, MailIcon } from "lucide-react";
 
 import CadIcon from "@/components/shared/icons/files/cad";
 import DocsIcon from "@/components/shared/icons/files/docs";
@@ -20,6 +20,8 @@ export function fileIcon({
   isLight?: boolean;
 }) {
   switch (fileType) {
+    case "urls":
+      return <LinkIcon className={className} />;
     case "pdf":
     case "application/pdf":
       return <PdfIcon className={className} isLight={isLight} />;

@@ -251,9 +251,11 @@ export default async function handle(
       contentType,
       createLink,
       fileSize,
+      contentUrls,
     } = req.body as {
       name: string;
       url: string;
+      contentUrls?: string[];
       storageType: DocumentStorageType;
       numPages?: number;
       type: string;
@@ -273,6 +275,7 @@ export default async function handle(
         documentData: {
           name,
           key: fileUrl,
+          contentUrls,
           storageType,
           numPages,
           supportedFileType: fileType,

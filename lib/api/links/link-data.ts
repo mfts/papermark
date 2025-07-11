@@ -129,6 +129,7 @@ export async function fetchDataroomLinkData({
                   versions: {
                     where: { isPrimary: true },
                     select: {
+                      contentUrls: true,
                       id: true,
                       versionNumber: true,
                       type: true,
@@ -293,6 +294,7 @@ export async function fetchDataroomDocumentLinkData({
                   versions: {
                     where: { isPrimary: true },
                     select: {
+                      contentUrls: true,
                       id: true,
                       versionNumber: true,
                       type: true,
@@ -360,6 +362,7 @@ export async function fetchDocumentLinkData({
               type: true,
               hasPages: true,
               file: true,
+              contentUrls: true,
               isVertical: true,
             },
             take: 1,
