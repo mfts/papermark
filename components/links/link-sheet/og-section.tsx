@@ -436,7 +436,7 @@ export default function OGSection({
                 id="description"
                 rows={3}
                 maxLength={240}
-                className="focus:ring-inset"
+                className="focus:ring-inset bg-muted"
                 placeholder={`Papermark is an open-source document sharing infrastructure for modern teams.`}
                 value={metaDescription || ""}
                 onChange={(e) => {

@@ -1,46 +1,21 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
-import { getServerSession } from "next-auth/next";
 
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "PATCH") {
-    // PATCH /api/teams/:teamId/folders/move
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-    const userId = (session.user as CustomUser).id;
+export default createTeamHandler({
+  PATCH: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId } = req.query as { teamId: string };
     const { folderIds, selectedFolder, selectedFolderPath } = req.body as {
       folderIds: string[];
       selectedFolder: string | null;
       selectedFolderPath: string;
     };
-
-    // Ensure the user is an admin of the team
-    const team = await prisma.team.findUnique({
-      where: { id: teamId },
-      include: {
-        users: {
-          where: {
-            userId: userId,
-          },
-        },
-      },
-    });
-
-    if (!team || team.users.length === 0) {
-      return res.status(403).end("Forbidden");
-    }
 
     try {
       let updatedFolders: any[] = [];
@@ -68,9 +43,10 @@ export default async function handle(
             .filter((name) => existingFolderNames.has(name));
 
           if (duplicateNames.length > 0) {
-            return res.status(409).json({
+            res.status(409).json({
               message: `Cannot move folders: Duplicate names found inside target folder - ${duplicateNames.join(", ")}`,
             });
+            return;
           }
         }
         // Fetch all nested subfolders of the selected folders
@@ -137,7 +113,8 @@ export default async function handle(
         // Get new path for folder unless selectedFolder is null
       });
       if (updatedFolders.length === 0) {
-        return res.status(404).end("No Folder were updated");
+        res.status(404).end("No Folder were updated");
+        return;
       }
 
       let folder: { path: string } | null = null;
@@ -148,17 +125,13 @@ export default async function handle(
         });
       }
 
-      return res.status(200).json({
+      res.status(200).json({
         message: "Folder moved successfully",
         updatedCount: updatedFolders.length,
         newPath: folder?.path,
       });
     } catch (error) {
-      return res.status(500).end(error);
+      res.status(500).end(error);
     }
-  } else {
-    // We only allow PATCH requests
-    res.setHeader("Allow", ["PATCH"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

@@ -1,15 +1,16 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { DocumentStorageType, Prisma } from "@prisma/client";
-import { getServerSession } from "next-auth/next";
 
 import { hashToken } from "@/lib/api/auth/token";
 import { processDocument } from "@/lib/api/documents/process-document";
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 
@@ -18,20 +19,11 @@ export const config = {
   supportsResponseStreaming: true,
 };
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId/documents
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId } = req.query as { teamId: string };
     const { query, sort } = req.query as { query?: string; sort?: string };
-    const userId = (session.user as CustomUser).id;
+    const userId = req.user.id;
 
     const usePagination = !!(query || sort);
     const page = usePagination ? Number(req.query.page) || 1 : undefined;
@@ -50,7 +42,8 @@ export default async function handle(
       });
 
       if (!team) {
-        return res.status(404).end("Team not found");
+        res.status(404).end("Team not found");
+        return;
       }
 
       let orderBy: Prisma.DocumentOrderByWithRelationInput;
@@ -187,7 +180,7 @@ export default async function handle(
         );
       }
 
-      return res.status(200).json({
+      res.status(200).json({
         documents: documentsWithFolderList,
         ...(usePagination && {
           pagination: {
@@ -198,16 +191,19 @@ export default async function handle(
           },
         }),
       });
+      return;
     } catch (error) {
       errorhandler(error, res);
+      return;
     }
-  } else if (req.method === "POST") {
-    // POST /api/teams/:teamId/documents
+  },
+
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId } = req.query as { teamId: string };
 
     // Check for API token first
     const authHeader = req.headers.authorization;
-    let userId: string;
+    let finalUserId = req.user.id;
     let token: string | null = null;
 
     if (authHeader?.startsWith("Bearer ")) {
@@ -222,22 +218,17 @@ export default async function handle(
 
       // Check if token exists
       if (!restrictedToken) {
-        return res.status(401).json({ error: "Unauthorized" });
+        res.status(401).json({ error: "Unauthorized" });
+        return;
       }
 
       // Check if token is for the correct team
       if (restrictedToken.teamId !== teamId) {
-        return res.status(401).json({ error: "Unauthorized" });
+        res.status(401).json({ error: "Unauthorized" });
+        return;
       }
 
-      userId = restrictedToken.userId;
-    } else {
-      // Fall back to session auth
-      const session = await getServerSession(req, res, authOptions);
-      if (!session) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-      userId = (session.user as CustomUser).id;
+      finalUserId = restrictedToken.userId;
     }
 
     // Assuming data is an object with `name` and `description` properties
@@ -266,7 +257,7 @@ export default async function handle(
     try {
       const { team } = await getTeamWithUsersAndDocument({
         teamId,
-        userId,
+        userId: finalUserId,
       });
 
       const document = await processDocument({
@@ -279,26 +270,26 @@ export default async function handle(
           contentType,
           fileSize,
           enableExcelAdvancedMode:
-            fileType === "sheet" && team.enableExcelAdvancedMode && supportsAdvancedExcelMode(contentType),
+            fileType === "sheet" &&
+            team.enableExcelAdvancedMode &&
+            supportsAdvancedExcelMode(contentType),
         },
         teamId,
-        userId,
+        userId: finalUserId,
         teamPlan: team.plan,
         createLink,
         folderPathName,
       });
 
-      return res.status(201).json(document);
+      res.status(201).json(document);
+      return;
     } catch (error) {
       log({
         message: `Failed to create document. \n\n*teamId*: _${teamId}_, \n\n*file*: ${fileUrl} \n\n ${error}`,
         type: "error",
       });
       errorhandler(error, res);
+      return;
     }
-  } else {
-    // We only allow GET and POST requests
-    res.setHeader("Allow", ["GET", "POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

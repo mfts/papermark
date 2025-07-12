@@ -1,16 +1,17 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { View } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
-import { getServerSession } from "next-auth/next";
 
 import { LIMITS } from "@/lib/constants";
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { getViewPageDuration } from "@/lib/tinybird";
 import { getVideoEventsByDocument } from "@/lib/tinybird/pipes";
-import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
 type DocumentVersion = {
@@ -167,159 +168,137 @@ async function getDocumentViews(views: ViewWithExtras[], document: Document) {
   });
 }
 
-export default async function handle(
-  req: NextApiRequest,
+async function handleGetViews(
+  req: AuthenticatedRequest,
   res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
+): Promise<void> {
+  const { teamId, id: docId } = req.query as { teamId: string; id: string };
+  const page = parseInt((req.query.page as string) || "1", 10);
+  const limit = parseInt((req.query.limit as string) || "10", 10);
+  const offset = (page - 1) * limit;
+
+  try {
+    const document = await prisma.document.findUnique({
+      where: { id: docId, teamId: teamId },
+      select: {
+        id: true,
+        ownerId: true,
+        numPages: true,
+        type: true,
+        versions: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            versionNumber: true,
+            createdAt: true,
+            numPages: true,
+            type: true,
+            length: true,
+          },
+        },
+        _count: {
+          select: {
+            views: true,
+          },
+        },
+      },
+    });
+
+    if (!document) {
+      res.status(404).end("Document not found");
+      return;
     }
 
-    const { teamId, id: docId } = req.query as { teamId: string; id: string };
-    const page = parseInt((req.query.page as string) || "1", 10);
-    const limit = parseInt((req.query.limit as string) || "10", 10);
-    const offset = (page - 1) * limit;
-
-    const userId = (session.user as CustomUser).id;
-
-    try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
+    const views = await prisma.view.findMany({
+      skip: offset,
+      take: limit,
+      where: {
+        documentId: docId,
+      },
+      orderBy: {
+        viewedAt: "desc",
+      },
+      include: {
+        link: {
+          select: {
+            name: true,
           },
         },
-        select: { plan: true },
-      });
-
-      if (!team) {
-        return res.status(404).end("Team not found");
-      }
-
-      const document = await prisma.document.findUnique({
-        where: { id: docId, teamId: teamId },
-        select: {
-          id: true,
-          ownerId: true,
-          numPages: true,
-          type: true,
-          versions: {
-            orderBy: { createdAt: "desc" },
-            select: {
-              versionNumber: true,
-              createdAt: true,
-              numPages: true,
-              type: true,
-              length: true,
-            },
-          },
-          _count: {
-            select: {
-              views: true,
-            },
+        feedbackResponse: {
+          select: {
+            id: true,
+            data: true,
           },
         },
-      });
-
-      if (!document) {
-        return res.status(404).end("Document not found");
-      }
-
-      const views = await prisma.view.findMany({
-        skip: offset,
-        take: limit,
-        where: {
-          documentId: docId,
-        },
-        orderBy: {
-          viewedAt: "desc",
-        },
-        include: {
-          link: {
-            select: {
-              name: true,
-            },
-          },
-          feedbackResponse: {
-            select: {
-              id: true,
-              data: true,
-            },
-          },
-          agreementResponse: {
-            select: {
-              id: true,
-              agreementId: true,
-              agreement: {
-                select: {
-                  name: true,
-                },
+        agreementResponse: {
+          select: {
+            id: true,
+            agreementId: true,
+            agreement: {
+              select: {
+                name: true,
               },
             },
           },
         },
-      });
+      },
+    });
 
-      if (!views) {
-        return res.status(404).end("Document has no views");
-      }
+    if (!views) {
+      res.status(404).end("Document has no views");
+      return;
+    }
 
-      const users = await prisma.user.findMany({
-        where: {
-          teams: {
-            some: {
-              teamId: teamId,
-            },
+    const users = await prisma.user.findMany({
+      where: {
+        teams: {
+          some: {
+            teamId: teamId,
           },
         },
-        select: {
-          email: true,
-        },
+      },
+      select: {
+        email: true,
+      },
+    });
+
+    // filter the last 20 views
+    const limitedViews =
+      req.team?.plan === "free" && offset >= LIMITS.views ? [] : views;
+
+    let viewsWithDuration;
+    if (document.type === "video") {
+      const videoEvents = await getVideoEventsByDocument({
+        document_id: docId,
       });
-
-      // filter the last 20 views
-      const limitedViews =
-        team.plan === "free" && offset >= LIMITS.views ? [] : views;
-
-      let viewsWithDuration;
-      if (document.type === "video") {
-        const videoEvents = await getVideoEventsByDocument({
-          document_id: docId,
-        });
-        viewsWithDuration = await getVideoViews(
-          limitedViews,
-          document,
-          videoEvents,
-        );
-      } else {
-        viewsWithDuration = await getDocumentViews(limitedViews, document);
-      }
-
-      // Add internal flag to all views
-      viewsWithDuration = viewsWithDuration.map((view) => ({
-        ...view,
-        internal: users.some((user) => user.email === view.viewerEmail),
-      }));
-
-      return res.status(200).json({
-        viewsWithDuration,
-        hiddenViewCount: views.length - limitedViews.length,
-        totalViews: document._count.views || 0,
-      });
-    } catch (error) {
-      log({
-        message: `Failed to get views for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
-        type: "error",
-      });
-      errorhandler(error, res);
+      viewsWithDuration = await getVideoViews(
+        limitedViews,
+        document,
+        videoEvents,
+      );
+    } else {
+      viewsWithDuration = await getDocumentViews(limitedViews, document);
     }
-  } else {
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+
+    // Add internal flag to all views
+    viewsWithDuration = viewsWithDuration.map((view) => ({
+      ...view,
+      internal: users.some((user) => user.email === view.viewerEmail),
+    }));
+
+    res.status(200).json({
+      viewsWithDuration,
+      hiddenViewCount: views.length - limitedViews.length,
+      totalViews: document._count.views || 0,
+    });
+  } catch (error) {
+    log({
+      message: `Failed to get views for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${req.user.id}}\``,
+      type: "error",
+    });
+    errorhandler(error, res);
   }
 }
+
+export default createTeamHandler({
+  GET: handleGetViews,
+});

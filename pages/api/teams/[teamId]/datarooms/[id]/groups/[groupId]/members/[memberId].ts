@@ -1,61 +1,28 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "DELETE") {
-    // DELETE /api/teams/:teamId/datarooms/:id/groups/:groupId/members/:memberId
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
+  // DELETE /api/teams/:teamId/datarooms/:id/groups/:groupId/members/:memberId
+  const { memberId } = req.query as {
+    memberId: string;
+  };
 
-    const {
-      teamId,
-      id: dataroomId,
-      groupId,
-      memberId,
-    } = req.query as {
-      teamId: string;
-      id: string;
-      groupId: string;
-      memberId: string;
-    };
-    const userId = (session.user as CustomUser).id;
-
-    try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).json("Unauthorized");
-      }
-
-      await prisma.viewerGroupMembership.delete({
-        where: { id: memberId },
-      });
-      return res.status(204).end();
-    } catch (error) {
-      errorhandler(error, res);
-    }
-  } else {
-    res.setHeader("Allow", ["DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+  try {
+    await prisma.viewerGroupMembership.delete({
+      where: { id: memberId },
+    });
+    res.status(204).end();
+  } catch (error) {
+    errorhandler(error, res);
   }
 }
+
+export default createTeamHandler({
+  DELETE: handler,
+});

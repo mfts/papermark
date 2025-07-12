@@ -1,28 +1,18 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { View } from "@prisma/client";
-import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
 import {
-  getTotalAvgPageDuration,
-  getTotalDocumentDuration,
-} from "@/lib/tinybird";
-import { CustomUser } from "@/lib/types";
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
+import prisma from "@/lib/prisma";
+import { getTotalAvgPageDuration } from "@/lib/tinybird";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // GET /api/teams/:teamId/datarooms/:id/documents/:documentId/stats
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
     const {
       teamId,
       id: dataroomId,
@@ -33,25 +23,8 @@ export default async function handle(
       documentId: string;
     };
 
-    const userId = (session.user as CustomUser).id;
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       // Verify the document exists in the dataroom
       const dataroomDocument = await prisma.dataroomDocument.findFirst({
         where: {
@@ -155,9 +128,5 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

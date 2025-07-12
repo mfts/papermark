@@ -1,24 +1,16 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { getViewPageDuration } from "@/lib/tinybird";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // GET /api/teams/:teamId/documents/:id/views/:viewId/stats
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
     const {
       teamId,
       id: docId,
@@ -29,12 +21,10 @@ export default async function handle(
       viewId: string;
     };
 
-    const userId = (session.user as CustomUser).id;
-
     try {
       await getTeamWithUsersAndDocument({
         teamId,
-        userId,
+        userId: req.user.id,
         docId,
         checkOwner: true,
         options: {
@@ -58,13 +48,9 @@ export default async function handle(
 
       const stats = { duration, total_duration };
 
-      return res.status(200).json(stats);
+      res.status(200).json(stats);
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow GET and POST requests
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

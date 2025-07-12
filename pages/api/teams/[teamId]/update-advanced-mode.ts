@@ -1,32 +1,14 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { Session } from "next-auth";
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-import { authOptions } from "../../auth/[...nextauth]";
-
-interface CustomSession extends Session {
-  user: {
-    id: string;
-    name?: string | null;
-  };
-}
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "PATCH") {
-    // PATCH /api/teams/:teamId/update-advanced-mode
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
+export default createTeamHandler({
+  PATCH: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId } = req.query as { teamId: string };
     const { enableExcelAdvancedMode } = req.body;
 
@@ -37,7 +19,7 @@ export default async function handle(
           id: teamId,
           users: {
             some: {
-              userId: (session.user as CustomUser).id,
+              userId: req.user.id,
             },
           },
         },
@@ -70,9 +52,5 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow PATCH requests
-    res.setHeader("Allow", "[PATCH]");
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

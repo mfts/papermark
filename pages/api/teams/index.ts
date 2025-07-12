@@ -1,26 +1,17 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { getServerSession } from "next-auth";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createAuthenticatedHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
-import { authOptions } from "../auth/[...nextauth]";
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/teams
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const user = session.user as CustomUser;
+export default createAuthenticatedHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    const user = req.user as CustomUser;
 
     try {
       const userTeams = await prisma.userTeam.findMany({
@@ -73,24 +64,21 @@ export default async function handle(
         teams.push(defaultTeam);
       }
 
-      return res.status(200).json(teams);
+      res.status(200).json(teams);
+      return;
     } catch (error) {
       log({
         message: `Failed to find team for user: _${user.id}_ \n\n ${error}`,
         type: "error",
       });
       errorhandler(error, res);
+      return;
     }
-  } else if (req.method === "POST") {
-    // POST /api/teams
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
+  },
 
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { team } = req.body;
-
-    const user = session.user as CustomUser;
+    const user = req.user as CustomUser;
 
     try {
       const newTeam = await prisma.team.create({
@@ -108,16 +96,15 @@ export default async function handle(
         },
       });
 
-      return res.status(201).json(newTeam);
+      res.status(201).json(newTeam);
+      return;
     } catch (error) {
       log({
         message: `Failed to create team "${team}" for user: _${user.id}_. \n\n*Error*: \n\n ${error}`,
         type: "error",
       });
       errorhandler(error, res);
+      return;
     }
-  } else {
-    res.setHeader("Allow", ["GET", "POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

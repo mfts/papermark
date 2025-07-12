@@ -1,23 +1,13 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
-
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId/folders/:name
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const userId = (session.user as CustomUser).id;
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId, name } = req.query as { teamId: string; name: string[] };
 
     const path = "/" + name.join("/"); // construct the materialized path
@@ -29,14 +19,15 @@ export default async function handle(
           id: teamId,
           users: {
             some: {
-              userId: userId,
+              userId: req.user.id,
             },
           },
         },
       });
 
       if (!team) {
-        return res.status(401).end("Unauthorized");
+        res.status(401).end("Unauthorized");
+        return;
       }
 
       const parentFolder = await prisma.folder.findUnique({
@@ -53,7 +44,8 @@ export default async function handle(
       });
 
       if (!parentFolder) {
-        return res.status(404).end("Parent Folder not found");
+        res.status(404).end("Parent Folder not found");
+        return;
       }
 
       const folders = await prisma.folder.findMany({
@@ -71,14 +63,10 @@ export default async function handle(
         },
       });
 
-      return res.status(200).json(folders);
+      res.status(200).json(folders);
     } catch (error) {
       console.error("Request error", error);
-      return res.status(500).json({ error: "Error fetching folders" });
+      res.status(500).json({ error: "Error fetching folders" });
     }
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

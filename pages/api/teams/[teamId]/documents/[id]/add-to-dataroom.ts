@@ -1,62 +1,28 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // POST /api/teams/:teamId/documents/:id/add-to-dataroom
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const { teamId, id: docId } = req.query as { teamId: string; id: string };
+    const { id: docId } = req.query as { id: string };
     const { dataroomId } = req.body as { dataroomId: string };
 
-    const userId = (session.user as CustomUser).id;
-
     try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId,
-            },
-          },
-          documents: {
-            some: {
-              id: {
-                equals: docId,
-              },
-            },
-          },
-        },
-        select: {
-          id: true,
-          plan: true,
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
+      // Check plan restrictions for datarooms
       if (
-        (team.plan === "free" || team.plan === "pro") &&
-        !team.plan.includes("drtrial")
+        (req.team?.plan === "free" || req.team?.plan === "pro") &&
+        !req.team?.plan?.includes("drtrial")
       ) {
-        return res.status(403).json({
+        res.status(403).json({
           message: "Upgrade your plan to use datarooms.",
         });
+        return;
       }
 
       try {
@@ -73,20 +39,17 @@ export default async function handle(
           },
         });
       } catch (error) {
-        return res.status(500).json({
+        res.status(500).json({
           message: "Document already exists in dataroom!",
         });
+        return;
       }
 
-      return res.status(200).json({
+      res.status(200).json({
         message: "Document added to dataroom!",
       });
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

@@ -1,13 +1,14 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
 import { getLimits } from "@/ee/limits/server";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { DataroomFolder, Document, Folder } from "@prisma/client";
-import { getServerSession } from "next-auth/next";
 
 import { newId } from "@/lib/id-helper";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
 // Define types
 interface FolderWithContents extends Folder {
@@ -111,31 +112,15 @@ async function createDataroomFolders(
   );
 }
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // POST /api/teams/:teamId/datarooms/create-from-folder
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
-    const { teamId } = req.query as { teamId: string };
     const { folderId } = req.body as { folderId: string };
-    const userId = (session.user as CustomUser).id;
 
     try {
       const team = await prisma.team.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
+          id: req.team!.id,
         },
         select: {
           id: true,
@@ -149,10 +134,14 @@ export default async function handle(
       });
 
       if (!team) {
-        return res.status(401).end("Unauthorized");
+        res.status(401).end("Unauthorized");
+        return;
       }
 
-      const limits = await getLimits({ teamId, userId });
+      const limits = await getLimits({
+        teamId: req.team!.id,
+        userId: req.user.id,
+      });
       const stripedTeamPlan = team.plan.replace("+old", "");
 
       if (
@@ -161,22 +150,26 @@ export default async function handle(
         limits &&
         team._count.datarooms >= limits.datarooms
       ) {
-        return res.status(403).json({
+        res.status(403).json({
           message:
             "You've reached the limit of datarooms. Consider upgrading your plan.",
         });
+        return;
       }
 
       if (team.plan.includes("drtrial") && team._count.datarooms > 0) {
-        return res
-          .status(400)
-          .json({ message: "Trial data room already exists" });
+        res.status(400).json({ message: "Trial data room already exists" });
+        return;
       }
 
-      if (["free", "pro"].includes(team.plan) && !team.plan.includes("drtrial")) {
-        return res
+      if (
+        ["free", "pro"].includes(team.plan) &&
+        !team.plan.includes("drtrial")
+      ) {
+        res
           .status(400)
           .json({ message: "You need a Business plan to create a data room" });
+        return;
       }
 
       // Fetch the folder structure
@@ -188,7 +181,7 @@ export default async function handle(
         data: {
           pId: pId,
           name: folderContents.name,
-          teamId: teamId,
+          teamId: req.team!.id,
           documents: {
             create: folderContents.documents.map((doc) => ({
               documentId: doc.id,
@@ -222,9 +215,5 @@ export default async function handle(
       console.error("Request error", error);
       res.status(500).json({ error: "Error creating dataroom" });
     }
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

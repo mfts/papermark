@@ -1,42 +1,31 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { getServerSession } from "next-auth";
+import { NextApiResponse } from "next";
 
 import { getFileForDocumentPage } from "@/lib/documents/get-file-helper";
+import {
+  AuthenticatedRequest,
+  createAuthenticatedHandler,
+} from "@/lib/middleware/api-auth";
 
-import { authOptions } from "../auth/[...nextauth]";
+export default createAuthenticatedHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    const { documentId, pageNumber, versionNumber } = req.query as {
+      documentId: string;
+      pageNumber: string;
+      versionNumber: string;
+    };
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  // We only allow GET requests
-  if (req.method !== "GET") {
-    res.status(405).json({ message: "Method Not Allowed" });
-    return;
-  }
+    try {
+      const imageUrl = await getFileForDocumentPage(
+        Number(pageNumber),
+        documentId,
+        versionNumber === "undefined" ? undefined : Number(versionNumber),
+      );
 
-  const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return res.status(401).end("Unauthorized");
-  }
-
-  const { documentId, pageNumber, versionNumber } = req.query as {
-    documentId: string;
-    pageNumber: string;
-    versionNumber: string;
-  };
-
-  try {
-    const imageUrl = await getFileForDocumentPage(
-      Number(pageNumber),
-      documentId,
-      versionNumber === "undefined" ? undefined : Number(versionNumber),
-    );
-
-    return res.status(200).json({ imageUrl });
-  } catch (error) {
-    res.status(500).json({ message: (error as Error).message });
-    return;
-  }
-}
+      res.status(200).json({ imageUrl });
+      return;
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message });
+      return;
+    }
+  },
+});

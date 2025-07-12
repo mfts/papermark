@@ -1,31 +1,23 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
 import { cancelSubscription } from "@/ee/stripe";
 import { isOldAccount } from "@/ee/stripe/utils";
 import { DocumentStorageType } from "@prisma/client";
-import { getServerSession } from "next-auth";
 
 import { removeDomainFromVercelProject } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
 import { deleteFiles } from "@/lib/files/delete-team-files-server";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import { CustomUser } from "@/lib/types";
 import { unsubscribe } from "@/lib/unsend";
 
-import { authOptions } from "../../auth/[...nextauth]";
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId } = req.query as { teamId: string };
 
     try {
@@ -66,24 +58,22 @@ export default async function handle(
       // check that the user is member of the team, otherwise return 403
       const teamUsers = team?.users;
       const isUserPartOfTeam = teamUsers?.some(
-        (user) => user.userId === (session.user as CustomUser).id,
+        (user) => user.userId === req.user.id,
       );
       if (!isUserPartOfTeam) {
-        return res.status(403).end("Unauthorized to access this team");
+        res.status(403).end("Unauthorized to access this team");
+        return;
       }
 
-      return res.status(200).json(team);
+      res.status(200).json(team);
+      return;
     } catch (error) {
       errorhandler(error, res);
-    }
-  } else if (req.method === "DELETE") {
-    // DELETE /api/teams/:teamId
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
       return;
     }
+  },
 
+  DELETE: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId } = req.query as { teamId: string };
 
     try {
@@ -98,19 +88,19 @@ export default async function handle(
         },
       });
       if (!team) {
-        return res.status(400).json("Team doesn't exists");
+        res.status(400).json("Team doesn't exists");
+        return;
       }
 
       // check if current user is admin of the team
       const isUserAdmin = team.users.some(
-        (user) =>
-          user.role === "ADMIN" &&
-          user.userId === (session.user as CustomUser).id,
+        (user) => user.role === "ADMIN" && user.userId === req.user.id,
       );
       if (!isUserAdmin) {
-        return res
+        res
           .status(403)
           .json({ message: "You are not permitted to perform this action" });
+        return;
       }
 
       // get all documents using Vercel Blob storage
@@ -198,7 +188,7 @@ export default async function handle(
         where: {
           users: {
             some: {
-              userId: (session.user as CustomUser).id,
+              userId: req.user.id,
             },
           },
         },
@@ -219,12 +209,12 @@ export default async function handle(
         team.stripeId &&
           cancelSubscription(team.stripeId, isOldAccount(team.plan)),
         // delete user from contact book
-        unsubscribe((session.user as CustomUser).email ?? ""),
+        unsubscribe(req.user.email ?? ""),
         // delete user, if no other teams
         userTeams.length === 1 &&
           prisma.user.delete({
             where: {
-              id: (session.user as CustomUser).id,
+              id: req.user.id,
             },
           }),
         // delete team branding from redis
@@ -237,13 +227,11 @@ export default async function handle(
         }),
       ]);
 
-      return res.status(204).end();
+      res.status(204).end();
+      return;
     } catch (error) {
-      return res.status(500).json((error as Error).message);
+      res.status(500).json((error as Error).message);
+      return;
     }
-  } else {
-    // We only allow GET and DELETE requests
-    res.setHeader("Allow", ["GET", "DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

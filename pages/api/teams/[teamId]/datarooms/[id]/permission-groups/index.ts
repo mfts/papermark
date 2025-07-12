@@ -1,48 +1,24 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
 import { ItemType } from "@prisma/client";
-import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-import { authOptions } from "../../../../../auth/[...nextauth]";
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // POST /api/teams/:teamId/datarooms/:id/permission-groups
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
     const { teamId, id: dataroomId } = req.query as {
       teamId: string;
       id: string;
     };
     const { permissions, linkId } = req.body;
 
-    const userId = (session.user as CustomUser).id;
-
     try {
-      // Verify team membership
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: { userId },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       // Verify dataroom exists and belongs to team
       const dataroom = await prisma.dataroom.findUnique({
         where: {
@@ -118,9 +94,5 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-  }
-
-  // We only allow POST requests
-  res.setHeader("Allow", ["POST"]);
-  return res.status(405).end(`Method ${req.method} Not Allowed`);
-}
+  },
+});

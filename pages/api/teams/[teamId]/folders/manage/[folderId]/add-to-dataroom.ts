@@ -1,12 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
-import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
 interface FolderWithContents {
   id: string;
@@ -79,23 +80,13 @@ async function createDataroomStructure(
   );
 }
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
-    // POST /api/teams/:teamId/folders/manage/:folderId/add-to-dataroom
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId, folderId } = req.query as {
       teamId: string;
       folderId: string;
     };
     const { dataroomId } = req.body as { dataroomId: string };
-    const userId = (session.user as CustomUser).id;
 
     try {
       const team = await prisma.team.findUnique({
@@ -103,7 +94,7 @@ export default async function handle(
           id: teamId,
           users: {
             some: {
-              userId,
+              userId: req.user.id,
             },
           },
           datarooms: {
@@ -126,13 +117,15 @@ export default async function handle(
       });
 
       if (!team) {
-        return res.status(401).end("Unauthorized");
+        res.status(401).end("Unauthorized");
+        return;
       }
 
       if (team.plan === "free" || team.plan === "pro") {
-        return res.status(403).json({
+        res.status(403).json({
           message: "Upgrade your plan to use datarooms.",
         });
+        return;
       }
 
       try {
@@ -178,20 +171,17 @@ export default async function handle(
         //   },
         // });
       } catch (error) {
-        return res.status(500).json({
+        res.status(500).json({
           message: "Document already exists in dataroom!",
         });
+        return;
       }
 
-      return res.status(200).json({
+      res.status(200).json({
         message: "Folder added to dataroom!",
       });
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

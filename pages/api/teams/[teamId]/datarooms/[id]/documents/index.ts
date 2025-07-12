@@ -1,15 +1,15 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { runs } from "@trigger.dev/sdk/v3";
 import { waitUntil } from "@vercel/functions";
-import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
-import { getFeatureFlags } from "@/lib/featureFlags";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { sendDataroomChangeNotificationTask } from "@/lib/trigger/dataroom-change-notification";
-import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 
@@ -18,40 +18,15 @@ export const config = {
   supportsResponseStreaming: true,
 };
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // GET /api/teams/:teamId/datarooms/:id/documents
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const userId = (session.user as CustomUser).id;
-    const { teamId, id: dataroomId } = req.query as {
+    const { id: dataroomId } = req.query as {
       teamId: string;
       id: string;
     };
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       const documents = await prisma.dataroomDocument.findMany({
         where: {
           dataroomId: dataroomId,
@@ -95,20 +70,15 @@ export default async function handle(
         .status(500)
         .json({ error: "Error fetching documents from dataroom" });
     }
-  } else if (req.method === "POST") {
+  },
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // POST /api/teams/:teamId/datarooms/:id/documents
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
     const { teamId, id: dataroomId } = req.query as {
       teamId: string;
       id: string;
     };
 
-    const userId = (session.user as CustomUser).id;
+    const userId = req.user.id;
 
     // Assuming data is an object with `name` and `description` properties
     const { documentId, folderPathName } = req.body as {
@@ -117,22 +87,6 @@ export default async function handle(
     };
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       const folder = await prisma.dataroomFolder.findUnique({
         where: {
           dataroomId_path: {
@@ -208,9 +162,5 @@ export default async function handle(
       });
       errorhandler(error, res);
     }
-  } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET", "POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

@@ -1,30 +1,22 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "PUT") {
-    // PUT /api/teams/:teamId/agreements/:agreementId
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
-    const userId = (session.user as CustomUser).id;
-    const { teamId } = req.query as { teamId: string };
-    const { agreementId } = req.query as { agreementId: string };
+export default createTeamHandler({
+  PUT: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    const { teamId, agreementId } = req.query as {
+      teamId: string;
+      agreementId: string;
+    };
 
     if (!teamId || !agreementId) {
-      return res.status(401).json("Unauthorized");
+      res.status(401).json("Unauthorized");
+      return;
     }
 
     try {
@@ -35,17 +27,13 @@ export default async function handle(
         },
         data: {
           deletedAt: new Date(),
-          deletedBy: userId,
+          deletedBy: req.user.id,
         },
       });
 
-      return res.status(200).json({ message: "Agreement deleted" });
+      res.status(200).json({ message: "Agreement deleted" });
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow GET and POST requests
-    res.setHeader("Allow", ["PUT"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

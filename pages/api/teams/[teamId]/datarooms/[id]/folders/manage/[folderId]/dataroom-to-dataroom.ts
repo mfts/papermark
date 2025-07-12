@@ -1,12 +1,13 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
-import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
 interface FolderWithContents {
   id: string;
@@ -79,88 +80,80 @@ async function createDataroomStructure(
   );
 }
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
-    // POST /api/teams/:teamId/dataroomId/:id/folders/manage/:folderId/dataroom-to-dataroom
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
+  // POST /api/teams/:teamId/dataroomId/:id/folders/manage/:folderId/dataroom-to-dataroom
+  const {
+    teamId,
+    folderId,
+    id: roomId,
+  } = req.query as {
+    teamId: string;
+    folderId: string;
+    id: string;
+  };
+  const { dataroomId } = req.body as { dataroomId: string };
 
-    const {
-      teamId,
-      folderId,
-      id: roomId,
-    } = req.query as {
-      teamId: string;
-      folderId: string;
-      id: string;
-    };
-    const { dataroomId } = req.body as { dataroomId: string };
-    const userId = (session.user as CustomUser).id;
-
-    try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId,
-            },
+  try {
+    const team = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+        users: {
+          some: {
+            userId: req.user.id,
           },
-          datarooms: {
-            some: {
-              id: roomId,
-              folders: {
-                some: {
-                  id: {
-                    equals: folderId,
-                  },
+        },
+        datarooms: {
+          some: {
+            id: roomId,
+            folders: {
+              some: {
+                id: {
+                  equals: folderId,
                 },
               },
             },
           },
         },
-        select: {
-          id: true,
-          plan: true,
-        },
-      });
+      },
+      select: {
+        id: true,
+        plan: true,
+      },
+    });
 
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
-      if (
-        (team.plan === "free" || team.plan === "pro") &&
-        !team.plan.includes("drtrial")
-      ) {
-        return res.status(403).json({
-          message: "Upgrade your plan to use datarooms.",
-        });
-      }
-
-      try {
-        const folderContents = await fetchFolderContents(folderId);
-        await createDataroomStructure(dataroomId, folderContents);
-      } catch (error) {
-        return res.status(500).json({
-          message: "Document already exists in dataroom!",
-        });
-      }
-
-      return res.status(200).json({
-        message: "Folder added to dataroom!",
-      });
-    } catch (error) {
-      errorhandler(error, res);
+    if (!team) {
+      res.status(401).end("Unauthorized");
+      return;
     }
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+
+    if (
+      (team.plan === "free" || team.plan === "pro") &&
+      !team.plan.includes("drtrial")
+    ) {
+      res.status(403).json({
+        message: "Upgrade your plan to use datarooms.",
+      });
+      return;
+    }
+
+    try {
+      const folderContents = await fetchFolderContents(folderId);
+      await createDataroomStructure(dataroomId, folderContents);
+    } catch (error) {
+      res.status(500).json({
+        message: "Document already exists in dataroom!",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      message: "Folder added to dataroom!",
+    });
+  } catch (error) {
+    errorhandler(error, res);
   }
 }
+
+export default createTeamHandler({
+  POST: handler,
+});

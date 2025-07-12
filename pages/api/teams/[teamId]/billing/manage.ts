@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
 import { stripeInstance } from "@/ee/stripe";
 import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
@@ -6,36 +6,24 @@ import { getQuantityFromPriceId } from "@/ee/stripe/functions/get-quantity-from-
 import getSubscriptionItem from "@/ee/stripe/functions/get-subscription-item";
 import { PLANS, isOldAccount } from "@/ee/stripe/utils";
 import { waitUntil } from "@vercel/functions";
-import { getServerSession } from "next-auth/next";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-
-import { authOptions } from "../../../auth/[...nextauth]";
 
 export const config = {
   // in order to enable `waitUntil` function
   supportsResponseStreaming: true,
 };
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // POST /api/teams/:teamId/billing/manage – manage a user's subscription
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
-    const userId = (session.user as CustomUser).id;
-    const userEmail = (session.user as CustomUser).email;
-
-    const { teamId } = req.query as { teamId: string };
+    const userEmail = req.user.email;
     const {
       priceId,
       upgradePlan,
@@ -51,15 +39,11 @@ export default async function handle(
       proAnnualBanner?: boolean;
       return_url?: string;
     };
+
     try {
       const team = await prisma.team.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
+          id: req.team!.id,
         },
         select: {
           stripeId: true,
@@ -69,14 +53,17 @@ export default async function handle(
       });
 
       if (!team) {
-        return res.status(400).json({ error: "Team does not exists" });
+        res.status(400).json({ error: "Team does not exists" });
+        return;
       }
       if (!team.stripeId) {
-        return res.status(400).json({ error: "No Stripe customer ID" });
+        res.status(400).json({ error: "No Stripe customer ID" });
+        return;
       }
 
       if (!team.subscriptionId) {
-        return res.status(400).json({ error: "No subscription ID" });
+        res.status(400).json({ error: "No subscription ID" });
+        return;
       }
 
       const subscriptionItemId = await getSubscriptionItem(
@@ -118,21 +105,18 @@ export default async function handle(
           }),
       });
 
-      waitUntil(identifyUser(userEmail ?? userId));
+      waitUntil(identifyUser(userEmail ?? req.user.id));
       waitUntil(
         trackAnalytics({
           event: "Stripe Billing Portal Clicked",
-          teamId,
+          teamId: req.team!.id,
           action: proAnnualBanner ? "pro-annual-banner" : undefined,
         }),
       );
 
-      return res.status(200).json(url);
+      res.status(200).json(url);
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

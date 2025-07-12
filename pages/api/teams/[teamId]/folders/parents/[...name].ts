@@ -1,23 +1,13 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
-
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId/folders/parents/:name
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const userId = (session.user as CustomUser).id;
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId, name } = req.query as { teamId: string; name: string[] };
 
     let folderNames = [];
@@ -29,14 +19,15 @@ export default async function handle(
           id: teamId,
           users: {
             some: {
-              userId: userId,
+              userId: req.user.id,
             },
           },
         },
       });
 
       if (!team) {
-        return res.status(401).end("Unauthorized");
+        res.status(401).end("Unauthorized");
+        return;
       }
 
       for (let i = 0; i < name.length; i++) {
@@ -57,20 +48,17 @@ export default async function handle(
         });
 
         if (!folder) {
-          return res.status(404).end("Parent Folder not found");
+          res.status(404).end("Parent Folder not found");
+          return;
         }
 
         folderNames.push({ name: folder.name, path: path });
       }
 
-      return res.status(200).json(folderNames);
+      res.status(200).json(folderNames);
     } catch (error) {
       console.error("Request error", error);
-      return res.status(500).json({ error: "Error fetching folders" });
+      res.status(500).json({ error: "Error fetching folders" });
     }
-  } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

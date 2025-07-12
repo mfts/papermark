@@ -1,24 +1,15 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
-import { getServerSession } from "next-auth/next";
 
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "PATCH") {
-    // PATCH /api/teams/:teamId/datarooms/:id/folders/move
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-    const userId = (session.user as CustomUser).id;
+export default createTeamHandler({
+  PATCH: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId, id: dataroomId } = req.query as {
       teamId: string;
       id: string;
@@ -40,14 +31,15 @@ export default async function handle(
         users: {
           where: {
             role: { in: ["ADMIN", "MANAGER"] },
-            userId: userId,
+            userId: req.user.id,
           },
         },
       },
     });
 
     if (!team || team.users.length === 0 || team.datarooms.length === 0) {
-      return res.status(403).end("Forbidden");
+      res.status(403).end("Forbidden");
+      return;
     }
 
     try {
@@ -76,9 +68,10 @@ export default async function handle(
             .filter((name) => existingFolderNames.has(name));
 
           if (duplicateNames.length > 0) {
-            return res.status(409).json({
+            res.status(409).json({
               message: `Cannot move folders: Duplicate names found inside target folder - ${duplicateNames.join(", ")}`,
             });
+            return;
           }
         }
         // Fetch all nested subfolders of the selected folders
@@ -146,7 +139,8 @@ export default async function handle(
       });
 
       if (updatedFolders.length === 0) {
-        return res.status(404).end("No folder were updated");
+        res.status(404).end("No folder were updated");
+        return;
       }
 
       // Get new path for folder unless folderId is null
@@ -157,18 +151,14 @@ export default async function handle(
           select: { path: true },
         });
       }
-      return res.status(200).json({
+      res.status(200).json({
         message: "Folder moved successfully",
         updatedCount: updatedFolders.length,
         newPath: folder?.path,
       });
     } catch (error) {
       console.error(error);
-      return res.status(500).end("Failed to move folder");
+      res.status(500).end("Failed to move folder");
     }
-  } else {
-    // We only allow PATCH requests
-    res.setHeader("Allow", ["PATCH"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

@@ -1,24 +1,14 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
-
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId/datarooms/:id/folders/documents/:name
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const userId = (session.user as CustomUser).id;
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const {
       teamId,
       id: dataroomId,
@@ -28,22 +18,6 @@ export default async function handle(
     const path = "/" + name.join("/"); // construct the materialized path
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       const folder = await prisma.dataroomFolder.findUnique({
         where: {
           dataroomId_path: {
@@ -58,7 +32,8 @@ export default async function handle(
       });
 
       if (!folder) {
-        return res.status(404).end("Folder not found");
+        res.status(404).end("Folder not found");
+        return;
       }
 
       const documents = await prisma.dataroomDocument.findMany({
@@ -103,16 +78,12 @@ export default async function handle(
 
       const sortedDocuments = sortItemsByIndexAndName(documents);
 
-      return res.status(200).json(sortedDocuments);
+      res.status(200).json(sortedDocuments);
     } catch (error) {
       console.error("Request error", error);
-      return res
+      res
         .status(500)
         .json({ error: "Error fetching dataroom folder documents" });
     }
-  } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

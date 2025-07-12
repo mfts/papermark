@@ -1,46 +1,31 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
 import { View } from "@prisma/client";
-import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import {
   getTotalAvgPageDuration,
   getTotalDocumentDuration,
 } from "@/lib/tinybird";
-import { CustomUser } from "@/lib/types";
 
-import { authOptions } from "../../../../auth/[...nextauth]";
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // GET /api/teams/:teamId/documents/:id/stats
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const {
-      teamId,
-      id: docId,
-      excludeTeamMembers,
-    } = req.query as {
-      teamId: string;
+    const { id: docId, excludeTeamMembers } = req.query as {
       id: string;
       excludeTeamMembers?: string;
     };
-
-    const userId = (session.user as CustomUser).id;
 
     try {
       const document = await prisma.document.findUnique({
         where: {
           id: docId,
-          teamId,
+          teamId: req.team?.id,
         },
         include: {
           views: true,
@@ -56,7 +41,7 @@ export default async function handle(
         where: {
           teams: {
             some: {
-              teamId: teamId,
+              teamId: req.team?.id,
             },
           },
         },
@@ -69,12 +54,13 @@ export default async function handle(
 
       // if there are no views, return an empty array
       if (!views) {
-        return res.status(200).json({
+        res.status(200).json({
           views: [],
           duration: { data: [] },
           total_duration: 0,
           groupedReactions: [],
         });
+        return;
       }
 
       const activeViews = views.filter((view) => !view.isArchived);
@@ -132,13 +118,9 @@ export default async function handle(
         totalViews: filteredViews.length,
       };
 
-      return res.status(200).json(stats);
+      res.status(200).json(stats);
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

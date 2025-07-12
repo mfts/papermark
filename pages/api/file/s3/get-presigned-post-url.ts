@@ -1,76 +1,50 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import slugify from "@sindresorhus/slugify";
-import { getServerSession } from "next-auth";
 import path from "node:path";
 
 import { ONE_HOUR, ONE_SECOND } from "@/lib/constants";
 import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 
-import { authOptions } from "../../auth/[...nextauth]";
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    const { fileName, contentType, docId } = req.body as {
+      fileName: string;
+      contentType: string;
+      docId: string;
+    };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method !== "POST") {
-    return res.status(405).end("Method Not Allowed");
-  }
+    try {
+      // Get the basename and extension for the file
+      const { name, ext } = path.parse(fileName);
 
-  const { fileName, contentType, teamId, docId } = req.body as {
-    fileName: string;
-    contentType: string;
-    teamId: string;
-    docId: string;
-  };
+      const slugifiedName = slugify(name) + ext;
+      const key = `${req.team.id}/${docId}/${slugifiedName}`;
 
-  const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return res.status(401).end("Unauthorized");
-  }
+      const { client, config } = await getTeamS3ClientAndConfig(req.team.id);
 
-  const team = await prisma.team.findUnique({
-    where: {
-      id: teamId,
-      users: {
-        some: {
-          userId: (session.user as CustomUser).id,
-        },
-      },
-    },
-    select: { id: true },
-  });
+      const putObjectCommand = new PutObjectCommand({
+        Bucket: config.bucket,
+        Key: key,
+        ContentType: contentType,
+        ContentDisposition: `attachment; filename="${slugifiedName}"`,
+      });
 
-  if (!team) {
-    return res.status(403).end("Unauthorized to access this team");
-  }
+      const url = await getSignedUrl(client, putObjectCommand, {
+        expiresIn: ONE_HOUR / ONE_SECOND,
+      });
 
-  try {
-    // Get the basename and extension for the file
-    const { name, ext } = path.parse(fileName);
-
-    const slugifiedName = slugify(name) + ext;
-    const key = `${team.id}/${docId}/${slugifiedName}`;
-
-    const { client, config } = await getTeamS3ClientAndConfig(team.id);
-
-    const putObjectCommand = new PutObjectCommand({
-      Bucket: config.bucket,
-      Key: key,
-      ContentType: contentType,
-      ContentDisposition: `attachment; filename="${slugifiedName}"`,
-    });
-
-    const url = await getSignedUrl(client, putObjectCommand, {
-      expiresIn: ONE_HOUR / ONE_SECOND,
-    });
-
-    return res.status(200).json({ url, key, docId, fileName: slugifiedName });
-  } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
-  }
-}
+      res.status(200).json({ url, key, docId, fileName: slugifiedName });
+      return;
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+      return;
+    }
+  },
+});

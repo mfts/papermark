@@ -1,109 +1,56 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import { getFeatureFlags } from "@/lib/featureFlags";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // GET /api/teams/:teamId/datarooms/:id
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const { teamId, id: dataroomId } = req.query as {
-      teamId: string;
+    const { id: dataroomId } = req.query as {
       id: string;
     };
 
-    const userId = (session.user as CustomUser).id;
-
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: dataroomId,
-          teamId,
+          teamId: req.team!.id,
         },
       });
 
       if (!dataroom) {
-        return res.status(404).json({
+        res.status(404).json({
           error: "Not Found",
           message: "The requested dataroom does not exist",
         });
+        return;
       }
 
-      return res.status(200).json(dataroom);
+      res.status(200).json(dataroom);
     } catch (error) {
       errorhandler(error, res);
     }
-  } else if (req.method === "PATCH") {
+  },
+  PATCH: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // PATCH /api/teams/:teamId/datarooms/:id
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const { teamId, id: dataroomId } = req.query as {
-      teamId: string;
+    const { id: dataroomId } = req.query as {
       id: string;
     };
 
-    const userId = (session.user as CustomUser).id;
-
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-        select: {
-          id: true,
-          plan: true,
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       const { name, enableChangeNotifications } = req.body as {
         name?: string;
         enableChangeNotifications?: boolean;
       };
 
-      const featureFlags = await getFeatureFlags({ teamId: team.id });
-      const isDataroomsPlus = team.plan.includes("datarooms-plus");
-      const isTrial = team.plan.includes("drtrial");
+      const featureFlags = await getFeatureFlags({ teamId: req.team!.id });
+      const isDataroomsPlus = req.team!.plan.includes("datarooms-plus");
+      const isTrial = req.team!.plan.includes("drtrial");
 
       if (
         enableChangeNotifications !== undefined &&
@@ -111,9 +58,10 @@ export default async function handle(
         !isTrial &&
         !featureFlags.roomChangeNotifications
       ) {
-        return res.status(403).json({
+        res.status(403).json({
           message: "This feature is not available in your plan",
         });
+        return;
       }
 
       const dataroom = await prisma.dataroom.update({
@@ -128,67 +76,60 @@ export default async function handle(
         },
       });
 
-      return res.status(200).json(dataroom);
+      res.status(200).json(dataroom);
     } catch (error) {
       errorhandler(error, res);
     }
-  } else if (req.method === "DELETE") {
+  },
+  DELETE: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // DELETE /api/teams/:teamId/datarooms/:id
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const { teamId, id: dataroomId } = req.query as {
-      teamId: string;
+    const { id: dataroomId } = req.query as {
       id: string;
     };
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
+      // Check if the dataroom belongs to the team
+      const dataroom = await prisma.dataroom.findFirst({
         where: {
-          id: teamId,
-          datarooms: {
-            some: {
-              id: dataroomId,
-            },
-          },
+          id: dataroomId,
+          teamId: req.team!.id,
         },
-        include: { users: true },
       });
 
-      if (!team) {
-        return res.status(401).end("Unauthorized");
+      if (!dataroom) {
+        res.status(401).end("Unauthorized");
+        return;
       }
 
       // check if current user is admin of the team
-      const isUserAdmin = team.users.some(
-        (user) =>
-          (user.role === "ADMIN" || user.role === "MANAGER") &&
-          user.userId === (session.user as CustomUser).id,
-      );
-      if (!isUserAdmin) {
-        return res.status(403).json({
+      const teamUser = await prisma.userTeam.findFirst({
+        where: {
+          teamId: req.team!.id,
+          userId: req.user.id,
+        },
+        select: {
+          role: true,
+        },
+      });
+
+      if (!teamUser || !["ADMIN", "MANAGER"].includes(teamUser.role)) {
+        res.status(403).json({
           message:
             "You are not permitted to perform this action. Only admin and managers can delete datarooms.",
         });
+        return;
       }
 
       await prisma.dataroom.delete({
         where: {
           id: dataroomId,
-          teamId,
+          teamId: req.team!.id,
         },
       });
 
-      return res.status(204).end();
+      res.status(204).end();
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow GET, and PATCH requests
-    res.setHeader("Allow", ["GET", "PATCH"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

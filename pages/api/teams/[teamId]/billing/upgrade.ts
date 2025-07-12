@@ -1,48 +1,33 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
 import { stripeInstance } from "@/ee/stripe";
 import { getPlanFromPriceId, isOldAccount } from "@/ee/stripe/utils";
 import { waitUntil } from "@vercel/functions";
-import { getServerSession } from "next-auth/next";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-
-import { authOptions } from "../../../auth/[...nextauth]";
 
 export const config = {
   // in order to enable `waitUntil` function
   supportsResponseStreaming: true,
 };
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // POST /api/teams/:teamId/billing/upgrade
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
-    const { teamId, priceId } = req.query as {
-      teamId: string;
+    const { priceId } = req.query as {
       priceId: string;
     };
 
-    const { id: userId, email: userEmail } = session.user as CustomUser;
+    const { id: userId, email: userEmail } = req.user;
 
     const team = await prisma.team.findUnique({
       where: {
-        id: teamId,
-        users: {
-          some: {
-            userId,
-          },
-        },
+        id: req.team!.id,
       },
       select: { stripeId: true, plan: true },
     });
@@ -88,7 +73,7 @@ export default async function handle(
         },
         mode: "subscription",
         allow_promotion_codes: true,
-        client_reference_id: teamId,
+        client_reference_id: req.team!.id,
       });
     } else {
       // else initialize a new customer
@@ -106,7 +91,7 @@ export default async function handle(
         },
         mode: "subscription",
         allow_promotion_codes: true,
-        client_reference_id: teamId,
+        client_reference_id: req.team!.id,
       });
     }
 
@@ -114,15 +99,11 @@ export default async function handle(
     waitUntil(
       trackAnalytics({
         event: "Stripe Checkout Clicked",
-        teamId,
+        teamId: req.team!.id,
         priceId: priceId,
       }),
     );
 
-    return res.status(200).json(stripeSession);
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+    res.status(200).json(stripeSession);
+  },
+});

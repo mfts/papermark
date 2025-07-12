@@ -1,46 +1,21 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { del } from "@vercel/blob";
-import { getServerSession } from "next-auth";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return res.status(401).end("Unauthorized");
-  }
-
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { teamId, id: dataroomId } = req.query as {
     teamId: string;
     id: string;
   };
 
   try {
-    const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-        users: {
-          some: {
-            userId: (session.user as CustomUser).id,
-          },
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (!team) {
-      return res.status(403).end("Unauthorized to access this team");
-    }
-
     const dataroom = await prisma.dataroom.findUnique({
       where: {
         id: dataroomId,
@@ -49,10 +24,12 @@ export default async function handle(
     });
 
     if (!dataroom) {
-      return res.status(404).end("Dataroom not found");
+      res.status(404).end("Dataroom not found");
+      return;
     }
   } catch (error) {
     errorhandler(error, res);
+    return;
   }
 
   if (req.method === "GET") {
@@ -64,10 +41,12 @@ export default async function handle(
     });
 
     if (!brand) {
-      return res.status(200).json(null);
+      res.status(200).json(null);
+      return;
     }
 
-    return res.status(200).json(brand);
+    res.status(200).json(brand);
+    return;
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/datarooms/:id/branding
     const { logo, banner, brandColor, accentColor } = req.body as {
@@ -88,7 +67,8 @@ export default async function handle(
       },
     });
 
-    return res.status(200).json(brand);
+    res.status(200).json(brand);
+    return;
   } else if (req.method === "PUT") {
     // PUT /api/teams/:teamId/datarooms/:id/branding
     const { logo, banner, brandColor, accentColor } = req.body as {
@@ -110,7 +90,8 @@ export default async function handle(
       },
     });
 
-    return res.status(200).json(brand);
+    res.status(200).json(brand);
+    return;
   } else if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId/datarooms/:id/branding
     const brand = await prisma.dataroomBrand.findFirst({
@@ -136,10 +117,13 @@ export default async function handle(
       },
     });
 
-    return res.status(204).end();
-  } else {
-    // We only allow GET and DELETE requests
-    res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.status(204).end();
   }
 }
+
+export default createTeamHandler({
+  GET: handler,
+  POST: handler,
+  PUT: handler,
+  DELETE: handler,
+});

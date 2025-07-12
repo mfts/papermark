@@ -1,8 +1,9 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
-
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 
 type OrderItem = {
@@ -11,50 +12,41 @@ type OrderItem = {
   orderIndex: number;
 };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed" });
-  }
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    const { id: dataroomId } = req.query as { teamId: string; id: string };
+    const newOrder: OrderItem[] = req.body;
 
-  const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return res.status(401).end("Unauthorized");
-  }
+    if (
+      !Array.isArray(newOrder) ||
+      !dataroomId ||
+      typeof dataroomId !== "string"
+    ) {
+      return res.status(400).json({ message: "Invalid input" });
+    }
 
-  const { id: dataroomId } = req.query as { teamId: string; id: string };
-  const newOrder: OrderItem[] = req.body;
-
-  if (
-    !Array.isArray(newOrder) ||
-    !dataroomId ||
-    typeof dataroomId !== "string"
-  ) {
-    return res.status(400).json({ message: "Invalid input" });
-  }
-
-  try {
-    await prisma.$transaction(async (prisma) => {
-      for (const item of newOrder) {
-        if (item.category === "folder") {
-          await prisma.dataroomFolder.update({
-            where: { id: item.id },
-            data: { orderIndex: item.orderIndex },
-          });
-        } else {
-          await prisma.dataroomDocument.update({
-            where: { id: item.id },
-            data: { orderIndex: item.orderIndex },
-          });
+    try {
+      await prisma.$transaction(async (prisma) => {
+        for (const item of newOrder) {
+          if (item.category === "folder") {
+            await prisma.dataroomFolder.update({
+              where: { id: item.id },
+              data: { orderIndex: item.orderIndex },
+            });
+          } else {
+            await prisma.dataroomDocument.update({
+              where: { id: item.id },
+              data: { orderIndex: item.orderIndex },
+            });
+          }
         }
-      }
-    });
+      });
 
-    res.status(200).json({ message: "Order updated successfully" });
-  } catch (error) {
-    console.error("Error updating order:", error);
-    res.status(500).json({ message: "Error updating order" });
-  }
-}
+      res.status(200).json({ message: "Order updated successfully" });
+      return;
+    } catch (error) {
+      console.error("Error updating order:", error);
+      res.status(500).json({ message: "Error updating order" });
+    }
+  },
+});

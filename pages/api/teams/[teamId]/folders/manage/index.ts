@@ -1,25 +1,16 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
-import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "PUT") {
-    // PUT /api/teams/:teamId/folders/manage
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-    const userId = (session.user as CustomUser).id;
+export default createTeamHandler({
+  PUT: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId } = req.query as { teamId: string };
     const { folderId, name } = req.body as { folderId: string; name: string };
 
@@ -29,14 +20,15 @@ export default async function handle(
           id: teamId,
           users: {
             some: {
-              userId: userId,
+              userId: req.user.id,
             },
           },
         },
       });
 
       if (!team) {
-        return res.status(401).end("Unauthorized");
+        res.status(401).end("Unauthorized");
+        return;
       }
 
       const folder = await prisma.folder.findUnique({
@@ -50,7 +42,8 @@ export default async function handle(
       });
 
       if (!folder) {
-        return res.status(404).json({ message: "Folder not found" });
+        res.status(404).json({ message: "Folder not found" });
+        return;
       }
 
       // take the old path and replace the last part with the new name
@@ -68,15 +61,9 @@ export default async function handle(
         },
       });
 
-      return res
-        .status(200)
-        .json({ message: "Folder name updated successfully" });
+      res.status(200).json({ message: "Folder name updated successfully" });
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow PUT requests
-    res.setHeader("Allow", ["PUT"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

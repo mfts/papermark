@@ -1,58 +1,25 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { DocumentVersion } from "@prisma/client";
-import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import { copyFileServer } from "@/lib/files/copy-file-server";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
-    // GET /api/teams/:teamId/documents/:id/duplicate
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const { teamId, id: docId } = req.query as { teamId: string; id: string };
-
-    const userId = (session.user as CustomUser).id;
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    // POST /api/teams/:teamId/documents/:id/duplicate
+    const { id: docId } = req.query as { id: string };
 
     try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId,
-            },
-          },
-          documents: {
-            some: {
-              id: {
-                equals: docId,
-              },
-            },
-          },
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
-      const document = await prisma.document.findUnique({
+      const document = await prisma.document.findFirst({
         where: {
           id: docId,
+          teamId: req.team?.id,
         },
         include: {
           versions: {
@@ -67,13 +34,14 @@ export default async function handle(
       });
 
       if (!document) {
-        return res.status(404).end("Document not found");
+        res.status(404).end("Document not found");
+        return;
       }
 
       const { documentId, ...documentVersion } = document.versions[0];
 
       const { type, data } = await copyFileServer({
-        teamId: teamId,
+        teamId: req.team!.id,
         filePath: documentVersion.file,
         fileName: document.name,
         storageType: documentVersion.storageType,
@@ -84,8 +52,8 @@ export default async function handle(
           ...document,
           name: `${document.name} (Copy)`,
           id: undefined,
-          teamId: teamId,
-          ownerId: userId,
+          teamId: req.team!.id,
+          ownerId: req.user.id,
           assistantEnabled: false,
           createdAt: undefined,
           updatedAt: undefined,
@@ -124,15 +92,11 @@ export default async function handle(
         },
       });
 
-      return res.status(200).json({
+      res.status(200).json({
         message: "Document duplicated successfully!",
       });
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

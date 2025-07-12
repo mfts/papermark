@@ -1,17 +1,18 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { waitUntil } from "@vercel/functions";
-import { getServerSession } from "next-auth/next";
 
 import { sendDataroomTrialWelcome } from "@/lib/emails/send-dataroom-trial";
 import { newId } from "@/lib/id-helper";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import {
   sendDataroomTrialExpiredEmailTask,
   sendDataroomTrialInfoEmailTask,
 } from "@/lib/trigger/send-scheduled-email";
-import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
 export const config = {
@@ -19,22 +20,10 @@ export const config = {
   supportsResponseStreaming: true,
 };
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // POST /api/teams/:teamId/datarooms/trial
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
-    const userId = (session.user as CustomUser).id;
-    const email = (session.user as CustomUser).email;
-
-    const { teamId } = req.query as { teamId: string };
+    const email = req.user.email;
     const { name, fullName, companyName, useCase, companySize, tools } =
       req.body as {
         name: string;
@@ -48,12 +37,7 @@ export default async function handle(
     try {
       const team = await prisma.team.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
+          id: req.team!.id,
         },
         select: {
           id: true,
@@ -67,23 +51,23 @@ export default async function handle(
       });
 
       if (!team) {
-        return res.status(401).end("Unauthorized");
+        res.status(401).end("Unauthorized");
+        return;
       }
 
       if (team.plan.includes("drtrial") || team._count.datarooms > 0) {
-        return res
-          .status(400)
-          .json({ message: "Trial data room already exists" });
+        res.status(400).json({ message: "Trial data room already exists" });
+        return;
       }
 
       await log({
-        message: `Dataroom Trial: ${teamId} \n\nEmail: ${email} \nName: ${fullName} \nCompany Name: ${companyName} \nUse Case: ${useCase} \nCompany Size: ${companySize} \nTools: ${tools}`,
+        message: `Dataroom Trial: ${req.team!.id} \n\nEmail: ${email} \nName: ${fullName} \nCompany Name: ${companyName} \nUse Case: ${useCase} \nCompany Size: ${companySize} \nTools: ${tools}`,
         type: "trial",
         mention: true,
       });
 
       await prisma.team.update({
-        where: { id: teamId },
+        where: { id: req.team!.id },
         data: {
           plan: `${team.plan}+drtrial`,
         },
@@ -94,7 +78,7 @@ export default async function handle(
       const dataroom = await prisma.dataroom.create({
         data: {
           name: name,
-          teamId: teamId,
+          teamId: req.team!.id,
           pId: pId,
         },
       });
@@ -119,7 +103,7 @@ export default async function handle(
       );
       waitUntil(
         sendDataroomTrialExpiredEmailTask.trigger(
-          { to: email!, name: fullName.split(" ")[0], teamId },
+          { to: email!, name: fullName.split(" ")[0], teamId: req.team!.id },
           { delay: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
         ),
       );
@@ -129,9 +113,5 @@ export default async function handle(
       console.error("Request error", error);
       res.status(500).json({ error: "Error creating dataroom" });
     }
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

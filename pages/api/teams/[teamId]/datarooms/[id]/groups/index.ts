@@ -1,51 +1,26 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
-
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
 import { ItemType } from "@prisma/client";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId/datarooms/:id/groups?documentId=:documentId
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
+import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
+import prisma from "@/lib/prisma";
+import { log } from "@/lib/utils";
 
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    // GET /api/teams/:teamId/datarooms/:id/groups?documentId=:documentId
     const { teamId, id: dataroomId } = req.query as {
       teamId: string;
       id: string;
     };
     const documentId = req.query?.documentId as string;
-    const userId = (session.user as CustomUser).id;
+    const userId = req.user.id;
 
     try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: (session.user as CustomUser).id,
-            },
-          },
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (!team) {
-        return res.status(403).end("Unauthorized to access this team");
-      }
-
       const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: dataroomId,
@@ -60,20 +35,21 @@ export default async function handle(
               createdAt: "desc",
             },
             include: {
-              ...(documentId ? {
-                accessControls: {
-                  where: {
-                    itemId: documentId,
-                    itemType: ItemType.DATAROOM_DOCUMENT,
-                  },
-                  select: {
-                    id: true,
-                    canView: true,
-                    canDownload: true,
-                    itemId: true,
-                  },
-                },
-              }
+              ...(documentId
+                ? {
+                    accessControls: {
+                      where: {
+                        itemId: documentId,
+                        itemType: ItemType.DATAROOM_DOCUMENT,
+                      },
+                      select: {
+                        id: true,
+                        canView: true,
+                        canDownload: true,
+                        itemId: true,
+                      },
+                    },
+                  }
                 : {}),
               _count: {
                 select: {
@@ -87,10 +63,11 @@ export default async function handle(
       });
 
       if (!dataroom || !dataroom.viewerGroups) {
-        return res.status(404).end("Dataroom not found");
+        res.status(404).end("Dataroom not found");
+        return;
       }
 
-      return res.status(200).json(dataroom.viewerGroups);
+      res.status(200).json(dataroom.viewerGroups);
     } catch (error) {
       log({
         message: `Failed to get groups for dataroom: _${dataroomId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
@@ -98,15 +75,10 @@ export default async function handle(
       });
       errorhandler(error, res);
     }
-  } else if (req.method === "POST") {
+  },
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // POST /api/teams/:teamId/datarooms/:id/groups
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
-    const userId = (session.user as CustomUser).id;
+    const userId = req.user.id;
     const { teamId, id: dataroomId } = req.query as {
       teamId: string;
       id: string;
@@ -115,22 +87,6 @@ export default async function handle(
     const { name } = req.body as { name: string };
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       const group = await prisma.viewerGroup.create({
         data: {
           name: name,
@@ -144,9 +100,5 @@ export default async function handle(
       console.error("Request error", error);
       res.status(500).json({ error: "Error creating folder" });
     }
-  } else {
-    // We only allow GET, POST requests
-    res.setHeader("Allow", ["GET", "POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

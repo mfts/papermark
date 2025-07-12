@@ -1,32 +1,22 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { LIMITS } from "@/lib/constants";
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createAuthenticatedHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { getDocumentWithTeamAndUser } from "@/lib/team/helper";
 import { getViewPageDuration } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
-import { authOptions } from "../../auth/[...nextauth]";
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/links/:id/visits
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
+export default createAuthenticatedHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // get link id from query params
     const { id } = req.query as { id: string };
-
-    const userId = (session.user as CustomUser).id;
+    const userId = req.user.id;
 
     try {
       // get the numPages from document
@@ -130,17 +120,15 @@ export default async function handle(
 
       // TODO: Check that the user is owner of the links, otherwise return 401
 
-      return res.status(200).json(viewsWithDuration);
+      res.status(200).json(viewsWithDuration);
+      return;
     } catch (error) {
       log({
         message: `Failed to get views for link: _${id}_. \n\n ${error} \n\n*Metadata*: \`{userId: ${userId}}\``,
         type: "error",
       });
       errorhandler(error, res);
+      return;
     }
-  } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

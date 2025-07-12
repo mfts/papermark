@@ -1,35 +1,23 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { getTeamWithDomain } from "@/lib/team/helper";
-import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
-import { authOptions } from "../../../auth/[...nextauth]";
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId/domains
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId } = req.query as { teamId: string };
-
-    const userId = (session.user as CustomUser).id;
 
     try {
       const { team } = await getTeamWithDomain({
         teamId,
-        userId,
+        userId: req.user.id,
         options: {
           select: {
             slug: true,
@@ -43,29 +31,24 @@ export default async function handle(
       });
 
       const domains = team.domains;
-      return res.status(200).json(domains);
+      res.status(200).json(domains);
     } catch (error) {
       errorhandler(error, res);
     }
-  } else if (req.method === "POST") {
-    // POST /api/teams/:teamId/domains
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
+  },
 
-    const userId = (session.user as CustomUser).id;
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId } = req.query as { teamId: string };
 
     if (!teamId) {
-      return res.status(401).json("Unauthorized");
+      res.status(401).json("Unauthorized");
+      return;
     }
 
     try {
       await getTeamWithDomain({
         teamId,
-        userId,
+        userId: req.user.id,
       });
 
       // Assuming data is an object with `domain` properties
@@ -81,14 +64,14 @@ export default async function handle(
       // Check if domain is valid
       const validDomain = validDomainRegex.test(sanitizedDomain);
       if (validDomain !== true) {
-        return res.status(422).json("Invalid domain");
+        res.status(422).json("Invalid domain");
+        return;
       }
 
       // Check if domain contains papermark
       if (sanitizedDomain.toLowerCase().includes("papermark")) {
-        return res
-          .status(400)
-          .json({ message: "Domain cannot contain 'papermark'" });
+        res.status(400).json({ message: "Domain cannot contain 'papermark'" });
+        return;
       }
 
       // Check if domain already exists
@@ -99,30 +82,27 @@ export default async function handle(
       });
 
       if (existingDomain) {
-        return res.status(400).json({ message: "Domain already exists" });
+        res.status(400).json({ message: "Domain already exists" });
+        return;
       }
 
       const response = await prisma.domain.create({
         data: {
           slug: sanitizedDomain,
-          userId,
+          userId: req.user.id,
           teamId,
         },
       });
       await addDomainToVercel(sanitizedDomain);
 
-      return res.status(201).json(response);
+      res.status(201).json(response);
     } catch (error) {
       log({
-        message: `Failed to add domain. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        message: `Failed to add domain. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${req.user.id}}\``,
         type: "error",
         mention: true,
       });
       errorhandler(error, res);
     }
-  } else {
-    // We only allow GET and POST requests
-    res.setHeader("Allow", ["GET", "POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});
