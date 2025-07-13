@@ -17,27 +17,6 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     folderId: string | null;
   };
 
-  // Ensure the user is an admin of the team
-  const team = await prisma.team.findUnique({
-    where: { id: teamId },
-    include: {
-      datarooms: {
-        where: { id: dataroomId },
-      },
-      users: {
-        where: {
-          role: { in: ["ADMIN", "MANAGER"] },
-          userId: req.user.id,
-        },
-      },
-    },
-  });
-
-  if (!team || team.users.length === 0 || team.datarooms.length === 0) {
-    res.status(403).end("Forbidden");
-    return;
-  }
-
   // Update the folderId for the specified documents
   const updatedDocuments = await prisma.dataroomDocument.updateMany({
     where: {

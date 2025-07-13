@@ -3,18 +3,18 @@ import { NextApiResponse } from "next";
 import { errorhandler } from "@/lib/errorHandler";
 import {
   AuthenticatedRequest,
-  createAuthenticatedHandler,
+  createTeamHandler,
 } from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 
-export default createAuthenticatedHandler({
+export default createTeamHandler({
   POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
-    const { teamId, id: docId } = req.query as { teamId: string; id: string };
+    const { id: docId } = req.query as { id: string };
 
     try {
       await getTeamWithUsersAndDocument({
-        teamId,
+        teamId: req.team.id,
         userId: req.user.id,
         docId,
         checkOwner: true,

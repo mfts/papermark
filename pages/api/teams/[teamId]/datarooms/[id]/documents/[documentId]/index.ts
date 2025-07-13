@@ -9,10 +9,9 @@ import prisma from "@/lib/prisma";
 async function patchHandler(req: AuthenticatedRequest, res: NextApiResponse) {
   // PATCH /api/teams/:teamId/datarooms/:id/documents/:documentId
   const {
-    teamId,
     id: dataroomId,
     documentId,
-  } = req.query as { teamId: string; id: string; documentId: string };
+  } = req.query as { id: string; documentId: string };
   const { folderId, currentPathName } = req.body as {
     folderId: string;
     currentPathName: string;
@@ -54,16 +53,15 @@ async function patchHandler(req: AuthenticatedRequest, res: NextApiResponse) {
 async function deleteHandler(req: AuthenticatedRequest, res: NextApiResponse) {
   // DELETE /api/teams/:teamId/datarooms/:id/documents/:documentId
   const {
-    teamId,
     id: dataroomId,
     documentId,
-  } = req.query as { teamId: string; id: string; documentId: string };
+  } = req.query as { id: string; documentId: string };
 
   try {
     const dataroom = await prisma.dataroom.findUnique({
       where: {
         id: dataroomId,
-        teamId: teamId,
+        teamId: req.team.id,
       },
     });
 

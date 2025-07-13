@@ -118,12 +118,14 @@ export default createTeamHandler({
         await del(brand.logo);
       }
 
-      // delete the branding from database
-      await prisma.brand.delete({
-        where: {
-          id: brand?.id,
-        },
-      });
+      // delete the branding from database only if brand exists
+      if (brand) {
+        await prisma.brand.delete({
+          where: {
+            id: brand.id,
+          },
+        });
+      }
 
       // Remove logo from Redis cache
       await redis.del(`brand:logo:${teamId}`);

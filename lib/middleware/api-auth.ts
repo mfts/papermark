@@ -6,18 +6,23 @@ import { getServerSession } from "next-auth/next";
 import { hashToken } from "@/lib/api/auth/token";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { RestrictedToken, UserTeam, Team } from "@prisma/client";
 
 // Types for the middleware
+interface TeamWithUsers extends Team {
+  users: Array<{ role: UserTeam["role"] }>;
+}
+
 export interface AuthenticatedRequest extends NextApiRequest {
   user: CustomUser;
-  team?: any;
-  token?: any;
+  team: TeamWithUsers;
+  token?: RestrictedToken;
 }
 
 export interface AuthContext {
   user: CustomUser;
-  team?: any;
-  token?: any;
+  team: TeamWithUsers;
+  token?: RestrictedToken;
 }
 
 // Base authentication middleware
@@ -131,11 +136,6 @@ export async function withApiToken(
 
     const restrictedToken = await prisma.restrictedToken.findUnique({
       where: { hashedKey: hashedToken },
-      select: {
-        userId: true,
-        teamId: true,
-        rateLimit: true,
-      },
     });
 
     if (!restrictedToken) {
@@ -208,6 +208,16 @@ export async function withTeamAccessOrToken(
         // Get team info for API token requests
         const team = await prisma.team.findUnique({
           where: { id: teamId },
+          include: {
+            users: {
+              where: {
+                userId: authenticatedReq.user.id,
+              },
+              select: {
+                role: true,
+              },
+            },
+          },
         });
 
         if (!team) {

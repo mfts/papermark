@@ -8,7 +8,7 @@ import prisma from "@/lib/prisma";
 
 export default createTeamHandler({
   GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
-    const { teamId, name } = req.query as { teamId: string; name: string[] };
+    const { name } = req.query as { name: string[] };
 
     const path = "/" + name.join("/"); // construct the materialized path
 
@@ -16,7 +16,7 @@ export default createTeamHandler({
       const folder = await prisma.folder.findUnique({
         where: {
           teamId_path: {
-            teamId: teamId,
+            teamId: req.team.id,
             path: path,
           },
         },
@@ -33,7 +33,7 @@ export default createTeamHandler({
 
       const documents = await prisma.document.findMany({
         where: {
-          teamId: teamId,
+          teamId: req.team.id,
           folderId: folder.id,
         },
         orderBy: {

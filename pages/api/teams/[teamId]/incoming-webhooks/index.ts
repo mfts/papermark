@@ -67,7 +67,7 @@ export default async function handle(
       res,
       async (authenticatedReq: AuthenticatedRequest, res: NextApiResponse) => {
         try {
-          const { name } = req.body;
+          const { name } = authenticatedReq.body;
           if (!name) {
             return res.status(400).json({ error: "Name is required" });
           }
@@ -102,15 +102,7 @@ export default async function handle(
       res,
       async (authenticatedReq: AuthenticatedRequest, res: NextApiResponse) => {
         try {
-          const { webhookId } = req.body;
-
-          // Check if user has admin role for DELETE operations
-          const userRole = authenticatedReq.team?.users?.[0]?.role;
-          if (userRole !== "ADMIN") {
-            return res
-              .status(403)
-              .json({ error: "Forbidden: Admin access required" });
-          }
+          const { webhookId } = authenticatedReq.body;
 
           // Delete the webhook
           await prisma.incomingWebhook.delete({

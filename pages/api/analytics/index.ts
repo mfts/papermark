@@ -54,7 +54,7 @@ export default createTeamHandler({
       const team = req.team;
 
       // Check if free plan user is trying to access data beyond 30 days
-      if (interval === "custom" && team.plan.includes("free")) {
+      if (interval === "custom" && team.plan?.includes("free")) {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         thirtyDaysAgo.setHours(0, 0, 0, 0);

@@ -116,7 +116,7 @@ export default createTeamHandler({
           {
             videoUrl: url,
             teamId: req.team!.id,
-            docId: url.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
+            docId: documentId || url.split("/")[1],// Extract doc_xxxx from teamId/doc_xxxx/filename
             documentVersionId: version.id,
             fileSize: fileSize || 0,
           },
@@ -140,7 +140,6 @@ export default createTeamHandler({
             documentId: documentId,
             documentVersionId: version.id,
             teamId: req.team!.id,
-            // docId: version.file.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
             versionNumber: version.versionNumber,
           },
           {

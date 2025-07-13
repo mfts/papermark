@@ -24,25 +24,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   };
 
   try {
-    // Fetching Team based on team.id
-    const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-        users: {
-          some: {
-            userId: req.user.id,
-          },
-        },
-      },
-      select: { plan: true },
-    });
-
-    if (!team) {
-      res.status(404).end("Team not found");
-      return;
-    }
-
-    if (team.plan === "free") {
+    // Check if the feature is available for the team's plan
+    if (req.team.plan === "free") {
       res
         .status(403)
         .json({ message: "This feature is not available for your plan" });

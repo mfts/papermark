@@ -68,7 +68,7 @@ export default createTeamHandler({
     const userId = req.user.id;
 
     if (!domain) {
-      res.status(400).json("Domain is required for deletion");
+      res.status(400).json("Domain parameter is required");
       return;
     }
 

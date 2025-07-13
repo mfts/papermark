@@ -74,7 +74,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     res.status(201).json(members);
   } catch (error) {
     console.error("Request error", error);
-    res.status(500).json({ error: "Error creating folder" });
+    res.status(500).json({ error: "Error creating group members" });
   }
 }
 

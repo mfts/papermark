@@ -8,7 +8,6 @@ import {
   createTeamHandler,
 } from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { generateChecksum } from "@/lib/utils/generate-checksum";
 import { generateJWT } from "@/lib/utils/generate-jwt";
 
 export default createTeamHandler(
@@ -18,16 +17,6 @@ export default createTeamHandler(
       const { email } = req.body as { email: string };
 
       try {
-        // get current team
-        const team = await prisma.team.findUnique({
-          where: {
-            id: teamId,
-          },
-          select: {
-            name: true,
-          },
-        });
-
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + 168); // invitation expires in 7 days
 
@@ -103,7 +92,7 @@ export default createTeamHandler(
         sendTeammateInviteEmail({
           senderName: sender.name || "",
           senderEmail: sender.email || "",
-          teamName: team?.name || "",
+          teamName: req.team.name,
           to: email,
           url: verifyUrl,
         });

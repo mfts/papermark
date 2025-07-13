@@ -16,22 +16,6 @@ export default createTeamHandler({
     };
 
     try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: req.user.id,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        res.status(401).end("Unauthorized");
-        return;
-      }
-
       const folder = await prisma.folder.findUnique({
         where: {
           id: folderId,

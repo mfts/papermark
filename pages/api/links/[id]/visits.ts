@@ -9,7 +9,6 @@ import {
 import prisma from "@/lib/prisma";
 import { getDocumentWithTeamAndUser } from "@/lib/team/helper";
 import { getViewPageDuration } from "@/lib/tinybird";
-import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
 export default createAuthenticatedHandler({

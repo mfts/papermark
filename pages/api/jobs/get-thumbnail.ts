@@ -24,7 +24,8 @@ export default createAuthenticatedHandler({
       res.status(200).json({ imageUrl });
       return;
     } catch (error) {
-      res.status(500).json({ message: (error as Error).message });
+      console.error("Thumbnail retrieval error:", error);
+      res.status(500).json({ message: "Failed to retrieve thumbnail" });
       return;
     }
   },
