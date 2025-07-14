@@ -331,11 +331,7 @@ export function createTeamHandler(
 
     const authType = options?.authType || "both";
     const authMiddleware =
-      authType === "session"
-        ? withTeamAccess
-        : authType === "token"
-          ? withTeamAccessOrToken
-          : withTeamAccessOrToken;
+      authType === "session" ? withTeamAccess : withTeamAccessOrToken;
 
     return authMiddleware(req, res, handler, {
       requireAdmin: options?.requireAdmin,
