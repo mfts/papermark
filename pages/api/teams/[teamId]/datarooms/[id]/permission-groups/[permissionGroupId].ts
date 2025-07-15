@@ -18,6 +18,13 @@ const itemPermissionSchema = z.object({
 
 const permissionsSchema = z.record(z.string(), itemPermissionSchema);
 
+const patchPermissionGroupSchema = z.object({
+  name: z.string().optional(),
+  description: z.string().nullable().optional(),
+  defaultCanView: z.boolean().optional(),
+  defaultCanDownload: z.boolean().optional(),
+});
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -307,9 +314,91 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
+  } else if (req.method === "PATCH") {
+    // PATCH /api/teams/:teamId/datarooms/:id/permission-groups/:permissionGroupId
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauthorized");
+    }
+
+    const {
+      teamId,
+      id: dataroomId,
+      permissionGroupId,
+    } = req.query as {
+      teamId: string;
+      id: string;
+      permissionGroupId: string;
+    };
+
+    const userId = (session.user as CustomUser).id;
+
+    try {
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: { userId },
+          },
+        },
+      });
+
+      if (!team) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      const dataroom = await prisma.dataroom.findUnique({
+        where: {
+          id: dataroomId,
+          teamId: teamId,
+        },
+      });
+
+      if (!dataroom) {
+        return res.status(404).json({ error: "Dataroom not found" });
+      }
+
+      const permissionGroup = await prisma.permissionGroup.findUnique({
+        where: {
+          id: permissionGroupId,
+          dataroomId: dataroomId,
+          teamId: teamId,
+        },
+      });
+
+      if (!permissionGroup) {
+        return res.status(404).json({ error: "Permission group not found" });
+      }
+
+      const validationResult = patchPermissionGroupSchema.safeParse(req.body);
+
+      if (!validationResult.success) {
+        return res.status(400).json({
+          error: "Invalid request body",
+          details: validationResult.error.issues,
+        });
+      }
+
+      const dataToUpdate = validationResult.data;
+
+      if (Object.keys(dataToUpdate).length === 0) {
+        return res.status(400).json({ error: "No fields to update" });
+      }
+
+      const updatedPermissionGroup = await prisma.permissionGroup.update({
+        where: {
+          id: permissionGroupId,
+        },
+        data: dataToUpdate,
+      });
+
+      return res.status(200).json({ permissionGroup: updatedPermissionGroup });
+    } catch (error) {
+      errorhandler(error, res);
+    }
   }
 
   // We only allow GET requests
-  res.setHeader("Allow", ["GET", "PUT"]);
+  res.setHeader("Allow", ["GET", "PUT", "PATCH"]);
   return res.status(405).end(`Method ${req.method} Not Allowed`);
 }

@@ -139,40 +139,18 @@ export default function PermissionSettings({
     groupId: string,
     checked: boolean,
   ) => {
-    const group = viewerGroups?.find((g) => g.id === groupId);
-    if (!group) return;
-
-    // If disabling view, also disable download in single API call
-    if (!checked && (group.defaultCanDownload ?? false)) {
-      await updateGroupPermissions(groupId, {
-        defaultCanView: checked,
-        defaultCanDownload: false,
-      });
-    } else {
-      await updateGroupPermissions(groupId, {
-        defaultCanView: checked,
-      });
-    }
+    await updateGroupPermissions(groupId, {
+      defaultCanView: checked,
+    });
   };
 
   const handleDownloadPermissionChange = async (
     groupId: string,
     checked: boolean,
   ) => {
-    const group = viewerGroups?.find((g) => g.id === groupId);
-    if (!group) return;
-
-    // If enabling download, also enable view in single API call
-    if (checked && !(group.defaultCanView ?? false)) {
-      await updateGroupPermissions(groupId, {
-        defaultCanView: true,
-        defaultCanDownload: checked,
-      });
-    } else {
-      await updateGroupPermissions(groupId, {
-        defaultCanDownload: checked,
-      });
-    }
+    await updateGroupPermissions(groupId, {
+      defaultCanDownload: checked,
+    });
   };
 
   const currentStrategy =
@@ -182,7 +160,7 @@ export default function PermissionSettings({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Permission Settings</CardTitle>
+        <CardTitle>Group Default Permissions</CardTitle>
         <CardDescription>
           Configure how group permissions are handled for new documents.
         </CardDescription>

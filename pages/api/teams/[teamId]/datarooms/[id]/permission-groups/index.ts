@@ -13,7 +13,74 @@ export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (req.method === "POST") {
+  if (req.method === "GET") {
+    // GET /api/teams/:teamId/datarooms/:id/permission-groups
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauthorized");
+    }
+
+    const { teamId, id: dataroomId } = req.query as {
+      teamId: string;
+      id: string;
+    };
+
+    const userId = (session.user as CustomUser).id;
+
+    try {
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: { userId },
+          },
+        },
+      });
+
+      if (!team) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      const dataroom = await prisma.dataroom.findUnique({
+        where: {
+          id: dataroomId,
+          teamId: teamId,
+        },
+      });
+
+      if (!dataroom) {
+        return res.status(404).json({ error: "Dataroom not found" });
+      }
+
+      const permissionGroups = await prisma.permissionGroup.findMany({
+        where: {
+          dataroomId: dataroomId,
+          teamId: teamId,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          links: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          _count: {
+            select: {
+              links: true,
+              accessControls: true,
+            },
+          },
+        },
+      });
+
+      return res.status(200).json(permissionGroups);
+    } catch (error) {
+      errorhandler(error, res);
+    }
+  } else if (req.method === "POST") {
     // POST /api/teams/:teamId/datarooms/:id/permission-groups
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
@@ -120,7 +187,7 @@ export default async function handle(
     }
   }
 
-  // We only allow POST requests
-  res.setHeader("Allow", ["POST"]);
+  // We only allow GET and POST requests
+  res.setHeader("Allow", ["GET", "POST"]);
   return res.status(405).end(`Method ${req.method} Not Allowed`);
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { BellIcon, CogIcon, ShieldIcon } from "lucide-react";
+import { BellIcon, CogIcon, LinkIcon, ShieldIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SettingsTabsProps {
@@ -39,6 +39,18 @@ export default function SettingsTabs({ dataroomId }: SettingsTabsProps) {
         Notifications
       </Link>
       <Link
+        href={`/datarooms/${dataroomId}/settings/link-permission`}
+        className={cn(
+          "flex items-center gap-x-2 rounded-md p-2 text-primary hover:bg-muted",
+          {
+            "bg-muted font-medium": router.pathname.includes("link-permission"),
+          },
+        )}
+      >
+        <LinkIcon className="h-4 w-4" />
+        Link Permission
+      </Link>
+      <Link
         href={`/datarooms/${dataroomId}/settings/permissions`}
         className={cn(
           "flex items-center gap-x-2 rounded-md p-2 text-primary hover:bg-muted",
@@ -48,7 +60,7 @@ export default function SettingsTabs({ dataroomId }: SettingsTabsProps) {
         )}
       >
         <ShieldIcon className="h-4 w-4" />
-        Permissions
+        Group Permissions
       </Link>
     </nav>
   );

@@ -34,6 +34,7 @@ import {
   useDataroom,
 } from "@/lib/swr/use-dataroom";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
+import useDataroomPermissionGroups from "@/lib/swr/use-dataroom-permission-groups";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import { useRemoveDataroomItemsModal } from "@/components/datarooms/actions/remove-document-modal";
@@ -77,10 +78,15 @@ export function DataroomItemsList({
   documentCount: number;
 }) {
   const { viewerGroups } = useDataroomGroups();
+  const { permissionGroups } = useDataroomPermissionGroups();
   const { dataroom } = useDataroom();
   const { isMobile } = useMediaQuery();
-  const { applyDefaultPermissions, inheritParentPermissions } =
-    useDataroomPermissions();
+  const {
+    applyDefaultPermissions,
+    inheritParentPermissions,
+    applyDefaultPermissionGroupPermissions,
+    inheritParentPermissionGroupPermissions,
+  } = useDataroomPermissions();
 
   const [uploads, setUploads] = useState<UploadState[]>([]);
   const [rejectedFiles, setRejectedFiles] = useState<RejectedFile[]>([]);
@@ -552,47 +558,93 @@ export function DataroomItemsList({
       dataroomDocumentId: string;
     }[],
   ) => {
-    if (viewerGroups && viewerGroups.length === 0) return;
+    // Check if there are any groups to apply permissions to
+    const hasViewerGroups = viewerGroups && viewerGroups.length > 0;
+    const hasPermissionGroups = permissionGroups && permissionGroups.length > 0;
 
-    const defaultPermission =
-      dataroom?.defaultGroupPermission || "ask_every_time";
-    if (defaultPermission === "ask_every_time" && files.length > 0) {
-      setUploadedFiles(files);
-      setShowGroupPermissions(true);
-      return;
-    }
+    if (!hasViewerGroups && !hasPermissionGroups) return;
 
-    if (defaultPermission === "inherit_from_parent") {
-      const isRootLevel = !folderPathName || folderPathName.length === 0;
-      if (isRootLevel) {
-        setUploadedFiles(files);
-        setShowGroupPermissions(true);
-      } else {
-        const documentIds = files.map((file) => file.documentId);
-        inheritParentPermissions(
-          dataroomId,
-          documentIds,
-          folderPathName.join("/"),
-        ).catch((error) => {
-          console.error("Failed to inherit parent permissions:", error);
-          toast.error("Failed to inherit parent permissions");
-        });
+    const documentIds = files.map((file) => file.documentId);
+    const promises = [];
+
+    // Handle ViewerGroup permissions
+    if (hasViewerGroups) {
+      const defaultPermission =
+        dataroom?.defaultGroupPermission || "ask_every_time";
+
+      if (defaultPermission === "use_default_permissions") {
+        promises.push(applyDefaultPermissions(dataroomId, documentIds));
+      } else if (defaultPermission === "inherit_from_parent") {
+        const isRootLevel = !folderPathName || folderPathName.length === 0;
+        if (isRootLevel) {
+          // For root level, show modal or apply defaults
+          setShowGroupPermissions(true);
+          setUploadedFiles(files);
+        } else {
+          // For subfolder uploads, inherit permissions from parent folder
+          promises.push(
+            inheritParentPermissions(
+              dataroomId,
+              documentIds,
+              folderPathName?.join("/"),
+            ),
+          );
+        }
       }
-      return;
     }
 
-    if (defaultPermission === "use_default_permissions") {
-      const documentIds = files.map((file) => file.documentId);
-      applyDefaultPermissions(dataroomId, documentIds).catch((error) => {
+    // Handle PermissionGroup permissions
+    if (hasPermissionGroups) {
+      const linkPermissionStrategy =
+        dataroom?.defaultLinkPermission || "inherit_from_parent";
+
+      if (linkPermissionStrategy === "inherit_from_parent") {
+        promises.push(
+          inheritParentPermissionGroupPermissions(
+            dataroomId,
+            documentIds,
+            folderPathName?.join("/"),
+          ),
+        );
+      } else if (
+        linkPermissionStrategy === "use_default_permissions" ||
+        linkPermissionStrategy === "use_simple_permissions"
+      ) {
+        const isRootLevel = !folderPathName || folderPathName.length === 0;
+
+        if (isRootLevel) {
+          promises.push(
+            applyDefaultPermissionGroupPermissions(dataroomId, documentIds),
+          );
+        } else {
+          promises.push(
+            inheritParentPermissionGroupPermissions(
+              dataroomId,
+              documentIds,
+              folderPathName?.join("/"),
+            ),
+          );
+        }
+      }
+    }
+
+    Promise.allSettled(promises)
+      .then((results) => {
+        const failures = results.filter(
+          (result) =>
+            result.status === "rejected" ||
+            (result.status === "fulfilled" && !result.value.success),
+        );
+
+        if (failures.length > 0) {
+          console.error("Failed to apply default permissions:", failures);
+          toast.error("Failed to apply default permissions");
+        }
+      })
+      .catch((error) => {
         console.error("Failed to apply default permissions:", error);
         toast.error("Failed to apply default permissions");
       });
-      return;
-    }
-
-    if (defaultPermission === "no_permissions") {
-      return;
-    }
   };
 
   return (

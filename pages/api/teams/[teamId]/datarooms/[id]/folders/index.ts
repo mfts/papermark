@@ -1,11 +1,137 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { ItemType } from "@prisma/client";
 import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+
+async function applyFolderPermissions(
+  dataroomId: string,
+  folderId: string,
+  folderPath: string,
+) {
+  try {
+    await applyDefaultFolderPermissions(dataroomId, folderId);
+  } catch (error) {
+    console.error("Error applying folder permissions:", error);
+  }
+}
+
+
+
+async function applyDefaultFolderPermissions(
+  dataroomId: string,
+  folderId: string,
+) {
+  const [dataroom, viewerGroups, permissionGroups] = await Promise.all([
+    prisma.dataroom.findUnique({
+      where: { id: dataroomId },
+      select: {
+        defaultLinkPermission: true,
+        defaultLinkCanView: true,
+        defaultLinkCanDownload: true,
+        teamId: true,
+      },
+    }),
+    prisma.viewerGroup.findMany({
+      where: { dataroomId },
+      select: {
+        id: true,
+        defaultCanView: true,
+        defaultCanDownload: true,
+      },
+    }),
+    prisma.permissionGroup.findMany({
+      where: { dataroomId },
+      select: {
+        id: true,
+        name: true,
+        defaultCanView: true,
+        defaultCanDownload: true,
+      },
+    }),
+  ]);
+
+  if (!dataroom) return;
+
+
+  const allPermissionGroupData: {
+    groupId: string;
+    itemId: string;
+    itemType: ItemType;
+    canView: boolean;
+    canDownload: boolean;
+    canDownloadOriginal: boolean;
+  }[] = [];
+
+  if (permissionGroups.length > 0) {
+    if (dataroom.defaultLinkPermission === "inherit_from_parent") {
+      permissionGroups.forEach(group => {
+        allPermissionGroupData.push({
+          groupId: group.id,
+          itemId: folderId,
+          itemType: ItemType.DATAROOM_FOLDER,
+          canView: true,
+          canDownload: false,
+          canDownloadOriginal: false,
+        });
+      });
+    } else if (dataroom.defaultLinkPermission === "use_simple_permissions") {
+      const globalCanView = dataroom.defaultLinkCanView ?? false;
+      const globalCanDownload = dataroom.defaultLinkCanDownload ?? false;
+
+      if (globalCanView || globalCanDownload) {
+        permissionGroups.forEach(group => {
+          allPermissionGroupData.push({
+            groupId: group.id,
+            itemId: folderId,
+            itemType: ItemType.DATAROOM_FOLDER,
+            canView: globalCanView || globalCanDownload,
+            canDownload: globalCanDownload,
+            canDownloadOriginal: false,
+          });
+        });
+      }
+    } else {
+      permissionGroups
+        .filter(group => group.defaultCanView || group.defaultCanDownload)
+        .forEach(group => {
+          const canDownload = group.defaultCanDownload ?? false;
+          const canView = group.defaultCanView ?? false;
+
+          allPermissionGroupData.push({
+            groupId: group.id,
+            itemId: folderId,
+            itemType: ItemType.DATAROOM_FOLDER,
+            canView: canView || canDownload,
+            canDownload: canDownload,
+            canDownloadOriginal: false,
+          });
+        });
+    }
+  }
+  await Promise.all([
+    viewerGroups.length > 0 && prisma.viewerGroupAccessControls.createMany({
+      data: viewerGroups
+        .filter(group => group.defaultCanView || group.defaultCanDownload)
+        .map(group => ({
+          groupId: group.id,
+          itemId: folderId,
+          itemType: ItemType.DATAROOM_FOLDER,
+          canView: group.defaultCanView ?? false,
+          canDownload: group.defaultCanDownload ?? false,
+        })),
+      skipDuplicates: true,
+    }),
+    allPermissionGroupData.length > 0 && prisma.permissionGroupAccessControls.createMany({
+      data: allPermissionGroupData,
+      skipDuplicates: true,
+    }),
+  ]);
+}
 
 export default async function handle(
   req: NextApiRequest,
@@ -284,6 +410,8 @@ export default async function handle(
           dataroomId: dataroomId,
         },
       });
+
+      await applyFolderPermissions(dataroomId, folder.id, childFolderPath);
 
       const folderWithDocs = {
         ...folder,

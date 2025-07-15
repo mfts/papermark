@@ -7,7 +7,7 @@ import { errorhandler } from "@/lib/errorHandler";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { DefaultGroupPermissionStrategy } from "@prisma/client";
+import { DefaultGroupPermissionStrategy, DefaultLinkPermissionStrategy } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -48,6 +48,9 @@ export default async function handle(
         where: {
           id: dataroomId,
           teamId,
+        },
+        include: {
+          _count: { select: { viewerGroups: true, permissionGroups: true } },
         },
       });
 
@@ -97,10 +100,13 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      const { name, enableChangeNotifications, defaultGroupPermission } = req.body as {
+      const { name, enableChangeNotifications, defaultGroupPermission, defaultLinkPermission, defaultLinkCanView, defaultLinkCanDownload } = req.body as {
         name?: string;
         enableChangeNotifications?: boolean;
         defaultGroupPermission?: DefaultGroupPermissionStrategy;
+        defaultLinkPermission?: DefaultLinkPermissionStrategy;
+        defaultLinkCanView?: boolean;
+        defaultLinkCanDownload?: boolean;
       };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
@@ -126,6 +132,9 @@ export default async function handle(
             enableChangeNotifications,
           }),
           ...(defaultGroupPermission && { defaultGroupPermission }),
+          ...(defaultLinkPermission && { defaultLinkPermission }),
+          ...(typeof defaultLinkCanView === "boolean" && { defaultLinkCanView }),
+          ...(typeof defaultLinkCanDownload === "boolean" && { defaultLinkCanDownload }),
         },
       });
 
