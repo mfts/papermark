@@ -24,7 +24,7 @@ export default async function handle(
 
     const { userToBeChanged, role } = req.body as {
       userToBeChanged: string;
-      role: "MEMBER" | "MANAGER";
+      role: "MEMBER" | "MANAGER" | "ADMIN";
     };
 
     try {
@@ -37,6 +37,11 @@ export default async function handle(
 
       if (!userTeam) {
         return res.status(401).json("Unauthorized");
+      }
+
+      // Only ADMINs can change roles
+      if (role === "ADMIN" && userTeam.role !== "ADMIN") {
+        return res.status(403).json("Only admins can change user roles");
       }
 
       if (userTeam?.role === "ADMIN" && userTeam.userId === userToBeChanged) {

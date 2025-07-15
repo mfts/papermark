@@ -83,7 +83,7 @@ export default function Billing() {
     );
   };
 
-  const changeRole = async (teamId: string, userId: string, role: string) => {
+  const changeRole = async (teamId: string, userId: string, role: "ADMIN" | "MANAGER" | "MEMBER") => {
     const response = await fetch(`/api/teams/${teamId}/change-role`, {
       method: "PUT",
       headers: {
@@ -347,21 +347,48 @@ export default function Billing() {
                         {isCurrentUserAdmin() &&
                         !isCurrentUser(member.userId) ? (
                           <>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                changeRole(
-                                  member.teamId,
-                                  member.userId,
-                                  member.role === "MEMBER"
-                                    ? "MANAGER"
-                                    : "MEMBER",
-                                )
-                              }
-                              className="text-red-500 hover:cursor-pointer focus:bg-destructive focus:text-destructive-foreground"
-                            >
-                              Change role to{" "}
-                              {member.role === "MEMBER" ? "MANAGER" : "MEMBER"}
-                            </DropdownMenuItem>
+                            {member.role !== "ADMIN" && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  changeRole(
+                                    member.teamId,
+                                    member.userId,
+                                    "ADMIN",
+                                  )
+                                }
+                                className="hover:cursor-pointer"
+                              >
+                                Change role to ADMIN
+                              </DropdownMenuItem>
+                            )}
+                            {member.role !== "MANAGER" && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  changeRole(
+                                    member.teamId,
+                                    member.userId,
+                                    "MANAGER",
+                                  )
+                                }
+                                className="hover:cursor-pointer"
+                              >
+                                Change role to MANAGER
+                              </DropdownMenuItem>
+                            )}
+                            {member.role !== "MEMBER" && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  changeRole(
+                                    member.teamId,
+                                    member.userId,
+                                    "MEMBER",
+                                  )
+                                }
+                                className="hover:cursor-pointer"
+                              >
+                                Change role to MEMBER
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               onClick={() =>
                                 removeTeammate(member.teamId, member.userId)
