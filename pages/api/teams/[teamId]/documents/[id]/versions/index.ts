@@ -73,32 +73,10 @@ export default async function handle(
           type: type,
           storageType,
           numPages: document?.advancedExcelEnabled ? 1 : numPages,
-          isPrimary: true,
+          isPrimary: false,
           versionNumber: currentVersionNumber + 1,
           contentType,
           fileSize,
-        },
-      });
-
-      // turn off isPrimary flag for all other versions
-      await prisma.documentVersion.updateMany({
-        where: {
-          documentId: documentId,
-          id: { not: version.id },
-        },
-        data: {
-          isPrimary: false,
-        },
-      });
-
-      // turn off isPrimary flag for all other versions
-      await prisma.documentVersion.updateMany({
-        where: {
-          documentId: documentId,
-          id: { not: version.id },
-        },
-        data: {
-          isPrimary: false,
         },
       });
 
@@ -128,6 +106,7 @@ export default async function handle(
             videoUrl: url,
             teamId,
             docId: url.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
+            documentId,
             documentVersionId: version.id,
             fileSize: fileSize || 0,
           },

@@ -7,6 +7,7 @@ import os from "os";
 import path from "path";
 import { pipeline } from "stream/promises";
 
+import { setVersionAsPrimary } from "@/lib/documents/set-version-as-primary";
 import { getFile } from "@/lib/files/get-file";
 import { streamFileServer } from "@/lib/files/stream-file-server";
 import prisma from "@/lib/prisma";
@@ -20,10 +21,12 @@ export const processVideo = task({
     videoUrl: string;
     teamId: string;
     docId: string;
+    documentId: string;
     documentVersionId: string;
     fileSize: number;
   }) => {
-    const { videoUrl, teamId, docId, documentVersionId, fileSize } = payload;
+    const { videoUrl, teamId, docId, documentId, documentVersionId, fileSize } =
+      payload;
 
     try {
       const fileUrl = await getFile({
@@ -210,6 +213,8 @@ export const processVideo = task({
           file: data,
         },
       });
+
+      await setVersionAsPrimary(documentId, documentVersionId);
 
       // Clean up temporary directory
       await fs.rm(tempDirectory, { recursive: true });
