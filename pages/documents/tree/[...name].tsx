@@ -2,23 +2,32 @@ import { useRouter } from "next/router";
 
 import { useTeam } from "@/context/team-context";
 import { FolderPlusIcon, PlusIcon } from "lucide-react";
+import { useFolder, useFolderDocuments } from "@/lib/swr/use-documents";
 
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { DocumentsList } from "@/components/documents/documents-list";
+import SortButton from "@/components/documents/filters/sort-button";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
+import { SearchBoxPersisted } from "@/components/search-box";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-import { useFolder, useFolderDocuments } from "@/lib/swr/use-documents";
 
 export default function DocumentTreePage() {
   const router = useRouter();
   const { name } = router.query as { name: string[] };
 
-  const { folders, loading: foldersLoading } = useFolder({ name });
-  const { documents, loading } = useFolderDocuments({ name });
+  const {
+    folders,
+    loading: foldersLoading,
+    isValidating: foldersValidating,
+  } = useFolder({ name });
+  const { documents, loading, isValidating } = useFolderDocuments({ name });
   const teamInfo = useTeam();
+
+  const isSorting = !!router.query.sort;
+  const displayFolders = isSorting ? [] : folders;
 
   return (
     <AppLayout>
@@ -55,6 +64,16 @@ export default function DocumentTreePage() {
           </div>
         </section>
 
+        <div className="mb-2 flex justify-end gap-x-2">
+          <div className="relative w-full sm:max-w-xs">
+            <SearchBoxPersisted
+              loading={isValidating || foldersValidating}
+              inputClassName="h-10"
+            />
+          </div>
+          <SortButton />
+        </div>
+
         {/* Portaled in from DocumentsList component */}
         <section id="documents-header-count" />
 
@@ -62,7 +81,7 @@ export default function DocumentTreePage() {
 
         <DocumentsList
           documents={documents}
-          folders={folders}
+          folders={displayFolders}
           teamInfo={teamInfo}
           folderPathName={name}
           loading={loading}

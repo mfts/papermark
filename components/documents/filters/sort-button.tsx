@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   ArrowDownAZ,
@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 export default function SortButton() {
   const router = useRouter();
   const [sortBy, setSortBy] = useState<string | null>(null);
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     const { sort } = router.query;
@@ -43,6 +44,14 @@ export default function SortButton() {
   }, [router.query]);
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (!router.isReady) {
+      return;
+    }
+
     const currentQuery = { ...router.query };
 
     if (sortBy === null) {
