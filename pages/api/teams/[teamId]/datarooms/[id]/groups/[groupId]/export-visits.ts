@@ -1,35 +1,21 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
-
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import {
   getViewPageDuration,
   getViewUserAgent,
   getViewUserAgent_v2,
 } from "@/lib/tinybird";
-import { CustomUser } from "@/lib/types";
 
 export const config = {
   maxDuration: 180,
 };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method !== "GET") {
-    // GET /api/teams/:teamId/datarooms/:id/groups/:groupId/export-visits
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-
-  const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return res.status(401).end("Unauthorized");
-  }
-
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   // get dataroom id and teamId from query params
   const {
     teamId,
@@ -41,30 +27,13 @@ export default async function handler(
     groupId: string;
   };
 
-  const userId = (session.user as CustomUser).id;
-
   try {
-    // Fetching Team based on team.id
-    const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-        users: {
-          some: {
-            userId: userId,
-          },
-        },
-      },
-      select: { plan: true },
-    });
-
-    if (!team) {
-      return res.status(404).end("Team not found");
-    }
-
-    if (team.plan === "free") {
-      return res
+    // Check if team plan allows this feature
+    if (req.team.plan === "free") {
+      res
         .status(403)
         .json({ message: "This feature is not available for your plan" });
+      return;
     }
 
     // Fetching Dataroom based on dataroom.id
@@ -96,7 +65,8 @@ export default async function handler(
     });
 
     if (!dataroom) {
-      return res.status(404).end("Dataroom not found");
+      res.status(404).end("Dataroom not found");
+      return;
     }
 
     // First fetch the dataroom views
@@ -144,7 +114,8 @@ export default async function handler(
     });
 
     if (!views || views.length === 0) {
-      return res.status(404).end("Dataroom has no views");
+      res.status(404).end("Dataroom has no views");
+      return;
     }
 
     // First get all dataroom views
@@ -357,12 +328,16 @@ export default async function handler(
       }
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       dataroomName: dataroom.name,
       visits: csvRows.join("\n"),
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Something went wrong" });
+    res.status(500).json({ message: "Something went wrong" });
   }
 }
+
+export default createTeamHandler({
+  GET: handler,
+});

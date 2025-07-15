@@ -1,34 +1,20 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { createPreviewSession } from "@/lib/auth/preview-auth";
+import {
+  AuthenticatedRequest,
+  createAuthenticatedHandler,
+} from "@/lib/middleware/api-auth";
 import { CustomUser } from "@/lib/types";
 
-import { authOptions } from "../../auth/[...nextauth]";
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
+export default createAuthenticatedHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // POST /api/links/:id/preview
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
     const { id } = req.query as { id: string };
 
-    const previewSession = await createPreviewSession(
-      id,
-      (session.user as CustomUser).id,
-    );
+    const previewSession = await createPreviewSession(id, req.user.id);
 
-    return res.status(200).json({ previewToken: previewSession.token });
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+    res.status(200).json({ previewToken: previewSession.token });
+    return;
+  },
+});

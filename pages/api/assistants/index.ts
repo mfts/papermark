@@ -1,25 +1,16 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { getServerSession } from "next-auth";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import { getFile } from "@/lib/files/get-file";
+import {
+  AuthenticatedRequest,
+  createAuthenticatedHandler,
+} from "@/lib/middleware/api-auth";
 import { openai } from "@/lib/openai";
 import prisma from "@/lib/prisma";
 
-import { authOptions } from "../auth/[...nextauth]";
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
-    // POST /api/assistants
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
+export default createAuthenticatedHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { documentId } = req.body as { documentId: string };
 
     try {
@@ -85,13 +76,8 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-  } else if (req.method === "DELETE") {
-    // DELETE /api/assistants
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
+  },
+  DELETE: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { documentId } = req.body as { documentId: string };
 
     try {
@@ -151,9 +137,5 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow POST and DELETE requests
-    res.setHeader("Allow", ["POST", "DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

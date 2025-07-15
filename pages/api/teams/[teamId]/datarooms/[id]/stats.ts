@@ -1,26 +1,18 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
 import { View } from "@prisma/client";
-import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { getTotalDataroomDuration } from "@/lib/tinybird";
-import { CustomUser } from "@/lib/types";
 
-import { authOptions } from "../../../../auth/[...nextauth]";
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // GET /api/teams/:teamId/documents/:id/stats
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
     const {
       teamId,
       id: dataroomId,
@@ -31,25 +23,7 @@ export default async function handle(
       excludeTeamMembers?: string;
     };
 
-    const userId = (session.user as CustomUser).id;
-
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: dataroomId,
@@ -126,9 +100,5 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

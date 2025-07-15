@@ -1,33 +1,23 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { authOptions } from "@/pages/api//auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { getApexDomain, removeDomainFromVercel } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { getTeamWithDomain } from "@/lib/team/helper";
-import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "DELETE") {
-    // DELETE /api/teams/:teamId/domains/:domain
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    // Assuming the domain slug is sent in the request body.
+export default createTeamHandler({
+  DELETE: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId, domain } = req.query as { teamId: string; domain: string };
-
-    const userId = (session.user as CustomUser).id;
+    const userId = req.user.id;
 
     if (!domain) {
-      return res.status(400).json("Domain is required for deletion");
+      res.status(400).json("Domain is required for deletion");
+      return;
     }
 
     try {
@@ -63,7 +53,7 @@ export default async function handle(
         }),
       ]);
 
-      return res.status(204).end(); // 204 No Content response for successful deletes
+      res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
       log({
         message: `Failed to delete domain: _${domain}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
@@ -72,20 +62,14 @@ export default async function handle(
       });
       errorhandler(error, res);
     }
-  } else if (req.method === "PATCH") {
-    // PATCH /api/teams/:teamId/domains/:domain
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    // Assuming the domain slug is sent in the request body.
+  },
+  PATCH: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId, domain } = req.query as { teamId: string; domain: string };
-
-    const userId = (session.user as CustomUser).id;
+    const userId = req.user.id;
 
     if (!domain) {
-      return res.status(400).json("Domain is required for deletion");
+      res.status(400).json("Domain parameter is required");
+      return;
     }
 
     try {
@@ -96,7 +80,8 @@ export default async function handle(
       });
 
       if (!domainToBeUpdated) {
-        return res.status(404).json("Domain not found");
+        res.status(404).json("Domain not found");
+        return;
       }
 
       const updateDefaultPromise = prisma.domain.update({
@@ -123,7 +108,7 @@ export default async function handle(
 
       await Promise.all([updateDefaultPromise, updateNonDefaultPromise]);
 
-      return res.status(200).json({ message: "Domain set to default" }); // 204 No Content response for successful deletes
+      res.status(200).json({ message: "Domain set to default" });
     } catch (error) {
       log({
         message: `Failed to set domain: _${domain}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
@@ -132,9 +117,5 @@ export default async function handle(
       });
       errorhandler(error, res);
     }
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["DELETE", "PATCH"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

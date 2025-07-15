@@ -1,11 +1,13 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { ItemType } from "@prisma/client";
-import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -18,17 +20,9 @@ const itemPermissionSchema = z.object({
 
 const permissionsSchema = z.record(z.string(), itemPermissionSchema);
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // GET /api/teams/:teamId/datarooms/:id/permission-groups/:permissionGroupId
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
     const {
       teamId,
       id: dataroomId,
@@ -39,23 +33,7 @@ export default async function handle(
       permissionGroupId: string;
     };
 
-    const userId = (session.user as CustomUser).id;
-
     try {
-      // Verify team membership
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: { userId },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       // Fetch permission group with access controls
       const permissionGroup = await prisma.permissionGroup.findUnique({
         where: {
@@ -85,13 +63,9 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-  } else if (req.method === "PUT") {
+  },
+  PUT: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // PUT /api/teams/:teamId/datarooms/:id/permission-groups/:permissionGroupId
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
     const {
       teamId,
       id: dataroomId,
@@ -104,23 +78,7 @@ export default async function handle(
 
     const { permissions } = req.body;
 
-    const userId = (session.user as CustomUser).id;
-
     try {
-      // Verify team membership
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: { userId },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       // Verify dataroom exists and belongs to team
       const dataroom = await prisma.dataroom.findUnique({
         where: {
@@ -307,13 +265,9 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-  } else if (req.method === "DELETE") {
+  },
+  DELETE: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // DELETE /api/teams/:teamId/datarooms/:id/permission-groups/:permissionGroupId
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
     const {
       teamId,
       id: dataroomId,
@@ -323,24 +277,7 @@ export default async function handle(
       id: string;
       permissionGroupId: string;
     };
-
-    const userId = (session.user as CustomUser).id;
-
     try {
-      // Verify team membership
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: { userId },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       // Verify permission group exists and belongs to dataroom
       const permissionGroup = await prisma.permissionGroup.findUnique({
         where: {
@@ -367,9 +304,5 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-  }
-
-  // We only allow GET, PUT, and DELETE requests
-  res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
-  return res.status(405).end(`Method ${req.method} Not Allowed`);
-}
+  },
+});

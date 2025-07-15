@@ -1,24 +1,17 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
-import { getServerSession } from "next-auth/next";
 
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // GET /api/teams/:teamId/datarooms/:id/folders
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const userId = (session.user as CustomUser).id;
     const {
       teamId,
       id: dataroomId,
@@ -32,22 +25,6 @@ export default async function handle(
     };
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       /** if root is present then only get root folders */
       if (root === "true") {
         const folders = await prisma.dataroomFolder.findMany({
@@ -192,15 +169,9 @@ export default async function handle(
       console.error("Request error", error);
       return res.status(500).json({ error: "Error fetching folders" });
     }
-  } else if (req.method === "POST") {
+  },
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // POST /api/teams/:teamId/datarooms/:id/folders
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
-    const userId = (session.user as CustomUser).id;
     const { teamId, id: dataroomId } = req.query as {
       teamId: string;
       id: string;
@@ -211,22 +182,6 @@ export default async function handle(
     const parentFolderPath = path ? "/" + path : "/";
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       const parentFolder = await prisma.dataroomFolder.findUnique({
         where: {
           dataroomId_path: {
@@ -246,10 +201,11 @@ export default async function handle(
       let counter = 1;
       const MAX_RETRIES = 50;
 
-      // Split path into segments 
+      // Split path into segments
       // Slugify the final folder name
-      const pathSegments = path ? path.split('/').filter(Boolean) : [];
-      const basePath = pathSegments.length > 0 ? '/' + pathSegments.join('/') + '/' : '/';
+      const pathSegments = path ? path.split("/").filter(Boolean) : [];
+      const basePath =
+        pathSegments.length > 0 ? "/" + pathSegments.join("/") + "/" : "/";
 
       let childFolderPath = basePath + slugify(folderName);
 
@@ -296,9 +252,5 @@ export default async function handle(
       console.error("Request error", error);
       res.status(500).json({ error: "Error creating folder" });
     }
-  } else {
-    // We only allow GET and POST requests
-    res.setHeader("Allow", ["GET", "POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

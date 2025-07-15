@@ -1,66 +1,47 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { CustomUser } from "@/lib/types";
-import { getExtension, log } from "@/lib/utils";
+import { log } from "@/lib/utils";
 
-import { authOptions } from "../../../auth/[...nextauth]";
-
-export default async function handle(
-  req: NextApiRequest,
+async function handleUpdateDocument(
+  req: AuthenticatedRequest,
   res: NextApiResponse,
-) {
-  if (req.method === "POST") {
-    // POST /api/teams/:teamId/documents/update
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
+): Promise<void> {
+  // Assuming data is an object with `name` and `description` properties
+  const { documentId, numPages } = req.body;
+  const { teamId } = req.query as { teamId: string };
 
-    // Assuming data is an object with `name` and `description` properties
-    const { documentId, numPages } = req.body;
+  try {
+    await getTeamWithUsersAndDocument({
+      teamId,
+      userId: req.user.id,
+      docId: documentId,
+    });
 
-    const { teamId } = req.query as { teamId: string };
+    // Save data to the database
+    await prisma.document.update({
+      where: { id: documentId },
+      data: {
+        numPages: numPages,
+      },
+    });
 
-    const userId = (session.user as CustomUser).id;
-
-    try {
-      await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
-        docId: documentId,
-      });
-
-      // Save data to the database
-      await prisma.document.update({
-        where: { id: documentId },
-        data: {
-          numPages: numPages,
-          // versions: {
-          //   update: {
-          //     where: { id: documentId },
-          //     data: { numPages: numPages },
-          //   },
-          // },
-        },
-      });
-
-      return res.status(201).json({ message: "Document updated successfully" });
-    } catch (error) {
-      log({
-        message: `Failed to update document: _${documentId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
-        type: "error",
-      });
-      errorhandler(error, res);
-    }
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.status(201).json({ message: "Document updated successfully" });
+  } catch (error) {
+    log({
+      message: `Failed to update document: _${documentId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${req.user.id}}\``,
+      type: "error",
+    });
+    errorhandler(error, res);
   }
 }
+
+export default createTeamHandler({
+  POST: handleUpdateDocument,
+});

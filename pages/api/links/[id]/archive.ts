@@ -1,25 +1,16 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createAuthenticatedHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 
-import { authOptions } from "../../auth/[...nextauth]";
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "PUT") {
+export default createAuthenticatedHandler({
+  PUT: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // PUT /api/links/:id/archive
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
     const { id } = req.query as { id: string };
-
     const { isArchived } = req.body;
 
     try {
@@ -53,7 +44,8 @@ export default async function handle(
         },
       });
       if (!updatedLink) {
-        return res.status(404).json({ error: "Link not found" });
+        res.status(404).json({ error: "Link not found" });
+        return;
       }
 
       const { tags, ...rest } = updatedLink;
@@ -63,13 +55,9 @@ export default async function handle(
         `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}&hasDomain=${updatedLink.domainId ? "true" : "false"}`,
       );
 
-      return res.status(200).json({ ...rest, tags: linkTags });
+      res.status(200).json({ ...rest, tags: linkTags });
     } catch (error) {
       errorhandler(error, res);
     }
-  }
-
-  // We only allow PUT requests
-  res.setHeader("Allow", ["PUT"]);
-  return res.status(405).end(`Method ${req.method} Not Allowed`);
-}
+  },
+});

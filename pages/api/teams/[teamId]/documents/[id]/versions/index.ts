@@ -1,33 +1,24 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { DocumentStorageType } from "@prisma/client";
-import { getServerSession } from "next-auth/next";
 
 import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
 import { processVideo } from "@/lib/trigger/optimize-video-files";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
-import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { conversionQueue } from "@/lib/utils/trigger-utils";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // POST /api/teams/:teamId/documents/:id/versions
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    // get document id from query params
-    const { teamId, id: documentId } = req.query as {
-      teamId: string;
+    const { id: documentId } = req.query as {
       id: string;
     };
     const { url, type, numPages, storageType, contentType, fileSize } =
@@ -40,12 +31,10 @@ export default async function handle(
         fileSize: number | undefined;
       };
 
-    const userId = (session.user as CustomUser).id;
-
     try {
       const { team, document } = await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
+        teamId: req.team!.id,
+        userId: req.user.id,
         docId: documentId,
         checkOwner: true,
         options: {
@@ -106,18 +95,18 @@ export default async function handle(
         await convertFilesToPdfTask.trigger(
           {
             documentVersionId: version.id,
-            teamId,
+            teamId: req.team!.id,
             documentId,
           },
           {
-            idempotencyKey: `${teamId}-${version.id}-docs`,
+            idempotencyKey: `${req.team!.id}-${version.id}-docs`,
             tags: [
-              `team_${teamId}`,
+              `team_${req.team!.id}`,
               `document_${documentId}`,
               `version:${version.id}`,
             ],
             queue: conversionQueue(team.plan),
-            concurrencyKey: teamId,
+            concurrencyKey: req.team!.id,
           },
         );
       }
@@ -126,20 +115,20 @@ export default async function handle(
         await processVideo.trigger(
           {
             videoUrl: url,
-            teamId,
-            docId: url.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
+            teamId: req.team!.id,
+            docId: documentId || url.split("/")[1],// Extract doc_xxxx from teamId/doc_xxxx/filename
             documentVersionId: version.id,
             fileSize: fileSize || 0,
           },
           {
-            idempotencyKey: `${teamId}-${version.id}`,
+            idempotencyKey: `${req.team!.id}-${version.id}`,
             tags: [
-              `team_${teamId}`,
+              `team_${req.team!.id}`,
               `document_${documentId}`,
               `version:${version.id}`,
             ],
             queue: conversionQueue(team.plan),
-            concurrencyKey: teamId,
+            concurrencyKey: req.team!.id,
           },
         );
       }
@@ -150,19 +139,18 @@ export default async function handle(
           {
             documentId: documentId,
             documentVersionId: version.id,
-            teamId,
-            // docId: version.file.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
+            teamId: req.team!.id,
             versionNumber: version.versionNumber,
           },
           {
-            idempotencyKey: `${teamId}-${version.id}`,
+            idempotencyKey: `${req.team!.id}-${version.id}`,
             tags: [
-              `team_${teamId}`,
+              `team_${req.team!.id}`,
               `document_${documentId}`,
               `version:${version.id}`,
             ],
             queue: conversionQueue(team.plan),
-            concurrencyKey: teamId,
+            concurrencyKey: req.team!.id,
           },
         );
       }
@@ -172,24 +160,20 @@ export default async function handle(
         await copyFileToBucketServer({
           filePath: version.file,
           storageType: version.storageType,
-          teamId,
+          teamId: req.team!.id,
         });
       }
 
       res.status(200).json({ id: documentId });
     } catch (error) {
       log({
-        message: `Failed to create new version for document: _${documentId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        message: `Failed to create new version for document: _${documentId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${req.team!.id}, userId: ${req.user.id}}\``,
         type: "error",
       });
-      return res.status(500).json({
+      res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
       });
     }
-  } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

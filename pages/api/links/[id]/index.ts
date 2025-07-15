@@ -1,14 +1,16 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
 import { Brand, DataroomBrand, LinkAudienceType } from "@prisma/client";
-import { getServerSession } from "next-auth/next";
 
 import {
   fetchDataroomLinkData,
   fetchDocumentLinkData,
 } from "@/lib/api/links/link-data";
+import {
+  AuthenticatedRequest,
+  createAuthenticatedHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 import {
   decryptEncrpytedPassword,
   generateEncrpytedPassword,
@@ -16,13 +18,9 @@ import {
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 
 import { DomainObject } from "..";
-import { authOptions } from "../../auth/[...nextauth]";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
+export default createAuthenticatedHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // GET /api/links/:id
     const { id } = req.query as { id: string };
 
@@ -93,11 +91,13 @@ export default async function handle(
       console.timeEnd("get-link");
 
       if (!link) {
-        return res.status(404).json({ error: "Link not found" });
+        res.status(404).json({ error: "Link not found" });
+        return;
       }
 
       if (link.isArchived) {
-        return res.status(404).json({ error: "Link is archived" });
+        res.status(404).json({ error: "Link is archived" });
+        return;
       }
 
       const { email } = req.query as { email?: string };
@@ -159,22 +159,17 @@ export default async function handle(
         }),
       };
 
-      return res.status(200).json({ linkType, link: returnLink, brand });
+      res.status(200).json({ linkType, link: returnLink, brand });
     } catch (error) {
       console.error("Error fetching link data:", error);
-      return res.status(500).json({
+      res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
       });
     }
-  } else if (req.method === "PUT") {
+  },
+  PUT: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // PUT /api/links/:id
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const userId = (session.user as CustomUser).id;
     const { id } = req.query as { id: string };
     const {
       targetId,
@@ -195,22 +190,22 @@ export default async function handle(
           teamId: teamId,
           team: {
             users: {
-              some: { userId },
+              some: { userId: req.user.id },
             },
           },
         },
       });
 
       if (!existingLink) {
-        return res
-          .status(404)
-          .json({ error: "Link not found or unauthorized" });
+        res.status(404).json({ error: "Link not found or unauthorized" });
+        return;
       }
     } catch (error) {
-      return res.status(500).json({
+      res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
       });
+      return;
     }
 
     const hashedPassword =
@@ -237,7 +232,8 @@ export default async function handle(
       });
 
       if (!domainObj) {
-        return res.status(400).json({ error: "Domain not found." });
+        res.status(400).json({ error: "Domain not found." });
+        return;
       }
 
       const currentLink = await prisma.link.findUnique({
@@ -261,17 +257,19 @@ export default async function handle(
         });
 
         if (existingLink) {
-          return res.status(400).json({
+          res.status(400).json({
             error: "The link already exists.",
           });
+          return;
         }
       }
     }
 
     if (linkData.enableAgreement && !linkData.agreementId) {
-      return res.status(400).json({
+      res.status(400).json({
         error: "No agreement selected.",
       });
+      return;
     }
 
     const updatedLink = await prisma.$transaction(async (tx) => {
@@ -382,7 +380,7 @@ export default async function handle(
             tagId,
             itemType: "LINK_TAG",
             linkId: id,
-            taggedBy: userId,
+            taggedBy: req.user.id,
           })),
           skipDuplicates: true,
         });
@@ -414,7 +412,8 @@ export default async function handle(
     });
 
     if (!updatedLink) {
-      return res.status(404).json({ error: "Link not found" });
+      res.status(404).json({ error: "Link not found" });
+      return;
     }
 
     await fetch(
@@ -426,14 +425,10 @@ export default async function handle(
       updatedLink.password = decryptEncrpytedPassword(updatedLink.password);
     }
 
-    return res.status(200).json(updatedLink);
-  } else if (req.method == "DELETE") {
+    res.status(200).json(updatedLink);
+  },
+  DELETE: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // DELETE /api/links/:id
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
     const { id } = req.query as { id: string };
 
     try {
@@ -451,13 +446,13 @@ export default async function handle(
       });
 
       if (!linkToBeDeleted) {
-        return res.status(404).json({ error: "Link not found" });
+        res.status(404).json({ error: "Link not found" });
+        return;
       }
 
-      if (
-        linkToBeDeleted.document!.ownerId !== (session.user as CustomUser).id
-      ) {
-        return res.status(401).end("Unauthorized to access the link");
+      if (linkToBeDeleted.document!.ownerId !== req.user.id) {
+        res.status(401).end("Unauthorized to access the link");
+        return;
       }
 
       await prisma.link.delete({
@@ -468,14 +463,10 @@ export default async function handle(
 
       res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
-      return res.status(500).json({
+      res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
       });
     }
-  }
-
-  // We only allow GET and PUT requests
-  res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
-  return res.status(405).end(`Method ${req.method} Not Allowed`);
-}
+  },
+});

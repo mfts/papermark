@@ -1,51 +1,26 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth";
+import { NextApiResponse } from "next";
 
 import { hashToken } from "@/lib/api/auth/token";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import { newId } from "@/lib/id-helper";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  const { teamId } = req.query as { teamId: string };
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    const { teamId } = req.query as { teamId: string };
 
-  const features = await getFeatureFlags({ teamId });
-  if (!features.tokens) {
-    return res
-      .status(403)
-      .json({ error: "This feature is not available for your team" });
-  }
+    const features = await getFeatureFlags({ teamId });
+    if (!features.tokens) {
+      return res
+        .status(403)
+        .json({ error: "This feature is not available for your team" });
+    }
 
-  if (req.method === "GET") {
     try {
-      const session = await getServerSession(req, res, authOptions);
-      if (!session) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const { teamId } = req.query as { teamId: string };
-      const userId = (session.user as CustomUser).id;
-
-      // Check if user is in team
-      const userTeam = await prisma.userTeam.findUnique({
-        where: {
-          userId_teamId: {
-            userId,
-            teamId,
-          },
-        },
-      });
-
-      if (!userTeam) {
-        return res.status(403).json({ error: "Unauthorized" });
-      }
-
       // Fetch tokens
       const tokens = await prisma.restrictedToken.findMany({
         where: {
@@ -74,22 +49,25 @@ export default async function handle(
       console.error(error);
       return res.status(500).json({ error: "Error fetching tokens" });
     }
-  } else if (req.method === "POST") {
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+  },
 
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId } = req.query as { teamId: string };
-    const userId = (session.user as CustomUser).id;
     const { name } = req.body;
 
+    const features = await getFeatureFlags({ teamId });
+    if (!features.tokens) {
+      return res
+        .status(403)
+        .json({ error: "This feature is not available for your team" });
+    }
+
     try {
-      // Check if user is in team
+      // Check if user is in team and get role
       const { role } = await prisma.userTeam.findUniqueOrThrow({
         where: {
           userId_teamId: {
-            userId,
+            userId: req.user.id,
             teamId,
           },
         },
@@ -118,7 +96,7 @@ export default async function handle(
           hashedKey: hashedToken,
           partialKey,
           teamId,
-          userId,
+          userId: req.user.id,
         },
       });
 
@@ -128,22 +106,25 @@ export default async function handle(
       console.error(error);
       return res.status(500).json({ error: "Error creating token" });
     }
-  } else if (req.method === "DELETE") {
+  },
+
+  DELETE: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    const { teamId } = req.query as { teamId: string };
+    const { tokenId } = req.body;
+
+    const features = await getFeatureFlags({ teamId });
+    if (!features.tokens) {
+      return res
+        .status(403)
+        .json({ error: "This feature is not available for your team" });
+    }
+
     try {
-      const session = await getServerSession(req, res, authOptions);
-      if (!session) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const { teamId } = req.query as { teamId: string };
-      const { tokenId } = req.body;
-      const userId = (session.user as CustomUser).id;
-
       // Check if user is in team and has admin role
       const { role } = await prisma.userTeam.findUniqueOrThrow({
         where: {
           userId_teamId: {
-            userId,
+            userId: req.user.id,
             teamId,
           },
         },
@@ -173,8 +154,5 @@ export default async function handle(
       console.error(error);
       return res.status(500).json({ error: "Error deleting token" });
     }
-  } else {
-    res.setHeader("Allow", ["GET", "POST", "DELETE"]);
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-}
+  },
+});

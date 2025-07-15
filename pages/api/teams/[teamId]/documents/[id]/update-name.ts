@@ -1,32 +1,21 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
-    // GET /api/teams/:teamId/documents/:id/update-name
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const { teamId, id: docId } = req.query as { teamId: string; id: string };
-
-    const userId = (session.user as CustomUser).id;
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    const { id: docId } = req.query as { id: string };
 
     try {
       await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
+        teamId: req.team.id,
+        userId: req.user.id,
         docId,
         checkOwner: true,
         options: {
@@ -46,13 +35,9 @@ export default async function handle(
         },
       });
 
-      return res.status(200).json({ message: "Document name updated!" });
+      res.status(200).json({ message: "Document name updated!" });
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

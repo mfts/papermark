@@ -1,24 +1,17 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // GET /api/teams/:teamId/datarooms/:id/groups/:groupId
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
     const {
       teamId,
       id: dataroomId,
@@ -28,27 +21,9 @@ export default async function handle(
       id: string;
       groupId: string;
     };
-    const userId = (session.user as CustomUser).id;
+    const userId = req.user.id;
 
     try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: (session.user as CustomUser).id,
-            },
-          },
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (!team) {
-        return res.status(403).end("Unauthorized to access this team");
-      }
-
       const group = await prisma.viewerGroup.findUnique({
         where: {
           id: groupId,
@@ -72,13 +47,9 @@ export default async function handle(
       });
       errorhandler(error, res);
     }
-  } else if (req.method === "PATCH") {
+  },
+  PATCH: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // PATCH /api/teams/:teamId/datarooms/:id/groups/:groupId
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
     const {
       teamId,
       id: dataroomId,
@@ -94,7 +65,7 @@ export default async function handle(
       domains?: string[];
       allowAll?: boolean;
     };
-    const userId = (session.user as CustomUser).id;
+    const userId = req.user.id;
 
     try {
       const group = await prisma.viewerGroup.update({
@@ -125,14 +96,9 @@ export default async function handle(
       });
       errorhandler(error, res);
     }
-  } else if (req.method === "DELETE") {
+  },
+  DELETE: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // DELETE /api/teams/:teamId/datarooms/:id/groups/:groupId
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
     const {
       teamId,
       id: dataroomId,
@@ -142,7 +108,7 @@ export default async function handle(
       id: string;
       groupId: string;
     };
-    const userId = (session.user as CustomUser).id;
+    const userId = req.user.id;
 
     try {
       // delete links associated with the group
@@ -170,9 +136,5 @@ export default async function handle(
       });
       errorhandler(error, res);
     }
-  } else {
-    // We only allow GET, PATCH, DELETE requests
-    res.setHeader("Allow", ["GET", "PATCH", "DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

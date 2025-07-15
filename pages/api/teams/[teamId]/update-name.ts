@@ -1,68 +1,47 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { getServerSession } from "next-auth";
-
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-import { authOptions } from "../../auth/[...nextauth]";
+export default createTeamHandler(
+  {
+    PATCH: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+      const { teamId } = req.query as { teamId: string };
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "PATCH") {
-    // PATCH /api/teams/:teamId/update-name
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
+      try {
+        // check if the team exists
+        const team = await prisma.team.findUnique({
+          where: {
+            id: teamId,
+          },
+          include: {
+            users: true,
+          },
+        });
+        if (!team) {
+          return res.status(400).json("Team doesn't exists");
+        }
 
-    const { teamId } = req.query as { teamId: string };
+        // update name
+        await prisma.team.update({
+          where: {
+            id: teamId,
+          },
+          data: {
+            name: req.body.name,
+          },
+        });
 
-    try {
-      // check if the team exists
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-        },
-        include: {
-          users: true,
-        },
-      });
-      if (!team) {
-        return res.status(400).json("Team doesn't exists");
+        return res.status(200).json("Team name updated!");
+      } catch (error) {
+        return res.status(500).json((error as Error).message);
       }
-
-      // check if current user is admin of the team
-      const isUserAdmin = team.users.some(
-        (user) =>
-          user.role === "ADMIN" &&
-          user.userId === (session.user as CustomUser).id,
-      );
-      if (!isUserAdmin) {
-        return res
-          .status(403)
-          .json("You are not permitted to perform this action");
-      }
-
-      // update name
-      await prisma.team.update({
-        where: {
-          id: teamId,
-        },
-        data: {
-          name: req.body.name,
-        },
-      });
-
-      return res.status(200).json("Team name updated!");
-    } catch (error) {
-      return res.status(500).json((error as Error).message);
-    }
-  } else {
-    // We only allow PATCH requests
-    res.setHeader("Allow", "[PATCH]");
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+    },
+  },
+  {
+    requireAdmin: true,
+  },
+);

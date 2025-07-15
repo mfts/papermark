@@ -1,11 +1,11 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
-
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { getVideoEventsByDocument } from "@/lib/tinybird/pipes";
-import { CustomUser } from "@/lib/types";
 
 interface AnalyticsResponse {
   overall: {
@@ -132,99 +132,82 @@ function calculateAnalytics(
   }
 }
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ message: "Method not allowed" });
-  }
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    try {
+      const { id: documentId } = req.query as {
+        id: string;
+      };
 
-  try {
-    const session = await getServerSession(req, res, authOptions);
-    const user = session?.user as CustomUser;
-
-    if (!user?.id) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const { teamId, id: documentId } = req.query as {
-      teamId: string;
-      id: string;
-    };
-
-    // Check if user has access to this document and team
-    const document = await prisma.document.findFirst({
-      where: {
-        id: documentId,
-        teamId,
-        team: {
-          users: {
-            some: {
-              userId: user.id,
+      // Check if user has access to this document (middleware already verified team access)
+      const document = await prisma.document.findFirst({
+        where: {
+          id: documentId,
+          teamId: req.team?.id,
+        },
+        include: {
+          versions: {
+            where: {
+              isPrimary: true,
+            },
+            select: {
+              length: true,
             },
           },
         },
-      },
-      include: {
-        versions: {
-          where: {
-            isPrimary: true,
-          },
-          select: {
-            length: true,
-          },
-        },
-      },
-    });
-
-    if (!document) {
-      return res.status(404).json({ message: "Document not found" });
-    }
-
-    const videoLength = document.versions[0]?.length || 51;
-    if (!videoLength) {
-      return res.status(400).json({ message: "Video length not found" });
-    }
-
-    try {
-      // Fetch video events from Tinybird
-      const response = await getVideoEventsByDocument({
-        document_id: documentId,
       });
 
-      if (!response || !response.data) {
-        console.error("Invalid response from Tinybird:", response);
-        return res
-          .status(500)
-          .json({ message: "Invalid response from analytics service" });
+      if (!document) {
+        res.status(404).json({ message: "Document not found" });
+        return;
       }
 
-      const analytics = calculateAnalytics(response.data, videoLength);
-      return res.status(200).json(analytics);
+      const videoLength = document.versions[0]?.length || 51;
+      if (!videoLength) {
+        res.status(400).json({ message: "Video length not found" });
+        return;
+      }
+
+      try {
+        // Fetch video events from Tinybird
+        const response = await getVideoEventsByDocument({
+          document_id: documentId,
+        });
+
+        if (!response || !response.data) {
+          console.error("Invalid response from Tinybird:", response);
+          res
+            .status(500)
+            .json({ message: "Invalid response from analytics service" });
+          return;
+        }
+
+        const analytics = calculateAnalytics(response.data, videoLength);
+        res.status(200).json(analytics);
+      } catch (error) {
+        console.error("Tinybird error details:", {
+          error,
+          message: error instanceof Error ? error.message : "Unknown error",
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+        res.status(500).json({
+          message: "Error fetching video analytics",
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
     } catch (error) {
-      console.error("Tinybird error details:", {
-        error,
-        message: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : undefined,
-      });
-      return res.status(500).json({
-        message: "Error fetching video analytics",
+      console.error(
+        "Error in /api/teams/[teamId]/documents/[id]/video-analytics:",
+        {
+          error,
+          message: error instanceof Error ? error.message : "Unknown error",
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+      );
+      res.status(500).json({
+        message: "Internal Server Error",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  } catch (error) {
-    console.error(
-      "Error in /api/teams/[teamId]/documents/[id]/video-analytics:",
-      {
-        error,
-        message: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : undefined,
-      },
-    );
-    return res.status(500).json({
-      message: "Internal Server Error",
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
-  }
-}
+  },
+});

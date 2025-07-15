@@ -1,47 +1,25 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
-import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "PUT") {
+export default createTeamHandler({
+  PUT: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // PUT /api/teams/:teamId/datarooms/:id/folders/manage
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-    const userId = (session.user as CustomUser).id;
-    const { teamId, id: dataroomId } = req.query as {
+    const { id: dataroomId } = req.query as {
       teamId: string;
       id: string;
     };
     const { folderId, name } = req.body as { folderId: string; name: string };
 
     try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       const folder = await prisma.dataroomFolder.findUnique({
         where: {
           id: folderId,
@@ -78,9 +56,5 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow PUT requests
-    res.setHeader("Allow", ["PUT"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

@@ -1,43 +1,18 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
-import { getServerSession } from "next-auth/next";
 
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId/folders
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const userId = (session.user as CustomUser).id;
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId, root } = req.query as { teamId: string; root?: string };
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       /** if root is present then only get root folders */
       if (root === "true") {
         const folders = await prisma.folder.findMany({
@@ -55,7 +30,8 @@ export default async function handle(
           },
         });
 
-        return res.status(200).json(folders);
+        res.status(200).json(folders);
+        return;
       }
 
       const folders = await prisma.folder.findMany({
@@ -87,43 +63,20 @@ export default async function handle(
         },
       });
 
-      return res.status(200).json(folders);
+      res.status(200).json(folders);
     } catch (error) {
       console.error("Request error", error);
-      return res.status(500).json({ error: "Error fetching folders" });
+      res.status(500).json({ error: "Error fetching folders" });
     }
-  } else if (req.method === "POST") {
-    // POST /api/teams/:teamId/folders
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
+  },
 
-    const userId = (session.user as CustomUser).id;
-
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId } = req.query as { teamId: string };
     const { name, path } = req.body as { name: string; path: string };
 
     const parentFolderPath = path ? "/" + path : "/";
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       const parentFolder = await prisma.folder.findUnique({
         where: {
           teamId_path: {
@@ -166,10 +119,11 @@ export default async function handle(
       }
 
       if (counter > MAX_RETRIES) {
-        return res.status(400).json({
+        res.status(400).json({
           error: "Failed to create folder",
           message: "Too many folders with similar names",
         });
+        return;
       }
 
       const folder = await prisma.folder.create({
@@ -193,9 +147,5 @@ export default async function handle(
       console.error("Request error", error);
       res.status(500).json({ error: "Error creating folder" });
     }
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["GET", "POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

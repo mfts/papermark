@@ -1,34 +1,22 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { TeamError, errorhandler } from "@/lib/errorHandler";
 import { deleteFile } from "@/lib/files/delete-file-server";
+import {
+  AuthenticatedRequest,
+  createAuthenticatedHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { CustomUser } from "@/lib/types";
 
-import { authOptions } from "../../../../auth/[...nextauth]";
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId/documents/:id
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
+export default createAuthenticatedHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
-
-    const userId = (session.user as CustomUser).id;
 
     try {
       const { document } = await getTeamWithUsersAndDocument({
         teamId,
-        userId,
+        userId: req.user.id,
         docId,
         options: {
           include: {
@@ -66,10 +54,11 @@ export default async function handle(
       });
 
       if (!document || !document.versions || document.versions.length === 0) {
-        return res.status(404).json({
+        res.status(404).json({
           error: "Not Found",
           message: "The requested document does not exist",
         });
+        return;
       }
 
       const pages = await prisma.documentPage.findMany({
@@ -89,28 +78,24 @@ export default async function handle(
       );
 
       // Check that the user is owner of the document, otherwise return 401
-      // if (document.ownerId !== (session.user as CustomUser).id) {
-      //   return res.status(401).end("Unauthorized to access this document");
+      // if (document.ownerId !== req.user.id) {
+      //   res.status(401).end("Unauthorized to access this document");
+      //   return;
       // }
 
-      return res.status(200).json({ ...document, hasPageLinks });
+      res.status(200).json({ ...document, hasPageLinks });
     } catch (error) {
       if (error instanceof TeamError) {
-        return res.status(404).json({
+        res.status(404).json({
           error: "Not Found",
           message: error.message,
         });
+        return;
       }
       errorhandler(error, res);
     }
-  } else if (req.method === "PUT") {
-    // PUT /api/teams/:teamId/document/:id
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-    const userId = (session.user as CustomUser).id;
+  },
+  PUT: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
     const { folderId, currentPathName } = req.body as {
       folderId: string;
@@ -125,7 +110,7 @@ export default async function handle(
           users: {
             some: {
               role: "ADMIN",
-              userId: userId,
+              userId: req.user.id,
             },
           },
         },
@@ -143,25 +128,18 @@ export default async function handle(
     });
 
     if (!document) {
-      return res.status(404).end("Document not found");
+      res.status(404).end("Document not found");
+      return;
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Document moved successfully",
       newPath: document.folder?.path,
       oldPath: currentPathName,
     });
-  } else if (req.method === "DELETE") {
-    // DELETE /api/teams/:teamId/document/:id
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
+  },
+  DELETE: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
-
-    const userId = (session.user as CustomUser).id;
 
     try {
       const documentVersions = await prisma.document.findUnique({
@@ -172,7 +150,7 @@ export default async function handle(
             users: {
               some: {
                 // role: { in: ["ADMIN", "MANAGER"] },
-                userId: userId,
+                userId: req.user.id,
               },
             },
           },
@@ -190,7 +168,8 @@ export default async function handle(
       });
 
       if (!documentVersions) {
-        return res.status(404).end("Document not found");
+        res.status(404).end("Document not found");
+        return;
       }
 
       //if it is not notion document then only delete the document from storage
@@ -212,13 +191,9 @@ export default async function handle(
         },
       });
 
-      return res.status(204).end(); // 204 No Content response for successful deletes
+      res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow GET, PUT and DELETE requests
-    res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

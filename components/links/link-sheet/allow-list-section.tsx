@@ -109,7 +109,7 @@ export default function AllowListSection({
             {...FADE_IN_ANIMATION_SETTINGS}
           >
             <Textarea
-              className="focus:ring-inset"
+              className="focus:ring-inset bg-muted"
               rows={5}
               placeholder={`Enter allowed emails/domains, one per line, e.g.
 marc@papermark.io

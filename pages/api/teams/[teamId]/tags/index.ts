@@ -1,12 +1,14 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth";
 import { z } from "zod";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser, tagColors } from "@/lib/types";
+import { tagColors } from "@/lib/types";
 
 import {
   COLORS_LIST,
@@ -81,117 +83,94 @@ export const createTagBodySchema = z
     }
   });
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return res.status(401).end("Unauthorized");
-  }
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    const { teamId } = req.query as { teamId: string };
 
-  const { teamId } = req.query as { teamId: string };
+    try {
+      const { search, includeLinksCount, sortBy, sortOrder, pageSize, page } =
+        searchParamsSchema.parse(req.query);
 
-  try {
-    const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-      },
-      select: {
-        id: true,
-        users: { select: { userId: true } },
-      },
-    });
+      const whereCondition = {
+        teamId: teamId,
+        ...(search && {
+          name: {
+            contains: search,
+          },
+        }),
+      };
 
-    // check that the user is member of the team, otherwise return 403
-    const teamUsers = team?.users;
-    const isUserPartOfTeam = teamUsers?.some(
-      (user) => user.userId === (session.user as CustomUser).id,
-    );
-    if (!isUserPartOfTeam) {
-      return res.status(403).end("Unauthorized to access this team");
-    }
-  } catch (error) {
-    errorhandler(error, res);
-  }
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId/tag
-    const { search, includeLinksCount, sortBy, sortOrder, pageSize, page } =
-      searchParamsSchema.parse(req.query);
-
-    const whereCondition = {
-      teamId: teamId,
-      ...(search && {
-        name: {
-          contains: search,
-        },
-      }),
-    };
-
-    const [tags, totalCount] = await prisma.$transaction([
-      prisma.tag.findMany({
-        where: whereCondition,
-        select: {
-          id: true,
-          name: true,
-          color: true,
-          description: true,
-          ...(includeLinksCount && {
-            _count: {
-              select: {
-                items: true,
+      const [tags, totalCount] = await prisma.$transaction([
+        prisma.tag.findMany({
+          where: whereCondition,
+          select: {
+            id: true,
+            name: true,
+            color: true,
+            description: true,
+            ...(includeLinksCount && {
+              _count: {
+                select: {
+                  items: true,
+                },
               },
-            },
-          }),
-        },
-        orderBy: {
-          [sortBy]: sortOrder,
-        },
-        ...(pageSize &&
-          page && {
-            take: pageSize,
-            skip: (page - 1) * pageSize,
-          }),
-      }),
-      prisma.tag.count({ where: whereCondition }),
-    ]);
+            }),
+          },
+          orderBy: {
+            [sortBy]: sortOrder,
+          },
+          ...(pageSize &&
+            page && {
+              take: pageSize,
+              skip: (page - 1) * pageSize,
+            }),
+        }),
+        prisma.tag.count({ where: whereCondition }),
+      ]);
 
-    if (!tags) {
-      return res.status(200).json({ tags: null, totalCount: 0 });
+      if (!tags) {
+        res.status(200).json({ tags: null, totalCount: 0 });
+        return;
+      }
+
+      res.status(200).json({ tags, totalCount });
+    } catch (error) {
+      errorhandler(error, res);
     }
+  },
 
-    return res.status(200).json({ tags, totalCount });
-  } else if (req.method === "POST") {
-    // POST /api/teams/:teamId/tag
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    const { teamId } = req.query as { teamId: string };
 
-    const { color, name, description } = createTagBodySchema.parse(req.body);
+    try {
+      const { color, name, description } = createTagBodySchema.parse(req.body);
 
-    const existingTag = await prisma.tag.findFirst({
-      where: {
-        teamId: teamId,
-        name: name,
-      },
-    });
-    if (existingTag) {
-      return res.status(400).json({
-        error: "A tag with that name already exists.",
+      const existingTag = await prisma.tag.findFirst({
+        where: {
+          teamId: teamId,
+          name: name,
+        },
       });
+      if (existingTag) {
+        res.status(400).json({
+          error: "A tag with that name already exists.",
+        });
+        return;
+      }
+      const response = await prisma.tag.create({
+        data: {
+          name: name!,
+          color:
+            color && COLORS_LIST.map(({ color }) => color).includes(color)
+              ? color
+              : randomBadgeColor(),
+          teamId: teamId,
+          description: description,
+        },
+      });
+      res.status(200).json(response);
+    } catch (error) {
+      errorhandler(error, res);
     }
-    const response = await prisma.tag.create({
-      data: {
-        name: name!,
-        color:
-          color && COLORS_LIST.map(({ color }) => color).includes(color)
-            ? color
-            : randomBadgeColor(),
-        teamId: teamId,
-        description: description,
-      },
-    });
-    return res.status(200).json(response);
-  } else {
-    // We only allow GET and DELETE requests
-    res.setHeader("Allow", ["GET", "POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

@@ -1,48 +1,19 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
-    // GET /api/teams/:teamId/documents/:id/advanced-mode
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    const { teamId, id: docId } = req.query as { teamId: string; id: string };
-
-    const userId = (session.user as CustomUser).id;
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    const { id: docId } = req.query as { id: string };
 
     try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId,
-            },
-          },
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
       const documentVersion = await prisma.documentVersion.findFirst({
         where: {
           documentId: docId,
@@ -58,20 +29,22 @@ export default async function handle(
       });
 
       if (!documentVersion) {
-        return res.status(404).end("Document not found");
+        res.status(404).end("Document not found");
+        return;
       }
 
       if (!supportsAdvancedExcelMode(documentVersion.contentType)) {
-        return res.status(400).json({
+        res.status(400).json({
           message:
             "Advanced mode is only available for Excel files (.xls, .xlsx, .xlsm).",
         });
+        return;
       }
 
       await copyFileToBucketServer({
         filePath: documentVersion.file,
         storageType: documentVersion.storageType,
-        teamId,
+        teamId: req.team!.id,
       });
 
       const documentPromise = prisma.document.update({
@@ -90,15 +63,11 @@ export default async function handle(
         `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${docId}`,
       );
 
-      return res.status(200).json({
+      res.status(200).json({
         message: `Document updated to advanced Excel mode!`,
       });
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

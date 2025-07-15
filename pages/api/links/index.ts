@@ -1,10 +1,13 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
 import { LinkAudienceType, Tag } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
-import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createAuthenticatedHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import {
@@ -12,8 +15,6 @@ import {
   generateEncrpytedPassword,
 } from "@/lib/utils";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
-
-import { authOptions } from "../auth/[...nextauth]";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -25,17 +26,8 @@ export interface DomainObject {
   slug: string;
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  // POST /api/links
-  if (req.method === "POST") {
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
+export default createAuthenticatedHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const {
       targetId,
       linkType,
@@ -46,7 +38,7 @@ export default async function handler(
       ...linkDomainData
     } = req.body;
 
-    const userId = (session.user as CustomUser).id;
+    const userId = req.user.id;
 
     const dataroomLink = linkType === "DATAROOM_LINK";
     const documentLink = linkType === "DOCUMENT_LINK";
@@ -256,11 +248,11 @@ export default async function handler(
         linkWithView.password = decryptEncrpytedPassword(linkWithView.password);
       }
 
-      return res.status(200).json(linkWithView);
+      res.status(200).json(linkWithView);
+      return;
     } catch (error) {
       errorhandler(error, res);
+      return;
     }
-  }
-
-  return res.status(405).json({ error: "Method not allowed" });
-}
+  },
+});

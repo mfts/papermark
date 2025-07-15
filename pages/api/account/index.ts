@@ -1,20 +1,20 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
 import { waitUntil } from "@vercel/functions";
 import { randomBytes } from "crypto";
-import { getServerSession } from "next-auth";
 import { z } from "zod";
 
 import { hashToken } from "@/lib/api/auth/token";
 import { sendEmailChangeVerificationRequestEmail } from "@/lib/emails/send-mail-verification";
 import { errorhandler } from "@/lib/errorHandler";
-import { newId } from "@/lib/id-helper";
+import {
+  AuthenticatedRequest,
+  createAuthenticatedHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { ratelimit, redis } from "@/lib/redis";
 import { CustomUser } from "@/lib/types";
 import { trim } from "@/lib/utils";
-
-import { authOptions } from "../auth/[...nextauth]";
 
 const updateUserSchema = z.object({
   name: z.preprocess(trim, z.string().min(1).max(64)).optional(),
@@ -22,18 +22,10 @@ const updateUserSchema = z.object({
   image: z.string().url().optional(),
 });
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "PATCH") {
+export default createAuthenticatedHandler({
+  PATCH: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     // POST /api/account
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      throw new Error("Unauthorized");
-    }
-    const sessionUser = session.user as CustomUser;
+    const sessionUser = req.user as CustomUser;
     const { email, image, name } = await updateUserSchema.parseAsync(
       await req.body,
     );
@@ -103,8 +95,5 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    res.setHeader("Allow", ["PATCH"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

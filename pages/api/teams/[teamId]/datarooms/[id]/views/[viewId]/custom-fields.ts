@@ -1,23 +1,14 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId/datarooms/:id/views/:viewId/custom-fields
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const {
       teamId,
       id: dataroomId,
@@ -28,15 +19,13 @@ export default async function handle(
       viewId: string;
     };
 
-    const userId = (session.user as CustomUser).id;
-
     try {
       const team = await prisma.team.findUnique({
         where: {
           id: teamId,
           users: {
             some: {
-              userId: userId,
+              userId: req.user.id,
             },
           },
         },
@@ -47,11 +36,13 @@ export default async function handle(
       });
 
       if (!team) {
-        return res.status(401).end("Unauthorized");
+        res.status(401).end("Unauthorized");
+        return;
       }
 
       if (team.plan.includes("free")) {
-        return res.status(403).end("Forbidden");
+        res.status(403).end("Forbidden");
+        return;
       }
 
       const customFields = await prisma.customFieldResponse.findFirst({
@@ -68,13 +59,9 @@ export default async function handle(
 
       const data = customFields?.data;
 
-      return res.status(200).json(data);
+      res.status(200).json(data);
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

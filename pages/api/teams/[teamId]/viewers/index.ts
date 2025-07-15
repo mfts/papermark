@@ -1,24 +1,16 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
-
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 import { Prisma } from "@prisma/client";
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId/viewers
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
+import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
+import prisma from "@/lib/prisma";
 
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { query, page, pageSize, sortBy, sortOrder } = req.query as {
       query?: string;
       page?: string;
@@ -36,9 +28,9 @@ export default async function handle(
     const validSortFields = ["lastViewed", "totalVisits"];
     const validSortOrders = ["asc", "desc"];
     const sort = validSortFields.includes(sortBy || "") ? sortBy : "lastViewed";
-    const order = validSortOrders.includes(sortOrder || "") ? sortOrder : "desc";
-
-    const userId = (session.user as CustomUser).id;
+    const order = validSortOrders.includes(sortOrder || "")
+      ? sortOrder
+      : "desc";
 
     try {
       const team = await prisma.team.findUnique({
@@ -46,7 +38,7 @@ export default async function handle(
           id: teamId,
           users: {
             some: {
-              userId,
+              userId: req.user.id,
             },
           },
         },
@@ -62,21 +54,24 @@ export default async function handle(
         : Prisma.empty;
 
       let orderByClause: Prisma.Sql;
-      if (sort === 'totalVisits') {
-        orderByClause = order === 'desc'
-          ? Prisma.sql`"totalVisits" DESC, "createdAt" DESC`
-          : Prisma.sql`"totalVisits" ASC, "createdAt" DESC`;
-      } else if (sort === 'lastViewed') {
-        orderByClause = order === 'desc'
-          ? Prisma.sql`"lastViewed" DESC NULLS LAST, "createdAt" DESC`
-          : Prisma.sql`"lastViewed" ASC NULLS LAST, "createdAt" DESC`;
+      if (sort === "totalVisits") {
+        orderByClause =
+          order === "desc"
+            ? Prisma.sql`"totalVisits" DESC, "createdAt" DESC`
+            : Prisma.sql`"totalVisits" ASC, "createdAt" DESC`;
+      } else if (sort === "lastViewed") {
+        orderByClause =
+          order === "desc"
+            ? Prisma.sql`"lastViewed" DESC NULLS LAST, "createdAt" DESC`
+            : Prisma.sql`"lastViewed" ASC NULLS LAST, "createdAt" DESC`;
       } else {
-        orderByClause = order === 'desc'
-          ? Prisma.sql`"createdAt" DESC`
-          : Prisma.sql`"createdAt" ASC`;
+        orderByClause =
+          order === "desc"
+            ? Prisma.sql`"createdAt" DESC`
+            : Prisma.sql`"createdAt" ASC`;
       }
 
-      const viewersWithStats = await prisma.$queryRaw`
+      const viewersWithStats = (await prisma.$queryRaw`
         WITH viewer_stats AS (
           SELECT 
             v.id,
@@ -102,7 +97,7 @@ export default async function handle(
         ORDER BY ${orderByClause}
         LIMIT ${limit}
         OFFSET ${offset}
-      ` as Array<{
+      `) as Array<{
         id: string;
         email: string;
         createdAt: Date;
@@ -111,12 +106,12 @@ export default async function handle(
         lastViewed: Date | null;
       }>;
 
-      const totalCountResult = await prisma.$queryRaw`
+      const totalCountResult = (await prisma.$queryRaw`
         SELECT COUNT(*)::int as count
         FROM "Viewer" v
         WHERE v."teamId" = ${teamId}
           ${searchCondition}
-      ` as Array<{ count: number }>;
+      `) as Array<{ count: number }>;
 
       const totalCount = totalCountResult[0]?.count || 0;
       const totalPages = Math.ceil(totalCount / limit);
@@ -146,16 +141,14 @@ export default async function handle(
         },
       };
 
-
-      res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
+      res.setHeader(
+        "Cache-Control",
+        "public, s-maxage=30, stale-while-revalidate=300",
+      );
 
       return res.status(200).json(response);
     } catch (error) {
       errorhandler(error, res);
     }
-  } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

@@ -1,19 +1,20 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiResponse } from "next";
 
 import { MultiRegionS3Store } from "@/ee/features/storage/s3-store";
 import { CopyObjectCommand } from "@aws-sdk/client-s3";
 import slugify from "@sindresorhus/slugify";
 import { Server } from "@tus/server";
-import { getServerSession } from "next-auth/next";
 import path from "node:path";
 
 import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
 import { RedisLocker } from "@/lib/files/tus-redis-locker";
 import { newId } from "@/lib/id-helper";
+import {
+  AuthenticatedRequest,
+  createAuthenticatedHandler,
+} from "@/lib/middleware/api-auth";
 import { lockerRedisClient } from "@/lib/redis";
 import { log } from "@/lib/utils";
-
-import { authOptions } from "../../auth/[...nextauth]";
 
 export const config = {
   api: {
@@ -98,12 +99,16 @@ const tusServer = new Server({
   },
 });
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Get the session
-  const session = getServerSession(req, res, authOptions);
-  if (!session) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  return tusServer.handle(req, res);
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
+  await tusServer.handle(req, res);
 }
+
+export default createAuthenticatedHandler({
+  GET: handler,
+  POST: handler,
+  PATCH: handler,
+  DELETE: handler,
+  PUT: handler,
+  HEAD: handler,
+  OPTIONS: handler,
+});

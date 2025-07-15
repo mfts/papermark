@@ -1,36 +1,33 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth/next";
-
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { getWebhookEvents } from "@/lib/tinybird/pipes";
 import { CustomUser } from "@/lib/types";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    const { teamId, id: webhookId } = req.query as {
+      teamId: string;
+      id: string;
+    };
+    const userId = req.user.id;
 
-  const { teamId, id: webhookId } = req.query as { teamId: string; id: string };
-  const userId = (session.user as CustomUser).id;
+    const userTeam = await prisma.userTeam.findFirst({
+      where: {
+        userId,
+        teamId,
+      },
+    });
 
-  const userTeam = await prisma.userTeam.findFirst({
-    where: {
-      userId,
-      teamId,
-    },
-  });
+    if (!userTeam) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
 
-  if (!userTeam) {
-    return res.status(403).json({ error: "Forbidden" });
-  }
-
-  if (req.method === "GET") {
     try {
       const { pId } = await prisma.webhook.findUniqueOrThrow({
         where: {
@@ -51,12 +48,12 @@ export default async function handler(
         request_body: JSON.parse(event.request_body as string),
       }));
 
-      return res.status(200).json(parsedEvents);
+      res.status(200).json(parsedEvents);
+      return;
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ error: "Internal server error" });
+      res.status(500).json({ error: "Internal server error" });
+      return;
     }
-  }
-
-  return res.status(405).json({ error: "Method not allowed" });
-}
+  },
+});

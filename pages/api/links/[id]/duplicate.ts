@@ -1,32 +1,24 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
 import { Prisma } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
-import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createAuthenticatedHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
-
-import { authOptions } from "../../auth/[...nextauth]";
 
 export const config = {
   // in order to enable `waitUntil` function
   supportsResponseStreaming: true,
 };
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
-    // PUT /api/links/:id/duplicate
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
+export default createAuthenticatedHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    // POST /api/links/:id/duplicate
     const { id } = req.query as { id: string };
     const { teamId } = req.body as { teamId: string };
 
@@ -36,7 +28,7 @@ export default async function handle(
           id: teamId,
           users: {
             some: {
-              userId: (session.user as CustomUser).id,
+              userId: req.user.id,
             },
           },
         },
@@ -44,7 +36,8 @@ export default async function handle(
       });
 
       if (!team) {
-        return res.status(401).end("Unauthorized");
+        res.status(401).end("Unauthorized");
+        return;
       }
 
       const link = await prisma.link.findUnique({
@@ -63,7 +56,8 @@ export default async function handle(
       });
 
       if (!link) {
-        return res.status(404).json({ error: "Link not found" });
+        res.status(404).json({ error: "Link not found" });
+        return;
       }
 
       const { tags, ...rest } = link;
@@ -92,7 +86,7 @@ export default async function handle(
               tagId,
               itemType: "LINK_TAG",
               linkId: createdLink.id,
-              taggedBy: (session.user as CustomUser).id,
+              taggedBy: req.user.id,
             })),
             skipDuplicates: true,
           });
@@ -124,13 +118,9 @@ export default async function handle(
         }),
       );
 
-      return res.status(201).json(linkWithView);
+      res.status(201).json(linkWithView);
     } catch (error) {
       errorhandler(error, res);
     }
-  }
-
-  // We only allow PUT requests
-  res.setHeader("Allow", ["POST"]);
-  return res.status(405).end(`Method ${req.method} Not Allowed`);
-}
+  },
+});

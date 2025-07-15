@@ -1,56 +1,30 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 
 import { getTeamStorageConfigById } from "@/ee/features/storage/config";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
-import { getServerSession } from "next-auth";
 
 import { getLambdaClientForTeam } from "@/lib/files/aws-client";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 
 export const config = {
   maxDuration: 180,
 };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return res.status(401).end("Unauthorized");
-  }
+export default createTeamHandler({
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
+    const { id: dataroomId } = req.query as {
+      id: string;
+    };
 
-  const { teamId, id: dataroomId } = req.query as {
-    teamId: string;
-    id: string;
-  };
-
-  if (req.method === "POST") {
     try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: (session.user as CustomUser).id,
-            },
-          },
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (!team) {
-        return res.status(403).end("Unauthorized to access this team");
-      }
-
       const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: dataroomId,
-          teamId: teamId,
+          teamId: req.team!.id,
         },
         select: {
           folders: {
@@ -85,7 +59,8 @@ export default async function handler(
         },
       });
       if (!dataroom) {
-        return res.status(404).end("Dataroom not found");
+        res.status(404).end("Dataroom not found");
+        return;
       }
       let downloadFolders = dataroom.folders;
       let downloadDocuments = dataroom.documents;
@@ -178,8 +153,8 @@ export default async function handler(
       });
 
       // Get team-specific Lambda client and storage config
-      const client = await getLambdaClientForTeam(teamId);
-      const storageConfig = await getTeamStorageConfigById(teamId);
+      const client = await getLambdaClientForTeam(req.team!.id);
+      const storageConfig = await getTeamStorageConfigById(req.team!.id);
 
       const params = {
         FunctionName: storageConfig.lambdaFunctionName,
@@ -213,14 +188,10 @@ export default async function handler(
         });
       }
     } catch (error) {
-      return res.status(500).json({
+      res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
       });
     }
-  } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});

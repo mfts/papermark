@@ -1,27 +1,16 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
-import { getServerSession } from "next-auth/next";
+import { NextApiResponse } from "next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import {
+  AuthenticatedRequest,
+  createTeamHandler,
+} from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
-import { authOptions } from "../../../auth/[...nextauth]";
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId/agreements
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
+export default createTeamHandler({
+  GET: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId } = req.query as { teamId: string };
-    const userId = (session.user as CustomUser).id;
 
     try {
       const team = await prisma.team.findUnique({
@@ -29,7 +18,7 @@ export default async function handle(
           id: teamId,
           users: {
             some: {
-              userId,
+              userId: req.user.id,
             },
           },
         },
@@ -47,27 +36,23 @@ export default async function handle(
       });
 
       if (!team) {
-        return res.status(401).json("Unauthorized");
+        res.status(401).json("Unauthorized");
+        return;
       }
 
       const agreements = team.agreements;
-      return res.status(200).json(agreements);
+      res.status(200).json(agreements);
     } catch (error) {
       errorhandler(error, res);
     }
-  } else if (req.method === "POST") {
-    // POST /api/teams/:teamId/agreements
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
+  },
 
-    const userId = (session.user as CustomUser).id;
+  POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
     const { teamId } = req.query as { teamId: string };
 
     if (!teamId) {
-      return res.status(401).json("Unauthorized");
+      res.status(401).json("Unauthorized");
+      return;
     }
 
     try {
@@ -76,14 +61,15 @@ export default async function handle(
           id: teamId,
           users: {
             some: {
-              userId,
+              userId: req.user.id,
             },
           },
         },
       });
 
       if (!team) {
-        return res.status(401).json("Unauthorized");
+        res.status(401).json("Unauthorized");
+        return;
       }
 
       const { name, link, requireName } = req.body as {
@@ -101,18 +87,14 @@ export default async function handle(
         },
       });
 
-      return res.status(201).json(agreement);
+      res.status(201).json(agreement);
     } catch (error) {
       log({
-        message: `Failed to add agreement. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        message: `Failed to add agreement. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${req.user.id}}\``,
         type: "error",
         mention: true,
       });
       errorhandler(error, res);
     }
-  } else {
-    // We only allow GET and POST requests
-    res.setHeader("Allow", ["GET", "POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+  },
+});
