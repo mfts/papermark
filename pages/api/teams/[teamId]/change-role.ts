@@ -39,6 +39,11 @@ export default async function handle(
         return res.status(401).json("Unauthorized");
       }
 
+      // Only ADMINs can change roles
+      if (userTeam.role !== "ADMIN") {
+        return res.status(403).json("Only admins can change user roles");
+      }
+
       if (userTeam?.role === "ADMIN" && userTeam.userId === userToBeChanged) {
         return res.status(401).json("You can't change the Admin");
       }
