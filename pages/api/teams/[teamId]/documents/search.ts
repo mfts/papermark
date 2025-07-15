@@ -14,10 +14,12 @@ async function handleSearch(req: AuthenticatedRequest, res: NextApiResponse) {
     const documents = await prisma.document.findMany({
       where: {
         teamId: teamId,
-        name: {
-          contains: query,
-          mode: "insensitive",
-        },
+        ...(query && {
+          name: {
+            contains: query,
+            mode: "insensitive",
+          },
+        }),
       },
       orderBy: {
         createdAt: "desc",

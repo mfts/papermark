@@ -25,7 +25,7 @@ export default createTeamHandler({
       const document = await prisma.document.findUnique({
         where: {
           id: docId,
-          teamId: req.team?.id,
+          teamId: req.team!.id,
         },
         include: {
           views: true,
@@ -41,7 +41,7 @@ export default createTeamHandler({
         where: {
           teams: {
             some: {
-              teamId: req.team?.id,
+              teamId: req.team!.id,
             },
           },
         },

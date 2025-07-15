@@ -11,6 +11,9 @@ import { RestrictedToken, UserTeam, Team } from "@prisma/client";
 // Types for the middleware
 interface TeamWithUsers extends Team {
   users: Array<{ role: UserTeam["role"] }>;
+  _count?: {
+    datarooms: number;
+  };
 }
 
 export interface AuthenticatedRequest extends NextApiRequest {
@@ -56,6 +59,7 @@ export async function withTeamAccess(
   options?: {
     requireAdmin?: boolean;
     requireManager?: boolean;
+    includeCounts?: boolean;
   },
 ): Promise<void> {
   return withAuth(req, res, async (authenticatedReq, res) => {
@@ -84,6 +88,13 @@ export async function withTeamAccess(
               role: true,
             },
           },
+          ...(options?.includeCounts && {
+            _count: {
+              select: {
+                datarooms: true,
+              },
+            },
+          }),
         },
       });
 
@@ -187,6 +198,7 @@ export async function withTeamAccessOrToken(
   options?: {
     requireAdmin?: boolean;
     requireManager?: boolean;
+    includeCounts?: boolean;
   },
 ): Promise<void> {
   return withAuthOrToken(req, res, async (authenticatedReq, res) => {
@@ -247,6 +259,13 @@ export async function withTeamAccessOrToken(
               role: true,
             },
           },
+          ...(options?.includeCounts && {
+            _count: {
+              select: {
+                datarooms: true,
+              },
+            },
+          }),
         },
       });
 
@@ -286,6 +305,8 @@ export function createAuthenticatedHandler(
     PUT?: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void>;
     PATCH?: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void>;
     DELETE?: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void>;
+    HEAD?: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void>;
+    OPTIONS?: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void>;
   },
   authType: "session" | "token" | "both" = "both",
 ) {
@@ -315,11 +336,14 @@ export function createTeamHandler(
     PUT?: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void>;
     PATCH?: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void>;
     DELETE?: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void>;
+    HEAD?: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void>;
+    OPTIONS?: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void>;
   },
   options?: {
     requireAdmin?: boolean;
     requireManager?: boolean;
     authType?: "session" | "token" | "both";
+    includeCounts?: boolean;
   },
 ) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
@@ -336,6 +360,7 @@ export function createTeamHandler(
     return authMiddleware(req, res, handler, {
       requireAdmin: options?.requireAdmin,
       requireManager: options?.requireManager,
+      includeCounts: options?.includeCounts,
     });
   };
 }

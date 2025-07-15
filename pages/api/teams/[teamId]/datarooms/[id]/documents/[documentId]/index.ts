@@ -18,6 +18,19 @@ async function patchHandler(req: AuthenticatedRequest, res: NextApiResponse) {
   };
 
   try {
+    // Ensure the dataroom belongs to the team
+    const dataroom = await prisma.dataroom.findUnique({
+      where: {
+        id: dataroomId,
+        teamId: req.team.id,
+      },
+    });
+
+    if (!dataroom) {
+      res.status(404).end("Dataroom not found");
+      return;
+    }
+
     const document = await prisma.dataroomDocument.update({
       where: {
         id: documentId,
@@ -66,7 +79,7 @@ async function deleteHandler(req: AuthenticatedRequest, res: NextApiResponse) {
     });
 
     if (!dataroom) {
-      res.status(401).end("Dataroom not found");
+      res.status(404).end("Dataroom not found");
       return;
     }
 

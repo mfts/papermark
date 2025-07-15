@@ -16,7 +16,6 @@ import { generateJWT } from "@/lib/utils/generate-jwt";
 export default createTeamHandler(
   {
     POST: async (req: AuthenticatedRequest, res: NextApiResponse) => {
-      const { teamId } = req.query as { teamId: string };
       const { email } = req.body;
 
       if (!email) {
@@ -27,7 +26,7 @@ export default createTeamHandler(
       try {
         const team = await prisma.team.findUnique({
           where: {
-            id: teamId,
+            id: req.team.id,
           },
           include: {
             users: {
@@ -51,7 +50,7 @@ export default createTeamHandler(
 
         // Check if the user has reached the limit of users in the team
         const limits = await getLimits({
-          teamId,
+          teamId: req.team.id,
           userId: req.user.id,
         });
 
@@ -76,7 +75,7 @@ export default createTeamHandler(
         const invitationExists = await prisma.invitation.findUnique({
           where: {
             email_teamId: {
-              teamId,
+              teamId: req.team.id,
               email,
             },
           },
@@ -97,7 +96,7 @@ export default createTeamHandler(
             email,
             token,
             expires: expiresAt,
-            teamId,
+            teamId: req.team.id,
           },
         });
 
@@ -113,7 +112,7 @@ export default createTeamHandler(
         const sender = req.user;
 
         // invitation acceptance URL
-        const invitationUrl = `/api/teams/${teamId}/invitations/accept?token=${token}&email=${email}`;
+        const invitationUrl = `/api/teams/${req.team.id}/invitations/accept?token=${token}&email=${email}`;
         const fullInvitationUrl = `${process.env.NEXT_PUBLIC_BASE_URL}${invitationUrl}`;
 
         // magic link
@@ -129,7 +128,7 @@ export default createTeamHandler(
           verification_url: magicLink,
           email,
           token,
-          teamId,
+          teamId: req.team.id,
           type: "invitation",
           expiresAt: expiresAt.toISOString(),
         });

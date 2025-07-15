@@ -9,10 +9,22 @@ import prisma from "@/lib/prisma";
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   // GET /api/teams/:teamId/datarooms/:id/folders/:name
   const {
-    teamId,
     id: dataroomId,
     name,
-  } = req.query as { teamId: string; id: string; name: string[] };
+  } = req.query as { id: string; name: string[] };
+
+  // Verify that the dataroom belongs to the team
+  const dataroom = await prisma.dataroom.findUnique({
+    where: {
+      id: dataroomId,
+      teamId: req.team.id,
+    },
+  });
+
+  if (!dataroom) {
+    res.status(404).json({ error: "Dataroom not found" });
+    return;
+  }
 
   const path = "/" + name.join("/"); // construct the materialized path
 

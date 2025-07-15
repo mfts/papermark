@@ -12,6 +12,10 @@ import {
 import prisma from "@/lib/prisma";
 import { presetDataSchema } from "@/lib/zod/schemas/presets";
 
+const validatePresetId = (presetId: unknown): presetId is string => {
+  return typeof presetId === 'string' && presetId.trim() !== '';
+};
+
 export const config = {
   api: {
     bodyParser: {
@@ -26,6 +30,14 @@ export default createTeamHandler({
       teamId: string;
       id: string;
     };
+
+    // Validate presetId parameter (teamId is already validated by middleware)
+    if (!validatePresetId(presetId)) {
+      res.status(400).json({
+        error: "Invalid or missing preset id parameter. Preset id must be a non-empty string."
+      });
+      return;
+    }
 
     try {
       const preset = await prisma.linkPreset.findFirst({
@@ -51,6 +63,14 @@ export default createTeamHandler({
       teamId: string;
       id: string;
     };
+
+    // Validate presetId parameter (teamId is already validated by middleware)
+    if (!validatePresetId(presetId)) {
+      res.status(400).json({
+        error: "Invalid or missing preset id parameter. Preset id must be a non-empty string."
+      });
+      return;
+    }
 
     try {
       // Validate request body with Zod schema
@@ -108,6 +128,14 @@ export default createTeamHandler({
       teamId: string;
       id: string;
     };
+
+    // Validate presetId parameter (teamId is already validated by middleware)
+    if (!validatePresetId(presetId)) {
+      res.status(400).json({
+        error: "Invalid or missing preset id parameter. Preset id must be a non-empty string."
+      });
+      return;
+    }
 
     try {
       // Check if preset exists and belongs to the team

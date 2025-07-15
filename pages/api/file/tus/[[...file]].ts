@@ -109,4 +109,6 @@ export default createAuthenticatedHandler({
   PATCH: handler,
   DELETE: handler,
   PUT: handler,
+  HEAD: handler,
+  OPTIONS: handler,
 });

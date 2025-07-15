@@ -73,9 +73,6 @@ export default createTeamHandler({
         }
       });
 
-      console.log("toUpdate", toUpdate);
-      console.log("toCreate", toCreate);
-
       // Perform operations
       await prisma.$transaction(async (tx) => {
         if (toUpdate.length > 0) {

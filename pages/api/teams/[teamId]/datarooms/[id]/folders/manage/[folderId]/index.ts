@@ -54,7 +54,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     });
 
     if (!dataroom) {
-      res.status(401).end("Dataroom not found");
+      res.status(404).end("Dataroom not found");
       return;
     }
 

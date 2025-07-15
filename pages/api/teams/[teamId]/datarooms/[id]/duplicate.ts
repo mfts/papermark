@@ -130,34 +130,12 @@ async function duplicateFolders(
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   // POST /api/teams/:teamId/datarooms/:id/duplicate
-  const { teamId, id: dataroomId } = req.query as {
-    teamId: string;
+  const { id: dataroomId } = req.query as {
     id: string;
   };
 
   try {
-    const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-        users: {
-          some: {
-            userId: req.user.id,
-          },
-        },
-      },
-      include: {
-        _count: {
-          select: {
-            datarooms: true,
-          },
-        },
-      },
-    });
-
-    if (!team) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
+    const team = req.team;
 
     if (team.plan.includes("drtrial")) {
       res.status(403).json({
@@ -170,7 +148,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const dataroom = await prisma.dataroom.findUnique({
       where: {
         id: dataroomId,
-        teamId: teamId,
+        teamId: team.id,
       },
       select: { id: true },
     });
@@ -181,12 +159,12 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     // Check if the team has reached the limit of datarooms
-    const limits = await getLimits({ teamId, userId: req.user.id });
-    if (limits && team._count.datarooms >= limits.datarooms) {
+    const limits = await getLimits({ teamId: team.id, userId: req.user.id });
+    if (limits && (team._count?.datarooms ?? 0) >= limits.datarooms) {
       console.log(
         "Dataroom limit reached",
         limits.datarooms,
-        team._count.datarooms,
+        team._count?.datarooms ?? 0,
       );
       res.status(400).json({
         message:
@@ -240,4 +218,4 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
 export default createTeamHandler({
   POST: handler,
-});
+}, { includeCounts: true });

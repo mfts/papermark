@@ -3,6 +3,11 @@ import { NextApiResponse } from "next";
 import { addDays } from "date-fns";
 import { z } from "zod";
 
+interface DateRangeFilter {
+  gte: Date;
+  lte: Date;
+}
+
 import {
   AuthenticatedRequest,
   createTeamHandler,
@@ -110,7 +115,7 @@ export default createTeamHandler({
       }
 
       // Create the interval filter for the query
-      const intervalFilter: any = { gte: startDate, lte: endDate };
+      const intervalFilter: DateRangeFilter = { gte: startDate, lte: endDate };
 
       let since: number;
 

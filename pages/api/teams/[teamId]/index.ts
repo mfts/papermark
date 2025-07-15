@@ -13,7 +13,6 @@ import {
 } from "@/lib/middleware/api-auth";
 import prisma from "@/lib/prisma";
 import { redis } from "@/lib/redis";
-import { CustomUser } from "@/lib/types";
 import { unsubscribe } from "@/lib/unsend";
 
 export default createTeamHandler({
@@ -54,16 +53,6 @@ export default createTeamHandler({
           },
         },
       });
-
-      // check that the user is member of the team, otherwise return 403
-      const teamUsers = team?.users;
-      const isUserPartOfTeam = teamUsers?.some(
-        (user) => user.userId === req.user.id,
-      );
-      if (!isUserPartOfTeam) {
-        res.status(403).end("Unauthorized to access this team");
-        return;
-      }
 
       res.status(200).json(team);
       return;
@@ -230,7 +219,7 @@ export default createTeamHandler({
       res.status(204).end();
       return;
     } catch (error) {
-      res.status(500).json((error as Error).message);
+      errorhandler(error, res);
       return;
     }
   },
