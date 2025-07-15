@@ -19,6 +19,7 @@ import AccessForm, {
 import { useDisablePrint } from "@/lib/hooks/use-disable-print";
 
 import EmailVerificationMessage from "../access-form/email-verification-form";
+import { SecuredByPapermark } from "../secured-by-papermark";
 import ViewData, { TViewDocumentData } from "../view-data";
 
 type RowData = { [key: string]: any };
@@ -357,6 +358,7 @@ export default function DataroomDocumentView({
           <LoadingSpinner className="h-20 w-20" />
         </div>
       )}
+      {link.securedByPapermark && <SecuredByPapermark linkId={link.id} />}
     </div>
   );
 }
