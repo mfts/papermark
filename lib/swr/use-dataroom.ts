@@ -9,6 +9,7 @@ import useSWR from "swr";
 
 import { LinkWithViews } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
+import { sortByIndexThenName } from "@/lib/utils/sort-items-by-index-name";
 
 export type DataroomFolderWithCount = DataroomFolder & {
   _count: {
@@ -128,8 +129,7 @@ export function useDataroomItems({
       })),
       ...(documentData || []).map((doc) => ({ ...doc, itemType: "document" })),
     ];
-
-    return allItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+    return sortByIndexThenName(allItems);
   }, [folderData, documentData]);
 
   return {
@@ -207,6 +207,7 @@ export function useDataroomFolders({
 export type DataroomFolderWithDocuments = DataroomFolder & {
   childFolders: DataroomFolderWithDocuments[];
   documents: {
+    orderIndex: number | null;
     id: string;
     folderId: string;
     document: {

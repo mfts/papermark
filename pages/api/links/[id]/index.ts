@@ -63,6 +63,7 @@ export default async function handle(
           groupId: true,
           permissionGroupId: true,
           audienceType: true,
+          dataroomId: true,
           teamId: true,
           team: {
             select: {
@@ -115,6 +116,7 @@ export default async function handle(
         console.time("get-dataroom-link-data");
         const data = await fetchDataroomLinkData({
           linkId: id,
+          dataroomId: link.dataroomId,
           teamId: link.teamId!,
           permissionGroupId: link.permissionGroupId || undefined,
           ...(link.audienceType === LinkAudienceType.GROUP &&
@@ -134,6 +136,7 @@ export default async function handle(
       const returnLink = {
         ...link,
         ...linkData,
+        dataroomId: undefined,
         ...(teamPlan === "free" && {
           customFields: [], // reset custom fields for free plan
           enableAgreement: false,
@@ -338,6 +341,7 @@ export default async function handle(
           uploadFolderId: linkData.uploadFolderId || null,
         },
         include: {
+          customFields: true,
           views: {
             orderBy: {
               viewedAt: "desc",

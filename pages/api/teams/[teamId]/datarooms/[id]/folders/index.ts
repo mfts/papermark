@@ -264,6 +264,7 @@ export default async function handle(
         include: {
           documents: {
             select: {
+              orderIndex: true,
               id: true,
               folderId: true,
               document: {
@@ -287,6 +288,7 @@ export default async function handle(
             include: {
               documents: {
                 select: {
+                  orderIndex: true,
                   id: true,
                   folderId: true,
                   document: {
@@ -332,10 +334,6 @@ export default async function handle(
 
     const { name, path } = req.body as { name: string; path?: string };
 
-    // const childFolderPath = path
-    //   ? "/" + path + "/" + slugify(name)
-    //   : "/" + slugify(name);
-
     const parentFolderPath = path ? "/" + path : "/";
 
     try {
@@ -374,9 +372,12 @@ export default async function handle(
       let counter = 1;
       const MAX_RETRIES = 50;
 
-      let childFolderPath = path
-        ? "/" + path + "/" + slugify(folderName)
-        : "/" + slugify(folderName);
+      // Split path into segments 
+      // Slugify the final folder name
+      const pathSegments = path ? path.split('/').filter(Boolean) : [];
+      const basePath = pathSegments.length > 0 ? '/' + pathSegments.join('/') + '/' : '/';
+
+      let childFolderPath = basePath + slugify(folderName);
 
       while (counter <= MAX_RETRIES) {
         const existingFolder = await prisma.dataroomFolder.findUnique({
@@ -389,9 +390,7 @@ export default async function handle(
         });
         if (!existingFolder) break;
         folderName = `${name} (${counter})`;
-        childFolderPath = path
-          ? "/" + path + "/" + slugify(folderName)
-          : "/" + slugify(folderName);
+        childFolderPath = basePath + slugify(folderName);
         counter++;
       }
 

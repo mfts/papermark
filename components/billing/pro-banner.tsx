@@ -44,7 +44,6 @@ export default function ProBanner({
         <UpgradePlanModal
           clickedPlan={PlanEnum.Pro}
           trigger={"pro_banner"}
-          highlightItem={["custom-branding"]}
         >
           <Button
             type="button"

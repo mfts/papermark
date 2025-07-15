@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
 import { useInvitations } from "@/lib/swr/use-invitations";
 import useLimits from "@/lib/swr/use-limits";
 import { useGetTeam } from "@/lib/swr/use-team";
@@ -41,6 +42,7 @@ export default function Billing() {
   const { data: session } = useSession();
   const { team, loading } = useGetTeam()!;
   const teamInfo = useTeam();
+  const { isTrial } = usePlan();
   const { canAddUsers, showUpgradePlanModal } = useLimits();
   const { teams } = useTeams();
   const analytics = useAnalytics();
@@ -240,7 +242,7 @@ export default function Billing() {
               </div>
               {showUpgradePlanModal ? (
                 <UpgradePlanModal
-                  clickedPlan={PlanEnum.Pro}
+                  clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
                   trigger={"invite_team_members"}
                 >
                   <Button className="whitespace-nowrap px-1 text-xs sm:px-4 sm:text-sm">

@@ -74,6 +74,15 @@ import { DataroomLinkSheet } from "./link-sheet/dataroom-link-sheet";
 import { PermissionsSheet } from "./link-sheet/permissions-sheet";
 import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
+import { PreviewButton } from "./preview-button";
+
+const isDocumentProcessing = (version?: DocumentVersion) => {
+  if (!version) return false;
+  return (
+    !version.hasPages &&
+    ["pdf", "slides", "docs", "cad"].includes(version.type!)
+  );
+};
 
 export default function LinksTable({
   targetType,
@@ -95,7 +104,7 @@ export default function LinksTable({
 
   const now = Date.now();
   const router = useRouter();
-  const { isFree } = usePlan();
+  const { isFree, isTrial } = usePlan();
   const teamInfo = useTeam();
   const { id: targetId, groupId } = router.query as {
     id: string;
@@ -141,14 +150,6 @@ export default function LinksTable({
   }, [links, processedLinks, selectedTagNames]);
 
   const { canAddLinks } = useLimits();
-  const { data: features } = useSWR<{
-    embedding: boolean;
-  }>(
-    teamInfo?.currentTeam?.id
-      ? `/api/feature-flags?teamId=${teamInfo.currentTeam.id}`
-      : null,
-    fetcher,
-  );
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingLinks, setLoadingLinks] = useState<Set<string>>(new Set());
@@ -232,6 +233,13 @@ export default function LinksTable({
       return;
     }
 
+    if (isDocumentProcessing(primaryVersion)) {
+      toast.error(
+        "Document is still processing. Please wait a moment and try again.",
+      );
+      return;
+    }
+
     const response = await fetch(`/api/links/${link.id}/preview`, {
       method: "POST",
       headers: {
@@ -304,6 +312,52 @@ export default function LinksTable({
   const handlePermissionsSave = async (permissions: any) => {
     if (!editPermissionLink) return;
 
+    // Handle the case where user wants to share entire dataroom (permissions === null)
+    if (permissions === null && editPermissionLink.permissionGroupId) {
+      // Delete the permission group - database will set permissionGroupId to null automatically
+      try {
+        const deleteResponse = await fetch(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+          {
+            method: "DELETE",
+          },
+        );
+
+        if (!deleteResponse.ok) {
+          const { error } = await deleteResponse.json();
+          throw new Error(error ?? "Failed to delete permission group");
+        }
+
+        // Refresh the links cache
+        const endpointTargetType = `${targetType.toLowerCase()}s`;
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+            targetId,
+          )}/links`,
+          (currentLinks: LinkWithViews[] | undefined) =>
+            (currentLinks || []).map((link: LinkWithViews) =>
+              link.id === editPermissionLink.id
+                ? { ...link, permissionGroupId: null }
+                : link,
+            ),
+          false,
+        );
+
+        // Invalidate the permission group cache
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+        );
+
+        setShowPermissionsSheet(false);
+        setEditPermissionLink(null);
+        toast.success("File permissions updated successfully");
+      } catch (error) {
+        console.error("Error updating file permissions:", error);
+        toast.error("Failed to update file permissions");
+      }
+      return;
+    }
+
     if (!editPermissionLink.permissionGroupId) {
       setIsLoading(true);
       try {
@@ -326,6 +380,9 @@ export default function LinksTable({
           throw new Error(error.error || "Failed to create permission group");
         }
 
+        const { permissionGroup: newPermissionGroup, _ } =
+          await response.json();
+
         // Refresh the links cache
         const endpointTargetType = `${targetType.toLowerCase()}s`;
         mutate(
@@ -333,6 +390,15 @@ export default function LinksTable({
             targetId,
           )}/links`,
         );
+
+        // Cache the new permission group data
+        if (newPermissionGroup?.id) {
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${newPermissionGroup.id}`,
+            newPermissionGroup,
+            false,
+          );
+        }
 
         setShowPermissionsSheet(false);
         setEditPermissionLink(null);
@@ -373,6 +439,13 @@ export default function LinksTable({
           )}/links`,
         );
 
+        // Invalidate the permission group cache
+        if (editPermissionLink.permissionGroupId) {
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+          );
+        }
+
         setShowPermissionsSheet(false);
         setEditPermissionLink(null);
         toast.success("File permissions updated successfully");
@@ -386,7 +459,10 @@ export default function LinksTable({
   const AddLinkButton = () => {
     if (!canAddLinks) {
       return (
-        <UpgradePlanModal clickedPlan={PlanEnum.Pro} trigger={"limit_add_link"}>
+        <UpgradePlanModal
+          clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
+          trigger={"limit_add_link"}
+        >
           <Button>Upgrade to Create Link</Button>
         </UpgradePlanModal>
       );
@@ -552,11 +628,8 @@ export default function LinksTable({
                             )}
                           >
                             {/* Progress bar */}
-                            {primaryVersion &&
-                              !primaryVersion.hasPages &&
-                              ["pdf", "slides", "docs", "cad"].includes(
-                                primaryVersion.type!,
-                              ) && (
+                            {isDocumentProcessing(primaryVersion) &&
+                              primaryVersion && (
                                 <FileProcessStatusBar
                                   documentVersionId={primaryVersion.id}
                                   className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
@@ -595,17 +668,17 @@ export default function LinksTable({
                               </button>
                             )}
                           </div>
-                          <ButtonTooltip content="Preview link">
-                            <Button
-                              variant={"link"}
-                              size={"icon"}
-                              className="group h-7 w-8"
-                              onClick={() => handlePreviewLink(link)}
-                            >
-                              <span className="sr-only">Preview link</span>
-                              <EyeIcon className="text-gray-400 group-hover:text-gray-500" />
-                            </Button>
-                          </ButtonTooltip>
+                          <PreviewButton
+                            link={link}
+                            isProcessing={isDocumentProcessing(primaryVersion)}
+                            onPreview={handlePreviewLink}
+                          />
+                          {targetType === "DATAROOM" &&
+                            link.permissionGroupId && (
+                              <ButtonTooltip content="Limited File Access">
+                                <FileSlidersIcon className="text-gray-400 group-hover:text-gray-500" />
+                              </ButtonTooltip>
+                            )}
                           {isMobile ? (
                             <ButtonTooltip content="Edit link">
                               <Button
@@ -802,22 +875,19 @@ export default function LinksTable({
                                 <CopyPlusIcon className="mr-2 h-4 w-4" />
                                 Duplicate Link
                               </DropdownMenuItem>
-                              {features?.embedding ? (
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setSelectedEmbedLink({
-                                      id: link.id,
-                                      name:
-                                        link.name ||
-                                        `Link #${link.id.slice(-5)}`,
-                                    });
-                                    setEmbedModalOpen(true);
-                                  }}
-                                >
-                                  <Code2Icon className="mr-2 h-4 w-4" />
-                                  Get Embed Code
-                                </DropdownMenuItem>
-                              ) : null}
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedEmbedLink({
+                                    id: link.id,
+                                    name:
+                                      link.name || `Link #${link.id.slice(-5)}`,
+                                  });
+                                  setEmbedModalOpen(true);
+                                }}
+                              >
+                                <Code2Icon className="mr-2 h-4 w-4" />
+                                Get Embed Code
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>

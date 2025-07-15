@@ -744,7 +744,7 @@ export default function DocumentHeader({
               {prismaDocument.type === "sheet" &&
                 !prismaDocument.advancedExcelEnabled &&
                 supportsAdvancedExcelMode(primaryVersion.contentType) &&
-                (isBusiness || isDatarooms || isTrial) && (
+                (isPro || isBusiness || isDatarooms || isTrial) && (
                   <DropdownMenuItem
                     onClick={() => enableAdvancedExcel(prismaDocument)}
                   >
@@ -931,7 +931,8 @@ export default function DocumentHeader({
 
       {prismaDocument.type === "sheet" &&
         supportsAdvancedExcelMode(primaryVersion.contentType) &&
-        (isFree || isPro) && (
+        isFree &&
+        !isTrial && (
           <AlertBanner
             id="advanced-excel-alert"
             variant="default"
@@ -942,12 +943,12 @@ export default function DocumentHeader({
                 <span
                   className="hover:text-primary/ 80 cursor-pointer underline underline-offset-4"
                   onClick={() =>
-                    handleUpgradeClick(PlanEnum.Business, "advanced-excel-mode")
+                    handleUpgradeClick(PlanEnum.Pro, "advanced-excel-mode")
                   }
                 >
                   upgrading
                 </span>{" "}
-                to Business plan to preserve the file formatting. This uses the
+                to Pro plan to preserve the file formatting. This uses the
                 Microsoft Office viewer.
               </>
             }
@@ -958,7 +959,7 @@ export default function DocumentHeader({
       {prismaDocument.type === "sheet" &&
         !prismaDocument.advancedExcelEnabled &&
         supportsAdvancedExcelMode(primaryVersion.contentType) &&
-        (isBusiness || isDatarooms || isTrial) && (
+        (isPro || isBusiness || isDatarooms || isTrial) && (
           <AlertBanner
             id="enable-advanced-excel-alert"
             variant="default"

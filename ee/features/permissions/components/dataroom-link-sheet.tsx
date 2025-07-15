@@ -20,7 +20,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { useDomains } from "@/lib/swr/use-domains";
 import useLimits from "@/lib/swr/use-limits";
-import { LinkWithViews, WatermarkConfig } from "@/lib/types";
+import { LinkWithViews } from "@/lib/types";
 import { convertDataUrlToFile, fetcher, uploadImage } from "@/lib/utils";
 
 import {
@@ -120,6 +120,7 @@ export function DataroomLinkSheet({
     useState<boolean>(false);
 
   const isPresetsAllowed =
+    isTrial ||
     (isPro && limits?.advancedLinkControlsOnPro) ||
     isBusiness ||
     isDatarooms ||
@@ -220,6 +221,7 @@ export function DataroomLinkSheet({
         permissions,
         false,
         true,
+        true,
       );
 
       // Close the sheets and show success
@@ -237,6 +239,7 @@ export function DataroomLinkSheet({
     permissions: ItemPermission | null,
     shouldPreview: boolean = false,
     showSuccess: boolean = false,
+    isPermissionUpdate: boolean = false,
   ) => {
     // Upload the image if it's a data URL
     let blobUrl: string | null =
@@ -270,7 +273,9 @@ export function DataroomLinkSheet({
       endpoint = `/api/links/${currentLink.id}`;
       method = "PUT";
     }
-
+    const customFields = linkData.customFields?.filter((field) =>
+      field.label.trim(),
+    );
     const response = await fetch(endpoint, {
       method: method,
       headers: {
@@ -278,6 +283,7 @@ export function DataroomLinkSheet({
       },
       body: JSON.stringify({
         ...linkData,
+        customFields: customFields,
         metaImage: blobUrl,
         metaFavicon: blobUrlFavicon,
         targetId: targetId,
@@ -297,11 +303,58 @@ export function DataroomLinkSheet({
     const returnedLink = await response.json();
 
     // Handle permissions
-    await handlePermissionGroupOperations(
-      returnedLink,
-      permissions,
-      isUpdating,
-    );
+    if (
+      isPermissionUpdate &&
+      permissions === null &&
+      isUpdating &&
+      currentLink?.permissionGroupId
+    ) {
+      // Delete the permission group - database will set permissionGroupId to null automatically
+      const deleteResponse = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!deleteResponse.ok) {
+        // Handle error with toast message
+        try {
+          const errorData = await deleteResponse.json();
+          toast.error(errorData.error || "Failed to delete permission group");
+        } catch {
+          toast.error("Failed to delete permission group");
+        }
+        setIsSaving(false);
+        return;
+      }
+
+      returnedLink.permissionGroupId = null;
+
+      // Show success message
+      toast.success("Permission group deleted successfully");
+
+      // Refresh the links cache
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${encodeURIComponent(
+          targetId,
+        )}/links`,
+      );
+
+      // Clear the permission group cache instead of invalidating to avoid 404
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
+        undefined,
+        false,
+      );
+    } else if (permissions !== null) {
+      // Only handle permission group operations if we have specific permissions to set
+      await handlePermissionGroupOperations(
+        returnedLink,
+        permissions,
+        isUpdating,
+      );
+    }
 
     // Handle UI updates and notifications
     await handlePostSaveOperations(
@@ -318,48 +371,61 @@ export function DataroomLinkSheet({
 
   const handlePermissionGroupOperations = async (
     link: any,
-    permissions: ItemPermission | null,
+    permissions: ItemPermission,
     isUpdating: boolean,
   ) => {
-    // If permissions are null, user wants full dataroom access - no permission group needed
-    if (permissions === null) {
-      // If updating and link had a permission group, we might want to remove it
-      // For now, we'll leave existing permission groups as they are
-      return;
-    }
+    // Create/update permission group with the provided permissions
+    if (isUpdating && currentLink?.permissionGroupId) {
+      // Update existing permission group
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            permissions: permissions,
+          }),
+        },
+      );
 
-    // If permissions is an empty object, user wants no access - still create/update permission group
-    // If permissions has items, create/update permission group with those permissions
-    if (permissions && typeof permissions === "object") {
-      if (isUpdating && currentLink?.permissionGroupId) {
-        // Update existing permission group
-        await fetch(
+      if (response.ok) {
+        // Invalidate the permission group cache
+        mutate(
           `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              permissions: permissions,
-            }),
-          },
         );
-      } else {
-        // Create new permission group
-        await fetch(
-          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              permissions: permissions,
-              linkId: link.id,
-            }),
+      }
+    } else {
+      // Create new permission group
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
+          body: JSON.stringify({
+            permissions: permissions,
+            linkId: link.id,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        const { permissionGroup: newPermissionGroup, _ } =
+          await response.json();
+        // Cache the new permission group data
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${newPermissionGroup.id}`,
+          newPermissionGroup,
+          false,
         );
+
+        // Update the link with the new permission group ID
+        if (newPermissionGroup.id) {
+          link.permissionGroupId = newPermissionGroup.id;
+        }
       }
     }
   };
@@ -491,6 +557,10 @@ export function DataroomLinkSheet({
         setShowPermissionsSheet(false);
         setPendingLinkData(null);
         toast.success("Link created successfully");
+        const isOnPermissionsPage = router.asPath.includes("/permissions");
+        if (linkType === LinkType.DATAROOM_LINK && !isOnPermissionsPage) {
+          router.push(`/datarooms/${targetId}/permissions`);
+        }
       }
     }
 
@@ -506,12 +576,14 @@ export function DataroomLinkSheet({
     showSuccess: boolean = false,
   ) => {
     // For backward compatibility, extract permissions from linkData
+    setIsSaving(true);
     const permissions = linkData.permissions || null;
     await createOrUpdateLinkWithPermissions(
       linkData,
       permissions,
       shouldPreview,
       showSuccess,
+      false,
     );
   };
 
@@ -528,7 +600,6 @@ export function DataroomLinkSheet({
       setShowPermissionsSheet(true);
       return;
     }
-
     // Use the refactored function
     await createLinkWithPermissions(data, shouldPreview);
   };
@@ -681,7 +752,7 @@ export function DataroomLinkSheet({
                         <div className="space-y-6 pt-2">
                           <div className="space-y-2">
                             <div className="flex w-full items-center justify-between">
-                              <Label htmlFor="group-id">Group </Label>
+                              <Label htmlFor="group-id">Group</Label>
                               <ButtonTooltip content="Refresh groups">
                                 <Button
                                   size="icon"
@@ -840,7 +911,7 @@ export function DataroomLinkSheet({
             <SheetFooter>
               <div className="flex flex-row-reverse items-center gap-2 pt-2">
                 {linkType === LinkType.DATAROOM_LINK &&
-                  currentLink?.audienceType !== LinkAudienceType.GROUP && (
+                  data?.audienceType !== LinkAudienceType.GROUP && (
                     <Button
                       type="button"
                       variant="default"
@@ -854,7 +925,7 @@ export function DataroomLinkSheet({
                   variant={
                     linkType === LinkType.DOCUMENT_LINK ||
                     (linkType === LinkType.DATAROOM_LINK &&
-                      currentLink?.audienceType === LinkAudienceType.GROUP)
+                      data?.audienceType === LinkAudienceType.GROUP)
                       ? "default"
                       : "outline"
                   }

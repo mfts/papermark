@@ -12,6 +12,7 @@ export function isSystemFile(name: string): boolean {
 interface CreateFolderResponse {
   path: string;
   parentFolderPath?: string;
+  name: string;
 }
 
 export async function createFolderInDataroom({
@@ -77,30 +78,57 @@ export async function createFolderInMainDocs({
   return response.json();
 }
 
+export function determineFolderPaths({
+  currentDataroomPath,
+  currentMainDocsPath,
+  isFirstLevelFolder,
+}: {
+  currentDataroomPath?: string;
+  currentMainDocsPath?: string;
+  isFirstLevelFolder: boolean;
+}): {
+  parentDataroomPath?: string;
+  parentMainDocsPath?: string;
+} {
+  return {
+    parentDataroomPath: currentDataroomPath,
+    parentMainDocsPath: isFirstLevelFolder ? undefined : currentMainDocsPath,
+  };
+}
+
 export async function createFolderInBoth({
   teamId,
   dataroomId,
   name,
-  path,
+  parentMainDocsPath,
+  parentDataroomPath,
   setRejectedFiles,
   analytics,
 }: {
   teamId: string;
   dataroomId: string;
   name: string;
-  path?: string;
+  parentMainDocsPath?: string;
+  parentDataroomPath?: string;
   setRejectedFiles: (files: { fileName: string; message: string }[]) => void;
   analytics: any;
 }): Promise<{ dataroomPath: string; mainDocsPath: string }> {
   try {
     const [dataroomResponse, mainDocsResponse] = await Promise.all([
-      createFolderInDataroom({ teamId, dataroomId, name, path }),
-      createFolderInMainDocs({ teamId, name, path }),
+      createFolderInDataroom({
+        teamId,
+        dataroomId,
+        name,
+        path: parentDataroomPath,
+      }),
+      createFolderInMainDocs({ teamId, name, path: parentMainDocsPath }),
     ]);
 
     // Track analytics
-    analytics.capture("Folder Added in dataroom", {
+    analytics.capture("Folder Added in dataroom and in main documents", {
       folderName: name,
+      dataroomTargetParent: parentDataroomPath,
+      mainDocsTargetParent: parentMainDocsPath,
     });
 
     // Mutate dataroom folders
@@ -109,13 +137,19 @@ export async function createFolderInBoth({
     mutate(
       `/api/teams/${teamId}/datarooms/${dataroomId}/folders/${dataroomResponse.path}`,
     );
+    // mutate main docs folders
+    mutate(`/api/teams/${teamId}/folders?root=true`);
+    mutate(`/api/teams/${teamId}/documents`);
 
     return {
       dataroomPath: dataroomResponse.path,
       mainDocsPath: mainDocsResponse.path,
     };
   } catch (error) {
-    console.error("An error occurred while creating the folder: ", error);
+    console.error(
+      "An error occurred while creating the folder in both locations: ",
+      error,
+    );
     setRejectedFiles([
       {
         fileName: name,
