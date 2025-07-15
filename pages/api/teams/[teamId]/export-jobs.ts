@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { nanoid } from "nanoid";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import { exportVisitsTask } from "@/lib/trigger/export-visits";
+import { jobStore } from "@/lib/redis-job-store";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -57,15 +57,13 @@ export default async function handler(
       }
 
       // Create export job record
-      const exportJob = await prisma.exportJob.create({
-        data: {
-          type,
-          resourceId,
-          groupId,
-          userId,
-          teamId,
-          status: "PENDING",
-        },
+      const exportJob = await jobStore.createJob({
+        type,
+        resourceId,
+        groupId,
+        userId,
+        teamId,
+        status: "PENDING",
       });
 
       // Trigger the background task
@@ -102,16 +100,7 @@ export default async function handler(
   if (req.method === "GET") {
     // Get export jobs for the team
     try {
-      const exportJobs = await prisma.exportJob.findMany({
-        where: {
-          teamId,
-          userId,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        take: 20, // Limit to last 20 jobs
-      });
+      const exportJobs = await jobStore.getUserTeamJobs(userId, teamId, 20);
 
       return res.status(200).json(exportJobs);
     } catch (error) {

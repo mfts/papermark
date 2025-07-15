@@ -20,30 +20,32 @@ The export visits functionality has been converted from a synchronous API call t
 - **Timeout**: 15 minutes maximum duration
 - **Machine**: Medium-1x preset for more resources
 
-### 2. Database Schema
-A new `ExportJob` table has been added to track export jobs:
+### 2. Redis Job Storage
+Export jobs are stored in Redis for fast access and automatic cleanup:
 
-```sql
-CREATE TABLE "ExportJob" (
-    "id" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
-    "status" "ExportStatus" NOT NULL DEFAULT 'PENDING',
-    "resourceId" TEXT NOT NULL,
-    "resourceName" TEXT,
-    "groupId" TEXT,
-    "result" TEXT,
-    "error" TEXT,
-    "userId" TEXT NOT NULL,
-    "teamId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    "completedAt" TIMESTAMP(3),
-    
-    CONSTRAINT "ExportJob_pkey" PRIMARY KEY ("id")
-);
-
-CREATE TYPE "ExportStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED');
+```typescript
+interface ExportJob {
+  id: string;
+  type: "document" | "dataroom" | "dataroom-group";
+  status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+  resourceId: string;
+  resourceName?: string;
+  groupId?: string;
+  result?: string; // CSV data
+  error?: string;
+  userId: string;
+  teamId: string;
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string;
+}
 ```
+
+**Benefits of Redis storage:**
+- **Fast access**: Redis is much faster than database queries
+- **Automatic cleanup**: Jobs expire after 7 days (configurable)
+- **No database migrations**: Uses existing Redis infrastructure
+- **Sorted job lists**: Jobs are automatically sorted by creation time
 
 ### 3. API Endpoints
 
@@ -67,14 +69,7 @@ The frontend components now:
 
 ## Setup Instructions
 
-### 1. Database Migration
-Apply the database migration to add the export jobs table:
-
-```bash
-npx prisma migrate dev --name add-export-jobs --schema prisma/schema/schema.prisma
-```
-
-### 2. Environment Variables
+### 1. Environment Variables
 Ensure your Trigger.dev environment variables are set:
 
 ```bash
@@ -82,14 +77,14 @@ TRIGGER_PROJECT_ID=your_project_id
 TRIGGER_ACCESS_TOKEN=your_access_token
 ```
 
-### 3. Start Trigger.dev Development Server
+### 2. Start Trigger.dev Development Server
 Run the Trigger.dev development server:
 
 ```bash
 npm run trigger:v3:dev
 ```
 
-### 4. Deploy to Production
+### 3. Deploy to Production
 When ready for production, deploy the Trigger.dev tasks:
 
 ```bash
@@ -112,7 +107,8 @@ You can adjust these values based on your Tinybird API limits and requirements.
 ## Monitoring
 
 Export jobs can be monitored through:
-- Database queries on the `ExportJob` table
+- Redis commands to inspect job data (`HGETALL export_job:*`)
+- API endpoints for job listing and status
 - Trigger.dev dashboard (if using Trigger.dev Cloud)
 - Application logs
 
@@ -163,6 +159,8 @@ const blob = await response.blob();
 ```
 
 ## Migration Notes
+
+**No database migrations required!** This solution uses Redis for job storage.
 
 The following endpoints have been changed from GET to POST:
 - `/api/teams/[teamId]/documents/[id]/export-visits`

@@ -3,8 +3,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import prisma from "@/lib/prisma";
+import { jobStore } from "@/lib/redis-job-store";
 import { exportVisitsTask } from "@/lib/trigger/export-visits";
+import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 export default async function handler(
@@ -73,16 +74,14 @@ export default async function handler(
     }
 
     // Create export job record
-    const exportJob = await prisma.exportJob.create({
-      data: {
-        type: "dataroom",
-        resourceId: dataroomId,
-        resourceName: dataroom.name,
-        groupId,
-        userId,
-        teamId,
-        status: "PENDING",
-      },
+    const exportJob = await jobStore.createJob({
+      type: "dataroom",
+      resourceId: dataroomId,
+      resourceName: dataroom.name,
+      groupId,
+      userId,
+      teamId,
+      status: "PENDING",
     });
 
     // Trigger the background task

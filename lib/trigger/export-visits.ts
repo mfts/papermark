@@ -2,6 +2,7 @@ import { logger, task } from "@trigger.dev/sdk/v3";
 import Bottleneck from "bottleneck";
 
 import prisma from "@/lib/prisma";
+import { jobStore } from "@/lib/redis-job-store";
 import {
   getViewPageDuration,
   getViewUserAgent,
@@ -37,10 +38,7 @@ export const exportVisitsTask = task({
 
     try {
       // Update job status to processing
-      await prisma.exportJob.update({
-        where: { id: exportId },
-        data: { status: "PROCESSING" },
-      });
+      await jobStore.updateJob(exportId, { status: "PROCESSING" });
 
       // Verify team access
       const team = await prisma.team.findUnique({
@@ -74,15 +72,12 @@ export const exportVisitsTask = task({
         throw new Error("Invalid export type");
       }
 
-      // Store the result in the database
-      await prisma.exportJob.update({
-        where: { id: exportId },
-        data: {
-          status: "COMPLETED",
-          result: csvData,
-          resourceName,
-          completedAt: new Date(),
-        },
+      // Store the result in Redis
+      await jobStore.updateJob(exportId, {
+        status: "COMPLETED",
+        result: csvData,
+        resourceName,
+        completedAt: new Date().toISOString(),
       });
 
       logger.info("Export visits task completed successfully", {
@@ -105,12 +100,9 @@ export const exportVisitsTask = task({
       });
 
       // Update job status to failed
-      await prisma.exportJob.update({
-        where: { id: exportId },
-        data: {
-          status: "FAILED",
-          error: error instanceof Error ? error.message : String(error),
-        },
+      await jobStore.updateJob(exportId, {
+        status: "FAILED",
+        error: error instanceof Error ? error.message : String(error),
       });
 
       throw error;

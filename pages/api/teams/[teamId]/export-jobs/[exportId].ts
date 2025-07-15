@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import prisma from "@/lib/prisma";
+import { jobStore } from "@/lib/redis-job-store";
 import { CustomUser } from "@/lib/types";
 
 export default async function handler(
@@ -24,15 +24,9 @@ export default async function handler(
   if (req.method === "GET") {
     try {
       // Get export job details
-      const exportJob = await prisma.exportJob.findUnique({
-        where: {
-          id: exportId,
-          teamId,
-          userId,
-        },
-      });
+      const exportJob = await jobStore.getJob(exportId);
 
-      if (!exportJob) {
+      if (!exportJob || exportJob.teamId !== teamId || exportJob.userId !== userId) {
         return res.status(404).json({ error: "Export job not found" });
       }
 
@@ -74,14 +68,15 @@ export default async function handler(
 
   if (req.method === "DELETE") {
     try {
+      // Get the job first to verify ownership
+      const exportJob = await jobStore.getJob(exportId);
+      
+      if (!exportJob || exportJob.teamId !== teamId || exportJob.userId !== userId) {
+        return res.status(404).json({ error: "Export job not found" });
+      }
+
       // Delete export job
-      await prisma.exportJob.delete({
-        where: {
-          id: exportId,
-          teamId,
-          userId,
-        },
-      });
+      await jobStore.deleteJob(exportId);
 
       return res.status(200).json({ message: "Export job deleted successfully" });
     } catch (error) {
