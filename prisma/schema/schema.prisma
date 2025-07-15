@@ -110,6 +110,7 @@ model Team {
   Tag       Tag[]
 
   ignoredDomains String[] // Domains that are ignored for the team
+  globalBlockList String[]
 }
 
 

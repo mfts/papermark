@@ -13,6 +13,7 @@ import {
   decryptEncrpytedPassword,
   generateEncrpytedPassword,
 } from "@/lib/utils";
+import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 
 import { DomainObject } from "..";
 import { authOptions } from "../../auth/[...nextauth]";
@@ -68,6 +69,7 @@ export default async function handle(
           team: {
             select: {
               plan: true,
+              globalBlockList: true,
             },
           },
           customFields: {
@@ -96,6 +98,18 @@ export default async function handle(
 
       if (link.isArchived) {
         return res.status(404).json({ error: "Link is archived" });
+      }
+
+      const { email } = req.query as { email?: string };
+      const globalBlockCheck = checkGlobalBlockList(
+        email,
+        link.team?.globalBlockList,
+      );
+      if (globalBlockCheck.error) {
+        return res.status(400).json({ message: globalBlockCheck.error });
+      }
+      if (globalBlockCheck.isBlocked) {
+        return res.status(403).json({ message: "Access denied" });
       }
 
       const linkType = link.linkType;

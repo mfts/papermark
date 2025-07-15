@@ -25,6 +25,8 @@ import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { validateEmail } from "@/lib/utils/validate-email";
+import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
+import { extractEmailDomain, isEmailBlocked } from "@/lib/utils/email-domain";
 
 export async function POST(request: NextRequest) {
   try {
@@ -121,6 +123,7 @@ export async function POST(request: NextRequest) {
         team: {
           select: {
             plan: true,
+            globalBlockList: true,
           },
         },
         customFields: {
@@ -271,18 +274,30 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Check global block list first - this overrides all other access controls
+      const globalBlockCheck = checkGlobalBlockList(email, link.team?.globalBlockList);
+      if (globalBlockCheck.error) {
+        return NextResponse.json(
+          { message: globalBlockCheck.error },
+          { status: 400 },
+        );
+      }
+      if (globalBlockCheck.isBlocked) {
+        return NextResponse.json(
+          { message: "Access denied" },
+          { status: 403 },
+        );
+      }
+
       // Check if email is allowed to visit the link
       if (link.allowList && link.allowList.length > 0) {
-        // Extract the domain from the email address
-        const emailDomain = email.substring(email.lastIndexOf("@"));
-
         // Determine if the email or its domain is allowed
-        const isAllowed = link.allowList.some((allowed) => {
-          return (
+        const isAllowed = link.allowList.some((allowed) =>
+          isEmailBlocked(email, allowed) === false && (
             allowed === email ||
-            (allowed.startsWith("@") && emailDomain === allowed)
-          );
-        });
+            (allowed.startsWith("@") && extractEmailDomain(email) === allowed)
+          )
+        );
 
         // Deny access if the email is not allowed
         if (!isAllowed) {
@@ -295,16 +310,10 @@ export async function POST(request: NextRequest) {
 
       // Check if email is denied to visit the link
       if (link.denyList && link.denyList.length > 0) {
-        // Extract the domain from the email address
-        const emailDomain = email.substring(email.lastIndexOf("@"));
-
         // Determine if the email or its domain is denied
-        const isDenied = link.denyList.some((denied) => {
-          return (
-            denied === email ||
-            (denied.startsWith("@") && emailDomain === denied)
-          );
-        });
+        const isDenied = link.denyList.some((denied) =>
+          isEmailBlocked(email, denied)
+        );
 
         // Deny access if the email is denied
         if (isDenied) {
@@ -343,11 +352,11 @@ export async function POST(request: NextRequest) {
           );
 
           // Extract domain from email
-          const emailDomain = email.substring(email.lastIndexOf("@"));
+          const emailDomain = extractEmailDomain(email);
           // Check domain access
-          const hasDomainAccess = group.domains.some(
+          const hasDomainAccess = emailDomain ? group.domains.some(
             (domain) => domain === emailDomain,
-          );
+          ) : false;
 
           if (!isMember && !hasDomainAccess) {
             return NextResponse.json(
@@ -587,28 +596,28 @@ export async function POST(request: NextRequest) {
       ...(link.enableAgreement &&
         link.agreementId &&
         hasConfirmedAgreement && {
-          agreementResponse: {
-            create: {
-              agreementId: link.agreementId,
-            },
+        agreementResponse: {
+          create: {
+            agreementId: link.agreementId,
           },
-        }),
+        },
+      }),
       ...(link.audienceType === LinkAudienceType.GROUP &&
         link.groupId && {
-          groupId: link.groupId,
-        }),
+        groupId: link.groupId,
+      }),
       ...(customFields &&
         link.customFields.length > 0 && {
-          customFieldResponse: {
-            create: {
-              data: link.customFields.map((field) => ({
-                identifier: field.identifier,
-                label: field.label,
-                response: customFields[field.identifier] || "",
-              })),
-            },
+        customFieldResponse: {
+          create: {
+            data: link.customFields.map((field) => ({
+              identifier: field.identifier,
+              label: field.label,
+              response: customFields[field.identifier] || "",
+            })),
           },
-        }),
+        },
+      }),
     };
 
     // ** DATAROOM_VIEW **
@@ -912,15 +921,15 @@ export async function POST(request: NextRequest) {
               documentVersion.type === "image" ||
               documentVersion.type === "zip" ||
               documentVersion.type === "video")) ||
-          (documentVersion && useAdvancedExcelViewer)
+            (documentVersion && useAdvancedExcelViewer)
             ? documentVersion.file
             : undefined,
         pages: documentPages ? documentPages : undefined,
         notionData: undefined,
         sheetData:
           documentVersion &&
-          documentVersion.type === "sheet" &&
-          !useAdvancedExcelViewer
+            documentVersion.type === "sheet" &&
+            !useAdvancedExcelViewer
             ? sheetData
             : undefined,
         fileType: documentVersion
@@ -934,16 +943,16 @@ export async function POST(request: NextRequest) {
         viewerEmail: viewer?.email ?? email ?? verifiedEmail ?? null,
         ipAddress:
           link.enableWatermark &&
-          link.watermarkConfig &&
-          WatermarkConfigSchema.parse(link.watermarkConfig).text.includes(
-            "{{ipAddress}}",
-          )
+            link.watermarkConfig &&
+            WatermarkConfigSchema.parse(link.watermarkConfig).text.includes(
+              "{{ipAddress}}",
+            )
             ? (ipAddress(request) ?? LOCALHOST_IP)
             : undefined,
         useAdvancedExcelViewer:
           documentVersion &&
-          documentVersion.type === "sheet" &&
-          useAdvancedExcelViewer
+            documentVersion.type === "sheet" &&
+            useAdvancedExcelViewer
             ? useAdvancedExcelViewer
             : undefined,
         canDownload: canDownload,
