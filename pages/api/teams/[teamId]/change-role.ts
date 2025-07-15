@@ -24,7 +24,7 @@ export default async function handle(
 
     const { userToBeChanged, role } = req.body as {
       userToBeChanged: string;
-      role: "MEMBER" | "MANAGER";
+      role: "MEMBER" | "MANAGER" | "ADMIN";
     };
 
     try {
