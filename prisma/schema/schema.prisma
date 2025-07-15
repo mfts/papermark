@@ -62,6 +62,9 @@ model User {
   // conversation
   participatedConversations ConversationParticipant[]
   messages                  Message[]
+
+  // export jobs
+  exportJobs ExportJob[]
 }
 
 model Team {
@@ -98,6 +101,9 @@ model Team {
   restrictedTokens RestrictedToken[]
   webhooks         Webhook[]
 
+  // export jobs
+  exportJobs ExportJob[]
+
   conversations Conversation[]
 
   uploadedDocuments DocumentUpload[]
@@ -130,6 +136,13 @@ enum Role {
   ADMIN
   MANAGER
   MEMBER
+}
+
+enum ExportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }
 
 model UserTeam {
@@ -641,4 +654,30 @@ model TagItem {
   @@index([tagId, linkId])
   @@index([tagId, documentId])
   @@index([tagId, dataroomId])
+}
+
+model ExportJob {
+  id           String        @id @default(cuid())
+  type         String        // "document" | "dataroom" | "dataroom-group"
+  status       ExportStatus  @default(PENDING)
+  resourceId   String        // document ID or dataroom ID
+  resourceName String?       // document name or dataroom name
+  groupId      String?       // for dataroom groups
+  result       String?       @db.Text // CSV data
+  error        String?       // error message if failed
+  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+  
+  @@index([userId])
+  @@index([teamId])
+  @@index([status])
+  @@index([createdAt])
 }

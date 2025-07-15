@@ -320,39 +320,82 @@ export default function DocumentHeader({
       toast.error("This feature is not available for your plan");
       return;
     }
+    
     try {
+      // Trigger the background export job
       const response = await fetch(
         `/api/teams/${teamId}/documents/${document.id}/export-visits`,
-        { method: "GET" },
+        { method: "POST" },
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
 
-      // Create and download the CSV file
-      const blob = new Blob([data.visits], { type: "text/csv;charset=utf-8;" });
-      const url = window.URL.createObjectURL(blob);
-      const link = window.document.createElement("a");
-      link.href = url;
-      link.setAttribute(
-        "download",
-        `${data.documentName}_visits_${formattedTime}.csv`,
-      );
-      link.rel = "noopener noreferrer";
-      window.document.body.appendChild(link);
-      link.click();
+      if (data.exportId) {
+        toast.success("Export job started. You'll be notified when it's ready.");
+        
+        // Poll for export completion
+        const pollInterval = setInterval(async () => {
+          try {
+            const statusResponse = await fetch(
+              `/api/teams/${teamId}/export-jobs/${data.exportId}`,
+              { method: "GET" },
+            );
+            
+            if (statusResponse.ok) {
+              const statusData = await statusResponse.json();
+              
+              if (statusData.status === "COMPLETED" && statusData.isReady) {
+                clearInterval(pollInterval);
+                
+                // Download the CSV file
+                const downloadResponse = await fetch(
+                  `/api/teams/${teamId}/export-jobs/${data.exportId}?download=true`,
+                  { method: "GET" },
+                );
+                
+                if (downloadResponse.ok) {
+                  const blob = await downloadResponse.blob();
+                  const url = window.URL.createObjectURL(blob);
+                  const link = window.document.createElement("a");
+                  link.href = url;
+                  link.setAttribute(
+                    "download",
+                    `${statusData.resourceName}_visits_${formattedTime}.csv`,
+                  );
+                  link.rel = "noopener noreferrer";
+                  window.document.body.appendChild(link);
+                  link.click();
 
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-        window.document.body.removeChild(link);
-      }, 100);
+                  setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                    window.document.body.removeChild(link);
+                  }, 100);
 
-      toast.success("CSV file downloaded successfully");
+                  toast.success("CSV file downloaded successfully");
+                } else {
+                  toast.error("Failed to download the export file");
+                }
+              } else if (statusData.status === "FAILED") {
+                clearInterval(pollInterval);
+                toast.error(`Export failed: ${statusData.error || "Unknown error"}`);
+              }
+            }
+          } catch (error) {
+            console.error("Error polling export status:", error);
+          }
+        }, 3000); // Poll every 3 seconds
+
+        // Clear interval after 5 minutes to prevent indefinite polling
+        setTimeout(() => {
+          clearInterval(pollInterval);
+        }, 300000);
+      }
     } catch (error) {
       console.error("Error:", error);
       toast.error(
-        "An error occurred while downloading the CSV. Please try again.",
+        "An error occurred while starting the export. Please try again.",
       );
     }
   };
