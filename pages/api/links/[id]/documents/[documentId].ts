@@ -60,6 +60,7 @@ export default async function handle(
         team: {
           select: {
             plan: true,
+            globalBlockList: true,
           },
         },
         customFields: {
@@ -86,6 +87,24 @@ export default async function handle(
 
     if (link.isArchived) {
       return res.status(404).json({ error: "Link is archived" });
+    }
+
+    const { email } = req.query as { email?: string };
+    if (email && link.team?.globalBlockList && link.team.globalBlockList.length > 0) {
+      const emailDomain = email.substring(email.lastIndexOf("@"));
+
+      const isBlocked = link.team.globalBlockList.some((blocked) => {
+        return (
+          blocked === email ||
+          (blocked.startsWith("@") && emailDomain === blocked)
+        );
+      });
+
+      if (isBlocked) {
+        return res.status(403).json(
+          { message: "Access denied" },
+        );
+      }
     }
 
     let brand: Partial<DataroomBrand> | null = null;

@@ -121,6 +121,7 @@ export async function POST(request: NextRequest) {
         team: {
           select: {
             plan: true,
+            globalBlockList: true,
           },
         },
         customFields: {
@@ -310,6 +311,22 @@ export async function POST(request: NextRequest) {
         if (isDenied) {
           return NextResponse.json(
             { message: "Unauthorized access" },
+            { status: 403 },
+          );
+        }
+      }
+
+      if (link.team?.globalBlockList && link.team.globalBlockList.length > 0) {
+        const emailDomain = email.substring(email.lastIndexOf("@"));
+        const isGloballyBlocked = link.team.globalBlockList.some((blocked) => {
+          return (
+            blocked === email ||
+            (blocked.startsWith("@") && emailDomain === blocked)
+          );
+        });
+        if (isGloballyBlocked) {
+          return NextResponse.json(
+            { message: "Access denied" },
             { status: 403 },
           );
         }
@@ -587,28 +604,28 @@ export async function POST(request: NextRequest) {
       ...(link.enableAgreement &&
         link.agreementId &&
         hasConfirmedAgreement && {
-          agreementResponse: {
-            create: {
-              agreementId: link.agreementId,
-            },
+        agreementResponse: {
+          create: {
+            agreementId: link.agreementId,
           },
-        }),
+        },
+      }),
       ...(link.audienceType === LinkAudienceType.GROUP &&
         link.groupId && {
-          groupId: link.groupId,
-        }),
+        groupId: link.groupId,
+      }),
       ...(customFields &&
         link.customFields.length > 0 && {
-          customFieldResponse: {
-            create: {
-              data: link.customFields.map((field) => ({
-                identifier: field.identifier,
-                label: field.label,
-                response: customFields[field.identifier] || "",
-              })),
-            },
+        customFieldResponse: {
+          create: {
+            data: link.customFields.map((field) => ({
+              identifier: field.identifier,
+              label: field.label,
+              response: customFields[field.identifier] || "",
+            })),
           },
-        }),
+        },
+      }),
     };
 
     // ** DATAROOM_VIEW **
@@ -912,15 +929,15 @@ export async function POST(request: NextRequest) {
               documentVersion.type === "image" ||
               documentVersion.type === "zip" ||
               documentVersion.type === "video")) ||
-          (documentVersion && useAdvancedExcelViewer)
+            (documentVersion && useAdvancedExcelViewer)
             ? documentVersion.file
             : undefined,
         pages: documentPages ? documentPages : undefined,
         notionData: undefined,
         sheetData:
           documentVersion &&
-          documentVersion.type === "sheet" &&
-          !useAdvancedExcelViewer
+            documentVersion.type === "sheet" &&
+            !useAdvancedExcelViewer
             ? sheetData
             : undefined,
         fileType: documentVersion
@@ -934,16 +951,16 @@ export async function POST(request: NextRequest) {
         viewerEmail: viewer?.email ?? email ?? verifiedEmail ?? null,
         ipAddress:
           link.enableWatermark &&
-          link.watermarkConfig &&
-          WatermarkConfigSchema.parse(link.watermarkConfig).text.includes(
-            "{{ipAddress}}",
-          )
+            link.watermarkConfig &&
+            WatermarkConfigSchema.parse(link.watermarkConfig).text.includes(
+              "{{ipAddress}}",
+            )
             ? (ipAddress(request) ?? LOCALHOST_IP)
             : undefined,
         useAdvancedExcelViewer:
           documentVersion &&
-          documentVersion.type === "sheet" &&
-          useAdvancedExcelViewer
+            documentVersion.type === "sheet" &&
+            useAdvancedExcelViewer
             ? useAdvancedExcelViewer
             : undefined,
         canDownload: canDownload,

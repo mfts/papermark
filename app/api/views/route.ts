@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
         team: {
           select: {
             plan: true,
+            globalBlockList: true,
           },
         },
         customFields: {
@@ -246,6 +247,22 @@ export async function POST(request: NextRequest) {
         if (isDenied) {
           return NextResponse.json(
             { message: "Unauthorized access" },
+            { status: 403 },
+          );
+        }
+      }
+
+      if (link.team?.globalBlockList && link.team.globalBlockList.length > 0) {
+        const emailDomain = email.substring(email.lastIndexOf("@"));
+        const isGloballyBlocked = link.team.globalBlockList.some((blocked) => {
+          return (
+            blocked === email ||
+            (blocked.startsWith("@") && emailDomain === blocked)
+          );
+        });
+        if (isGloballyBlocked) {
+          return NextResponse.json(
+            { message: "Access denied" },
             { status: 403 },
           );
         }
