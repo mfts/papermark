@@ -25,6 +25,8 @@ import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { validateEmail } from "@/lib/utils/validate-email";
+import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
+import { extractEmailDomain, isEmailBlocked } from "@/lib/utils/email-domain";
 
 export async function POST(request: NextRequest) {
   try {
@@ -272,18 +274,30 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Check global block list first - this overrides all other access controls
+      const globalBlockCheck = checkGlobalBlockList(email, link.team?.globalBlockList);
+      if (globalBlockCheck.error) {
+        return NextResponse.json(
+          { message: globalBlockCheck.error },
+          { status: 400 },
+        );
+      }
+      if (globalBlockCheck.isBlocked) {
+        return NextResponse.json(
+          { message: "Access denied" },
+          { status: 403 },
+        );
+      }
+
       // Check if email is allowed to visit the link
       if (link.allowList && link.allowList.length > 0) {
-        // Extract the domain from the email address
-        const emailDomain = email.substring(email.lastIndexOf("@"));
-
         // Determine if the email or its domain is allowed
-        const isAllowed = link.allowList.some((allowed) => {
-          return (
+        const isAllowed = link.allowList.some((allowed) =>
+          isEmailBlocked(email, allowed) === false && (
             allowed === email ||
-            (allowed.startsWith("@") && emailDomain === allowed)
-          );
-        });
+            (allowed.startsWith("@") && extractEmailDomain(email) === allowed)
+          )
+        );
 
         // Deny access if the email is not allowed
         if (!isAllowed) {
@@ -296,37 +310,15 @@ export async function POST(request: NextRequest) {
 
       // Check if email is denied to visit the link
       if (link.denyList && link.denyList.length > 0) {
-        // Extract the domain from the email address
-        const emailDomain = email.substring(email.lastIndexOf("@"));
-
         // Determine if the email or its domain is denied
-        const isDenied = link.denyList.some((denied) => {
-          return (
-            denied === email ||
-            (denied.startsWith("@") && emailDomain === denied)
-          );
-        });
+        const isDenied = link.denyList.some((denied) =>
+          isEmailBlocked(email, denied)
+        );
 
         // Deny access if the email is denied
         if (isDenied) {
           return NextResponse.json(
             { message: "Unauthorized access" },
-            { status: 403 },
-          );
-        }
-      }
-
-      if (link.team?.globalBlockList && link.team.globalBlockList.length > 0) {
-        const emailDomain = email.substring(email.lastIndexOf("@"));
-        const isGloballyBlocked = link.team.globalBlockList.some((blocked) => {
-          return (
-            blocked === email ||
-            (blocked.startsWith("@") && emailDomain === blocked)
-          );
-        });
-        if (isGloballyBlocked) {
-          return NextResponse.json(
-            { message: "Access denied" },
             { status: 403 },
           );
         }
@@ -360,11 +352,11 @@ export async function POST(request: NextRequest) {
           );
 
           // Extract domain from email
-          const emailDomain = email.substring(email.lastIndexOf("@"));
+          const emailDomain = extractEmailDomain(email);
           // Check domain access
-          const hasDomainAccess = group.domains.some(
+          const hasDomainAccess = emailDomain ? group.domains.some(
             (domain) => domain === emailDomain,
-          );
+          ) : false;
 
           if (!isMember && !hasDomainAccess) {
             return NextResponse.json(
