@@ -44,6 +44,15 @@ export default async function handle(
         },
         include: {
           views: true,
+          versions: {
+            take: 1,
+            where: {
+              isPrimary: true,
+            },
+            select: {
+              type: true,
+            },
+          },
           team: {
             select: {
               plan: true,
@@ -108,26 +117,39 @@ export default async function handle(
         _count: { type: true },
       });
 
-      const duration = await getTotalAvgPageDuration({
-        documentId: docId,
-        excludedLinkIds: "",
-        excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
-        since: 0,
-      });
+      // Check if this is a video document
+      const isVideo = document?.versions[0]?.type === "video";
 
-      const totalDocumentDuration = await getTotalDocumentDuration({
-        documentId: docId,
-        excludedLinkIds: "",
-        excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
-        since: 0,
-      });
+      let duration;
+      let total_duration = 0;
+
+      if (isVideo) {
+        duration = { data: [] };
+        total_duration = 0;
+      } else {
+        duration = await getTotalAvgPageDuration({
+          documentId: docId,
+          excludedLinkIds: "",
+          excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
+          since: 0,
+        });
+
+        const totalDocumentDuration = await getTotalDocumentDuration({
+          documentId: docId,
+          excludedLinkIds: "",
+          excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
+          since: 0,
+        });
+
+        total_duration = filteredViews.length > 0
+          ? (totalDocumentDuration.data[0]?.sum_duration || 0) / filteredViews.length
+          : 0;
+      }
 
       const stats = {
         views: filteredViews,
         duration,
-        total_duration:
-          (totalDocumentDuration.data[0].sum_duration * 1.0) /
-          filteredViews.length,
+        total_duration,
         groupedReactions,
         totalViews: filteredViews.length,
       };
