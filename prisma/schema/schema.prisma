@@ -243,21 +243,23 @@ enum DocumentStorageType {
 }
 
 model Domain {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId      String?
-  teamId      String
-  Team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  verified    Boolean  @default(false) // Whether the domain has been verified
-  isDefault   Boolean  @default(false) // Whether the domain is the primary domain
-  lastChecked DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  links       Link[] // links associated with this domain
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId       String?
+  teamId       String
+  Team         Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  verified     Boolean  @default(false) // Whether the domain has been verified
+  isDefault    Boolean  @default(false) // Whether the domain is the primary domain
+  lastChecked  DateTime @default(now())
+  rootRedirect String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  links        Link[] // links associated with this domain
 
   @@index([userId])
   @@index([teamId])
+  @@index([slug])
 }
 
 model View {
