@@ -11,6 +11,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import DeleteTeam from "@/components/settings/delete-team";
+import GlobalBlockListForm from "@/components/settings/global-block-list-form";
 import IgnoredDomainsForm from "@/components/settings/ignored-domains-form";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Form } from "@/components/ui/form";
@@ -147,6 +148,7 @@ export default function General() {
             plan={(isFree && !isTrial) || isPro ? "Business" : undefined}
           />
           <IgnoredDomainsForm />
+          <GlobalBlockListForm />
 
           <DeleteTeam />
         </div>
