@@ -40,7 +40,7 @@ export default async function handle(
       }
 
       // Only ADMINs can change roles
-      if (userTeam.role !== "ADMIN") {
+      if (role === "ADMIN" && userTeam.role !== "ADMIN") {
         return res.status(403).json("Only admins can change user roles");
       }
 
