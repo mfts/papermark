@@ -121,16 +121,15 @@ export default async function handle(
       }
 
       const { email } = req.query as { email?: string };
-      const globalBlockCheck = checkGlobalBlockList(email, link.team?.globalBlockList);
+      const globalBlockCheck = checkGlobalBlockList(
+        email,
+        link.team?.globalBlockList,
+      );
       if (globalBlockCheck.error) {
-        return res.status(400).json(
-          { message: globalBlockCheck.error },
-        );
+        return res.status(400).json({ message: globalBlockCheck.error });
       }
       if (globalBlockCheck.isBlocked) {
-        return res.status(403).json(
-          { message: "Access denied" },
-        );
+        return res.status(403).json({ message: "Access denied" });
       }
 
       const teamPlan = link.team?.plan || "free";
