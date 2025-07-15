@@ -19,11 +19,11 @@ import { parseSheet } from "@/lib/sheet";
 import { recordLinkView } from "@/lib/tracking/record-link-view";
 import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
+import { extractEmailDomain, isEmailMatched } from "@/lib/utils/email-domain";
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
-import { validateEmail } from "@/lib/utils/validate-email";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
-import { extractEmailDomain, isEmailBlocked } from "@/lib/utils/email-domain";
+import { validateEmail } from "@/lib/utils/validate-email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -210,7 +210,10 @@ export async function POST(request: NextRequest) {
       }
 
       // Check global block list first - this overrides all other access controls
-      const globalBlockCheck = checkGlobalBlockList(email, link.team?.globalBlockList);
+      const globalBlockCheck = checkGlobalBlockList(
+        email,
+        link.team?.globalBlockList,
+      );
       if (globalBlockCheck.error) {
         return NextResponse.json(
           { message: globalBlockCheck.error },
@@ -218,20 +221,14 @@ export async function POST(request: NextRequest) {
         );
       }
       if (globalBlockCheck.isBlocked) {
-        return NextResponse.json(
-          { message: "Access denied" },
-          { status: 403 },
-        );
+        return NextResponse.json({ message: "Access denied" }, { status: 403 });
       }
 
       // Check if email is allowed to visit the link
       if (link.allowList && link.allowList.length > 0) {
         // Determine if the email or its domain is allowed
         const isAllowed = link.allowList.some((allowed) =>
-          isEmailBlocked(email, allowed) === false && (
-            allowed === email ||
-            (allowed.startsWith("@") && extractEmailDomain(email) === allowed)
-          )
+          isEmailMatched(email, allowed),
         );
 
         // Deny access if the email is not allowed
@@ -247,7 +244,7 @@ export async function POST(request: NextRequest) {
       if (link.denyList && link.denyList.length > 0) {
         // Determine if the email or its domain is denied
         const isDenied = link.denyList.some((denied) =>
-          isEmailBlocked(email, denied)
+          isEmailMatched(email, denied),
         );
 
         // Deny access if the email is denied
