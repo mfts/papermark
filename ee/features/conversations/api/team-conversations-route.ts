@@ -519,7 +519,14 @@ const routeHandlers = {
       });
 
       // Cancel any existing unsent notification runs for this dataroom
-      await Promise.all(allRuns.data.map((run) => runs.cancel(run.id)));
+      await Promise.all(
+        allRuns.data.map((run) =>
+          runs.cancel(run.id).catch((error) => {
+            console.error(`Failed to cancel run ${run.id}:`, error);
+            return null;
+          })
+        )
+      );
 
       waitUntil(
         sendConversationMessageNotificationTask.trigger(
