@@ -84,8 +84,7 @@ export function DataroomItemsList({
   const {
     applyDefaultPermissions,
     inheritParentPermissions,
-    applyDefaultPermissionGroupPermissions,
-    inheritParentPermissionGroupPermissions,
+    applyPermissionGroupPermissions,
   } = useDataroomPermissions();
 
   const [uploads, setUploads] = useState<UploadState[]>([]);
@@ -595,37 +594,15 @@ export function DataroomItemsList({
 
     // Handle PermissionGroup permissions
     if (hasPermissionGroups) {
-      const linkPermissionStrategy =
-        dataroom?.defaultLinkPermission || "inherit_from_parent";
-
-      if (linkPermissionStrategy === "inherit_from_parent") {
-        promises.push(
-          inheritParentPermissionGroupPermissions(
-            dataroomId,
-            documentIds,
-            folderPathName?.join("/"),
-          ),
-        );
-      } else if (
-        linkPermissionStrategy === "use_default_permissions" ||
-        linkPermissionStrategy === "use_simple_permissions"
-      ) {
-        const isRootLevel = !folderPathName || folderPathName.length === 0;
-
-        if (isRootLevel) {
-          promises.push(
-            applyDefaultPermissionGroupPermissions(dataroomId, documentIds),
-          );
-        } else {
-          promises.push(
-            inheritParentPermissionGroupPermissions(
-              dataroomId,
-              documentIds,
-              folderPathName?.join("/"),
-            ),
-          );
-        }
-      }
+      promises.push(
+        applyPermissionGroupPermissions(
+          dataroomId,
+          documentIds,
+          dataroom?.defaultLinkPermission || "inherit_from_parent",
+          folderPathName?.join("/"),
+          (message) => toast.error(message),
+        ),
+      );
     }
 
     Promise.allSettled(promises)

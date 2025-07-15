@@ -140,9 +140,7 @@ export default async function handler(
                     });
                 });
 
-                // Apply false permissions in a transaction
                 await prisma.$transaction(async (tx) => {
-                    // First, remove any existing permissions for these documents and groups
                     await tx.permissionGroupAccessControls.deleteMany({
                         where: {
                             itemId: {
@@ -155,7 +153,6 @@ export default async function handler(
                         },
                     });
 
-                    // Then create the false permissions
                     await tx.permissionGroupAccessControls.createMany({
                         data: permissionsToCreate,
                         skipDuplicates: true,

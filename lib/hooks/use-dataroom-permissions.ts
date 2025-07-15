@@ -184,10 +184,97 @@ export const useDataroomPermissions = () => {
         }
     };
 
+    const applyPermissionGroupPermissions = async (
+        dataroomId: string,
+        documentIds: string[],
+        defaultLinkPermission: string,
+        folderPath?: string,
+        onError?: (message: string) => void,
+    ): Promise<{ success: boolean; error?: string }> => {
+        if (defaultLinkPermission === "inherit_from_parent") {
+            try {
+                const result = await inheritParentPermissionGroupPermissions(
+                    dataroomId,
+                    documentIds,
+                    folderPath,
+                );
+                if (!result.success) {
+                    console.error(
+                        "Failed to inherit parent PermissionGroup permissions:",
+                        result.error,
+                    );
+                    onError?.("Failed to inherit parent PermissionGroup permissions");
+                }
+                return result;
+            } catch (error) {
+                console.error(
+                    "Failed to inherit parent PermissionGroup permissions:",
+                    error,
+                );
+                onError?.("Failed to inherit parent PermissionGroup permissions");
+                return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+            }
+        } else if (
+            defaultLinkPermission === "use_default_permissions" ||
+            defaultLinkPermission === "use_simple_permissions"
+        ) {
+            const isRootLevel = !folderPath || folderPath.length === 0;
+
+            if (isRootLevel) {
+                try {
+                    const result = await applyDefaultPermissionGroupPermissions(
+                        dataroomId,
+                        documentIds,
+                    );
+                    if (!result.success) {
+                        console.error(
+                            "Failed to apply default PermissionGroup permissions:",
+                            result.error,
+                        );
+                        onError?.("Failed to apply default PermissionGroup permissions");
+                    }
+                    return result;
+                } catch (error) {
+                    console.error(
+                        "Failed to apply default PermissionGroup permissions:",
+                        error,
+                    );
+                    onError?.("Failed to apply default PermissionGroup permissions");
+                    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+                }
+            } else {
+                try {
+                    const result = await inheritParentPermissionGroupPermissions(
+                        dataroomId,
+                        documentIds,
+                        folderPath,
+                    );
+                    if (!result.success) {
+                        console.error(
+                            "Failed to inherit parent PermissionGroup permissions:",
+                            result.error,
+                        );
+                        onError?.("Failed to inherit parent PermissionGroup permissions");
+                    }
+                    return result;
+                } catch (error) {
+                    console.error(
+                        "Failed to inherit parent PermissionGroup permissions:",
+                        error,
+                    );
+                    onError?.("Failed to inherit parent PermissionGroup permissions");
+                    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+                }
+            }
+        }
+        return { success: true };
+    };
+
     return {
         applyDefaultPermissions,
         inheritParentPermissions,
         applyDefaultPermissionGroupPermissions,
-        inheritParentPermissionGroupPermissions
+        inheritParentPermissionGroupPermissions,
+        applyPermissionGroupPermissions
     };
 }; 

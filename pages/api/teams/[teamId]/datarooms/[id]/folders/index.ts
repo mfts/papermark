@@ -12,11 +12,12 @@ async function applyFolderPermissions(
   dataroomId: string,
   folderId: string,
   folderPath: string,
-) {
+): Promise<void> {
   try {
     await applyDefaultFolderPermissions(dataroomId, folderId);
   } catch (error) {
     console.error("Error applying folder permissions:", error);
+    throw error;
   }
 }
 
