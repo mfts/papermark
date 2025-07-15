@@ -77,24 +77,23 @@ export default function DataroomTrial() {
         return;
       }
 
-      const { id: dataroomId } = await response.json(); // Assuming the API returns the created dataroom's ID
+      const { success, teamId } = await response.json(); // Now returns success flag and teamId
 
-      if (!dataroomId) {
-        throw new Error("No dataroom ID returned from the server");
+      if (!success) {
+        throw new Error("Trial activation failed");
       }
 
       analytics.capture("Dataroom Trial Created", {
-        dataroomName: "Dataroom #1",
         useCase: useCase === "other" ? customUseCase.trim() : useCase,
         companySize,
-        dataroomId,
+        teamId,
       });
-      toast.success("Dataroom successfully created! 🎉");
+      toast.success("Trial activated successfully! 🎉");
 
       await mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
 
-      // Instead of redirecting to "/datarooms", we'll navigate to the dataroom-upload page
-      router.push(`/welcome?type=dataroom-upload&dataroomId=${dataroomId}`);
+      // Navigate to choice screen instead of creating dataroom immediately
+      router.push(`/welcome?type=dataroom-choice`);
     } catch (error) {
       toast.error("Error adding dataroom. Please try again.");
       console.error("Error creating dataroom:", error);

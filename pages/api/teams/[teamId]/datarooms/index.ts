@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
 import { newId } from "@/lib/id-helper";
@@ -68,7 +67,6 @@ export default async function handle(
 
     const { teamId } = req.query as { teamId: string };
     const { name } = req.body as { name: string };
-
     try {
       // Check if the user is part of the team
       const team = await prisma.team.findUnique({
@@ -85,7 +83,8 @@ export default async function handle(
               "datarooms-plus+old",
               "datarooms+drtrial", 
               "business+drtrial", 
-              "datarooms-plus+drtrial"
+              "datarooms-plus+drtrial",
+              "free+drtrial"
             ],
           },
           users: {
@@ -94,22 +93,31 @@ export default async function handle(
             },
           },
         },
+        include: {
+          _count: {
+            select: {
+              datarooms: true,
+            },
+          },
+        },
       });
-
+      console.log("teamthis", team);
       if (!team) {
         return res.status(401).end("Unauthorized");
       }
 
-      // Limits: Check if the user has reached the limit of datarooms in the team
-      const dataroomCount = await prisma.dataroom.count({
-        where: {
-          teamId: teamId,
-        },
-      });
+      const isTrial = team.plan.includes("drtrial");
+      if (isTrial && team._count.datarooms >= 1) {
+        return res.status(403).json({
+          message:
+            "You've reached the limit of datarooms. Consider upgrading your plan.",
+          info: "trial_limit_reached",
+        });
+      }
 
       const limits = await getLimits({ teamId, userId });
 
-      if (limits && dataroomCount >= limits.datarooms) {
+      if (limits && team._count.datarooms >= limits.datarooms && !isTrial) {
         return res
           .status(403)
           .json({ message: "You have reached the limit of datarooms" });
