@@ -235,7 +235,7 @@ export default function Billing() {
           <div>
             <div className="flex items-center justify-between gap-x-1 rounded-lg border border-border bg-secondary p-4 sm:p-10">
               <div className="flex flex-col space-y-1 sm:space-y-3">
-                <h2 className="text-xl font-medium">People</h2>
+                <h2 className="text-xl font-medium">Team</h2>
                 <p className="text-sm text-secondary-foreground">
                   Teammates that have access to this project.
                 </p>
