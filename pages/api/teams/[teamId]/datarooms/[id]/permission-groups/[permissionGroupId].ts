@@ -20,9 +20,7 @@ const permissionsSchema = z.record(z.string(), itemPermissionSchema);
 
 const patchPermissionGroupSchema = z.object({
   name: z.string().optional(),
-  description: z.string().nullable().optional(),
-  defaultCanView: z.boolean().optional(),
-  defaultCanDownload: z.boolean().optional(),
+  description: z.string().optional(),
 });
 
 export default async function handle(

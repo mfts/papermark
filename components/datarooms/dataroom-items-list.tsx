@@ -15,6 +15,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { DefaultPermissionStrategy } from "@prisma/client";
 import {
   ArchiveXIcon,
   FileIcon,
@@ -81,11 +82,7 @@ export function DataroomItemsList({
   const { permissionGroups } = useDataroomPermissionGroups();
   const { dataroom } = useDataroom();
   const { isMobile } = useMediaQuery();
-  const {
-    applyDefaultPermissions,
-    inheritParentPermissions,
-    applyPermissionGroupPermissions,
-  } = useDataroomPermissions();
+  const { applyPermissions } = useDataroomPermissions();
 
   const [uploads, setUploads] = useState<UploadState[]>([]);
   const [rejectedFiles, setRejectedFiles] = useState<RejectedFile[]>([]);
@@ -558,70 +555,35 @@ export function DataroomItemsList({
     }[],
   ) => {
     // Check if there are any groups to apply permissions to
-    const hasViewerGroups = viewerGroups && viewerGroups.length > 0;
-    const hasPermissionGroups = permissionGroups && permissionGroups.length > 0;
+    const hasAnyGroups =
+      (viewerGroups && viewerGroups.length > 0) ||
+      (permissionGroups && permissionGroups.length > 0);
 
-    if (!hasViewerGroups && !hasPermissionGroups) return;
+    if (!hasAnyGroups) return;
 
     const documentIds = files.map((file) => file.documentId);
-    const promises = [];
+    const strategy =
+      dataroom?.defaultPermissionStrategy ||
+      DefaultPermissionStrategy.INHERIT_FROM_PARENT;
 
-    // Handle ViewerGroup permissions
-    if (hasViewerGroups) {
-      const defaultPermission =
-        dataroom?.defaultGroupPermission || "ask_every_time";
+    if (strategy === DefaultPermissionStrategy.ASK_EVERY_TIME) {
+      setShowGroupPermissions(true);
+      setUploadedFiles(files);
+    } else if (strategy === DefaultPermissionStrategy.INHERIT_FROM_PARENT) {
+      const isRootLevel = !folderPathName || folderPathName.length === 0;
 
-      if (defaultPermission === "use_default_permissions") {
-        promises.push(applyDefaultPermissions(dataroomId, documentIds));
-      } else if (defaultPermission === "inherit_from_parent") {
-        const isRootLevel = !folderPathName || folderPathName.length === 0;
-        if (isRootLevel) {
-          // For root level, show modal or apply defaults
-          setShowGroupPermissions(true);
-          setUploadedFiles(files);
-        } else {
-          // For subfolder uploads, inherit permissions from parent folder
-          promises.push(
-            inheritParentPermissions(
-              dataroomId,
-              documentIds,
-              folderPathName?.join("/"),
-            ),
-          );
-        }
-      }
-    }
-
-    // Handle PermissionGroup permissions
-    if (hasPermissionGroups) {
-      promises.push(
-        applyPermissionGroupPermissions(
-          dataroomId,
-          documentIds,
-          dataroom?.defaultLinkPermission || "inherit_from_parent",
-          folderPathName?.join("/"),
-          (message) => toast.error(message),
-        ),
-      );
-    }
-
-    Promise.allSettled(promises)
-      .then((results) => {
-        const failures = results.filter(
-          (result) =>
-            result.status === "rejected" ||
-            (result.status === "fulfilled" && !result.value.success),
-        );
-
-        if (failures.length > 0) {
-          console.error("Failed to apply default permissions:", failures);
-          toast.error("Failed to apply default permissions");
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to apply default permissions:", error);
-        toast.error("Failed to apply default permissions");
+      applyPermissions(
+        dataroomId,
+        documentIds,
+        "INHERIT_FROM_PARENT",
+        isRootLevel ? undefined : folderPathName?.join("/"),
+        (message: string) => toast.error(message),
+      ).catch((error: any) => {
+        console.error("Failed to apply permissions:", error);
+        toast.error("Failed to apply permissions");
       });
+    }
+    // strategy === DefaultPermissionStrategy.HIDDEN_BY_DEFAULT - do nothing
   };
 
   return (

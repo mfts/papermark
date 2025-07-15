@@ -1,13 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { DefaultPermissionStrategy } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { DefaultGroupPermissionStrategy, DefaultLinkPermissionStrategy } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -100,14 +100,12 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      const { name, enableChangeNotifications, defaultGroupPermission, defaultLinkPermission, defaultLinkCanView, defaultLinkCanDownload } = req.body as {
-        name?: string;
-        enableChangeNotifications?: boolean;
-        defaultGroupPermission?: DefaultGroupPermissionStrategy;
-        defaultLinkPermission?: DefaultLinkPermissionStrategy;
-        defaultLinkCanView?: boolean;
-        defaultLinkCanDownload?: boolean;
-      };
+      const { name, enableChangeNotifications, defaultPermissionStrategy } =
+        req.body as {
+          name?: string;
+          enableChangeNotifications?: boolean;
+          defaultPermissionStrategy?: DefaultPermissionStrategy;
+        };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
       const isDataroomsPlus = team.plan.includes("datarooms-plus");
@@ -133,10 +131,7 @@ export default async function handle(
           ...(typeof enableChangeNotifications === "boolean" && {
             enableChangeNotifications,
           }),
-          ...(defaultGroupPermission && { defaultGroupPermission }),
-          ...(defaultLinkPermission && { defaultLinkPermission }),
-          ...(typeof defaultLinkCanView === "boolean" && { defaultLinkCanView }),
-          ...(typeof defaultLinkCanDownload === "boolean" && { defaultLinkCanDownload }),
+          ...(defaultPermissionStrategy && { defaultPermissionStrategy }),
         },
       });
 

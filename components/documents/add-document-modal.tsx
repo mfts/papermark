@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
+import { DefaultPermissionStrategy } from "@prisma/client";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -85,11 +86,7 @@ export function AddDocumentModal({
   const { dataroom } = useDataroom();
   const teamId = teamInfo?.currentTeam?.id as string;
 
-  const {
-    applyDefaultPermissions,
-    inheritParentPermissions,
-    applyPermissionGroupPermissions,
-  } = useDataroomPermissions();
+  const { applyPermissions } = useDataroomPermissions();
 
   useEffect(() => {
     if (openModal) setIsOpen(openModal);
@@ -150,7 +147,7 @@ export function AddDocumentModal({
       "Failed to apply default permissions. Update the group permissions in the group settings.",
     );
 
-  const applyViewerGroupPermissions = async (
+  const applyUnifiedPermissionsToDocument = async (
     document: any,
     dataroomDocument: DataroomDocument & {
       dataroom: {
@@ -159,81 +156,47 @@ export function AddDocumentModal({
     },
     currentFolderPath?: string[],
   ): Promise<void> => {
-    const hasViewerGroups = dataroomDocument.dataroom._count.viewerGroups > 0;
-    const hasPermissionGroups =
+    const hasAnyGroups =
+      dataroomDocument.dataroom._count.viewerGroups > 0 ||
       dataroomDocument.dataroom._count.permissionGroups > 0;
 
-    if (hasViewerGroups) {
-      const defaultPermission =
-        dataroom?.defaultGroupPermission || "ask_every_time";
+    if (!hasAnyGroups) return;
 
-      if (defaultPermission === "ask_every_time") {
-        setShowGroupPermissions(true);
-        setUploadedFiles([
-          {
-            documentId: document.id,
-            dataroomDocumentId: dataroomDocument.id,
-            fileName: document.name,
-          },
-        ]);
-      } else if (defaultPermission === "inherit_from_parent") {
-        const isRootLevel =
-          !currentFolderPath || currentFolderPath.length === 0;
-        if (isRootLevel) {
-          setShowGroupPermissions(true);
-          setUploadedFiles([
-            {
-              documentId: document.id,
-              dataroomDocumentId: dataroomDocument.id,
-              fileName: document.name,
-            },
-          ]);
-        } else {
-          try {
-            const result = await inheritParentPermissions(
-              dataroomId!,
-              [document.id],
-              currentFolderPath?.join("/"),
-            );
+    const strategy =
+      dataroom?.defaultPermissionStrategy ||
+      DefaultPermissionStrategy.INHERIT_FROM_PARENT;
 
-            if (!result.success) {
-              console.error(
-                "Failed to inherit parent permissions:",
-                result.error,
-              );
-              toastErrorMessage();
-            }
-          } catch (error) {
-            console.error("Failed to inherit parent permissions:", error);
-            toastErrorMessage();
-          }
-        }
-      } else if (defaultPermission === "use_default_permissions") {
-        try {
-          const result = await applyDefaultPermissions(dataroomId!, [
-            document.id,
-          ]);
-          if (!result.success) {
-            console.error("Failed to apply default permissions:", result.error);
-            toastErrorMessage();
-          }
-        } catch (error) {
-          console.error("Failed to apply default permissions:", error);
+    if (strategy === DefaultPermissionStrategy.ASK_EVERY_TIME) {
+      setShowGroupPermissions(true);
+      setUploadedFiles([
+        {
+          documentId: document.id,
+          dataroomDocumentId: dataroomDocument.id,
+          fileName: document.name,
+        },
+      ]);
+    } else if (strategy === DefaultPermissionStrategy.INHERIT_FROM_PARENT) {
+      const isRootLevel = !currentFolderPath || currentFolderPath.length === 0;
+
+      try {
+        const result = await applyPermissions(
+          dataroomId!,
+          [document.id],
+          "INHERIT_FROM_PARENT",
+          isRootLevel ? undefined : currentFolderPath?.join("/"),
+          toastErrorMessage,
+        );
+
+        if (!result.success) {
+          console.error("Failed to apply permissions:", result.error);
           toastErrorMessage();
         }
+      } catch (error) {
+        console.error("Failed to apply permissions:", error);
+        toastErrorMessage();
       }
     }
-
-    // Handle PermissionGroup permissions
-    if (hasPermissionGroups) {
-      await applyPermissionGroupPermissions(
-        dataroomId!,
-        [document.id],
-        dataroom?.defaultLinkPermission || "inherit_from_parent",
-        currentFolderPath?.join("/"),
-        toastErrorMessage,
-      );
-    }
+    // strategy === DefaultPermissionStrategy.HIDDEN_BY_DEFAULT - do nothing, documents remain hidden
   };
 
   const handleFileUpload = async (
@@ -330,7 +293,7 @@ export function AddDocumentModal({
                 };
               };
 
-            await applyViewerGroupPermissions(
+            await applyUnifiedPermissionsToDocument(
               document,
               dataroomDocument,
               currentFolderPath,
@@ -482,7 +445,7 @@ export function AddDocumentModal({
               };
             };
 
-          await applyViewerGroupPermissions(
+          await applyUnifiedPermissionsToDocument(
             document,
             dataroomDocument,
             currentFolderPath,

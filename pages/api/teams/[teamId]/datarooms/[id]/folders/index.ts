@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { ItemType } from "@prisma/client";
+import { DefaultPermissionStrategy, ItemType } from "@prisma/client";
 import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
@@ -21,8 +21,6 @@ async function applyFolderPermissions(
   }
 }
 
-
-
 async function applyDefaultFolderPermissions(
   dataroomId: string,
   folderId: string,
@@ -31,9 +29,7 @@ async function applyDefaultFolderPermissions(
     prisma.dataroom.findUnique({
       where: { id: dataroomId },
       select: {
-        defaultLinkPermission: true,
-        defaultLinkCanView: true,
-        defaultLinkCanDownload: true,
+        defaultPermissionStrategy: true,
         teamId: true,
       },
     }),
@@ -41,8 +37,6 @@ async function applyDefaultFolderPermissions(
       where: { dataroomId },
       select: {
         id: true,
-        defaultCanView: true,
-        defaultCanDownload: true,
       },
     }),
     prisma.permissionGroup.findMany({
@@ -50,14 +44,11 @@ async function applyDefaultFolderPermissions(
       select: {
         id: true,
         name: true,
-        defaultCanView: true,
-        defaultCanDownload: true,
       },
     }),
   ]);
 
   if (!dataroom) return;
-
 
   const allPermissionGroupData: {
     groupId: string;
@@ -69,8 +60,11 @@ async function applyDefaultFolderPermissions(
   }[] = [];
 
   if (permissionGroups.length > 0) {
-    if (dataroom.defaultLinkPermission === "inherit_from_parent") {
-      permissionGroups.forEach(group => {
+    if (
+      dataroom.defaultPermissionStrategy ===
+      DefaultPermissionStrategy.INHERIT_FROM_PARENT
+    ) {
+      permissionGroups.forEach((group) => {
         allPermissionGroupData.push({
           groupId: group.id,
           itemId: folderId,
@@ -80,57 +74,33 @@ async function applyDefaultFolderPermissions(
           canDownloadOriginal: false,
         });
       });
-    } else if (dataroom.defaultLinkPermission === "use_simple_permissions") {
-      const globalCanView = dataroom.defaultLinkCanView ?? false;
-      const globalCanDownload = dataroom.defaultLinkCanDownload ?? false;
-
-      if (globalCanView || globalCanDownload) {
-        permissionGroups.forEach(group => {
-          allPermissionGroupData.push({
-            groupId: group.id,
-            itemId: folderId,
-            itemType: ItemType.DATAROOM_FOLDER,
-            canView: globalCanView || globalCanDownload,
-            canDownload: globalCanDownload,
-            canDownloadOriginal: false,
-          });
-        });
-      }
-    } else {
-      permissionGroups
-        .filter(group => group.defaultCanView || group.defaultCanDownload)
-        .forEach(group => {
-          const canDownload = group.defaultCanDownload ?? false;
-          const canView = group.defaultCanView ?? false;
-
-          allPermissionGroupData.push({
-            groupId: group.id,
-            itemId: folderId,
-            itemType: ItemType.DATAROOM_FOLDER,
-            canView: canView || canDownload,
-            canDownload: canDownload,
-            canDownloadOriginal: false,
-          });
-        });
     }
+    // For other strategies (ASK_EVERY_TIME, HIDDEN_BY_DEFAULT), don't auto-create permissions
   }
+
+  const viewerGroupData = viewerGroups.map((group) => ({
+    groupId: group.id,
+    itemId: folderId,
+    itemType: ItemType.DATAROOM_FOLDER,
+    canView:
+      dataroom.defaultPermissionStrategy ===
+      DefaultPermissionStrategy.INHERIT_FROM_PARENT,
+    canDownload: false,
+  }));
+
   await Promise.all([
-    viewerGroups.length > 0 && prisma.viewerGroupAccessControls.createMany({
-      data: viewerGroups
-        .filter(group => group.defaultCanView || group.defaultCanDownload)
-        .map(group => ({
-          groupId: group.id,
-          itemId: folderId,
-          itemType: ItemType.DATAROOM_FOLDER,
-          canView: group.defaultCanView ?? false,
-          canDownload: group.defaultCanDownload ?? false,
-        })),
-      skipDuplicates: true,
-    }),
-    allPermissionGroupData.length > 0 && prisma.permissionGroupAccessControls.createMany({
-      data: allPermissionGroupData,
-      skipDuplicates: true,
-    }),
+    viewerGroupData.length > 0 &&
+      dataroom.defaultPermissionStrategy ===
+        DefaultPermissionStrategy.INHERIT_FROM_PARENT &&
+      prisma.viewerGroupAccessControls.createMany({
+        data: viewerGroupData,
+        skipDuplicates: true,
+      }),
+    allPermissionGroupData.length > 0 &&
+      prisma.permissionGroupAccessControls.createMany({
+        data: allPermissionGroupData,
+        skipDuplicates: true,
+      }),
   ]);
 }
 
@@ -182,12 +152,7 @@ export default async function handle(
             dataroomId,
             parentId: null,
           },
-          orderBy: [
-            { orderIndex: "asc" },
-            {
-              name: "asc",
-            },
-          ],
+          orderBy: [{ orderIndex: "asc" }, { name: "asc" }],
           include: {
             _count: {
               select: { documents: true, childFolders: true },
@@ -373,10 +338,11 @@ export default async function handle(
       let counter = 1;
       const MAX_RETRIES = 50;
 
-      // Split path into segments 
+      // Split path into segments
       // Slugify the final folder name
-      const pathSegments = path ? path.split('/').filter(Boolean) : [];
-      const basePath = pathSegments.length > 0 ? '/' + pathSegments.join('/') + '/' : '/';
+      const pathSegments = path ? path.split("/").filter(Boolean) : [];
+      const basePath =
+        pathSegments.length > 0 ? "/" + pathSegments.join("/") + "/" : "/";
 
       let childFolderPath = basePath + slugify(folderName);
 
