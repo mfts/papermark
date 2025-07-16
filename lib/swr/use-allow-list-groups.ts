@@ -31,6 +31,15 @@ export type AllowListGroupWithUsage = AllowListGroup & {
     }>;
 };
 
+export interface Pagination {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+}
+
 export default function useAllowListGroups(
     page: number = 1,
     limit: number = 10,
@@ -43,7 +52,7 @@ export default function useAllowListGroups(
         data,
         error,
         mutate,
-    } = useSWR<{ groups: AllowListGroup[]; pagination: any }>(
+    } = useSWR<{ groups: AllowListGroup[]; pagination: Pagination }>(
         teamId
             ? `/api/teams/${teamId}/allow-list-groups?page=${page}&limit=${limit}&search=${search}`
             : null,
