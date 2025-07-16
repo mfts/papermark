@@ -1,10 +1,10 @@
 import { useRouter } from "next/router";
 
 import { useMemo } from "react";
-import { toast } from "sonner";
 
 import { useTeam } from "@/context/team-context";
 import { Dataroom, DataroomDocument, DataroomFolder } from "@prisma/client";
+import { toast } from "sonner";
 import useSWR from "swr";
 
 import { LinkWithViews } from "@/lib/types";
@@ -28,21 +28,24 @@ export function useDataroom() {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: dataroom, error } = useSWR<Dataroom & { _count?: { viewerGroups: number; permissionGroups: number } }>(
-    teamId && id && `/api/teams/${teamId}/datarooms/${id}`,
-    fetcher,
-    {
-      dedupingInterval: 10000,
-      onError: (err) => {
-        if (err.status === 404) {
-          toast.error("Dataroom not found", {
-            description: "The dataroom you're looking for doesn't exist or has been moved.",
-          });
-          router.replace("/datarooms");
-        }
+  // Only make the API call if we're on a dataroom page
+  const isDataroomPage = router.pathname.startsWith("/datarooms");
+  const shouldFetch = teamId && id && isDataroomPage;
+
+  const { data: dataroom, error } = useSWR<
+    Dataroom & { _count?: { viewerGroups: number; permissionGroups: number } }
+  >(shouldFetch ? `/api/teams/${teamId}/datarooms/${id}` : null, fetcher, {
+    dedupingInterval: 10000,
+    onError: (err) => {
+      if (err.status === 404) {
+        toast.error("Dataroom not found", {
+          description:
+            "The dataroom you're looking for doesn't exist or has been moved.",
+        });
+        router.replace("/datarooms");
       }
     },
-  );
+  });
 
   return {
     dataroom,
@@ -257,7 +260,8 @@ export function useDataroomFolderWithParents({
 
   const { data: folders, error } = useSWR<{ name: string; path: string }[]>(
     teamId &&
-    name && !!name.length &&
+      name &&
+      !!name.length &&
       `/api/teams/${teamId}/datarooms/${dataroomId}/folders/parents/${name.join("/")}`,
     fetcher,
     {
