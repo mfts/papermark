@@ -1,10 +1,6 @@
 import { useRouter } from "next/router";
 
-
-
 import { useEffect, useRef } from "react";
-
-
 
 import { Download } from "lucide-react";
 import { toast } from "sonner";
@@ -213,11 +209,34 @@ export default function DownloadOnlyViewer({
         toast.error("Error downloading file");
         return;
       }
-      const { downloadUrl } = await response.json();
 
-      window.open(downloadUrl, "_blank");
+      // Check if the response is a PDF file (for watermarked PDFs)
+      const contentType = response.headers.get("content-type");
+      if (contentType === "application/pdf") {
+        // Handle direct PDF download (watermarked PDFs)
+        const pdfBlob = await response.blob();
+        const url = URL.createObjectURL(pdfBlob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${documentName || "document"}.pdf`;
+        a.rel = "noopener noreferrer";
+        document.body.appendChild(a);
+        a.click();
+
+        // Clean up
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }, 100);
+      } else {
+        // Handle JSON response with downloadUrl (non-watermarked files)
+        const { downloadUrl } = await response.json();
+        window.open(downloadUrl, "_blank");
+      }
     } catch (error) {
       console.error("Error downloading file:", error);
+      toast.error("Error downloading file");
     }
   };
 
