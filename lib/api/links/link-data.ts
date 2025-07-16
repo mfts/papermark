@@ -110,6 +110,7 @@ export async function fetchDataroomLinkData({
           id: true,
           name: true,
           teamId: true,
+          showLastUpdated: true,
           documents: {
             where:
               groupPermissions.length > 0 || effectiveGroupId
