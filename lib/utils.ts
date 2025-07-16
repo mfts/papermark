@@ -4,6 +4,7 @@ import slugify from "@sindresorhus/slugify";
 import { upload } from "@vercel/blob/client";
 import { Message } from "ai";
 import bcrypt from "bcryptjs";
+import * as chrono from "chrono-node";
 import { type ClassValue, clsx } from "clsx";
 import crypto from "crypto";
 import ms from "ms";
@@ -13,7 +14,6 @@ import { rgb } from "pdf-lib";
 import { ParsedUrlQuery } from "querystring";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
-import * as chrono from "chrono-node";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -570,7 +570,10 @@ export function decryptEncrpytedPassword(password: string): string {
 
 type FilterMode = "email" | "domain" | "both";
 
-export const sanitizeList = (list: string, mode: FilterMode = "both"): string[] => {
+export const sanitizeList = (
+  list: string,
+  mode: FilterMode = "both",
+): string[] => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const domainRegex = /^@[^\s@]+\.[^\s@]+$/;
 
@@ -592,7 +595,7 @@ export function hexToRgb(hex: string) {
   let r = ((bigint >> 16) & 255) / 255; // Convert to 0-1 range
   let g = ((bigint >> 8) & 255) / 255; // Convert to 0-1 range
   let b = (bigint & 255) / 255; // Convert to 0-1 range
-  return rgb(r, g, g);
+  return rgb(r, g, b);
 }
 
 export const trim = (u: unknown) => (typeof u === "string" ? u.trim() : u);
@@ -656,10 +659,10 @@ export const PRESET_OPTIONS: { label: string; value: number }[] = [
   { label: "in 6 months", value: 15552000 },
   { label: "in 1 year", value: 31536000 },
 ];
-export const WITH_CUSTOM_PRESET_OPTION: { label: string; value: number | string }[] = [
-  ...PRESET_OPTIONS,
-  { label: "Custom", value: "custom" },
-];
+export const WITH_CUSTOM_PRESET_OPTION: {
+  label: string;
+  value: number | string;
+}[] = [...PRESET_OPTIONS, { label: "Custom", value: "custom" }];
 
 export const formatExpirationTime = (seconds: number) => {
   // Define constants for time units
@@ -667,7 +670,6 @@ export const formatExpirationTime = (seconds: number) => {
   const HOUR = 3600;
   const DAY = 86400;
   const YEAR = 31536000;
-
 
   seconds = Math.ceil(seconds / MINUTE) * MINUTE;
 
@@ -705,8 +707,10 @@ export const formatExpirationTime = (seconds: number) => {
   if (seconds < DAY) {
     const hours = Math.floor(seconds / HOUR);
     const minutes = Math.floor((seconds % HOUR) / MINUTE);
-    return `${hours} hour${hours !== 1 ? "s" : ""}` +
-      (minutes > 0 ? ` and ${minutes} minute${minutes !== 1 ? "s" : ""}` : "");
+    return (
+      `${hours} hour${hours !== 1 ? "s" : ""}` +
+      (minutes > 0 ? ` and ${minutes} minute${minutes !== 1 ? "s" : ""}` : "")
+    );
   }
 
   if (seconds < YEAR) {
