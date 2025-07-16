@@ -80,13 +80,14 @@ model DataroomFolder {
 }
 
 model DataroomBrand {
-  id          String   @id @default(cuid())
-  logo        String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
-  banner      String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
-  brandColor  String? // This should be a reference to the brand color
-  accentColor String? // This should be a reference to the accent color
-  dataroomId  String   @unique
-  dataroom    Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  logo           String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  banner         String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  brandColor     String? // This should be a reference to the brand color
+  accentColor    String? // This should be a reference to the accent color
+  welcomeMessage String? // This should be a reference to the welcome message
+  dataroomId     String   @unique
+  dataroom       Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
