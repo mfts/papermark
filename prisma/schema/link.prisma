@@ -79,6 +79,9 @@ model Link {
   customFields CustomField[]
 
   tags TagItem[]
+  
+  allowListGroupId String?
+  allowListGroup   AllowListGroup? @relation(fields: [allowListGroupId], references: [id], onDelete: SetNull)
 
   @@unique([domainSlug, slug])
   @@index([documentId])
@@ -104,6 +107,8 @@ model LinkPreset {
   allowDownload              Boolean?  @default(false)
   enableAllowList            Boolean?  @default(false)
   allowList                  String[]
+  allowListGroupId           String?
+  allowListGroup             AllowListGroup? @relation(fields: [allowListGroupId], references: [id], onDelete: SetNull)
   enableDenyList             Boolean?  @default(false)
   denyList                   String[]
   expiresIn                  Int? // how many days from link creation until it expires in seconds

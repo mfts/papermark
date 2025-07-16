@@ -27,6 +27,7 @@ import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { validateEmail } from "@/lib/utils/validate-email";
+import { isEmailAllowedByAllowList } from "@/lib/utils/allow-list-access";
 
 export async function POST(request: NextRequest) {
   try {
@@ -110,6 +111,12 @@ export async function POST(request: NextRequest) {
         domainId: true,
         allowList: true,
         denyList: true,
+        allowListGroupId: true,
+        allowListGroup: {
+          select: {
+            allowList: true,
+          },
+        },
         enableAgreement: true,
         agreementId: true,
         enableWatermark: true,
@@ -289,19 +296,24 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: "Access denied" }, { status: 403 });
       }
 
-      // Check if email is allowed to visit the link
-      if (link.allowList && link.allowList.length > 0) {
-        // Determine if the email or its domain is allowed
-        const isAllowed = link.allowList.some((allowed) =>
-          isEmailMatched(email, allowed),
-        );
+      // Check if email is allowed by either link allowList or AllowListGroup
+      if (email && typeof email === "string" && email.includes("@")) {
+        const hasAnyAllowList = (link.allowList && link.allowList.length > 0) ||
+          (link.allowListGroup?.allowList && link.allowListGroup.allowList.length > 0);
 
-        // Deny access if the email is not allowed
-        if (!isAllowed) {
-          return NextResponse.json(
-            { message: "Unauthorized access" },
-            { status: 403 },
+        if (hasAnyAllowList) {
+          const isAllowed = isEmailAllowedByAllowList(
+            email,
+            link.allowList,
+            link.allowListGroup
           );
+
+          if (!isAllowed) {
+            return NextResponse.json(
+              { message: "Unauthorized access" },
+              { status: 403 },
+            );
+          }
         }
       }
 

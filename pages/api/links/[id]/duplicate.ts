@@ -81,6 +81,7 @@ export default async function handle(
             slug: link.slug ? link.slug + "-copy" : null,
             name: newLinkName,
             watermarkConfig: link.watermarkConfig || Prisma.JsonNull,
+            allowListGroupId: link.allowListGroupId,
             createdAt: undefined,
             updatedAt: undefined,
           },
