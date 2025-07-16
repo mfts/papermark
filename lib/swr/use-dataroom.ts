@@ -28,7 +28,7 @@ export function useDataroom() {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: dataroom, error } = useSWR<Dataroom>(
+  const { data: dataroom, error } = useSWR<Dataroom & { _count?: { viewerGroups: number; permissionGroups: number } }>(
     teamId && id && `/api/teams/${teamId}/datarooms/${id}`,
     fetcher,
     {
