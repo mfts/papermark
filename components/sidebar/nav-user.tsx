@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { ModeToggle } from "../theme-toggle";
+import { ContactSupportModal } from "@/components/contact-support-modal";
 
 interface Article {
   data: {
@@ -163,15 +164,12 @@ export function NavUser() {
                   <LifeBuoyIcon />
                   Help Center
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    navigator.clipboard.writeText("support@papermark.io");
-                    toast.success("support@papermark.io copied to clipboard");
-                  }}
-                >
-                  <MailIcon />
-                  Contact Support
-                </DropdownMenuItem>
+                <ContactSupportModal>
+                  <DropdownMenuItem>
+                    <MailIcon />
+                    Contact Support
+                  </DropdownMenuItem>
+                </ContactSupportModal>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem

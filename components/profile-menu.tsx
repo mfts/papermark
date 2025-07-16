@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { SearchCommand } from "./search-command";
 import UserRound from "./shared/icons/user-round";
 import { ModeToggle } from "./theme-toggle";
+import { ContactSupportModal } from "@/components/contact-support-modal";
 
 type ProfileMenuProps = {
   className?: string;
@@ -140,13 +141,12 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
                     Need help?
                   </button>
 
-                  <a
-                    href="mailto:support@papermark.io"
-                    className="my-1 flex items-center px-3 py-2 text-sm duration-200 hover:bg-gray-200 dark:hover:bg-muted"
-                  >
-                    <HelpCircle className="mr-2 h-4 w-4" />
-                    Contact us
-                  </a>
+                  <ContactSupportModal>
+                    <button className="my-1 flex w-full items-center px-3 py-2 text-sm duration-200 hover:bg-gray-200 dark:hover:bg-muted">
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      Contact us
+                    </button>
+                  </ContactSupportModal>
 
                   <Link
                     onClick={() =>
