@@ -61,6 +61,7 @@ export default async function handle(
           createdAt: "desc",
         },
         include: {
+          accessControls: true,
           links: {
             select: {
               id: true,

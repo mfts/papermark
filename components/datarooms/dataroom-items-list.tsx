@@ -40,6 +40,7 @@ import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import { useRemoveDataroomItemsModal } from "@/components/datarooms/actions/remove-document-modal";
 import DataroomDocumentCard from "@/components/datarooms/dataroom-document-card";
+import { SetUnifiedPermissionsModal } from "@/components/datarooms/groups/set-unified-permissions-modal";
 import { useDeleteFolderModal } from "@/components/documents/actions/delete-folder-modal";
 import { DraggableItem } from "@/components/documents/drag-and-drop/draggable-item";
 import { DroppableFolder } from "@/components/documents/drag-and-drop/droppable-folder";
@@ -56,7 +57,6 @@ import UploadZone, {
 } from "@/components/upload-zone";
 
 import { itemsMessage } from "./folders/utils";
-import { SetGroupPermissionsModal } from "./groups/set-group-permissions-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type FolderOrDocument =
@@ -733,7 +733,7 @@ export function DataroomItemsList({
       ) : null}
 
       {showGroupPermissions && dataroomId && (
-        <SetGroupPermissionsModal
+        <SetUnifiedPermissionsModal
           open={showGroupPermissions}
           setOpen={setShowGroupPermissions}
           dataroomId={dataroomId}
@@ -742,7 +742,6 @@ export function DataroomItemsList({
             setShowGroupPermissions(false);
             setUploadedFiles([]);
           }}
-          isAutoOpen
         />
       )}
       <DeleteFolderModal />

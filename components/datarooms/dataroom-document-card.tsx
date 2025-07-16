@@ -34,7 +34,7 @@ import {
 
 import { AddToDataroomModal } from "../documents/add-document-to-dataroom-modal";
 import FileProcessStatusBar from "../documents/file-process-status-bar";
-import { SetGroupPermissionsModal } from "./groups/set-group-permissions-modal";
+import { SetUnifiedPermissionsModal } from "./groups/set-unified-permissions-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type DocumentsCardProps = {
@@ -342,7 +342,7 @@ export default function DataroomDocumentCard({
         />
       ) : null}
       {groupPermissionOpen ? (
-        <SetGroupPermissionsModal
+        <SetUnifiedPermissionsModal
           open={groupPermissionOpen}
           setOpen={setGroupPermissionOpen}
           dataroomId={dataroomId}

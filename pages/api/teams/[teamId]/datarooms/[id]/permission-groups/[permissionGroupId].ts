@@ -23,6 +23,121 @@ const patchPermissionGroupSchema = z.object({
   description: z.string().optional(),
 });
 
+// Helper function to get parent folder IDs for a given document in a dataroom
+async function getParentFolderIds(
+  dataroomId: string,
+  documentId: string,
+): Promise<string[]> {
+  // Get the dataroom document to find which folder it's in
+  const dataroomDocument = await prisma.dataroomDocument.findUnique({
+    where: { id: documentId },
+    select: { folderId: true },
+  });
+
+  if (!dataroomDocument?.folderId) {
+    return []; // Document is at root level
+  }
+
+  // Get the folder and walk up the hierarchy
+  const parentFolders: string[] = [];
+  let currentFolderId: string | null = dataroomDocument.folderId;
+
+  while (currentFolderId) {
+    parentFolders.push(currentFolderId);
+
+    const folder: { parentId: string | null } | null =
+      await prisma.dataroomFolder.findUnique({
+        where: { id: currentFolderId },
+        select: { parentId: true },
+      });
+
+    currentFolderId = folder?.parentId || null;
+  }
+
+  return parentFolders;
+}
+
+// Helper function to ensure parent folders are visible when child documents are made visible
+async function ensureParentFoldersVisible(
+  dataroomId: string,
+  groupId: string,
+  permissions: Record<
+    string,
+    { itemType: ItemType; view: boolean; download: boolean }
+  >,
+): Promise<void> {
+  const foldersToMakeVisible = new Set<string>();
+
+  // Find all documents that are being made visible
+  const visibleDocuments = Object.entries(permissions)
+    .filter(
+      ([_, perm]) => perm.itemType === ItemType.DATAROOM_DOCUMENT && perm.view,
+    )
+    .map(([itemId, _]) => itemId);
+
+  // Get parent folder IDs for all visible documents
+  for (const documentId of visibleDocuments) {
+    const parentFolders = await getParentFolderIds(dataroomId, documentId);
+    parentFolders.forEach((folderId) => foldersToMakeVisible.add(folderId));
+  }
+
+  // Also handle folders that are being made visible - ensure their parent folders are visible too
+  const visibleFolders = Object.entries(permissions)
+    .filter(
+      ([_, perm]) => perm.itemType === ItemType.DATAROOM_FOLDER && perm.view,
+    )
+    .map(([itemId, _]) => itemId);
+
+  for (const folderId of visibleFolders) {
+    let currentFolderId: string | null = folderId;
+
+    while (currentFolderId) {
+      const folder: { parentId: string | null } | null =
+        await prisma.dataroomFolder.findUnique({
+          where: { id: currentFolderId },
+          select: { parentId: true },
+        });
+
+      if (folder?.parentId) {
+        foldersToMakeVisible.add(folder.parentId);
+        currentFolderId = folder.parentId;
+      } else {
+        break;
+      }
+    }
+  }
+
+  // Update or create permissions for parent folders to make them visible
+  if (foldersToMakeVisible.size > 0) {
+    const foldersToUpdate = Array.from(foldersToMakeVisible);
+
+    await prisma.$transaction(async (tx) => {
+      for (const folderId of foldersToUpdate) {
+        await tx.permissionGroupAccessControls.upsert({
+          where: {
+            groupId_itemId: {
+              groupId: groupId,
+              itemId: folderId,
+            },
+          },
+          create: {
+            groupId: groupId,
+            itemId: folderId,
+            itemType: ItemType.DATAROOM_FOLDER,
+            canView: true,
+            canDownload: false,
+            canDownloadOriginal: false,
+          },
+          update: {
+            canView: true, // Always ensure parent folders are visible
+            // Don't change canDownload - preserve existing setting
+          },
+        });
+      }
+    });
+  }
+}
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -61,7 +176,19 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      // Fetch permission group with access controls
+      // Verify dataroom exists and belongs to team
+      const dataroom = await prisma.dataroom.findUnique({
+        where: {
+          id: dataroomId,
+          teamId: teamId,
+        },
+      });
+
+      if (!dataroom) {
+        return res.status(404).json({ error: "Dataroom not found" });
+      }
+
+      // Fetch permission group and its access controls
       const permissionGroup = await prisma.permissionGroup.findUnique({
         where: {
           id: permissionGroupId,
@@ -69,16 +196,7 @@ export default async function handle(
           teamId: teamId,
         },
         include: {
-          accessControls: {
-            select: {
-              id: true,
-              itemId: true,
-              itemType: true,
-              canView: true,
-              canDownload: true,
-              canDownloadOriginal: true,
-            },
-          },
+          accessControls: true,
         },
       });
 
@@ -88,7 +206,91 @@ export default async function handle(
 
       return res.status(200).json({ permissionGroup });
     } catch (error) {
-      errorhandler(error, res);
+      return errorhandler(error, res);
+    }
+  } else if (req.method === "PATCH") {
+    // PATCH /api/teams/:teamId/datarooms/:id/permission-groups/:permissionGroupId
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauthorized");
+    }
+
+    const {
+      teamId,
+      id: dataroomId,
+      permissionGroupId,
+    } = req.query as {
+      teamId: string;
+      id: string;
+      permissionGroupId: string;
+    };
+
+    const userId = (session.user as CustomUser).id;
+
+    try {
+      // Verify team membership
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: { userId },
+          },
+        },
+      });
+
+      if (!team) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      // Verify dataroom exists and belongs to team
+      const dataroom = await prisma.dataroom.findUnique({
+        where: {
+          id: dataroomId,
+          teamId: teamId,
+        },
+      });
+
+      if (!dataroom) {
+        return res.status(404).json({ error: "Dataroom not found" });
+      }
+
+      // Verify permission group exists and belongs to dataroom
+      const permissionGroup = await prisma.permissionGroup.findUnique({
+        where: {
+          id: permissionGroupId,
+          dataroomId: dataroomId,
+          teamId: teamId,
+        },
+      });
+
+      if (!permissionGroup) {
+        return res.status(404).json({ error: "Permission group not found" });
+      }
+
+      // Validate and update permission group
+      const validationResult = patchPermissionGroupSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({
+          error: "Invalid request body",
+          details: validationResult.error.issues,
+        });
+      }
+
+      const { name, description } = validationResult.data;
+
+      const updatedPermissionGroup = await prisma.permissionGroup.update({
+        where: {
+          id: permissionGroupId,
+        },
+        data: {
+          ...(name && { name }),
+          ...(description !== undefined && { description }),
+        },
+      });
+
+      return res.status(200).json({ permissionGroup: updatedPermissionGroup });
+    } catch (error) {
+      return errorhandler(error, res);
     }
   } else if (req.method === "PUT") {
     // PUT /api/teams/:teamId/datarooms/:id/permission-groups/:permissionGroupId
@@ -167,33 +369,24 @@ export default async function handle(
 
       const validatedPermissions = validationResult.data;
 
-      // Update permission group access controls using a transaction
       const updatedPermissionGroup = await prisma.$transaction(async (tx) => {
-        // Get existing access controls to determine what needs to be updated vs created
-        const existingControls =
+        // Get existing permissions for comparison
+        const existingPermissions =
           await tx.permissionGroupAccessControls.findMany({
             where: {
               groupId: permissionGroupId,
             },
-            select: {
-              itemId: true,
-              itemType: true,
-              canView: true,
-              canDownload: true,
-              canDownloadOriginal: true,
-            },
           });
 
+        // Create maps for efficient lookup
         const existingMap = new Map(
-          existingControls.map((control) => [
-            `${control.itemId}-${control.itemType}`,
-            control,
-          ]),
+          existingPermissions.map((p) => [`${p.itemId}-${p.itemType}`, p]),
         );
 
+        // Categorize permissions into updates vs creates
         const toUpdate: Array<{
           itemId: string;
-          itemType: any;
+          itemType: ItemType;
           canView: boolean;
           canDownload: boolean;
           canDownloadOriginal: boolean;
@@ -202,7 +395,7 @@ export default async function handle(
         const toCreate: Array<{
           groupId: string;
           itemId: string;
-          itemType: any;
+          itemType: ItemType;
           canView: boolean;
           canDownload: boolean;
           canDownloadOriginal: boolean;
@@ -271,49 +464,36 @@ export default async function handle(
           ),
         );
 
-        const toDelete = existingControls.filter(
-          (control) =>
-            !newItemKeys.has(`${control.itemId}-${control.itemType}`),
+        const toDelete = existingPermissions.filter(
+          (p) => !newItemKeys.has(`${p.itemId}-${p.itemType}`),
         );
 
         if (toDelete.length > 0) {
-          await Promise.all(
-            toDelete.map((item) =>
-              tx.permissionGroupAccessControls.deleteMany({
-                where: {
-                  groupId: permissionGroupId,
-                  itemId: item.itemId,
-                  itemType: item.itemType,
-                },
-              }),
-            ),
-          );
-        }
-
-        // Return the updated permission group with access controls
-        return await tx.permissionGroup.findUnique({
-          where: { id: permissionGroupId },
-          include: {
-            accessControls: {
-              select: {
-                id: true,
-                itemId: true,
-                itemType: true,
-                canView: true,
-                canDownload: true,
-                canDownloadOriginal: true,
+          await tx.permissionGroupAccessControls.deleteMany({
+            where: {
+              id: {
+                in: toDelete.map((p) => p.id),
               },
             },
-          },
-        });
+          });
+        }
+
+        return permissionGroup;
       });
+
+      // After saving permissions, ensure parent folders are visible for any items that were made visible
+      await ensureParentFoldersVisible(
+        dataroomId,
+        permissionGroupId,
+        validatedPermissions,
+      );
 
       return res.status(200).json({ permissionGroup: updatedPermissionGroup });
     } catch (error) {
-      errorhandler(error, res);
+      return errorhandler(error, res);
     }
-  } else if (req.method === "PATCH") {
-    // PATCH /api/teams/:teamId/datarooms/:id/permission-groups/:permissionGroupId
+  } else if (req.method === "DELETE") {
+    // DELETE /api/teams/:teamId/datarooms/:id/permission-groups/:permissionGroupId
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
@@ -332,6 +512,7 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
+      // Verify team membership
       const team = await prisma.team.findUnique({
         where: {
           id: teamId,
@@ -345,6 +526,7 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
+      // Verify dataroom exists and belongs to team
       const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: dataroomId,
@@ -356,6 +538,7 @@ export default async function handle(
         return res.status(404).json({ error: "Dataroom not found" });
       }
 
+      // Verify permission group exists and belongs to dataroom
       const permissionGroup = await prisma.permissionGroup.findUnique({
         where: {
           id: permissionGroupId,
@@ -368,35 +551,20 @@ export default async function handle(
         return res.status(404).json({ error: "Permission group not found" });
       }
 
-      const validationResult = patchPermissionGroupSchema.safeParse(req.body);
-
-      if (!validationResult.success) {
-        return res.status(400).json({
-          error: "Invalid request body",
-          details: validationResult.error.issues,
-        });
-      }
-
-      const dataToUpdate = validationResult.data;
-
-      if (Object.keys(dataToUpdate).length === 0) {
-        return res.status(400).json({ error: "No fields to update" });
-      }
-
-      const updatedPermissionGroup = await prisma.permissionGroup.update({
+      // Delete the permission group (this will cascade delete access controls)
+      await prisma.permissionGroup.delete({
         where: {
           id: permissionGroupId,
         },
-        data: dataToUpdate,
       });
 
-      return res.status(200).json({ permissionGroup: updatedPermissionGroup });
+      return res.status(200).json({ message: "Permission group deleted" });
     } catch (error) {
-      errorhandler(error, res);
+      return errorhandler(error, res);
     }
   }
 
-  // We only allow GET requests
-  res.setHeader("Allow", ["GET", "PUT", "PATCH"]);
+  // We only allow GET, PATCH, PUT, and DELETE requests
+  res.setHeader("Allow", ["GET", "PATCH", "PUT", "DELETE"]);
   return res.status(405).end(`Method ${req.method} Not Allowed`);
 }

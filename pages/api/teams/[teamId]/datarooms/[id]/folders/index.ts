@@ -14,7 +14,7 @@ async function applyFolderPermissions(
   folderPath: string,
 ): Promise<void> {
   try {
-    await applyDefaultFolderPermissions(dataroomId, folderId);
+    await applyDefaultFolderPermissions(dataroomId, folderId, folderPath);
   } catch (error) {
     console.error("Error applying folder permissions:", error);
     throw error;
@@ -24,6 +24,7 @@ async function applyFolderPermissions(
 async function applyDefaultFolderPermissions(
   dataroomId: string,
   folderId: string,
+  folderPath?: string,
 ) {
   const [dataroom, viewerGroups, permissionGroups] = await Promise.all([
     prisma.dataroom.findUnique({
@@ -50,6 +51,17 @@ async function applyDefaultFolderPermissions(
 
   if (!dataroom) return;
 
+  if (
+    dataroom.defaultPermissionStrategy ===
+      DefaultPermissionStrategy.INHERIT_FROM_PARENT &&
+    folderPath
+  ) {
+    // If we have a folder path, inherit from parent folder
+    await inheritFolderPermissionsFromParent(dataroomId, folderId, folderPath);
+    return;
+  }
+
+  // Fallback to default behavior (for root folders or non-inherit strategies)
   const allPermissionGroupData: {
     groupId: string;
     itemId: string;
@@ -69,7 +81,7 @@ async function applyDefaultFolderPermissions(
           groupId: group.id,
           itemId: folderId,
           itemType: ItemType.DATAROOM_FOLDER,
-          canView: true,
+          canView: true, // Root folders get view permissions by default
           canDownload: false,
           canDownloadOriginal: false,
         });
@@ -102,6 +114,100 @@ async function applyDefaultFolderPermissions(
         skipDuplicates: true,
       }),
   ]);
+}
+
+async function inheritFolderPermissionsFromParent(
+  dataroomId: string,
+  folderId: string,
+  folderPath: string,
+) {
+  // Get parent folder path
+  const pathSegments = folderPath.split("/").filter(Boolean);
+  const parentPath = "/" + pathSegments.slice(0, -1).join("/");
+
+  // If this is a root folder, apply default permissions
+  if (parentPath === "/") {
+    await applyDefaultFolderPermissions(dataroomId, folderId);
+    return;
+  }
+
+  const parentFolder = await prisma.dataroomFolder.findUnique({
+    where: {
+      dataroomId_path: { dataroomId, path: parentPath },
+    },
+    select: { id: true },
+  });
+
+  if (!parentFolder) {
+    // If no parent folder found, apply default permissions
+    await applyDefaultFolderPermissions(dataroomId, folderId);
+    return;
+  }
+
+  // Get existing permissions for the parent folder
+  const [parentViewerPermissions, parentPermissionGroupPermissions] =
+    await Promise.all([
+      prisma.viewerGroupAccessControls.findMany({
+        where: {
+          itemId: parentFolder.id,
+          itemType: ItemType.DATAROOM_FOLDER,
+        },
+        select: { groupId: true, canView: true, canDownload: true },
+      }),
+      prisma.permissionGroupAccessControls.findMany({
+        where: {
+          itemId: parentFolder.id,
+          itemType: ItemType.DATAROOM_FOLDER,
+        },
+        select: {
+          groupId: true,
+          canView: true,
+          canDownload: true,
+          canDownloadOriginal: true,
+        },
+      }),
+    ]);
+
+  // Apply parent permissions to the new folder
+  await prisma.$transaction(async (tx) => {
+    const viewerGroupPermissionsToCreate: any[] = [];
+    const permissionGroupPermissionsToCreate: any[] = [];
+
+    parentViewerPermissions.forEach((parentPerm) => {
+      viewerGroupPermissionsToCreate.push({
+        groupId: parentPerm.groupId,
+        itemId: folderId,
+        itemType: ItemType.DATAROOM_FOLDER,
+        canView: parentPerm.canView,
+        canDownload: parentPerm.canDownload,
+      });
+    });
+
+    parentPermissionGroupPermissions.forEach((parentPerm) => {
+      permissionGroupPermissionsToCreate.push({
+        groupId: parentPerm.groupId,
+        itemId: folderId,
+        itemType: ItemType.DATAROOM_FOLDER,
+        canView: parentPerm.canView,
+        canDownload: parentPerm.canDownload,
+        canDownloadOriginal: parentPerm.canDownloadOriginal,
+      });
+    });
+
+    if (viewerGroupPermissionsToCreate.length > 0) {
+      await tx.viewerGroupAccessControls.createMany({
+        data: viewerGroupPermissionsToCreate,
+        skipDuplicates: true,
+      });
+    }
+
+    if (permissionGroupPermissionsToCreate.length > 0) {
+      await tx.permissionGroupAccessControls.createMany({
+        data: permissionGroupPermissionsToCreate,
+        skipDuplicates: true,
+      });
+    }
+  });
 }
 
 export default async function handle(

@@ -23,6 +23,7 @@ import { useDataroom } from "@/lib/swr/use-dataroom";
 import useLimits from "@/lib/swr/use-limits";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
+import { SetUnifiedPermissionsModal } from "@/components/datarooms/groups/set-unified-permissions-modal";
 import DocumentUpload from "@/components/document-upload";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,7 +44,6 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
-import { SetGroupPermissionsModal } from "../datarooms/groups/set-group-permissions-modal";
 
 interface DataroomDocument {
   id: string;
@@ -684,7 +684,7 @@ export function AddDocumentModal({
       </Dialog>
 
       {showGroupPermissions && dataroomId && (
-        <SetGroupPermissionsModal
+        <SetUnifiedPermissionsModal
           open={showGroupPermissions}
           setOpen={setShowGroupPermissions}
           dataroomId={dataroomId}
@@ -694,7 +694,6 @@ export function AddDocumentModal({
             setAddDocumentModalOpen?.(false);
             setUploadedFiles([]);
           }}
-          isAutoOpen
         />
       )}
     </>
