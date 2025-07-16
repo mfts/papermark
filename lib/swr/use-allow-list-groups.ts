@@ -28,6 +28,9 @@ export type AllowListGroupWithUsage = AllowListGroup & {
             id: string;
             name: string;
         };
+        _count: {
+            views: number;
+        };
     }>;
 };
 

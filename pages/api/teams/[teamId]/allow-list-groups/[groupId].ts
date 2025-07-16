@@ -59,6 +59,11 @@ export default async function handle(
                                     name: true,
                                 },
                             },
+                            _count: {
+                                select: {
+                                    views: true,
+                                },
+                            },
                         },
                     },
                     _count: {

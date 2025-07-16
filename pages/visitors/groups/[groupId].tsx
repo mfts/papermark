@@ -271,34 +271,33 @@ export default function AllowListGroupPage() {
                   <Link
                     key={link.id}
                     href={
-                      (link as any).linkType === "DOCUMENT_LINK"
-                        ? `/documents/${(link as any).document?.id}`
-                        : `/datarooms/${(link as any).dataroom?.id}/permissions`
+                      link.linkType === "DOCUMENT_LINK"
+                        ? `/documents/${link.document?.id}`
+                        : `/datarooms/${link.dataroom?.id}/permissions`
                     }
                     className="group flex items-center space-x-3 rounded-md border border-border bg-background p-3 transition hover:bg-muted/50"
-                    title={(link as any).name || "Untitled"}
+                    title={link.name || `Link #${link.id.slice(-5)}`}
                   >
                     <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
                       {index + 1}
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium text-foreground group-hover:text-primary">
-                        {(link as any).name ||
-                          `Link #${(link as any).id.slice(-8)}`}
+                        {link.name || `Link #${link.id.slice(-8)}`}
                       </div>
                       <div className="mt-0.5 text-xs text-muted-foreground">
-                        {(link as any).linkType === "DOCUMENT_LINK"
+                        {link.linkType === "DOCUMENT_LINK"
                           ? "Document"
                           : "Dataroom"}
                         :{" "}
-                        {(link as any).linkType === "DOCUMENT_LINK"
-                          ? (link as any).document?.name
-                          : (link as any).dataroom?.name}
+                        {link.linkType === "DOCUMENT_LINK"
+                          ? link.document?.name
+                          : link.dataroom?.name}
                       </div>
                     </div>
                     <div className="flex flex-shrink-0 items-center gap-3 pr-1">
                       <span className="text-xs text-muted-foreground">
-                        {nFormatter((link as any)._count?.views || 0)} views
+                        {nFormatter(link._count?.views || 0)} views
                       </span>
                       <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
                     </div>
