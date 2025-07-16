@@ -62,6 +62,8 @@ model User {
   // conversation
   participatedConversations ConversationParticipant[]
   messages                  Message[]
+
+  approvedAccessRequests AccessRequest[]
 }
 
 model Team {
@@ -104,6 +106,8 @@ model Team {
 
   // team settings
   enableExcelAdvancedMode Boolean @default(false) // Enable Excel advanced mode for all documents in the team
+
+  accessRequests AccessRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

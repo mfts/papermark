@@ -289,34 +289,35 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: "Access denied" }, { status: 403 });
       }
 
-      // Check if email is allowed to visit the link
-      if (link.allowList && link.allowList.length > 0) {
-        // Determine if the email or its domain is allowed
-        const isAllowed = link.allowList.some((allowed) =>
-          isEmailMatched(email, allowed),
-        );
-
-        // Deny access if the email is not allowed
-        if (!isAllowed) {
-          return NextResponse.json(
-            { message: "Unauthorized access" },
-            { status: 403 },
-          );
-        }
-      }
-
       // Check if email is denied to visit the link
-      if (link.denyList && link.denyList.length > 0) {
-        // Determine if the email or its domain is denied
-        const isDenied = link.denyList.some((denied) =>
-          isEmailMatched(email, denied),
-        );
+      if (
+        email &&
+        typeof email === "string" &&
+        email.includes("@") &&
+        link.denyList &&
+        link.denyList.length > 0
+      ) {
+        // Extract the domain from the email address
+        const emailDomain = email.substring(email.lastIndexOf("@"));
 
-        // Deny access if the email is denied
+        // Determine if the email or its domain is denied
+        const isDenied = link.denyList.some((denied) => {
+          return (
+            denied === email ||
+            (denied.startsWith("@") && emailDomain === denied)
+          );
+        });
+
+        // Allow denied emails to request access instead of blocking them
         if (isDenied) {
           return NextResponse.json(
-            { message: "Unauthorized access" },
-            { status: 403 },
+            {
+              type: "request-access",
+              message:
+                "Your email is not authorized to access this content. You can request access from the content owner.",
+              email: email,
+            },
+            { status: 200 },
           );
         }
       }
@@ -349,18 +350,53 @@ export async function POST(request: NextRequest) {
           );
 
           // Extract domain from email
-          const emailDomain = extractEmailDomain(email);
+          const emailDomain =
+            email && typeof email === "string" && email.includes("@")
+              ? email.substring(email.lastIndexOf("@"))
+              : "";
           // Check domain access
-          const hasDomainAccess = emailDomain
-            ? group.domains.some((domain) => domain === emailDomain)
-            : false;
+          const hasDomainAccess =
+            emailDomain &&
+            group.domains.some((domain) => domain === emailDomain);
 
           if (!isMember && !hasDomainAccess) {
             return NextResponse.json(
-              { message: "Unauthorized access" },
-              { status: 403 },
+              {
+                type: "request-access",
+                message:
+                  "Your email is not authorized to access this content. You can request access from the content owner.",
+                email: email,
+              },
+              { status: 200 },
             );
           }
+        }
+      }
+
+      if (
+        email &&
+        typeof email === "string" &&
+        email.includes("@") &&
+        link.allowList &&
+        link.allowList.length > 0
+      ) {
+        const emailDomain = email.substring(email.lastIndexOf("@"));
+        const isAllowed = link.allowList.some((allowed) => {
+          return (
+            allowed === email ||
+            (allowed.startsWith("@") && emailDomain === allowed)
+          );
+        });
+        if (!isAllowed) {
+          return NextResponse.json(
+            {
+              type: "request-access",
+              message:
+                "Your email is not authorized to access this content. You can request access from the content owner.",
+              email: email,
+            },
+            { status: 200 },
+          );
         }
       }
 
@@ -530,6 +566,7 @@ export async function POST(request: NextRequest) {
       if (link.emailAuthenticated && dataroomVerified) {
         isEmailVerified = true;
       }
+
     }
 
     let viewer: { id: string; email: string; verified: boolean } | null = null;
