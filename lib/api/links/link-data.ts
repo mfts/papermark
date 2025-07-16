@@ -315,6 +315,11 @@ export async function fetchDataroomDocumentLinkData({
     throw new Error("Dataroom not found");
   }
 
+  // Check if the specific document exists in the dataroom
+  if (!linkData.dataroom.documents || linkData.dataroom.documents.length === 0) {
+    throw new Error("Document not found in dataroom");
+  }
+
   const brand = await prisma.dataroomBrand.findFirst({
     where: {
       dataroomId: linkData.dataroom.id,
