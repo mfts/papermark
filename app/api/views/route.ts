@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
           { status: 400 },
         );
       }
-// Check global block list first - this overrides all other access controls
+      // Check global block list first - this overrides all other access controls
       const globalBlockCheck = checkGlobalBlockList(
         email,
         link.team?.globalBlockList,
@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: "Access denied" }, { status: 403 });
       }
 
-   // Check if email is denied to visit the link
+      // Check if email is denied to visit the link
       if (link.denyList && link.denyList.length > 0) {
         // Extract the domain from the email address
         const emailDomain = email.substring(email.lastIndexOf("@"));
@@ -241,15 +241,22 @@ export async function POST(request: NextRequest) {
           return NextResponse.json(
             {
               type: "request-access",
-              message: "Your email is not authorized to access this content. You can request access from the content owner.",
-              email: email
+              message:
+                "Your email is not authorized to access this content. You can request access from the content owner.",
+              email: email,
             },
             { status: 200 },
           );
         }
       }
 
-      if (email && typeof email === 'string' && email.includes('@') && link.allowList && link.allowList.length > 0) {
+      if (
+        email &&
+        typeof email === "string" &&
+        email.includes("@") &&
+        link.allowList &&
+        link.allowList.length > 0
+      ) {
         const emailDomain = email.substring(email.lastIndexOf("@"));
         const isAllowed = link.allowList.some((allowed) => {
           return (
@@ -262,8 +269,9 @@ export async function POST(request: NextRequest) {
           return NextResponse.json(
             {
               type: "request-access",
-              message: "Your email is not authorized to access this content. You can request access from the content owner.",
-              email: email
+              message:
+                "Your email is not authorized to access this content. You can request access from the content owner.",
+              email: email,
             },
             { status: 200 },
           );
