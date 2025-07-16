@@ -27,7 +27,7 @@ export default function NotificationSettings({
 }: NotificationSettingsProps) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const { isDataroomsPlus } = usePlan();
+  const { isDataroomsPlus, isTrial } = usePlan();
 
   const { data: dataroomData, mutate: mutateDataroom } = useSWR<{
     id: string;
@@ -49,7 +49,7 @@ export default function NotificationSettings({
   const handleNotificationToggle = async (checked: boolean) => {
     if (!dataroomId || !teamId) return;
 
-    if (!isDataroomsPlus && !features?.roomChangeNotifications) {
+    if (!isDataroomsPlus && !isTrial && !features?.roomChangeNotifications) {
       toast.error("This feature is not available in your plan");
       return;
     }

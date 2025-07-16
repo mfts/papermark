@@ -5,6 +5,7 @@ import { DataroomBrand, LinkAudienceType } from "@prisma/client";
 import { fetchDataroomDocumentLinkData } from "@/lib/api/links/link-data";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 
 export default async function handle(
   req: NextApiRequest,
@@ -60,6 +61,7 @@ export default async function handle(
         team: {
           select: {
             plan: true,
+            globalBlockList: true,
           },
         },
         customFields: {
@@ -86,6 +88,18 @@ export default async function handle(
 
     if (link.isArchived) {
       return res.status(404).json({ error: "Link is archived" });
+    }
+
+    const { email } = req.query as { email?: string };
+    const globalBlockCheck = checkGlobalBlockList(
+      email,
+      link.team?.globalBlockList,
+    );
+    if (globalBlockCheck.error) {
+      return res.status(400).json({ message: globalBlockCheck.error });
+    }
+    if (globalBlockCheck.isBlocked) {
+      return res.status(403).json({ message: "Access denied" });
     }
 
     let brand: Partial<DataroomBrand> | null = null;

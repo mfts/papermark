@@ -77,7 +77,7 @@ export default function VisitorsTable({
     currentPage,
     pageSize,
   );
-  const { plan } = usePlan();
+  const { plan, isTrial } = usePlan();
   const isFreePlan = plan === "free";
 
   const [isLoading, setIsLoading] = useState(false);
@@ -479,7 +479,10 @@ export default function VisitorsTable({
                         Some older visits may not be shown because your document
                         has more than 20 views.{" "}
                       </span>
-                      <UpgradePlanModal clickedPlan={PlanEnum.Pro} trigger="">
+                      <UpgradePlanModal
+                        clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
+                        trigger=""
+                      >
                         <button className="underline hover:text-gray-800">
                           Upgrade to see full history
                         </button>

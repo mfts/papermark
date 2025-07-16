@@ -122,7 +122,7 @@ export default async function handle(
         );
       }
 
-      if (type === "video") {
+      if (type === "video" && contentType !== "video/mp4") {
         await processVideo.trigger(
           {
             videoUrl: url,
@@ -172,6 +172,7 @@ export default async function handle(
         await copyFileToBucketServer({
           filePath: version.file,
           storageType: version.storageType,
+          teamId,
         });
       }
 

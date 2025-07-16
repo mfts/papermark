@@ -112,7 +112,11 @@ model Team {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Tag       Tag[]
+
+  ignoredDomains String[] // Domains that are ignored for the team
+  globalBlockList String[]
 }
+
 
 model Brand {
   id          String  @id @default(cuid())
@@ -300,7 +304,10 @@ model View {
   @@index([documentId])
   @@index([dataroomId])
   @@index([dataroomViewId])
+  @@index([viewerId])
   @@index([teamId])
+  @@index([viewedAt(sort: Desc)]) // Performance optimization for date aggregations
+  @@index([viewerId, documentId]) // Performance optimization for joins with filtering
 }
 
 enum ViewType {

@@ -9,6 +9,7 @@ import {
 } from "@/lib/api/links/link-data";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
+import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 
 export default async function handle(
   req: NextApiRequest,
@@ -77,6 +78,7 @@ export default async function handle(
           team: {
             select: {
               plan: true,
+              globalBlockList: true,
             },
           },
           customFields: {
@@ -116,6 +118,18 @@ export default async function handle(
           error: "Link is archived",
           message: "link is archived",
         });
+      }
+
+      const { email } = req.query as { email?: string };
+      const globalBlockCheck = checkGlobalBlockList(
+        email,
+        link.team?.globalBlockList,
+      );
+      if (globalBlockCheck.error) {
+        return res.status(400).json({ message: globalBlockCheck.error });
+      }
+      if (globalBlockCheck.isBlocked) {
+        return res.status(403).json({ message: "Access denied" });
       }
 
       const teamPlan = link.team?.plan || "free";

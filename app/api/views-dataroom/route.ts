@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { ItemType, LinkAudienceType } from "@prisma/client";
 import { ipAddress, waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth";
-import { parsePageId } from "notion-utils";
 
 import { hashToken } from "@/lib/api/auth/token";
 import {
@@ -16,16 +16,16 @@ import { PreviewSession, verifyPreviewSession } from "@/lib/auth/preview-auth";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
-import notion from "@/lib/notion";
-import { addSignedUrls } from "@/lib/notion/utils";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { parseSheet } from "@/lib/sheet";
 import { recordLinkView } from "@/lib/tracking/record-link-view";
 import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
+import { extractEmailDomain, isEmailMatched } from "@/lib/utils/email-domain";
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
+import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { validateEmail } from "@/lib/utils/validate-email";
 
 export async function POST(request: NextRequest) {
@@ -123,6 +123,7 @@ export async function POST(request: NextRequest) {
         team: {
           select: {
             plan: true,
+            globalBlockList: true,
           },
         },
         customFields: {
@@ -212,6 +213,11 @@ export async function POST(request: NextRequest) {
         linkId,
         link.dataroomId!,
       );
+
+      // If we have a dataroom session, use its verified status
+      if (dataroomSession) {
+        isEmailVerified = dataroomSession.verified;
+      }
     }
 
     // If there is no session, then we need to check if the link is protected and enforce the checks
@@ -267,8 +273,23 @@ export async function POST(request: NextRequest) {
           { status: 400 },
         );
       }
-
-      // Check if email is denied to visit the link
+      
+       // Check global block list first - this overrides all other access controls
+      const globalBlockCheck = checkGlobalBlockList(
+        email,
+        link.team?.globalBlockList,
+      );
+      if (globalBlockCheck.error) {
+        return NextResponse.json(
+          { message: globalBlockCheck.error },
+          { status: 400 },
+        );
+      }
+      if (globalBlockCheck.isBlocked) {
+        return NextResponse.json({ message: "Access denied" }, { status: 403 });
+      }
+      
+ // Check if email is denied to visit the link
       if (email && typeof email === 'string' && email.includes('@') && link.denyList && link.denyList.length > 0) {
         // Extract the domain from the email address
         const emailDomain = email.substring(email.lastIndexOf("@"));
@@ -576,6 +597,8 @@ export async function POST(request: NextRequest) {
           where: { id: viewer.id },
           data: { verified: isEmailVerified },
         });
+        // Update the viewer object to reflect the new verified status
+        viewer.verified = isEmailVerified;
       }
     }
 
@@ -673,6 +696,7 @@ export async function POST(request: NextRequest) {
             linkId,
             newDataroomView?.id!,
             ipAddress(request) ?? LOCALHOST_IP,
+            isEmailVerified,
             viewer?.id,
           );
 
@@ -758,11 +782,8 @@ export async function POST(request: NextRequest) {
       }
 
       // if document version has pages, then return pages
-      // otherwise, check if notion document,
-      // if notion, return recordMap and theme from document version file
       // otherwise, return file from document version
       let documentPages, documentVersion;
-      let recordMap, theme;
       let sheetData;
 
       if (hasPages) {
@@ -821,23 +842,6 @@ export async function POST(request: NextRequest) {
             type: documentVersion.storageType,
           });
         }
-
-        if (documentVersion.type === "notion") {
-          // get theme `mode` param from document version file
-          const modeMatch = documentVersion.file.match(/[?&]mode=(dark|light)/);
-          theme = modeMatch ? modeMatch[1] : undefined;
-
-          let notionPageId = parsePageId(documentVersion.file, { uuid: false });
-          if (!notionPageId) {
-            notionPageId = "";
-          }
-
-          const pageId = notionPageId;
-          recordMap = await notion.getPage(pageId, { signFileUrls: false });
-          // TODO: separately sign the file urls until PR merged and published; ref: https://github.com/NotionX/react-notion-x/issues/580#issuecomment-2542823817
-          await addSignedUrls({ recordMap });
-        }
-
         if (documentVersion.type === "sheet") {
           const document = await prisma.document.findUnique({
             where: { id: documentId },
@@ -846,9 +850,15 @@ export async function POST(request: NextRequest) {
           useAdvancedExcelViewer = document?.advancedExcelEnabled ?? false;
 
           if (useAdvancedExcelViewer) {
-            documentVersion.file = documentVersion.file.includes("https://")
-              ? documentVersion.file
-              : `https://${process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST}/${documentVersion.file}`;
+            if (documentVersion.file.includes("https://")) {
+              documentVersion.file = documentVersion.file;
+            } else {
+              // Get team-specific storage config for advanced distribution host
+              const storageConfig = await getTeamStorageConfigById(
+                link.teamId!,
+              );
+              documentVersion.file = `https://${storageConfig.advancedDistributionHost}/${documentVersion.file}`;
+            }
           } else {
             const fileUrl = await getFile({
               data: documentVersion.file,
@@ -933,7 +943,7 @@ export async function POST(request: NextRequest) {
             ? documentVersion.file
             : undefined,
         pages: documentPages ? documentPages : undefined,
-        notionData: recordMap ? { recordMap, theme } : undefined,
+        notionData: undefined,
         sheetData:
           documentVersion &&
           documentVersion.type === "sheet" &&
@@ -944,9 +954,7 @@ export async function POST(request: NextRequest) {
           ? documentVersion.type
           : documentPages
             ? "pdf"
-            : recordMap
-              ? "notion"
-              : undefined,
+            : undefined,
         watermarkConfig: link.enableWatermark
           ? link.watermarkConfig
           : undefined,
@@ -973,13 +981,14 @@ export async function POST(request: NextRequest) {
 
       const response = NextResponse.json(returnObject, { status: 200 });
 
-      // Create a dataroom session token if a dataroom session doesn't exist yet// Create a dataroom session token if a dataroom session doesn't exist yet
+      // Create a dataroom session token if a dataroom session doesn't exist yet
       if (!dataroomSession && !isPreview) {
         const newDataroomSession = await createDataroomSession(
           dataroomId,
           linkId,
           dataroomView?.id!,
           ipAddress(request) ?? LOCALHOST_IP,
+          isEmailVerified,
           viewer?.id,
         );
 

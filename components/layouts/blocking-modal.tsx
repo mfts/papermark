@@ -182,7 +182,7 @@ export const BlockingModal = () => {
               Log out
             </Button>
             <UpgradePlanModal
-              clickedPlan={PlanEnum.Pro}
+              clickedPlan={PlanEnum.Business}
               trigger="trial_end_blocking_modal_for_team_member"
             >
               <Button className="w-full sm:w-auto" type="button">

@@ -8,6 +8,7 @@ export interface DataroomIndexEntry {
   onlineUrl?: string;
   mimeType?: string;
   createdAt?: Date;
+  version?: number;
 }
 
 export interface DataroomIndex {

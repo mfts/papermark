@@ -159,7 +159,7 @@ export const processDocument = async ({
     );
   }
 
-  if (type === "video") {
+  if (type === "video" && contentType !== "video/mp4") {
     await processVideo.trigger(
       {
         videoUrl: key,
@@ -206,6 +206,7 @@ export const processDocument = async ({
     await copyFileToBucketServer({
       filePath: document.versions[0].file,
       storageType: document.versions[0].storageType,
+      teamId,
     });
 
     await prisma.documentVersion.update({

@@ -182,6 +182,8 @@ export default function EditPreset() {
           expiresIn: data.expiresIn,
           pId: data.pId,
           enableScreenshotProtection: data.enableScreenshotProtection,
+          enableAgreement: data.enableAgreement,
+          agreementId: data.agreementId,
           enableCustomFields: data.enableCustomFields,
           customFields: data.customFields,
           enableNotification: data.enableNotification,
