@@ -28,12 +28,8 @@ model Dataroom {
   // notification settings
   enableChangeNotifications Boolean @default(false)
 
-  // default group permission setting
-  defaultGroupPermission DefaultGroupPermissionStrategy @default(inherit_from_parent)
-  defaultLinkPermission  DefaultLinkPermissionStrategy  @default(inherit_from_parent)
-
-  defaultLinkCanView     Boolean @default(false)
-  defaultLinkCanDownload Boolean @default(false)
+  // unified permission strategy
+  defaultPermissionStrategy DefaultPermissionStrategy @default(INHERIT_FROM_PARENT)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -113,10 +109,6 @@ model ViewerGroup {
   views         View[]
   conversations Conversation[]
 
-  // default group permission setting
-  defaultCanView     Boolean @default(false)
-  defaultCanDownload Boolean @default(false)
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -164,17 +156,10 @@ enum ItemType {
   DATAROOM_FOLDER
 }
 
-enum DefaultGroupPermissionStrategy {
-  ask_every_time
-  inherit_from_parent
-  use_default_permissions
-  no_permissions
-}
-
-enum DefaultLinkPermissionStrategy {
-  inherit_from_parent
-  use_default_permissions
-  use_simple_permissions
+enum DefaultPermissionStrategy {
+  INHERIT_FROM_PARENT
+  ASK_EVERY_TIME
+  HIDDEN_BY_DEFAULT
 }
 
 model PermissionGroup {
@@ -184,9 +169,6 @@ model PermissionGroup {
 
   links          Link[]
   accessControls PermissionGroupAccessControls[]
-
-  defaultCanView     Boolean @default(false)
-  defaultCanDownload Boolean @default(false)
 
   dataroomId String
   dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
