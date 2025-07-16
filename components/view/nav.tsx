@@ -128,7 +128,10 @@ export default function Nav({
         return;
       }
 
-      if (hasWatermark) {
+      // Check if the response is a PDF file (for watermarked PDFs)
+      const contentType = response.headers.get("content-type");
+      if (contentType === "application/pdf") {
+        // Handle direct PDF download (watermarked PDFs)
         const pdfBlob = await response.blob();
         const blobUrl = window.URL.createObjectURL(pdfBlob);
 
@@ -144,6 +147,7 @@ export default function Nav({
           document.body.removeChild(link);
         }, 100);
       } else {
+        // Handle JSON response with downloadUrl (non-watermarked files)
         const { downloadUrl } = await response.json();
 
         const link = document.createElement("a");
@@ -158,6 +162,7 @@ export default function Nav({
       }
     } catch (error) {
       console.error("Error downloading file:", error);
+      toast.error("Error downloading file");
     }
   };
 
