@@ -170,34 +170,31 @@ export function SetUnifiedPermissionsModal({
   const initialGroupPermissions = useMemo(() => {
     if (!viewerGroups) return {};
 
-    return viewerGroups.reduce<GroupPermissions>(
-      (acc, group) => ({
-        ...acc,
-        [group.id]: {
-          view: group.accessControls?.[0]?.canView ?? false,
-          download: group.accessControls?.[0]?.canDownload ?? false,
-        },
-      }),
-      {},
-    );
+    const permissions: GroupPermissions = {};
+    viewerGroups.forEach((group) => {
+      permissions[group.id] = {
+        view: group.accessControls?.[0]?.canView ?? false,
+        download: group.accessControls?.[0]?.canDownload ?? false,
+      };
+    });
+    return permissions;
   }, [viewerGroups]);
 
   // Memoize initial link permissions instead of useEffect
   const initialLinkPermissions = useMemo(() => {
     if (!linksWithPermissionGroups || !currentDataroomDocumentId) return {};
 
-    return linksWithPermissionGroups.reduce<LinkPermissions>((acc, link) => {
+    const permissions: LinkPermissions = {};
+    linksWithPermissionGroups.forEach((link) => {
       const documentPermission = link.permissionGroup?.accessControls?.find(
         (ac) => ac.itemId === currentDataroomDocumentId,
       );
-      return {
-        ...acc,
-        [link.id]: {
-          view: documentPermission?.canView ?? false,
-          download: documentPermission?.canDownload ?? false,
-        },
+      permissions[link.id] = {
+        view: documentPermission?.canView ?? false,
+        download: documentPermission?.canDownload ?? false,
       };
-    }, {});
+    });
+    return permissions;
   }, [linksWithPermissionGroups, currentDataroomDocumentId]);
 
   // Update state when initial permissions change
