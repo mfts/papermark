@@ -233,6 +233,27 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      if (email && typeof email === 'string' && email.includes('@') && link.allowList && link.allowList.length > 0) {
+        const emailDomain = email.substring(email.lastIndexOf("@"));
+        const isAllowed = link.allowList.some((allowed) => {
+          return (
+            allowed === email ||
+            (allowed.startsWith("@") && emailDomain === allowed)
+          );
+        });
+
+        if (!isAllowed) {
+          return NextResponse.json(
+            {
+              type: "request-access",
+              message: "Your email is not authorized to access this content. You can request access from the content owner.",
+              email: email
+            },
+            { status: 200 },
+          );
+        }
+      }
+
       // Request OTP Code for email verification if
       // 1) email verification is required and
       // 2) code is not provided or token not provided
@@ -396,31 +417,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check if email is allowed to visit the link (after all verification is complete)
-    if (!isTeamMember && email && link.allowList && link.allowList.length > 0) {
-      // Extract the domain from the email address
-      const emailDomain = email.substring(email.lastIndexOf("@"));
-
-      // Determine if the email or its domain is allowed
-      const isAllowed = link.allowList.some((allowed) => {
-        return (
-          allowed === email ||
-          (allowed.startsWith("@") && emailDomain === allowed)
-        );
-      });
-
-      // If email is not in allow list, return request access response
-      if (!isAllowed) {
-        return NextResponse.json(
-          {
-            type: "request-access",
-            message: "Your email is not authorized to access this content. You can request access from the content owner.",
-            email: email
-          },
-          { status: 200 },
-        );
-      }
-    }
 
     // Check if there's a valid preview session
     let previewSession: PreviewSession | null = null;

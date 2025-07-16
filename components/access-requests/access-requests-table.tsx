@@ -298,7 +298,8 @@ export function AccessRequestsTable({
               {contentName}
             </div>
             <div className="text-xs text-muted-foreground/60">
-              {contentType} • {request.link.name}
+              {contentType} •{" "}
+              {request.link.name || `Link #${request.link.id.slice(-5)}`}
             </div>
           </div>
         );
