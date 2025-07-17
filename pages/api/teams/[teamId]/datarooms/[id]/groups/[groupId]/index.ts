@@ -89,14 +89,29 @@ export default async function handle(
       groupId: string;
     };
 
-    const { name, domains, allowAll } = req.body as {
+    const { name, allowAll, domains } = req.body as {
       name?: string;
-      domains?: string[];
       allowAll?: boolean;
+      domains?: string[];
     };
     const userId = (session.user as CustomUser).id;
 
     try {
+      const team = await prisma.team.findFirst({
+        where: {
+          id: teamId,
+          users: {
+            some: {
+              userId: userId,
+            },
+          },
+        },
+      });
+
+      if (!team) {
+        return res.status(401).end("Unauthorized");
+      }
+
       const group = await prisma.viewerGroup.update({
         where: {
           id: groupId,

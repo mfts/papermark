@@ -15,6 +15,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { DefaultPermissionStrategy } from "@prisma/client";
 import {
   ArchiveXIcon,
   FileIcon,
@@ -27,15 +28,19 @@ import { toast } from "sonner";
 
 import { moveDataroomDocumentToFolder } from "@/lib/documents/move-dataroom-documents";
 import { moveDataroomFolderToFolder } from "@/lib/documents/move-dataroom-folders";
+import { useDataroomPermissions } from "@/lib/hooks/use-dataroom-permissions";
 import {
   DataroomFolderDocument,
   DataroomFolderWithCount,
+  useDataroom,
 } from "@/lib/swr/use-dataroom";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
+import useDataroomPermissionGroups from "@/lib/swr/use-dataroom-permission-groups";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import { useRemoveDataroomItemsModal } from "@/components/datarooms/actions/remove-document-modal";
 import DataroomDocumentCard from "@/components/datarooms/dataroom-document-card";
+import { SetUnifiedPermissionsModal } from "@/components/datarooms/groups/set-unified-permissions-modal";
 import { useDeleteFolderModal } from "@/components/documents/actions/delete-folder-modal";
 import { DraggableItem } from "@/components/documents/drag-and-drop/draggable-item";
 import { DroppableFolder } from "@/components/documents/drag-and-drop/droppable-folder";
@@ -52,7 +57,6 @@ import UploadZone, {
 } from "@/components/upload-zone";
 
 import { itemsMessage } from "./folders/utils";
-import { SetGroupPermissionsModal } from "./groups/set-group-permissions-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type FolderOrDocument =
@@ -75,7 +79,10 @@ export function DataroomItemsList({
   documentCount: number;
 }) {
   const { viewerGroups } = useDataroomGroups();
+  const { permissionGroups } = useDataroomPermissionGroups();
+  const { dataroom } = useDataroom();
   const { isMobile } = useMediaQuery();
+  const { applyPermissions } = useDataroomPermissions();
 
   const [uploads, setUploads] = useState<UploadState[]>([]);
   const [rejectedFiles, setRejectedFiles] = useState<RejectedFile[]>([]);
@@ -547,11 +554,36 @@ export function DataroomItemsList({
       dataroomDocumentId: string;
     }[],
   ) => {
-    if (viewerGroups && viewerGroups.length > 0) {
-      setUploadedFiles(files);
+    // Check if there are any groups to apply permissions to
+    const hasAnyGroups =
+      (viewerGroups && viewerGroups.length > 0) ||
+      (permissionGroups && permissionGroups.length > 0);
+
+    if (!hasAnyGroups) return;
+
+    const documentIds = files.map((file) => file.documentId);
+    const strategy =
+      dataroom?.defaultPermissionStrategy ||
+      DefaultPermissionStrategy.INHERIT_FROM_PARENT;
+
+    if (strategy === DefaultPermissionStrategy.ASK_EVERY_TIME) {
       setShowGroupPermissions(true);
+      setUploadedFiles(files);
+    } else if (strategy === DefaultPermissionStrategy.INHERIT_FROM_PARENT) {
+      const isRootLevel = !folderPathName || folderPathName.length === 0;
+
+      applyPermissions(
+        dataroomId,
+        documentIds,
+        "INHERIT_FROM_PARENT",
+        isRootLevel ? undefined : folderPathName?.join("/"),
+        (message: string) => toast.error(message),
+      ).catch((error: any) => {
+        console.error("Failed to apply permissions:", error);
+        toast.error("Failed to apply permissions");
+      });
     }
-    return;
+    // strategy === DefaultPermissionStrategy.HIDDEN_BY_DEFAULT - do nothing
   };
 
   return (
@@ -701,7 +733,7 @@ export function DataroomItemsList({
       ) : null}
 
       {showGroupPermissions && dataroomId && (
-        <SetGroupPermissionsModal
+        <SetUnifiedPermissionsModal
           open={showGroupPermissions}
           setOpen={setShowGroupPermissions}
           dataroomId={dataroomId}
@@ -710,7 +742,6 @@ export function DataroomItemsList({
             setShowGroupPermissions(false);
             setUploadedFiles([]);
           }}
-          isAutoOpen
         />
       )}
       <DeleteFolderModal />

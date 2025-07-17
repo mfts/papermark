@@ -75,8 +75,12 @@ const NavItem: React.FC<Props["navigation"][0]> = ({
   }
 
   // Special case for permissions - also active when pathname includes "groups"
-  if (segment === "permissions" && router.pathname.includes("groups")) {
-    active = true;
+  // but NOT when it's within settings (like settings/file-permissions)
+  if (segment === "permissions") {
+    active =
+      (router.pathname.includes("permissions") &&
+        !router.pathname.includes("settings")) ||
+      router.pathname.includes("groups");
   }
 
   if (segment === "analytics" && router.pathname.includes("groups")) {

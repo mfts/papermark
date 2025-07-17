@@ -8,10 +8,10 @@ import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BetweenHorizontalStartIcon,
   ChevronRight,
+  EyeIcon,
   FileIcon,
   FolderIcon,
   FolderInputIcon,
-  Layers2Icon,
   MoreVertical,
   ServerIcon,
   TrashIcon,
@@ -30,6 +30,7 @@ import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
 import { AddToDataroomModal } from "@/components/documents/add-document-to-dataroom-modal";
+import { DocumentPreviewModal } from "@/components/documents/document-preview-modal";
 import { MoveToFolderModal } from "@/components/documents/move-folder-modal";
 import BarChart from "@/components/shared/icons/bar-chart";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,7 @@ export default function DocumentsCard({
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
   const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
+  const [previewOpen, setPreviewOpen] = useState<boolean>(false);
 
   const { datarooms } = useDatarooms();
 
@@ -344,6 +346,16 @@ export default function DocumentsCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => {
+                  setPreviewOpen(true);
+                  setMenuOpen(false);
+                }}
+              >
+                <EyeIcon className="mr-2 h-4 w-4" />
+                Quick preview
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
@@ -412,6 +424,12 @@ export default function DocumentsCard({
           setOpen={setPlanModalOpen}
         />
       ) : null}
+
+      <DocumentPreviewModal
+        documentId={prismaDocument.id}
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+      />
     </>
   );
 }

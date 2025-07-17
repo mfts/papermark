@@ -73,7 +73,86 @@ async function insertWatermark(
 
   // Compile the Handlebars template
   const template = Handlebars.compile(config.text);
-  const watermarkText = template(viewerData);
+  const rawWatermarkText = template(viewerData);
+
+  // Handle Unicode characters that can't be encoded in WinAnsi
+  const sanitizeText = (text: string): string => {
+    // Common character replacements for WinAnsi compatibility
+    const replacements: { [key: string]: string } = {
+      // Turkish characters
+      İ: "I",
+      ı: "i",
+      ğ: "g",
+      Ğ: "G",
+      ü: "u",
+      Ü: "U",
+      ş: "s",
+      Ş: "S",
+      ç: "c",
+      Ç: "C",
+      ö: "o",
+      Ö: "O",
+      // German characters
+      ß: "ss",
+      ä: "a",
+      Ä: "A",
+      ë: "e",
+      Ë: "E",
+      // French characters
+      à: "a",
+      À: "A",
+      é: "e",
+      É: "E",
+      è: "e",
+      È: "E",
+      ê: "e",
+      Ê: "E",
+      ù: "u",
+      Ù: "U",
+      ô: "o",
+      Ô: "O",
+      // Spanish characters
+      ñ: "n",
+      Ñ: "N",
+      á: "a",
+      Á: "A",
+      í: "i",
+      Í: "I",
+      ó: "o",
+      Ó: "O",
+      ú: "u",
+      Ú: "U",
+      // Common symbols
+      "€": "EUR",
+      "£": "GBP",
+      "¥": "JPY",
+      "©": "(c)",
+      "®": "(R)",
+      "™": "TM",
+      "…": "...",
+      "–": "-",
+      "—": "-",
+      "\u201C": '"',
+      "\u201D": '"',
+      "\u2018": "'",
+      "\u2019": "'",
+      "•": "*",
+    };
+
+    let sanitized = text;
+
+    // Apply character replacements
+    for (const [original, replacement] of Object.entries(replacements)) {
+      sanitized = sanitized.replace(new RegExp(original, "g"), replacement);
+    }
+
+    // Replace any remaining non-WinAnsi characters (outside Latin-1 range)
+    sanitized = sanitized.replace(/[^\u0000-\u00FF]/g, "?");
+
+    return sanitized;
+  };
+
+  const watermarkText = sanitizeText(rawWatermarkText);
 
   // Calculate a responsive font size
   const calculateFontSize = () => {
@@ -82,8 +161,19 @@ async function insertWatermark(
   };
   const fontSize = calculateFontSize();
 
-  const textWidth = font.widthOfTextAtSize(watermarkText, fontSize);
-  const textHeight = font.heightAtSize(fontSize);
+  // Calculate text dimensions with error handling
+  let textWidth: number;
+  let textHeight: number;
+
+  try {
+    textWidth = font.widthOfTextAtSize(watermarkText, fontSize);
+    textHeight = font.heightAtSize(fontSize);
+  } catch (error) {
+    // If there are still encoding issues, provide fallback values
+    console.warn("Font encoding error:", error);
+    textWidth = watermarkText.length * fontSize * 0.6; // Approximate width
+    textHeight = fontSize * 1.2; // Approximate height
+  }
 
   if (config.isTiled) {
     const patternWidth = textWidth / 1.1;
@@ -101,15 +191,22 @@ async function insertWatermark(
         const x = i * patternWidth + offsetX;
         const y = j * patternHeight + offsetY;
 
-        page.drawText(watermarkText, {
-          x,
-          y,
-          size: fontSize,
-          font,
-          color: hexToRgb(config.color) ?? rgb(0, 0, 0),
-          opacity: config.opacity,
-          rotate: degrees(config.rotation),
-        });
+        try {
+          page.drawText(watermarkText, {
+            x,
+            y,
+            size: fontSize,
+            font,
+            color: hexToRgb(config.color) ?? rgb(0, 0, 0),
+            opacity: config.opacity,
+            rotate: degrees(config.rotation),
+          });
+        } catch (error) {
+          console.error("Error drawing tiled watermark text:", error);
+          throw new Error(
+            `Failed to apply watermark to page ${pageIndex + 1}: ${error}`,
+          );
+        }
       }
     }
   } else {
@@ -121,15 +218,22 @@ async function insertWatermark(
       textHeight,
     );
 
-    page.drawText(watermarkText, {
-      x,
-      y,
-      size: fontSize,
-      font,
-      color: hexToRgb(config.color) ?? rgb(0, 0, 0),
-      opacity: config.opacity,
-      rotate: degrees(config.rotation),
-    });
+    try {
+      page.drawText(watermarkText, {
+        x,
+        y,
+        size: fontSize,
+        font,
+        color: hexToRgb(config.color) ?? rgb(0, 0, 0),
+        opacity: config.opacity,
+        rotate: degrees(config.rotation),
+      });
+    } catch (error) {
+      console.error("Error drawing positioned watermark text:", error);
+      throw new Error(
+        `Failed to apply watermark to page ${pageIndex + 1}: ${error}`,
+      );
+    }
   }
 }
 
@@ -204,6 +308,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       type: "error",
       mention: true,
     });
-    throw error;
+
+    // Return proper error response instead of throwing
+    res.status(500).json({
+      error: "Failed to apply watermark",
+      details: (error as Error).message,
+    });
+    return;
   }
 };

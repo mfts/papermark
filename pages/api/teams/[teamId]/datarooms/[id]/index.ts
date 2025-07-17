@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { DefaultPermissionStrategy } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
@@ -47,6 +48,9 @@ export default async function handle(
         where: {
           id: dataroomId,
           teamId,
+        },
+        include: {
+          _count: { select: { viewerGroups: true, permissionGroups: true } },
         },
       });
 
@@ -96,10 +100,12 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      const { name, enableChangeNotifications } = req.body as {
-        name?: string;
-        enableChangeNotifications?: boolean;
-      };
+      const { name, enableChangeNotifications, defaultPermissionStrategy } =
+        req.body as {
+          name?: string;
+          enableChangeNotifications?: boolean;
+          defaultPermissionStrategy?: DefaultPermissionStrategy;
+        };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
       const isDataroomsPlus = team.plan.includes("datarooms-plus");
@@ -125,6 +131,7 @@ export default async function handle(
           ...(typeof enableChangeNotifications === "boolean" && {
             enableChangeNotifications,
           }),
+          ...(defaultPermissionStrategy && { defaultPermissionStrategy }),
         },
       });
 

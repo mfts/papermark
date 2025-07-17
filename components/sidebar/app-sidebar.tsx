@@ -136,7 +136,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             current: router.pathname.includes("settings/general"),
           },
           {
-            title: "People",
+            title: "Team",
             url: "/settings/people",
             current: router.pathname.includes("settings/people"),
           },

@@ -33,8 +33,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { AddToDataroomModal } from "../documents/add-document-to-dataroom-modal";
+import { DocumentPreviewButton } from "../documents/document-preview-button";
 import FileProcessStatusBar from "../documents/file-process-status-bar";
-import { SetGroupPermissionsModal } from "./groups/set-group-permissions-modal";
+import { SetUnifiedPermissionsModal } from "./groups/set-unified-permissions-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type DocumentsCardProps = {
@@ -243,6 +244,19 @@ export default function DataroomDocumentCard({
               </p>
             </Link>
 
+            <DocumentPreviewButton
+              documentId={dataroomDocument.document.id}
+              primaryVersion={{
+                hasPages:
+                  dataroomDocument.document.versions?.[0]?.hasPages || false,
+                type: dataroomDocument.document.type,
+                numPages: null, // Not available in this context
+              }}
+              variant="outline"
+              size="icon"
+              className="z-10 h-8 w-8 border-gray-200 bg-transparent hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
+            />
+
             <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -342,7 +356,7 @@ export default function DataroomDocumentCard({
         />
       ) : null}
       {groupPermissionOpen ? (
-        <SetGroupPermissionsModal
+        <SetUnifiedPermissionsModal
           open={groupPermissionOpen}
           setOpen={setGroupPermissionOpen}
           dataroomId={dataroomId}

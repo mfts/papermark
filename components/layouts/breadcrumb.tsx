@@ -169,6 +169,8 @@ const SingleDataroomBreadcrumb = ({ path }: { path: string }) => {
         return "Conversations";
       case "/datarooms/[id]/settings/notifications":
         return "Notifications";
+      case "/datarooms/[id]/settings/file-permissions":
+        return "File Permissions";
       default:
         return dataroom?.name || "Loading...";
     }
@@ -207,7 +209,7 @@ const SettingsBreadcrumb = () => {
       case "/settings/general":
         return "General";
       case "/settings/people":
-        return "People";
+        return "Team";
       case "/settings/domains":
         return "Domains";
       case "/settings/presets":
