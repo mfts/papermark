@@ -18,10 +18,16 @@ DialogTrigger.displayName = DialogPrimitive.Trigger.displayName;
 
 const DialogPortal = ({
   children,
+  isPreviewDialog,
   ...props
-}: DialogPrimitive.DialogPortalProps) => (
+}: DialogPrimitive.DialogPortalProps & { isPreviewDialog?: boolean }) => (
   <DialogPrimitive.Portal {...props}>
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+    <div
+      className={cn(
+        "fixed inset-0 z-50 flex items-end justify-center sm:items-center",
+        isPreviewDialog ? "items-center" : "items-end",
+      )}
+    >
       {children}
     </div>
   </DialogPrimitive.Portal>
@@ -47,35 +53,41 @@ const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     isDocumentDialog?: boolean;
+    isPreviewDialog?: boolean;
   }
->(({ className, children, isDocumentDialog, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed z-50 grid w-full gap-4 rounded-t-lg border border-gray-800 bg-background p-6 shadow-lg animate-in data-[state=open]:fade-in-90 data-[state=open]:slide-in-from-bottom-10 sm:max-w-xl sm:rounded-lg sm:zoom-in-90 data-[state=open]:sm:slide-in-from-bottom-0 md:w-1/2",
-        className,
-      )}
-      onCloseAutoFocus={(event) => {
-        event.preventDefault();
-        document.body.style.pointerEvents = "";
-      }}
-      {...props}
-    >
-      {children}
-      <DialogPrimitive.Close
+>(
+  (
+    { className, children, isDocumentDialog, isPreviewDialog, ...props },
+    ref,
+  ) => (
+    <DialogPortal isPreviewDialog={isPreviewDialog}>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        ref={ref}
         className={cn(
-          "absolute rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground",
-          isDocumentDialog ? "right-8 top-20" : "right-4 top-4",
+          "fixed z-50 grid w-full gap-4 rounded-t-lg border border-gray-800 bg-background p-6 shadow-lg animate-in data-[state=open]:fade-in-90 data-[state=open]:slide-in-from-bottom-10 sm:max-w-xl sm:rounded-lg sm:zoom-in-90 data-[state=open]:sm:slide-in-from-bottom-0 md:w-1/2",
+          className,
         )}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          document.body.style.pointerEvents = "";
+        }}
+        {...props}
       >
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </DialogPortal>
-));
+        {children}
+        <DialogPrimitive.Close
+          className={cn(
+            "absolute rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground",
+            isDocumentDialog ? "right-8 top-20" : "right-4 top-4",
+          )}
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  ),
+);
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const DialogHeader = ({

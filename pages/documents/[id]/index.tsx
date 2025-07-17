@@ -11,6 +11,7 @@ import useLimits from "@/lib/swr/use-limits";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import DocumentHeader from "@/components/documents/document-header";
+import { DocumentPreviewButton } from "@/components/documents/document-preview-button";
 import { StatsComponent } from "@/components/documents/stats";
 import VideoAnalytics from "@/components/documents/video-analytics";
 import AppLayout from "@/components/layouts/app";
@@ -73,7 +74,18 @@ export default function DocumentPage() {
               primaryVersion={primaryVersion}
               prismaDocument={prismaDocument}
               teamId={teamInfo?.currentTeam?.id!}
-              actions={[<AddLinkButton key={"create-link"} />]}
+              actions={[
+                <DocumentPreviewButton
+                  key={"preview"}
+                  documentId={prismaDocument.id}
+                  primaryVersion={primaryVersion}
+                  variant="outline"
+                  size="default"
+                  showTooltip={false}
+                  className="h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm"
+                />,
+                <AddLinkButton key={"create-link"} />,
+              ]}
             />
 
             {/* Document Analytics */}

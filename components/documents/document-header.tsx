@@ -576,9 +576,9 @@ export default function DocumentHeader({
             (!orientationLoading ? (
               <ButtonTooltip content="Change orientation">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
-                  className="hidden md:flex"
+                  className="hidden size-8 sm:flex lg:size-9"
                   onClick={changeDocumentOrientation}
                   title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
                 >
@@ -604,13 +604,13 @@ export default function DocumentHeader({
             >
               <ButtonTooltip content="Upload new version">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
                     setOpenAddDocModal(true);
                   }}
-                  className="hidden md:flex"
+                  className="hidden size-8 md:flex lg:size-9"
                 >
                   <FileUp className="h-6 w-6" />
                 </Button>
@@ -640,7 +640,7 @@ export default function DocumentHeader({
             {actionRows.map((row, i) => (
               <ul
                 key={i.toString()}
-                className="flex flex-wrap items-center justify-end gap-2 md:flex-nowrap md:gap-4"
+                className="flex flex-wrap items-center justify-end gap-x-4 md:flex-nowrap md:gap-x-2"
               >
                 {row.map((action, i) => (
                   <li key={i}>{action}</li>
