@@ -132,7 +132,9 @@ export default function AccessForm({
               color: determineTextColor(brand?.accentColor),
             }}
           >
-            Your action is requested to continue
+            {brand && "welcomeMessage" in brand && brand.welcomeMessage
+              ? brand.welcomeMessage
+              : "Your action is requested to continue"}
           </h1>
         </div>
 

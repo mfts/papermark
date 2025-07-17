@@ -189,6 +189,7 @@ export async function fetchDataroomLinkData({
       banner: true,
       brandColor: true,
       accentColor: true,
+      welcomeMessage: true,
     },
   });
 
@@ -208,6 +209,7 @@ export async function fetchDataroomLinkData({
     banner: dataroomBrand?.banner || null,
     brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
     accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
+    welcomeMessage: dataroomBrand?.welcomeMessage,
   };
 
   // Extract access controls from either ViewerGroup or PermissionGroup
@@ -324,6 +326,7 @@ export async function fetchDataroomDocumentLinkData({
       banner: true,
       brandColor: true,
       accentColor: true,
+      welcomeMessage: true,
     },
   });
 

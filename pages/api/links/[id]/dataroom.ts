@@ -95,6 +95,7 @@ export default async function handle(
           logo: true,
           banner: true,
           brandColor: true,
+          welcomeMessage: true,
         },
       });
 

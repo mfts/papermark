@@ -8,8 +8,9 @@ import { determineTextColor } from "@/lib/utils/determine-text-color";
 
 export default function ViewPage() {
   const router = useRouter();
-  const { accentColor } = router.query as {
+  const { accentColor, welcomeMessage } = router.query as {
     accentColor: string;
+    welcomeMessage?: string;
   };
 
   return (
@@ -25,7 +26,7 @@ export default function ViewPage() {
               color: determineTextColor(accentColor),
             }}
           >
-            Your action is requested to continue
+            {welcomeMessage || "Your action is requested to continue"}
           </h1>
         </div>
 

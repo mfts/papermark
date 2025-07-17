@@ -7,12 +7,18 @@ import { Check, CircleHelpIcon, InfoIcon, PlusIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { useDebounce } from "use-debounce";
+
+import { useDataroomBrand } from "@/lib/swr/use-brand";
+import { useDataroom } from "@/lib/swr/use-dataroom";
+import { cn, convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import {
@@ -22,10 +28,6 @@ import {
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-
-import { useDataroomBrand } from "@/lib/swr/use-brand";
-import { useDataroom } from "@/lib/swr/use-dataroom";
-import { cn, convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
 
@@ -41,7 +43,10 @@ export default function DataroomBrandPage() {
   const [banner, setBanner] = useState<string | null>(DEFAULT_BANNER_IMAGE);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [bannerBlobUrl, setBannerBlobUrl] = useState<string | null>(null);
-
+  const [welcomeMessage, setWelcomeMessage] = useState<string>(
+    "Your action is requested to continue",
+  );
+  const [debouncedWelcomeMessage] = useDebounce(welcomeMessage, 500);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -137,6 +142,8 @@ export default function DataroomBrandPage() {
     }
 
     const data = {
+      welcomeMessage:
+        welcomeMessage.trim() || "Your action is requested to continue",
       brandColor: brandColor,
       accentColor: accentColor,
       logo: blobUrl,
@@ -224,6 +231,15 @@ export default function DataroomBrandPage() {
                   <CardContent className="pt-6">
                     <div className="grid gap-6">
                       <div className="flex flex-col gap-2">
+                        <Label htmlFor="welcome-message">Welcome Message</Label>
+                        <Input
+                          id="welcome-message"
+                          value={welcomeMessage}
+                          onChange={(e) => setWelcomeMessage(e.target.value)}
+                          placeholder="Your action is requested to continue"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between">
                           <Label htmlFor="logo">
                             Logo{" "}
@@ -235,9 +251,10 @@ export default function DataroomBrandPage() {
                             <p className="text-sm text-red-500">{fileError}</p>
                           ) : null}
                         </div>
+                        <div>
                         <label
                           htmlFor="image"
-                          className="group relative mt-1 flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
+                          className="group relative flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
                         >
                           {false && (
                             <div className="absolute z-[5] flex h-full w-full items-center justify-center rounded-md bg-white">
@@ -321,7 +338,7 @@ export default function DataroomBrandPage() {
                             />
                           )}
                         </label>
-                        <div className="mt-1 flex rounded-md shadow-sm">
+                        <div className="flex rounded-md shadow-sm">
                           <input
                             id="image"
                             name="image"
@@ -330,6 +347,7 @@ export default function DataroomBrandPage() {
                             className="sr-only"
                             onChange={onChangeLogo}
                           />
+                        </div>
                         </div>
                       </div>
                       {/* Banner Input */}
@@ -345,9 +363,10 @@ export default function DataroomBrandPage() {
                             <p className="text-sm text-red-500">{fileError}</p>
                           ) : null}
                         </div>
+                        <div>
                         <label
                           htmlFor="banner"
-                          className="group relative mt-1 flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
+                          className="group relative flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
                           style={{
                             backgroundImage:
                               "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(135deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(135deg, transparent 75%, #ccc 75%)",
@@ -387,7 +406,7 @@ export default function DataroomBrandPage() {
                             />
                           )}
                         </label>
-                        <div className="mt-1 flex rounded-md shadow-sm">
+                        <div className="flex rounded-md shadow-sm">
                           <input
                             id="banner"
                             name="banner"
@@ -395,7 +414,8 @@ export default function DataroomBrandPage() {
                             accept="image/jpeg,image/png"
                             className="sr-only"
                             onChange={onChangeBanner}
-                          />
+                            />
+                          </div>
                         </div>
                       </div>
                       <div className="flex flex-col gap-2">
@@ -725,10 +745,10 @@ export default function DataroomBrandPage() {
                             </div>
                           </div>
                           <iframe
-                            key={`access-screen-${brandColor}-${accentColor}`}
+                            key={`access-screen-${brandColor}-${accentColor}-${debouncedWelcomeMessage}`}
                             name="access-screen"
                             id="access-screen"
-                            src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
+                            src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
                             style={{
                               width: "1390px",
                               height: "831px",
