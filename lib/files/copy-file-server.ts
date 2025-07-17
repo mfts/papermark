@@ -1,6 +1,6 @@
 import { CopyObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { DocumentStorageType } from "@prisma/client";
-import { put } from "@vercel/blob";
+import { copy } from "@vercel/blob";
 import { match } from "ts-pattern";
 
 import { newId } from "@/lib/id-helper";
@@ -40,12 +40,11 @@ const copyFileInVercelServer = async ({
   fileName: string;
   fileUrl: string;
 }) => {
-  const file = await fetch(fileUrl);
-  const contents = await file.arrayBuffer();
   const newFileName = fileName + "-copy";
 
-  const blob = await put(newFileName, contents, {
+  const blob = await copy(fileUrl, newFileName, {
     access: "public",
+    addRandomSuffix: true,
   });
 
   return {
