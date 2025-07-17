@@ -26,7 +26,6 @@ export function DocumentPreviewModal({
     document: documentData,
     loading,
     error,
-    mutate,
   } = useDocumentPreview(documentId, isOpen);
 
   const handleClose = () => {
@@ -43,8 +42,6 @@ export function DocumentPreviewModal({
     // Prevent clicks from propagating to underlying elements
     e.stopPropagation();
   };
-
-  console.log("error", error);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -81,19 +78,7 @@ export function DocumentPreviewModal({
           <div className="flex h-full w-full items-center justify-center">
             <div className="text-center">
               <p className="text-red-400">
-                {(() => {
-                  try {
-                    const errorData = JSON.parse((error as Error).message);
-                    return (
-                      errorData.message || "Failed to load document preview"
-                    );
-                  } catch {
-                    return (
-                      (error as Error).message ||
-                      "Failed to load document preview"
-                    );
-                  }
-                })()}
+                {(error as Error).message || "Failed to load document preview"}
               </p>
             </div>
           </div>

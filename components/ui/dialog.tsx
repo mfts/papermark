@@ -25,7 +25,7 @@ const DialogPortal = ({
     <div
       className={cn(
         "fixed inset-0 z-50 flex items-end justify-center sm:items-center",
-        isPreviewDialog ? "items-center" : "items-end",
+        isPreviewDialog && "items-center",
       )}
     >
       {children}

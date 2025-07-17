@@ -1,28 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
+import { DocumentPreviewData } from "@/lib/types/document-preview";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
-
-interface DocumentPreviewData {
-  documentId: string;
-  documentName: string;
-  documentType: string;
-  fileType: string;
-  isVertical: boolean;
-  numPages: number;
-  pages?: {
-    file: string;
-    pageNumber: string;
-    embeddedLinks: string[];
-    pageLinks: { href: string; coords: string }[];
-    metadata: { width: number; height: number; scaleFactor: number };
-  }[];
-  file?: string;
-  sheetData?: any;
-}
 
 interface PreviewPagesViewerProps {
   documentData: DocumentPreviewData;
@@ -39,15 +22,19 @@ export function PreviewPagesViewer({
 
   const { pages, numPages, documentName, isVertical } = documentData;
 
-  if (!pages || pages.length === 0) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <p className="text-gray-400">No pages available for preview</p>
-      </div>
-    );
-  }
+  const goToNextPage = useCallback(() => {
+    if (currentPage < numPages) {
+      setCurrentPage(currentPage + 1);
+      setImageLoaded(imageCache[currentPage + 1] || false);
+    }
+  }, [currentPage, numPages, imageCache]);
 
-  const currentPageData = pages[currentPage - 1];
+  const goToPreviousPage = useCallback(() => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      setImageLoaded(imageCache[currentPage - 1] || false);
+    }
+  }, [currentPage, numPages, imageCache]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -66,21 +53,17 @@ export function PreviewPagesViewer({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [currentPage, onClose]);
+  }, [goToPreviousPage, goToNextPage, onClose]);
 
-  const goToNextPage = () => {
-    if (currentPage < numPages) {
-      setCurrentPage(currentPage + 1);
-      setImageLoaded(imageCache[currentPage + 1] || false);
-    }
-  };
+  if (!pages || pages.length === 0) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <p className="text-gray-400">No pages available for preview</p>
+      </div>
+    );
+  }
 
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-      setImageLoaded(imageCache[currentPage - 1] || false);
-    }
-  };
+  const currentPageData = pages[currentPage - 1];
 
   const handleImageLoad = () => {
     setImageLoaded(true);

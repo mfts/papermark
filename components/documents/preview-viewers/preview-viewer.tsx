@@ -1,23 +1,7 @@
+import { DocumentPreviewData } from "@/lib/types/document-preview";
+
 import { PreviewImageViewer } from "./preview-image-viewer";
 import { PreviewPagesViewer } from "./preview-pages-viewer";
-
-interface DocumentPreviewData {
-  documentId: string;
-  documentName: string;
-  documentType: string;
-  fileType: string;
-  isVertical: boolean;
-  numPages: number;
-  pages?: {
-    file: string;
-    pageNumber: string;
-    embeddedLinks: string[];
-    pageLinks: { href: string; coords: string }[];
-    metadata: { width: number; height: number; scaleFactor: number };
-  }[];
-  file?: string;
-  sheetData?: any;
-}
 
 interface PreviewViewerProps {
   documentData: DocumentPreviewData;
@@ -77,6 +61,8 @@ export function PreviewViewer({ documentData, onClose }: PreviewViewerProps) {
   };
 
   return (
-    <div className="relative h-full w-full bg-gray-900">{renderViewer()}</div>
+    <div className="relative h-full w-full rounded-lg bg-gray-900">
+      {renderViewer()}
+    </div>
   );
 }
