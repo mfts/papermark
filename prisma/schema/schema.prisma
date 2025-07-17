@@ -111,8 +111,25 @@ model Team {
 
   ignoredDomains String[] // Domains that are ignored for the team
   globalBlockList String[]
+  allowListGroups AllowListGroup[]
 }
 
+model AllowListGroup {
+  id          String   @id @default(cuid())
+  name        String
+  allowList   String[]
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  links Link[]
+  presets LinkPreset[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, name])
+  @@index([teamId])
+}
 
 model Brand {
   id          String  @id @default(cuid())

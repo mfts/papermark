@@ -43,6 +43,7 @@ const LinkSchema = z.object({
   groupId: z.string().optional(),
   allowList: z.array(z.string()).optional(),
   denyList: z.array(z.string()).optional(),
+  allowListGroupId: z.string().optional(),
   presetId: z.string().optional(),
 });
 
@@ -448,6 +449,7 @@ async function handleDocumentCreate(
         groupId: isGroupAudience ? link.groupId : null,
         allowList: link.allowList || preset?.allowList,
         denyList: link.denyList || preset?.denyList,
+        allowListGroupId: link.allowListGroupId || null,
         ...(preset?.enableCustomMetaTag && {
           enableCustomMetatag: preset?.enableCustomMetaTag,
           metaTitle: preset?.metaTitle,
@@ -654,6 +656,7 @@ async function handleLinkCreate(
         groupId: isGroupAudience ? link.groupId : null,
         allowList: link.allowList || preset?.allowList,
         denyList: link.denyList || preset?.denyList,
+        allowListGroupId: link.allowListGroupId || null,
         ...(preset?.enableCustomMetaTag && {
           enableCustomMetatag: preset?.enableCustomMetaTag,
           metaTitle: preset?.metaTitle,
@@ -825,6 +828,7 @@ async function handleDataroomCreate(
           groupId: isGroupAudience ? link.groupId : null,
           allowList: link.allowList || preset?.allowList,
           denyList: link.denyList || preset?.denyList,
+          allowListGroupId: link.allowListGroupId || null,
           ...(preset?.enableCustomMetaTag && {
             enableCustomMetatag: preset?.enableCustomMetaTag,
             metaTitle: preset?.metaTitle,

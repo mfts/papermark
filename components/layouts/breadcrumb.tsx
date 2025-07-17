@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+import { useAllowListGroup } from "@/lib/swr/use-allow-list-groups";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { useDocument } from "@/lib/swr/use-document";
 import { useFolderWithParents } from "@/lib/swr/use-folders";
@@ -365,9 +366,7 @@ const VisitorsBreadcrumb = () => {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href="/visitors">Visitors</Link>
-          </BreadcrumbLink>
+          <BreadcrumbPage>Visitors</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
@@ -389,6 +388,28 @@ const SingleVisitorBreadcrumb = () => {
         <BreadcrumbItem>
           <BreadcrumbPage className="max-w-[200px] truncate">
             {viewer?.email || "Loading..."}
+          </BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+};
+
+const SingleVisitorGroupBreadcrumb = ({ groupId }: { groupId: string }) => {
+  const { allowListGroup } = useAllowListGroup(groupId);
+
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href="/visitors?tab=allow-lists">Visitors</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage>
+            {allowListGroup?.name || "Loading..."}
           </BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
@@ -435,8 +456,9 @@ const AnalyticsBreadcrumb = () => {
 export const AppBreadcrumb = () => {
   const router = useRouter();
   const path = router.pathname;
-  const { id } = router.query as {
+  const { id, groupId } = router.query as {
     id?: string;
+    groupId?: string;
   };
 
   const breadcrumb = useMemo(() => {
@@ -516,8 +538,13 @@ export const AppBreadcrumb = () => {
       return <SingleVisitorBreadcrumb />;
     }
 
+    // Visitor group route
+    if (path === "/visitors/groups/[groupId]" && groupId) {
+      return <SingleVisitorGroupBreadcrumb groupId={groupId} />;
+    }
+
     return null;
-  }, [path, id]);
+  }, [path, id, groupId]);
 
   return breadcrumb;
 };
