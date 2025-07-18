@@ -1,6 +1,8 @@
 import { logger, task } from "@trigger.dev/sdk/v3";
+import { put } from "@vercel/blob";
 import Bottleneck from "bottleneck";
 
+import { sendExportReadyEmail } from "@/lib/emails/send-export-ready-email";
 import prisma from "@/lib/prisma";
 import { jobStore } from "@/lib/redis-job-store";
 import {
@@ -28,9 +30,6 @@ export const exportVisitsTask = task({
   id: "export-visits",
   retry: { maxAttempts: 3 },
   maxDuration: 900, // 15 minutes to handle large datasets
-  machine: {
-    preset: "medium-1x", // More resources for processing
-  },
   run: async (payload: ExportVisitsPayload) => {
     const { type, teamId, resourceId, groupId, userId, exportId } = payload;
 
@@ -65,26 +64,71 @@ export const exportVisitsTask = task({
       let resourceName: string;
 
       if (type === "document") {
-        ({ csvData, resourceName } = await exportDocumentVisits(resourceId, teamId));
+        ({ csvData, resourceName } = await exportDocumentVisits(
+          resourceId,
+          teamId,
+        ));
       } else if (type === "dataroom") {
-        ({ csvData, resourceName } = await exportDataroomVisits(resourceId, teamId, groupId));
+        ({ csvData, resourceName } = await exportDataroomVisits(
+          resourceId,
+          teamId,
+          groupId,
+        ));
       } else {
         throw new Error("Invalid export type");
       }
 
-      // Store the result in Redis
-      await jobStore.updateJob(exportId, {
+      // Create timestamp for filename
+      const currentTime = new Date().toISOString().split("T")[0];
+
+      // Upload CSV to Vercel Blob
+      const filename = `visits-${resourceName.replace(/[^a-zA-Z0-9]/g, "_")}-${currentTime}.csv`;
+      const blob = await put(filename, csvData, {
+        access: "public",
+        addRandomSuffix: true,
+        contentType: "text/csv",
+      });
+
+      logger.info("CSV uploaded to Vercel Blob", {
+        filename,
+        url: blob.downloadUrl,
+        size: csvData.length,
+      });
+
+      // Store the blob URL in Redis
+      const updatedJob = await jobStore.updateJob(exportId, {
         status: "COMPLETED",
-        result: csvData,
+        result: blob.downloadUrl,
         resourceName,
         completedAt: new Date().toISOString(),
       });
+
+      // Send email notification if requested
+      if (updatedJob?.emailNotification && updatedJob.emailAddress) {
+        try {
+          await sendExportReadyEmail({
+            to: updatedJob.emailAddress,
+            resourceName: resourceName,
+            downloadUrl: `${process.env.NEXTAUTH_URL}/api/teams/${teamId}/export-jobs/${exportId}?download=true`,
+          });
+          logger.info("Export ready email sent", {
+            exportId,
+            emailAddress: updatedJob.emailAddress,
+          });
+        } catch (error) {
+          logger.error("Failed to send export ready email", {
+            exportId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
 
       logger.info("Export visits task completed successfully", {
         exportId,
         type,
         resourceId,
         csvSize: csvData.length,
+        blobUrl: blob.downloadUrl,
       });
 
       return {
@@ -92,6 +136,7 @@ export const exportVisitsTask = task({
         exportId,
         resourceName,
         csvSize: csvData.length,
+        blobUrl: blob.downloadUrl,
       };
     } catch (error) {
       logger.error("Export visits task failed", {
@@ -110,7 +155,10 @@ export const exportVisitsTask = task({
   },
 });
 
-async function exportDocumentVisits(docId: string, teamId: string): Promise<{
+async function exportDocumentVisits(
+  docId: string,
+  teamId: string,
+): Promise<{
   csvData: string;
   resourceName: string;
 }> {
@@ -208,7 +256,7 @@ async function exportDocumentVisits(docId: string, teamId: string): Promise<{
 
   for (let i = 0; i < views.length; i++) {
     const view = views[i];
-    
+
     logger.info(`Processing view ${i + 1}/${views.length}`, {
       viewId: view.id,
       viewedAt: view.viewedAt,
@@ -299,7 +347,7 @@ async function exportDocumentVisits(docId: string, teamId: string): Promise<{
 async function exportDataroomVisits(
   dataroomId: string,
   teamId: string,
-  groupId?: string
+  groupId?: string,
 ): Promise<{
   csvData: string;
   resourceName: string;
@@ -385,8 +433,12 @@ async function exportDataroomVisits(
   }
 
   // First get all dataroom views
-  const dataroomViews = views.filter((view) => view.viewType === "DATAROOM_VIEW");
-  const documentViews = views.filter((view) => view.viewType === "DOCUMENT_VIEW");
+  const dataroomViews = views.filter(
+    (view) => view.viewType === "DATAROOM_VIEW",
+  );
+  const documentViews = views.filter(
+    (view) => view.viewType === "DOCUMENT_VIEW",
+  );
 
   logger.info("Processing dataroom views with rate limiting", {
     dataroomViewCount: dataroomViews.length,
@@ -397,35 +449,38 @@ async function exportDataroomVisits(
   const exportData = [];
   for (let i = 0; i < dataroomViews.length; i++) {
     const dataroomView = dataroomViews[i];
-    
+
     logger.info(`Processing dataroom view ${i + 1}/${dataroomViews.length}`, {
       viewId: dataroomView.id,
     });
 
     // Find associated document views
     const associatedDocViews = documentViews.filter(
-      (docView) => docView.dataroomViewId === dataroomView.id
+      (docView) => docView.dataroomViewId === dataroomView.id,
     );
 
     // Process document views with rate limiting
     const documentViewDetails = [];
     for (let j = 0; j < associatedDocViews.length; j++) {
       const docView = associatedDocViews[j];
-      
-      logger.info(`Processing document view ${j + 1}/${associatedDocViews.length} for dataroom view ${i + 1}`, {
-        docViewId: docView.id,
-      });
+
+      logger.info(
+        `Processing document view ${j + 1}/${associatedDocViews.length} for dataroom view ${i + 1}`,
+        {
+          docViewId: docView.id,
+        },
+      );
 
       const duration = await tinybirdLimiter.schedule(() =>
         getViewPageDuration({
           documentId: docView.document?.id || "null",
           viewId: docView.id,
           since: 0,
-        })
+        }),
       );
 
       const relevantVersion = docView.document?.versions.find(
-        (version) => version.createdAt <= docView.viewedAt
+        (version) => version.createdAt <= docView.viewedAt,
       );
 
       const numPages =
@@ -440,7 +495,7 @@ async function exportDataroomVisits(
         downloadedAt: docView.downloadedAt?.toISOString() || "NaN",
         duration: duration.data.reduce(
           (total, data) => total + data.sum_duration,
-          0
+          0,
         ),
         completionRate: completionRate.toFixed(2) + "%",
         documentVersion:
@@ -462,7 +517,8 @@ async function exportDataroomVisits(
       agreementName: dataroomView.agreementResponse?.agreement.name || "NaN",
       agreementAcceptedAt:
         dataroomView.agreementResponse?.createdAt.toISOString() || "NaN",
-      agreementContent: dataroomView.agreementResponse?.agreement.content || "NaN",
+      agreementContent:
+        dataroomView.agreementResponse?.agreement.content || "NaN",
       documentViews: documentViewDetails,
     });
   }
@@ -491,60 +547,36 @@ async function exportDataroomVisits(
 
   // Create CSV
   const csvRows: string[] = [];
-  csvRows.push([
-    "Dataroom Viewed At",
-    "Dataroom Downloaded At",
-    "Visitor Name",
-    "Visitor Email",
-    "Link Name",
-    "Verified",
-    "Agreement Accepted",
-    "Agreement Name",
-    "Agreement Content",
-    "Agreement Accepted At",
-    "Document Name",
-    "Document Viewed At",
-    "Document Downloaded At",
-    "Total Visit Duration (s)",
-    "Total Document Completion (%)",
-    "Document Version",
-    "Browser",
-    "OS",
-    "Device",
-    "Country",
-    "City",
-  ].join(","));
+  csvRows.push(
+    [
+      "Dataroom Viewed At",
+      "Dataroom Downloaded At",
+      "Visitor Name",
+      "Visitor Email",
+      "Link Name",
+      "Verified",
+      "Agreement Accepted",
+      "Agreement Name",
+      "Agreement Content",
+      "Agreement Accepted At",
+      "Document Name",
+      "Document Viewed At",
+      "Document Downloaded At",
+      "Total Visit Duration (s)",
+      "Total Document Completion (%)",
+      "Document Version",
+      "Browser",
+      "OS",
+      "Device",
+      "Country",
+      "City",
+    ].join(","),
+  );
 
   exportData.forEach((view) => {
     if (view.documentViews.length === 0) {
-      csvRows.push([
-        view.dataroomViewedAt,
-        view.dataroomDownloadedAt,
-        view.viewerName,
-        view.viewerEmail,
-        view.linkName,
-        view.verified,
-        view.agreementStatus,
-        view.agreementName,
-        view.agreementContent,
-        view.agreementAcceptedAt,
-        "NaN",
-        "NaN",
-        "NaN",
-        "NaN",
-        "NaN",
-        "NaN",
-        "NaN",
-        "NaN",
-        "NaN",
-        "NaN",
-        "NaN",
-      ].join(","));
-    } else {
-      view.documentViews.forEach((docView) => {
-        const userAgentData = userAgentDataMap.get(docView.viewId);
-        
-        csvRows.push([
+      csvRows.push(
+        [
           view.dataroomViewedAt,
           view.dataroomDownloadedAt,
           view.viewerName,
@@ -555,18 +587,48 @@ async function exportDataroomVisits(
           view.agreementName,
           view.agreementContent,
           view.agreementAcceptedAt,
-          docView.documentName,
-          docView.viewedAt,
-          docView.downloadedAt,
-          (docView.duration / 1000).toFixed(1),
-          docView.completionRate,
-          docView.documentVersion,
-          userAgentData?.data[0]?.browser || "NaN",
-          userAgentData?.data[0]?.os || "NaN",
-          userAgentData?.data[0]?.device || "NaN",
-          userAgentData?.data[0]?.country || "NaN",
-          userAgentData?.data[0]?.city || "NaN",
-        ].join(","));
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
+        ].join(","),
+      );
+    } else {
+      view.documentViews.forEach((docView) => {
+        const userAgentData = userAgentDataMap.get(docView.viewId);
+
+        csvRows.push(
+          [
+            view.dataroomViewedAt,
+            view.dataroomDownloadedAt,
+            view.viewerName,
+            view.viewerEmail,
+            view.linkName,
+            view.verified,
+            view.agreementStatus,
+            view.agreementName,
+            view.agreementContent,
+            view.agreementAcceptedAt,
+            docView.documentName,
+            docView.viewedAt,
+            docView.downloadedAt,
+            (docView.duration / 1000).toFixed(1),
+            docView.completionRate,
+            docView.documentVersion,
+            userAgentData?.data[0]?.browser || "NaN",
+            userAgentData?.data[0]?.os || "NaN",
+            userAgentData?.data[0]?.device || "NaN",
+            userAgentData?.data[0]?.country || "NaN",
+            userAgentData?.data[0]?.city || "NaN",
+          ].join(","),
+        );
       });
     }
   });

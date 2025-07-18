@@ -26,24 +26,23 @@ export default async function handler(
       // Get export job details
       const exportJob = await jobStore.getJob(exportId);
 
-      if (!exportJob || exportJob.teamId !== teamId || exportJob.userId !== userId) {
+      if (
+        !exportJob ||
+        exportJob.teamId !== teamId ||
+        exportJob.userId !== userId
+      ) {
         return res.status(404).json({ error: "Export job not found" });
       }
 
       // Check if client wants to download the CSV
       const { download } = req.query;
-      if (download === "true" && exportJob.status === "COMPLETED" && exportJob.result) {
-        const timestamp = new Date().toISOString().replace(/[-:Z]/g, "");
-        const filename = `${exportJob.resourceName || "export"}_visits_${timestamp}.csv`;
-        
-        res.setHeader("Content-Type", "text/csv");
-        res.setHeader(
-          "Content-Disposition",
-          `attachment; filename="${filename}"`
-        );
-        res.setHeader("Content-Length", Buffer.byteLength(exportJob.result));
-        
-        return res.status(200).send(exportJob.result);
+      if (
+        download === "true" &&
+        exportJob.status === "COMPLETED" &&
+        exportJob.result
+      ) {
+        // Redirect directly to the blob URL
+        return res.redirect(302, exportJob.result);
       }
 
       // Return job status
@@ -70,15 +69,21 @@ export default async function handler(
     try {
       // Get the job first to verify ownership
       const exportJob = await jobStore.getJob(exportId);
-      
-      if (!exportJob || exportJob.teamId !== teamId || exportJob.userId !== userId) {
+
+      if (
+        !exportJob ||
+        exportJob.teamId !== teamId ||
+        exportJob.userId !== userId
+      ) {
         return res.status(404).json({ error: "Export job not found" });
       }
 
       // Delete export job
       await jobStore.deleteJob(exportId);
 
-      return res.status(200).json({ message: "Export job deleted successfully" });
+      return res
+        .status(200)
+        .json({ message: "Export job deleted successfully" });
     } catch (error) {
       console.error("Error deleting export job:", error);
       return res.status(500).json({ error: "Failed to delete export job" });

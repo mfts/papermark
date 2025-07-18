@@ -65,6 +65,7 @@ import { ButtonTooltip } from "../ui/tooltip";
 import { AddDocumentModal } from "./add-document-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 import AlertBanner from "./alert";
+import { ExportVisitsModal } from "./export-visits-modal";
 
 export default function DocumentHeader({
   prismaDocument,
@@ -94,6 +95,7 @@ export default function DocumentHeader({
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const [planModalTrigger, setPlanModalTrigger] = useState<string>("");
   const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
+  const [exportModalOpen, setExportModalOpen] = useState<boolean>(false);
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -315,89 +317,12 @@ export default function DocumentHeader({
   };
 
   // export method to fetch the visits data and convert to csv.
-  const exportVisitCounts = async (document: Document) => {
+  const exportVisitCounts = (document: Document) => {
     if (isFree) {
       toast.error("This feature is not available for your plan");
       return;
     }
-    
-    try {
-      // Trigger the background export job
-      const response = await fetch(
-        `/api/teams/${teamId}/documents/${document.id}/export-visits`,
-        { method: "POST" },
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-
-      if (data.exportId) {
-        toast.success("Export job started. You'll be notified when it's ready.");
-        
-        // Poll for export completion
-        const pollInterval = setInterval(async () => {
-          try {
-            const statusResponse = await fetch(
-              `/api/teams/${teamId}/export-jobs/${data.exportId}`,
-              { method: "GET" },
-            );
-            
-            if (statusResponse.ok) {
-              const statusData = await statusResponse.json();
-              
-              if (statusData.status === "COMPLETED" && statusData.isReady) {
-                clearInterval(pollInterval);
-                
-                // Download the CSV file
-                const downloadResponse = await fetch(
-                  `/api/teams/${teamId}/export-jobs/${data.exportId}?download=true`,
-                  { method: "GET" },
-                );
-                
-                if (downloadResponse.ok) {
-                  const blob = await downloadResponse.blob();
-                  const url = window.URL.createObjectURL(blob);
-                  const link = window.document.createElement("a");
-                  link.href = url;
-                  link.setAttribute(
-                    "download",
-                    `${statusData.resourceName}_visits_${formattedTime}.csv`,
-                  );
-                  link.rel = "noopener noreferrer";
-                  window.document.body.appendChild(link);
-                  link.click();
-
-                  setTimeout(() => {
-                    window.URL.revokeObjectURL(url);
-                    window.document.body.removeChild(link);
-                  }, 100);
-
-                  toast.success("CSV file downloaded successfully");
-                } else {
-                  toast.error("Failed to download the export file");
-                }
-              } else if (statusData.status === "FAILED") {
-                clearInterval(pollInterval);
-                toast.error(`Export failed: ${statusData.error || "Unknown error"}`);
-              }
-            }
-          } catch (error) {
-            console.error("Error polling export status:", error);
-          }
-        }, 3000); // Poll every 3 seconds
-
-        // Clear interval after 5 minutes to prevent indefinite polling
-        setTimeout(() => {
-          clearInterval(pollInterval);
-        }, 300000);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error(
-        "An error occurred while starting the export. Please try again.",
-      );
-    }
+    setExportModalOpen(true);
   };
 
   // Make a document download only or viewable
@@ -1041,6 +966,13 @@ export default function DocumentHeader({
           setOpen={setPlanModalOpen}
         />
       ) : null}
+
+      <ExportVisitsModal
+        document={prismaDocument}
+        teamId={teamId}
+        isVisible={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+      />
     </header>
   );
 }

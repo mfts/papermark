@@ -642,5 +642,3 @@ model TagItem {
   @@index([tagId, documentId])
   @@index([tagId, dataroomId])
 }
-
-
