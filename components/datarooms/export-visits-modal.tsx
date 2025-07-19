@@ -49,8 +49,7 @@ export function ExportVisitsModal({
     if (isVisible) {
       startExport();
     }
-  }, [isVisible]);
-
+  }, [isVisible, startExport]);
   const startExport = async () => {
     try {
       // Show modal immediately
