@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -11,22 +11,22 @@ interface ExportStatus {
 }
 
 interface ExportVisitsModalProps {
+  teamId: string;
   dataroomId: string;
   dataroomName: string;
-  teamId: string;
   groupId?: string;
   groupName?: string;
-  isVisible: boolean;
+  // Remove isVisible - if component is rendered, it should start
   onClose: () => void;
 }
 
 export function ExportVisitsModal({
+  teamId,
   dataroomId,
   dataroomName,
-  teamId,
   groupId,
   groupName,
-  isVisible,
+  // Remove isVisible parameter
   onClose,
 }: ExportVisitsModalProps) {
   const { data: session } = useSession();
@@ -44,13 +44,7 @@ export function ExportVisitsModal({
     };
   }, []);
 
-  // Start export when component becomes visible
-  useEffect(() => {
-    if (isVisible) {
-      startExport();
-    }
-  }, [isVisible, startExport]);
-  const startExport = async () => {
+  const startExport = useCallback(async () => {
     try {
       // Show modal immediately
       setShowModal(true);
@@ -172,7 +166,12 @@ export function ExportVisitsModal({
       );
       onClose();
     }
-  };
+  }, [teamId, dataroomId, groupId, dataroomName, groupName, onClose]);
+
+  // Start export immediately when component mounts
+  useEffect(() => {
+    startExport();
+  }, [startExport]);
 
   // Send export via email
   const sendExportEmail = async () => {
@@ -208,11 +207,6 @@ export function ExportVisitsModal({
   };
 
   // Don't render anything if not visible and no modal to show
-  if (!isVisible && !showModal) {
-    return null;
-  }
-
-  // Only show modal if it should be visible
   if (!showModal) {
     return null;
   }

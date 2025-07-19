@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Document } from "@prisma/client";
 import { useSession } from "next-auth/react";
@@ -14,14 +14,14 @@ interface ExportStatus {
 interface ExportVisitsModalProps {
   document: Document;
   teamId: string;
-  isVisible: boolean;
+  // Remove isVisible - if component is rendered, it should start
   onClose: () => void;
 }
 
 export function ExportVisitsModal({
   document,
   teamId,
-  isVisible,
+  // Remove isVisible parameter
   onClose,
 }: ExportVisitsModalProps) {
   const { data: session } = useSession();
@@ -39,14 +39,7 @@ export function ExportVisitsModal({
     };
   }, []);
 
-  // Start export when component becomes visible
-  useEffect(() => {
-    if (isVisible) {
-      startExport();
-    }
-  }, [isVisible]);
-
-  const startExport = async () => {
+  const startExport = useCallback(async () => {
     try {
       // Show modal immediately
       setShowModal(true);
@@ -168,7 +161,12 @@ export function ExportVisitsModal({
       );
       onClose();
     }
-  };
+  }, [document.id, teamId, onClose]);
+
+  // Start export immediately when component mounts
+  useEffect(() => {
+    startExport();
+  }, [startExport]);
 
   // Send export via email
   const sendExportEmail = async () => {
@@ -204,11 +202,6 @@ export function ExportVisitsModal({
   };
 
   // Don't render anything if not visible and no modal to show
-  if (!isVisible && !showModal) {
-    return null;
-  }
-
-  // Only show modal if it should be visible
   if (!showModal) {
     return null;
   }

@@ -272,14 +272,13 @@ export default function DataroomVisitorsTable({
         </Table>
       </div>
 
-      {dataroom && teamId && (
+      {dataroom && teamId && exportModalOpen && (
         <ExportVisitsModal
           dataroomId={dataroomId}
           dataroomName={dataroom.name}
           teamId={teamId}
           groupId={groupId}
           groupName={name}
-          isVisible={exportModalOpen}
           onClose={() => setExportModalOpen(false)}
         />
       )}

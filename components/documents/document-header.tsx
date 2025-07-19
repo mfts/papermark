@@ -967,12 +967,13 @@ export default function DocumentHeader({
         />
       ) : null}
 
-      <ExportVisitsModal
-        document={prismaDocument}
-        teamId={teamId}
-        isVisible={exportModalOpen}
-        onClose={() => setExportModalOpen(false)}
-      />
+      {exportModalOpen && (
+        <ExportVisitsModal
+          document={prismaDocument}
+          teamId={teamId}
+          onClose={() => setExportModalOpen(false)}
+        />
+      )}
     </header>
   );
 }
