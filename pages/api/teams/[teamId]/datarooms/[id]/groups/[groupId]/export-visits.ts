@@ -3,25 +3,18 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
+import { jobStore } from "@/lib/redis-job-store";
+import { exportVisitsTask } from "@/lib/trigger/export-visits";
 import prisma from "@/lib/prisma";
-import {
-  getViewPageDuration,
-  getViewUserAgent,
-  getViewUserAgent_v2,
-} from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
-
-export const config = {
-  maxDuration: 180,
-};
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (req.method !== "GET") {
-    // GET /api/teams/:teamId/datarooms/:id/groups/:groupId/export-visits
-    res.setHeader("Allow", ["GET"]);
+  if (req.method !== "POST") {
+    // Changed to POST to trigger background job
+    res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
@@ -73,25 +66,6 @@ export default async function handler(
       select: {
         id: true,
         name: true,
-        documents: {
-          select: {
-            id: true,
-            document: {
-              select: {
-                name: true,
-                numPages: true,
-                versions: {
-                  orderBy: { createdAt: "desc" },
-                  select: {
-                    versionNumber: true,
-                    createdAt: true,
-                    numPages: true,
-                  },
-                },
-              },
-            },
-          },
-        },
       },
     });
 
@@ -99,270 +73,44 @@ export default async function handler(
       return res.status(404).end("Dataroom not found");
     }
 
-    // First fetch the dataroom views
-    const views = await prisma.view.findMany({
-      where: {
-        dataroomId: dataroomId,
-        groupId: groupId,
-      },
-      include: {
-        link: { select: { name: true } },
-        agreementResponse: {
-          include: {
-            agreement: {
-              select: {
-                name: true,
-                content: true,
-              },
-            },
-          },
-        },
-        document: {
-          select: {
-            id: true,
-            name: true,
-            numPages: true,
-            versions: {
-              orderBy: { createdAt: "desc" },
-              select: {
-                versionNumber: true,
-                createdAt: true,
-                numPages: true,
-              },
-            },
-          },
-        },
-        customFieldResponse: {
-          select: {
-            data: true,
-          },
-        },
-      },
-      orderBy: {
-        viewedAt: "desc",
-      },
+    // Create export job record
+    const exportJob = await jobStore.createJob({
+      type: "dataroom",
+      resourceId: dataroomId,
+      resourceName: dataroom.name,
+      groupId,
+      userId,
+      teamId,
+      status: "PENDING",
     });
 
-    if (!views || views.length === 0) {
-      return res.status(404).end("Dataroom has no views");
-    }
-
-    // First get all dataroom views
-    const dataroomViews = views.filter(
-      (view) => view.viewType === "DATAROOM_VIEW",
+    // Trigger the background task
+    await exportVisitsTask.trigger(
+      {
+        type: "dataroom",
+        teamId,
+        resourceId: dataroomId,
+        groupId,
+        userId,
+        exportId: exportJob.id,
+      },
+      {
+        idempotencyKey: exportJob.id,
+        tags: [
+          `team_${teamId}`,
+          `user_${userId}`,
+          `export_${exportJob.id}`,
+        ],
+      },
     );
-
-    // Get all document views for this dataroom
-    const documentViews = views.filter(
-      (view) => view.viewType === "DOCUMENT_VIEW",
-    );
-
-    // For each dataroom view, get its associated document views and build export data
-    const exportData = await Promise.all(
-      dataroomViews.map(async (dataroomView) => {
-        // Find all document views that belong to this dataroom view
-        const associatedDocViews = documentViews.filter(
-          (docView) => docView.dataroomViewId === dataroomView.id,
-        );
-
-        // Get document view details including durations from Tinybird
-        const documentViewDetails = await Promise.all(
-          associatedDocViews.map(async (docView) => {
-            const duration = await getViewPageDuration({
-              documentId: docView.document?.id || "null",
-              viewId: docView.id,
-              since: 0,
-            });
-
-            const relevantVersion = docView.document?.versions.find(
-              (version) => version.createdAt <= docView.viewedAt,
-            );
-
-            const numPages =
-              relevantVersion?.numPages || docView.document?.numPages || 0;
-            const completionRate = numPages
-              ? (duration.data.length / numPages) * 100
-              : 0;
-
-            return {
-              documentName: docView.document?.name || "NaN",
-              viewedAt: docView.viewedAt.toISOString(),
-              downloadedAt: docView.downloadedAt?.toISOString() || "NaN",
-              duration: duration.data.reduce(
-                (total, data) => total + data.sum_duration,
-                0,
-              ),
-              completionRate: completionRate.toFixed(2) + "%",
-              documentVersion:
-                relevantVersion?.versionNumber ||
-                docView.document?.versions[0]?.versionNumber ||
-                "NaN",
-            };
-          }),
-        );
-
-        // Return the complete view data
-        return {
-          // Dataroom view details
-          dataroomViewedAt: dataroomView.viewedAt.toISOString(),
-          dataroomDownloadedAt:
-            dataroomView.downloadedAt?.toISOString() || "NaN",
-          viewerName: dataroomView.viewerName || "NaN",
-          viewerEmail: dataroomView.viewerEmail || "NaN",
-          linkName: dataroomView.link?.name || "NaN",
-          verified: dataroomView.verified ? "Yes" : "NaN",
-
-          // Agreement details
-          agreementStatus: dataroomView.agreementResponse ? "Yes" : "NaN",
-          agreementName:
-            dataroomView.agreementResponse?.agreement.name || "NaN",
-          agreementAcceptedAt:
-            dataroomView.agreementResponse?.createdAt.toISOString() || "NaN",
-          agreementContent:
-            dataroomView.agreementResponse?.agreement.content || "NaN",
-
-          // Document view details
-          documentViews: documentViewDetails,
-        };
-      }),
-    );
-
-    // Create CSV with nested document views
-    const csvRows: string[] = [];
-
-    // Add headers
-    csvRows.push(
-      [
-        "Dataroom Viewed At",
-        "Dataroom Downloaded At",
-        "Visitor Name",
-        "Visitor Email",
-        "Link Name",
-        "Verified",
-        "Agreement Accepted",
-        "Agreement Name",
-        "Agreement Content",
-        "Agreement Accepted At",
-        "Document Name",
-        "Document Viewed At",
-        "Document Downloaded At",
-        "Total Visit Duration (s)",
-        "Total Document Completion (%)",
-        "Document Version",
-        "Browser",
-        "OS",
-        "Device",
-        "Country",
-        "City",
-      ].join(","),
-    );
-
-    // Create a map of viewId to userAgent data for efficient lookup
-    const userAgentDataMap = new Map();
-
-    await Promise.all(
-      documentViews.map(async (view) => {
-        const result = await getViewUserAgent({
-          viewId: view.id,
-        });
-
-        let userAgentResult;
-        if (!result || result.rows === 0) {
-          // Only call v2 if document and its id exist
-          if (view.document?.id) {
-            userAgentResult = await getViewUserAgent_v2({
-              documentId: view.document.id,
-              viewId: view.id,
-              since: 0,
-            });
-          } else {
-            // Set default empty result if document/id is missing
-            userAgentResult = { data: [] };
-          }
-        } else {
-          userAgentResult = result;
-        }
-
-        userAgentDataMap.set(view.id, userAgentResult);
-      }),
-    );
-
-    // Process each view and add to CSV rows
-    exportData.forEach((view) => {
-      if (view.documentViews.length === 0) {
-        // Add a row for dataroom view without document views
-        csvRows.push(
-          [
-            view.dataroomViewedAt,
-            view.dataroomDownloadedAt,
-            view.viewerName,
-            view.viewerEmail,
-            view.linkName,
-            view.verified,
-            view.agreementStatus,
-            view.agreementName,
-            view.agreementContent,
-            view.agreementAcceptedAt,
-            "No documents viewed",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "", // Browser
-            "", // OS
-            "", // Device
-            "", // Country
-            "", // City
-          ].join(","),
-        );
-      } else {
-        // Add a row for each document view
-        view.documentViews.forEach((docView) => {
-          // Find the corresponding document view to get the correct viewId
-          const correspondingDocView = documentViews.find(
-            (dv) => dv.viewedAt.toISOString() === docView.viewedAt,
-          );
-
-          const userAgentData = correspondingDocView
-            ? userAgentDataMap.get(correspondingDocView.id)
-            : { data: [] };
-
-          csvRows.push(
-            [
-              view.dataroomViewedAt,
-              view.dataroomDownloadedAt,
-              view.viewerName,
-              view.viewerEmail,
-              view.linkName,
-              view.verified,
-              view.agreementStatus,
-              view.agreementName,
-              view.agreementContent,
-              view.agreementAcceptedAt,
-              docView.documentName,
-              docView.viewedAt,
-              docView.downloadedAt,
-              (docView.duration / 1000).toFixed(1),
-              docView.completionRate,
-              docView.documentVersion,
-              userAgentData?.data[0]?.browser || "NaN",
-              userAgentData?.data[0]?.os || "NaN",
-              userAgentData?.data[0]?.device || "NaN",
-              userAgentData?.data[0]?.country || "NaN",
-              userAgentData?.data[0]?.city || "NaN",
-            ].join(","),
-          );
-        });
-      }
-    });
 
     return res.status(200).json({
-      dataroomName: dataroom.name,
-      visits: csvRows.join("\n"),
+      exportId: exportJob.id,
+      status: exportJob.status,
+      message: "Export job created successfully. You will be notified when it's ready.",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error creating export job:", error);
     return res.status(500).json({ message: "Something went wrong" });
   }
 }

@@ -1,5 +1,3 @@
-import React from "react";
-
 import {
   Body,
   Button,
@@ -13,46 +11,54 @@ import {
   Text,
 } from "@react-email/components";
 
-export default function EmailVerification({
-  verificationURL = "papermark.com",
-  email = "test@test.com",
-  isDataroom = false,
+export default function ExportReady({
+  resourceName = "Export",
+  downloadUrl,
+  email,
 }: {
-  verificationURL: string;
+  resourceName?: string;
+  downloadUrl: string;
   email: string;
-  isDataroom: boolean;
 }) {
   return (
     <Html>
       <Head />
-      <Preview>Verify your email to view the document</Preview>
+      <Preview>Your {resourceName} export is ready for download</Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
               <span className="font-bold tracking-tighter">Papermark</span>
             </Text>
-            <Text className="mx-0 my-7 p-0 text-center text-xl font-semibold text-black">
-              Please verify your email
-            </Text>
             <Text className="text-sm leading-6 text-black">
-              Please click the verification link below to view the{" "}
-              {isDataroom ? "dataroom" : "document"}.
+              The export you requested is ready to download for your Papermark
+              account. Make sure you&apos;re signed into this account, and click
+              below to download. The file will be available for the next three
+              days.
             </Text>
             <Section className="my-8 text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={verificationURL}
+                href={downloadUrl}
                 style={{ padding: "12px 20px" }}
               >
-                Verify Email
+                Download Export
               </Button>
             </Section>
             <Text className="text-sm leading-6 text-black">
-              or copy and paste this URL into your browser:
+              Export details:
             </Text>
-            <Text className="max-w-sm flex-wrap break-words font-medium text-purple-600 no-underline">
-              {verificationURL.replace(/^https?:\/\//, "")}
+            <Text className="break-all text-sm leading-6 text-black">
+              <ul>
+                <li className="text-sm leading-6 text-black">
+                  Export type: {resourceName}
+                </li>
+              </ul>
+            </Text>
+            <Text className="text-sm leading-6 text-black">
+              Best,
+              <br />
+              The Papermark Team
             </Text>
             <Hr />
             <Section className="mt-8 text-gray-400">
@@ -63,7 +69,7 @@ export default function EmailVerification({
                   className="text-gray-400 no-underline hover:text-gray-400"
                   target="_blank"
                 >
-                  papermark.com
+                  Papermark, Inc.
                 </a>
               </Text>
               <Text className="text-xs">

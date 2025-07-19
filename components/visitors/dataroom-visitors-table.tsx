@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { useTeam } from "@/context/team-context";
 import {
   BadgeCheckIcon,
@@ -9,6 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { useDataroom } from "@/lib/swr/use-dataroom";
 import { useDataroomVisits } from "@/lib/swr/use-dataroom";
 import { timeAgo } from "@/lib/utils";
 
@@ -30,6 +33,7 @@ import {
 } from "@/components/ui/table";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
+import { ExportVisitsModal } from "../datarooms/export-visits-modal";
 import DataroomVisitorCustomFields from "./dataroom-visitor-custom-fields";
 import { DataroomVisitorUserAgent } from "./dataroom-visitor-useragent";
 import DataroomVisitHistory from "./dataroom-visitors-history";
@@ -47,51 +51,18 @@ export default function DataroomVisitorsTable({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const { views } = useDataroomVisits({ dataroomId, groupId });
+  const { dataroom } = useDataroom();
+  const [exportModalOpen, setExportModalOpen] = useState(false);
 
-  const exportVisitCounts = async (dataroomId: string) => {
-    const formattedTime = new Date().toISOString().replace(/[-:Z]/g, "");
-    try {
-      const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroomId}${groupId ? `/groups/${groupId}` : ""}/export-visits`,
-        { method: "GET" },
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-
-      // Create blob and download
-      const blob = new Blob([data.visits], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute(
-        "download",
-        `${data.dataroomName}_${name ? `${name}_` : ""}visits_${formattedTime}.csv`,
-      );
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      toast.success("CSV file downloaded successfully");
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error(
-        "An error occurred while downloading the CSV. Please try again.",
-      );
-    }
+  const exportVisitCounts = () => {
+    setExportModalOpen(true);
   };
 
   return (
     <div className="w-full">
       <div className="mb-2 flex items-center justify-between md:mb-4">
         <h2>All visitors</h2>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => exportVisitCounts(dataroomId)}
-        >
+        <Button variant="outline" size="sm" onClick={exportVisitCounts}>
           <Download className="!size-4" />
           Export visits
         </Button>
@@ -300,6 +271,17 @@ export default function DataroomVisitorsTable({
           </TableBody>
         </Table>
       </div>
+
+      {dataroom && teamId && exportModalOpen && (
+        <ExportVisitsModal
+          dataroomId={dataroomId}
+          dataroomName={dataroom.name}
+          teamId={teamId}
+          groupId={groupId}
+          groupName={name}
+          onClose={() => setExportModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
