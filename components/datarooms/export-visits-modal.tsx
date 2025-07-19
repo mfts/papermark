@@ -16,7 +16,6 @@ interface ExportVisitsModalProps {
   dataroomName: string;
   groupId?: string;
   groupName?: string;
-  // Remove isVisible - if component is rendered, it should start
   onClose: () => void;
 }
 
@@ -26,7 +25,6 @@ export function ExportVisitsModal({
   dataroomName,
   groupId,
   groupName,
-  // Remove isVisible parameter
   onClose,
 }: ExportVisitsModalProps) {
   const { data: session } = useSession();
@@ -34,6 +32,7 @@ export function ExportVisitsModal({
   const [showModal, setShowModal] = useState(false);
   const [viewCount, setViewCount] = useState<number | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const exportStartedRef = useRef<boolean>(false);
 
   // Cleanup interval on component unmount
   useEffect(() => {
@@ -45,6 +44,13 @@ export function ExportVisitsModal({
   }, []);
 
   const startExport = useCallback(async () => {
+    // Prevent double triggering
+    if (exportStartedRef.current) {
+      console.warn("Export already started, skipping duplicate request");
+      return;
+    }
+    exportStartedRef.current = true;
+
     try {
       // Show modal immediately
       setShowModal(true);
@@ -164,9 +170,9 @@ export function ExportVisitsModal({
       toast.error(
         "An error occurred while starting the export. Please try again.",
       );
-      onClose();
+      handleClose();
     }
-  }, [teamId, dataroomId, groupId, dataroomName, groupName, onClose]);
+  }, [teamId, dataroomId, groupId, dataroomName, groupName]);
 
   // Start export immediately when component mounts
   useEffect(() => {
@@ -203,6 +209,7 @@ export function ExportVisitsModal({
     }
     setShowModal(false);
     setExportStatus(null);
+    exportStartedRef.current = false; // Reset for potential reuse
     onClose();
   };
 
