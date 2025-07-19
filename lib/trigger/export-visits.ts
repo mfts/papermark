@@ -11,6 +11,32 @@ import {
   getViewUserAgent_v2,
 } from "@/lib/tinybird";
 
+// Helper function to properly escape CSV fields
+function escapeCsvField(field: string | number | null | undefined): string {
+  if (field === null || field === undefined) {
+    return "NaN";
+  }
+
+  const stringField = String(field);
+
+  // If the field contains comma, newline, or quote, wrap in quotes and escape quotes
+  if (
+    stringField.includes(",") ||
+    stringField.includes("\n") ||
+    stringField.includes("\r") ||
+    stringField.includes('"')
+  ) {
+    return `"${stringField.replace(/"/g, '""')}"`;
+  }
+
+  return stringField;
+}
+
+// Helper function to convert array of fields to properly escaped CSV row
+function createCsvRow(fields: (string | number | null | undefined)[]): string {
+  return fields.map(escapeCsvField).join(",");
+}
+
 // Create a bottleneck instance to limit tinybird API calls
 const tinybirdLimiter = new Bottleneck({
   maxConcurrent: 5, // Maximum 5 concurrent requests
@@ -247,7 +273,7 @@ async function exportDocumentVisits(
     headers.push("Country", "City", "Custom Fields");
   }
 
-  csvRows.push(headers.join(","));
+  csvRows.push(createCsvRow(headers));
 
   // Process views with rate limiting
   logger.info("Processing document views with rate limiting", {
@@ -330,12 +356,12 @@ async function exportDocumentVisits(
         userAgentData?.data[0]?.country || "NaN",
         userAgentData?.data[0]?.city || "NaN",
         view.customFieldResponse?.data
-          ? `"${JSON.stringify(view.customFieldResponse.data).replace(/"/g, '""')}"`
+          ? JSON.stringify(view.customFieldResponse.data)
           : "NaN",
       );
     }
 
-    csvRows.push(rowData.join(","));
+    csvRows.push(createCsvRow(rowData));
   }
 
   return {
@@ -548,7 +574,7 @@ async function exportDataroomVisits(
   // Create CSV
   const csvRows: string[] = [];
   csvRows.push(
-    [
+    createCsvRow([
       "Dataroom Viewed At",
       "Dataroom Downloaded At",
       "Visitor Name",
@@ -570,13 +596,13 @@ async function exportDataroomVisits(
       "Device",
       "Country",
       "City",
-    ].join(","),
+    ]),
   );
 
   exportData.forEach((view) => {
     if (view.documentViews.length === 0) {
       csvRows.push(
-        [
+        createCsvRow([
           view.dataroomViewedAt,
           view.dataroomDownloadedAt,
           view.viewerName,
@@ -598,14 +624,14 @@ async function exportDataroomVisits(
           "NaN",
           "NaN",
           "NaN",
-        ].join(","),
+        ]),
       );
     } else {
       view.documentViews.forEach((docView) => {
         const userAgentData = userAgentDataMap.get(docView.viewId);
 
         csvRows.push(
-          [
+          createCsvRow([
             view.dataroomViewedAt,
             view.dataroomDownloadedAt,
             view.viewerName,
@@ -627,7 +653,7 @@ async function exportDataroomVisits(
             userAgentData?.data[0]?.device || "NaN",
             userAgentData?.data[0]?.country || "NaN",
             userAgentData?.data[0]?.city || "NaN",
-          ].join(","),
+          ]),
         );
       });
     }
