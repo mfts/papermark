@@ -3,11 +3,8 @@ import {
   Button,
   Container,
   Head,
-  Heading,
   Hr,
   Html,
-  Img,
-  Link,
   Preview,
   Section,
   Tailwind,
@@ -35,7 +32,7 @@ export default function ExportReady({
             </Text>
             <Text className="text-sm leading-6 text-black">
               The export you requested is ready to download for your Papermark
-              account. Make sure you're signed into this account, and click
+              account. Make sure you&apos;re signed into this account, and click
               below to download. The file will be available for the next three
               days.
             </Text>
