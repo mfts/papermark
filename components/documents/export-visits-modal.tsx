@@ -115,18 +115,24 @@ export function ExportVisitsModal({
 
                 // Create a direct link to the API endpoint (it will redirect to blob)
                 const downloadUrl = `/api/teams/${teamId}/export-jobs/${data.exportId}?download=true`;
-                const link = window.document.createElement("a");
-                link.href = downloadUrl;
-                link.setAttribute(
-                  "download",
-                  `${statusData.resourceName || document.name}_visits_${new Date().toISOString().split("T")[0]}.csv`,
-                );
-                link.rel = "noopener noreferrer";
-                link.style.display = "none";
+                try {
+                  const link = window.document.createElement("a");
+                  link.href = downloadUrl;
+                  link.setAttribute(
+                    "download",
+                    `${statusData.resourceName || document.name}_visits_${new Date().toISOString().split("T")[0]}.csv`,
+                  );
+                  link.rel = "noopener noreferrer";
+                  link.style.display = "none";
 
-                window.document.body.appendChild(link);
-                link.click();
-                window.document.body.removeChild(link);
+                  window.document.body.appendChild(link);
+                  link.click();
+                  window.document.body.removeChild(link);
+                } catch (error) {
+                  // Fallback: open in new tab if programmatic download fails
+                  window.open(downloadUrl, "_blank");
+                  console.error("Download failed, opened in new tab:", error);
+                }
 
                 handleClose();
                 toast.success("Export successfully downloaded");
@@ -144,7 +150,7 @@ export function ExportVisitsModal({
           } catch (error) {
             console.error("Error polling export status:", error);
           }
-        }, 3000); // Poll every 3 seconds
+        }, 5000); // Poll every 5 seconds
 
         // Clear interval after 10 minutes to prevent indefinite polling
         setTimeout(() => {
