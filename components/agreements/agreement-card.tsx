@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { FileTextIcon, MoreVertical, TrashIcon } from "lucide-react";
+import { DownloadIcon, FileTextIcon, MoreVertical, TrashIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { AgreementWithLinksCount } from "@/lib/swr/use-agreements";
@@ -57,6 +57,46 @@ export default function AgreementCard({
     );
   };
 
+  const handleDownload = async () => {
+    toast.promise(
+      fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/agreements/${agreement.id}/download`,
+        {
+          method: "GET",
+        },
+      ).then(async (response) => {
+        if (!response.ok) {
+          throw new Error("Failed to download agreement");
+        }
+        
+        // Get the filename from the Content-Disposition header or use default
+        const contentDisposition = response.headers.get("Content-Disposition");
+        const filenameMatch = contentDisposition?.match(/filename="([^"]+)"/);
+        const filename = filenameMatch ? filenameMatch[1] : `${agreement.name}.txt`;
+        
+        // Create a blob and download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(link);
+        }, 100);
+      }),
+      {
+        loading: "Downloading agreement...",
+        success: "Agreement downloaded successfully",
+        error: "Failed to download agreement",
+      },
+    );
+  };
+
   return (
     <>
       <div className="flex items-center justify-between rounded-lg border p-4">
@@ -85,6 +125,10 @@ export default function AgreementCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleDownload}>
+                <DownloadIcon className="mr-2 h-4 w-4" />
+                Download agreement
+              </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
                 onClick={() => setShowDeleteDialog(true)}
