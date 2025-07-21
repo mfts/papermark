@@ -62,7 +62,7 @@ export default function AgreementCard({
       fetch(
         `/api/teams/${teamInfo?.currentTeam?.id}/agreements/${agreement.id}/download`,
         {
-          method: "GET",
+          method: "POST",
         },
       ).then(async (response) => {
         if (!response.ok) {

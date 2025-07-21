@@ -11,8 +11,8 @@ export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (req.method === "GET") {
-    // GET /api/teams/:teamId/agreements/:agreementId/download
+  if (req.method === "POST") {
+    // POST /api/teams/:teamId/agreements/:agreementId/download
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       res.status(401).end("Unauthorized");
@@ -98,7 +98,7 @@ Agreement ID: ${agreement.id}
       `.trim();
 
       // Set headers for file download
-      const filename = `${agreement.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_agreement.txt`;
+      const filename = `${agreement.name.replace(/[^a-z0-9\-_]/gi, '_').toLowerCase().substring(0, 50)}_agreement.txt`;
       res.setHeader("Content-Type", "text/plain; charset=utf-8");
       res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
       res.setHeader("Content-Length", Buffer.byteLength(agreementContent, 'utf8'));
@@ -109,8 +109,8 @@ Agreement ID: ${agreement.id}
       errorhandler(error, res);
     }
   } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
+    // We only allow POST requests
+    res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
