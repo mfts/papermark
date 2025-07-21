@@ -1,19 +1,29 @@
 import { useState } from "react";
 
+import { Document } from "@prisma/client";
 import { toast } from "sonner";
 
 import { DocumentData } from "@/lib/documents/create-document";
 
 import ViewerUploadZone from "@/components/viewer-upload-zone";
 
+import { DocumentVersion } from "./view/viewer/dataroom-viewer";
+
 export function ViewerUploadComponent({
   viewerData,
   teamId,
   folderId,
+  onSuccess,
 }: {
   viewerData: { id: string; linkId: string; dataroomId?: string };
   teamId: string;
   folderId?: string;
+  onSuccess: (
+    document: Document & {
+      versions: DocumentVersion[];
+      requireApproval: boolean;
+    },
+  ) => void;
 }) {
   const [uploads, setUploads] = useState<
     { fileName: string; progress: number }[]
@@ -54,6 +64,13 @@ export function ViewerUploadComponent({
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to process upload");
+      }
+      const document = await response.json();
+      console.log("document", document);
+      if (document && document.id && Array.isArray(document.versions)) {
+        onSuccess(document);
+      } else {
+        throw new Error("Invalid document response");
       }
 
       // Optional: You might want to update UI or fetch updated document list

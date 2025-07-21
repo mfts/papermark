@@ -109,10 +109,9 @@ model Team {
   updatedAt DateTime @updatedAt
   Tag       Tag[]
 
-  ignoredDomains String[] // Domains that are ignored for the team
+  ignoredDomains  String[] // Domains that are ignored for the team
   globalBlockList String[]
 }
-
 
 model Brand {
   id          String  @id @default(cuid())
@@ -156,6 +155,12 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+enum DocumentApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Document {
   id                   String              @id @default(cuid())
   name                 String
@@ -187,8 +192,8 @@ model Document {
   tags      TagItem[]
 
   // upload external documents
-  uploadedDocument DocumentUpload[]
-  isExternalUpload Boolean          @default(false) // Indicates if the document is an external upload
+  uploadedDocument DocumentUpload?
+  isExternalUpload Boolean         @default(false) // Indicates if the document is an external upload
 
   @@index([ownerId])
   @@index([teamId])
@@ -557,7 +562,7 @@ model YearInReview {
 
 model DocumentUpload {
   id         String   @id @default(cuid())
-  documentId String
+  documentId String   @unique
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   teamId     String
   team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -573,6 +578,11 @@ model DocumentUpload {
   dataroom           Dataroom?         @relation(fields: [dataroomId], references: [id], onDelete: SetNull)
   dataroomDocumentId String?
   dataroomDocument   DataroomDocument? @relation(fields: [dataroomDocumentId], references: [id], onDelete: SetNull)
+
+  requireApproval Boolean?                @default(true)
+  approvedAt      DateTime?
+  approvedBy      String? // userId
+  approvedStatus  DocumentApprovalStatus? @default(PENDING) // This is the status of the document approval [pending, approved, rejected]
 
   // Additional metadata
   originalFilename String?

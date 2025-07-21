@@ -8,6 +8,7 @@ import { TeamContextType } from "@/context/team-context";
 import {
   ArchiveXIcon,
   BetweenHorizontalStartIcon,
+  CheckIcon,
   FileSlidersIcon,
   FolderInputIcon,
   MoreVertical,
@@ -19,6 +20,7 @@ import { mutate } from "swr";
 import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
 import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
+import { approveDocument } from "@/lib/utils/document-approve";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import BarChart from "@/components/shared/icons/bar-chart";
@@ -35,6 +37,7 @@ import {
 import { AddToDataroomModal } from "../documents/add-document-to-dataroom-modal";
 import { DocumentPreviewButton } from "../documents/document-preview-button";
 import FileProcessStatusBar from "../documents/file-process-status-bar";
+import { Badge } from "../ui/badge";
 import { SetUnifiedPermissionsModal } from "./groups/set-unified-permissions-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
@@ -108,6 +111,15 @@ export default function DataroomDocumentCard({
     } else {
       setIsFirstClick(true);
     }
+  };
+
+  const handleApproveDocument = async (documentId: string) => {
+    await approveDocument({
+      documentId,
+      teamInfo,
+      currentFolderPath,
+      dataroomId,
+    });
   };
 
   const handleRemoveDocument = async (documentId: string) => {
@@ -205,8 +217,14 @@ export default function DataroomDocumentCard({
 
             <div className="flex-col">
               <div className="flex items-center">
-                <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
+                <h2 className="flex min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
                   {dataroomDocument.document.name}
+                  {dataroomDocument.document.uploadedDocument
+                    ?.requireApproval && (
+                    <Badge variant="default" className="ml-2">
+                      Need approval
+                    </Badge>
+                  )}
                 </h2>
               </div>
               <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
@@ -270,6 +288,19 @@ export default function DataroomDocumentCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" ref={dropdownRef}>
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                {dataroomDocument.document.isExternalUpload &&
+                  dataroomDocument.document.uploadedDocument
+                    ?.requireApproval && (
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleApproveDocument(dataroomDocument.document.id);
+                      }}
+                    >
+                      <CheckIcon className="mr-2 h-4 w-4" />
+                      Approve external document
+                    </DropdownMenuItem>
+                  )}
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();

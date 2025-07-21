@@ -24,6 +24,9 @@ export interface CreateUserEmailProps {
 }
 
 export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
+  uploadedDocument?: {
+    requireApproval: boolean;
+  };
   _count: {
     links: number;
     views: number;
@@ -135,6 +138,9 @@ export interface LinkWithDataroom extends Link {
       document: {
         id: string;
         name: string;
+        uploadedDocument?: {
+          requireApproval: boolean;
+        };
         versions: {
           id: string;
           versionNumber: number;

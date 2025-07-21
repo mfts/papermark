@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 
 import React from "react";
 
-import { Download, MoreVerticalIcon } from "lucide-react";
+import { Download, LockIcon, MoreVerticalIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
@@ -10,6 +10,7 @@ import { timeAgo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,6 +29,9 @@ type DRDocument = {
   downloadOnly: boolean;
   versions: DocumentVersion[];
   canDownload: boolean;
+  uploadedDocument?: {
+    requireApproval: boolean;
+  };
 };
 
 type DocumentsCardProps = {
@@ -58,7 +62,7 @@ export default function DocumentCard({
     domain?: string;
     slug?: string;
   };
-
+  const requireApproval = document.uploadedDocument?.requireApproval;
   const handleDocumentClick = (e: React.MouseEvent) => {
     if (isProcessing) {
       e.preventDefault();
@@ -69,6 +73,12 @@ export default function DocumentCard({
     }
 
     e.preventDefault();
+    if (requireApproval) {
+      toast.error(
+        "Document requires approval. Please wait for it to be approved.",
+      );
+      return;
+    }
     // Open in new tab
     if (domain && slug) {
       window.open(`/${slug}/d/${document.dataroomDocumentId}`, "_blank");
@@ -166,9 +176,12 @@ export default function DocumentCard({
   };
 
   return (
-    <div
+    <li
       className={cn(
-        "group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4",
+        "group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 transition-all sm:p-4",
+        requireApproval
+          ? "bg-background/50 opacity-60 ring-gray-200 backdrop-blur-sm dark:ring-gray-700"
+          : "ring-gray-200 hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500",
         isProcessing && "cursor-not-allowed opacity-60",
       )}
     >
@@ -176,7 +189,7 @@ export default function DocumentCard({
         <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
           {fileIcon({
             fileType: document.versions[0].type ?? "",
-            className: "h-8 w-8",
+            className: cn("h-8 w-8", requireApproval && "opacity-50"),
             isLight,
           })}
         </div>
@@ -198,6 +211,12 @@ export default function DocumentCard({
                 <span className="absolute inset-0" />
               </button>
             </h2>
+            {requireApproval && (
+              <Badge variant="default" className="ml-2">
+                <LockIcon className="mr-1 h-3 w-3" />
+                Pending Approval
+              </Badge>
+            )}
           </div>
           <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
             <p className="truncate">
@@ -206,7 +225,7 @@ export default function DocumentCard({
           </div>
         </div>
       </div>
-      {canDownload && !isProcessing && (
+      {canDownload && !isProcessing && !requireApproval && (
         <div className="z-10">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -235,6 +254,6 @@ export default function DocumentCard({
           </DropdownMenu>
         </div>
       )}
-    </div>
+    </li>
   );
 }

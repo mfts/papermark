@@ -132,7 +132,7 @@ export async function POST(
     });
 
     // 3. Create the DocumentUpload record to track the upload details
-    await prisma.documentUpload.create({
+    const documentUpload = await prisma.documentUpload.create({
       data: {
         documentId: document.id,
         viewerId: viewerId,
@@ -146,9 +146,16 @@ export async function POST(
         dataroomDocumentId: newDataroomDocument.id,
         teamId: link.teamId,
       },
+      select: {
+        requireApproval: true,
+      },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      ...document,
+      folderId: dataroomFolderId,
+      requireApproval: documentUpload.requireApproval,
+    });
   } catch (error) {
     console.error("Error uploading document:", error);
     return NextResponse.json(

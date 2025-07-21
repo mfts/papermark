@@ -284,6 +284,9 @@ export type DataroomFolderDocument = DataroomDocument & {
     type: string;
     versions?: { id: string; hasPages: boolean }[];
     isExternalUpload?: boolean;
+    uploadedDocument?: {
+      requireApproval: boolean;
+    };
     _count: {
       views: number;
       versions: number;

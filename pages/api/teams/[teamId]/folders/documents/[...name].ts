@@ -73,6 +73,11 @@ export default async function handle(
               datarooms: true,
             },
           },
+          uploadedDocument: {
+            select: {
+              requireApproval: true,
+            },
+          },
           links: {
             take: 1,
             select: { id: true },
