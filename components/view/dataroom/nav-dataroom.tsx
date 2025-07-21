@@ -212,7 +212,7 @@ export default function DataroomNav({
           width={1920}
           height={320}
         />
-        <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
+        <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md text-black">
           <div className="px-5 py-2 sm:px-10">
             <div className="text-3xl">{dataroom.name}</div>
             <time
