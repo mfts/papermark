@@ -19,11 +19,12 @@ import { parseSheet } from "@/lib/sheet";
 import { recordLinkView } from "@/lib/tracking/record-link-view";
 import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
-import { extractEmailDomain, isEmailMatched } from "@/lib/utils/email-domain";
+import { isEmailMatched } from "@/lib/utils/email-domain";
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { validateEmail } from "@/lib/utils/validate-email";
+import { notifyBlockedAttempt } from "../views-dataroom/route";
 
 export async function POST(request: NextRequest) {
   try {
@@ -84,6 +85,9 @@ export async function POST(request: NextRequest) {
         id: linkId,
       },
       select: {
+        id: true,
+        name: true,
+        documentId: true,
         emailProtected: true,
         enableNotification: true,
         emailAuthenticated: true,
@@ -221,6 +225,11 @@ export async function POST(request: NextRequest) {
         );
       }
       if (globalBlockCheck.isBlocked) {
+        try {
+          await notifyBlockedAttempt(link, email);
+        } catch (e) {
+          console.error(e);
+        }
         return NextResponse.json({ message: "Access denied" }, { status: 403 });
       }
 
@@ -249,6 +258,11 @@ export async function POST(request: NextRequest) {
 
         // Deny access if the email is denied
         if (isDenied) {
+          try {
+            await notifyBlockedAttempt(link, email);
+          } catch (e) {
+            console.error(e);
+          }
           return NextResponse.json(
             { message: "Unauthorized access" },
             { status: 403 },

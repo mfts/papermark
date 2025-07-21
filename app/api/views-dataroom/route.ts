@@ -27,6 +27,7 @@ import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { validateEmail } from "@/lib/utils/validate-email";
+import { sendBlockedEmailAttemptNotification } from "@/lib/emails/send-blocked-email-attempt";
 
 export async function POST(request: NextRequest) {
   try {
@@ -98,6 +99,8 @@ export async function POST(request: NextRequest) {
         id: linkId,
       },
       select: {
+        id: true,
+        name: true,
         documentId: true,
         dataroomId: true,
         emailProtected: true,
@@ -286,6 +289,11 @@ export async function POST(request: NextRequest) {
         );
       }
       if (globalBlockCheck.isBlocked) {
+        try {
+          await notifyBlockedAttempt(link, email);
+        } catch (e) {
+          console.error(e);
+        }
         return NextResponse.json({ message: "Access denied" }, { status: 403 });
       }
 
@@ -314,6 +322,11 @@ export async function POST(request: NextRequest) {
 
         // Deny access if the email is denied
         if (isDenied) {
+          try {
+            await notifyBlockedAttempt(link, email);
+          } catch (e) {
+            console.error(e);
+          }
           return NextResponse.json(
             { message: "Unauthorized access" },
             { status: 403 },
@@ -1011,4 +1024,58 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+export async function notifyBlockedAttempt(link: any, email: string) {
+  if (!link) return;
+  const users = await prisma.userTeam.findMany({
+    where: {
+      role: { in: ["ADMIN", "MANAGER"] },
+      status: "ACTIVE",
+      teamId: link.teamId!,
+    },
+    select: {
+      user: { select: { email: true } },
+    },
+  });
+  const adminEmails = users.map((u) => u.user?.email).filter((e): e is string => !!e);
+  let ownerEmail: string | undefined;
+  let resourceType: "dataroom" | "document" = "dataroom";
+  let resourceName = "Dataroom";
+  if (link.documentId) {
+    resourceType = "document";
+    const doc = await prisma.document.findUnique({ where: { id: link.documentId }, select: { name: true, ownerId: true } });
+    resourceName = doc?.name || "Document";
+    if (doc?.ownerId) {
+      const owner = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId: doc.ownerId,
+            teamId: link.teamId!,
+          },
+          status: "ACTIVE",
+        },
+        select: { user: { select: { email: true } } },
+      });
+      ownerEmail = owner?.user?.email || undefined;
+    }
+  } else if (link.dataroomId) {
+    resourceType = "dataroom";
+    resourceName = (await prisma.dataroom.findUnique({ where: { id: link.dataroomId }, select: { name: true } }))?.name || "Dataroom";
+  }
+
+  let cc = adminEmails.slice(1);
+  const to = ownerEmail || adminEmails[0] || "";
+  if (ownerEmail && !cc.includes(ownerEmail) && ownerEmail !== to) {
+    cc = [ownerEmail, ...cc];
+  }
+
+  await sendBlockedEmailAttemptNotification({
+    to,
+    cc,
+    blockedEmail: email!,
+    linkName: link?.name || `Link #${link.id.slice(-5)}`,
+    resourceName,
+    resourceType,
+  });
 }
