@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { ItemType, LinkAudienceType } from "@prisma/client";
+import { ItemType, Link, LinkAudienceType } from "@prisma/client";
 import { ipAddress, waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth";
 
@@ -1026,7 +1026,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function notifyBlockedAttempt(link: any, email: string) {
+type PartialLink = Partial<Link>
+export async function notifyBlockedAttempt(link: PartialLink, email: string) {
   if (!link) return;
   const users = await prisma.userTeam.findMany({
     where: {
@@ -1069,13 +1070,14 @@ export async function notifyBlockedAttempt(link: any, email: string) {
   if (ownerEmail && !cc.includes(ownerEmail) && ownerEmail !== to) {
     cc = [ownerEmail, ...cc];
   }
-
-  await sendBlockedEmailAttemptNotification({
-    to,
-    cc,
-    blockedEmail: email!,
-    linkName: link?.name || `Link #${link.id.slice(-5)}`,
-    resourceName,
-    resourceType,
-  });
+  if (to) {
+    await sendBlockedEmailAttemptNotification({
+      to,
+      cc,
+      blockedEmail: email!,
+      linkName: link?.name || `Link #${link.id?.slice(-5)}`,
+      resourceName,
+      resourceType,
+    });
+  }
 }
