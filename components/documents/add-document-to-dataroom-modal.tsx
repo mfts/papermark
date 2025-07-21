@@ -87,16 +87,18 @@ export function AddToDataroomModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader className="text-start">
-          <DialogTitle>
-            <span className="font-bold">{documentName}</span>
-          </DialogTitle>
-          <DialogDescription>
-            Add your document to a dataroom.
-          </DialogDescription>
-        </DialogHeader>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-[425px] max-w-[90vw]">
+          <DialogHeader className="text-start">
+            <DialogTitle className="break-words max-w-full">
+              <span className="font-bold break-words line-clamp-2">
+                {documentName}
+              </span>
+            </DialogTitle>
+            <DialogDescription>
+              Add your document to a dataroom.
+            </DialogDescription>
+          </DialogHeader>
         <Select onValueChange={(value) => setSelectedDataroom(value)}>
           <SelectTrigger className="min-w-fit">
             <SelectValue placeholder="Select a dataroom" />
