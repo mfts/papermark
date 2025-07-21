@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { DocumentStorageType } from "@prisma/client";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
@@ -135,8 +134,17 @@ export default async function handle(
           isDownload: true,
         });
 
-        // Fetch the actual file content
-        const fileResponse = await fetch(fileUrl);
+// Fetch the actual file content with safety measures
+ const controller = new AbortController();
+ const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+ 
+ const fileResponse = await fetch(fileUrl, {
+   signal: controller.signal,
+   // Add size limit check in the response handling
+ });
+ 
+ clearTimeout(timeoutId);
+ 
         
         if (!fileResponse.ok) {
           throw new Error("Failed to fetch document content");
