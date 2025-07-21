@@ -155,18 +155,15 @@ export default async function handle(
         // Handle different file types appropriately
         const isPdf = fileType === 'pdf' || link.document.contentType?.includes('pdf');
         const isDocx = fileType === 'docs' || link.document.contentType?.includes('wordprocessingml');
-        const isPptx = fileType === 'slides' || link.document.contentType?.includes('presentationml');
-        const isXlsx = fileType === 'sheet' || link.document.contentType?.includes('spreadsheetml');
         
-        if (isPdf || isDocx || isPptx || isXlsx) {
-          // Handle binary files (PDFs, Word docs, PowerPoint, Excel)
+        if (isPdf || isDocx) {
+          // Handle binary files (PDFs, Word docs)
           const buffer = await fileResponse.arrayBuffer();
           let contentType = link.document.contentType || 'application/octet-stream';
           
           if (isPdf) contentType = 'application/pdf';
           else if (isDocx) contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-          else if (isPptx) contentType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-          else if (isXlsx) contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+ 
           
           res.setHeader("Content-Type", contentType);
           res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
