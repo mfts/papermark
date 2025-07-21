@@ -71,30 +71,151 @@ export default async function handle(
 
       const agreement = team.agreements[0];
 
-      // Get the file URL from S3
-      const fileUrl = await getFile({
-        type: DocumentStorageType.S3_PATH, // Assuming agreements use S3 storage
-        data: agreement.content, // S3 file key
-        isDownload: true,
-      });
+      // Check if the content is a Papermark URL
+      const isPapermarkUrl = agreement.content.includes('papermark.com/view/') || 
+                            agreement.content.includes('www.papermark.com/view/');
 
-      // Fetch the actual file content from S3
-      const fileResponse = await fetch(fileUrl);
-      
-      if (!fileResponse.ok) {
-        throw new Error("Failed to fetch agreement file content");
+      let fileContent: string;
+      let filename: string;
+      let link: any = null;
+
+      if (isPapermarkUrl) {
+        // Extract linkId from Papermark URL
+        const urlParts = agreement.content.split('/view/');
+        if (urlParts.length < 2) {
+          return res.status(400).json("Invalid Papermark URL format");
+        }
+        
+        const linkId = urlParts[1].split(/[/?#]/)[0]; // Get linkId, remove any query params or fragments
+        
+        // Fetch the link and its document
+        link = await prisma.link.findUnique({
+          where: { id: linkId },
+          include: {
+            document: {
+              select: {
+                name: true,
+                file: true,
+                originalFile: true,
+                storageType: true,
+                type: true,
+                contentType: true,
+                versions: {
+                  where: { isPrimary: true },
+                  select: {
+                    file: true,
+                    originalFile: true,
+                    storageType: true,
+                    type: true,
+                    contentType: true,
+                  },
+                  take: 1,
+                },
+              },
+            },
+          },
+        });
+
+        if (!link || !link.document) {
+          return res.status(404).json("Document not found for the provided Papermark URL");
+        }
+
+        // Use the primary version if available, otherwise use the document file
+        const documentVersion = link.document.versions[0];
+        const fileKey = documentVersion ? 
+          (documentVersion.originalFile || documentVersion.file) : 
+          (link.document.originalFile || link.document.file);
+        const storageType = documentVersion ? documentVersion.storageType : link.document.storageType;
+        const fileType = documentVersion ? documentVersion.type : link.document.type;
+
+        // Get the file URL from storage
+        const fileUrl = await getFile({
+          type: storageType,
+          data: fileKey,
+          isDownload: true,
+        });
+
+        // Fetch the actual file content
+        const fileResponse = await fetch(fileUrl);
+        
+        if (!fileResponse.ok) {
+          throw new Error("Failed to fetch document content");
+        }
+
+        // Use the document name for filename
+        const docName = link.document.name.replace(/\.[^/.]+$/, ""); // Remove extension
+        let extension = 'txt';
+        if (fileType === 'pdf') extension = 'pdf';
+        else if (fileType === 'docs') extension = 'docx';
+        else if (fileType === 'slides') extension = 'pptx';
+        else if (fileType === 'sheet') extension = 'xlsx';
+        
+        filename = `${docName.replace(/[^a-z0-9\-_]/gi, '_').toLowerCase().substring(0, 50)}_agreement.${extension}`;
+
+        // Handle different file types appropriately
+        const isPdf = fileType === 'pdf' || link.document.contentType?.includes('pdf');
+        const isDocx = fileType === 'docs' || link.document.contentType?.includes('wordprocessingml');
+        const isPptx = fileType === 'slides' || link.document.contentType?.includes('presentationml');
+        const isXlsx = fileType === 'sheet' || link.document.contentType?.includes('spreadsheetml');
+        
+        if (isPdf || isDocx || isPptx || isXlsx) {
+          // Handle binary files (PDFs, Word docs, PowerPoint, Excel)
+          const buffer = await fileResponse.arrayBuffer();
+          let contentType = link.document.contentType || 'application/octet-stream';
+          
+          if (isPdf) contentType = 'application/pdf';
+          else if (isDocx) contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          else if (isPptx) contentType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+          else if (isXlsx) contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          
+          res.setHeader("Content-Type", contentType);
+          res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+          res.setHeader("Content-Length", buffer.byteLength.toString());
+          return res.send(Buffer.from(buffer));
+        } else {
+          // Handle text-based files
+          fileContent = await fileResponse.text();
+        }
+        
+      } else {
+        // Regular URL - return formatted metadata as before
+        fileContent = `
+AGREEMENT DETAILS
+================
+
+Name: ${agreement.name}
+URL: ${agreement.content}
+Requires Name: ${agreement.requireName ? "Yes" : "No"}
+Created: ${agreement.createdAt.toLocaleDateString()} at ${agreement.createdAt.toLocaleTimeString()}
+Last Updated: ${agreement.updatedAt.toLocaleDateString()} at ${agreement.updatedAt.toLocaleTimeString()}
+Team: ${team.name}
+
+USAGE STATISTICS
+===============
+
+Used in ${agreement._count.links} link${agreement._count.links === 1 ? "" : "s"}
+Total responses: ${agreement._count.responses}
+
+AGREEMENT URL
+=============
+
+${agreement.content}
+
+---
+Downloaded on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+Agreement ID: ${agreement.id}
+        `.trim();
+
+        filename = `${agreement.name.replace(/[^a-z0-9\-_]/gi, '_').toLowerCase().substring(0, 50)}_agreement.txt`;
       }
 
-      const fileContent = await fileResponse.text();
-
-      // Set headers for file download
-      const filename = `${agreement.name.replace(/[^a-z0-9\-_]/gi, '_').toLowerCase().substring(0, 50)}_agreement.txt`;
-      res.setHeader("Content-Type", "text/plain; charset=utf-8");
-      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-      res.setHeader("Content-Length", Buffer.byteLength(fileContent, 'utf8'));
-
-      // Send the actual agreement file content
-      return res.send(fileContent);
+      // Set headers for file download (only for text files - PDFs are handled above)
+      if (fileContent) {
+        res.setHeader("Content-Type", "text/plain; charset=utf-8");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+        res.setHeader("Content-Length", Buffer.byteLength(fileContent, 'utf8'));
+        return res.send(fileContent);
+      }
     } catch (error) {
       errorhandler(error, res);
     }
