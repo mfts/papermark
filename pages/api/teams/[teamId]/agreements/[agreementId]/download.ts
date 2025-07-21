@@ -1,9 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { DocumentStorageType } from "@prisma/client";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import { getFile } from "@/lib/files/get-file";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -69,42 +71,30 @@ export default async function handle(
 
       const agreement = team.agreements[0];
 
-      // Create the agreement content as a formatted text file
-      const agreementContent = `
-AGREEMENT DETAILS
-================
+      // Get the file URL from S3
+      const fileUrl = await getFile({
+        type: DocumentStorageType.S3_PATH, // Assuming agreements use S3 storage
+        data: agreement.content, // S3 file key
+        isDownload: true,
+      });
 
-Name: ${agreement.name}
-URL: ${agreement.content}
-Requires Name: ${agreement.requireName ? "Yes" : "No"}
-Created: ${agreement.createdAt.toLocaleDateString()} at ${agreement.createdAt.toLocaleTimeString()}
-Last Updated: ${agreement.updatedAt.toLocaleDateString()} at ${agreement.updatedAt.toLocaleTimeString()}
-Team: ${team.name}
+      // Fetch the actual file content from S3
+      const fileResponse = await fetch(fileUrl);
+      
+      if (!fileResponse.ok) {
+        throw new Error("Failed to fetch agreement file content");
+      }
 
-USAGE STATISTICS
-===============
-
-Used in ${agreement._count.links} link${agreement._count.links === 1 ? "" : "s"}
-Total responses: ${agreement._count.responses}
-
-AGREEMENT URL
-=============
-
-${agreement.content}
-
----
-Downloaded on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
-Agreement ID: ${agreement.id}
-      `.trim();
+      const fileContent = await fileResponse.text();
 
       // Set headers for file download
       const filename = `${agreement.name.replace(/[^a-z0-9\-_]/gi, '_').toLowerCase().substring(0, 50)}_agreement.txt`;
       res.setHeader("Content-Type", "text/plain; charset=utf-8");
       res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-      res.setHeader("Content-Length", Buffer.byteLength(agreementContent, 'utf8'));
+      res.setHeader("Content-Length", Buffer.byteLength(fileContent, 'utf8'));
 
-      // Send the agreement content
-      return res.send(agreementContent);
+      // Send the actual agreement file content
+      return res.send(fileContent);
     } catch (error) {
       errorhandler(error, res);
     }
