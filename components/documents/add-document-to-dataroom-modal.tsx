@@ -87,31 +87,32 @@ export function AddToDataroomModal({
   };
 
   return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[425px] max-w-[90vw]">
-          <DialogHeader className="text-start">
-            <DialogTitle className="break-words max-w-full">
-              <span className="font-bold break-words line-clamp-2">
-                {documentName}
-              </span>
-            </DialogTitle>
-            <DialogDescription>
-              Add your document to a dataroom.
-            </DialogDescription>
-          </DialogHeader>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-[90vw] sm:max-w-[425px]">
+        <DialogHeader className="text-start">
+          <DialogTitle>
+            <span className="font-bold">{documentName}</span>
+          </DialogTitle>
+          <DialogDescription>
+            Add your document to a dataroom.
+          </DialogDescription>
+        </DialogHeader>
         <Select onValueChange={(value) => setSelectedDataroom(value)}>
-          <SelectTrigger className="min-w-fit">
+          <SelectTrigger className="w-[380px] max-w-full [&>span]:max-w-full [&>span]:overflow-hidden [&>span]:truncate [&>span]:text-ellipsis [&>span]:whitespace-nowrap">
             <SelectValue placeholder="Select a dataroom" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="w-[380px] max-w-[90vw]">
             {datarooms?.map((dataroom) => (
               <SelectItem
                 key={dataroom.id}
                 value={dataroom.id}
                 disabled={dataroom.id === dataroomId}
+                className="break-words"
               >
-                {dataroom.name}
-                {dataroom.id === dataroomId ? " (current)" : ""}
+                <span className="line-clamp-1 break-words">
+                  {dataroom.name}
+                  {dataroom.id === dataroomId ? " (current)" : ""}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -129,15 +130,15 @@ export function AddToDataroomModal({
               {!selectedDataroom ? (
                 "Select a dataroom"
               ) : (
-                <>
-                  Add to{" "}
-                  <span className="font-medium">
+                <span className="flex w-full max-w-[350px] items-center justify-center truncate">
+                  Add to
+                  <span className="ml-1 line-clamp-1 truncate font-medium">
                     {
                       datarooms?.filter((d) => d.id === selectedDataroom)[0]
                         .name
                     }
                   </span>
-                </>
+                </span>
               )}
             </Button>
           </DialogFooter>
