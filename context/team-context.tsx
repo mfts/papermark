@@ -66,6 +66,39 @@ export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
     if (typeof localStorage !== "undefined") {
       localStorage.setItem("currentTeamId", team.id);
     }
+
+    // Update PostHog group association when team changes
+    if (typeof window !== "undefined") {
+      import("posthog-js").then((module) => {
+        const posthog = module.default;
+        if (posthog && posthog.isFeatureEnabled) {
+          // Update user properties with new current team
+          posthog.setPersonProperties({
+            current_team_id: team.id,
+            current_team_name: team.name,
+            current_team_plan: team.plan,
+          });
+
+          // Associate with the new team group
+          posthog.group("team", team.id, {
+            name: team.name,
+            plan: team.plan,
+            created_at: team.createdAt,
+            excel_advanced_mode: team.enableExcelAdvancedMode,
+          });
+
+          // Track team switch event
+          posthog.capture("Team Switched", {
+            team_id: team.id,
+            team_name: team.name,
+            team_plan: team.plan,
+            $groups: { team: team.id },
+          });
+        }
+      }).catch((error) => {
+        console.error("Failed to update PostHog group on team switch:", error);
+      });
+    }
   }, []);
 
   const value = useMemo(

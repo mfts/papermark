@@ -171,7 +171,7 @@ export default function DocumentView({
           viewerEmail: data.email ?? verifiedEmail ?? userEmail,
           isEmbedded,
           isTeamMember,
-        });
+        }, link.teamId || undefined);
 
         // set the verification token to the cookie
         if (verificationToken) {

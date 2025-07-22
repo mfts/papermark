@@ -27,14 +27,49 @@ export const PostHogCustomProvider = ({
         getSession()
           .then((session) => {
             if (session) {
+              const user = session.user as CustomUser;
+              
+              // Identify the user
               posthog.identify(
-                (session.user as CustomUser).email ??
-                  (session.user as CustomUser).id,
+                user.email ?? user.id,
                 {
-                  email: (session.user as CustomUser).email,
-                  userId: (session.user as CustomUser).id,
+                  email: user.email,
+                  userId: user.id,
+                  name: user.name,
                 },
               );
+
+              // Fetch user's teams and associate with groups
+              fetch("/api/teams")
+                .then((res) => res.json())
+                .then((teams) => {
+                  // Associate user with team groups
+                  teams.forEach((team: any) => {
+                    posthog.group("team", team.id, {
+                      name: team.name,
+                      plan: team.plan,
+                      created_at: team.createdAt,
+                      excel_advanced_mode: team.enableExcelAdvancedMode,
+                    });
+                  });
+
+                  // Get current team from localStorage for primary group association
+                  const currentTeamId = localStorage.getItem("currentTeamId");
+                  if (currentTeamId) {
+                    const currentTeam = teams.find((t: any) => t.id === currentTeamId);
+                    if (currentTeam) {
+                      // Set primary group properties
+                      posthog.setPersonProperties({
+                        current_team_id: currentTeam.id,
+                        current_team_name: currentTeam.name,
+                        current_team_plan: currentTeam.plan,
+                      });
+                    }
+                  }
+                })
+                .catch((error) => {
+                  console.error("Failed to fetch teams for PostHog groups:", error);
+                });
             } else {
               posthog.reset();
             }

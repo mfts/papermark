@@ -124,11 +124,21 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     signIn: async ({ user }) => {
       if (!user.email || (await isBlacklistedEmail(user.email))) {
-        await identifyUser(user.email ?? user.id);
+        // Get user's teams for context
+        const userTeams = await prisma.userTeam.findMany({
+          where: { userId: user.id },
+          include: { team: { select: { id: true, name: true } } },
+        });
+        
+        const primaryTeam = userTeams[0]?.team;
+        
+        await identifyUser(user.email ?? user.id, primaryTeam?.id, primaryTeam?.name);
         await trackAnalytics({
           event: "User Sign In Attempted",
           email: user.email ?? undefined,
           userId: user.id,
+          teamId: primaryTeam?.id,
+          teamName: primaryTeam?.name,
         });
         return false;
       }
@@ -184,11 +194,21 @@ export const authOptions: NextAuthOptions = {
         },
       };
 
-      await identifyUser(message.user.email ?? message.user.id);
+      // Get user's teams for context (new users might not have teams yet)
+      const userTeams = await prisma.userTeam.findMany({
+        where: { userId: message.user.id },
+        include: { team: { select: { id: true, name: true } } },
+      });
+      
+      const primaryTeam = userTeams[0]?.team;
+
+      await identifyUser(message.user.email ?? message.user.id, primaryTeam?.id, primaryTeam?.name);
       await trackAnalytics({
         event: "User Signed Up",
         email: message.user.email,
         userId: message.user.id,
+        teamId: primaryTeam?.id,
+        teamName: primaryTeam?.name,
       });
 
       await sendWelcomeEmail(params);
@@ -205,10 +225,21 @@ export const authOptions: NextAuthOptions = {
           console.error("Failed to set additional cookie", error);
         }
       }
-      await identifyUser(message.user.email ?? message.user.id);
+      
+      // Get user's teams for context
+      const userTeams = await prisma.userTeam.findMany({
+        where: { userId: message.user.id },
+        include: { team: { select: { id: true, name: true } } },
+      });
+      
+      const primaryTeam = userTeams[0]?.team;
+
+      await identifyUser(message.user.email ?? message.user.id, primaryTeam?.id, primaryTeam?.name);
       await trackAnalytics({
         event: "User Signed In",
         email: message.user.email,
+        teamId: primaryTeam?.id,
+        teamName: primaryTeam?.name,
       });
     },
   },

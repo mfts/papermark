@@ -8,17 +8,26 @@ export function useAnalytics() {
   const isPostHogEnabled = getPostHogConfig();
 
   /**
-   * Capture an analytic event.
+   * Capture an analytic event with team context.
    *
    * @param event The event name.
    * @param properties Properties to attach to the event.
+   * @param teamId Optional team ID to associate the event with the team group.
    */
-  const capture = (event: string, properties?: Record<string, unknown>) => {
+  const capture = (event: string, properties?: Record<string, unknown>, teamId?: string) => {
     if (!isPostHogEnabled) {
       return;
     }
 
-    posthog.capture(event, properties);
+    // Get current team from localStorage if not provided
+    const currentTeamId = teamId || (typeof window !== "undefined" ? localStorage.getItem("currentTeamId") : null);
+    
+    const eventProperties = {
+      ...properties,
+      ...(currentTeamId && { $groups: { team: currentTeamId } }),
+    };
+
+    posthog.capture(event, eventProperties);
   };
 
   const identify = (
@@ -32,9 +41,24 @@ export function useAnalytics() {
     posthog.identify(distinctId, properties);
   };
 
+  /**
+   * Associate user with a team group.
+   *
+   * @param teamId Team ID to associate with.
+   * @param teamProperties Properties of the team.
+   */
+  const groupIdentify = (teamId: string, teamProperties: Record<string, unknown>) => {
+    if (!isPostHogEnabled) {
+      return;
+    }
+
+    posthog.group("team", teamId, teamProperties);
+  };
+
   return {
     capture,
     identify,
+    groupIdentify,
   };
 }
 
@@ -47,5 +71,39 @@ const analytics =
       })
     : emptyAnalytics;
 
-export const identifyUser = (userId: string) => analytics.identify(userId);
-export const trackAnalytics = (args: AnalyticsEvents) => analytics.track(args);
+export const identifyUser = (userId: string, teamId?: string, teamName?: string) => {
+  analytics.identify(userId, {
+    ...(teamId && { team_id: teamId }),
+    ...(teamName && { team_name: teamName }),
+  });
+};
+
+export const trackAnalytics = (args: AnalyticsEvents & { teamId?: string; teamName?: string }) => {
+  const { teamId, teamName, ...eventArgs } = args;
+  
+  // Add team context to all server-side events
+  const eventWithTeamContext = {
+    ...eventArgs,
+    ...(teamId && { team_id: teamId }),
+    ...(teamName && { team_name: teamName }),
+  };
+  
+  analytics.track(eventWithTeamContext);
+
+  // Also track as PostHog group event if we have team info
+  if (teamId && typeof window !== "undefined") {
+    const posthogConfig = getPostHogConfig();
+    if (posthogConfig) {
+      // Import posthog dynamically to avoid SSR issues
+      import("posthog-js").then((module) => {
+        const posthog = module.default;
+        if (posthog && posthog.isFeatureEnabled) {
+          posthog.capture(eventArgs.event, {
+            ...eventArgs,
+            $groups: { team: teamId },
+          });
+        }
+      });
+    }
+  }
+};
