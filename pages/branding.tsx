@@ -1,10 +1,18 @@
 import { useRouter } from "next/router";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
+import ReactCrop, {
+  centerCrop,
+  makeAspectCrop,
+  Crop,
+  PixelCrop,
+  convertToPixelCrop,
+} from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
-import { Check, CircleHelpIcon, PlusIcon } from "lucide-react";
+import { Check, CircleHelpIcon, PlusIcon, X } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -43,6 +51,82 @@ export default function Branding() {
   const [fileError, setFileError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
+  // Image cropping states
+  const [showCropper, setShowCropper] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string>("");
+  const [crop, setCrop] = useState<Crop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const imgRef = useRef<HTMLImageElement>(null);
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Utility functions for cropping
+  const centerAspectCrop = useCallback((mediaWidth: number, mediaHeight: number, aspect: number) => {
+    return centerCrop(
+      makeAspectCrop(
+        {
+          unit: "%",
+          width: 90,
+        },
+        aspect,
+        mediaWidth,
+        mediaHeight,
+      ),
+      mediaWidth,
+      mediaHeight,
+    );
+  }, []);
+
+  const canvasPreview = useCallback(async (
+    image: HTMLImageElement,
+    canvas: HTMLCanvasElement,
+    crop: PixelCrop,
+  ) => {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("No 2d context");
+    }
+
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    const pixelRatio = window.devicePixelRatio || 1;
+
+    canvas.width = Math.floor(crop.width * scaleX * pixelRatio);
+    canvas.height = Math.floor(crop.height * scaleY * pixelRatio);
+
+    ctx.scale(pixelRatio, pixelRatio);
+    ctx.imageSmoothingQuality = "high";
+
+    const cropX = crop.x * scaleX;
+    const cropY = crop.y * scaleY;
+
+    ctx.save();
+    ctx.translate(-cropX, -cropY);
+    ctx.drawImage(
+      image,
+      0,
+      0,
+      image.naturalWidth,
+      image.naturalHeight,
+      0,
+      0,
+      image.naturalWidth,
+      image.naturalHeight,
+    );
+    ctx.restore();
+  }, []);
+
+  // Handle image crop completion
+  useEffect(() => {
+    if (
+      completedCrop?.width &&
+      completedCrop?.height &&
+      imgRef.current &&
+      previewCanvasRef.current
+    ) {
+      canvasPreview(imgRef.current, previewCanvasRef.current, completedCrop);
+    }
+  }, [completedCrop, canvasPreview]);
+
   const onChangeLogo = useCallback(
     (e: any) => {
       setFileError(null);
@@ -56,18 +140,57 @@ export default function Branding() {
           const reader = new FileReader();
           reader.onload = (e) => {
             const dataUrl = e.target?.result as string;
-            setLogo(dataUrl);
-            // create a blob url for preview
-            const blob = convertDataUrlToFile({ dataUrl });
-            const blobUrl = URL.createObjectURL(blob);
-            setBlobUrl(blobUrl);
+            setImageToCrop(dataUrl);
+            setShowCropper(true);
           };
           reader.readAsDataURL(file);
         }
       }
+      // Reset the input value so the same file can be selected again
+      e.target.value = '';
     },
-    [setLogo],
+    [],
   );
+
+  const handleImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget;
+    setCrop(centerAspectCrop(width, height, 1)); // Square aspect ratio for logo
+  }, [centerAspectCrop]);
+
+  const handleCropComplete = useCallback(() => {
+    if (!previewCanvasRef.current) {
+      return;
+    }
+
+    previewCanvasRef.current.toBlob((blob) => {
+      if (!blob) {
+        toast.error("Failed to process image");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        setLogo(dataUrl);
+        // create a blob url for preview
+        const blob = convertDataUrlToFile({ dataUrl });
+        const blobUrl = URL.createObjectURL(blob);
+        setBlobUrl(blobUrl);
+        setShowCropper(false);
+        setImageToCrop("");
+        setCrop(undefined);
+        setCompletedCrop(undefined);
+      };
+      reader.readAsDataURL(blob);
+    });
+  }, []);
+
+  const handleCropCancel = useCallback(() => {
+    setShowCropper(false);
+    setImageToCrop("");
+    setCrop(undefined);
+    setCompletedCrop(undefined);
+  }, []);
 
   useEffect(() => {
     if (brand) {
@@ -257,13 +380,8 @@ export default function Branding() {
                                   const reader = new FileReader();
                                   reader.onload = (e) => {
                                     const dataUrl = e.target?.result as string;
-                                    setLogo(dataUrl);
-                                    // create a blob url for preview
-                                    const blob = convertDataUrlToFile({
-                                      dataUrl,
-                                    });
-                                    const blobUrl = URL.createObjectURL(blob);
-                                    setBlobUrl(blobUrl);
+                                    setImageToCrop(dataUrl);
+                                    setShowCropper(true);
                                   };
                                   reader.readAsDataURL(file);
                                 }
@@ -594,6 +712,81 @@ export default function Branding() {
           </div>
         </div>
       </main>
+
+      {/* Image Cropper Modal */}
+      {showCropper && imageToCrop && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+          <Card className="w-full max-w-4xl max-h-[90vh] overflow-auto">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Crop Logo</h3>
+                <Button variant="ghost" size="sm" onClick={handleCropCancel}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex justify-center">
+                  <ReactCrop
+                    crop={crop}
+                    onChange={(_, percentCrop) => setCrop(percentCrop)}
+                    onComplete={(c) => {
+                      if (imgRef.current) {
+                        setCompletedCrop(
+                          convertToPixelCrop(c, imgRef.current.width, imgRef.current.height)
+                        );
+                      }
+                    }}
+                    aspect={1} // Square aspect ratio for logos
+                    minWidth={100}
+                    minHeight={100}
+                    className="max-w-full"
+                  >
+                    <img
+                      ref={imgRef}
+                      alt="Crop me"
+                      src={imageToCrop}
+                      onLoad={handleImageLoad}
+                      style={{
+                        maxWidth: "100%",
+                        maxHeight: "60vh",
+                      }}
+                    />
+                  </ReactCrop>
+                </div>
+
+                {completedCrop && (
+                  <div className="space-y-4">
+                    <div className="flex justify-center">
+                      <div className="text-center">
+                        <h4 className="text-sm font-medium mb-2">Preview:</h4>
+                        <canvas
+                          ref={previewCanvasRef}
+                          className="border rounded max-w-full h-auto mx-auto"
+                          style={{
+                            objectFit: "contain",
+                            width: Math.min(completedCrop.width, 200),
+                            height: Math.min(completedCrop.height, 200),
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 justify-center">
+                      <Button onClick={handleCropComplete}>
+                        Apply Crop
+                      </Button>
+                      <Button variant="outline" onClick={handleCropCancel}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </AppLayout>
   );
 }

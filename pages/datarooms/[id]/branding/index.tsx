@@ -1,9 +1,17 @@
 import { useRouter } from "next/router";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
+import ReactCrop, {
+  centerCrop,
+  makeAspectCrop,
+  Crop,
+  PixelCrop,
+  convertToPixelCrop,
+} from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 
 import { useTeam } from "@/context/team-context";
-import { Check, CircleHelpIcon, InfoIcon, PlusIcon } from "lucide-react";
+import { Check, CircleHelpIcon, InfoIcon, PlusIcon, X } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -46,6 +54,102 @@ export default function DataroomBrandPage() {
   const [fileError, setFileError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
+  // Image cropping states - Logo
+  const [showLogoCropper, setShowLogoCropper] = useState(false);
+  const [logoImageToCrop, setLogoImageToCrop] = useState<string>("");
+  const [logoCrop, setLogoCrop] = useState<Crop>();
+  const [logoCompletedCrop, setLogoCompletedCrop] = useState<PixelCrop>();
+  const logoImgRef = useRef<HTMLImageElement>(null);
+  const logoPreviewCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Image cropping states - Banner
+  const [showBannerCropper, setShowBannerCropper] = useState(false);
+  const [bannerImageToCrop, setBannerImageToCrop] = useState<string>("");
+  const [bannerCrop, setBannerCrop] = useState<Crop>();
+  const [bannerCompletedCrop, setBannerCompletedCrop] = useState<PixelCrop>();
+  const bannerImgRef = useRef<HTMLImageElement>(null);
+  const bannerPreviewCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Utility functions for cropping
+  const centerAspectCrop = useCallback((mediaWidth: number, mediaHeight: number, aspect: number) => {
+    return centerCrop(
+      makeAspectCrop(
+        {
+          unit: "%",
+          width: 90,
+        },
+        aspect,
+        mediaWidth,
+        mediaHeight,
+      ),
+      mediaWidth,
+      mediaHeight,
+    );
+  }, []);
+
+  const canvasPreview = useCallback(async (
+    image: HTMLImageElement,
+    canvas: HTMLCanvasElement,
+    crop: PixelCrop,
+  ) => {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("No 2d context");
+    }
+
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    const pixelRatio = window.devicePixelRatio || 1;
+
+    canvas.width = Math.floor(crop.width * scaleX * pixelRatio);
+    canvas.height = Math.floor(crop.height * scaleY * pixelRatio);
+
+    ctx.scale(pixelRatio, pixelRatio);
+    ctx.imageSmoothingQuality = "high";
+
+    const cropX = crop.x * scaleX;
+    const cropY = crop.y * scaleY;
+
+    ctx.save();
+    ctx.translate(-cropX, -cropY);
+    ctx.drawImage(
+      image,
+      0,
+      0,
+      image.naturalWidth,
+      image.naturalHeight,
+      0,
+      0,
+      image.naturalWidth,
+      image.naturalHeight,
+    );
+    ctx.restore();
+  }, []);
+
+  // Handle logo crop completion
+  useEffect(() => {
+    if (
+      logoCompletedCrop?.width &&
+      logoCompletedCrop?.height &&
+      logoImgRef.current &&
+      logoPreviewCanvasRef.current
+    ) {
+      canvasPreview(logoImgRef.current, logoPreviewCanvasRef.current, logoCompletedCrop);
+    }
+  }, [logoCompletedCrop, canvasPreview]);
+
+  // Handle banner crop completion
+  useEffect(() => {
+    if (
+      bannerCompletedCrop?.width &&
+      bannerCompletedCrop?.height &&
+      bannerImgRef.current &&
+      bannerPreviewCanvasRef.current
+    ) {
+      canvasPreview(bannerImgRef.current, bannerPreviewCanvasRef.current, bannerCompletedCrop);
+    }
+  }, [bannerCompletedCrop, canvasPreview]);
+
   const onChangeLogo = useCallback(
     (e: any) => {
       setFileError(null);
@@ -59,17 +163,16 @@ export default function DataroomBrandPage() {
           const reader = new FileReader();
           reader.onload = (e) => {
             const dataUrl = e.target?.result as string;
-            setLogo(dataUrl);
-            // create a blob url for preview
-            const blob = convertDataUrlToFile({ dataUrl });
-            const blobUrl = URL.createObjectURL(blob);
-            setBlobUrl(blobUrl);
+            setLogoImageToCrop(dataUrl);
+            setShowLogoCropper(true);
           };
           reader.readAsDataURL(file);
         }
       }
+      // Reset the input value so the same file can be selected again
+      e.target.value = '';
     },
-    [setLogo],
+    [],
   );
 
   const onChangeBanner = useCallback(
@@ -85,17 +188,16 @@ export default function DataroomBrandPage() {
           const reader = new FileReader();
           reader.onload = (e) => {
             const dataUrl = e.target?.result as string;
-            setBanner(dataUrl);
-            // create a blob url for preview
-            const blob = convertDataUrlToFile({ dataUrl });
-            const bannerBlobUrl = URL.createObjectURL(blob);
-            setBannerBlobUrl(bannerBlobUrl);
+            setBannerImageToCrop(dataUrl);
+            setShowBannerCropper(true);
           };
           reader.readAsDataURL(file);
         }
       }
+      // Reset the input value so the same file can be selected again
+      e.target.value = '';
     },
-    [setBanner],
+    [],
   );
 
   useEffect(() => {
@@ -106,6 +208,88 @@ export default function DataroomBrandPage() {
       setBanner(brand.banner || DEFAULT_BANNER_IMAGE);
     }
   }, [brand]);
+
+  // Logo cropping handlers
+  const handleLogoImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget;
+    setLogoCrop(centerAspectCrop(width, height, 1)); // Square aspect ratio for logo
+  }, [centerAspectCrop]);
+
+  const handleLogoCropComplete = useCallback(() => {
+    if (!logoPreviewCanvasRef.current) {
+      return;
+    }
+
+    logoPreviewCanvasRef.current.toBlob((blob) => {
+      if (!blob) {
+        toast.error("Failed to process image");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        setLogo(dataUrl);
+        // create a blob url for preview
+        const blob = convertDataUrlToFile({ dataUrl });
+        const blobUrl = URL.createObjectURL(blob);
+        setBlobUrl(blobUrl);
+        setShowLogoCropper(false);
+        setLogoImageToCrop("");
+        setLogoCrop(undefined);
+        setLogoCompletedCrop(undefined);
+      };
+      reader.readAsDataURL(blob);
+    });
+  }, []);
+
+  const handleLogoCropCancel = useCallback(() => {
+    setShowLogoCropper(false);
+    setLogoImageToCrop("");
+    setLogoCrop(undefined);
+    setLogoCompletedCrop(undefined);
+  }, []);
+
+  // Banner cropping handlers
+  const handleBannerImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget;
+    setBannerCrop(centerAspectCrop(width, height, 6)); // 6:1 aspect ratio for banner (1920x320)
+  }, [centerAspectCrop]);
+
+  const handleBannerCropComplete = useCallback(() => {
+    if (!bannerPreviewCanvasRef.current) {
+      return;
+    }
+
+    bannerPreviewCanvasRef.current.toBlob((blob) => {
+      if (!blob) {
+        toast.error("Failed to process image");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        setBanner(dataUrl);
+        // create a blob url for preview
+        const blob = convertDataUrlToFile({ dataUrl });
+        const bannerBlobUrl = URL.createObjectURL(blob);
+        setBannerBlobUrl(bannerBlobUrl);
+        setShowBannerCropper(false);
+        setBannerImageToCrop("");
+        setBannerCrop(undefined);
+        setBannerCompletedCrop(undefined);
+      };
+      reader.readAsDataURL(blob);
+    });
+  }, []);
+
+  const handleBannerCropCancel = useCallback(() => {
+    setShowBannerCropper(false);
+    setBannerImageToCrop("");
+    setBannerCrop(undefined);
+    setBannerCompletedCrop(undefined);
+  }, []);
 
   if (!dataroom) {
     return <div>Loading...</div>;
@@ -282,13 +466,8 @@ export default function DataroomBrandPage() {
                                   const reader = new FileReader();
                                   reader.onload = (e) => {
                                     const dataUrl = e.target?.result as string;
-                                    setLogo(dataUrl);
-                                    // create a blob url for preview
-                                    const blob = convertDataUrlToFile({
-                                      dataUrl,
-                                    });
-                                    const blobUrl = URL.createObjectURL(blob);
-                                    setBlobUrl(blobUrl);
+                                    setLogoImageToCrop(dataUrl);
+                                    setShowLogoCropper(true);
                                   };
                                   reader.readAsDataURL(file);
                                 }
@@ -759,6 +938,156 @@ export default function DataroomBrandPage() {
             </Card>
           </div>
         </div>
+
+        {/* Logo Cropper Modal */}
+        {showLogoCropper && logoImageToCrop && (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+            <Card className="w-full max-w-4xl max-h-[90vh] overflow-auto">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Crop Logo</h3>
+                  <Button variant="ghost" size="sm" onClick={handleLogoCropCancel}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-center">
+                    <ReactCrop
+                      crop={logoCrop}
+                      onChange={(_, percentCrop) => setLogoCrop(percentCrop)}
+                      onComplete={(c) => {
+                        if (logoImgRef.current) {
+                          setLogoCompletedCrop(
+                            convertToPixelCrop(c, logoImgRef.current.width, logoImgRef.current.height)
+                          );
+                        }
+                      }}
+                      aspect={1} // Square aspect ratio for logos
+                      minWidth={100}
+                      minHeight={100}
+                      className="max-w-full"
+                    >
+                      <img
+                        ref={logoImgRef}
+                        alt="Crop logo"
+                        src={logoImageToCrop}
+                        onLoad={handleLogoImageLoad}
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "60vh",
+                        }}
+                      />
+                    </ReactCrop>
+                  </div>
+
+                  {logoCompletedCrop && (
+                    <div className="space-y-4">
+                      <div className="flex justify-center">
+                        <div className="text-center">
+                          <h4 className="text-sm font-medium mb-2">Preview:</h4>
+                          <canvas
+                            ref={logoPreviewCanvasRef}
+                            className="border rounded max-w-full h-auto mx-auto"
+                            style={{
+                              objectFit: "contain",
+                              width: Math.min(logoCompletedCrop.width, 200),
+                              height: Math.min(logoCompletedCrop.height, 200),
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 justify-center">
+                        <Button onClick={handleLogoCropComplete}>
+                          Apply Crop
+                        </Button>
+                        <Button variant="outline" onClick={handleLogoCropCancel}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Banner Cropper Modal */}
+        {showBannerCropper && bannerImageToCrop && (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+            <Card className="w-full max-w-4xl max-h-[90vh] overflow-auto">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Crop Banner</h3>
+                  <Button variant="ghost" size="sm" onClick={handleBannerCropCancel}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-center">
+                    <ReactCrop
+                      crop={bannerCrop}
+                      onChange={(_, percentCrop) => setBannerCrop(percentCrop)}
+                      onComplete={(c) => {
+                        if (bannerImgRef.current) {
+                          setBannerCompletedCrop(
+                            convertToPixelCrop(c, bannerImgRef.current.width, bannerImgRef.current.height)
+                          );
+                        }
+                      }}
+                      aspect={6} // 6:1 aspect ratio for banners (1920x320)
+                      minWidth={320}
+                      minHeight={53}
+                      className="max-w-full"
+                    >
+                      <img
+                        ref={bannerImgRef}
+                        alt="Crop banner"
+                        src={bannerImageToCrop}
+                        onLoad={handleBannerImageLoad}
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "60vh",
+                        }}
+                      />
+                    </ReactCrop>
+                  </div>
+
+                  {bannerCompletedCrop && (
+                    <div className="space-y-4">
+                      <div className="flex justify-center">
+                        <div className="text-center">
+                          <h4 className="text-sm font-medium mb-2">Preview:</h4>
+                          <canvas
+                            ref={bannerPreviewCanvasRef}
+                            className="border rounded max-w-full h-auto mx-auto"
+                            style={{
+                              objectFit: "contain",
+                              width: Math.min(bannerCompletedCrop.width, 400),
+                              height: Math.min(bannerCompletedCrop.height, 67),
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 justify-center">
+                        <Button onClick={handleBannerCropComplete}>
+                          Apply Crop
+                        </Button>
+                        <Button variant="outline" onClick={handleBannerCropCancel}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </AppLayout>
   );

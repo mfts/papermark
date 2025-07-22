@@ -116,6 +116,7 @@
     "react-dropzone": "^14.3.8",
     "react-email": "^4.0.16",
     "react-hotkeys-hook": "^5.1.0",
+    "react-image-crop": "^11.0.10",
     "react-intersection-observer": "^9.16.0",
     "react-notion-x": "^7.3.0",
     "react-pdf": "^8.0.2",
