@@ -38,7 +38,7 @@ export function SettingsHeader() {
             segment: `general`,
           },
           {
-            label: "People",
+            label: "Team",
             href: `/settings/people`,
             segment: "people",
           },

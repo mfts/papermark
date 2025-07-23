@@ -51,6 +51,7 @@ const putFileInVercelServer = async (file: File) => {
 
   const blob = await put(file.name, contents, {
     access: "public",
+    addRandomSuffix: true,
   });
 
   return {

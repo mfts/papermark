@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
+import { useDataroom } from "@/lib/swr/use-dataroom";
+import { useDocument } from "@/lib/swr/use-document";
+import { useFolderWithParents } from "@/lib/swr/use-folders";
+import useViewer from "@/lib/swr/use-viewer";
 
 import { BreadcrumbComponent as DataroomBreadcrumb } from "@/components/datarooms/dataroom-breadcrumb";
 import {
@@ -19,11 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { useDataroom } from "@/lib/swr/use-dataroom";
-import { useDocument } from "@/lib/swr/use-document";
-import { useFolderWithParents } from "@/lib/swr/use-folders";
-import useViewer from "@/lib/swr/use-viewer";
+import { BadgeTooltip } from "@/components/ui/tooltip";
 
 const FOLDERS_TO_DISPLAY = 1; // Only show the last folder in the path
 
@@ -105,6 +106,45 @@ const SingleDocumentBreadcrumb = () => {
   );
 };
 
+export const TruncatedBreadcrumbLink = ({
+  href,
+  text,
+}: {
+  href: string;
+  text: string | undefined;
+}) => {
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+  const breadcrumbRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (
+      breadcrumbRef.current &&
+      breadcrumbRef.current.scrollWidth > breadcrumbRef.current.clientWidth
+    ) {
+      setIsTooltipVisible(true);
+    } else {
+      setIsTooltipVisible(false);
+    }
+  }, [text]);
+
+  const link = (
+    <BreadcrumbLink asChild>
+      <Link
+        ref={breadcrumbRef}
+        href={href}
+        className="max-w-32 truncate md:max-w-60"
+      >
+        {text || "Loading..."}
+      </Link>
+    </BreadcrumbLink>
+  );
+
+  if (isTooltipVisible) {
+    return <BadgeTooltip content={text || ""}>{link}</BadgeTooltip>;
+  }
+  return link;
+};
+
 const SingleDataroomBreadcrumb = ({ path }: { path: string }) => {
   const { dataroom } = useDataroom();
 
@@ -129,6 +169,8 @@ const SingleDataroomBreadcrumb = ({ path }: { path: string }) => {
         return "Conversations";
       case "/datarooms/[id]/settings/notifications":
         return "Notifications";
+      case "/datarooms/[id]/settings/file-permissions":
+        return "File Permissions";
       default:
         return dataroom?.name || "Loading...";
     }
@@ -144,11 +186,10 @@ const SingleDataroomBreadcrumb = ({ path }: { path: string }) => {
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href={`/datarooms/${dataroom?.id}/documents`}>
-              {dataroom?.name}
-            </Link>
-          </BreadcrumbLink>
+          <TruncatedBreadcrumbLink
+            href={`/datarooms/${dataroom?.id}/documents`}
+            text={dataroom?.name}
+          />
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
@@ -168,7 +209,7 @@ const SettingsBreadcrumb = () => {
       case "/settings/general":
         return "General";
       case "/settings/people":
-        return "People";
+        return "Team";
       case "/settings/domains":
         return "Domains";
       case "/settings/presets":

@@ -1,19 +1,14 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-
-
 import { FormEvent, useEffect, useState } from "react";
-
-
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
+import { DefaultPermissionStrategy } from "@prisma/client";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
 import { mutate } from "swr";
-
-
 
 import { useAnalytics } from "@/lib/analytics";
 import {
@@ -22,10 +17,13 @@ import {
   createNewDocumentVersion,
 } from "@/lib/documents/create-document";
 import { putFile } from "@/lib/files/put-file";
+import { useDataroomPermissions } from "@/lib/hooks/use-dataroom-permissions";
 import { usePlan } from "@/lib/swr/use-billing";
+import { useDataroom } from "@/lib/swr/use-dataroom";
 import useLimits from "@/lib/swr/use-limits";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
+import { SetUnifiedPermissionsModal } from "@/components/datarooms/groups/set-unified-permissions-modal";
 import DocumentUpload from "@/components/document-upload";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,7 +44,6 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
-import { SetGroupPermissionsModal } from "../datarooms/groups/set-group-permissions-modal";
 
 interface DataroomDocument {
   id: string;
@@ -86,8 +83,10 @@ export function AddDocumentModal({
   const teamInfo = useTeam();
   const { canAddDocuments } = useLimits();
   const { plan, isFree, isTrial } = usePlan();
-
+  const { dataroom } = useDataroom();
   const teamId = teamInfo?.currentTeam?.id as string;
+
+  const { applyPermissions } = useDataroomPermissions();
 
   useEffect(() => {
     if (openModal) setIsOpen(openModal);
@@ -141,6 +140,63 @@ export function AddDocumentModal({
       );
       return undefined;
     }
+  };
+
+  const toastErrorMessage = () =>
+    toast.error(
+      "Failed to apply default permissions. Update the group permissions in the group settings.",
+    );
+
+  const applyUnifiedPermissionsToDocument = async (
+    document: any,
+    dataroomDocument: DataroomDocument & {
+      dataroom: {
+        _count: { viewerGroups: number; permissionGroups: number };
+      };
+    },
+    currentFolderPath?: string[],
+  ): Promise<void> => {
+    const hasAnyGroups =
+      dataroomDocument.dataroom._count.viewerGroups > 0 ||
+      dataroomDocument.dataroom._count.permissionGroups > 0;
+
+    if (!hasAnyGroups) return;
+
+    const strategy =
+      dataroom?.defaultPermissionStrategy ||
+      DefaultPermissionStrategy.INHERIT_FROM_PARENT;
+
+    if (strategy === DefaultPermissionStrategy.ASK_EVERY_TIME) {
+      setShowGroupPermissions(true);
+      setUploadedFiles([
+        {
+          documentId: document.id,
+          dataroomDocumentId: dataroomDocument.id,
+          fileName: document.name,
+        },
+      ]);
+    } else if (strategy === DefaultPermissionStrategy.INHERIT_FROM_PARENT) {
+      const isRootLevel = !currentFolderPath || currentFolderPath.length === 0;
+
+      try {
+        const result = await applyPermissions(
+          dataroomId!,
+          [document.id],
+          "INHERIT_FROM_PARENT",
+          isRootLevel ? undefined : currentFolderPath?.join("/"),
+          toastErrorMessage,
+        );
+
+        if (!result.success) {
+          console.error("Failed to apply permissions:", result.error);
+          toastErrorMessage();
+        }
+      } catch (error) {
+        console.error("Failed to apply permissions:", error);
+        toastErrorMessage();
+      }
+    }
+    // strategy === DefaultPermissionStrategy.HIDDEN_BY_DEFAULT - do nothing, documents remain hidden
   };
 
   const handleFileUpload = async (
@@ -232,19 +288,16 @@ export function AddDocumentModal({
           if (dataroomResponse?.ok) {
             const dataroomDocument =
               (await dataroomResponse.json()) as DataroomDocument & {
-                dataroom: { _count: { viewerGroups: number } };
+                dataroom: {
+                  _count: { viewerGroups: number; permissionGroups: number };
+                };
               };
 
-            if (dataroomDocument.dataroom._count.viewerGroups > 0) {
-              setShowGroupPermissions(true);
-              setUploadedFiles([
-                {
-                  documentId: document.id,
-                  dataroomDocumentId: dataroomDocument.id,
-                  fileName: document.name,
-                },
-              ]);
-            }
+            await applyUnifiedPermissionsToDocument(
+              document,
+              dataroomDocument,
+              currentFolderPath,
+            );
           }
 
           analytics.capture("Document Added", {
@@ -387,19 +440,16 @@ export function AddDocumentModal({
         if (dataroomResponse?.ok) {
           const dataroomDocument =
             (await dataroomResponse.json()) as DataroomDocument & {
-              dataroom: { _count: { viewerGroups: number } };
+              dataroom: {
+                _count: { viewerGroups: number; permissionGroups: number };
+              };
             };
 
-          if (dataroomDocument.dataroom._count.viewerGroups > 0) {
-            setShowGroupPermissions(true);
-            setUploadedFiles([
-              {
-                documentId: document.id,
-                dataroomDocumentId: dataroomDocument.id,
-                fileName: document.name,
-              },
-            ]);
-          }
+          await applyUnifiedPermissionsToDocument(
+            document,
+            dataroomDocument,
+            currentFolderPath,
+          );
         }
 
         analytics.capture("Document Added", {
@@ -634,7 +684,7 @@ export function AddDocumentModal({
       </Dialog>
 
       {showGroupPermissions && dataroomId && (
-        <SetGroupPermissionsModal
+        <SetUnifiedPermissionsModal
           open={showGroupPermissions}
           setOpen={setShowGroupPermissions}
           dataroomId={dataroomId}
@@ -644,7 +694,6 @@ export function AddDocumentModal({
             setAddDocumentModalOpen?.(false);
             setUploadedFiles([]);
           }}
-          isAutoOpen
         />
       )}
     </>

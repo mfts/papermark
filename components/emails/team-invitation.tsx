@@ -65,7 +65,7 @@ export default function TeamInvitation({
                 © {new Date().getFullYear()}{" "}
                 <a
                   href="https://www.papermark.com"
-                  className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
+                  className="text-gray-400 no-underline hover:text-gray-400"
                   target="_blank"
                 >
                   papermark.com
