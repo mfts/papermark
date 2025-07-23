@@ -281,7 +281,6 @@ const AccountBreadcrumb = () => {
 const DocumentsBreadcrumb = () => {
   const router = useRouter();
   const { name } = router.query as { name: string[] };
-
   const { folders } = useFolderWithParents({ name });
 
   return (

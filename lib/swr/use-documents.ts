@@ -56,14 +56,27 @@ export default function useDocuments() {
 }
 
 export function useFolderDocuments({ name }: { name: string[] }) {
+  const router = useRouter();
   const teamInfo = useTeam();
 
-  const { data: documents, error } = useSWR<
-    DocumentWithLinksAndLinkCountAndViewCount[]
-  >(
+  const queryParams = router.query;
+  const searchQuery = queryParams["search"];
+  const sortQuery = queryParams["sort"];
+
+  const queryParts = [];
+  if (searchQuery) queryParts.push(`query=${searchQuery}`);
+  if (sortQuery) queryParts.push(`sort=${sortQuery}`);
+  const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+
+  const {
+    data: documents,
+    error,
+    isValidating,
+  } = useSWR<DocumentWithLinksAndLinkCountAndViewCount[]>(
     teamInfo?.currentTeam?.id &&
     name.length > 0 &&
-      `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${name.join("/")}`,
+    `/api/teams/${teamInfo?.currentTeam?.id
+    }/folders/documents/${name.join("/")}${queryString}`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -74,6 +87,8 @@ export function useFolderDocuments({ name }: { name: string[] }) {
   return {
     documents,
     loading: !documents && !error,
+    isValidating,
+    isFiltered: !!searchQuery || !!sortQuery,
     error,
   };
 }
@@ -86,13 +101,25 @@ export type FolderWithCount = Folder & {
 };
 
 export function useFolder({ name }: { name: string[] }) {
-  const teamInfo = useTeam();
   const router = useRouter();
+  const teamInfo = useTeam();
 
-  const { data: folders, error } = useSWR<FolderWithCount[]>(
+  const queryParams = router.query;
+  const searchQuery = queryParams["search"];
+
+  const queryParts = [];
+  if (searchQuery) queryParts.push(`query=${searchQuery}`);
+  const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+
+  const {
+    data: folders,
+    error,
+    isValidating,
+  } = useSWR<FolderWithCount[]>(
     teamInfo?.currentTeam?.id &&
     name.length > 0 &&
-      `/api/teams/${teamInfo?.currentTeam?.id}/folders/${name.join("/")}`,
+    `/api/teams/${teamInfo?.currentTeam?.id
+    }/folders/${name.join("/")}${queryString}`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -108,6 +135,8 @@ export function useFolder({ name }: { name: string[] }) {
   return {
     folders,
     loading: !folders && !error,
+    isValidating,
+    isFiltered: !!searchQuery,
     error,
   };
 }
