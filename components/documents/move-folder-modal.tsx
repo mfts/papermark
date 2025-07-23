@@ -5,6 +5,9 @@ import { useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 
+import { moveDocumentToFolder } from "@/lib/documents/move-documents";
+import { moveFolderToFolder } from "@/lib/documents/move-folder";
+
 import { SidebarFolderTreeSelection } from "@/components/sidebar-folders";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,9 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-import { moveDocumentToFolder } from "@/lib/documents/move-documents";
-import { moveFolderToFolder } from "@/lib/documents/move-folder";
 
 export type TSelectedFolder = {
   id: string | null;
@@ -104,14 +104,14 @@ export function MoveToFolderModal({
         <DialogHeader className="text-start">
           <DialogTitle>
             Move
-            <div className="w-[376px] truncate font-bold">
+            <div className="truncate font-bold">
               {`${(documentIds?.length ?? 0) + (folderIds?.length ?? 0)} items`}
             </div>
           </DialogTitle>
           <DialogDescription>Move your item to a folder.</DialogDescription>
         </DialogHeader>
         <form>
-          <div className="mb-2 max-h-[75vh] overflow-y-scroll">
+          <div className="mb-2 max-h-[75vh] overflow-x-hidden overflow-y-scroll">
             <SidebarFolderTreeSelection
               selectedFolder={selectedFolder}
               setSelectedFolder={setSelectedFolder}
@@ -133,7 +133,9 @@ export function MoveToFolderModal({
               ) : (
                 <>
                   Move to{" "}
-                  <span className="font-medium">{selectedFolder.name}</span>
+                  <span className="max-w-[200px] truncate font-medium">
+                    {selectedFolder.name}
+                  </span>
                 </>
               )}
             </Button>
