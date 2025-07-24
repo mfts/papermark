@@ -120,6 +120,7 @@ export default function DataroomConversationsPage() {
 
     setIsDeleting(true);
     try {
+      const teamIdParsed = z.string().cuid().parse(teamId);
       const dataroomIdParsed = z.string().cuid().parse(dataroom.id);
       const conversationToDeleteParsed = z
         .string()
@@ -127,7 +128,7 @@ export default function DataroomConversationsPage() {
         .parse(conversationToDelete);
 
       const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroomIdParsed}/conversations/${conversationToDeleteParsed}`,
+        `/api/teams/${teamIdParsed}/datarooms/${dataroomIdParsed}/conversations/${conversationToDeleteParsed}`,
         {
           method: "DELETE",
         },
