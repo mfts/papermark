@@ -188,6 +188,7 @@ export default async function handle(
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
             },
             body: JSON.stringify({
               url: downloadUrl,
