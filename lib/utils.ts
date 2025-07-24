@@ -759,3 +759,27 @@ export const parseDateTime = (str: Date | string) => {
   if (str instanceof Date) return str;
   return chrono.parseDate(str);
 };
+
+/**
+ * Safely replaces template variables in user input with actual values.
+ * Only allows whitelisted variables to prevent template injection.
+ */
+export function safeTemplateReplace(
+  template: string,
+  data: Record<string, any>,
+): string {
+  // Define allowed template variables - only these will be replaced
+  const allowedVariables = ["email", "date", "time", "link", "ipAddress"];
+
+  let result = template;
+
+  for (const key of allowedVariables) {
+    if (data[key] !== undefined && data[key] !== null) {
+      // Use a regex to match {{variable}} patterns with optional whitespace
+      const regex = new RegExp(`{{\\s*${key}\\s*}}`, "gi");
+      result = result.replace(regex, String(data[key]));
+    }
+  }
+
+  return result;
+}
