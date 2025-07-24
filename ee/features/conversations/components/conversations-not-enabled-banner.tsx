@@ -76,9 +76,10 @@ export function ConversationsNotEnabledBanner({
     setIsProcessing(true);
     try {
       const dataroomIdParsed = z.string().cuid().parse(dataroomId);
+      const teamIdParsed = z.string().cuid().parse(teamId);
 
       const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroomIdParsed}/conversations/toggle-conversations`,
+        `/api/teams/${teamIdParsed}/datarooms/${dataroomIdParsed}/conversations/toggle-conversations`,
         {
           method: "POST",
           headers: {
