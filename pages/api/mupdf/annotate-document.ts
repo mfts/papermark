@@ -242,15 +242,15 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  // // Extract the API Key from the Authorization header
-  // const authHeader = req.headers.authorization;
-  // const token = authHeader?.split(" ")[1]; // Assuming the format is "Bearer [token]"
+  // Extract the API Key from the Authorization header
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(" ")[1]; // Assuming the format is "Bearer [token]"
 
-  // // Check if the API Key matches
-  // if (token !== process.env.INTERNAL_API_KEY) {
-  //   res.status(401).json({ message: "Unauthorized" });
-  //   return;
-  // }
+  // Check if the API Key matches
+  if (token !== process.env.INTERNAL_API_KEY) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
 
   const { url, watermarkConfig, viewerData, numPages } = req.body as {
     url: string;
