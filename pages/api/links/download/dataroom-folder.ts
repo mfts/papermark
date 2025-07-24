@@ -181,7 +181,13 @@ export default async function handler(
       [key: string]: {
         name: string;
         path: string;
-        files: { name: string; key: string }[];
+        files: {
+          name: string;
+          key: string;
+          type?: string;
+          numPages?: number;
+          needsWatermark?: boolean;
+        }[];
       };
     } = {};
 
@@ -192,6 +198,8 @@ export default async function handler(
       rootFolder: { name: string; path: string },
       fileName: string,
       fileKey: string,
+      fileType?: string,
+      numPages?: number,
     ) => {
       let relativePath = "";
       if (fullPath !== rootFolder.path) {
@@ -223,9 +231,16 @@ export default async function handler(
       }
 
       if (fileName && fileKey) {
+        const needsWatermark =
+          view.link.enableWatermark &&
+          (fileType === "pdf" || fileType === "image");
+
         folderStructure[currentPath].files.push({
           name: fileName,
           key: fileKey,
+          type: fileType,
+          numPages: numPages,
+          needsWatermark: needsWatermark ?? undefined,
         });
         fileKeys.push(fileKey);
       }
@@ -235,7 +250,14 @@ export default async function handler(
       const docs = allDocuments.filter((doc) => doc.folderId === folder.id);
 
       if (docs.length === 0) {
-        addFileToStructure(folder.path, rootFolder, "", "");
+        addFileToStructure(
+          folder.path,
+          rootFolder,
+          "",
+          "",
+          undefined,
+          undefined,
+        );
         continue;
       }
 
@@ -253,7 +275,14 @@ export default async function handler(
           view.link.enableWatermark && version.type === "pdf"
             ? version.file
             : (version.originalFile ?? version.file);
-        addFileToStructure(folder.path, rootFolder, doc.document.name, fileKey);
+        addFileToStructure(
+          folder.path,
+          rootFolder,
+          doc.document.name,
+          fileKey,
+          version.type ?? undefined,
+          version.numPages ?? undefined,
+        );
       }
     }
 
