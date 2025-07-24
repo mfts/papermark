@@ -18,6 +18,7 @@ import {
 import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
+import z from "zod";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
@@ -105,7 +106,7 @@ export default function LinksTable({
   const now = Date.now();
   const router = useRouter();
   const { isFree, isTrial } = usePlan();
-  const teamInfo = useTeam();
+  const { currentTeamId } = useTeam();
   const { id: targetId, groupId } = router.query as {
     id: string;
     groupId?: string;
@@ -267,7 +268,7 @@ export default function LinksTable({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        teamId: teamInfo?.currentTeam?.id,
+        teamId: currentTeamId,
       }),
     });
 
@@ -280,7 +281,7 @@ export default function LinksTable({
 
     // Update the duplicated link in the list of links
     mutate(
-      `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+      `/api/teams/${currentTeamId}/${endpointTargetType}/${encodeURIComponent(
         link.documentId ?? link.dataroomId ?? "",
       )}/links`,
       (links || []).concat(duplicatedLink),
@@ -292,7 +293,7 @@ export default function LinksTable({
       const groupLinks =
         links?.filter((link) => link.groupId === groupId) || [];
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+        `/api/teams/${currentTeamId}/${endpointTargetType}/${encodeURIComponent(
           duplicatedLink.documentId ?? duplicatedLink.dataroomId ?? "",
         )}/groups/${duplicatedLink.groupId}/links`,
         groupLinks.concat(duplicatedLink),
@@ -316,8 +317,15 @@ export default function LinksTable({
     if (permissions === null && editPermissionLink.permissionGroupId) {
       // Delete the permission group - database will set permissionGroupId to null automatically
       try {
+        const teamIdParsed = z.string().cuid().parse(currentTeamId);
+        const targetIdParsed = z.string().cuid().parse(targetId);
+        const permissionGroupIdParsed = z
+          .string()
+          .cuid()
+          .parse(editPermissionLink.permissionGroupId);
+
         const deleteResponse = await fetch(
-          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+          `/api/teams/${teamIdParsed}/datarooms/${targetIdParsed}/permission-groups/${permissionGroupIdParsed}`,
           {
             method: "DELETE",
           },
@@ -331,8 +339,8 @@ export default function LinksTable({
         // Refresh the links cache
         const endpointTargetType = `${targetType.toLowerCase()}s`;
         mutate(
-          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
-            targetId,
+          `/api/teams/${teamIdParsed}/${endpointTargetType}/${encodeURIComponent(
+            targetIdParsed,
           )}/links`,
           (currentLinks: LinkWithViews[] | undefined) =>
             (currentLinks || []).map((link: LinkWithViews) =>
@@ -345,7 +353,7 @@ export default function LinksTable({
 
         // Invalidate the permission group cache
         mutate(
-          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+          `/api/teams/${teamIdParsed}/datarooms/${targetIdParsed}/permission-groups/${permissionGroupIdParsed}`,
         );
 
         setShowPermissionsSheet(false);
@@ -361,8 +369,10 @@ export default function LinksTable({
     if (!editPermissionLink.permissionGroupId) {
       setIsLoading(true);
       try {
+        const teamIdParsed = z.string().cuid().parse(currentTeamId);
+        const targetIdParsed = z.string().cuid().parse(targetId);
         const response = await fetch(
-          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups`,
+          `/api/teams/${teamIdParsed}/datarooms/${targetIdParsed}/permission-groups`,
           {
             method: "POST",
             headers: {
@@ -386,7 +396,7 @@ export default function LinksTable({
         // Refresh the links cache
         const endpointTargetType = `${targetType.toLowerCase()}s`;
         mutate(
-          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          `/api/teams/${currentTeamId}/${endpointTargetType}/${encodeURIComponent(
             targetId,
           )}/links`,
         );
@@ -394,7 +404,7 @@ export default function LinksTable({
         // Cache the new permission group data
         if (newPermissionGroup?.id) {
           mutate(
-            `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${newPermissionGroup.id}`,
+            `/api/teams/${currentTeamId}/datarooms/${targetId}/permission-groups/${newPermissionGroup.id}`,
             newPermissionGroup,
             false,
           );
@@ -412,8 +422,15 @@ export default function LinksTable({
     } else {
       try {
         // Update the permissions for the existing link
+        const teamIdParsed = z.string().cuid().parse(currentTeamId);
+        const targetIdParsed = z.string().cuid().parse(targetId);
+        const permissionGroupIdParsed = z
+          .string()
+          .cuid()
+          .parse(editPermissionLink.permissionGroupId);
+
         const res = await fetch(
-          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+          `/api/teams/${teamIdParsed}/datarooms/${targetIdParsed}/permission-groups/${permissionGroupIdParsed}`,
           {
             method: "PUT",
             headers: {
@@ -434,7 +451,7 @@ export default function LinksTable({
         // Refresh the links cache
         const endpointTargetType = `${targetType.toLowerCase()}s`;
         mutate(
-          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          `/api/teams/${currentTeamId}/${endpointTargetType}/${encodeURIComponent(
             targetId,
           )}/links`,
         );
@@ -442,7 +459,7 @@ export default function LinksTable({
         // Invalidate the permission group cache
         if (editPermissionLink.permissionGroupId) {
           mutate(
-            `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
+            `/api/teams/${currentTeamId}/datarooms/${targetId}/permission-groups/${editPermissionLink.permissionGroupId}`,
           );
         }
 
@@ -502,7 +519,7 @@ export default function LinksTable({
 
       // Update the archived link in the list of links
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+        `/api/teams/${currentTeamId}/${endpointTargetType}/${encodeURIComponent(
           targetId,
         )}/links`,
         (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
@@ -514,7 +531,7 @@ export default function LinksTable({
         const groupLinks =
           links?.filter((link) => link.groupId === groupId) || [];
         mutate(
-          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          `/api/teams/${currentTeamId}/${endpointTargetType}/${encodeURIComponent(
             archivedLink.documentId ?? archivedLink.dataroomId ?? "",
           )}/groups/${groupId}/links`,
           groupLinks.map((link) => (link.id === linkId ? archivedLink : link)),

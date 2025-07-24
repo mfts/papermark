@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { toast } from "sonner";
+import z from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -74,8 +75,10 @@ export function ConversationsNotEnabledBanner({
   const handleToggleConversations = async (newValue: boolean) => {
     setIsProcessing(true);
     try {
+      const dataroomIdParsed = z.string().cuid().parse(dataroomId);
+
       const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/conversations/toggle-conversations`,
+        `/api/teams/${teamId}/datarooms/${dataroomIdParsed}/conversations/toggle-conversations`,
         {
           method: "POST",
           headers: {

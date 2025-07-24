@@ -7,6 +7,7 @@ import { ConversationsNotEnabledBanner } from "@/ee/features/conversations/compo
 import { Loader2, MessageSquare, Search } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
+import z from "zod";
 
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import useLimits from "@/lib/swr/use-limits";
@@ -119,8 +120,14 @@ export default function DataroomConversationsPage() {
 
     setIsDeleting(true);
     try {
+      const dataroomIdParsed = z.string().cuid().parse(dataroom.id);
+      const conversationToDeleteParsed = z
+        .string()
+        .cuid()
+        .parse(conversationToDelete);
+
       const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroom.id}/conversations/${conversationToDelete}`,
+        `/api/teams/${teamId}/datarooms/${dataroomIdParsed}/conversations/${conversationToDeleteParsed}`,
         {
           method: "DELETE",
         },
