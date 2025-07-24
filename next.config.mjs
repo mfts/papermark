@@ -6,7 +6,6 @@ const nextConfig = {
     minimumCacheTTL: 2592000, // 30 days
     remotePatterns: prepareRemotePatterns(),
   },
-  transpilePackages: ["react-syntax-highlighter"],
   skipTrailingSlashRedirect: true,
   assetPrefix:
     process.env.NODE_ENV === "production" &&
