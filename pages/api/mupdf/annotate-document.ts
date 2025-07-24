@@ -1,10 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import fontkit from "@pdf-lib/fontkit";
-import Handlebars from "handlebars";
 import { PDFDocument, StandardFonts, degrees, rgb } from "pdf-lib";
 
-import { hexToRgb, log } from "@/lib/utils";
+import { hexToRgb, log, safeTemplateReplace } from "@/lib/utils";
 
 // This function can run for a maximum of 120 seconds
 export const config = {
@@ -71,9 +70,8 @@ async function insertWatermark(
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-  // Compile the Handlebars template
-  const template = Handlebars.compile(config.text);
-  const rawWatermarkText = template(viewerData);
+  // Safely replace template variables with whitelisted values only
+  const rawWatermarkText = safeTemplateReplace(config.text, viewerData);
 
   // Handle Unicode characters that can't be encoded in WinAnsi
   const sanitizeText = (text: string): string => {
