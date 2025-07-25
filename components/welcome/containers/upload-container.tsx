@@ -5,6 +5,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { motion } from "motion/react";
 import { toast } from "sonner";
+import z from "zod";
 
 import { useAnalytics } from "@/lib/analytics";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
@@ -34,8 +35,7 @@ export function UploadContainer({
   const analytics = useAnalytics();
   const [uploading, setUploading] = useState<boolean>(false);
 
-  const teamInfo = useTeam();
-  const teamId = teamInfo?.currentTeam?.id as string;
+  const { currentTeamId: teamId } = useTeam();
 
   const handleBrowserUpload = async (event: any) => {
     event.preventDefault();
@@ -62,7 +62,7 @@ export function UploadContainer({
 
       const { type, data, numPages, fileSize } = await putFile({
         file: currentFile,
-        teamId,
+        teamId: teamId as string,
       });
 
       setCurrentFile(null);
@@ -79,7 +79,7 @@ export function UploadContainer({
       // create a document in the database
       const response = await createDocument({
         documentData,
-        teamId,
+        teamId: teamId as string,
         numPages,
         createLink: dataroomId ? false : true, // don't create a link if the document is being added to a dataroom
       });
@@ -89,55 +89,64 @@ export function UploadContainer({
 
         if (dataroomId) {
           // add document to dataroom
-          await fetch(
-            `/api/teams/${teamId}/datarooms/${dataroomId}/documents`,
-            {
+          try {
+            const dataroomIdParsed = z.string().cuid().parse(dataroomId);
+
+            await fetch(
+              `/api/teams/${teamId}/datarooms/${dataroomIdParsed}/documents`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ documentId: document.id }),
+              },
+            );
+
+            analytics.capture("Document Added to Dataroom", {
+              documentId: document.id,
+              name: document.name,
+              numPages: document.numPages,
+              path: router.asPath,
+              type: document.type,
+              teamId: teamId,
+              dataroomId: dataroomId,
+            });
+
+            // create link to dataroom
+            const newLinkResponse = await fetch(`/api/links`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ documentId: document.id }),
-            },
-          );
-
-          analytics.capture("Document Added to Dataroom", {
-            documentId: document.id,
-            name: document.name,
-            numPages: document.numPages,
-            path: router.asPath,
-            type: document.type,
-            teamId: teamInfo?.currentTeam?.id,
-            dataroomId: dataroomId,
-          });
-
-          // create link to dataroom
-          const newLinkResponse = await fetch(`/api/links`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              targetId: dataroomId,
-              linkType: "DATAROOM_LINK",
-              teamId,
-            }),
-          });
-
-          if (newLinkResponse.ok) {
-            const link = await newLinkResponse.json();
-            setCurrentLinkId(link.id);
-
-            analytics.capture("Link Added", {
-              linkId: link.id,
-              dataroomId: dataroomId,
-              customDomain: null,
-              teamId: teamInfo?.currentTeam?.id,
+              body: JSON.stringify({
+                targetId: dataroomId,
+                linkType: "DATAROOM_LINK",
+                teamId,
+              }),
             });
-          }
 
-          setTimeout(() => {
+            if (newLinkResponse.ok) {
+              const link = await newLinkResponse.json();
+              setCurrentLinkId(link.id);
+
+              analytics.capture("Link Added", {
+                linkId: link.id,
+                dataroomId: dataroomId,
+                customDomain: null,
+                teamId: teamId,
+              });
+            }
+
+            setTimeout(() => {
+              setUploading(false);
+            }, 2000);
+          } catch (error) {
+            console.error("Error adding document to dataroom:", error);
+            toast.error("Failed to add document to dataroom");
             setUploading(false);
-          }, 2000);
+            return;
+          }
         } else {
           const linkId = document.links[0].id;
 
@@ -149,13 +158,13 @@ export function UploadContainer({
             path: router.asPath,
             type: document.type,
             contentType: document.contentType,
-            teamId: teamInfo?.currentTeam?.id,
+            teamId: teamId,
           });
           analytics.capture("Link Added", {
             linkId: linkId,
             documentId: document.id,
             customDomain: null,
-            teamId: teamInfo?.currentTeam?.id,
+            teamId: teamId,
           });
 
           setTimeout(() => {

@@ -7,6 +7,7 @@ import slugify from "@sindresorhus/slugify";
 
 import { getLambdaClientForTeam } from "@/lib/files/aws-client";
 import prisma from "@/lib/prisma";
+import { getIpAddress } from "@/lib/utils/ip";
 
 export const config = {
   maxDuration: 180,
@@ -43,12 +44,16 @@ export default async function handler(
       select: {
         id: true,
         viewedAt: true,
+        viewerEmail: true,
         link: {
           select: {
             teamId: true,
             allowDownload: true,
             expiresAt: true,
             isArchived: true,
+            enableWatermark: true,
+            watermarkConfig: true,
+            name: true,
             permissionGroupId: true,
           },
         },
@@ -125,6 +130,8 @@ export default async function handler(
                 file: true,
                 storageType: true,
                 originalFile: true,
+                numPages: true,
+                contentType: true,
               },
               take: 1,
             },
@@ -174,7 +181,13 @@ export default async function handler(
       [key: string]: {
         name: string;
         path: string;
-        files: { name: string; key: string }[];
+        files: {
+          name: string;
+          key: string;
+          type?: string;
+          numPages?: number;
+          needsWatermark?: boolean;
+        }[];
       };
     } = {};
 
@@ -185,6 +198,8 @@ export default async function handler(
       rootFolder: { name: string; path: string },
       fileName: string,
       fileKey: string,
+      fileType?: string,
+      numPages?: number,
     ) => {
       let relativePath = "";
       if (fullPath !== rootFolder.path) {
@@ -216,9 +231,16 @@ export default async function handler(
       }
 
       if (fileName && fileKey) {
+        const needsWatermark =
+          view.link.enableWatermark &&
+          (fileType === "pdf" || fileType === "image");
+
         folderStructure[currentPath].files.push({
           name: fileName,
           key: fileKey,
+          type: fileType,
+          numPages: numPages,
+          needsWatermark: needsWatermark ?? undefined,
         });
         fileKeys.push(fileKey);
       }
@@ -228,7 +250,14 @@ export default async function handler(
       const docs = allDocuments.filter((doc) => doc.folderId === folder.id);
 
       if (docs.length === 0) {
-        addFileToStructure(folder.path, rootFolder, "", "");
+        addFileToStructure(
+          folder.path,
+          rootFolder,
+          "",
+          "",
+          undefined,
+          undefined,
+        );
         continue;
       }
 
@@ -241,8 +270,19 @@ export default async function handler(
         )
           continue;
 
-        const fileKey = version.originalFile ?? version.file;
-        addFileToStructure(folder.path, rootFolder, doc.document.name, fileKey);
+        // Use .file if watermark is enabled and document is PDF, otherwise use .originalFile
+        const fileKey =
+          view.link.enableWatermark && version.type === "pdf"
+            ? version.file
+            : (version.originalFile ?? version.file);
+        addFileToStructure(
+          folder.path,
+          rootFolder,
+          doc.document.name,
+          fileKey,
+          version.type ?? undefined,
+          version.numPages ?? undefined,
+        );
       }
     }
 
@@ -268,6 +308,19 @@ export default async function handler(
         sourceBucket: storageConfig.bucket,
         fileKeys,
         folderStructure,
+        watermarkConfig: view.link.enableWatermark
+          ? {
+              enabled: true,
+              config: view.link.watermarkConfig,
+              viewerData: {
+                email: view.viewerEmail,
+                date: new Date(view.viewedAt).toLocaleDateString(),
+                time: new Date(view.viewedAt).toLocaleTimeString(),
+                link: view.link.name,
+                ipAddress: getIpAddress(req.headers),
+              },
+            }
+          : { enabled: false },
       }),
     };
 

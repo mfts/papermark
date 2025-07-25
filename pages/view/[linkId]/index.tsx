@@ -9,6 +9,7 @@ import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
+import z from "zod";
 
 import notion from "@/lib/notion";
 import { addSignedUrls } from "@/lib/notion/utils";
@@ -59,9 +60,10 @@ export interface ViewPageProps {
 }
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const { linkId } = context.params as { linkId: string };
+  const { linkId: linkIdParam } = context.params as { linkId: string };
 
   try {
+    const linkId = z.string().cuid().parse(linkIdParam);
     const res = await fetch(`${process.env.NEXTAUTH_URL}/api/links/${linkId}`);
     if (!res.ok) {
       throw new Error(`Failed to fetch: ${res.status}`);

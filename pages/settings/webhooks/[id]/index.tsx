@@ -7,6 +7,7 @@ import { Webhook } from "@prisma/client";
 import { ArrowLeft, Check, Copy, WebhookIcon } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
+import z from "zod";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import { cn, fetcher } from "@/lib/utils";
@@ -31,9 +32,8 @@ type WebhookFormData = {
 export default function WebhookDetail() {
   const router = useRouter();
   const { id } = router.query;
-  const teamInfo = useTeam();
+  const { currentTeamId: teamId } = useTeam();
   const { isFree, isPro, isTrial } = usePlan();
-  const teamId = teamInfo?.currentTeam?.id;
   const [isEditing, setIsEditing] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [formData, setFormData] = useState<WebhookFormData>({
@@ -70,11 +70,15 @@ export default function WebhookDetail() {
     }
 
     try {
-      const response = await fetch(`/api/teams/${teamId}/webhooks/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const webhookId = z.string().cuid().parse(id);
+      const response = await fetch(
+        `/api/teams/${teamId}/webhooks/${webhookId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        },
+      );
 
       if (!response.ok) throw new Error("Failed to update webhook");
 
@@ -395,8 +399,9 @@ export default function WebhookDetail() {
                         )
                       ) {
                         try {
+                          const webhookId = z.string().cuid().parse(id);
                           const response = await fetch(
-                            `/api/teams/${teamId}/webhooks/${id}`,
+                            `/api/teams/${teamId}/webhooks/${webhookId}`,
                             {
                               method: "DELETE",
                             },

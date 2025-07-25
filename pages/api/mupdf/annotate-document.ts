@@ -1,10 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import fontkit from "@pdf-lib/fontkit";
-import Handlebars from "handlebars";
 import { PDFDocument, StandardFonts, degrees, rgb } from "pdf-lib";
 
-import { hexToRgb, log } from "@/lib/utils";
+import { hexToRgb, log, safeTemplateReplace } from "@/lib/utils";
 
 // This function can run for a maximum of 120 seconds
 export const config = {
@@ -71,9 +70,8 @@ async function insertWatermark(
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-  // Compile the Handlebars template
-  const template = Handlebars.compile(config.text);
-  const rawWatermarkText = template(viewerData);
+  // Safely replace template variables with whitelisted values only
+  const rawWatermarkText = safeTemplateReplace(config.text, viewerData);
 
   // Handle Unicode characters that can't be encoded in WinAnsi
   const sanitizeText = (text: string): string => {
@@ -244,15 +242,15 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  // // Extract the API Key from the Authorization header
-  // const authHeader = req.headers.authorization;
-  // const token = authHeader?.split(" ")[1]; // Assuming the format is "Bearer [token]"
+  // Extract the API Key from the Authorization header
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(" ")[1]; // Assuming the format is "Bearer [token]"
 
-  // // Check if the API Key matches
-  // if (token !== process.env.INTERNAL_API_KEY) {
-  //   res.status(401).json({ message: "Unauthorized" });
-  //   return;
-  // }
+  // Check if the API Key matches
+  if (token !== process.env.INTERNAL_API_KEY) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
 
   const { url, watermarkConfig, viewerData, numPages } = req.body as {
     url: string;

@@ -1,14 +1,10 @@
 "use client";
 
-import { PropsWithChildren, useState } from "react";
+import { PropsWithChildren, useState, useEffect } from "react";
 
 import { CircleCheck, CircleXIcon, CopyIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  materialDark,
-  materialLight,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
+import { createHighlighter, type Highlighter } from "shiki";
 
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
@@ -28,21 +24,88 @@ export type EventListProps = PropsWithChildren<{
   events: any[];
 }>;
 
+// Shiki Code Highlighter Component
+const CodeHighlighter = ({ 
+  code, 
+  language = "json",
+  isDark = false 
+}: { 
+  code: string; 
+  language?: string;
+  isDark?: boolean;
+}) => {
+  const [highlighter, setHighlighter] = useState<Highlighter | null>(null);
+  const [highlightedCode, setHighlightedCode] = useState<string>("");
+
+  useEffect(() => {
+    const initHighlighter = async () => {
+      const shiki = await createHighlighter({
+        themes: ['material-theme-lighter', 'material-theme-darker'],
+        langs: ['json']
+      });
+      setHighlighter(shiki);
+    };
+
+    initHighlighter();
+  }, []);
+
+  useEffect(() => {
+    if (highlighter && code) {
+      const theme = isDark ? 'material-theme-darker' : 'material-theme-lighter';
+      const html = highlighter.codeToHtml(code, {
+        lang: language,
+        theme: theme,
+        transformers: [
+          {
+            pre(node) {
+              // Add custom styling to the pre element
+              node.properties.style = [
+                node.properties.style,
+                'margin: 0',
+                'padding: 0.5rem',
+                'font-size: 0.875rem',
+                'border-radius: 0.375rem',
+                'overflow-x: auto'
+              ].filter(Boolean).join('; ');
+            },
+            code(node) {
+              // Ensure proper styling for the code element
+              node.properties.style = [
+                node.properties.style,
+                'display: block',
+                'line-height: 1.5'
+              ].filter(Boolean).join('; ');
+            }
+          }
+        ]
+      });
+      setHighlightedCode(html);
+    }
+  }, [highlighter, code, language, isDark]);
+
+  if (!highlighter || !highlightedCode) {
+    return (
+      <pre className="rounded-md bg-gray-100 p-2 text-sm dark:bg-gray-800">
+        <code>{code}</code>
+      </pre>
+    );
+  }
+
+  return (
+    <div 
+      className="overflow-x-auto rounded-md"
+      dangerouslySetInnerHTML={{ __html: highlightedCode }}
+    />
+  );
+};
+
 const WebhookEvent = ({ event }: { event: any }) => {
   const { copyToClipboard, isCopied } = useCopyToClipboard({ timeout: 2000 });
   const isSuccess = event.http_status >= 200 && event.http_status < 300;
   const { isMobile } = useMediaQuery();
   const [isOpen, setIsOpen] = useState(false);
   const { theme, systemTheme } = useTheme();
-  const isLight =
-    theme === "light" || (theme === "system" && systemTheme === "light");
-
-  // Custom style overrides for react-syntax-highlighter
-  const customStyle = {
-    margin: 0,
-    padding: "0.5rem",
-    fontSize: "0.875rem",
-  };
+  const isDark = theme === "dark" || (theme === "system" && systemTheme === "dark");
 
   return (
     <>
@@ -112,29 +175,21 @@ const WebhookEvent = ({ event }: { event: any }) => {
                 <p className="text-sm text-gray-700">{event.http_status}</p>
               </div>
               <div className="overflow-y-scroll">
-                <SyntaxHighlighter
+                <CodeHighlighter
+                  code={JSON.stringify(event.response_body, null, 2)}
                   language="json"
-                  showLineNumbers
-                  customStyle={customStyle}
-                  style={isLight ? materialLight : materialDark}
-                  lineNumberStyle={{ textAlign: "right", minWidth: "3.25em" }}
-                >
-                  {JSON.stringify(event.response_body, null, 2)}
-                </SyntaxHighlighter>
+                  isDark={isDark}
+                />
               </div>
             </div>
             <div className="grid gap-4 border-t border-gray-200 bg-transparent py-4">
               <h4 className="font-semibold">Request</h4>
               <div className="overflow-y-scroll">
-                <SyntaxHighlighter
+                <CodeHighlighter
+                  code={JSON.stringify(event.request_body, null, 2)}
                   language="json"
-                  showLineNumbers
-                  style={isLight ? materialLight : materialDark}
-                  customStyle={customStyle}
-                  lineNumberStyle={{ textAlign: "right", minWidth: "3.25em" }}
-                >
-                  {JSON.stringify(event.request_body, null, 2)}
-                </SyntaxHighlighter>
+                  isDark={isDark}
+                />
               </div>
             </div>
           </ScrollArea>

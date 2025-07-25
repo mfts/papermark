@@ -9,6 +9,7 @@ import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
+import z from "zod";
 
 import notion from "@/lib/notion";
 import { addSignedUrls } from "@/lib/notion/utils";
@@ -178,13 +179,26 @@ export default function DataroomDocumentViewPage({
 }
 
 export async function getStaticProps(context: GetStaticPropsContext) {
-  const { domain, slug, documentId } = context.params as {
+  const {
+    domain: domainParam,
+    slug: slugParam,
+    documentId: documentIdParam,
+  } = context.params as {
     domain: string;
     slug: string;
     documentId: string;
   };
 
   try {
+    const domain = z
+      .string()
+      .regex(/^([a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/)
+      .parse(domainParam);
+    const slug = z
+      .string()
+      .regex(/^[a-zA-Z0-9_-]+$/, "Invalid path parameter")
+      .parse(slugParam);
+    const documentId = z.string().cuid().parse(documentIdParam);
     const res = await fetch(
       `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
         domain,

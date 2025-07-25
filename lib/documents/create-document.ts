@@ -1,4 +1,5 @@
 import { DocumentStorageType } from "@prisma/client";
+import z from "zod";
 
 export type DocumentData = {
   name: string;
@@ -105,27 +106,34 @@ export const createNewDocumentVersion = async ({
   teamId: string;
   numPages?: number;
 }) => {
-  const response = await fetch(
-    `/api/teams/${teamId}/documents/${documentId}/versions`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+  try {
+    const documentIdParsed = z.string().cuid().parse(documentId);
+
+    const response = await fetch(
+      `/api/teams/${teamId}/documents/${documentIdParsed}/versions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: documentData.key,
+          storageType: documentData.storageType,
+          numPages: numPages,
+          type: documentData.supportedFileType,
+          contentType: documentData.contentType,
+          fileSize: documentData.fileSize,
+        }),
       },
-      body: JSON.stringify({
-        url: documentData.key,
-        storageType: documentData.storageType,
-        numPages: numPages,
-        type: documentData.supportedFileType,
-        contentType: documentData.contentType,
-        fileSize: documentData.fileSize,
-      }),
-    },
-  );
+    );
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Error creating new document version:", error);
+    throw new Error("Invalid document ID or team ID");
   }
-
-  return response;
 };
