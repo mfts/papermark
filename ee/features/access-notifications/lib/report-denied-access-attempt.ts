@@ -9,14 +9,14 @@ export async function reportDeniedAccessAttempt(
   email: string,
   accessType: "global" | "allow" | "deny" = "global",
 ) {
-  if (!link) return;
+  if (!link || !link.teamId) return;
 
   // Get all admin and manager emails
   const users = await prisma.userTeam.findMany({
     where: {
       role: { in: ["ADMIN", "MANAGER"] },
       status: "ACTIVE",
-      teamId: link.teamId!,
+      teamId: link.teamId,
     },
     select: {
       user: { select: { email: true } },
@@ -45,7 +45,7 @@ export async function reportDeniedAccessAttempt(
         where: {
           userId_teamId: {
             userId: document.ownerId,
-            teamId: link.teamId!,
+            teamId: link.teamId,
           },
           status: "ACTIVE",
         },

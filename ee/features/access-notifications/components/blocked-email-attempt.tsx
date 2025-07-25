@@ -86,14 +86,7 @@ export default function BlockedEmailAttempt({
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
-                  target="_blank"
-                >
-                  Papermark, Inc.
-                </a>
+                © {new Date().getFullYear()} Papermark, Inc.
               </Text>
               <Text className="text-xs">
                 If you have any feedback or questions about this email, simply
