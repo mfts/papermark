@@ -59,11 +59,14 @@ export default function Documents() {
               dataroomId={dataroom?.id}
               key={1}
             >
-              <ResponsiveButton
-                icon={<PlusIcon className="h-5 w-5 shrink-0" />}
-                text="Add Document"
+              <Button
                 size="sm"
-              />
+                className="group flex items-center justify-start gap-x-3 px-3 text-left"
+                title="Add Document"
+              >
+                <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <span>Add Document</span>
+              </Button>
             </AddDocumentModal>
 
             <AddFolderModal isDataroom={true} dataroomId={dataroom?.id} key={2}>
