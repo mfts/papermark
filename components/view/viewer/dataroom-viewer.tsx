@@ -39,6 +39,7 @@ import { DocumentUploadModal } from "../dataroom/document-upload-modal";
 import FolderCard from "../dataroom/folder-card";
 import IndexFileDialog from "../dataroom/index-file-dialog";
 import DataroomNav from "../dataroom/nav-dataroom";
+import { SecuredByPapermark } from "../secured-by-papermark";
 
 type FolderOrDocument =
   | (DataroomFolder & { allowDownload: boolean })
@@ -97,6 +98,7 @@ export default function DataroomViewer({
   enableIndexFile,
   isEmbedded,
   viewerEmail,
+  securedByPapermark,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
@@ -112,6 +114,7 @@ export default function DataroomViewer({
   enableIndexFile?: boolean;
   isEmbedded?: boolean;
   viewerEmail?: string;
+  securedByPapermark?: boolean;
 }) {
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
@@ -336,7 +339,11 @@ export default function DataroomViewer({
         isTeamMember={viewData.isTeamMember}
       />
       <div
-        style={{ height: "calc(100vh - 64px)" }}
+        style={{
+          height: securedByPapermark
+            ? "calc(100vh - 64px - 40px)"
+            : "calc(100vh - 64px)",
+        }}
         className="relative flex items-center bg-white dark:bg-black"
       >
         <div className="relative mx-auto flex h-full w-full items-start justify-center">
@@ -484,6 +491,9 @@ export default function DataroomViewer({
           </ScrollArea>
         </div>
       </div>
+      {securedByPapermark && (
+        <SecuredByPapermark linkId={linkId} isClosable={false} />
+      )}
     </>
   );
 }
