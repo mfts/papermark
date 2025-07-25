@@ -83,7 +83,7 @@ export default function NotificationSettings({
         <CardTitle>
           Notifications{" "}
           {!isDataroomsPlus && !features?.roomChangeNotifications ? (
-            <PlanBadge plan="datarooms-plus" />
+            <PlanBadge plan="data rooms plus" />
           ) : null}
         </CardTitle>
         <CardDescription>
