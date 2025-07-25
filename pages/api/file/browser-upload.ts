@@ -51,6 +51,7 @@ export default async function handler(
         }
 
         return {
+          addRandomSuffix: true,
           allowedContentTypes: [
             "application/pdf",
             "application/vnd.ms-excel",

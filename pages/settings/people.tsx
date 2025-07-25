@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
 import { useInvitations } from "@/lib/swr/use-invitations";
 import useLimits from "@/lib/swr/use-limits";
 import { useGetTeam } from "@/lib/swr/use-team";
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UpgradeButton } from "@/components/ui/upgrade-button";
+
 export default function Billing() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
     useState<boolean>(false);
@@ -40,6 +42,7 @@ export default function Billing() {
   const { data: session } = useSession();
   const { team, loading } = useGetTeam()!;
   const teamInfo = useTeam();
+  const { isTrial } = usePlan();
   const { canAddUsers, showUpgradePlanModal } = useLimits();
   const { teams } = useTeams();
   const analytics = useAnalytics();
@@ -80,7 +83,11 @@ export default function Billing() {
     );
   };
 
-  const changeRole = async (teamId: string, userId: string, role: string) => {
+  const changeRole = async (
+    teamId: string,
+    userId: string,
+    role: "ADMIN" | "MANAGER" | "MEMBER",
+  ) => {
     const response = await fetch(`/api/teams/${teamId}/change-role`, {
       method: "PUT",
       headers: {
@@ -232,7 +239,7 @@ export default function Billing() {
           <div>
             <div className="flex items-center justify-between gap-x-1 rounded-lg border border-border bg-secondary p-4 sm:p-10">
               <div className="flex flex-col space-y-1 sm:space-y-3">
-                <h2 className="text-xl font-medium">People</h2>
+                <h2 className="text-xl font-medium">Team</h2>
                 <p className="text-sm text-secondary-foreground">
                   Teammates that have access to this project.
                 </p>
@@ -240,7 +247,7 @@ export default function Billing() {
               {showUpgradePlanModal ? (
                 <UpgradeButton
                   text="Invite Members"
-                  clickedPlan={PlanEnum.Pro}
+                  clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
                   trigger="invite_team_members"
                 />
               ) : showInvite ? (
@@ -341,21 +348,48 @@ export default function Billing() {
                         {isCurrentUserAdmin() &&
                         !isCurrentUser(member.userId) ? (
                           <>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                changeRole(
-                                  member.teamId,
-                                  member.userId,
-                                  member.role === "MEMBER"
-                                    ? "MANAGER"
-                                    : "MEMBER",
-                                )
-                              }
-                              className="text-red-500 hover:cursor-pointer focus:bg-destructive focus:text-destructive-foreground"
-                            >
-                              Change role to{" "}
-                              {member.role === "MEMBER" ? "MANAGER" : "MEMBER"}
-                            </DropdownMenuItem>
+                            {member.role !== "ADMIN" && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  changeRole(
+                                    member.teamId,
+                                    member.userId,
+                                    "ADMIN",
+                                  )
+                                }
+                                className="hover:cursor-pointer"
+                              >
+                                Change role to ADMIN
+                              </DropdownMenuItem>
+                            )}
+                            {member.role !== "MANAGER" && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  changeRole(
+                                    member.teamId,
+                                    member.userId,
+                                    "MANAGER",
+                                  )
+                                }
+                                className="hover:cursor-pointer"
+                              >
+                                Change role to MANAGER
+                              </DropdownMenuItem>
+                            )}
+                            {member.role !== "MEMBER" && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  changeRole(
+                                    member.teamId,
+                                    member.userId,
+                                    "MEMBER",
+                                  )
+                                }
+                                className="hover:cursor-pointer"
+                              >
+                                Change role to MEMBER
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               onClick={() =>
                                 removeTeammate(member.teamId, member.userId)

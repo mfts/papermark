@@ -4,6 +4,11 @@ import { useRouter } from "next/router";
 import React, { useMemo } from "react";
 
 import {
+  useDataroom,
+  useDataroomFolderWithParents,
+} from "@/lib/swr/use-dataroom";
+
+import {
   Breadcrumb,
   BreadcrumbEllipsis,
   BreadcrumbItem,
@@ -19,11 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import {
-  useDataroom,
-  useDataroomFolderWithParents,
-} from "@/lib/swr/use-dataroom";
-
+import { TruncatedBreadcrumbLink } from "../layouts/breadcrumb";
 function BreadcrumbComponentBase({
   name,
   dataroomId,
@@ -47,11 +48,10 @@ function BreadcrumbComponentBase({
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href={`/datarooms/${dataroomId}/documents`}>
-              {dataroom?.name || "Loading..."}
-            </Link>
-          </BreadcrumbLink>
+          <TruncatedBreadcrumbLink
+            href={`/datarooms/${dataroomId}/documents`}
+            text={dataroom?.name}
+          />
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>

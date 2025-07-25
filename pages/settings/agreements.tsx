@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 import { createUpgradeButton } from "@/components/ui/upgrade-button";
 
-
 const AgreementsUpgradeButton = createUpgradeButton(
   "Create Agreements",
   PlanEnum.Business,
@@ -27,7 +26,7 @@ const AgreementsUpgradeButton = createUpgradeButton(
 export default function NdaAgreements() {
   const { agreements, loading, error } = useAgreements();
   const teamInfo = useTeam();
-  const { isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
+  const { isTrial, isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
@@ -67,7 +66,7 @@ export default function NdaAgreements() {
               </p>
             </div>
             <ul className="flex items-center justify-between gap-4">
-              {isBusiness || isDatarooms || isDataroomsPlus ? (
+              {isTrial || isBusiness || isDatarooms || isDataroomsPlus ? (
                 <Button variant="outline" onClick={() => setIsOpen(true)}>
                   <FileTextIcon className="h-4 w-4" />
                   Create agreement
@@ -120,7 +119,7 @@ export default function NdaAgreements() {
                   Create your first NDA agreement to get started
                 </p>
               </div>
-              {isBusiness || isDatarooms || isDataroomsPlus ? (
+              {isTrial || isBusiness || isDatarooms || isDataroomsPlus ? (
                 <Button variant="outline" onClick={() => setIsOpen(true)}>
                   <FileTextIcon className="h-4 w-4" />
                   Create NDA agreement

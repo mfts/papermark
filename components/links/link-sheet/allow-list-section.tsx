@@ -4,7 +4,7 @@ import { LinkPreset } from "@prisma/client";
 import { motion } from "motion/react";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import { sanitizeAllowDenyList } from "@/lib/utils";
+import { sanitizeList } from "@/lib/utils";
 
 import { Textarea } from "@/components/ui/textarea";
 
@@ -42,7 +42,7 @@ export default function AllowListSection({
 
   useEffect(() => {
     // Update the allowList in the data state when their inputs change
-    const newAllowList = sanitizeAllowDenyList(allowListInput);
+    const newAllowList = sanitizeList(allowListInput);
     setEnabled((prevEnabled) => prevEnabled && emailProtected);
     setData((prevData) => ({
       ...prevData,
@@ -64,7 +64,7 @@ export default function AllowListSection({
     if (updatedEnabled) {
       setData((prevData) => ({
         ...prevData,
-        allowList: updatedEnabled ? sanitizeAllowDenyList(allowListInput) : [],
+        allowList: updatedEnabled ? sanitizeList(allowListInput) : [],
         emailAuthenticated: true, // Turn on email authentication
         emailProtected: true, // Turn on email protection
       }));

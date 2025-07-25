@@ -14,6 +14,7 @@ import { EyeIcon, RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import useSWR from "swr";
+import z from "zod";
 
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
@@ -99,7 +100,7 @@ export function DataroomLinkSheet({
     loading: isLoadingGroups,
     mutate: mutateGroups,
   } = useDataroomGroups();
-  const teamInfo = useTeam();
+  const { currentTeamId: teamId } = useTeam();
   const { isFree, isPro, isBusiness, isDatarooms, isDataroomsPlus, isTrial } =
     usePlan();
   const { limits } = useLimits();
@@ -120,6 +121,7 @@ export function DataroomLinkSheet({
     useState<boolean>(false);
 
   const isPresetsAllowed =
+    isTrial ||
     (isPro && limits?.advancedLinkControlsOnPro) ||
     isBusiness ||
     isDatarooms ||
@@ -127,9 +129,7 @@ export function DataroomLinkSheet({
 
   // Presets
   const { data: presets } = useSWR<LinkPreset[]>(
-    teamInfo?.currentTeam?.id
-      ? `/api/teams/${teamInfo.currentTeam.id}/presets`
-      : null,
+    teamId ? `/api/teams/${teamId}/presets` : null,
     fetcher,
     {
       dedupingInterval: 10000,
@@ -147,31 +147,39 @@ export function DataroomLinkSheet({
     }
 
     setIsLoading(true);
-    const response = await fetch(`/api/links/${link.id}/preview`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    try {
+      const linkId = z.string().cuid().parse(link.id);
+      const response = await fetch(`/api/links/${linkId}/preview`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
+        toast.error("Failed to generate preview link");
+        setIsLoading(false);
+        return;
+      }
+
+      const { previewToken } = await response.json();
+      const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${linkId}?previewToken=${previewToken}`;
+      setIsLoading(false);
+      const linkElement = document.createElement("a");
+      linkElement.href = previewLink;
+      linkElement.target = "_blank";
+      document.body.appendChild(linkElement);
+      linkElement.click();
+
+      setTimeout(() => {
+        document.body.removeChild(linkElement);
+      }, 100);
+    } catch (error) {
+      console.error("Error generating preview link:", error);
       toast.error("Failed to generate preview link");
       setIsLoading(false);
       return;
     }
-
-    const { previewToken } = await response.json();
-    const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}?previewToken=${previewToken}`;
-    setIsLoading(false);
-    const linkElement = document.createElement("a");
-    linkElement.href = previewLink;
-    linkElement.target = "_blank";
-    document.body.appendChild(linkElement);
-    linkElement.click();
-
-    setTimeout(() => {
-      document.body.removeChild(linkElement);
-    }, 100);
   };
 
   const applyPreset = (presetId: string) => {
@@ -220,6 +228,7 @@ export function DataroomLinkSheet({
         permissions,
         false,
         true,
+        true,
       );
 
       // Close the sheets and show success
@@ -237,6 +246,7 @@ export function DataroomLinkSheet({
     permissions: ItemPermission | null,
     shouldPreview: boolean = false,
     showSuccess: boolean = false,
+    isPermissionUpdate: boolean = false,
   ) => {
     // Upload the image if it's a data URL
     let blobUrl: string | null =
@@ -262,29 +272,36 @@ export function DataroomLinkSheet({
       blobUrlFavicon = await uploadImage(blobFavicon);
     }
 
-    let endpoint = "/api/links";
-    let method = "POST";
     const isUpdating = !!currentLink?.id;
 
-    if (isUpdating) {
-      endpoint = `/api/links/${currentLink.id}`;
-      method = "PUT";
+    if (isUpdating && !currentLink?.id) {
+      toast.error("Invalid link ID for update");
+      setIsSaving(false);
+      return;
     }
 
-    const response = await fetch(endpoint, {
-      method: method,
-      headers: {
-        "Content-Type": "application/json",
+    const customFields = linkData.customFields?.filter((field) =>
+      field.label.trim(),
+    );
+
+    const response = await fetch(
+      isUpdating ? `/api/links/${currentLink.id}` : "/api/links",
+      {
+        method: isUpdating ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...linkData,
+          customFields: customFields,
+          metaImage: blobUrl,
+          metaFavicon: blobUrlFavicon,
+          targetId: targetId,
+          linkType: linkType,
+          teamId: teamId,
+        }),
       },
-      body: JSON.stringify({
-        ...linkData,
-        metaImage: blobUrl,
-        metaFavicon: blobUrlFavicon,
-        targetId: targetId,
-        linkType: linkType,
-        teamId: teamInfo?.currentTeam?.id,
-      }),
-    });
+    );
 
     if (!response.ok) {
       // handle error with toast message
@@ -297,45 +314,70 @@ export function DataroomLinkSheet({
     const returnedLink = await response.json();
 
     // Handle permissions
-    if (permissions === null && isUpdating && currentLink?.permissionGroupId) {
+    if (
+      isPermissionUpdate &&
+      permissions === null &&
+      isUpdating &&
+      currentLink?.permissionGroupId
+    ) {
       // Delete the permission group - database will set permissionGroupId to null automatically
-      const deleteResponse = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      if (!deleteResponse.ok) {
-        // Handle error with toast message
-        try {
-          const errorData = await deleteResponse.json();
-          toast.error(errorData.error || "Failed to delete permission group");
-        } catch {
-          toast.error("Failed to delete permission group");
-        }
+      if (!teamId || !targetId || !currentLink.permissionGroupId) {
+        toast.error("Invalid parameters for permission group deletion");
         setIsSaving(false);
         return;
       }
 
-      // Show success message
-      toast.success("Permission group deleted successfully");
+      try {
+        const targetIdParsed = z.string().cuid().parse(targetId);
+        const teamIdParsed = z.string().cuid().parse(teamId);
+        const permissionGroupIdParsed = z
+          .string()
+          .cuid()
+          .parse(currentLink.permissionGroupId);
 
-      // Refresh the links cache
-      mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${encodeURIComponent(
-          targetId,
-        )}/links`,
-      );
+        const deleteResponse = await fetch(
+          `/api/teams/${teamIdParsed}/datarooms/${targetIdParsed}/permission-groups/${permissionGroupIdParsed}`,
+          {
+            method: "DELETE",
+          },
+        );
 
-      // Clear the permission group cache instead of invalidating to avoid 404
-      mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
-        undefined,
-        false,
-      );
+        if (!deleteResponse.ok) {
+          // Handle error with toast message
+          try {
+            const errorData = await deleteResponse.json();
+            toast.error(errorData.error || "Failed to delete permission group");
+          } catch {
+            toast.error("Failed to delete permission group");
+          }
+          setIsSaving(false);
+          return;
+        }
+
+        returnedLink.permissionGroupId = null;
+
+        // Show success message
+        toast.success("Permission group deleted successfully");
+
+        // Refresh the links cache
+        mutate(
+          `/api/teams/${teamId}/datarooms/${encodeURIComponent(targetId)}/links`,
+        );
+
+        // Clear the permission group cache instead of invalidating to avoid 404
+        mutate(
+          `/api/teams/${teamId}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
+          undefined,
+          false,
+        );
+      } catch (error) {
+        console.error("Error deleting permission group:", error);
+        toast.error("Failed to delete permission group");
+        setIsSaving(false);
+        return;
+      }
     } else if (permissions !== null) {
-      // Only handle permission group operations if we're not deleting
+      // Only handle permission group operations if we have specific permissions to set
       await handlePermissionGroupOperations(
         returnedLink,
         permissions,
@@ -363,56 +405,88 @@ export function DataroomLinkSheet({
   ) => {
     // Create/update permission group with the provided permissions
     if (isUpdating && currentLink?.permissionGroupId) {
-      // Update existing permission group
-      const response = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            permissions: permissions,
-          }),
-        },
-      );
+      if (!teamId || !targetId || !currentLink.permissionGroupId) {
+        console.error("Invalid parameters for permission group update");
+        return;
+      }
 
-      if (response.ok) {
-        // Invalidate the permission group cache
-        mutate(
-          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${currentLink.permissionGroupId}`,
+      try {
+        const targetIdParsed = z.string().cuid().parse(targetId);
+        const teamIdParsed = z.string().cuid().parse(teamId);
+        const permissionGroupIdParsed = z
+          .string()
+          .cuid()
+          .parse(currentLink.permissionGroupId);
+        // Update existing permission group
+        const response = await fetch(
+          `/api/teams/${teamIdParsed}/datarooms/${targetIdParsed}/permission-groups/${permissionGroupIdParsed}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              permissions: permissions,
+            }),
+          },
         );
+
+        if (response.ok) {
+          // Invalidate the permission group cache
+          mutate(
+            `/api/teams/${teamIdParsed}/datarooms/${targetIdParsed}/permission-groups/${permissionGroupIdParsed}`,
+          );
+        }
+      } catch (error) {
+        console.error("Error updating permission group:", error);
+        toast.error("Failed to update permission group");
+        setIsSaving(false);
+        return;
       }
     } else {
-      // Create new permission group
-      const response = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            permissions: permissions,
-            linkId: link.id,
-          }),
-        },
-      );
+      if (!teamId || !targetId) {
+        console.error("Invalid parameters for permission group creation");
+        return;
+      }
 
-      if (response.ok) {
-        const { permissionGroup: newPermissionGroup, _ } =
-          await response.json();
-        // Cache the new permission group data
-        mutate(
-          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${targetId}/permission-groups/${newPermissionGroup.id}`,
-          newPermissionGroup,
-          false,
+      try {
+        const targetIdParsed = z.string().cuid().parse(targetId);
+        const teamIdParsed = z.string().cuid().parse(teamId);
+        // Create new permission group
+        const response = await fetch(
+          `/api/teams/${teamIdParsed}/datarooms/${targetIdParsed}/permission-groups`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              permissions: permissions,
+              linkId: link.id,
+            }),
+          },
         );
 
-        // Update the link with the new permission group ID
-        if (newPermissionGroup.id) {
-          link.permissionGroupId = newPermissionGroup.id;
+        if (response.ok) {
+          const { permissionGroup: newPermissionGroup, _ } =
+            await response.json();
+          // Cache the new permission group data
+          mutate(
+            `/api/teams/${teamId}/datarooms/${targetId}/permission-groups/${newPermissionGroup.id}`,
+            newPermissionGroup,
+            false,
+          );
+
+          // Update the link with the new permission group ID
+          if (newPermissionGroup.id) {
+            link.permissionGroupId = newPermissionGroup.id;
+          }
         }
+      } catch (error) {
+        console.error("Error creating/updating permission group:", error);
+        toast.error("Failed to create/update permission group");
+        setIsSaving(false);
+        return;
       }
     }
   };
@@ -430,7 +504,7 @@ export function DataroomLinkSheet({
       setIsOpen(false);
       // Update the link in the list of links
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+        `/api/teams/${teamId}/${endpointTargetType}/${encodeURIComponent(
           targetId,
         )}/links`,
         (existingLinks || []).map((link) =>
@@ -454,7 +528,7 @@ export function DataroomLinkSheet({
               ) || [];
 
             mutate(
-              `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+              `/api/teams/${teamId}/${endpointTargetType}/${encodeURIComponent(
                 targetId,
               )}/groups/${groupId}/links`,
               groupLinks,
@@ -467,7 +541,7 @@ export function DataroomLinkSheet({
               existingLinks?.filter((link) => link.groupId === groupId) || [];
 
             mutate(
-              `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+              `/api/teams/${teamId}/${endpointTargetType}/${encodeURIComponent(
                 targetId,
               )}/groups/${groupId}/links`,
               [returnedLink, ...groupLinks],
@@ -481,7 +555,7 @@ export function DataroomLinkSheet({
             existingLinks?.filter((link) => link.groupId === groupId) || [];
 
           mutate(
-            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+            `/api/teams/${teamId}/${endpointTargetType}/${encodeURIComponent(
               targetId,
             )}/groups/${groupId}/links`,
             groupLinks.map((link) =>
@@ -496,7 +570,7 @@ export function DataroomLinkSheet({
     } else {
       // Add the new link to the list of links
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+        `/api/teams/${teamId}/${endpointTargetType}/${encodeURIComponent(
           targetId,
         )}/links`,
         [returnedLink, ...(existingLinks || [])],
@@ -512,7 +586,7 @@ export function DataroomLinkSheet({
         const groupLinks =
           existingLinks?.filter((link) => link.groupId === groupId) || [];
         mutate(
-          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          `/api/teams/${teamId}/${endpointTargetType}/${encodeURIComponent(
             targetId,
           )}/groups/${groupId}/links`,
           [returnedLink, ...groupLinks],
@@ -544,6 +618,10 @@ export function DataroomLinkSheet({
         setShowPermissionsSheet(false);
         setPendingLinkData(null);
         toast.success("Link created successfully");
+        const isOnPermissionsPage = router.asPath.includes("/permissions");
+        if (linkType === LinkType.DATAROOM_LINK && !isOnPermissionsPage) {
+          router.push(`/datarooms/${targetId}/permissions`);
+        }
       }
     }
 
@@ -559,12 +637,14 @@ export function DataroomLinkSheet({
     showSuccess: boolean = false,
   ) => {
     // For backward compatibility, extract permissions from linkData
+    setIsSaving(true);
     const permissions = linkData.permissions || null;
     await createOrUpdateLinkWithPermissions(
       linkData,
       permissions,
       shouldPreview,
       showSuccess,
+      false,
     );
   };
 
@@ -581,7 +661,6 @@ export function DataroomLinkSheet({
       setShowPermissionsSheet(true);
       return;
     }
-
     // Use the refactored function
     await createLinkWithPermissions(data, shouldPreview);
   };
@@ -734,7 +813,7 @@ export function DataroomLinkSheet({
                         <div className="space-y-6 pt-2">
                           <div className="space-y-2">
                             <div className="flex w-full items-center justify-between">
-                              <Label htmlFor="group-id">Group </Label>
+                              <Label htmlFor="group-id">Group</Label>
                               <ButtonTooltip content="Refresh groups">
                                 <Button
                                   size="icon"
@@ -883,7 +962,7 @@ export function DataroomLinkSheet({
                   <div className="space-y-2">
                     <TagSection
                       {...{ data, setData }}
-                      teamId={teamInfo?.currentTeam?.id as string}
+                      teamId={teamId as string}
                     />
                   </div>
                 </div>
@@ -893,7 +972,7 @@ export function DataroomLinkSheet({
             <SheetFooter>
               <div className="flex flex-row-reverse items-center gap-2 pt-2">
                 {linkType === LinkType.DATAROOM_LINK &&
-                  currentLink?.audienceType !== LinkAudienceType.GROUP && (
+                  data?.audienceType !== LinkAudienceType.GROUP && (
                     <Button
                       type="button"
                       variant="default"
@@ -907,7 +986,7 @@ export function DataroomLinkSheet({
                   variant={
                     linkType === LinkType.DOCUMENT_LINK ||
                     (linkType === LinkType.DATAROOM_LINK &&
-                      currentLink?.audienceType === LinkAudienceType.GROUP)
+                      data?.audienceType === LinkAudienceType.GROUP)
                       ? "default"
                       : "outline"
                   }

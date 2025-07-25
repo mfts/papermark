@@ -9,6 +9,7 @@ import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
+import z from "zod";
 
 import notion from "@/lib/notion";
 import {
@@ -36,10 +37,21 @@ type DataroomLinkData = {
 };
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const { domain, slug } = context.params as { domain: string; slug: string };
+  const { domain: domainParam, slug: slugParam } = context.params as {
+    domain: string;
+    slug: string;
+  };
 
   try {
-    // Fetch the link
+    const domain = z
+      .string()
+      .regex(/^([a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/)
+      .parse(domainParam);
+    const slug = z
+      .string()
+      .regex(/^[a-zA-Z0-9_-]+$/, "Invalid path parameter")
+      .parse(slugParam);
+
     const res = await fetch(
       `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
         domain,

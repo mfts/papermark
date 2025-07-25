@@ -4,7 +4,7 @@ import { LinkPreset } from "@prisma/client";
 import { motion } from "motion/react";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import { sanitizeAllowDenyList } from "@/lib/utils";
+import { sanitizeList } from "@/lib/utils";
 
 import { Textarea } from "@/components/ui/textarea";
 
@@ -41,7 +41,7 @@ export default function DenyListSection({
 
   useEffect(() => {
     // Update the denyList in the data state when their inputs change
-    const newDenyList = sanitizeAllowDenyList(denyListInput);
+    const newDenyList = sanitizeList(denyListInput);
     setEnabled((prevEnabled) => prevEnabled && emailProtected);
     setData((prevData) => ({
       ...prevData,
@@ -63,7 +63,7 @@ export default function DenyListSection({
     if (updatedEnabled) {
       setData((prevData) => ({
         ...prevData,
-        denyList: updatedEnabled ? sanitizeAllowDenyList(denyListInput) : [],
+        denyList: updatedEnabled ? sanitizeList(denyListInput) : [],
         emailAuthenticated: true, // Turn on email authentication
         emailProtected: true, // Turn on email protection
       }));

@@ -8,6 +8,7 @@ import { LinkPreset } from "@prisma/client";
 import { AlertCircle, ArrowLeft, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
+import z from "zod";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
@@ -59,8 +60,7 @@ export type PRESET_DATA = Partial<DEFAULT_LINK_TYPE> & {
 export default function EditPreset() {
   const router = useRouter();
   const { id } = router.query;
-  const teamInfo = useTeam();
-  const teamId = teamInfo?.currentTeam?.id;
+  const { currentTeamId: teamId } = useTeam();
 
   const {
     data: preset,
@@ -155,7 +155,8 @@ export default function EditPreset() {
     }
 
     try {
-      const response = await fetch(`/api/teams/${teamId}/presets/${id}`, {
+      const presetId = z.string().cuid().parse(id);
+      const response = await fetch(`/api/teams/${teamId}/presets/${presetId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -182,6 +183,8 @@ export default function EditPreset() {
           expiresIn: data.expiresIn,
           pId: data.pId,
           enableScreenshotProtection: data.enableScreenshotProtection,
+          enableAgreement: data.enableAgreement,
+          agreementId: data.agreementId,
           enableCustomFields: data.enableCustomFields,
           customFields: data.customFields,
           enableNotification: data.enableNotification,
@@ -205,7 +208,8 @@ export default function EditPreset() {
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`/api/teams/${teamId}/presets/${id}`, {
+      const presetId = z.string().cuid().parse(id);
+      const response = await fetch(`/api/teams/${teamId}/presets/${presetId}`, {
         method: "DELETE",
       });
 

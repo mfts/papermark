@@ -13,7 +13,6 @@ import { z } from "zod";
 import { newId } from "@/lib/id-helper";
 import { usePlan } from "@/lib/swr/use-billing";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import Copy from "@/components/shared/icons/copy";
@@ -75,7 +74,7 @@ const formSchema = z.object({
 export default function NewWebhook() {
   const router = useRouter();
   const teamInfo = useTeam();
-  const { isFree, isPro } = usePlan();
+  const { isFree, isPro, isTrial } = usePlan();
   const teamId = teamInfo?.currentTeam?.id;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -93,7 +92,7 @@ export default function NewWebhook() {
   }, []);
 
   const createWebhook = async () => {
-    if (isFree || isPro) {
+    if ((isFree || isPro) && !isTrial) {
       return;
     }
 
@@ -338,7 +337,7 @@ export default function NewWebhook() {
             </div>
 
             <div className="flex space-x-4">
-              {isFree || isPro ? (
+              {(isFree || isPro) && !isTrial ? (
                 <UpgradeButton
                   text="Save Webhook"
                   clickedPlan={PlanEnum.Business}

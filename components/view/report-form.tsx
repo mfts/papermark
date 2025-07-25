@@ -101,7 +101,7 @@ export default function ReportForm({
               </p>
             </div>
             <div className="flex flex-col space-y-4">
-              <RadioGroup onValueChange={setAbuseType} className="grid gap-2">
+              <RadioGroup value={abuseType} onValueChange={setAbuseType} className="grid gap-2">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="spam" id="spam" />
                   <Label htmlFor="spam" className="font-normal">

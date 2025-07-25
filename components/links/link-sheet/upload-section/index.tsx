@@ -19,7 +19,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { DEFAULT_LINK_TYPE } from "..";
@@ -90,7 +89,7 @@ function FolderSelectionModal({
           </DialogDescription>
         </DialogHeader>
         <form>
-          <div className="mb-2 max-h-[75vh] overflow-y-scroll">
+          <div className="mb-2 max-h-[75vh] overflow-x-hidden overflow-y-scroll">
             {dataroomId && dataroomId !== "all_documents" ? (
               <DataroomFolderTree
                 dataroomId={dataroomId}
@@ -116,7 +115,9 @@ function FolderSelectionModal({
               ) : (
                 <>
                   Select{" "}
-                  <span className="font-medium">{selectedFolder.name}</span>
+                  <span className="max-w-[200px] truncate font-medium">
+                    {selectedFolder.name}
+                  </span>
                 </>
               )}
             </Button>

@@ -11,6 +11,8 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import DeleteTeam from "@/components/settings/delete-team";
+import GlobalBlockListForm from "@/components/settings/global-block-list-form";
+import IgnoredDomainsForm from "@/components/settings/ignored-domains-form";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Form } from "@/components/ui/form";
 
@@ -18,7 +20,7 @@ export default function General() {
   const analytics = useAnalytics();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const { isFree, isPro, isTrial } = usePlan();
+  const { isFree, isPro, isTrial, isStarter } = usePlan();
   const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
   const [planModalTrigger, setPlanModalTrigger] = useState<string>("");
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
@@ -32,7 +34,11 @@ export default function General() {
   const handleExcelAdvancedModeChange = async (data: {
     enableExcelAdvancedMode: string;
   }) => {
-    if (isFree && data.enableExcelAdvancedMode === "true") {
+    if (
+      (isFree || isPro || isStarter) &&
+      !isTrial &&
+      data.enableExcelAdvancedMode === "true"
+    ) {
       showUpgradeModal(PlanEnum.Business, "advanced-excel-mode");
       return;
     }
@@ -141,6 +147,8 @@ export default function General() {
             handleSubmit={handleExcelAdvancedModeChange}
             plan={(isFree && !isTrial) || isPro ? "Business" : undefined}
           />
+          <IgnoredDomainsForm />
+          <GlobalBlockListForm />
 
           <DeleteTeam />
         </div>

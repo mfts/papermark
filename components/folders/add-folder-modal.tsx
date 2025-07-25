@@ -136,7 +136,7 @@ export function AddFolderModal({
   };
 
   // If the team is on a free plan, show the upgrade modal
-  if (isFree && (!isDataroom || !isTrial)) {
+  if (isFree && !isTrial) {
     if (children) {
       return (
         <UpgradePlanModal

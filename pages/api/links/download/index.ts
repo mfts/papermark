@@ -122,6 +122,7 @@ export default async function handle(
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
             },
             body: JSON.stringify({
               url: downloadUrl,
@@ -139,7 +140,21 @@ export default async function handle(
         );
 
         if (!response.ok) {
-          return res.status(500).json({ error: "Error downloading" });
+          // Try to get the specific error details from the watermarking API
+          let errorMessage = "Error downloading";
+          try {
+            const errorData = await response.json();
+            if (errorData.error && errorData.details) {
+              errorMessage = `${errorData.error}: ${errorData.details}`;
+            } else if (errorData.error) {
+              errorMessage = errorData.error;
+            }
+          } catch {
+            // If we can't parse the error response, use generic message
+            errorMessage = "Error downloading";
+          }
+
+          return res.status(500).json({ error: errorMessage });
         }
 
         const pdfBuffer = await response.arrayBuffer();

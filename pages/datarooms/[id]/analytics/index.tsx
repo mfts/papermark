@@ -31,7 +31,7 @@ export default function DataroomAnalyticsPage() {
   const defaultTab =
     isTrial || isDatarooms || isDataroomsPlus ? "analytics" : "audit-log";
   // Check if user has access to analytics features
-  const hasAnalyticsAccess = isDatarooms || isDataroomsPlus;
+  const hasAnalyticsAccess = isDatarooms || isDataroomsPlus || isTrial;
 
   if (!dataroom) {
     return <div>Loading...</div>;
