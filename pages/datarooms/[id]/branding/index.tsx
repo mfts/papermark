@@ -3,8 +3,9 @@ import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { Check, CircleHelpIcon, InfoIcon, PlusIcon } from "lucide-react";
+import { Check, CircleHelpIcon, PlusIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
+import sanitizeHtml from "sanitize-html";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { useDebounce } from "use-debounce";
@@ -27,6 +28,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
@@ -50,6 +52,34 @@ export default function DataroomBrandPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [welcomeMessageError, setWelcomeMessageError] = useState<string | null>(
+    null,
+  );
+
+  // Welcome message validation
+  const MAX_WELCOME_MESSAGE_LENGTH = 80; // Roughly 2 lines of text
+
+  const validateWelcomeMessage = (message: string): string | null => {
+    if (!message.trim()) {
+      return "Welcome message cannot be empty";
+    }
+
+    // Strip HTML tags and validate plain text only
+    const sanitized = sanitizeHtml(message, {
+      allowedTags: [],
+      allowedAttributes: {},
+    });
+
+    if (sanitized !== message) {
+      return "Welcome message must contain only plain text";
+    }
+
+    if (sanitized.length > MAX_WELCOME_MESSAGE_LENGTH) {
+      return `Welcome message must be ${MAX_WELCOME_MESSAGE_LENGTH} characters or less (currently ${sanitized.length})`;
+    }
+
+    return null;
+  };
 
   const onChangeLogo = useCallback(
     (e: any) => {
@@ -109,8 +139,21 @@ export default function DataroomBrandPage() {
       setAccentColor(brand.accentColor || "#FFFFFF");
       setLogo(brand.logo || null);
       setBanner(brand.banner || DEFAULT_BANNER_IMAGE);
+      const message =
+        brand.welcomeMessage || "Your action is requested to continue";
+      setWelcomeMessage(message);
+      // Validate existing message
+      const error = validateWelcomeMessage(message);
+      setWelcomeMessageError(error);
     }
   }, [brand]);
+
+  // Handle welcome message change with validation
+  const handleWelcomeMessageChange = (value: string) => {
+    setWelcomeMessage(value);
+    const error = validateWelcomeMessage(value);
+    setWelcomeMessageError(error);
+  };
 
   if (!dataroom) {
     return <div>Loading...</div>;
@@ -118,6 +161,14 @@ export default function DataroomBrandPage() {
 
   const saveBranding = async (e: any) => {
     e.preventDefault();
+
+    // Validate welcome message before saving
+    const welcomeError = validateWelcomeMessage(welcomeMessage);
+    if (welcomeError) {
+      setWelcomeMessageError(welcomeError);
+      toast.error("Please fix the validation errors before saving");
+      return;
+    }
 
     setIsLoading(true);
 
@@ -230,15 +281,7 @@ export default function DataroomBrandPage() {
                 <Card className="min-w-max dark:bg-secondary">
                   <CardContent className="pt-6">
                     <div className="grid gap-6">
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor="welcome-message">Welcome Message</Label>
-                        <Input
-                          id="welcome-message"
-                          value={welcomeMessage}
-                          onChange={(e) => setWelcomeMessage(e.target.value)}
-                          placeholder="Your action is requested to continue"
-                        />
-                      </div>
+                      {/* Logo Input */}
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between">
                           <Label htmlFor="logo">
@@ -252,102 +295,104 @@ export default function DataroomBrandPage() {
                           ) : null}
                         </div>
                         <div>
-                        <label
-                          htmlFor="image"
-                          className="group relative flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
-                        >
-                          {false && (
-                            <div className="absolute z-[5] flex h-full w-full items-center justify-center rounded-md bg-white">
-                              <LoadingSpinner />
-                            </div>
-                          )}
-                          <div
-                            className="absolute z-[5] h-full w-full rounded-md"
-                            onDragOver={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setDragActive(true);
-                            }}
-                            onDragEnter={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setDragActive(true);
-                            }}
-                            onDragLeave={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setDragActive(false);
-                            }}
-                            onDrop={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setDragActive(false);
-                              setFileError(null);
-                              const file =
-                                e.dataTransfer.files && e.dataTransfer.files[0];
-                              if (file) {
-                                if (file.size / 1024 / 1024 > 2) {
-                                  setFileError("File size too big (max 2MB)");
-                                } else if (
-                                  file.type !== "image/png" &&
-                                  file.type !== "image/jpeg"
-                                ) {
-                                  setFileError(
-                                    "File type not supported (.png or .jpg only)",
-                                  );
-                                } else {
-                                  const reader = new FileReader();
-                                  reader.onload = (e) => {
-                                    const dataUrl = e.target?.result as string;
-                                    setLogo(dataUrl);
-                                    // create a blob url for preview
-                                    const blob = convertDataUrlToFile({
-                                      dataUrl,
-                                    });
-                                    const blobUrl = URL.createObjectURL(blob);
-                                    setBlobUrl(blobUrl);
-                                  };
-                                  reader.readAsDataURL(file);
-                                }
-                              }
-                            }}
-                          />
-                          <div
-                            className={cn(
-                              "absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-md bg-white transition-all",
-                              dragActive &&
-                                "cursor-copy border-2 border-black bg-gray-50 opacity-100",
-                              logo
-                                ? "opacity-0 group-hover:opacity-100"
-                                : "group-hover:bg-gray-50",
-                            )}
+                          <label
+                            htmlFor="image"
+                            className="group relative flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
                           >
-                            <PlusIcon
+                            {false && (
+                              <div className="absolute z-[5] flex h-full w-full items-center justify-center rounded-md bg-white">
+                                <LoadingSpinner />
+                              </div>
+                            )}
+                            <div
+                              className="absolute z-[5] h-full w-full rounded-md"
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setDragActive(true);
+                              }}
+                              onDragEnter={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setDragActive(true);
+                              }}
+                              onDragLeave={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setDragActive(false);
+                              }}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setDragActive(false);
+                                setFileError(null);
+                                const file =
+                                  e.dataTransfer.files &&
+                                  e.dataTransfer.files[0];
+                                if (file) {
+                                  if (file.size / 1024 / 1024 > 2) {
+                                    setFileError("File size too big (max 2MB)");
+                                  } else if (
+                                    file.type !== "image/png" &&
+                                    file.type !== "image/jpeg"
+                                  ) {
+                                    setFileError(
+                                      "File type not supported (.png or .jpg only)",
+                                    );
+                                  } else {
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => {
+                                      const dataUrl = e.target
+                                        ?.result as string;
+                                      setLogo(dataUrl);
+                                      // create a blob url for preview
+                                      const blob = convertDataUrlToFile({
+                                        dataUrl,
+                                      });
+                                      const blobUrl = URL.createObjectURL(blob);
+                                      setBlobUrl(blobUrl);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }
+                              }}
+                            />
+                            <div
                               className={cn(
-                                "h-7 w-7 text-gray-500 transition-all duration-75 group-hover:scale-110 group-active:scale-95",
-                                dragActive ? "scale-110" : "scale-100",
+                                "absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-md bg-white transition-all",
+                                dragActive &&
+                                  "cursor-copy border-2 border-black bg-gray-50 opacity-100",
+                                logo
+                                  ? "opacity-0 group-hover:opacity-100"
+                                  : "group-hover:bg-gray-50",
                               )}
+                            >
+                              <PlusIcon
+                                className={cn(
+                                  "h-7 w-7 text-gray-500 transition-all duration-75 group-hover:scale-110 group-active:scale-95",
+                                  dragActive ? "scale-110" : "scale-100",
+                                )}
+                              />
+                              <span className="sr-only">OG image upload</span>
+                            </div>
+                            {logo && (
+                              <img
+                                src={logo}
+                                alt="Preview"
+                                className="h-full w-full rounded-md object-contain"
+                              />
+                            )}
+                          </label>
+                          <div className="flex rounded-md shadow-sm">
+                            <input
+                              id="image"
+                              name="image"
+                              type="file"
+                              accept="image/jpeg,image/png"
+                              className="sr-only"
+                              onChange={onChangeLogo}
                             />
-                            <span className="sr-only">OG image upload</span>
                           </div>
-                          {logo && (
-                            <img
-                              src={logo}
-                              alt="Preview"
-                              className="h-full w-full rounded-md object-contain"
-                            />
-                          )}
-                        </label>
-                        <div className="flex rounded-md shadow-sm">
-                          <input
-                            id="image"
-                            name="image"
-                            type="file"
-                            accept="image/jpeg,image/png"
-                            className="sr-only"
-                            onChange={onChangeLogo}
-                          />
-                        </div>
                         </div>
                       </div>
                       {/* Banner Input */}
@@ -364,60 +409,63 @@ export default function DataroomBrandPage() {
                           ) : null}
                         </div>
                         <div>
-                        <label
-                          htmlFor="banner"
-                          className="group relative flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
-                          style={{
-                            backgroundImage:
-                              "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(135deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(135deg, transparent 75%, #ccc 75%)",
-                            backgroundSize: "20px 20px",
-                            backgroundPosition:
-                              "0 0, 10px 0, 10px -10px, 0px 10px",
-                          }}
-                        >
-                          {false && (
-                            <div className="absolute z-[5] flex h-full w-full items-center justify-center rounded-md bg-white">
-                              <LoadingSpinner />
-                            </div>
-                          )}
-                          <div
-                            className={cn(
-                              "absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-md bg-white transition-all",
-                              dragActive &&
-                                "cursor-copy border-2 border-black bg-gray-50 opacity-100",
-                              banner
-                                ? "opacity-0 group-hover:opacity-100"
-                                : "group-hover:bg-gray-50",
-                            )}
+                          <label
+                            htmlFor="banner"
+                            className="group relative flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
+                            style={{
+                              backgroundImage:
+                                "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(135deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(135deg, transparent 75%, #ccc 75%)",
+                              backgroundSize: "20px 20px",
+                              backgroundPosition:
+                                "0 0, 10px 0, 10px -10px, 0px 10px",
+                            }}
                           >
-                            <PlusIcon
+                            {false && (
+                              <div className="absolute z-[5] flex h-full w-full items-center justify-center rounded-md bg-white">
+                                <LoadingSpinner />
+                              </div>
+                            )}
+                            <div
                               className={cn(
-                                "h-7 w-7 text-gray-500 transition-all duration-75 group-hover:scale-110 group-active:scale-95",
-                                dragActive ? "scale-110" : "scale-100",
+                                "absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-md bg-white transition-all",
+                                dragActive &&
+                                  "cursor-copy border-2 border-black bg-gray-50 opacity-100",
+                                banner
+                                  ? "opacity-0 group-hover:opacity-100"
+                                  : "group-hover:bg-gray-50",
                               )}
-                            />
-                            <span className="sr-only">Banner image upload</span>
-                          </div>
-                          {banner && (
-                            <img
-                              src={banner}
-                              alt="Preview"
-                              className="h-full w-full rounded-md object-contain"
-                            />
-                          )}
-                        </label>
-                        <div className="flex rounded-md shadow-sm">
-                          <input
-                            id="banner"
-                            name="banner"
-                            type="file"
-                            accept="image/jpeg,image/png"
-                            className="sr-only"
-                            onChange={onChangeBanner}
+                            >
+                              <PlusIcon
+                                className={cn(
+                                  "h-7 w-7 text-gray-500 transition-all duration-75 group-hover:scale-110 group-active:scale-95",
+                                  dragActive ? "scale-110" : "scale-100",
+                                )}
+                              />
+                              <span className="sr-only">
+                                Banner image upload
+                              </span>
+                            </div>
+                            {banner && (
+                              <img
+                                src={banner}
+                                alt="Preview"
+                                className="h-full w-full rounded-md object-contain"
+                              />
+                            )}
+                          </label>
+                          <div className="flex rounded-md shadow-sm">
+                            <input
+                              id="banner"
+                              name="banner"
+                              type="file"
+                              accept="image/jpeg,image/png"
+                              className="sr-only"
+                              onChange={onChangeBanner}
                             />
                           </div>
                         </div>
                       </div>
+                      {/* Brand Color */}
                       <div className="flex flex-col gap-2">
                         <Label htmlFor="primary-color">Brand Color</Label>
                         <div className="flex space-x-1">
@@ -443,6 +491,7 @@ export default function DataroomBrandPage() {
                           />
                         </div>
                       </div>
+                      {/* Background Color */}
                       <div className="flex flex-col gap-2">
                         <Label htmlFor="accent-color">
                           Background Color
@@ -523,10 +572,54 @@ export default function DataroomBrandPage() {
                           </div>
                         </div>
                       </div>
+                      {/* Welcome Message */}
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="welcome-message">
+                            Welcome Message
+                          </Label>
+                          <span className="text-sm text-muted-foreground">
+                            <span
+                              className={cn(
+                                welcomeMessageError && "text-red-500",
+                              )}
+                            >
+                              {welcomeMessage.length}
+                            </span>
+                            /{MAX_WELCOME_MESSAGE_LENGTH}
+                          </span>
+                        </div>
+                        <Textarea
+                          id="welcome-message"
+                          value={welcomeMessage}
+                          onChange={(e) =>
+                            handleWelcomeMessageChange(e.target.value)
+                          }
+                          placeholder="Your action is requested to continue"
+                          className={cn(
+                            "min-h-10",
+                            welcomeMessageError &&
+                              "border-red-500 focus:border-red-500 focus:ring-red-500",
+                          )}
+                        />
+                        {welcomeMessageError && (
+                          <p className="text-xs text-red-500">
+                            {welcomeMessageError}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          Keep the message concise - it should fit within two
+                          lines for the best user experience.
+                        </p>
+                      </div>
                     </div>
                   </CardContent>
                   <CardFooter className="border-t p-6">
-                    <Button onClick={saveBranding} loading={isLoading}>
+                    <Button
+                      onClick={saveBranding}
+                      loading={isLoading}
+                      disabled={!!welcomeMessageError}
+                    >
                       Save changes
                     </Button>
 
