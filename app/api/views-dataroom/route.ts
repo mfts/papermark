@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { reportDeniedAccessAttempt } from "@/ee/features/access-notifications";
 import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { ItemType, Link, LinkAudienceType } from "@prisma/client";
+import { ItemType, LinkAudienceType } from "@prisma/client";
 import { ipAddress, waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth";
 
