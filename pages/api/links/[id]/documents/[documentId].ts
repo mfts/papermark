@@ -6,7 +6,6 @@ import { fetchDataroomDocumentLinkData } from "@/lib/api/links/link-data";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
-import { sendBlockedEmailAttemptNotification } from "@/lib/emails/send-blocked-email-attempt";
 
 export default async function handle(
   req: NextApiRequest,
@@ -28,7 +27,6 @@ export default async function handle(
       where: { id, linkType: "DATAROOM_LINK" },
       select: {
         id: true,
-        name: true,
         expiresAt: true,
         emailProtected: true,
         emailAuthenticated: true,
@@ -101,36 +99,6 @@ export default async function handle(
       return res.status(400).json({ message: globalBlockCheck.error });
     }
     if (globalBlockCheck.isBlocked) {
-      try {
-        const users = await prisma.userTeam.findMany({
-          where: {
-            role: { in: ["ADMIN", "MANAGER"] },
-            status: "ACTIVE",
-            teamId: link.teamId!,
-          },
-          select: {
-            user: { select: { email: true } },
-          },
-        });
-        const adminEmails = users.map((u) => u.user.email).filter((e): e is string => !!e);
-        const to = adminEmails[0];
-        const cc = adminEmails.slice(1);
-
-        const dataroomDocument = await prisma.dataroomDocument.findUnique({
-          where: { id: dataroomDocumentId },
-          select: { document: { select: { name: true } } },
-        });
-
-        await sendBlockedEmailAttemptNotification({
-          to,
-          cc,
-          blockedEmail: email!,
-          linkName: link.name || `Link #${link.id.slice(-5)}`,
-          resourceName: `dataroom document ${dataroomDocument?.document?.name}`,
-        });
-      } catch (e) {
-        console.error(e);
-      }
       return res.status(403).json({ message: "Access denied" });
     }
 

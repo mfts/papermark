@@ -10,7 +10,6 @@ import {
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
-import { notifyBlockedAttempt } from "@/app/api/views-dataroom/route";
 
 export default async function handle(
   req: NextApiRequest,
@@ -45,7 +44,6 @@ export default async function handle(
         },
         select: {
           id: true,
-          name: true,
           expiresAt: true,
           emailProtected: true,
           allowDownload: true,
@@ -131,9 +129,6 @@ export default async function handle(
         return res.status(400).json({ message: globalBlockCheck.error });
       }
       if (globalBlockCheck.isBlocked) {
-        try {
-          await notifyBlockedAttempt(link, email!);
-        } catch (e) { console.error(e); }
         return res.status(403).json({ message: "Access denied" });
       }
 
