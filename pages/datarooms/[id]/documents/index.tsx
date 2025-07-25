@@ -16,7 +16,8 @@ import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { LoadingDocuments } from "@/components/documents/loading-document";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
-import { ResponsiveButton } from "@/components/responsive-button";
+import { Button } from "@/components/ui/button";
+import { ResponsiveButton } from "@/components/ui/responsive-button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function Documents() {

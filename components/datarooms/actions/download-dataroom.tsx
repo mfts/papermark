@@ -3,7 +3,7 @@ import { useState } from "react";
 import { DownloadIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { ResponsiveButton } from "@/components/responsive-button";
+import { ResponsiveButton } from "@/components/ui/responsive-button";
 
 export default function DownloadDataroomButton({
   teamId,

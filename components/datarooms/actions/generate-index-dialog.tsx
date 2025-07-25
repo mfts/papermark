@@ -15,7 +15,6 @@ import { useDataroomLinks } from "@/lib/swr/use-dataroom";
 import { IndexFileFormat } from "@/lib/types/index-file";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
-import { ResponsiveButton } from "@/components/responsive-button";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,6 +25,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ResponsiveButton } from "@/components/ui/responsive-button";
 import {
   Select,
   SelectContent,
