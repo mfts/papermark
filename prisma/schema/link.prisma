@@ -52,7 +52,7 @@ model Link {
 
   // granular permissions
   permissionGroupId String?
-  permissionGroup PermissionGroup? @relation(fields: [permissionGroupId], references: [id], onDelete: SetNull)
+  permissionGroup   PermissionGroup? @relation(fields: [permissionGroupId], references: [id], onDelete: SetNull)
 
   // custom metatags
   metaTitle           String? // This will be the meta title of the link
