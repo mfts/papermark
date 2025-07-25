@@ -269,6 +269,102 @@ export default function VisitorsTable({
                     </TableRow>
                   );
                 }
+                if (isLink) {
+                  return (
+                    <TableRow key={view.id} className="group/row">
+                      {/* Name */}
+                      <TableCell>
+                        <div className="flex items-center overflow-visible sm:space-x-3">
+                          <VisitorAvatar viewerEmail={view.viewerEmail} />
+                          <div className="min-w-0 flex-1">
+                            <div className="focus:outline-none">
+                              <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
+                                {view.viewerEmail ? (
+                                  <>{view.viewerEmail}</>
+                                ) : (
+                                  "Anonymous"
+                                )}
+                              </p>
+                              <p className="text-xs text-muted-foreground/60 sm:text-sm">
+                                {view.link.name ? view.link.name : view.linkId}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      {/* Duration */}
+                      <TableCell className="">
+                        <div className="text-sm text-muted-foreground">
+                          <BadgeTooltip
+                            content={
+                              view.redirectAt
+                                ? `Link redirected at ${new Date(view.redirectAt).toLocaleString()}`
+                                : "Link not redirected"
+                            }
+                          >
+                            <span>
+                              {view.redirectAt ? timeAgo(view.redirectAt) : "-"}
+                            </span>
+                          </BadgeTooltip>
+                        </div>
+                      </TableCell>
+                      {/* Completion */}
+                      <TableCell className="flex justify-start">
+                        <div className="text-sm text-muted-foreground">
+                          <Gauge
+                            value={view.completionRate}
+                            size={"small"}
+                            showValue={true}
+                          />
+                        </div>
+                      </TableCell>
+                      {/* Last Viewed */}
+                      <TableCell className="text-sm text-muted-foreground">
+                        <time dateTime={new Date(view.viewedAt).toISOString()}>
+                          {timeAgo(view.viewedAt)}
+                        </time>
+                      </TableCell>
+                      {/* Actions */}
+                      <TableCell className="text-center sm:text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0 group-hover/row:ring-1 group-hover/row:ring-gray-200 group-hover/row:dark:ring-gray-700"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                              }}
+                            >
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontalIcon className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                handleArchiveView(
+                                  view.id,
+                                  view.documentId ?? "",
+                                  view.isArchived,
+                                );
+                              }}
+                              disabled={isLoading}
+                            >
+                              <ArchiveIcon className="mr-2 h-4 w-4" />
+                              Archive
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
                 return (
                   <Collapsible key={view.id} asChild>
                     <>
