@@ -8,8 +8,8 @@ import { toast } from "sonner";
 
 import { useAnalytics } from "@/lib/analytics";
 import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
-import { LinkWithDataroom } from "@/lib/types";
 import { useDisablePrint } from "@/lib/hooks/use-disable-print";
+import { LinkWithDataroom } from "@/lib/types";
 
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
@@ -43,6 +43,7 @@ export type DEFAULT_DATAROOM_VIEW_TYPE = {
   conversationsEnabled?: boolean;
   enableVisitorUpload?: boolean;
   isTeamMember?: boolean;
+  uploadDocumentsCount?: number;
 };
 
 export default function DataroomView({
@@ -143,6 +144,7 @@ export default function DataroomView({
           viewerId,
           conversationsEnabled,
           enableVisitorUpload,
+          uploadDocumentsCount,
           isTeamMember,
         } = fetchData as DEFAULT_DATAROOM_VIEW_TYPE;
 
@@ -178,6 +180,7 @@ export default function DataroomView({
           conversationsEnabled,
           enableVisitorUpload,
           isTeamMember,
+          uploadDocumentsCount,
         });
         setSubmitted(true);
         setVerificationRequested(false);

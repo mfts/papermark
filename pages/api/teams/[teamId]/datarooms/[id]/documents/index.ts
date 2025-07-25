@@ -75,6 +75,11 @@ export default async function handle(
                 select: { id: true, hasPages: true },
               },
               isExternalUpload: true,
+              uploadedDocument: {
+                select: {
+                  requireApproval: true,
+                },
+              },
               _count: {
                 select: {
                   views: { where: { dataroomId } },

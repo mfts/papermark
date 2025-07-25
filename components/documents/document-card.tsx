@@ -7,6 +7,7 @@ import { TeamContextType } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BetweenHorizontalStartIcon,
+  CheckIcon,
   ChevronRight,
   EyeIcon,
   FileIcon,
@@ -24,6 +25,7 @@ import useDatarooms from "@/lib/swr/use-datarooms";
 import useLimits from "@/lib/swr/use-limits";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, getBreadcrumbPath, nFormatter, timeAgo } from "@/lib/utils";
+import { approveDocument } from "@/lib/utils/document-approve";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
@@ -43,6 +45,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BadgeTooltip } from "@/components/ui/tooltip";
+
+import { Badge } from "../ui/badge";
 
 type DocumentsCardProps = {
   document: DocumentWithLinksAndLinkCountAndViewCount;
@@ -112,6 +116,14 @@ export default function DocumentsCard({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const handleApproveDocument = async (documentId: string) => {
+    await approveDocument({
+      documentId,
+      teamInfo,
+      currentFolderPath,
+    });
+  };
 
   const handleButtonClick = (event: any, documentId: string) => {
     event.stopPropagation();
@@ -269,6 +281,11 @@ export default function DocumentsCard({
                   </BadgeTooltip>
                 </div>
               )}
+              {prismaDocument.uploadedDocument?.requireApproval ? (
+                <Badge variant="default" className="ml-2">
+                  Need approval
+                </Badge>
+              ) : null}
             </div>
             <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
               <p className="truncate">{timeAgo(prismaDocument.createdAt)}</p>
@@ -374,6 +391,17 @@ export default function DocumentsCard({
                   Add to dataroom
                 </DropdownMenuItem>
               )}
+              {prismaDocument.uploadedDocument?.requireApproval ? (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleApproveDocument(prismaDocument.id);
+                  }}
+                >
+                  <CheckIcon className="mr-2 h-4 w-4" />
+                  Approve document
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={(event) => handleButtonClick(event, prismaDocument.id)}

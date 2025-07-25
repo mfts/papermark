@@ -65,6 +65,14 @@ export default async function handle(
                 name: true,
                 teamId: true,
                 documents: {
+                  where: {
+                    uploadedDocuments: {
+                      some: {
+                        requireApproval: false,
+                        approvedStatus: "APPROVED",
+                      },
+                    },
+                  },
                   include: {
                     document: {
                       include: {

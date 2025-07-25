@@ -1,7 +1,9 @@
 // components/view/dataroom/document-upload-button.tsx
 import { useState } from "react";
 
+import { Document } from "@prisma/client";
 import { PlusIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,18 +15,40 @@ import {
 } from "@/components/ui/dialog";
 import { ViewerUploadComponent } from "@/components/viewer-upload-component";
 
+import { DocumentVersion } from "../viewer/dataroom-viewer";
+
 export function DocumentUploadModal({
   linkId,
   dataroomId,
   viewerId,
   folderId,
+  onUploadSuccess,
 }: {
   linkId: string;
   dataroomId: string;
   viewerId: string;
   folderId?: string;
+  onUploadSuccess?: (
+    document: Document & {
+      versions: DocumentVersion[];
+      requireApproval: boolean;
+    },
+  ) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleUploadSuccess = (
+    document: Document & {
+      versions: DocumentVersion[];
+      requireApproval: boolean;
+    },
+  ) => {
+    onUploadSuccess?.(document);
+    setIsOpen(false);
+    toast.success(
+      "Document uploaded successfully. Waiting for admin approval.",
+    );
+  };
 
   return (
     <>
@@ -57,6 +81,7 @@ export function DocumentUploadModal({
             }}
             teamId="visitor-upload"
             folderId={folderId}
+            onSuccess={handleUploadSuccess}
           />
         </DialogContent>
       </Dialog>

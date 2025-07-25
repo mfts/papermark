@@ -27,6 +27,7 @@ import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { validateEmail } from "@/lib/utils/validate-email";
+import { fetchUploadDocumentsCount } from "@/lib/api/links/link-data";
 
 export async function POST(request: NextRequest) {
   try {
@@ -652,6 +653,19 @@ export async function POST(request: NextRequest) {
         const dataroomViewId =
           newDataroomView?.id ?? dataroomSession?.viewId ?? undefined;
 
+        let uploadDocumentsCount = 0;
+        try {
+          if (viewer?.id) {
+            uploadDocumentsCount = await fetchUploadDocumentsCount({
+              dataroomId,
+              viewerId: viewer.id,
+              teamId: link.teamId!,
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch upload documents count", error);
+        }
+
         const returnObject = {
           message: "Dataroom View recorded",
           viewId: dataroomViewId,
@@ -663,6 +677,7 @@ export async function POST(request: NextRequest) {
           viewerId: viewer?.id,
           conversationsEnabled: link.enableConversation,
           enableVisitorUpload: link.enableUpload,
+          uploadDocumentsCount: uploadDocumentsCount,
           ...(isTeamMember && { isTeamMember: true }),
         };
 

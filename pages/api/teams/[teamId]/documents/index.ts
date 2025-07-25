@@ -112,6 +112,11 @@ export default async function handle(
           take: limit,
         }),
         include: {
+          uploadedDocument: {
+            select: {
+              requireApproval: true,
+            },
+          },
           folder: {
             select: {
               name: true,

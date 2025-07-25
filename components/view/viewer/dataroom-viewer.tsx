@@ -1,16 +1,16 @@
 import { useSearchParams } from "next/navigation";
 
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import React from "react";
 
 import {
   DataroomBrand,
   DataroomFolder,
-  PermissionGroupAccessControls,
+  Document,
   ViewerGroupAccessControls,
 } from "@prisma/client";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { PanelLeftIcon, XIcon } from "lucide-react";
+import { FileText, PanelLeftIcon, XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { sortByIndexThenName } from "@/lib/utils/sort-items-by-index-name";
@@ -63,6 +63,9 @@ type DataroomDocument = {
   versions: DocumentVersion[];
   canDownload: boolean;
   canView: boolean;
+  uploadedDocument?: {
+    requireApproval: boolean;
+  };
 };
 
 const getParentFolders = (
@@ -106,17 +109,23 @@ export default function DataroomViewer({
   isPreview?: boolean;
   folderId: string | null;
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
-  accessControls: ViewerGroupAccessControls[] | PermissionGroupAccessControls[];
+  accessControls: ViewerGroupAccessControls[];
   viewerId?: string;
   viewData: DEFAULT_DATAROOM_VIEW_TYPE;
   enableIndexFile?: boolean;
   isEmbedded?: boolean;
   viewerEmail?: string;
 }) {
-  const { documents, folders } = dataroom as {
+  const { documents: initialDocuments, folders } = dataroom as {
     documents: DataroomDocument[];
     folders: DataroomFolder[];
   };
+
+  const [documents, setDocuments] =
+    useState<DataroomDocument[]>(initialDocuments);
+  const [uploadedDocumentsCount, setUploadedDocumentsCount] = useState<number>(
+    viewData.uploadDocumentsCount ?? 0,
+  );
 
   const searchParams = useSearchParams();
   const searchQuery = searchParams?.get("search")?.toLowerCase() || "";
@@ -321,6 +330,41 @@ export default function DataroomViewer({
     );
   };
 
+  const handleUploadSuccess = useCallback(
+    (
+      newDocument: Document & {
+        versions: DocumentVersion[];
+        requireApproval: boolean;
+      },
+    ) => {
+      const transformedDocument: DataroomDocument = {
+        dataroomDocumentId: newDocument.id,
+        id: newDocument.id,
+        name: newDocument.name,
+        folderId: newDocument.folderId || folderId,
+        orderIndex: documents.length,
+        downloadOnly: newDocument.downloadOnly,
+        uploadedDocument: {
+          requireApproval: newDocument.requireApproval ?? false,
+        },
+        versions:
+          newDocument?.versions.map((version) => ({
+            id: version.id,
+            type: version.type,
+            versionNumber: version.versionNumber,
+            hasPages: version.hasPages,
+            isVertical: version.isVertical,
+            updatedAt: version.updatedAt,
+          })) || [],
+        canDownload: false,
+        canView: false,
+      };
+      setDocuments((prev) => [...(prev || []), transformedDocument]);
+      setUploadedDocumentsCount((prev) => prev + 1);
+    },
+    [folderId, documents.length],
+  );
+
   return (
     <>
       <DataroomNav
@@ -427,6 +471,19 @@ export default function DataroomViewer({
                   </Breadcrumb>
 
                   <div className="flex items-center gap-x-2">
+                    {typeof uploadedDocumentsCount === "number" &&
+                      uploadedDocumentsCount > 0 && (
+                        <div className="flex items-center gap-x-1 rounded-md bg-secondary px-2 py-1 text-xs text-secondary-foreground">
+                          <FileText className="h-3 w-3" />
+                          <span>
+                            {uploadedDocumentsCount}{" "}
+                            {uploadedDocumentsCount === 1
+                              ? "document "
+                              : "documents "}
+                            uploaded
+                          </span>
+                        </div>
+                      )}
                     <SearchBoxPersisted inputClassName="h-9" />
                     {enableIndexFile && viewId && viewerId && (
                       <IndexFileDialog
@@ -444,6 +501,7 @@ export default function DataroomViewer({
                         dataroomId={dataroom?.id}
                         viewerId={viewerId}
                         folderId={folderId ?? undefined}
+                        onUploadSuccess={handleUploadSuccess}
                       />
                     )}
                   </div>
