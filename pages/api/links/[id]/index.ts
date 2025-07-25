@@ -64,6 +64,7 @@ export default async function handle(
           groupId: true,
           permissionGroupId: true,
           audienceType: true,
+          allowListGroupId: true,
           dataroomId: true,
           teamId: true,
           team: {
@@ -150,6 +151,7 @@ export default async function handle(
       const returnLink = {
         ...link,
         ...linkData,
+        allowListGroupId: link.allowListGroupId,
         dataroomId: undefined,
         ...(teamPlan === "free" && {
           customFields: [], // reset custom fields for free plan
@@ -290,6 +292,7 @@ export default async function handle(
           allowDownload: linkData.allowDownload,
           allowList: linkData.allowList,
           denyList: linkData.denyList,
+          allowListGroupId: linkData.allowListGroupId || null,
           expiresAt: exat,
           domainId: domainObj?.id || null,
           domainSlug: domain || null,

@@ -1,7 +1,5 @@
 import { useRouter } from "next/router";
 
-
-
 import { FormEvent, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -137,6 +135,7 @@ export default function NewPreset() {
             : false,
           customFields: data.customFields,
           enableNotification: data.enableNotification,
+          allowListGroupId: data.allowListGroupId,
         }),
       });
 
