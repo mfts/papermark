@@ -75,8 +75,8 @@ function TrialBannerComponent({
         </AlertTitle>
         <AlertDescription>
           You are on the <span className="font-bold">Data Rooms</span> plan
-          trial, you have access to advanced access controls, group permissions,
-          and data room. <br />
+          trial, you have access to advanced access controls, granular file
+          permissions, and data room. <br />
           <UpgradePlanModal
             clickedPlan={PlanEnum.DataRooms}
             trigger={"trial_navbar"}

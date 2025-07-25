@@ -9,6 +9,10 @@ import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import { useBrand } from "@/lib/swr/use-brand";
+import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
+
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { NavMenu } from "@/components/navigation-menu";
@@ -23,10 +27,7 @@ import {
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-
-import { usePlan } from "@/lib/swr/use-billing";
-import { useBrand } from "@/lib/swr/use-brand";
-import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
+import { UpgradeButton } from "@/components/ui/upgrade-button";
 
 export default function Branding() {
   const teamInfo = useTeam();
@@ -411,13 +412,12 @@ export default function Branding() {
                   </CardContent>
                   <CardFooter className="border-t p-6">
                     {plan === "free" && !isTrial ? (
-                      <UpgradePlanModal
+                      <UpgradeButton
+                        text="Save Branding"
                         clickedPlan={PlanEnum.Pro}
-                        trigger={"branding_page"}
+                        trigger="branding_page"
                         highlightItem={["custom-branding"]}
-                      >
-                        <Button>Upgrade to Save Branding</Button>
-                      </UpgradePlanModal>
+                      />
                     ) : (
                       <Button onClick={saveBranding} loading={isLoading}>
                         Save changes
