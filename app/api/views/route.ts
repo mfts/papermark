@@ -98,6 +98,18 @@ export async function POST(request: NextRequest) {
         enableWatermark: true,
         watermarkConfig: true,
         teamId: true,
+        document: {
+          select: {
+            versions: {
+              where: {
+                id: documentVersionId,
+              },
+              select: {
+                file: true,
+              },
+            },
+          },
+        },
         team: {
           select: {
             plan: true,
@@ -498,24 +510,24 @@ export async function POST(request: NextRequest) {
             ...(link.enableAgreement &&
               link.agreementId &&
               hasConfirmedAgreement && {
-                agreementResponse: {
-                  create: {
-                    agreementId: link.agreementId,
-                  },
+              agreementResponse: {
+                create: {
+                  agreementId: link.agreementId,
                 },
-              }),
+              },
+            }),
             ...(customFields &&
               link.customFields.length > 0 && {
-                customFieldResponse: {
-                  create: {
-                    data: link.customFields.map((field) => ({
-                      identifier: field.identifier,
-                      label: field.label,
-                      response: customFields[field.identifier] || "",
-                    })),
-                  },
+              customFieldResponse: {
+                create: {
+                  data: link.customFields.map((field) => ({
+                    identifier: field.identifier,
+                    label: field.label,
+                    response: customFields[field.identifier] || "",
+                  })),
                 },
-              }),
+              },
+            }),
           },
           select: { id: true },
         });
@@ -590,6 +602,14 @@ export async function POST(request: NextRequest) {
           });
         }
 
+        if (documentVersion.type === "link") {
+          if (link.document?.versions && link.document.versions.length > 0) {
+            documentVersion.file = link.document.versions[0].file;
+          } else {
+            throw new Error("Link document version not found.");
+          }
+        }
+
         if (documentVersion.type === "sheet") {
           if (useAdvancedExcelViewer) {
             if (!documentVersion.file.includes("https://")) {
@@ -637,15 +657,16 @@ export async function POST(request: NextRequest) {
             (documentVersion.type === "pdf" ||
               documentVersion.type === "image" ||
               documentVersion.type === "zip" ||
-              documentVersion.type === "video")) ||
-          (documentVersion && useAdvancedExcelViewer)
+              documentVersion.type === "video" ||
+              documentVersion.type === "link")) ||
+            (documentVersion && useAdvancedExcelViewer)
             ? documentVersion.file
             : undefined,
         pages: documentPages ? documentPages : undefined,
         sheetData:
           documentVersion &&
-          documentVersion.type === "sheet" &&
-          !useAdvancedExcelViewer
+            documentVersion.type === "sheet" &&
+            !useAdvancedExcelViewer
             ? sheetData
             : undefined,
         fileType: documentVersion
@@ -658,10 +679,10 @@ export async function POST(request: NextRequest) {
           : undefined,
         ipAddress:
           link.enableWatermark &&
-          link.watermarkConfig &&
-          WatermarkConfigSchema.parse(link.watermarkConfig).text.includes(
-            "{{ipAddress}}",
-          )
+            link.watermarkConfig &&
+            WatermarkConfigSchema.parse(link.watermarkConfig).text.includes(
+              "{{ipAddress}}",
+            )
             ? process.env.VERCEL === "1"
               ? ipAddress(request)
               : LOCALHOST_IP

@@ -72,6 +72,7 @@ export function AddDocumentModal({
   const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
+  const [linkUrl, setLinkUrl] = useState<string | null>(null);
   const [showGroupPermissions, setShowGroupPermissions] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<
     {
@@ -503,9 +504,139 @@ export function AddDocumentModal({
     }
   };
 
+  const createLinkFileName = (url: string) => {
+    try {
+      const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
+      const domain = urlObj.hostname.replace("www.", "");
+      return `${domain} - Link`;
+    } catch {
+      return "External Link";
+    }
+  };
+
+  const handleLinkUpload = async (
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
+    event.preventDefault();
+
+    if (!canAddDocuments) {
+      toast.error("You have reached the maximum number of documents.");
+      return;
+    }
+    const isValidURL =
+      /^(https?:\/\/)?([a-zA-Z0-9-]+\.){1,}[a-zA-Z]{2,}([a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]+)?$/;
+    if (!linkUrl) {
+      toast.error("Please enter a link to proceed.");
+      return;
+    }
+    if (!isValidURL.test(linkUrl)) {
+      toast.error("Please enter a valid URL to proceed.");
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const finalUrl = linkUrl.startsWith("http")
+        ? linkUrl
+        : `https://${linkUrl}`;
+
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/documents`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: createLinkFileName(finalUrl),
+            url: finalUrl,
+            numPages: 1,
+            type: "link",
+            createLink: false,
+            folderPathName: currentFolderPath?.join("/"),
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const { error } = await response.json();
+        toast.error(error);
+        return;
+      }
+
+      const document = await response.json();
+
+      if (isDataroom && dataroomId) {
+        const dataroomResponse = await addDocumentToDataroom({
+          documentId: document.id,
+          folderPathName: currentFolderPath?.join("/"),
+        });
+
+        if (dataroomResponse?.ok) {
+          const dataroomDocument =
+            (await dataroomResponse.json()) as DataroomDocument & {
+              dataroom: {
+                _count: { viewerGroups: number; permissionGroups: number };
+              };
+            };
+
+          await applyUnifiedPermissionsToDocument(
+            document,
+            dataroomDocument,
+            currentFolderPath,
+          );
+        }
+
+        analytics.capture("Document Added", {
+          documentId: document.id,
+          name: document.name,
+          numPages: document.numPages,
+          path: router.asPath,
+          type: "link",
+          teamId: teamId,
+          dataroomId: dataroomId,
+          $set: {
+            teamId: teamId,
+            teamPlan: plan,
+          },
+        });
+
+        return;
+      }
+
+      if (!newVersion) {
+        toast.success("Link saved. Redirecting to document page...");
+
+        analytics.capture("Document Added", {
+          documentId: document.id,
+          name: document.name,
+          fileSize: null,
+          path: router.asPath,
+          type: "link",
+          teamId: teamId,
+          $set: {
+            teamId: teamId,
+            teamPlan: plan,
+          },
+        });
+
+        // redirect to the document page
+        router.push("/documents/" + document.id);
+      }
+    } catch (error) {
+      setUploading(false);
+      toast.error("An error occurred while saving the link.");
+      console.error("An error occurred while processing the link: ", error);
+    } finally {
+      setUploading(false);
+      setIsOpen(false);
+    }
+  };
+
   const clearModelStates = () => {
     currentFile !== null && setCurrentFile(null);
     notionLink !== null && setNotionLink(null);
+    linkUrl !== null && setLinkUrl(null);
     setIsOpen(!isOpen);
     setAddDocumentModalOpen && setAddDocumentModalOpen(!isOpen);
   };
@@ -545,9 +676,10 @@ export function AddDocumentModal({
           </DialogDescription>
           <Tabs defaultValue="document">
             {!newVersion ? (
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="document">Document</TabsTrigger>
                 <TabsTrigger value="notion">Notion Page</TabsTrigger>
+                <TabsTrigger value="link">Link</TabsTrigger>
               </TabsList>
             ) : (
               <TabsList className="grid w-full grid-cols-1">
@@ -672,6 +804,54 @@ export function AddDocumentModal({
                           loading={uploading}
                         >
                           {uploading ? "Saving..." : "Save Notion Link"}
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
+            {!newVersion && (
+              <TabsContent value="link">
+                <Card>
+                  <CardHeader className="space-y-3">
+                    <CardTitle>Share a Link</CardTitle>
+                    <CardDescription>
+                      Add an external link as a document.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <form
+                      encType="multipart/form-data"
+                      onSubmit={handleLinkUpload}
+                      className="flex flex-col"
+                    >
+                      <div className="space-y-1 pb-8">
+                        <Label htmlFor="external-link">External Link</Label>
+                        <div className="mt-2">
+                          <input
+                            type="url"
+                            name="external-link"
+                            id="external-link"
+                            placeholder="https://example.com"
+                            className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                            value={linkUrl || ""}
+                            onChange={(e) => setLinkUrl(e.target.value)}
+                          />
+                        </div>
+                        <small className="text-xs text-muted-foreground">
+                          The link name will be automatically generated from the
+                          URL.
+                        </small>
+                      </div>
+                      <div className="flex justify-center">
+                        <Button
+                          type="submit"
+                          className="w-full lg:w-1/2"
+                          disabled={uploading || !linkUrl}
+                          loading={uploading}
+                        >
+                          {uploading ? "Saving..." : "Save Link"}
                         </Button>
                       </div>
                     </form>

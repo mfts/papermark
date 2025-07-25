@@ -167,6 +167,26 @@ async function getDocumentViews(views: ViewWithExtras[], document: Document) {
   });
 }
 
+async function getLinkViews(views: ViewWithExtras[], document: Document) {
+  return views.map((view, index) => {
+    const relevantDocumentVersion = document.versions.find(
+      (version) => version.createdAt <= view.viewedAt,
+    );
+
+    const numPages =
+      relevantDocumentVersion?.numPages || document.numPages || 0;
+
+    return {
+      ...view,
+      duration: { data: [] },
+      totalDuration: 0,
+      completionRate: 100,
+      versionNumber: relevantDocumentVersion?.versionNumber || 1,
+      versionNumPages: numPages,
+    };
+  });
+}
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -296,6 +316,8 @@ export default async function handle(
           document,
           videoEvents,
         );
+      } else if (document.type === "link") {
+        viewsWithDuration = await getLinkViews(limitedViews, document);
       } else {
         viewsWithDuration = await getDocumentViews(limitedViews, document);
       }

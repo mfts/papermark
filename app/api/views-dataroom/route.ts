@@ -120,6 +120,18 @@ export async function POST(request: NextRequest) {
         allowDownload: true,
         enableConversation: true,
         teamId: true,
+        document: {
+          select: {
+            versions: {
+              where: {
+                id: documentVersionId,
+              },
+              select: {
+                file: true,
+              },
+            },
+          },
+        },
         team: {
           select: {
             plan: true,
@@ -821,6 +833,11 @@ export async function POST(request: NextRequest) {
             type: documentVersion.storageType,
           });
         }
+        if (documentVersion.type === "link") {
+          if (link.document && link.document.versions.length > 0) {
+            documentVersion.file = link.document.versions[0].file;
+          }
+        }
         if (documentVersion.type === "sheet") {
           const document = await prisma.document.findUnique({
             where: { id: documentId },
@@ -917,7 +934,8 @@ export async function POST(request: NextRequest) {
             (documentVersion.type === "pdf" ||
               documentVersion.type === "image" ||
               documentVersion.type === "zip" ||
-              documentVersion.type === "video")) ||
+              documentVersion.type === "video" ||
+              documentVersion.type === "link")) ||
           (documentVersion && useAdvancedExcelViewer)
             ? documentVersion.file
             : undefined,

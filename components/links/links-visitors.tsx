@@ -1,17 +1,20 @@
+import { useLinkVisits } from "@/lib/swr/use-link";
+import { durationFormat, timeAgo } from "@/lib/utils";
+
 import { Gauge } from "@/components/ui/gauge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { BadgeTooltip } from "@/components/ui/tooltip";
 import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
-
-import { useLinkVisits } from "@/lib/swr/use-link";
-import { durationFormat, timeAgo } from "@/lib/utils";
 
 export default function LinksVisitors({
   linkId,
   linkName,
+  isLink = false,
 }: {
   linkId: string;
   linkName: string;
+  isLink?: boolean;
 }) {
   const { views } = useLinkVisits(linkId);
 
@@ -36,9 +39,23 @@ export default function LinksVisitors({
             <TableCell>
               <div className="flex items-center space-x-2 md:space-x-4">
                 <div className="whitespace-nowrap text-sm text-muted-foreground">
-                  {durationFormat(view.totalDuration)}
+                  {isLink ? (
+                    <BadgeTooltip
+                      content={
+                        view.redirectAt
+                          ? "Link redirected at " +
+                            new Date(view.redirectAt).toLocaleString()
+                          : "Link not redirected"
+                      }
+                    >
+                      <span>
+                        {view.redirectAt ? timeAgo(view.redirectAt) : "-"}
+                      </span>
+                    </BadgeTooltip>
+                  ) : (
+                    durationFormat(view.totalDuration)
+                  )}
                 </div>
-
                 <div className="text-xs md:text-sm">
                   <Gauge
                     value={view.completionRate}

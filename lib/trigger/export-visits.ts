@@ -195,6 +195,7 @@ async function exportDocumentVisits(
       id: true,
       name: true,
       numPages: true,
+      type: true,
       versions: {
         orderBy: { createdAt: "desc" },
         select: {
@@ -288,77 +289,112 @@ async function exportDocumentVisits(
       viewedAt: view.viewedAt,
     });
 
-    // Rate-limited calls to tinybird
-    const [duration, userAgentData] = await Promise.all([
-      tinybirdLimiter.schedule(() =>
-        getViewPageDuration({
-          documentId: docId,
-          viewId: view.id,
-          since: 0,
-        }),
-      ),
-      tinybirdLimiter.schedule(async () => {
-        const result = await getViewUserAgent({
-          viewId: view.id,
-        });
+    let rowData;
+    let relevantDocumentVersion = document.versions[0];
 
-        if (!result || result.rows === 0) {
-          return getViewUserAgent_v2({
+    if (document.type === "link") {
+      rowData = [
+        view.viewedAt.toISOString(),
+        view.viewerName || "NaN",
+        view.viewerEmail || "NaN",
+        view.link?.name || "NaN",
+        "0.0",
+        "100.00%",
+        relevantDocumentVersion?.versionNumber ||
+        document.versions[0]?.versionNumber ||
+        "NaN",
+        view.downloadedAt ? view.downloadedAt.toISOString() : "NaN",
+        view.verified ? "Yes" : "No",
+        view.agreementResponse ? "Yes" : "NaN",
+        view.agreementResponse?.agreement.name || "NaN",
+        view.agreementResponse?.agreement.content || "NaN",
+        view.agreementResponse?.createdAt.toISOString() || "NaN",
+        view.dataroomId ? "Yes" : "No",
+        "NaN",
+        "NaN",
+        "NaN",
+      ];
+      if (!isProPlan) {
+        rowData.push(
+          "NaN", // country
+          "NaN", // city
+          view.customFieldResponse?.data
+            ? JSON.stringify(view.customFieldResponse.data)
+            : "NaN",
+        );
+      }
+    } else {
+      // Rate-limited calls to tinybird
+      const [duration, userAgentData] = await Promise.all([
+        tinybirdLimiter.schedule(() =>
+          getViewPageDuration({
             documentId: docId,
             viewId: view.id,
             since: 0,
+          }),
+        ),
+        tinybirdLimiter.schedule(async () => {
+          const result = await getViewUserAgent({
+            viewId: view.id,
           });
-        }
 
-        return result;
-      }),
-    ]);
+          if (!result || result.rows === 0) {
+            return getViewUserAgent_v2({
+              documentId: docId,
+              viewId: view.id,
+              since: 0,
+            });
+          }
 
-    const relevantDocumentVersion = document.versions.find(
-      (version) => version.createdAt <= view.viewedAt,
-    );
+          return result;
+        }),
+      ]);
 
-    const numPages =
-      relevantDocumentVersion?.numPages || document.numPages || 0;
-    const completionRate = numPages
-      ? (duration.data.length / numPages) * 100
-      : 0;
+      relevantDocumentVersion = document.versions.find(
+        (version) => version.createdAt <= view.viewedAt,
+      ) || document.versions[0];
 
-    const totalDuration = duration.data.reduce(
-      (total, data) => total + data.sum_duration,
-      0,
-    );
+      const numPages =
+        relevantDocumentVersion?.numPages || document.numPages || 0;
+      const completionRate = numPages
+        ? (duration.data.length / numPages) * 100
+        : 0;
 
-    const rowData = [
-      view.viewedAt.toISOString(),
-      view.viewerName || "NaN",
-      view.viewerEmail || "NaN",
-      view.link?.name || "NaN",
-      (totalDuration / 1000.0).toFixed(1),
-      completionRate.toFixed(2) + "%",
-      relevantDocumentVersion?.versionNumber ||
+      const totalDuration = duration.data.reduce(
+        (total, data) => total + data.sum_duration,
+        0,
+      );
+
+      rowData = [
+        view.viewedAt.toISOString(),
+        view.viewerName || "NaN",
+        view.viewerEmail || "NaN",
+        view.link?.name || "NaN",
+        (totalDuration / 1000.0).toFixed(1),
+        completionRate.toFixed(2) + "%",
+        relevantDocumentVersion?.versionNumber ||
         document.versions[0]?.versionNumber ||
         "NaN",
-      view.downloadedAt ? view.downloadedAt.toISOString() : "NaN",
-      view.verified ? "Yes" : "No",
-      view.agreementResponse ? "Yes" : "NaN",
-      view.agreementResponse?.agreement.name || "NaN",
-      view.agreementResponse?.agreement.content || "NaN",
-      view.agreementResponse?.createdAt.toISOString() || "NaN",
-      view.dataroomId ? "Yes" : "No",
-      userAgentData?.data[0]?.browser || "NaN",
-      userAgentData?.data[0]?.os || "NaN",
-      userAgentData?.data[0]?.device || "NaN",
-    ];
-
-    if (!isProPlan) {
-      rowData.push(
-        userAgentData?.data[0]?.country || "NaN",
-        userAgentData?.data[0]?.city || "NaN",
-        view.customFieldResponse?.data
-          ? JSON.stringify(view.customFieldResponse.data)
-          : "NaN",
-      );
+        view.downloadedAt ? view.downloadedAt.toISOString() : "NaN",
+        view.verified ? "Yes" : "No",
+        view.agreementResponse ? "Yes" : "NaN",
+        view.agreementResponse?.agreement.name || "NaN",
+        view.agreementResponse?.agreement.content || "NaN",
+        view.agreementResponse?.createdAt.toISOString() || "NaN",
+        view.dataroomId ? "Yes" : "No",
+        userAgentData?.data[0]?.browser || "NaN",
+        userAgentData?.data[0]?.os || "NaN",
+        userAgentData?.data[0]?.device || "NaN",
+      ];
+      if (!isProPlan) {
+        rowData.push(
+          userAgentData?.data[0]?.country || "NaN",
+          userAgentData?.data[0]?.city || "NaN",
+          view.customFieldResponse?.data
+            ? JSON.stringify(view.customFieldResponse.data)
+            : "NaN",
+        );
+      }
     }
 
     csvRows.push(createCsvRow(rowData));

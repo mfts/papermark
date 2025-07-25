@@ -12,6 +12,7 @@ import useLimits from "@/lib/swr/use-limits";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import DocumentHeader from "@/components/documents/document-header";
 import { DocumentPreviewButton } from "@/components/documents/document-preview-button";
+import LinkAnalytics from "@/components/documents/link-analytics";
 import { StatsComponent } from "@/components/documents/stats";
 import VideoAnalytics from "@/components/documents/video-analytics";
 import AppLayout from "@/components/layouts/app";
@@ -89,16 +90,25 @@ export default function DocumentPage() {
             />
 
             {/* Document Analytics */}
-            {primaryVersion.type !== "video" && (
-              <StatsComponent
-                documentId={prismaDocument.id}
-                numPages={primaryVersion.numPages!}
-              />
-            )}
+            {primaryVersion.type !== "video" &&
+              primaryVersion.type !== "link" && (
+                <StatsComponent
+                  documentId={prismaDocument.id}
+                  numPages={primaryVersion.numPages!}
+                />
+              )}
 
             {/* Video Analytics */}
             {primaryVersion.type === "video" && (
               <VideoAnalytics
+                documentId={prismaDocument.id}
+                primaryVersion={primaryVersion}
+                teamId={teamInfo?.currentTeam?.id!}
+              />
+            )}
+
+            {primaryVersion.type === "link" && (
+              <LinkAnalytics
                 documentId={prismaDocument.id}
                 primaryVersion={primaryVersion}
                 teamId={teamInfo?.currentTeam?.id!}
@@ -117,6 +127,7 @@ export default function DocumentPage() {
             <VisitorsTable
               primaryVersion={primaryVersion}
               isVideo={primaryVersion.type === "video"}
+              isLink={primaryVersion.type === "link"}
             />
 
             <LinkSheet
