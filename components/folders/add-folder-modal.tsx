@@ -142,6 +142,7 @@ export function AddFolderModal({
         <UpgradePlanModal
           clickedPlan={PlanEnum.Pro}
           trigger={"add_folder_button"}
+          highlightItem={["folder", "multi-file"]}
         >
           {children}
         </UpgradePlanModal>
