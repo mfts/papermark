@@ -27,6 +27,7 @@ model Dataroom {
 
   // notification settings
   enableChangeNotifications Boolean @default(false)
+  showLastUpdated Boolean @default(true)
 
   // unified permission strategy
   defaultPermissionStrategy DefaultPermissionStrategy @default(INHERIT_FROM_PARENT)

@@ -100,11 +100,12 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      const { name, enableChangeNotifications, defaultPermissionStrategy } =
+      const { name, enableChangeNotifications, defaultPermissionStrategy, showLastUpdated } =
         req.body as {
           name?: string;
           enableChangeNotifications?: boolean;
           defaultPermissionStrategy?: DefaultPermissionStrategy;
+          showLastUpdated?: boolean;
         };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
@@ -132,6 +133,7 @@ export default async function handle(
             enableChangeNotifications,
           }),
           ...(defaultPermissionStrategy && { defaultPermissionStrategy }),
+          ...(typeof showLastUpdated === "boolean" && { showLastUpdated }),
         },
       });
 
