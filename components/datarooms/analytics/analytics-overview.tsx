@@ -1,10 +1,9 @@
 import { useMemo } from "react";
-
-import { useDataroom } from "@/lib/swr/use-dataroom";
+import { useTeam } from "@/context/team-context";
 import { useDataroomDocumentStats } from "@/lib/swr/use-dataroom-document-stats";
 import { useDataroomStats } from "@/lib/swr/use-dataroom-stats";
-
 import StatsChart from "@/components/documents/stats-chart";
+import VideoAnalytics from "@/components/documents/video-analytics";
 import { Gauge } from "@/components/ui/gauge";
 
 interface DataroomAnalyticsOverviewProps {
@@ -24,6 +23,7 @@ export default function DataroomAnalyticsOverview({
   selectedDocument,
   setSelectedDocument,
 }: DataroomAnalyticsOverviewProps) {
+  const teamInfo = useTeam();
   const {
     stats: dataroomStats,
     loading: dataroomLoading,
@@ -96,6 +96,9 @@ export default function DataroomAnalyticsOverview({
       ? mostViewedDocument?.name
       : "Most viewed document");
 
+  const isVideo = documentStats?.documentType === "video";
+  const primaryVersion = documentStats?.documentVersions?.[0];
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-6">
@@ -103,17 +106,34 @@ export default function DataroomAnalyticsOverview({
           <h3 className="mb-4 text-lg font-medium">
             {displayName ? displayName : "Document Engagement"}
           </h3>
-          {documentStats && (
+          {documentStats &&
+          isVideo &&
+          primaryVersion &&
+          teamInfo?.currentTeam?.id ? (
+            <VideoAnalytics
+              documentId={documentId || ""}
+              primaryVersion={primaryVersion}
+              teamId={teamInfo.currentTeam.id}
+            />
+          ) : documentStats && documentStats.totalPagesMax > 0 ? (
             <StatsChart
               documentId={documentId || ""}
-              totalPagesMax={documentStats?.totalPagesMax || 0}
+              totalPagesMax={documentStats.totalPagesMax}
               statsData={{
                 stats: documentStats,
                 loading: false,
                 error: null,
               }}
             />
-          )}
+          ) : documentStats ? (
+            <div className="flex h-[200px] items-center justify-center rounded-lg border border-dashed">
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  No analytics data available for this document
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {/* INFO: hiding completion rate for now */}

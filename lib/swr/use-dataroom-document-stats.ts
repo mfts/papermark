@@ -3,11 +3,15 @@ import { useRouter } from "next/router";
 import { useTeam } from "@/context/team-context";
 import useSWR from "swr";
 
+import { DocumentVersion } from "@prisma/client";
+
 import { TStatsData } from "@/lib/swr/use-stats";
 import { fetcher } from "@/lib/utils";
 
 type TDataroomDocumentStats = TStatsData & {
   totalPagesMax: number;
+  documentType?: string;
+  documentVersions?: DocumentVersion[];
 };
 
 export function useDataroomDocumentStats(
