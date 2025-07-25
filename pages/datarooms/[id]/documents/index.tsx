@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { ArrowUpDownIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
 
+import { useDataroom, useDataroomItems } from "@/lib/swr/use-dataroom";
+
 import DownloadDataroomButton from "@/components/datarooms/actions/download-dataroom";
 import GenerateIndexButton from "@/components/datarooms/actions/generate-index-button";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
@@ -15,9 +17,8 @@ import { LoadingDocuments } from "@/components/documents/loading-document";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
+import { ResponsiveButton } from "@/components/ui/responsive-button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-
-import { useDataroom, useDataroomItems } from "@/lib/swr/use-dataroom";
 
 export default function Documents() {
   const { dataroom } = useDataroom();
@@ -69,29 +70,22 @@ export default function Documents() {
             </AddDocumentModal>
 
             <AddFolderModal isDataroom={true} dataroomId={dataroom?.id} key={2}>
-              <Button
+              <ResponsiveButton
+                icon={<FolderPlusIcon className="h-5 w-5 shrink-0" />}
+                text="Add Folder"
                 size="sm"
                 variant="outline"
-                className="group flex items-center justify-start gap-x-3 px-3 text-left"
-              >
-                <FolderPlusIcon
-                  className="h-5 w-5 shrink-0"
-                  aria-hidden="true"
-                />
-                <span>Add Folder</span>
-              </Button>
+              />
             </AddFolderModal>
             <div id="dataroom-reordering-action">
               {!isReordering ? (
-                <Button
+                <ResponsiveButton
+                  icon={<ArrowUpDownIcon className="h-4 w-4" />}
+                  text="Edit index"
                   size="sm"
                   variant="outline"
-                  className="gap-x-1"
                   onClick={() => setIsReordering(!isReordering)}
-                >
-                  <ArrowUpDownIcon className="h-4 w-4" />
-                  Edit index
-                </Button>
+                />
               ) : null}
             </div>
           </div>
