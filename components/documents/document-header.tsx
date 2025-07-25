@@ -65,6 +65,7 @@ import { ButtonTooltip } from "../ui/tooltip";
 import { AddDocumentModal } from "./add-document-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 import AlertBanner from "./alert";
+import { ExportVisitsModal } from "./export-visits-modal";
 
 export default function DocumentHeader({
   prismaDocument,
@@ -94,6 +95,7 @@ export default function DocumentHeader({
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const [planModalTrigger, setPlanModalTrigger] = useState<string>("");
   const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
+  const [exportModalOpen, setExportModalOpen] = useState<boolean>(false);
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -315,46 +317,12 @@ export default function DocumentHeader({
   };
 
   // export method to fetch the visits data and convert to csv.
-  const exportVisitCounts = async (document: Document) => {
+  const exportVisitCounts = (document: Document) => {
     if (isFree) {
       toast.error("This feature is not available for your plan");
       return;
     }
-    try {
-      const response = await fetch(
-        `/api/teams/${teamId}/documents/${document.id}/export-visits`,
-        { method: "GET" },
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-
-      // Create and download the CSV file
-      const blob = new Blob([data.visits], { type: "text/csv;charset=utf-8;" });
-      const url = window.URL.createObjectURL(blob);
-      const link = window.document.createElement("a");
-      link.href = url;
-      link.setAttribute(
-        "download",
-        `${data.documentName}_visits_${formattedTime}.csv`,
-      );
-      link.rel = "noopener noreferrer";
-      window.document.body.appendChild(link);
-      link.click();
-
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-        window.document.body.removeChild(link);
-      }, 100);
-
-      toast.success("CSV file downloaded successfully");
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error(
-        "An error occurred while downloading the CSV. Please try again.",
-      );
-    }
+    setExportModalOpen(true);
   };
 
   // Make a document download only or viewable
@@ -576,9 +544,9 @@ export default function DocumentHeader({
             (!orientationLoading ? (
               <ButtonTooltip content="Change orientation">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
-                  className="hidden md:flex"
+                  className="hidden size-8 sm:flex lg:size-9"
                   onClick={changeDocumentOrientation}
                   title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
                 >
@@ -604,13 +572,13 @@ export default function DocumentHeader({
             >
               <ButtonTooltip content="Upload new version">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
                     setOpenAddDocModal(true);
                   }}
-                  className="hidden md:flex"
+                  className="hidden size-8 md:flex lg:size-9"
                 >
                   <FileUp className="h-6 w-6" />
                 </Button>
@@ -640,7 +608,7 @@ export default function DocumentHeader({
             {actionRows.map((row, i) => (
               <ul
                 key={i.toString()}
-                className="flex flex-wrap items-center justify-end gap-2 md:flex-nowrap md:gap-4"
+                className="flex flex-wrap items-center justify-end gap-x-4 md:flex-nowrap md:gap-x-2"
               >
                 {row.map((action, i) => (
                   <li key={i}>{action}</li>
@@ -998,6 +966,14 @@ export default function DocumentHeader({
           setOpen={setPlanModalOpen}
         />
       ) : null}
+
+      {exportModalOpen && (
+        <ExportVisitsModal
+          document={prismaDocument}
+          teamId={teamId}
+          onClose={() => setExportModalOpen(false)}
+        />
+      )}
     </header>
   );
 }

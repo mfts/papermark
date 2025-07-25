@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { folderPathSchema } from "@/lib/zod/schemas/folders";
 
 export default async function handle(
   req: NextApiRequest,
@@ -20,6 +21,16 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
     const { teamId, name } = req.query as { teamId: string; name: string[] };
 
+    // Validate that name is an array of strings using shared Zod schema
+    const nameValidation = folderPathSchema.safeParse(name);
+    if (!nameValidation.success) {
+      return res.status(400).json({
+        error: "Invalid folder path format",
+        details: nameValidation.error.issues.map((issue) => issue.message),
+      });
+    }
+
+    const validatedName = nameValidation.data;
     let folderNames = [];
 
     try {
@@ -39,8 +50,8 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      for (let i = 0; i < name.length; i++) {
-        const path = "/" + name.slice(0, i + 1).join("/"); // construct the materialized path
+      for (let i = 0; i < validatedName.length; i++) {
+        const path = "/" + validatedName.slice(0, i + 1).join("/"); // construct the materialized path
 
         const folder = await prisma.folder.findUnique({
           where: {

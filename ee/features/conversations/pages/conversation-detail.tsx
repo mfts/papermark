@@ -8,6 +8,7 @@ import { Loader2, SearchIcon, Send, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
+import z from "zod";
 
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { CustomUser } from "@/lib/types";
@@ -86,6 +87,7 @@ export default function ConversationDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const { conversationId, id: dataroomId } = router.query;
   const teamId = router.query.teamId || dataroom?.teamId;
+
   const [searchQuery, setSearchQuery] = useState("");
 
   // SWR hook for fetching the conversation with messages
@@ -153,8 +155,11 @@ export default function ConversationDetailPage() {
     if (!dataroomId || !teamId) return;
 
     try {
+      const conversationIdParsed = z.string().cuid().parse(conversationId);
+      const dataroomIdParsed = z.string().cuid().parse(dataroomId);
+      const teamIdParsed = z.string().cuid().parse(teamId);
       const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/conversations/${conversationId}/read`,
+        `/api/teams/${teamIdParsed}/datarooms/${dataroomIdParsed}/conversations/${conversationIdParsed}/read`,
         {
           method: "POST",
           headers: {
@@ -167,9 +172,11 @@ export default function ConversationDetailPage() {
 
       // Revalidate both the conversation and the summaries
       mutate(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/conversations/${conversationId}`,
+        `/api/teams/${teamIdParsed}/datarooms/${dataroomIdParsed}/conversations/${conversationIdParsed}`,
       );
-      mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/conversations`);
+      mutate(
+        `/api/teams/${teamIdParsed}/datarooms/${dataroomIdParsed}/conversations`,
+      );
     } catch (error) {
       console.error("Error marking messages as read:", error);
     }
@@ -181,8 +188,11 @@ export default function ConversationDetailPage() {
 
     setIsDeleting(true);
     try {
+      const conversationIdParsed = z.string().cuid().parse(conversation.id);
+      const dataroomIdParsed = z.string().cuid().parse(dataroomId);
+      const teamIdParsed = z.string().cuid().parse(teamId);
       const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/conversations/${conversation.id}`,
+        `/api/teams/${teamIdParsed}/datarooms/${dataroomIdParsed}/conversations/${conversationIdParsed}`,
         {
           method: "DELETE",
         },
@@ -191,10 +201,12 @@ export default function ConversationDetailPage() {
       if (!response.ok) throw new Error("Failed to delete conversation");
 
       // Revalidate the summaries
-      mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/conversations`);
+      mutate(
+        `/api/teams/${teamIdParsed}/datarooms/${dataroomIdParsed}/conversations`,
+      );
 
       // Navigate back to conversations list
-      router.push(`/datarooms/${dataroomId}/conversations`);
+      router.push(`/datarooms/${dataroomIdParsed}/conversations`);
 
       toast.success("Conversation deleted successfully");
     } catch (error) {
@@ -212,8 +224,11 @@ export default function ConversationDetailPage() {
     if (!newMessage.trim() || !conversation || !dataroomId || !teamId) return;
 
     try {
+      const conversationIdParsed = z.string().cuid().parse(conversation.id);
+      const dataroomIdParsed = z.string().cuid().parse(dataroomId);
+      const teamIdParsed = z.string().cuid().parse(teamId);
       const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/conversations/${conversation.id}/messages`,
+        `/api/teams/${teamIdParsed}/datarooms/${dataroomIdParsed}/conversations/${conversationIdParsed}/messages`,
         {
           method: "POST",
           headers: {
@@ -229,9 +244,11 @@ export default function ConversationDetailPage() {
 
       // Revalidate both the conversation and the summaries
       mutate(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/conversations/${conversation.id}`,
+        `/api/teams/${teamIdParsed}/datarooms/${dataroomIdParsed}/conversations/${conversationIdParsed}`,
       );
-      mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/conversations`);
+      mutate(
+        `/api/teams/${teamIdParsed}/datarooms/${dataroomIdParsed}/conversations`,
+      );
 
       toast.success("Message sent");
     } catch (error) {
