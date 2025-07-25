@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { reportDeniedAccessAttempt } from "@/ee/features/access-notifications";
 import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { ItemType, LinkAudienceType } from "@prisma/client";
@@ -98,6 +99,8 @@ export async function POST(request: NextRequest) {
         id: linkId,
       },
       select: {
+        id: true,
+        name: true,
         documentId: true,
         dataroomId: true,
         emailProtected: true,
@@ -286,6 +289,8 @@ export async function POST(request: NextRequest) {
         );
       }
       if (globalBlockCheck.isBlocked) {
+        waitUntil(reportDeniedAccessAttempt(link, email, "global"));
+
         return NextResponse.json({ message: "Access denied" }, { status: 403 });
       }
 
@@ -298,6 +303,8 @@ export async function POST(request: NextRequest) {
 
         // Deny access if the email is not allowed
         if (!isAllowed) {
+          waitUntil(reportDeniedAccessAttempt(link, email, "allow"));
+
           return NextResponse.json(
             { message: "Unauthorized access" },
             { status: 403 },
@@ -314,6 +321,8 @@ export async function POST(request: NextRequest) {
 
         // Deny access if the email is denied
         if (isDenied) {
+          waitUntil(reportDeniedAccessAttempt(link, email, "deny"));
+
           return NextResponse.json(
             { message: "Unauthorized access" },
             { status: 403 },
@@ -356,6 +365,7 @@ export async function POST(request: NextRequest) {
             : false;
 
           if (!isMember && !hasDomainAccess) {
+            waitUntil(reportDeniedAccessAttempt(link, email, "allow"));
             return NextResponse.json(
               { message: "Unauthorized access" },
               { status: 403 },

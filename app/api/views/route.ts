@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { reportDeniedAccessAttempt } from "@/ee/features/access-notifications";
 import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 // Import authOptions directly from the source
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -19,7 +20,7 @@ import { parseSheet } from "@/lib/sheet";
 import { recordLinkView } from "@/lib/tracking/record-link-view";
 import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
-import { extractEmailDomain, isEmailMatched } from "@/lib/utils/email-domain";
+import { isEmailMatched } from "@/lib/utils/email-domain";
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
@@ -84,6 +85,9 @@ export async function POST(request: NextRequest) {
         id: linkId,
       },
       select: {
+        id: true,
+        name: true,
+        documentId: true,
         emailProtected: true,
         enableNotification: true,
         emailAuthenticated: true,
@@ -221,6 +225,8 @@ export async function POST(request: NextRequest) {
         );
       }
       if (globalBlockCheck.isBlocked) {
+        waitUntil(reportDeniedAccessAttempt(link, email, "global"));
+
         return NextResponse.json({ message: "Access denied" }, { status: 403 });
       }
 
@@ -233,6 +239,8 @@ export async function POST(request: NextRequest) {
 
         // Deny access if the email is not allowed
         if (!isAllowed) {
+          waitUntil(reportDeniedAccessAttempt(link, email, "allow"));
+
           return NextResponse.json(
             { message: "Unauthorized access" },
             { status: 403 },
@@ -249,6 +257,8 @@ export async function POST(request: NextRequest) {
 
         // Deny access if the email is denied
         if (isDenied) {
+          waitUntil(reportDeniedAccessAttempt(link, email, "deny"));
+
           return NextResponse.json(
             { message: "Unauthorized access" },
             { status: 403 },
