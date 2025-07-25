@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from "next";
-
 import { getServerSession } from "next-auth/next";
 
 import { LIMITS } from "@/lib/constants";
@@ -16,131 +15,127 @@ export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (req.method === "GET") {
-    // GET /api/links/:id/visits
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
+  if (req.method !== "GET") {
+    res.setHeader("Allow", ["GET"]);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+
+  const session = await getServerSession(req, res, authOptions);
+  if (!session) {
+    return res.status(401).end("Unauthorized");
+  }
+
+  const { id } = req.query as { id: string };
+  const userId = (session.user as CustomUser).id;
+
+  try {
+    const result = await prisma.link.findUnique({
+      where: { id },
+      select: {
+        document: {
+          select: {
+            id: true,
+            type: true,
+            numPages: true,
+            versions: {
+              where: { isPrimary: true },
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: { numPages: true },
+            },
+            team: {
+              select: {
+                id: true,
+                plan: true,
+                users: {
+                  select: {
+                    userId: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const document = result?.document;
+
+    if (!document) {
+      return res.status(404).json({ error: "Document not found" });
     }
 
-    // get link id from query params
-    const { id } = req.query as { id: string };
+    const docId = document.id;
 
-    const userId = (session.user as CustomUser).id;
-
-    try {
-      // get the numPages from document
-      const result = await prisma.link.findUnique({
-        where: {
-          id: id,
-        },
-        select: {
-          document: {
-            select: {
-              id: true,
-              numPages: true,
-              versions: {
-                where: { isPrimary: true },
-                orderBy: { createdAt: "desc" },
-                take: 1,
-                select: { numPages: true },
-              },
-              team: {
-                select: {
-                  id: true,
-                  plan: true,
-                },
-              },
+    // ✅ Ensure user belongs to the document’s team
+    await getDocumentWithTeamAndUser({
+      docId,
+      userId,
+      options: {
+        team: {
+          select: {
+            users: {
+              select: { userId: true },
             },
           },
         },
-      });
+      },
+    });
 
-      const docId = result?.document!.id!;
+    const numPages =
+      document.versions?.[0]?.numPages || document.numPages || 0;
 
-      // check if the the team that own the document has the current user
-      await getDocumentWithTeamAndUser({
-        docId,
-        userId,
-        options: {
-          team: {
-            select: {
-              users: {
-                select: {
-                  userId: true,
-                },
-              },
-            },
-          },
-        },
-      });
+    const views = await prisma.view.findMany({
+      where: { linkId: id },
+      orderBy: { viewedAt: "desc" },
+    });
 
-      const numPages =
-        result?.document?.versions[0]?.numPages ||
-        result?.document?.numPages ||
-        0;
+    const limitedViews =
+      document.team?.plan === "free" ? views.slice(0, LIMITS.views) : views;
 
-      const views = await prisma.view.findMany({
-        where: {
-          linkId: id,
-        },
-        orderBy: {
-          viewedAt: "desc",
-        },
-      });
+    const isLinkType = document.type === "link";
 
-      // limit the number of views to 20 on free plan
-      const limitedViews =
-        result?.document?.team?.plan === "free"
-          ? views.slice(0, LIMITS.views)
-          : views;
+    const viewsWithDuration = await Promise.all(
+      limitedViews.map(async (view) => {
+        if (isLinkType) {
+          return {
+            ...view,
+            duration: { data: [] },
+            totalDuration: 0,
+            completionRate: "100",
+          };
+        }
 
-      const durationsPromises = limitedViews.map((view) => {
-        return getViewPageDuration({
+        const duration = await getViewPageDuration({
           documentId: view.documentId!,
           viewId: view.id,
           since: 0,
         });
-      });
 
-      const durations = await Promise.all(durationsPromises);
-
-      // Sum up durations for each view
-      const summedDurations = durations.map((duration) => {
-        return duration.data.reduce(
-          (totalDuration, data) => totalDuration + data.sum_duration,
+        const totalDuration = duration.data.reduce(
+          (totalDuration, d) => totalDuration + d.sum_duration,
           0,
         );
-      });
 
-      // Construct the response combining views and their respective durations
-      const viewsWithDuration = limitedViews.map((view, index) => {
-        // calculate the completion rate
         const completionRate = numPages
-          ? (durations[index].data.length / numPages) * 100
-          : 0;
+          ? ((duration.data.length / numPages) * 100).toFixed()
+          : "0";
 
         return {
           ...view,
-          duration: durations[index],
-          totalDuration: summedDurations[index],
-          completionRate: completionRate.toFixed(),
+          duration,
+          totalDuration,
+          completionRate,
         };
-      });
+      }),
+    );
 
-      // TODO: Check that the user is owner of the links, otherwise return 401
-
-      return res.status(200).json(viewsWithDuration);
-    } catch (error) {
-      log({
-        message: `Failed to get views for link: _${id}_. \n\n ${error} \n\n*Metadata*: \`{userId: ${userId}}\``,
-        type: "error",
-      });
-      errorhandler(error, res);
-    }
-  } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(200).json(viewsWithDuration);
+  } catch (error) {
+    log({
+      message: `Failed to get views for link: _${id}_. \n\n ${error} \n\n*Metadata*: \`{userId: ${userId}}\``,
+      type: "error",
+    });
+    errorhandler(error, res);
   }
 }

@@ -109,10 +109,9 @@ model Team {
   updatedAt DateTime @updatedAt
   Tag       Tag[]
 
-  ignoredDomains String[] // Domains that are ignored for the team
+  ignoredDomains  String[] // Domains that are ignored for the team
   globalBlockList String[]
 }
-
 
 model Brand {
   id          String  @id @default(cuid())
@@ -283,6 +282,9 @@ model View {
   feedbackResponse    FeedbackResponse?
   agreementResponse   AgreementResponse?
   customFieldResponse CustomFieldResponse?
+
+  // link document specific fields
+  redirectAt DateTime?
 
   isArchived Boolean @default(false) // Indicates if the view is archived and not counted in the analytics
 

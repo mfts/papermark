@@ -537,10 +537,9 @@ export default function DocumentHeader({
         </div>
 
         <div className="flex items-center gap-x-4 md:gap-x-2">
-          {primaryVersion.type !== "notion" &&
-            primaryVersion.type !== "sheet" &&
-            primaryVersion.type !== "zip" &&
-            primaryVersion.type !== "video" &&
+          {!["link", "notion", "sheet", "zip", "video"].includes(
+            primaryVersion?.type ?? "",
+          ) &&
             (!orientationLoading ? (
               <ButtonTooltip content="Change orientation">
                 <Button
@@ -563,8 +562,7 @@ export default function DocumentHeader({
                 <LoadingSpinner className="h-6 w-6" />
               </div>
             ))}
-
-          {primaryVersion.type !== "notion" && (
+          {!["link", "notion"].includes(primaryVersion?.type ?? "") && (
             <AddDocumentModal
               newVersion
               openModal={openAddDocModal}
@@ -727,34 +725,33 @@ export default function DocumentHeader({
                 </DropdownMenuItem>
               )}
 
-              {primaryVersion.type !== "notion" &&
-                primaryVersion.type !== "zip" &&
-                primaryVersion.type !== "map" &&
-                primaryVersion.type !== "email" && (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      isFree
-                        ? handleUpgradeClick(
-                            PlanEnum.Business,
-                            "download-only-document",
-                          )
-                        : toggleDownloadOnly()
-                    }
-                  >
-                    {prismaDocument.downloadOnly ? (
-                      <>
-                        <ViewIcon className="mr-2 h-4 w-4" />
-                        Set viewable
-                      </>
-                    ) : (
-                      <>
-                        <CloudDownloadIcon className="mr-2 h-4 w-4" />
-                        Set download only{" "}
-                        {isFree && <PlanBadge className="ml-2" plan="pro" />}
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                )}
+              {!["notion", "zip", "map", "email", "link"].includes(
+                primaryVersion?.type ?? "",
+              ) && (
+                <DropdownMenuItem
+                  onClick={() =>
+                    isFree
+                      ? handleUpgradeClick(
+                          PlanEnum.Business,
+                          "download-only-document",
+                        )
+                      : toggleDownloadOnly()
+                  }
+                >
+                  {prismaDocument.downloadOnly ? (
+                    <>
+                      <ViewIcon className="mr-2 h-4 w-4" />
+                      Set viewable
+                    </>
+                  ) : (
+                    <>
+                      <CloudDownloadIcon className="mr-2 h-4 w-4" />
+                      Set download only{" "}
+                      {isFree && <PlanBadge className="ml-2" plan="pro" />}
+                    </>
+                  )}
+                </DropdownMenuItem>
+              )}
 
               {prismaDocument.type === "notion" && (
                 <>
@@ -792,15 +789,16 @@ export default function DocumentHeader({
               </DropdownMenuItem>
 
               {/* Download latest version */}
-              {primaryVersion.type !== "notion" &&
-                primaryVersion.type !== "video" && (
-                  <DropdownMenuItem
-                    onClick={() => downloadDocument(primaryVersion)}
-                  >
-                    <DownloadIcon className="mr-2 h-4 w-4" />
-                    Download latest version
-                  </DropdownMenuItem>
-                )}
+              {!["notion", "video", "link"].includes(
+                primaryVersion?.type ?? "",
+              ) && (
+                <DropdownMenuItem
+                  onClick={() => downloadDocument(primaryVersion)}
+                >
+                  <DownloadIcon className="mr-2 h-4 w-4" />
+                  Download latest version
+                </DropdownMenuItem>
+              )}
 
               <DropdownMenuSeparator />
 

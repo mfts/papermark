@@ -25,6 +25,7 @@ import { TNavData } from "./nav";
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "./viewer/download-only-viewer";
 import ImageViewer from "./viewer/image-viewer";
+import LinkViewer from "./viewer/link-viewer";
 import PagesHorizontalViewer from "./viewer/pages-horizontal-viewer";
 import PagesVerticalViewer from "./viewer/pages-vertical-viewer";
 import VideoViewer from "./viewer/video-viewer";
@@ -108,6 +109,15 @@ export default function ViewData({
       theme={notionData.theme}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
       navData={navData}
+    />
+  ) : viewData.fileType === "link" ? (
+    <LinkViewer
+      linkUrl={viewData.file!}
+      documentName={document.name}
+      versionNumber={document.versions[0].versionNumber}
+      navData={navData}
+      showPoweredByBanner={!!showPoweredByBanner}
+      screenshotProtectionEnabled={link.enableScreenshotProtection!}
     />
   ) : document.downloadOnly ? (
     <DownloadOnlyViewer

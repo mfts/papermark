@@ -896,6 +896,7 @@ export default function LinksTable({
                         <LinksVisitors
                           linkName={link.name || "No link name"}
                           linkId={link.id}
+                          isLink={targetType === "DOCUMENT" && primaryVersion?.type === "link"}
                         />
                       </CollapsibleContent>
                     </>

@@ -22,10 +22,15 @@ import {
   ChevronsUpDownIcon,
   Copy,
   Download,
-  Link2Icon,
+  LinkIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
+
+import { usePlan } from "@/lib/swr/use-billing";
+import { cn, timeAgo } from "@/lib/utils";
+import { fetcher } from "@/lib/utils";
+import { downloadCSV } from "@/lib/utils/csv";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -37,11 +42,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/visitors/data-table-pagination";
-
-import { usePlan } from "@/lib/swr/use-billing";
-import { cn, timeAgo } from "@/lib/utils";
-import { fetcher } from "@/lib/utils";
-import { downloadCSV } from "@/lib/utils/csv";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
@@ -315,7 +315,7 @@ export default function LinksTable({
       <div className="flex justify-end">
         <UpgradeOrExportButton />
       </div>
-      <div className="rounded-xl border overflow-x-auto">
+      <div className="overflow-x-auto rounded-xl border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -365,7 +365,7 @@ export default function LinksTable({
                   <div className="flex w-full flex-col items-center justify-center gap-4 rounded-xl py-4">
                     <div className="hidden rounded-full sm:block">
                       <div className="rounded-full border border-white bg-gradient-to-t from-gray-100 p-1 md:p-3">
-                        <Link2Icon className="size-6" />
+                        <LinkIcon className="size-6" />
                       </div>
                     </div>
                     <p>

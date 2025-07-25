@@ -64,9 +64,11 @@ import VisitorVideoChart from "./visitor-video-chart";
 export default function VisitorsTable({
   primaryVersion,
   isVideo = false,
+  isLink = false,
 }: {
   primaryVersion: DocumentVersion;
   isVideo?: boolean;
+  isLink?: boolean;
 }) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
@@ -138,7 +140,9 @@ export default function VisitorsTable({
           <TableHeader>
             <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
               <TableHead>Name</TableHead>
-              <TableHead>Visit Duration</TableHead>
+              <TableHead>
+                {isLink ? "Redirect Time" : "Visit Duration"}
+              </TableHead>
               <TableHead>Visit Completion</TableHead>
               <TableHead>Last Viewed</TableHead>
               <TableHead className="text-center sm:text-right"></TableHead>
@@ -336,7 +340,26 @@ export default function VisitorsTable({
                           {/* Duration */}
                           <TableCell className="">
                             <div className="text-sm text-muted-foreground">
-                              {durationFormat(view.totalDuration)}
+                              {isLink ? (
+                                <BadgeTooltip
+                                  content={
+                                    view.redirectAt
+                                      ? "Link redirected at " +
+                                        new Date(
+                                          view.redirectAt,
+                                        ).toLocaleString()
+                                      : "Link not redirected"
+                                  }
+                                >
+                                  <span>
+                                    {view.redirectAt
+                                      ? timeAgo(view.redirectAt)
+                                      : "-"}
+                                  </span>
+                                </BadgeTooltip>
+                              ) : (
+                                durationFormat(view.totalDuration)
+                              )}
                             </div>
                           </TableCell>
                           {/* Completion */}
