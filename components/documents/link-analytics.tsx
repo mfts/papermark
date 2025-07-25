@@ -41,7 +41,6 @@ export default function LinkAnalytics({
     `/api/teams/${teamId}/documents/${documentId}/link-analytics${excludeTeamMembers ? "?excludeTeamMembers=true" : ""}`,
     fetcher,
   );
-  console.log("data data", data);
 
   if (error) {
     console.error("Error loading link analytics:", error);

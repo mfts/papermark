@@ -193,7 +193,21 @@ export default function VisitorsTable({
                       {/* Duration */}
                       <TableCell className="">
                         <div className="text-sm text-muted-foreground">
-                          {durationFormat(view.totalDuration)}
+                          {isLink ? (
+                            <BadgeTooltip
+                              content={
+                                view.redirectAt
+                                  ? `Link redirected at ${new Date(view.redirectAt).toLocaleString()}`
+                                  : "Link not redirected"
+                              }
+                            >
+                              <span>
+                                {view.redirectAt ? timeAgo(view.redirectAt) : "-"}
+                              </span>
+                            </BadgeTooltip>
+                          ) : (
+                            durationFormat(view.totalDuration)
+                          )}
                         </div>
                       </TableCell>
                       {/* Completion */}
