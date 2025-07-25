@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { reportDeniedAccessAttempt } from "@/ee/features/access-notifications";
 import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 // Import authOptions directly from the source
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -24,7 +25,6 @@ import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { validateEmail } from "@/lib/utils/validate-email";
-import { notifyBlockedAttempt } from "../views-dataroom/route";
 
 export async function POST(request: NextRequest) {
   try {
@@ -225,11 +225,8 @@ export async function POST(request: NextRequest) {
         );
       }
       if (globalBlockCheck.isBlocked) {
-        try {
-          await notifyBlockedAttempt(link, email);
-        } catch (e) {
-          console.error(e);
-        }
+        waitUntil(reportDeniedAccessAttempt(link, email, "global"));
+
         return NextResponse.json({ message: "Access denied" }, { status: 403 });
       }
 
@@ -242,6 +239,8 @@ export async function POST(request: NextRequest) {
 
         // Deny access if the email is not allowed
         if (!isAllowed) {
+          waitUntil(reportDeniedAccessAttempt(link, email, "allow"));
+
           return NextResponse.json(
             { message: "Unauthorized access" },
             { status: 403 },
@@ -258,11 +257,8 @@ export async function POST(request: NextRequest) {
 
         // Deny access if the email is denied
         if (isDenied) {
-          try {
-            await notifyBlockedAttempt(link, email);
-          } catch (e) {
-            console.error(e);
-          }
+          waitUntil(reportDeniedAccessAttempt(link, email, "deny"));
+
           return NextResponse.json(
             { message: "Unauthorized access" },
             { status: 403 },
