@@ -8,7 +8,7 @@ export function useBreakpoint(breakpoint: number) {
     const mediaQuery = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
 
     const handleChange = () => {
-      const newIsSmaller = window.innerWidth < breakpoint;
+      const newIsSmaller = window.innerWidth <= breakpoint - 1;
       setIsSmaller((prevIsSmaller) => {
         // Only update state if the value actually changed
         if (prevIsSmaller !== newIsSmaller) {
@@ -25,10 +25,10 @@ export function useBreakpoint(breakpoint: number) {
     mediaQuery.addEventListener("change", handleChange);
 
     // Fallback resize listener with debouncing for edge cases
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: number;
     const debouncedResize = () => {
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleChange, 100); // 100ms debounce
+      timeoutId = window.setTimeout(handleChange, 100); // 100ms debounce
     };
 
     window.addEventListener("resize", debouncedResize);
