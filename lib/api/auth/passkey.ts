@@ -48,3 +48,65 @@ export async function finishServerPasskeyRegistration({
   //   select: { id: true },
   // });
 }
+
+export async function listUserPasskeys({ session }: { session: Session }) {
+  if (!session) throw new Error("Not logged in");
+
+  const sessionUser = session.user as CustomUser;
+
+  const user = await prisma.user.findUnique({
+    where: { email: sessionUser.email as string },
+    select: { id: true },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  const tenantId = process.env.NEXT_PUBLIC_HANKO_TENANT_ID!;
+  const apiKey = process.env.HANKO_API_KEY!;
+
+  const response = await fetch(
+    `https://passkeys.hanko.io/${tenantId}/credentials?user_id=${user.id}`,
+    {
+      method: "GET",
+      headers: {
+        apiKey: apiKey,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to list passkeys: ${response.statusText}`);
+  }
+
+  const passkeys = await response.json();
+  return passkeys;
+}
+
+export async function removeUserPasskey({
+  credentialId,
+  session,
+}: {
+  credentialId: string;
+  session: Session;
+}) {
+  if (!session) throw new Error("Not logged in");
+
+  const tenantId = process.env.NEXT_PUBLIC_HANKO_TENANT_ID!;
+  const apiKey = process.env.HANKO_API_KEY!;
+
+  const response = await fetch(
+    `https://passkeys.hanko.io/${tenantId}/credentials/${credentialId}`,
+    {
+      method: "DELETE",
+      headers: {
+        apiKey: apiKey,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to remove passkey: ${response.statusText}`);
+  }
+}
