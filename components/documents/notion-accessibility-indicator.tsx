@@ -123,7 +123,9 @@ export default function NotionAccessibilityIndicator({
 
   // Check accessibility on component mount
   useEffect(() => {
-    checkAccessibility();
+    if (primaryVersion.type === "notion") {
+      checkAccessibility();
+    }
   }, []);
 
   // Only render for Notion documents
