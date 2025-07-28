@@ -76,6 +76,12 @@ export default function DocumentPage() {
               prismaDocument={prismaDocument}
               teamId={teamInfo?.currentTeam?.id!}
               actions={[
+                <NotionAccessibilityIndicator
+                  key={"notion-status"}
+                  documentId={prismaDocument.id}
+                  primaryVersion={primaryVersion}
+                  onUrlUpdate={mutateDocument}
+                />,
                 <DocumentPreviewButton
                   key={"preview"}
                   documentId={prismaDocument.id}
@@ -88,15 +94,6 @@ export default function DocumentPage() {
                 <AddLinkButton key={"create-link"} />,
               ]}
             />
-
-            {/* Notion Accessibility Indicator */}
-            {primaryVersion.type === "notion" && (
-              <NotionAccessibilityIndicator
-                documentId={prismaDocument.id}
-                primaryVersion={primaryVersion}
-                onUrlUpdate={mutateDocument}
-              />
-            )}
 
             {/* Document Analytics */}
             {primaryVersion.type !== "video" && (

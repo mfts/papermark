@@ -608,7 +608,7 @@ export default function DocumentHeader({
             {actionRows.map((row, i) => (
               <ul
                 key={i.toString()}
-                className="flex flex-wrap items-center justify-end gap-x-4 md:flex-nowrap md:gap-x-2"
+                className="flex flex-wrap items-center justify-end gap-x-2 md:flex-nowrap md:gap-x-1"
               >
                 {row.map((action, i) => (
                   <li key={i}>{action}</li>

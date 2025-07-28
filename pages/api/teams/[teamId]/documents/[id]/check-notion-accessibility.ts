@@ -2,7 +2,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
+import { parsePageId } from "notion-utils";
 
+import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -66,19 +68,29 @@ export default async function handle(
     // Check if the Notion page is publicly accessible
     try {
       const notionUrl = documentVersion.file;
-      const response = await fetch(notionUrl, {
-        method: "HEAD",
-        headers: {
-          "User-Agent": "Papermark/1.0 (accessibility-check)",
-        },
-      });
-
-      const isAccessible = response.ok && response.status === 200;
-
+      const pageId = parsePageId(notionUrl, { uuid: false });
+      if (!pageId) {
+        return res.status(200).json({
+          isAccessible: false,
+          url: notionUrl,
+          error: "Notion page URL is not valid",
+          lastChecked: new Date().toISOString(),
+        });
+      }
+      try {
+        await notion.getPage(pageId);
+      } catch (error) {
+        console.error("Error checking Notion accessibility:", error);
+        return res.status(200).json({
+          isAccessible: false,
+          url: documentVersion.file,
+          lastChecked: new Date().toISOString(),
+        });
+      }
       return res.status(200).json({
-        isAccessible,
+        isAccessible: true,
         url: notionUrl,
-        statusCode: response.status,
+        statusCode: 200,
         lastChecked: new Date().toISOString(),
       });
     } catch (error) {

@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 
-import { DocumentVersion } from "@prisma/client";
-import { AlertCircle, CheckCircle, Edit, ExternalLink, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
-
 import { useTeam } from "@/context/team-context";
+import { DocumentVersion } from "@prisma/client";
+import {
+  AlertCircle,
+  CheckCircle,
+  CheckCircleIcon,
+  CircleCheckIcon,
+  CircleXIcon,
+  Edit,
+  ExternalLink,
+  RefreshCw,
+} from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import { ButtonTooltip } from "@/components/ui/tooltip";
 
 interface NotionAccessibilityIndicatorProps {
   documentId: string;
@@ -42,7 +51,8 @@ export default function NotionAccessibilityIndicator({
   const teamInfo = useTeam();
   const [status, setStatus] = useState<AccessibilityStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isMainDialogOpen, setIsMainDialogOpen] = useState(false);
+  const [isUrlDialogOpen, setIsUrlDialogOpen] = useState(false);
   const [newUrl, setNewUrl] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -60,7 +70,7 @@ export default function NotionAccessibilityIndicator({
         `/api/teams/${teamInfo.currentTeam.id}/documents/${documentId}/check-notion-accessibility`,
       );
       const data = await response.json();
-      
+
       if (response.ok) {
         setStatus(data);
       } else {
@@ -94,7 +104,7 @@ export default function NotionAccessibilityIndicator({
 
       if (response.ok) {
         toast.success("Notion URL updated successfully");
-        setIsDialogOpen(false);
+        setIsUrlDialogOpen(false);
         setNewUrl("");
         // Refresh accessibility status
         await checkAccessibility();
@@ -128,132 +138,169 @@ export default function NotionAccessibilityIndicator({
     if (isLoading) {
       return <LoadingSpinner className="h-4 w-4" />;
     }
-    
+
     if (status?.isAccessible) {
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
+      return (
+        <CircleCheckIcon className="h-4 w-4 rounded-full bg-green-500 text-white" />
+      );
     } else {
-      return <AlertCircle className="h-4 w-4 text-red-500" />;
+      return (
+        <CircleXIcon className="h-4 w-4 rounded-full bg-red-500 text-white" />
+      );
     }
   };
 
-  const getStatusText = () => {
+  const getTooltipText = () => {
     if (isLoading) {
       return "Checking accessibility...";
     }
-    
-    if (status?.isAccessible) {
-      return "Publicly accessible";
-    } else if (status?.error) {
-      return "Unable to check";
-    } else {
-      return "Not publicly accessible";
-    }
-  };
 
-  const getStatusColor = () => {
-    if (isLoading) {
-      return "text-gray-500";
-    }
-    
     if (status?.isAccessible) {
-      return "text-green-600";
+      return "Notion page is publicly accessible";
+    } else if (status?.error) {
+      return "Unable to check accessibility";
     } else {
-      return "text-red-600";
+      return "Notion page is not publicly accessible";
     }
   };
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border bg-white p-3 shadow-sm">
-      <div className="flex items-center gap-2">
-        {getStatusIcon()}
-        <span className={`text-sm font-medium ${getStatusColor()}`}>
-          {getStatusText()}
-        </span>
-      </div>
-
-      <div className="flex items-center gap-1 ml-auto">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={checkAccessibility}
-          disabled={isLoading}
-          className="h-7 px-2"
-        >
-          <RefreshCw className={`h-3 w-3 ${isLoading ? "animate-spin" : ""}`} />
-        </Button>
-
-        {status?.url && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={openNotionPage}
-            className="h-7 px-2"
-          >
-            <ExternalLink className="h-3 w-3" />
-          </Button>
-        )}
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <>
+      {/* Compact Icon Trigger */}
+      <Dialog open={isMainDialogOpen} onOpenChange={setIsMainDialogOpen}>
+        <ButtonTooltip content={getTooltipText()}>
           <DialogTrigger asChild>
             <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2"
-              onClick={() => setNewUrl(status?.url || "")}
+              variant="outline"
+              size="default"
+              className="h-8 w-8 p-0 lg:h-9 lg:w-9"
             >
-              <Edit className="h-3 w-3" />
+              {getStatusIcon()}
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Update Notion URL</DialogTitle>
-              <DialogDescription>
-                Change the URL of the Notion page for this document.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="notion-url">Notion URL</Label>
-                <Input
-                  id="notion-url"
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
-                  placeholder="https://www.notion.so/your-page-url"
-                  className="w-full"
-                />
+        </ButtonTooltip>
+
+        {/* Main Status Dialog */}
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Notion Page Status</DialogTitle>
+            <DialogDescription>
+              Check and manage your Notion page accessibility.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Status Display */}
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              {getStatusIcon()}
+              <div className="flex-1">
+                <div className="font-medium">
+                  {isLoading
+                    ? "Checking..."
+                    : status?.isAccessible
+                      ? "Publicly accessible"
+                      : status?.error
+                        ? "Unable to check"
+                        : "Not publicly accessible"}
+                </div>
+                {status?.lastChecked && (
+                  <div className="text-sm text-gray-500">
+                    Last checked:{" "}
+                    {new Date(status.lastChecked).toLocaleTimeString()}
+                  </div>
+                )}
               </div>
             </div>
-            <DialogFooter>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => setIsDialogOpen(false)}
-                disabled={isUpdating}
+                size="sm"
+                onClick={checkAccessibility}
+                disabled={isLoading}
+                className="flex-1"
               >
-                Cancel
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                />
+                Refresh
               </Button>
-              <Button
-                onClick={updateNotionUrl}
-                disabled={isUpdating || !newUrl.trim()}
-              >
-                {isUpdating ? (
-                  <>
-                    <LoadingSpinner className="mr-2 h-4 w-4" />
-                    Updating...
-                  </>
-                ) : (
-                  "Update URL"
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
 
-      {status?.lastChecked && (
-        <div className="text-xs text-gray-400 mt-1">
-          Last checked: {new Date(status.lastChecked).toLocaleTimeString()}
-        </div>
-      )}
-    </div>
+              {status?.url && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={openNotionPage}
+                  className="flex-1"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Open Page
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setNewUrl(status?.url || "");
+                  setIsUrlDialogOpen(true);
+                }}
+                className="flex-1"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit URL
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* URL Edit Dialog */}
+      <Dialog open={isUrlDialogOpen} onOpenChange={setIsUrlDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Notion URL</DialogTitle>
+            <DialogDescription>
+              Change the URL of the Notion page for this document.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="notion-url">Notion URL</Label>
+              <Input
+                id="notion-url"
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+                placeholder="https://www.notion.so/your-page-url"
+                className="w-full"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsUrlDialogOpen(false)}
+              disabled={isUpdating}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={updateNotionUrl}
+              disabled={isUpdating || !newUrl.trim()}
+            >
+              {isUpdating ? (
+                <>
+                  <LoadingSpinner className="mr-2 h-4 w-4" />
+                  Updating...
+                </>
+              ) : (
+                "Update URL"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
