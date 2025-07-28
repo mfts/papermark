@@ -117,8 +117,8 @@ export async function removeUserPasskey({
     throw new Error("Unauthorized");
   }
 
-  const tenantId = process.env.NEXT_PUBLIC_HANKO_TENANT_ID!;
-  const apiKey = process.env.HANKO_API_KEY!;
+  const tenantId = process.env.NEXT_PUBLIC_HANKO_TENANT_ID;
+  const apiKey = process.env.HANKO_API_KEY;
 
   if (!tenantId || !apiKey) {
     throw new Error("Passkey service configuration missing");
