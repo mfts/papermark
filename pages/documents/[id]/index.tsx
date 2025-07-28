@@ -12,6 +12,7 @@ import useLimits from "@/lib/swr/use-limits";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import DocumentHeader from "@/components/documents/document-header";
 import { DocumentPreviewButton } from "@/components/documents/document-preview-button";
+import NotionAccessibilityIndicator from "@/components/documents/notion-accessibility-indicator";
 import { StatsComponent } from "@/components/documents/stats";
 import VideoAnalytics from "@/components/documents/video-analytics";
 import AppLayout from "@/components/layouts/app";
@@ -87,6 +88,15 @@ export default function DocumentPage() {
                 <AddLinkButton key={"create-link"} />,
               ]}
             />
+
+            {/* Notion Accessibility Indicator */}
+            {primaryVersion.type === "notion" && (
+              <NotionAccessibilityIndicator
+                documentId={prismaDocument.id}
+                primaryVersion={primaryVersion}
+                onUrlUpdate={mutateDocument}
+              />
+            )}
 
             {/* Document Analytics */}
             {primaryVersion.type !== "video" && (
