@@ -12,12 +12,12 @@ import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
+
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
-
-import { useAnalytics } from "@/lib/analytics";
 
 function DeleteItemsModal({
   showDeleteItemsModal,
@@ -51,9 +51,6 @@ function DeleteItemsModal({
       setIsValid(false);
     }
   };
-  const parentFolderPath = folderPathName
-    ?.join("/")
-    ?.substring(0, folderPathName?.lastIndexOf("/"));
 
   async function deleteDocumentsAndFolders(
     documentIds: string[],
@@ -135,11 +132,12 @@ function DeleteItemsModal({
           `/api/teams/${teamInfo?.currentTeam?.id}/folders?root=true`,
         );
         await mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders`);
-        await mutate(
-          `/api/teams/${teamInfo?.currentTeam?.id}/folders${parentFolderPath}`,
-        );
-
         if (folderPathName && folderPathName.length > 0) {
+          await mutate(
+            `/api/teams/${
+              teamInfo?.currentTeam?.id
+            }/folders/${folderPathName.join("/")}`,
+          );
           await mutate(
             `/api/teams/${
               teamInfo?.currentTeam?.id
