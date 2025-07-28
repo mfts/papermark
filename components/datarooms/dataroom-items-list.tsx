@@ -46,6 +46,7 @@ import { DraggableItem } from "@/components/documents/drag-and-drop/draggable-it
 import { DroppableFolder } from "@/components/documents/drag-and-drop/droppable-folder";
 import { EmptyDocuments } from "@/components/documents/empty-document";
 import FolderCard from "@/components/documents/folder-card";
+import { SelectionDropdown } from "@/components/documents/selection-dropdown";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Portal } from "@/components/ui/portal";
@@ -56,6 +57,14 @@ import UploadZone, {
   UploadState,
 } from "@/components/upload-zone";
 
+
+import { DraggableItem } from "../documents/drag-and-drop/draggable-item";
+import { DroppableFolder } from "../documents/drag-and-drop/droppable-folder";
+import { Button } from "../ui/button";
+import { Portal } from "../ui/portal";
+import { ButtonTooltip } from "../ui/tooltip";
+import { useRemoveDataroomItemsModal } from "./actions/remove-document-modal";
+import DataroomDocumentCard from "./dataroom-document-card";
 import { itemsMessage } from "./folders/utils";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
@@ -437,10 +446,38 @@ export function DataroomItemsList({
       </Fragment>
     );
   };
+
   const resetSelection = () => {
     setSelectedDocuments([]);
     setSelectedFolders([]);
   };
+
+  const handleSelectOnlyFiles = useCallback(() => {
+    const allDocumentIds = mixedItems
+      .filter((item) => item.itemType === "document")
+      .map((doc) => doc.id);
+    setSelectedDocuments(allDocumentIds);
+    setSelectedFolders([]);
+  }, [mixedItems]);
+
+  const handleSelectOnlyFolders = useCallback(() => {
+    const allFolderIds = mixedItems
+      .filter((item) => item.itemType === "folder")
+      .map((folder) => folder.id);
+    setSelectedFolders(allFolderIds);
+    setSelectedDocuments([]);
+  }, [mixedItems]);
+
+  const selectAllItems = useCallback(() => {
+    const allDocumentIds = mixedItems
+      .filter((item) => item.itemType === "document")
+      .map((doc) => doc.id);
+    const allFolderIds = mixedItems
+      .filter((item) => item.itemType === "folder")
+      .map((folder) => folder.id);
+    setSelectedDocuments(allDocumentIds);
+    setSelectedFolders(allFolderIds);
+  }, [mixedItems]);
 
   const HeaderContent = memo(() => {
     if (selectedDocumentsLength > 0 || selectedFoldersLength > 0) {
@@ -452,31 +489,20 @@ export function DataroomItemsList({
         if (isAllSelected) {
           resetSelection();
         } else {
-          const allDocumentIds = mixedItems
-            .filter((item) => item.itemType === "document")
-            .map((doc) => doc.id);
-          const allFolderIds = mixedItems
-            .filter((item) => item.itemType === "folder")
-            .map((folder) => folder.id);
-          setSelectedDocuments(allDocumentIds);
-          setSelectedFolders(allFolderIds);
+          selectAllItems();
         }
       };
 
       return (
         <div className="mb-2 flex items-center gap-x-1 rounded-3xl bg-gray-100 text-sm text-foreground dark:bg-gray-800">
-          <div className="ml-5 flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-200 hover:dark:bg-gray-700">
-            <ButtonTooltip
-              content={isAllSelected ? "Deselect all" : "Select all"}
-            >
-              <Checkbox
-                id="select-all"
-                checked={isAllSelected}
-                onCheckedChange={handleSelectAll}
-                className="h-5 w-5"
-                aria-label={isAllSelected ? "Deselect all" : "Select all"}
-              />
-            </ButtonTooltip>
+          <div className="ml-5 flex h-8 w-14 items-center justify-center rounded-md transition-colors hover:bg-gray-200 hover:dark:bg-gray-700">
+            <SelectionDropdown
+              isAllSelected={isAllSelected}
+              onSelectAll={handleSelectAll}
+              onSelectOnlyFiles={handleSelectOnlyFiles}
+              onSelectOnlyFolders={handleSelectOnlyFolders}
+              onSelectNone={resetSelection}
+            />
           </div>
           <ButtonTooltip content="Clear selection">
             <Button
@@ -525,6 +551,17 @@ export function DataroomItemsList({
     } else {
       return (
         <div className="mb-2 flex min-h-10 items-center gap-x-2">
+          {folderCount > 0 || documentCount > 0 ? (
+            <div className="ml-5 flex h-8 w-14 items-center justify-center rounded-md transition-colors hover:bg-gray-200 hover:dark:bg-gray-700">
+              <SelectionDropdown
+                isAllSelected={false}
+                onSelectAll={selectAllItems}
+                onSelectOnlyFiles={handleSelectOnlyFiles}
+                onSelectOnlyFolders={handleSelectOnlyFolders}
+                onSelectNone={resetSelection}
+              />
+            </div>
+          ) : null}
           {folderCount > 0 ? (
             <p className="flex items-center gap-x-1 text-sm text-gray-400">
               <FolderIcon className="h-5 w-5" />
