@@ -61,9 +61,12 @@ export async function listUserPasskeys({ session }: { session: Session }) {
 
   if (!user) throw new Error("User not found");
 
-  const tenantId = process.env.NEXT_PUBLIC_HANKO_TENANT_ID!;
-  const apiKey = process.env.HANKO_API_KEY!;
+  const tenantId = process.env.NEXT_PUBLIC_HANKO_TENANT_ID;
+  const apiKey = process.env.HANKO_API_KEY;
 
+  if (!tenantId || !apiKey) {
+    throw new Error("Passkey service configuration missing");
+  }
   const response = await fetch(
     `https://passkeys.hanko.io/${tenantId}/credentials?user_id=${user.id}`,
     {
@@ -80,6 +83,11 @@ export async function listUserPasskeys({ session }: { session: Session }) {
   }
 
   const passkeys = await response.json();
+
+  if (!Array.isArray(passkeys)) {
+    throw new Error("Invalid passkey data received");
+  }
+
   return passkeys;
 }
 
@@ -92,8 +100,34 @@ export async function removeUserPasskey({
 }) {
   if (!session) throw new Error("Not logged in");
 
+  // First verify the credential belongs to the user
+  const sessionUser = session.user as CustomUser;
+  const user = await prisma.user.findUnique({
+    where: { email: sessionUser.email as string },
+    select: { id: true },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  // Verify ownership by listing user's passkeys first
+  const userPasskeys = await listUserPasskeys({ session });
+  const ownsCredential = userPasskeys.some((pk: any) => pk.id === credentialId);
+
+  if (!ownsCredential) {
+    throw new Error("Unauthorized");
+  }
+
   const tenantId = process.env.NEXT_PUBLIC_HANKO_TENANT_ID!;
   const apiKey = process.env.HANKO_API_KEY!;
+
+  if (!tenantId || !apiKey) {
+    throw new Error("Passkey service configuration missing");
+  }
+
+  const isValidCredentialId = /^[a-zA-Z0-9_-]+$/.test(credentialId);
+  if (!isValidCredentialId) {
+    throw new Error("Invalid credential ID format");
+  }
 
   const response = await fetch(
     `https://passkeys.hanko.io/${tenantId}/credentials/${credentialId}`,
