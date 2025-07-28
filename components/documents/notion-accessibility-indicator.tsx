@@ -3,9 +3,6 @@ import { useEffect, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { DocumentVersion } from "@prisma/client";
 import {
-  AlertCircle,
-  CheckCircle,
-  CheckCircleIcon,
   CircleCheckIcon,
   CircleXIcon,
   Edit,
@@ -55,11 +52,6 @@ export default function NotionAccessibilityIndicator({
   const [isUrlDialogOpen, setIsUrlDialogOpen] = useState(false);
   const [newUrl, setNewUrl] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
-
-  // Only render for Notion documents
-  if (primaryVersion.type !== "notion") {
-    return null;
-  }
 
   const checkAccessibility = async () => {
     if (!teamInfo?.currentTeam?.id) return;
@@ -133,6 +125,11 @@ export default function NotionAccessibilityIndicator({
   useEffect(() => {
     checkAccessibility();
   }, []);
+
+  // Only render for Notion documents
+  if (primaryVersion.type !== "notion") {
+    return null;
+  }
 
   const getStatusIcon = () => {
     if (isLoading) {
