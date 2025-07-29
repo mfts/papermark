@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useState } from "react";
 
 import { sendGTMEvent } from "@next/third-parties/google";
@@ -26,6 +26,7 @@ export default function Welcome() {
   const router = useRouter();
   const [showSkipButtons, setShowSkipButtons] = useState(false);
   const { data: session } = useSession();
+  const signupEventSent = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -35,15 +36,17 @@ export default function Welcome() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Track signup for new users when welcome page loads
+  // Track signup for new users when welcome page loads (with deduplication)
   useEffect(() => {
     const user = session?.user as CustomUser;
-    if (user?.createdAt) {
-      // Check if user was created within the last 30 seconds (indicating new signup)
-      const isNewUser = new Date(user.createdAt).getTime() > Date.now() - 30000;
+
+    if (user?.createdAt && !signupEventSent.current) {
+      // Check if user was created within the last 10 seconds (indicating new signup)
+      const isNewUser = new Date(user.createdAt).getTime() > Date.now() - 10000;
 
       if (isNewUser) {
         sendGTMEvent({ event: "signup" });
+        signupEventSent.current = true;
       }
     }
   }, [session]);

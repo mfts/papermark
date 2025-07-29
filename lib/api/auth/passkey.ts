@@ -20,7 +20,7 @@ export async function startServerPasskeyRegistration({
 
   const createOptions = await hanko.registration.initialize({
     userId: user!.id,
-    username: user!.name || "",
+    username: user!.name || user!.id,
   });
 
   return createOptions;
