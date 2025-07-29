@@ -158,7 +158,14 @@ export class RedisJobStore {
 
     for (const item of items) {
       try {
-        const parsed = JSON.parse(item as string);
+        let parsed;
+        // Check if data is already an object (Redis client auto-parsed)
+        if (typeof item === "object" && item !== null) {
+          parsed = item as { blobUrl: string; jobId: string; scheduledAt: string };
+        } else {
+          // Otherwise parse the JSON string
+          parsed = JSON.parse(item as string);
+        }
         blobs.push(parsed);
       } catch (error) {
         console.error("Error parsing cleanup item:", error);
