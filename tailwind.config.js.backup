@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-import scrollbarHide from "tailwind-scrollbar-hide";
+const scrollbarHide = require("tailwind-scrollbar-hide");
 
 module.exports = {
   darkMode: ["class"],
