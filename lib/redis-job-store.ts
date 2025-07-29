@@ -15,6 +15,7 @@ export interface ExportJob {
   error?: string;
   userId: string;
   teamId: string;
+  triggerRunId?: string; // Trigger.dev run ID for cancellation
   createdAt: string;
   updatedAt: string;
   completedAt?: string;

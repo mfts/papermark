@@ -67,7 +67,7 @@ export default async function handler(
       });
 
       // Trigger the background task
-      await exportVisitsTask.trigger(
+      const handle = await exportVisitsTask.trigger(
         {
           type,
           teamId,
@@ -86,9 +86,14 @@ export default async function handler(
         },
       );
 
+      // Update the job with the trigger run ID for cancellation
+      const updatedJob = await jobStore.updateJob(exportJob.id, {
+        triggerRunId: handle.id,
+      });
+
       return res.status(200).json({
-        exportId: exportJob.id,
-        status: exportJob.status,
+        exportId: updatedJob?.id || exportJob.id,
+        status: updatedJob?.status || exportJob.status,
         message: "Export job created successfully",
       });
     } catch (error) {
