@@ -4,6 +4,8 @@ import { Document } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
+import { Button } from "../ui/button";
+
 interface ExportStatus {
   status: string;
   progress?: string;
@@ -301,13 +303,15 @@ export function ExportVisitsModal({
 
           {/* Cancel button - only show if export is in progress */}
           {exportStatus?.exportId && (
-            <div className="flex gap-2">
-              <button
+            <div className="flex gap-2 px-3">
+              <Button
                 onClick={cancelExport}
-                className="flex-1 rounded-md border border-red-300 bg-white px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:border-red-600 dark:bg-gray-900 dark:text-red-400 dark:hover:bg-red-950"
+                variant="outline"
+                size="sm"
+                className="flex-1 rounded-md border border-red-300 bg-white px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 hover:text-red-800 dark:border-red-600 dark:bg-gray-900 dark:text-red-400 dark:hover:bg-red-950"
               >
                 Cancel Export
-              </button>
+              </Button>
             </div>
           )}
         </div>
