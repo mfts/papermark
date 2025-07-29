@@ -3,6 +3,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
+import { runs } from "@trigger.dev/sdk/v3";
+
 import { jobStore } from "@/lib/redis-job-store";
 import { CustomUser } from "@/lib/types";
 
@@ -88,7 +90,7 @@ export default async function handler(
       // Cancel the trigger run if we have the run ID
       if (exportJob.triggerRunId) {
         try {
-          const { runs } = await import("@trigger.dev/sdk/v3");
+          
           await runs.cancel(exportJob.triggerRunId);
         } catch (error) {
           console.error("Failed to cancel trigger run:", error);

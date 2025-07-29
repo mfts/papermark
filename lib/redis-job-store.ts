@@ -23,6 +23,12 @@ export interface ExportJob {
   emailAddress?: string;
 }
 
+export interface ExportJobCleanupItem {
+  blobUrl: string;
+  jobId: string;
+  scheduledAt: string;
+}
+
 const JOB_PREFIX = "export_job:";
 const USER_JOBS_PREFIX = "user_jobs:";
 const TEAM_JOBS_PREFIX = "team_jobs:";
@@ -141,7 +147,7 @@ export class RedisJobStore {
 
   async getBlobsForCleanup(
     beforeTimestamp?: number,
-  ): Promise<Array<{ blobUrl: string; jobId: string; scheduledAt: string }>> {
+  ): Promise<Array<ExportJobCleanupItem>> {
     const cleanupQueueKey = this.getCleanupQueueKey();
     const maxScore = beforeTimestamp || Date.now();
 
@@ -150,18 +156,14 @@ export class RedisJobStore {
       byScore: true,
     });
 
-    const blobs: Array<{
-      blobUrl: string;
-      jobId: string;
-      scheduledAt: string;
-    }> = [];
+    const blobs: Array<ExportJobCleanupItem> = [];
 
     for (const item of items) {
       try {
-        let parsed;
+        let parsed: ExportJobCleanupItem;
         // Check if data is already an object (Redis client auto-parsed)
         if (typeof item === "object" && item !== null) {
-          parsed = item as { blobUrl: string; jobId: string; scheduledAt: string };
+          parsed = item as ExportJobCleanupItem;
         } else {
           // Otherwise parse the JSON string
           parsed = JSON.parse(item as string);
