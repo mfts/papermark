@@ -1,6 +1,5 @@
 "use client";
 
-import { Metadata } from "next";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -145,9 +144,7 @@ export default function Login() {
                   signIn("google", {
                     ...(next && next.length > 0 ? { callbackUrl: next } : {}),
                   }).then((res) => {
-                    if (res?.status) {
-                      setClickedMethod(undefined);
-                    }
+                    setClickedMethod(undefined);
                   });
                 }}
                 loading={clickedMethod === "google"}
@@ -169,9 +166,7 @@ export default function Login() {
                   signIn("linkedin", {
                     ...(next && next.length > 0 ? { callbackUrl: next } : {}),
                   }).then((res) => {
-                    if (res?.status) {
-                      setClickedMethod(undefined);
-                    }
+                    setClickedMethod(undefined);
                   });
                 }}
                 loading={clickedMethod === "linkedin"}
@@ -192,6 +187,8 @@ export default function Login() {
                   setClickedMethod("passkey");
                   signInWithPasskey({
                     tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
+                  }).then(() => {
+                    setClickedMethod(undefined);
                   });
                 }}
                 variant="outline"
