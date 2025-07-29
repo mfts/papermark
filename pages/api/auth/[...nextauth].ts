@@ -70,7 +70,7 @@ export const authOptions: NextAuthOptions = {
           const mainDomainObj = new URL(mainDomainUrl);
           urlObj.hostname = mainDomainObj.hostname;
           urlObj.protocol = mainDomainObj.protocol;
-          urlObj.port = mainDomainObj.port || '';
+          urlObj.port = mainDomainObj.port || "";
 
           finalUrl = urlObj.toString();
         }

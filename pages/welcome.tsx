@@ -3,11 +3,15 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { useState } from "react";
 
+import { sendGTMEvent } from "@next/third-parties/google";
 import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
 import { AnimatePresence } from "motion/react";
+import { useSession } from "next-auth/react";
 
+import { CustomUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+import { GTMComponent } from "@/components/gtm-component";
 import { Button } from "@/components/ui/button";
 import Dataroom from "@/components/welcome/dataroom";
 import DataroomTrial from "@/components/welcome/dataroom-trial";
@@ -21,6 +25,7 @@ import Upload from "@/components/welcome/upload";
 export default function Welcome() {
   const router = useRouter();
   const [showSkipButtons, setShowSkipButtons] = useState(false);
+  const { data: session } = useSession();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -29,6 +34,19 @@ export default function Welcome() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Track signup for new users when welcome page loads
+  useEffect(() => {
+    const user = session?.user as CustomUser;
+    if (user?.createdAt) {
+      // Check if user was created within the last 30 seconds (indicating new signup)
+      const isNewUser = new Date(user.createdAt).getTime() > Date.now() - 30000;
+
+      if (isNewUser) {
+        sendGTMEvent({ event: "signup" });
+      }
+    }
+  }, [session]);
 
   const isDataroomUpload = router.query.type === "dataroom-upload";
 
@@ -41,50 +59,54 @@ export default function Welcome() {
       : "/documents";
 
   return (
-    <div className="mx-auto flex h-screen max-w-3xl flex-col items-center justify-center overflow-x-hidden">
-      <AnimatePresence mode="wait">
-        {router.query.type ? (
-          <>
-            <button
-              className="group absolute left-2 top-10 z-40 rounded-full p-2 transition-all hover:bg-gray-400 sm:left-10"
-              onClick={() => router.back()}
-            >
-              <ArrowLeftIcon className="h-8 w-8 text-gray-500 group-hover:text-gray-800 group-active:scale-90" />
-            </button>
+    <>
+      <GTMComponent />
+      <div className="mx-auto flex h-screen max-w-3xl flex-col items-center justify-center overflow-x-hidden">
+        <AnimatePresence mode="wait">
+          {router.query.type ? (
+            <>
+              <button
+                className="group absolute left-2 top-10 z-40 rounded-full p-2 transition-all hover:bg-gray-400 sm:left-10"
+                onClick={() => router.back()}
+              >
+                <ArrowLeftIcon className="h-8 w-8 text-gray-500 group-hover:text-gray-800 group-active:scale-90" />
+              </button>
 
-            <Button
-              variant={"link"}
-              onClick={() => router.push(skipButtonPath)}
-              className={cn(
-                "absolute right-2 top-10 z-40 p-2 text-muted-foreground sm:right-10",
-                showSkipButtons ? "block" : "hidden",
-              )}
-            >
-              {skipButtonText}
-            </Button>
-          </>
-        ) : (
-          <Intro key="intro" />
-        )}
-        {router.query.type === "next" && <Next key="next" />}
-        {router.query.type === "select" && <Select key="select" />}
-        {router.query.type === "pitchdeck" && <Upload key="pitchdeck" />}
-        {router.query.type === "document" && <Upload key="document" />}
-        {router.query.type === "sales-document" && (
-          <Upload key="sales-document" />
-        )}
-        {router.query.type === "notion" && <NotionForm key="notion" />}
-        {router.query.type === "dataroom" && <Dataroom key="dataroom" />}
-        {router.query.type === "dataroom-trial" && (
-          <DataroomTrial key="dataroom-trial" />
-        )}
-        {router.query.type === "dataroom-upload" && router.query.dataroomId && (
-          <DataroomUpload
-            key="dataroom-upload"
-            dataroomId={router.query.dataroomId as string}
-          />
-        )}
-      </AnimatePresence>
-    </div>
+              <Button
+                variant={"link"}
+                onClick={() => router.push(skipButtonPath)}
+                className={cn(
+                  "absolute right-2 top-10 z-40 p-2 text-muted-foreground sm:right-10",
+                  showSkipButtons ? "block" : "hidden",
+                )}
+              >
+                {skipButtonText}
+              </Button>
+            </>
+          ) : (
+            <Intro key="intro" />
+          )}
+          {router.query.type === "next" && <Next key="next" />}
+          {router.query.type === "select" && <Select key="select" />}
+          {router.query.type === "pitchdeck" && <Upload key="pitchdeck" />}
+          {router.query.type === "document" && <Upload key="document" />}
+          {router.query.type === "sales-document" && (
+            <Upload key="sales-document" />
+          )}
+          {router.query.type === "notion" && <NotionForm key="notion" />}
+          {router.query.type === "dataroom" && <Dataroom key="dataroom" />}
+          {router.query.type === "dataroom-trial" && (
+            <DataroomTrial key="dataroom-trial" />
+          )}
+          {router.query.type === "dataroom-upload" &&
+            router.query.dataroomId && (
+              <DataroomUpload
+                key="dataroom-upload"
+                dataroomId={router.query.dataroomId as string}
+              />
+            )}
+        </AnimatePresence>
+      </div>
+    </>
   );
 }
