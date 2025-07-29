@@ -254,6 +254,27 @@ export class RedisJobStore {
     );
   }
 
+  async getResourceJobs(
+    resourceId: string,
+    teamId: string,
+    type?: "document" | "dataroom" | "dataroom-group",
+    groupId?: string,
+    limit: number = 10,
+  ): Promise<ExportJob[]> {
+    const teamJobs = await this.getTeamJobs(teamId, limit * 2); // Get more to filter
+
+    // Filter jobs by resource and type
+    return teamJobs
+      .filter((job) => {
+        const matchesResource = job.resourceId === resourceId;
+        const matchesType = !type || job.type === type;
+        const matchesGroup = !groupId || job.groupId === groupId;
+        const matchStatus = job.status !== "FAILED";
+        return matchesResource && matchesType && matchesGroup && matchStatus;
+      })
+      .slice(0, limit);
+  }
+
   async getUserTeamJobs(
     userId: string,
     teamId: string,
