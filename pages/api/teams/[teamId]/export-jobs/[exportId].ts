@@ -3,6 +3,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
+import { runs } from "@trigger.dev/sdk/v3";
+
 import { jobStore } from "@/lib/redis-job-store";
 import { CustomUser } from "@/lib/types";
 
@@ -65,6 +67,53 @@ export default async function handler(
     }
   }
 
+  if (req.method === "PATCH") {
+    try {
+      // Get the job first to verify ownership
+      const exportJob = await jobStore.getJob(exportId);
+
+      if (
+        !exportJob ||
+        exportJob.teamId !== teamId ||
+        exportJob.userId !== userId
+      ) {
+        return res.status(404).json({ error: "Export job not found" });
+      }
+
+      // Check if job can be cancelled
+      if (!["PENDING", "PROCESSING"].includes(exportJob.status)) {
+        return res.status(400).json({ 
+          error: "Export job cannot be cancelled in current state" 
+        });
+      }
+
+      // Cancel the trigger run if we have the run ID
+      if (exportJob.triggerRunId) {
+        try {
+          
+          await runs.cancel(exportJob.triggerRunId);
+        } catch (error) {
+          console.error("Failed to cancel trigger run:", error);
+          // Continue with local cancellation even if trigger cancellation fails
+        }
+      }
+
+      // Update job status to cancelled
+      const updatedJob = await jobStore.updateJob(exportId, { 
+        status: "FAILED",
+        error: "Export cancelled by user"
+      });
+
+      return res.status(200).json({
+        message: "Export job cancelled successfully",
+        job: updatedJob
+      });
+    } catch (error) {
+      console.error("Error cancelling export job:", error);
+      return res.status(500).json({ error: "Failed to cancel export job" });
+    }
+  }
+
   if (req.method === "DELETE") {
     try {
       // Get the job first to verify ownership
@@ -90,6 +139,6 @@ export default async function handler(
     }
   }
 
-  res.setHeader("Allow", ["GET", "DELETE"]);
+  res.setHeader("Allow", ["GET", "PATCH", "DELETE"]);
   return res.status(405).end(`Method ${req.method} Not Allowed`);
 }

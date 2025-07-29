@@ -15,11 +15,18 @@ export interface ExportJob {
   error?: string;
   userId: string;
   teamId: string;
+  triggerRunId?: string; // Trigger.dev run ID for cancellation
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
   emailNotification?: boolean;
   emailAddress?: string;
+}
+
+export interface ExportJobCleanupItem {
+  blobUrl: string;
+  jobId: string;
+  scheduledAt: string;
 }
 
 const JOB_PREFIX = "export_job:";
@@ -140,7 +147,7 @@ export class RedisJobStore {
 
   async getBlobsForCleanup(
     beforeTimestamp?: number,
-  ): Promise<Array<{ blobUrl: string; jobId: string; scheduledAt: string }>> {
+  ): Promise<Array<ExportJobCleanupItem>> {
     const cleanupQueueKey = this.getCleanupQueueKey();
     const maxScore = beforeTimestamp || Date.now();
 
@@ -149,15 +156,18 @@ export class RedisJobStore {
       byScore: true,
     });
 
-    const blobs: Array<{
-      blobUrl: string;
-      jobId: string;
-      scheduledAt: string;
-    }> = [];
+    const blobs: Array<ExportJobCleanupItem> = [];
 
     for (const item of items) {
       try {
-        const parsed = JSON.parse(item as string);
+        let parsed: ExportJobCleanupItem;
+        // Check if data is already an object (Redis client auto-parsed)
+        if (typeof item === "object" && item !== null) {
+          parsed = item as ExportJobCleanupItem;
+        } else {
+          // Otherwise parse the JSON string
+          parsed = JSON.parse(item as string);
+        }
         blobs.push(parsed);
       } catch (error) {
         console.error("Error parsing cleanup item:", error);
@@ -242,6 +252,27 @@ export class RedisJobStore {
     return jobs.filter(
       (job: ExportJob | null): job is ExportJob => job !== null,
     );
+  }
+
+  async getResourceJobs(
+    resourceId: string,
+    teamId: string,
+    type?: "document" | "dataroom" | "dataroom-group",
+    groupId?: string,
+    limit: number = 10,
+  ): Promise<ExportJob[]> {
+    const teamJobs = await this.getTeamJobs(teamId, limit * 2); // Get more to filter
+
+    // Filter jobs by resource and type
+    return teamJobs
+      .filter((job) => {
+        const matchesResource = job.resourceId === resourceId;
+        const matchesType = !type || job.type === type;
+        const matchesGroup = !groupId || job.groupId === groupId;
+        const matchStatus = job.status !== "FAILED";
+        return matchesResource && matchesType && matchesGroup && matchStatus;
+      })
+      .slice(0, limit);
   }
 
   async getUserTeamJobs(
