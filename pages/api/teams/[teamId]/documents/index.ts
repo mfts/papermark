@@ -10,7 +10,7 @@ import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { log, serializeFileSize } from "@/lib/utils";
 import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 
 export const config = {
@@ -279,7 +279,9 @@ export default async function handle(
           contentType,
           fileSize,
           enableExcelAdvancedMode:
-            fileType === "sheet" && team.enableExcelAdvancedMode && supportsAdvancedExcelMode(contentType),
+            fileType === "sheet" &&
+            team.enableExcelAdvancedMode &&
+            supportsAdvancedExcelMode(contentType),
         },
         teamId,
         userId,
@@ -288,7 +290,7 @@ export default async function handle(
         folderPathName,
       });
 
-      return res.status(201).json(document);
+      return res.status(201).json(serializeFileSize(document));
     } catch (error) {
       log({
         message: `Failed to create document. \n\n*teamId*: _${teamId}_, \n\n*file*: ${fileUrl} \n\n ${error}`,
