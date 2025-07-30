@@ -197,7 +197,10 @@ export default async function handle(
               isVertical: version.isVertical,
               numPages: version.numPages,
               updatedAt: version.updatedAt,
-              fileSize: version.fileSize,
+              fileSize:
+                typeof version.fileSize === "bigint"
+                  ? Number(version.fileSize)
+                  : version.fileSize,
             })),
           },
         })),

@@ -783,3 +783,34 @@ export function safeTemplateReplace(
 
   return result;
 }
+
+/**
+ * Converts BigInt fileSize values to numbers for safe serialization
+ * Recursively processes objects and arrays, converting only fileSize fields
+ */
+export function serializeFileSize(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(serializeFileSize);
+  }
+
+  if (typeof obj === "object") {
+    const serialized: any = {};
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        if (key === "fileSize" && typeof obj[key] === "bigint") {
+          // Convert BigInt fileSize to number
+          serialized[key] = Number(obj[key]);
+        } else {
+          serialized[key] = serializeFileSize(obj[key]);
+        }
+      }
+    }
+    return serialized;
+  }
+
+  return obj;
+}

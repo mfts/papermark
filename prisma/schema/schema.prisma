@@ -575,7 +575,7 @@ model DocumentUpload {
 
   // Additional metadata
   originalFilename String?
-  fileSize         Int?
+  fileSize         BigInt?
   numPages         Int?
   mimeType         String?
   uploadedAt       DateTime @default(now())
