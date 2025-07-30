@@ -9,7 +9,7 @@ import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
-import { getExtension, log } from "@/lib/utils";
+import { getExtension, log, serializeFileSize } from "@/lib/utils";
 import { conversionQueue } from "@/lib/utils/trigger-utils";
 
 import { authOptions } from "../../../auth/[...nextauth]";
@@ -156,7 +156,7 @@ export default async function handle(
         );
       }
 
-      return res.status(201).json(document);
+      return res.status(201).json(serializeFileSize(document));
     } catch (error) {
       log({
         message: `Failed to create document. \n\n*teamId*: _${teamId}_, \n\n*file*: ${fileUrl} \n\n ${error}`,

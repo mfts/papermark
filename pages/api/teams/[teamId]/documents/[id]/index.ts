@@ -7,6 +7,7 @@ import { deleteFile } from "@/lib/files/delete-file-server";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
+import { serializeFileSize } from "@/lib/utils";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 
@@ -93,7 +94,9 @@ export default async function handle(
       //   return res.status(401).end("Unauthorized to access this document");
       // }
 
-      return res.status(200).json({ ...document, hasPageLinks });
+      return res
+        .status(200)
+        .json(serializeFileSize({ ...document, hasPageLinks }));
     } catch (error) {
       if (error instanceof TeamError) {
         return res.status(404).json({
