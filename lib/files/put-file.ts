@@ -12,13 +12,13 @@ import { SUPPORTED_DOCUMENT_MIME_TYPES } from "../constants";
 
 /**
  * Uploads a file to the configured storage backend (S3 or Vercel).
- * 
+ *
  * For S3 uploads:
  * - Files larger than 10MB automatically use multipart upload with pre-signed URLs
  * - Files are uploaded in 10MB chunks with parallel processing (batches of 3)
  * - Provides better performance and reliability for large files
  * - Falls back to single upload for smaller files or on multipart failure
- * 
+ *
  * @param file - The file to upload
  * @param teamId - The team ID for storage configuration
  * @param docId - Optional document ID (generated if not provided)
@@ -58,9 +58,9 @@ export const putFile = async ({
 };
 
 const putFileInVercel = async (file: File) => {
-  const url = await upload(file.name, file, {
+  const newBlob = await upload(file.name, file, {
     access: "public",
-    handleUploadUrl: "/api/file/vercel",
+    handleUploadUrl: "/api/file/browser-upload",
   });
 
   let numPages: number = 1;
@@ -72,7 +72,7 @@ const putFileInVercel = async (file: File) => {
 
   return {
     type: DocumentStorageType.VERCEL_BLOB,
-    data: url.url,
+    data: newBlob.url,
     numPages: numPages,
     fileSize: file.size,
   };
@@ -193,6 +193,11 @@ const putFileMultipart = async ({
   docId: string;
 }) => {
   try {
+    // Generate a new doc ID if not provided
+    if (!docId) {
+      docId = newId("doc");
+    }
+
     // Step 1: Initiate multipart upload
     const initiateResponse = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/s3/multipart`,
@@ -249,7 +254,13 @@ const putFileMultipart = async ({
     const { urls } = await partUrlsResponse.json();
 
     // Step 3: Upload parts in parallel (batches of 3)
-    const uploadPart = async ({ partNumber, url }: { partNumber: number; url: string }) => {
+    const uploadPart = async ({
+      partNumber,
+      url,
+    }: {
+      partNumber: number;
+      url: string;
+    }) => {
       const start = (partNumber - 1) * PART_SIZE;
       const end = Math.min(start + PART_SIZE, file.size);
       const chunk = file.slice(start, end);
@@ -274,15 +285,17 @@ const putFileMultipart = async ({
     };
 
     // Upload parts in batches to avoid overwhelming the connection
-    const batchSize = 3;
+    const batchSize = 5;
     const parts: Array<{ PartNumber: number; ETag: string }> = [];
-    
+
     for (let i = 0; i < urls.length; i += batchSize) {
       const batch = urls.slice(i, i + batchSize);
-      const batchResults = await Promise.all(
-        batch.map(uploadPart)
-      );
+      const batchResults = await Promise.all(batch.map(uploadPart));
       parts.push(...batchResults);
+
+      if (i + batchSize < urls.length) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
     }
 
     // Step 4: Complete multipart upload
