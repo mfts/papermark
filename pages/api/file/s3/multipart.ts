@@ -139,13 +139,40 @@ export default async function handler(
           },
         });
 
-        await client.send(completeCommand);
+        try {
+          await client.send(completeCommand);
 
-        return res.status(200).json({
-          success: true,
-          key,
-          fileName: slugifiedName,
-        });
+          return res.status(200).json({
+            success: true,
+            key,
+            fileName: slugifiedName,
+          });
+        } catch (completeError) {
+          console.error("Failed to complete multipart upload:", completeError);
+
+          // Cleanup: Abort the multipart upload to prevent storage costs
+          try {
+            const abortCommand = new AbortMultipartUploadCommand({
+              Bucket: config.bucket,
+              Key: key,
+              UploadId: uploadId,
+            });
+
+            await client.send(abortCommand);
+            console.log(`Successfully aborted multipart upload: ${uploadId}`);
+          } catch (abortError) {
+            console.error("Failed to abort multipart upload:", abortError);
+            // Log but don't fail the request - the upload already failed
+          }
+
+          return res.status(500).json({
+            error: "Failed to complete multipart upload",
+            details:
+              completeError instanceof Error
+                ? completeError.message
+                : "Unknown error",
+          });
+        }
       }
 
       default:
