@@ -3,10 +3,12 @@ import { upload } from "@vercel/blob/client";
 import { match } from "ts-pattern";
 
 import { newId } from "@/lib/id-helper";
-import {
-  getPagesCount,
-  getSheetsCount,
-} from "@/lib/utils/get-page-number-count";
+import { getPagesCount } from "@/lib/utils/get-page-number-count";
+import type {
+  MultipartCompleteRequest,
+  MultipartGetPartUrlsRequest,
+  MultipartInitiateRequest,
+} from "@/lib/zod/schemas/multipart";
 
 import { SUPPORTED_DOCUMENT_MIME_TYPES } from "../constants";
 
@@ -193,11 +195,6 @@ const putFileMultipart = async ({
   docId: string;
 }) => {
   try {
-    // Generate a new doc ID if not provided
-    if (!docId) {
-      docId = newId("doc");
-    }
-
     // Step 1: Initiate multipart upload
     const initiateResponse = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/s3/multipart`,
@@ -212,7 +209,7 @@ const putFileMultipart = async ({
           contentType: file.type,
           teamId: teamId,
           docId: docId,
-        }),
+        } satisfies MultipartInitiateRequest),
       },
     );
 
@@ -241,7 +238,7 @@ const putFileMultipart = async ({
           uploadId: uploadId,
           fileSize: file.size,
           partSize: PART_SIZE,
-        }),
+        } satisfies MultipartGetPartUrlsRequest),
       },
     );
 
@@ -310,7 +307,7 @@ const putFileMultipart = async ({
           docId: docId,
           uploadId: uploadId,
           parts: parts,
-        }),
+        } satisfies MultipartCompleteRequest),
       },
     );
 

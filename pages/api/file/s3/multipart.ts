@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import {
+  AbortMultipartUploadCommand,
   CompleteMultipartUploadCommand,
   CreateMultipartUploadCommand,
   UploadPartCommand,
@@ -14,6 +15,7 @@ import { ONE_HOUR, ONE_SECOND } from "@/lib/constants";
 import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { MultipartUploadSchema } from "@/lib/zod/schemas/multipart";
 
 import { authOptions } from "../../auth/[...nextauth]";
 
@@ -31,27 +33,21 @@ export default async function handler(
   }
 
   try {
-    const {
-      action,
-      fileName,
-      contentType,
-      teamId,
-      docId,
-      uploadId,
-      fileSize,
-      partSize = 10 * 1024 * 1024, // Default 10MB chunks
-      parts,
-    } = req.body as {
-      action: "initiate" | "get-part-urls" | "complete";
-      fileName: string;
-      contentType: string;
-      teamId: string;
-      docId: string;
-      uploadId?: string;
-      fileSize?: number;
-      partSize?: number;
-      parts?: Array<{ ETag: string; PartNumber: number }>;
-    };
+    // Validate request body with Zod
+    const validationResult = MultipartUploadSchema.safeParse(req.body);
+
+    if (!validationResult.success) {
+      return res.status(400).json({
+        error: "Invalid request body",
+        details: validationResult.error.issues.map((issue) => ({
+          path: issue.path.join("."),
+          message: issue.message,
+        })),
+      });
+    }
+
+    const data = validationResult.data;
+    const { action, fileName, contentType, teamId, docId } = data;
 
     // Verify team access
     const team = await prisma.team.findUnique({
@@ -98,11 +94,11 @@ export default async function handler(
 
       case "get-part-urls": {
         // Step 2: Generate pre-signed URLs for each part
-        if (!uploadId || !fileSize) {
-          return res.status(400).json({
-            error: "uploadId and fileSize are required for get-part-urls action",
-          });
+        if (data.action !== "get-part-urls") {
+          return res.status(400).json({ error: "Invalid action" });
         }
+
+        const { uploadId, fileSize, partSize } = data;
 
         const numParts = Math.ceil(fileSize / partSize);
         const urls = await Promise.all(
@@ -128,11 +124,11 @@ export default async function handler(
 
       case "complete": {
         // Step 3: Complete multipart upload
-        if (!uploadId || !parts) {
-          return res.status(400).json({
-            error: "uploadId and parts are required for complete action",
-          });
+        if (data.action !== "complete") {
+          return res.status(400).json({ error: "Invalid action" });
         }
+
+        const { uploadId, parts } = data;
 
         const completeCommand = new CompleteMultipartUploadCommand({
           Bucket: config.bucket,
