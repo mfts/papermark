@@ -292,10 +292,6 @@ const putFileMultipart = async ({
       const batch = urls.slice(i, i + batchSize);
       const batchResults = await Promise.all(batch.map(uploadPart));
       parts.push(...batchResults);
-
-      if (i + batchSize < urls.length) {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
     }
 
     // Step 4: Complete multipart upload
