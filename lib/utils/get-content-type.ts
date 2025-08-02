@@ -11,6 +11,9 @@ export function getSupportedContentType(contentType: string): string | null {
     case "application/msword":
     case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
     case "application/vnd.oasis.opendocument.text":
+    case "application/rtf":
+    case "text/rtf":
+    case "text/plain":
       return "docs";
     case "application/vnd.ms-powerpoint":
     case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
@@ -70,6 +73,11 @@ export function getExtensionFromContentType(
       return "ppt";
     case "application/msword":
       return "doc";
+    case "application/rtf":
+    case "text/rtf":
+      return "rtf";
+    case "text/plain":
+      return "txt";
     case "image/vnd.dwg":
       return "dwg";
     case "image/vnd.dxf":
@@ -101,12 +109,15 @@ export function getExtensionFromContentType(
   }
 }
 
-export function supportsAdvancedExcelMode(contentType: string | null | undefined): boolean {
+export function supportsAdvancedExcelMode(
+  contentType: string | null | undefined,
+): boolean {
   if (!contentType) return false;
 
   return (
     contentType === "application/vnd.ms-excel" || // .xls
-    contentType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || // .xlsx
+    contentType ===
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || // .xlsx
     contentType === "application/vnd.ms-excel.sheet.macroEnabled.12" // .xlsm
   );
 }

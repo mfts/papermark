@@ -4,6 +4,7 @@ import { DocumentStorageType } from "@prisma/client";
 import { FileRejection, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
+import { VIEWER_ACCEPTED_FILE_TYPES } from "@/lib/constants";
 import { DocumentData } from "@/lib/documents/create-document";
 import { viewerUpload } from "@/lib/files/viewer-tus-upload";
 import { cn } from "@/lib/utils";
@@ -11,16 +12,7 @@ import { getSupportedContentType } from "@/lib/utils/get-content-type";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
 // File types allowed for viewer uploads
-const acceptableViewerFileTypes = {
-  "application/pdf": [], // ".pdf"
-  "application/vnd.ms-excel": [], // ".xls"
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
-  "text/csv": [], // ".csv"
-  "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
-  "image/jpeg": [], // ".jpg"
-  "image/png": [], // ".png"
-  "image/jpg": [], // ".jpg"
-};
+const acceptableViewerFileTypes = VIEWER_ACCEPTED_FILE_TYPES;
 
 export default function ViewerUploadZone({
   children,
