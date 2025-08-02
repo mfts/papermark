@@ -1,5 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { runs } from "@trigger.dev/sdk/v3";
+import { waitUntil } from "@vercel/functions";
+
 import prisma from "@/lib/prisma";
 
 import {
@@ -8,6 +11,7 @@ import {
 } from "../lib/api/conversations";
 import { messageService } from "../lib/api/messages";
 import { notificationService } from "../lib/api/notifications";
+import { sendConversationTeamMemberNotificationTask } from "../lib/trigger/conversation-message-notification";
 
 // Route mapping object to handle different paths
 const routeHandlers = {
@@ -117,6 +121,38 @@ const routeHandlers = {
       data,
     });
 
+    // Get all delayed and queued runs for this dataroom
+    const allRuns = await runs.list({
+      taskIdentifier: ["send-conversation-team-member-notification"],
+      tag: [`conversation_${conversation.id}`],
+      status: ["DELAYED", "QUEUED"],
+      period: "5m",
+    });
+
+    // Cancel any existing unsent notification runs for this dataroom
+    await Promise.all(allRuns.data.map((run) => runs.cancel(run.id)));
+
+    waitUntil(
+      sendConversationTeamMemberNotificationTask.trigger(
+        {
+          dataroomId,
+          messageId: conversation.messages[0].id,
+          conversationId: conversation.id,
+          senderUserId: viewerId,
+          teamId: team.id,
+        },
+        {
+          idempotencyKey: `conversation-notification-${team.id}-${dataroomId}-${conversation.id}-${conversation.messages[0].id}`,
+          tags: [
+            `team_${team.id}`,
+            `dataroom_${dataroomId}`,
+            `conversation_${conversation.id}`,
+          ],
+          delay: new Date(Date.now() + 5 * 60 * 1000), // 5 minute delay
+        },
+      ),
+    );
+
     return res.status(201).json(conversation);
   },
 
@@ -125,7 +161,7 @@ const routeHandlers = {
     const { content, viewId, viewerId, conversationId } = req.body as {
       content: string;
       viewId: string;
-      viewerId?: string;
+      viewerId: string;
       conversationId: string;
     };
 
@@ -140,6 +176,38 @@ const routeHandlers = {
       viewId,
       viewerId,
     });
+
+    // Get all delayed and queued runs for this dataroom
+    const allRuns = await runs.list({
+      taskIdentifier: ["send-conversation-team-member-notification"],
+      tag: [`conversation_${message.conversationId}`],
+      status: ["DELAYED", "QUEUED"],
+      period: "5m",
+    });
+
+    // Cancel any existing unsent notification runs for this dataroom
+    await Promise.all(allRuns.data.map((run) => runs.cancel(run.id)));
+
+    waitUntil(
+      sendConversationTeamMemberNotificationTask.trigger(
+        {
+          dataroomId: message.conversation.dataroomId,
+          messageId: message.id,
+          conversationId: message.conversationId,
+          senderUserId: viewerId,
+          teamId: message.conversation.teamId,
+        },
+        {
+          idempotencyKey: `conversation-notification-${message.conversation.teamId}-${message.conversation.dataroomId}-${message.conversationId}-${message.id}`,
+          tags: [
+            `team_${message.conversation.teamId}`,
+            `dataroom_${message.conversation.dataroomId}`,
+            `conversation_${message.conversationId}`,
+          ],
+          delay: new Date(Date.now() + 5 * 60 * 1000), // 5 minute delay
+        },
+      ),
+    );
 
     return res.status(201).json(message);
   },
