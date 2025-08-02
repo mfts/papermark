@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { ConversationMessage } from "@/ee/features/conversations/components/conversation-message";
+import { ConversationDocumentContext } from "@/ee/features/conversations/components/shared/conversation-document-context";
+import { ConversationMessage } from "@/ee/features/conversations/components/shared/conversation-message";
 import { format } from "date-fns";
 import { ArrowLeftIcon, BellIcon, BellOffIcon, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ interface Conversation {
   userId: string | null;
   viewerId: string | null;
   documentPageNumber: number | null;
+  documentVersionNumber: number | null;
   dataroomDocument?: {
     document: {
       name: string;
@@ -218,19 +220,20 @@ export function ConversationViewSidebar({
                     {/* Conversation Header */}
                     <div className="border-b p-4">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center">
+                        <div className="flex min-w-0 flex-1 items-center">
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => setActiveConversation(null)}
-                            className="-ml-2 mr-2"
+                            className="-ml-2 mr-2 shrink-0"
                           >
                             <ArrowLeftIcon className="h-5 w-5" />
                           </Button>
-                          <h3 className="truncate font-medium">
-                            {activeConversation.title ||
-                              "Untitled conversation"}
-                          </h3>
+                          <div className="min-w-0">
+                            <h3 className="truncate font-medium">
+                              {activeConversation.title || "Conversation"}
+                            </h3>
+                          </div>
                         </div>
                         <Button
                           variant={
@@ -297,6 +300,18 @@ export function ConversationViewSidebar({
                     {/* Messages */}
                     <ScrollArea className="flex-1">
                       <div className="flex flex-col gap-2 p-4">
+                        {/* Document Context */}
+                        <ConversationDocumentContext
+                          dataroomDocument={activeConversation.dataroomDocument}
+                          documentPageNumber={
+                            activeConversation.documentPageNumber
+                          }
+                          documentVersionNumber={
+                            activeConversation.documentVersionNumber
+                          }
+                          showVersionNumber={false} // Viewers see simplified context
+                          className="mb-2"
+                        />
                         {activeConversation.messages?.map((message) => (
                           <ConversationMessage
                             key={message.id}
