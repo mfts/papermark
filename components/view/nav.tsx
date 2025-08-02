@@ -422,6 +422,7 @@ export default function Nav({
         <ConversationSidebar
           dataroomId={dataroomId}
           documentId={documentId}
+          pageNumber={pageNumber}
           viewId={viewId || ""}
           viewerId={viewerId}
           linkId={linkId!}

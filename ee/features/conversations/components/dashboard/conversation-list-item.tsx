@@ -8,26 +8,29 @@ export function ConversationListItem({
   navigateToConversation,
   conversation,
   isActive,
+  showVersionNumber = false,
 }: {
   navigateToConversation: (id: string) => void;
   conversation: any;
   isActive: boolean;
+  showVersionNumber?: boolean;
 }) {
   // Helper function to format document reference
   const formatDocumentReference = () => {
-    if (!conversation.dataroomDocument) return "Untitled conversation";
-    
-    const documentName = conversation.dataroomDocument.document.name;
+    if (!conversation.dataroomDocumentName) return "Untitled conversation";
+
+    const documentName = conversation.dataroomDocumentName;
     const parts = [];
-    
+
     if (conversation.documentPageNumber) {
       parts.push(`Page ${conversation.documentPageNumber}`);
     }
-    
-    if (conversation.documentVersionNumber) {
+
+    // Only show version number if showVersionNumber is true (admin/team member view)
+    if (showVersionNumber && conversation.documentVersionNumber) {
       parts.push(`v${conversation.documentVersionNumber}`);
     }
-    
+
     const reference = parts.length > 0 ? ` (${parts.join(", ")})` : "";
     return `${documentName}${reference}`;
   };
@@ -59,7 +62,7 @@ export function ConversationListItem({
           </div>
         </div>
         <div className="text-xs font-medium">
-          {conversation.title || formatDocumentReference()}
+          {formatDocumentReference() || conversation.title}
         </div>
       </div>
 

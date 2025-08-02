@@ -65,6 +65,11 @@ const routeHandlers = {
               createdAt: true,
             },
           },
+          dataroomDocument: {
+            include: {
+              document: true,
+            },
+          },
           _count: {
             select: {
               messages: {
@@ -117,6 +122,15 @@ const routeHandlers = {
           viewerEmail: viewer?.email,
           unreadCount: conversation._count.messages,
           lastMessage: conversation.messages[0] || null,
+          dataroomDocumentName: conversation.dataroomDocumentId
+            ? conversation.dataroomDocument.document.name
+            : undefined,
+          documentPageNumber: conversation.dataroomDocumentId
+            ? conversation.documentPageNumber
+            : undefined,
+          documentVersionNumber: conversation.dataroomDocumentId
+            ? conversation.documentVersionNumber
+            : undefined,
         };
       });
 
@@ -371,6 +385,11 @@ const routeHandlers = {
             include: {
               user: true,
               viewer: true,
+            },
+          },
+          dataroomDocument: {
+            include: {
+              document: true,
             },
           },
         },

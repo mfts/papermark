@@ -2,9 +2,9 @@ import { useRouter } from "next/router";
 
 import { useState } from "react";
 
-import { ConversationListItem } from "@/ee/features/conversations/components/conversation-list-item";
-import { ConversationMessage } from "@/ee/features/conversations/components/conversation-message";
-import { ConversationDocumentContext } from "@/ee/features/conversations/components/conversation-document-context";
+import { ConversationListItem } from "@/ee/features/conversations/components/dashboard/conversation-list-item";
+import { ConversationDocumentContext } from "@/ee/features/conversations/components/shared/conversation-document-context";
+import { ConversationMessage } from "@/ee/features/conversations/components/shared/conversation-message";
 import { Loader2, SearchIcon, Send, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -51,6 +51,7 @@ interface Conversation {
   updatedAt: string;
   participants: { id: string; email: string | null }[];
   documentPageNumber: number | null;
+  documentVersionNumber: number | null;
   unreadCount: number;
   messages: Message[];
   dataroomDocument?: {
@@ -68,6 +69,7 @@ interface ConversationSummary {
   viewerId: string | null;
   viewerEmail?: string;
   documentPageNumber: number | null;
+  documentVersionNumber: number | null;
   unreadCount: number;
   lastMessage?: {
     content: string;
@@ -362,25 +364,6 @@ export default function ConversationDetailPage() {
                           {conversation.participants[0].email ||
                             "Anonymous Viewer"}
                         </p>
-                        {conversation.dataroomDocument && (
-                          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              📄 {conversation.dataroomDocument.document.name}
-                            </span>
-                            {(conversation.documentPageNumber ||
-                              conversation.documentVersionNumber) && (
-                              <span className="text-xs">
-                                {conversation.documentPageNumber &&
-                                  `Page ${conversation.documentPageNumber}`}
-                                {conversation.documentPageNumber &&
-                                  conversation.documentVersionNumber &&
-                                  " • "}
-                                {conversation.documentVersionNumber &&
-                                  `v${conversation.documentVersionNumber}`}
-                              </span>
-                            )}
-                          </div>
-                        )}
                       </div>
                     </div>
                     <Button
@@ -400,7 +383,10 @@ export default function ConversationDetailPage() {
                       <ConversationDocumentContext
                         dataroomDocument={conversation.dataroomDocument}
                         documentPageNumber={conversation.documentPageNumber}
-                        documentVersionNumber={conversation.documentVersionNumber}
+                        documentVersionNumber={
+                          conversation.documentVersionNumber
+                        }
+                        showVersionNumber={true} // Admin sees full context
                         className="mb-2"
                       />
                       {conversation.messages.map((message) => (

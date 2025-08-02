@@ -43,7 +43,11 @@ const routeHandlers = {
           },
         },
         dataroom: true,
-        dataroomDocument: true,
+        dataroomDocument: {
+          include: {
+            document: true,
+          },
+        },
         participants: {
           where: {
             viewerId,
@@ -71,11 +75,13 @@ const routeHandlers = {
 
   // POST /api/conversations
   "POST /": async (req: NextApiRequest, res: NextApiResponse) => {
-    const { dataroomId, viewId, viewerId, ...data } =
+    const { dataroomId, viewId, viewerId, documentId, pageNumber, ...data } =
       req.body as CreateConversationInput & {
         dataroomId: string;
         viewId: string;
         viewerId?: string;
+        documentId?: string;
+        pageNumber?: number;
       };
 
     // Check if conversations are allowed
@@ -112,13 +118,49 @@ const routeHandlers = {
       return res.status(400).json({ error: "Team not found" });
     }
 
+    // Map documentId to dataroomDocumentId and get version info if provided
+    let enhancedData = { ...data };
+    if (documentId) {
+      const dataroomDocument = await prisma.dataroomDocument.findFirst({
+        where: {
+          dataroomId,
+          documentId,
+        },
+        include: {
+          document: {
+            include: {
+              versions: {
+                where: { isPrimary: true },
+                select: { versionNumber: true },
+              },
+            },
+          },
+        },
+      });
+
+      if (dataroomDocument) {
+        enhancedData.dataroomDocumentId = dataroomDocument.id;
+
+        // Set page number if provided
+        if (pageNumber) {
+          enhancedData.documentPageNumber = pageNumber;
+        }
+
+        // Set document version number from the primary version
+        if (dataroomDocument.document.versions[0]?.versionNumber) {
+          enhancedData.documentVersionNumber =
+            dataroomDocument.document.versions[0].versionNumber;
+        }
+      }
+    }
+
     // Create the conversation
     const conversation = await conversationService.createConversation({
       dataroomId,
       viewerId,
       viewId,
       teamId: team.id,
-      data,
+      data: enhancedData,
     });
 
     // Get all delayed and queued runs for this dataroom

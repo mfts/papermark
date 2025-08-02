@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-import { ConversationMessage } from "@/ee/features/conversations/components/conversation-message";
-import { ConversationDocumentContext } from "@/ee/features/conversations/components/conversation-document-context";
+import { ConversationDocumentContext } from "@/ee/features/conversations/components/shared/conversation-document-context";
+import { ConversationMessage } from "@/ee/features/conversations/components/shared/conversation-message";
 import { format } from "date-fns";
 import { ArrowLeftIcon, BellIcon, BellOffIcon, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -36,6 +36,7 @@ interface Conversation {
   userId: string | null;
   viewerId: string | null;
   documentPageNumber: number | null;
+  documentVersionNumber: number | null;
   dataroomDocument?: {
     document: {
       name: string;
@@ -219,7 +220,7 @@ export function ConversationViewSidebar({
                     {/* Conversation Header */}
                     <div className="border-b p-4">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center flex-1 min-w-0">
+                        <div className="flex min-w-0 flex-1 items-center">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -230,28 +231,8 @@ export function ConversationViewSidebar({
                           </Button>
                           <div className="min-w-0">
                             <h3 className="truncate font-medium">
-                              {activeConversation.title ||
-                                "Conversation"}
+                              {activeConversation.title || "Conversation"}
                             </h3>
-                            {activeConversation.dataroomDocument && (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                <span className="truncate">
-                                  📄 {activeConversation.dataroomDocument.document.name}
-                                </span>
-                                {(activeConversation.documentPageNumber ||
-                                  activeConversation.documentVersionNumber) && (
-                                  <span className="shrink-0">
-                                    {activeConversation.documentPageNumber &&
-                                      `Page ${activeConversation.documentPageNumber}`}
-                                    {activeConversation.documentPageNumber &&
-                                      activeConversation.documentVersionNumber &&
-                                      " • "}
-                                    {activeConversation.documentVersionNumber &&
-                                      `v${activeConversation.documentVersionNumber}`}
-                                  </span>
-                                )}
-                              </div>
-                            )}
                           </div>
                         </div>
                         <Button
@@ -322,8 +303,13 @@ export function ConversationViewSidebar({
                         {/* Document Context */}
                         <ConversationDocumentContext
                           dataroomDocument={activeConversation.dataroomDocument}
-                          documentPageNumber={activeConversation.documentPageNumber}
-                          documentVersionNumber={activeConversation.documentVersionNumber}
+                          documentPageNumber={
+                            activeConversation.documentPageNumber
+                          }
+                          documentVersionNumber={
+                            activeConversation.documentVersionNumber
+                          }
+                          showVersionNumber={false} // Viewers see simplified context
                           className="mb-2"
                         />
                         {activeConversation.messages?.map((message) => (

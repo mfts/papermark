@@ -1,3 +1,3 @@
-import ConversationSection from "@/ee/features/conversations/components/link-option-conversation-section";
+import ConversationSection from "@/ee/features/conversations/components/dashboard/link-option-conversation-section";
 
 export default ConversationSection;
