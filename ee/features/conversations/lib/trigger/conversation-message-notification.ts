@@ -57,35 +57,9 @@ export const sendConversationMessageNotificationTask = task({
       },
     });
 
-    // Get team members (ADMIN/MANAGER) for this team
-    const teamMembers = await prisma.userTeam.findMany({
-      where: {
-        teamId: payload.teamId,
-        role: {
-          in: ["ADMIN", "MANAGER"],
-        },
-        userId: {
-          not: payload.senderUserId, // Don't notify the sender
-        },
-        // Only active team members (not blocked)
-        blockedAt: null,
-      },
-      select: {
-        userId: true,
-        user: {
-          select: {
-            id: true,
-            email: true,
-            notificationPreferences: true,
-          },
-        },
-      },
-    });
-
-    if ((!participants || participants.length === 0) && (!teamMembers || teamMembers.length === 0)) {
-      logger.info("No participants or team members found for this conversation", {
+    if (!participants || participants.length === 0) {
+      logger.info("No participants found for this conversation", {
         conversationId: payload.conversationId,
-        teamId: payload.teamId,
       });
       return;
     }
@@ -93,41 +67,64 @@ export const sendConversationMessageNotificationTask = task({
     // Construct simplified viewer objects with link information
     const viewersWithLinks = participants
       .map((participant) => {
-        const viewer = participant.viewer;
-        if (!viewer || !viewer.views || viewer.views.length === 0) {
+        if (!participant.viewer) {
           return null;
         }
 
-        const view = viewer.views[0];
-        const link = view.link;
+        const viewer = participant.viewer;
 
-        if (!link || link.isArchived || (link.expiresAt && link.expiresAt < new Date())) {
-          return null; // Skip archived or expired links
+        // Skip if notifications are disabled for this dataroom
+        const parsedPreferences =
+          ZViewerNotificationPreferencesSchema.safeParse(
+            viewer.notificationPreferences,
+          );
+        if (
+          parsedPreferences.success &&
+          parsedPreferences.data.dataroom[payload.dataroomId]?.enabled === false
+        ) {
+          logger.info("Viewer notifications are disabled for this dataroom", {
+            viewerId: viewer.id,
+            conversationId: payload.conversationId,
+            dataroomId: payload.dataroomId,
+          });
+          return null;
         }
 
-        const baseUrl = link.domainSlug
-          ? `https://${link.domainSlug}`
-          : process.env.NEXT_PUBLIC_BASE_URL;
+        // Get the link from the conversationView
+        const link = viewer.views[0]?.link;
 
-        const linkUrl = `${baseUrl}/view/${link.slug}`;
+        // Skip if link is expired or archived
+        if (
+          !link ||
+          link.isArchived ||
+          (link.expiresAt && new Date(link.expiresAt) < new Date())
+        ) {
+          logger.info("Link is expired or archived", {
+            conversationId: payload.conversationId,
+            link,
+          });
+          return null;
+        }
+
+        let linkUrl = "";
+        if (link.domainId && link.domainSlug && link.slug) {
+          linkUrl = `https://${link.domainSlug}/${link.slug}`;
+        } else {
+          linkUrl = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`;
+        }
 
         return {
           id: viewer.id,
           linkUrl,
         };
       })
-      .filter((viewer) => viewer !== null) as Array<{
-      id: string;
-      linkUrl: string;
-    }>;
+      .filter(
+        (participant): participant is { id: string; linkUrl: string } =>
+          participant !== null,
+      );
 
     logger.info("Processed viewer links", {
       viewerCount: viewersWithLinks.length,
-    });
-
-    logger.info("Found team members for notification", {
-      teamMemberCount: teamMembers.length,
-      teamId: payload.teamId,
     });
 
     // Send notification to each viewer
@@ -174,53 +171,106 @@ export const sendConversationMessageNotificationTask = task({
       }
     }
 
-    // Send notification to each team member
-    for (const teamMember of teamMembers) {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/jobs/send-conversation-team-member-notification`,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              conversationId: payload.conversationId,
-              dataroomId: payload.dataroomId,
-              userId: teamMember.userId,
-              senderUserId: payload.senderUserId,
-              teamId: payload.teamId,
-            }),
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
-            },
-          },
-        );
-
-        if (!response.ok) {
-          logger.error("Failed to send team member notification", {
-            userId: teamMember.userId,
-            dataroomId: payload.dataroomId,
-            error: await response.text(),
-          });
-          continue;
-        }
-
-        const { message } = (await response.json()) as { message: string };
-        logger.info("Team member notification sent successfully", {
-          userId: teamMember.userId,
-          message,
-        });
-      } catch (error) {
-        logger.error("Error sending team member notification", {
-          userId: teamMember.userId,
-          error,
-        });
-      }
-    }
-
     logger.info("Completed sending notifications", {
       dataroomId: payload.dataroomId,
       conversationId: payload.conversationId,
       viewerCount: viewersWithLinks.length,
+    });
+    return;
+  },
+});
+
+// New task specifically for notifying team members when viewers write messages
+export const sendConversationTeamMemberNotificationTask = task({
+  id: "send-conversation-team-member-notification",
+  retry: { maxAttempts: 3 },
+  run: async (payload: NotificationPayload) => {
+    logger.info("Starting team member notifications", {
+      conversationId: payload.conversationId,
+      teamId: payload.teamId,
+    });
+
+    // Get team members (ADMIN/MANAGER) for this team
+    const teamMembers = await prisma.userTeam.findMany({
+      where: {
+        teamId: payload.teamId,
+        role: {
+          in: ["ADMIN", "MANAGER"],
+        },
+        // Only active team members (not blocked)
+        blockedAt: null,
+      },
+      select: {
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!teamMembers || teamMembers.length === 0) {
+      logger.info("No team members found for this conversation", {
+        conversationId: payload.conversationId,
+        teamId: payload.teamId,
+      });
+      return;
+    }
+
+    logger.info("Found team members for notification", {
+      teamMemberCount: teamMembers.length,
+      teamId: payload.teamId,
+      conversationId: payload.conversationId,
+    });
+
+    // Send notification to all team members at once
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/jobs/send-conversation-team-member-notification`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            conversationId: payload.conversationId,
+            dataroomId: payload.dataroomId,
+            senderUserId: payload.senderUserId,
+            teamId: payload.teamId,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        logger.error("Failed to send team member notifications", {
+          dataroomId: payload.dataroomId,
+          teamId: payload.teamId,
+          error: await response.text(),
+        });
+      } else {
+        const result = (await response.json()) as {
+          message: string;
+          notified: number;
+        };
+        logger.info("Team member notifications sent successfully", {
+          teamId: payload.teamId,
+          notified: result.notified,
+          message: result.message,
+        });
+      }
+    } catch (error) {
+      logger.error("Error sending team member notifications", {
+        teamId: payload.teamId,
+        error,
+      });
+    }
+
+    logger.info("Completed team member notifications", {
+      conversationId: payload.conversationId,
+      teamId: payload.teamId,
       teamMemberCount: teamMembers.length,
     });
     return;
