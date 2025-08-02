@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { sendConversationTeamNotification } from "@/ee/features/conversations/emails/lib/send-conversation-team-notification";
+import { z } from "zod";
 
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
@@ -25,12 +26,36 @@ export default async function handle(
     return;
   }
 
-  const { conversationId, dataroomId, senderUserId, teamId } = req.body as {
-    conversationId: string;
-    dataroomId: string;
-    senderUserId: string;
-    teamId: string;
-  };
+  // Define validation schema
+  const requestSchema = z.object({
+    conversationId: z
+      .string()
+      .min(1, "conversationId is required and must be a non-empty string"),
+    dataroomId: z
+      .string()
+      .min(1, "dataroomId is required and must be a non-empty string"),
+    senderUserId: z
+      .string()
+      .min(1, "senderUserId is required and must be a non-empty string"),
+    teamId: z
+      .string()
+      .min(1, "teamId is required and must be a non-empty string"),
+  });
+
+  // Validate request body
+  const validationResult = requestSchema.safeParse(req.body);
+
+  if (!validationResult.success) {
+    const firstError = validationResult.error.errors[0];
+    res.status(400).json({
+      message: firstError.message,
+      field: firstError.path[0],
+    });
+    return;
+  }
+
+  const { conversationId, dataroomId, senderUserId, teamId } =
+    validationResult.data;
 
   try {
     // Get all team members (ADMIN/MANAGER) for this team
@@ -67,7 +92,9 @@ export default async function handle(
     const eligibleTeamMembers = teamMembers.filter((teamMember) => {
       if (teamMember.notificationPreferences) {
         try {
-          const preferences = teamMember.notificationPreferences as any;
+          const preferences = teamMember.notificationPreferences as {
+            conversations?: boolean;
+          };
           if (preferences.conversations === false) {
             return false;
           }
