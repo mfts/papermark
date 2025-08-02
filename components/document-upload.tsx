@@ -7,7 +7,11 @@ import { useTheme } from "next-themes";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
-import { SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
+import {
+  FREE_PLAN_ACCEPTED_FILE_TYPES,
+  FULL_PLAN_ACCEPTED_FILE_TYPES,
+  SUPPORTED_DOCUMENT_MIME_TYPES,
+} from "@/lib/constants";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { bytesToSize } from "@/lib/utils";
@@ -46,49 +50,8 @@ export default function DocumentUpload({
   const { getRootProps, getInputProps } = useDropzone({
     accept:
       isFree && !isTrial
-        ? {
-            "application/pdf": [], // ".pdf"
-            "application/vnd.ms-excel": [], // ".xls"
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-              [], // ".xlsx"
-            "text/csv": [], // ".csv"
-            "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
-            "image/png": [], // ".png"
-            "image/jpeg": [], // ".jpeg"
-            "image/jpg": [], // ".jpg"
-          }
-        : {
-            "application/pdf": [], // ".pdf"
-            "application/vnd.ms-excel": [], // ".xls"
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-              [], // ".xlsx"
-            "application/vnd.ms-excel.sheet.macroEnabled.12": [".xlsm"], // ".xlsm"
-            "text/csv": [], // ".csv"
-            "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
-            "application/vnd.ms-powerpoint": [], // ".ppt"
-            "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-              [], // ".pptx"
-            "application/vnd.oasis.opendocument.presentation": [], // ".odp"
-            "application/msword": [], // ".doc"
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-              [], // ".docx"
-            "application/vnd.oasis.opendocument.text": [], // ".odt"
-            "image/vnd.dwg": [".dwg"], // ".dwg"
-            "image/vnd.dxf": [".dxf"], // ".dxf"
-            "image/png": [], // ".png"
-            "image/jpeg": [], // ".jpeg"
-            "image/jpg": [], // ".jpg"
-            "application/zip": [], // ".zip"
-            "application/x-zip-compressed": [], // ".zip"
-            "video/mp4": [], // ".mp4"
-            "video/quicktime": [], // ".mov"
-            "video/x-msvideo": [], // ".avi"
-            "video/webm": [], // ".webm"
-            "video/ogg": [], // ".ogg"
-            "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
-            "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
-            "application/vnd.ms-outlook": [".msg"], // ".msg"
-          },
+        ? FREE_PLAN_ACCEPTED_FILE_TYPES
+        : FULL_PLAN_ACCEPTED_FILE_TYPES,
     multiple: false,
     onDropAccepted: (acceptedFiles) => {
       if (acceptedFiles.length === 0) {
@@ -229,7 +192,7 @@ export default function DocumentUpload({
                 ? "Replace file?"
                 : isFree && !isTrial
                   ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg`
-                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
+                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.rtf, *txt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
             </p>
           </div>
         </div>
