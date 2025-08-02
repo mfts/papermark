@@ -8,17 +8,12 @@ import { ArrowLeftIcon, BellIcon, BellOffIcon, Plus } from "lucide-react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
-import { cn, fetcher } from "@/lib/utils";
+import { fetcher } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 // Type definitions
 interface Message {
