@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { ConversationListItem } from "@/ee/features/conversations/components/conversation-list-item";
 import { ConversationMessage } from "@/ee/features/conversations/components/conversation-message";
+import { ConversationDocumentContext } from "@/ee/features/conversations/components/conversation-document-context";
 import { Loader2, SearchIcon, Send, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -353,21 +354,33 @@ export default function ConversationDetailPage() {
                             : "?"}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
+                      <div className="flex-1">
                         <h2 className="text-base font-semibold">
-                          {conversation.title ||
-                            (conversation.dataroomDocument
-                              ? `${conversation.dataroomDocument.document.name}${
-                                  conversation.documentPageNumber
-                                    ? ` (Page ${conversation.documentPageNumber})`
-                                    : ""
-                                }`
-                              : "Untitled conversation")}
+                          {conversation.title || "Conversation"}
                         </h2>
                         <p className="text-sm text-muted-foreground">
                           {conversation.participants[0].email ||
                             "Anonymous Viewer"}
                         </p>
+                        {conversation.dataroomDocument && (
+                          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              📄 {conversation.dataroomDocument.document.name}
+                            </span>
+                            {(conversation.documentPageNumber ||
+                              conversation.documentVersionNumber) && (
+                              <span className="text-xs">
+                                {conversation.documentPageNumber &&
+                                  `Page ${conversation.documentPageNumber}`}
+                                {conversation.documentPageNumber &&
+                                  conversation.documentVersionNumber &&
+                                  " • "}
+                                {conversation.documentVersionNumber &&
+                                  `v${conversation.documentVersionNumber}`}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <Button
@@ -383,6 +396,13 @@ export default function ConversationDetailPage() {
                   {/* Messages */}
                   <ScrollArea className="flex-1">
                     <div className="flex flex-col gap-4 p-4">
+                      {/* Document Context */}
+                      <ConversationDocumentContext
+                        dataroomDocument={conversation.dataroomDocument}
+                        documentPageNumber={conversation.documentPageNumber}
+                        documentVersionNumber={conversation.documentVersionNumber}
+                        className="mb-2"
+                      />
                       {conversation.messages.map((message) => (
                         <ConversationMessage
                           key={message.id}

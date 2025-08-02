@@ -13,6 +13,25 @@ export function ConversationListItem({
   conversation: any;
   isActive: boolean;
 }) {
+  // Helper function to format document reference
+  const formatDocumentReference = () => {
+    if (!conversation.dataroomDocument) return "Untitled conversation";
+    
+    const documentName = conversation.dataroomDocument.document.name;
+    const parts = [];
+    
+    if (conversation.documentPageNumber) {
+      parts.push(`Page ${conversation.documentPageNumber}`);
+    }
+    
+    if (conversation.documentVersionNumber) {
+      parts.push(`v${conversation.documentVersionNumber}`);
+    }
+    
+    const reference = parts.length > 0 ? ` (${parts.join(", ")})` : "";
+    return `${documentName}${reference}`;
+  };
+
   return (
     <button
       className={cn(
@@ -40,14 +59,7 @@ export function ConversationListItem({
           </div>
         </div>
         <div className="text-xs font-medium">
-          {conversation.title ||
-            (conversation.dataroomDocument
-              ? `${conversation.dataroomDocument.document.name}${
-                  conversation.documentPageNumber
-                    ? ` (Page ${conversation.documentPageNumber})`
-                    : ""
-                }`
-              : "Untitled conversation")}
+          {conversation.title || formatDocumentReference()}
         </div>
       </div>
 
