@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { CancellationModal } from "@/ee/features/cancellation/components";
 import { PlanEnum } from "@/ee/stripe/constants";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -22,6 +23,8 @@ import { UpgradeButton } from "@/components/ui/upgrade-button";
 export default function UpgradePlanContainer() {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
+  const [cancellationModalOpen, setCancellationModalOpen] =
+    useState<boolean>(false);
   const teamInfo = useTeam();
   const { plan, isFree, isDataroomsPlus } = usePlan();
 
@@ -69,39 +72,55 @@ export default function UpgradePlanContainer() {
       );
     } else {
       return (
-        <Button onClick={manageSubscription} loading={loading}>
-          Manage Subscription
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setCancellationModalOpen(true)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Cancel subscription
+          </Button>
+          <Button onClick={manageSubscription} loading={loading}>
+            Manage Subscription
+          </Button>
+        </div>
       );
     }
   };
 
   return (
-    <div className="rounded-lg">
-      <Card className="bg-transparent">
-        <CardHeader>
-          <CardTitle>Billing</CardTitle>
-          <CardDescription>
-            You are currently on the{" "}
-            <span className="mx-0.5 rounded-full bg-background px-2.5 py-1 text-xs font-bold tracking-normal text-foreground ring-1 ring-gray-800 dark:ring-gray-400">
-              {isDataroomsPlus
-                ? "Datarooms+"
-                : plan.charAt(0).toUpperCase() + plan.slice(1)}
-            </span>{" "}
-            plan.{" "}
-            <Link
-              href="/settings/upgrade"
-              className="text-sm underline underline-offset-4 hover:text-foreground"
-            >
-              See all plans
-            </Link>
-          </CardDescription>
-        </CardHeader>
-        <CardContent></CardContent>
-        <CardFooter className="flex items-center justify-end rounded-b-lg border-t px-6 py-3">
-          <div className="shrink-0">{ButtonList()}</div>
-        </CardFooter>
-      </Card>
-    </div>
+    <>
+      <div className="rounded-lg">
+        <Card className="bg-transparent">
+          <CardHeader>
+            <CardTitle>Billing</CardTitle>
+            <CardDescription>
+              You are currently on the{" "}
+              <span className="mx-0.5 rounded-full bg-background px-2.5 py-1 text-xs font-bold tracking-normal text-foreground ring-1 ring-gray-800 dark:ring-gray-400">
+                {isDataroomsPlus
+                  ? "Datarooms+"
+                  : plan.charAt(0).toUpperCase() + plan.slice(1)}
+              </span>{" "}
+              plan.{" "}
+              <Link
+                href="/settings/upgrade"
+                className="text-sm underline underline-offset-4 hover:text-foreground"
+              >
+                See all plans
+              </Link>
+            </CardDescription>
+          </CardHeader>
+          <CardContent></CardContent>
+          <CardFooter className="flex items-center justify-end rounded-b-lg border-t px-6 py-3">
+            <div className="shrink-0">{ButtonList()}</div>
+          </CardFooter>
+        </Card>
+      </div>
+
+      <CancellationModal
+        open={cancellationModalOpen}
+        onOpenChange={setCancellationModalOpen}
+      />
+    </>
   );
 }

@@ -67,3 +67,14 @@ export const DATAROOMS_PLUS_PLAN_LIMITS = {
   conversationsInDataroom: true,
   advancedLinkControlsOnPro: false,
 };
+
+export const PAUSED_PLAN_LIMITS = {
+  // During pause: keep all data accessible but restrict new creations and views
+  canCreateLinks: false,
+  canReceiveViews: false,
+  canCreateDocuments: false,
+  canCreateDatarooms: false,
+  // Keep existing access
+  canViewAnalytics: true,
+  canAccessExistingContent: true,
+};
