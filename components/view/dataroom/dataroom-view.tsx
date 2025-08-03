@@ -8,8 +8,8 @@ import { toast } from "sonner";
 
 import { useAnalytics } from "@/lib/analytics";
 import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
-import { LinkWithDataroom } from "@/lib/types";
 import { useDisablePrint } from "@/lib/hooks/use-disable-print";
+import { LinkWithDataroom } from "@/lib/types";
 
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
@@ -157,7 +157,7 @@ export default function DataroomView({
           viewerEmail: viewerEmail ?? data.email ?? verifiedEmail ?? userEmail,
           isEmbedded,
           isTeamMember,
-          teamId: dataroom?.teamId,
+          teamId: link.teamId,
         });
 
         // set the verification token to the cookie
