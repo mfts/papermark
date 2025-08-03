@@ -24,7 +24,7 @@ export type CustomFieldData = Omit<
 > & {
   type: Omit<
     CustomFieldType,
-    "PHONE_NUMBER" | "CHECKBOX" | "SELECT" | "MULTI_SELECT"
+    "CHECKBOX" | "SELECT" | "MULTI_SELECT"
   >;
 };
 
