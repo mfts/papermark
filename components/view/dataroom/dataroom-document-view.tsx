@@ -193,6 +193,7 @@ export default function DataroomDocumentView({
           viewerEmail: viewerEmail ?? data.email ?? verifiedEmail ?? userEmail,
           isEmbedded,
           isTeamMember,
+          teamId: link.teamId,
         });
 
         // set the verification token to the cookie
