@@ -4,6 +4,7 @@ import { LinkType } from "@prisma/client";
 
 import { getFile } from "@/lib/files/get-file";
 import prisma from "@/lib/prisma";
+import { getFileNameWithPdfExtension } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
 
 export default async function handle(
@@ -39,6 +40,7 @@ export default async function handle(
             select: {
               teamId: true,
               downloadOnly: true,
+              name: true,
               versions: {
                 where: { isPrimary: true },
                 select: {
@@ -128,6 +130,7 @@ export default async function handle(
               url: downloadUrl,
               numPages: view.document!.versions[0].numPages,
               watermarkConfig: view.link.watermarkConfig,
+              originalFileName: view.document!.name,
               viewerData: {
                 email: view.viewerEmail,
                 date: new Date(view.viewedAt).toLocaleDateString(),
@@ -163,7 +166,7 @@ export default async function handle(
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader(
           "Content-Disposition",
-          'attachment; filename="watermarked.pdf"',
+          `attachment; filename="${encodeURIComponent(getFileNameWithPdfExtension(view.document!.name))}"`,
         );
         res.setHeader("Content-Length", Buffer.from(pdfBuffer).length);
 

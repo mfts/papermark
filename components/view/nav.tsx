@@ -135,10 +135,24 @@ export default function Nav({
         const pdfBlob = await response.blob();
         const blobUrl = window.URL.createObjectURL(pdfBlob);
 
+        // Extract filename from Content-Disposition header
+        const contentDisposition = response.headers.get("content-disposition");
+        let filename = "document.pdf";
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(
+            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
+          );
+          if (filenameMatch && filenameMatch[1]) {
+            filename = decodeURIComponent(
+              filenameMatch[1].replace(/['"]/g, ""),
+            );
+          }
+        }
+
         const link = document.createElement("a");
         link.href = blobUrl;
         link.rel = "noopener noreferrer";
-        link.download = "watermarked_document.pdf";
+        link.download = filename;
         document.body.appendChild(link);
         link.click();
 

@@ -29,6 +29,18 @@ export function getExtension(url: string) {
   return url.split(/[#?]/)[0].split(".").pop().trim();
 }
 
+/**
+ * Ensures a filename has a .pdf extension for watermarked documents
+ * Removes any existing extension and adds .pdf
+ */
+export function getFileNameWithPdfExtension(filename?: string): string {
+  if (!filename) return "document.pdf";
+
+  // Remove existing extension and add .pdf
+  const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
+  return `${nameWithoutExt}.pdf`;
+}
+
 interface SWRError extends Error {
   status: number;
 }
