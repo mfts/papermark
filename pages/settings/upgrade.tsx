@@ -7,7 +7,7 @@ import { useTeam } from "@/context/team-context";
 import { getStripe } from "@/ee/stripe/client";
 import { Feature, PlanEnum, getPlanFeatures } from "@/ee/stripe/constants";
 import { PLANS } from "@/ee/stripe/utils";
-import { CheckIcon, Users2Icon } from "lucide-react";
+import { CheckIcon, Users2Icon, XIcon } from "lucide-react";
 
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
@@ -36,7 +36,11 @@ const FeatureItem = ({
     return (
       <div className={`justify-between gap-x-8 ${baseClasses}`}>
         <div className="flex items-center gap-x-3">
-          <CheckIcon className="h-6 w-5 flex-none text-[#fb7a00]" />
+          {feature.isNotIncluded ? (
+            <XIcon className="h-6 w-5 flex-none text-gray-500" />
+          ) : (
+            <CheckIcon className="h-6 w-5 flex-none text-[#fb7a00]" />
+          )}
           <span>{feature.text}</span>
         </div>
         {feature.tooltip && (
@@ -60,7 +64,11 @@ const FeatureItem = ({
   if (feature.isCustomDomain) {
     return (
       <span className={`gap-x-3 ${baseClasses}`}>
-        <CheckIcon className="h-6 w-5 flex-none text-[#fb7a00]" />
+        {feature.isNotIncluded ? (
+          <XIcon className="h-6 w-5 flex-none text-gray-500" />
+        ) : (
+          <CheckIcon className="h-6 w-5 flex-none text-[#fb7a00]" />
+        )}
         <span>{feature.text}</span>
       </span>
     );
@@ -68,7 +76,11 @@ const FeatureItem = ({
 
   return (
     <div className={`gap-x-3 ${baseClasses}`}>
-      <CheckIcon className="h-6 w-5 flex-none text-[#fb7a00]" />
+      {feature.isNotIncluded ? (
+        <XIcon className="h-6 w-5 flex-none text-gray-500" />
+      ) : (
+        <CheckIcon className="h-6 w-5 flex-none text-[#fb7a00]" />
+      )}
       <span>{feature.text}</span>
     </div>
   );
