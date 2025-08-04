@@ -312,10 +312,11 @@ export function UpgradePlanModal({
                     loading={selectedPlan === planOption}
                     disabled={selectedPlan !== null}
                     onClick={() => {
-                      const priceId = getPriceIdFromPlan(
-                        displayPlanName,
+                      const priceId = getPriceIdFromPlan({
+                        planName: displayPlanName,
                         period,
-                      );
+                        isOld: isOldAccount,
+                      });
 
                       setSelectedPlan(planOption);
                       if (isCustomer && teamPlan !== "free") {
