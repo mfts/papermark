@@ -1,4 +1,4 @@
-import Onboarding5Email from "@/components/emails/onboarding-5";
+import Onboarding5Email from "@/components/emails/data-rooms-information";
 
 import { sendEmail } from "@/lib/resend";
 

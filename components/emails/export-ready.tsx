@@ -48,13 +48,11 @@ export default function ExportReady({
             <Text className="text-sm leading-6 text-black">
               Export details:
             </Text>
-            <Text className="break-all text-sm leading-6 text-black">
-              <ul>
-                <li className="text-sm leading-6 text-black">
-                  Export type: {resourceName}
-                </li>
-              </ul>
-            </Text>
+            <ul className="break-all text-sm leading-6 text-black">
+              <li className="text-sm leading-6 text-black">
+                Export type: {resourceName}
+              </li>
+            </ul>
             <Text className="text-sm leading-6 text-black">
               Best,
               <br />

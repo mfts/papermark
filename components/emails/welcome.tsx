@@ -36,24 +36,22 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
               Thanks for signing up{name && `, ${name}`}!
             </Text>
             <Text className="text-sm">
-              My name is Marc, and I&apos;m the creator of Papermark – the
-              open-source DocSend alternative! I&apos;m excited to have you on
+              My name is Marc, and I&apos;m the founder of Papermark – the
+              open-source DocSend alternative for securely sharing documents and data rooms. I&apos;m excited to have you on
               board!
             </Text>
             <Text className="text-sm">
               Here are a few things you can do to get started:
             </Text>
-            <Text className="text-sm">
-              <ul className="list-inside list-disc text-sm">
-                <li>Upload a document</li>
-                <li>Create a virtual data room</li>
-                <li>
-                  Share a link{" "}
-                  <span className="italic">(with your custom domain)✨</span>
-                </li>
-                <li>Watch the views come in real-time</li>
-              </ul>
-            </Text>
+            <ul className="list-inside list-disc text-sm">
+              <li>Turn your documents into shareable links</li>
+              <li>Create secure virtual data rooms</li>
+              <li>
+                Share your documents {" "}
+                <span className="italic">(with custom domain)✨</span>
+              </li>
+              <li>Watch the page by page views come in real-time</li>
+            </ul>
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
@@ -63,45 +61,22 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
                 Get Started
               </Button>
             </Section>
-            <Section>
-              <Text className="text-sm">
-                If you would like to keep up to date, you can:
-              </Text>
-              <Text className="text-sm">
-                <ul className="list-inside list-disc text-sm">
-                  <li>
-                    Star the repo on{" "}
-                    <Link
-                      href="https://github.com/mfts/papermark"
-                      target="_blank"
-                    >
-                      GitHub
-                    </Link>
-                  </li>
-                  <li>
-                    Follow the journey on{" "}
-                    <Link href="https://x.com/papermarkio" target="_blank">
-                      Twitter
-                    </Link>
-                  </li>
-                  <li>
-                    Have a call to talk enterprise{" "}
-                    <Link
-                      href="https://cal.com/marcseitz/papermark"
-                      target="_blank"
-                    >
-                      Book
-                    </Link>
-                  </li>
-                </ul>
-              </Text>
-            </Section>
+           
             <Section className="mt-4">
               <Text className="text-sm">
                 If you have any questions or feedback just respond to this
-                email. I&apos;m always happy to help!
+                email.  <Link
+                    href="https://cal.com/marcseitz/papermark"
+                    target="_blank"
+                  >
+                    Book
+                  </Link> {" "}a call to talk enterprise. I&apos;m always happy to help!
+                 
               </Text>
-              <Text className="text-sm text-gray-400">Marc from Papermark</Text>
+         
+              <Text className="text-sm text-gray-400">Marc from Papermark
+              
+                  </Text>
             </Section>
             <Hr />
             <Section className="mt-8 text-gray-400">
@@ -116,7 +91,26 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
                 </a>
               </Text>
               <Text className="text-xs">
-                You will shortly receive the intro to Papermark. Stay tuned.
+              <Link href="https://www.papermark.com/customers" target="_blank" className="text-gray-400 text-xs">
+              Customer stories 
+                  </Link>
+              <Link href="https://x.com/papermarkio" target="_blank" className="text-gray-400 text-xs">
+              · Twitter
+                  </Link>
+                  <Link
+                    href="https://www.linkedin.com/company/papermarkio"
+                    target="_blank"
+                    className="text-gray-400 text-xs"
+                  >
+                    · LinkedIn
+                  </Link>
+                  <Link
+                    href="https://github.com/mfts/papermark"
+                    target="_blank"
+                    className="text-gray-400 text-xs"
+                  >
+                    · GitHub
+                  </Link>
               </Text>
             </Section>
           </Container>

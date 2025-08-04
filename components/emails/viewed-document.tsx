@@ -7,6 +7,7 @@ import {
   Head,
   Hr,
   Html,
+  Link,
   Preview,
   Section,
   Tailwind,
@@ -68,8 +69,17 @@ export default function ViewedDocument({
               </Button>
             </Section>
             <Text className="text-sm leading-6 text-black">
-              Stay informed, stay ahead with Papermark.
+             Receive view notifications in your{" "}
+              <Link
+                href="https://app.papermark.com/settings/general"
+                className="text-blue-500 underline"
+                target="_blank"
+              >
+                Slack
+              </Link>{" "}
+              channel. Stay informed, stay ahead with Papermark. 
             </Text>
+          
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">
