@@ -1,12 +1,12 @@
 import { Brand, CustomField, DataroomBrand } from "@prisma/client";
 import { E164Number } from "libphonenumber-js";
 
+import { cn } from "@/lib/utils";
+import { determineTextColor } from "@/lib/utils/determine-text-color";
+
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
-
-import { cn } from "@/lib/utils";
-import { determineTextColor } from "@/lib/utils/determine-text-color";
 
 export default function CustomFieldsSection({
   fields,
@@ -54,19 +54,26 @@ export default function CustomFieldsSection({
             </label>
             {isPhoneNumber ? (
               <PhoneInput
+                id={field.identifier}
                 value={value as E164Number}
-                onChange={(phoneValue) => handlePhoneChange(phoneValue, field.identifier!)}
+                onChange={(phoneValue) =>
+                  handlePhoneChange(phoneValue, field.identifier!)
+                }
                 placeholder={field.placeholder || "+1 123 456 7890"}
                 defaultCountry="US"
                 disabled={field.disabled}
                 className={cn(
-                  "flex w-full rounded-md border-0 bg-black py-1.5 text-gray-500 shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6",
+                  "flex w-full rounded-md border-0 bg-black text-gray-500 placeholder:text-gray-400 sm:text-sm sm:leading-6",
                 )}
-                style={{
-                  backgroundColor:
-                    brand && brand.accentColor ? brand.accentColor : "black",
-                  color: determineTextColor(brand?.accentColor),
-                }}
+                style={
+                  {
+                    "--phone-input-bg":
+                      brand && brand.accentColor ? brand.accentColor : "black",
+                    "--phone-input-color": determineTextColor(
+                      brand?.accentColor,
+                    ),
+                  } as React.CSSProperties
+                }
               />
             ) : (
               (() => {
@@ -101,7 +108,9 @@ export default function CustomFieldsSection({
                     )}
                     style={{
                       backgroundColor:
-                        brand && brand.accentColor ? brand.accentColor : "black",
+                        brand && brand.accentColor
+                          ? brand.accentColor
+                          : "black",
                       color: determineTextColor(brand?.accentColor),
                     }}
                     value={value}
