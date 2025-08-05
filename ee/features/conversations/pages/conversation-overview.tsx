@@ -2,8 +2,8 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
-import { ConversationListItem } from "@/ee/features/conversations/components/conversation-list-item";
-import { ConversationsNotEnabledBanner } from "@/ee/features/conversations/components/conversations-not-enabled-banner";
+import { ConversationListItem } from "@/ee/features/conversations/components/dashboard/conversation-list-item";
+import { ConversationsNotEnabledBanner } from "@/ee/features/conversations/components/dashboard/conversations-not-enabled-banner";
 import { Loader2, MessageSquare, Search } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -37,6 +37,7 @@ interface ConversationSummary {
   viewerId: string | null;
   viewerEmail?: string;
   documentPageNumber: number | null;
+  documentVersionNumber: number | null;
   unreadCount: number;
   lastMessage?: {
     content: string;

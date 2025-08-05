@@ -109,7 +109,11 @@ export const conversationService = {
         messages: true,
         views: true,
         dataroom: true,
-        dataroomDocument: true,
+        dataroomDocument: {
+          include: {
+            document: true,
+          },
+        },
       },
     });
   },
@@ -137,7 +141,11 @@ export const conversationService = {
           participants: true,
           messages: includeMessages,
           dataroom: true,
-          dataroomDocument: true,
+          dataroomDocument: {
+            include: {
+              document: true,
+            },
+          },
         },
         orderBy: {
           updatedAt: "desc",
@@ -170,7 +178,11 @@ export const conversationService = {
           participants: true,
           messages: includeMessages,
           dataroom: true,
-          dataroomDocument: true,
+          dataroomDocument: {
+            include: {
+              document: true,
+            },
+          },
         },
         orderBy: {
           updatedAt: "desc",

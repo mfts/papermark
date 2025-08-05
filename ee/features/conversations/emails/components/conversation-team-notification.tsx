@@ -13,37 +13,40 @@ import {
   Text,
 } from "@react-email/components";
 
-export default function ConversationNotification({
+export default function ConversationTeamNotification({
   conversationTitle,
   dataroomName,
   senderEmail,
   url,
-  unsubscribeUrl,
 }: {
   conversationTitle: string;
   dataroomName: string;
   senderEmail: string;
   url: string;
-  unsubscribeUrl: string;
 }) {
   return (
     <Html>
       <Head />
-      <Preview>Conversation update available</Preview>
+      <Preview>New message from visitor in your dataroom</Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
               <span className="font-bold tracking-tighter">Papermark</span>
             </Text>
-            <Text className="font-seminbold mx-0 mb-8 mt-4 p-0 text-center text-xl">
+            <Text className="mx-0 mb-8 mt-4 p-0 text-center text-xl font-semibold">
               {`New message in ${dataroomName}`}
             </Text>
             <Text className="text-sm leading-6 text-black">
-              A new message has been added to the conversation{" "}
-              <span className="font-semibold">{conversationTitle}</span> in the
+              A visitor (<span className="font-semibold">{senderEmail}</span>)
+              has sent a new message in the conversation{" "}
+              <span className="font-semibold">{conversationTitle}</span> in your
               dataroom <span className="font-semibold">{dataroomName}</span> on
               Papermark.
+            </Text>
+            <Text className="text-sm leading-6 text-black">
+              As a manager, you&apos;re receiving this notification to stay
+              informed about visitor interactions in your dataroom.
             </Text>
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
@@ -65,22 +68,8 @@ export default function ConversationNotification({
                 © {new Date().getFullYear()} Papermark, Inc.
               </Text>
               <Text className="text-xs">
-                You received this email from{" "}
-                <span className="font-semibold">{senderEmail}</span> because you
-                turned on notifications for the conversation{" "}
-                <span className="font-semibold">{conversationTitle}</span> in
-                the dataroom{" "}
-                <span className="font-semibold">{dataroomName}</span> on
-                Papermark. If you have any feedback or questions about this
-                email, simply reply to it. To unsubscribe from updates about
-                this dataroom,{" "}
-                <a
-                  href={unsubscribeUrl}
-                  className="text-gray-400 underline underline-offset-2 hover:text-gray-400"
-                >
-                  click here
-                </a>
-                .
+                If you have any feedback or questions about this email, simply
+                reply to it.
               </Text>
             </Section>
           </Container>

@@ -2,8 +2,9 @@ import { useRouter } from "next/router";
 
 import { useState } from "react";
 
-import { ConversationListItem } from "@/ee/features/conversations/components/conversation-list-item";
-import { ConversationMessage } from "@/ee/features/conversations/components/conversation-message";
+import { ConversationListItem } from "@/ee/features/conversations/components/dashboard/conversation-list-item";
+import { ConversationDocumentContext } from "@/ee/features/conversations/components/shared/conversation-document-context";
+import { ConversationMessage } from "@/ee/features/conversations/components/shared/conversation-message";
 import { Loader2, SearchIcon, Send, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -50,6 +51,7 @@ interface Conversation {
   updatedAt: string;
   participants: { id: string; email: string | null }[];
   documentPageNumber: number | null;
+  documentVersionNumber: number | null;
   unreadCount: number;
   messages: Message[];
   dataroomDocument?: {
@@ -67,6 +69,7 @@ interface ConversationSummary {
   viewerId: string | null;
   viewerEmail?: string;
   documentPageNumber: number | null;
+  documentVersionNumber: number | null;
   unreadCount: number;
   lastMessage?: {
     content: string;
@@ -353,16 +356,9 @@ export default function ConversationDetailPage() {
                             : "?"}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
+                      <div className="flex-1">
                         <h2 className="text-base font-semibold">
-                          {conversation.title ||
-                            (conversation.dataroomDocument
-                              ? `${conversation.dataroomDocument.document.name}${
-                                  conversation.documentPageNumber
-                                    ? ` (Page ${conversation.documentPageNumber})`
-                                    : ""
-                                }`
-                              : "Untitled conversation")}
+                          {conversation.title || "Conversation"}
                         </h2>
                         <p className="text-sm text-muted-foreground">
                           {conversation.participants[0].email ||
@@ -383,6 +379,16 @@ export default function ConversationDetailPage() {
                   {/* Messages */}
                   <ScrollArea className="flex-1">
                     <div className="flex flex-col gap-4 p-4">
+                      {/* Document Context */}
+                      <ConversationDocumentContext
+                        dataroomDocument={conversation.dataroomDocument}
+                        documentPageNumber={conversation.documentPageNumber}
+                        documentVersionNumber={
+                          conversation.documentVersionNumber
+                        }
+                        showVersionNumber={true} // Admin sees full context
+                        className="mb-2"
+                      />
                       {conversation.messages.map((message) => (
                         <ConversationMessage
                           key={message.id}
