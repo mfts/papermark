@@ -386,7 +386,7 @@ export default function SlackSettings() {
                                   ([channelId, channel]: [string, any]) => (
                                     <div
                                       key={channelId}
-                                      className="flex items-center gap-1.5 rounded-md border bg-white px-2 py-1 text-sm shadow-sm"
+                                      className="flex items-center gap-1.5 rounded-md border bg-background px-2 py-1 text-sm shadow-sm"
                                     >
                                       <Hash className="h-3 w-3 text-muted-foreground" />
                                       <span className="text-sm font-medium text-foreground">
@@ -404,7 +404,7 @@ export default function SlackSettings() {
                                             ),
                                           )
                                         }
-                                        className="ml-1 rounded-full p-0.5 text-muted-foreground transition-all duration-200 hover:scale-110 hover:bg-gray-100 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                                        className="ml-1 rounded-full p-0.5 text-muted-foreground transition-all duration-200 hover:scale-110 hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                                         aria-label={`Remove ${channel.name} channel`}
                                       >
                                         <X className="h-3 w-3" />
