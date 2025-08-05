@@ -10,6 +10,7 @@ import { errorhandler } from "@/lib/errorHandler";
 import { deleteFiles } from "@/lib/files/delete-team-files-server";
 import prisma from "@/lib/prisma";
 import { redis } from "@/lib/redis";
+import { slackScheduleManager } from "@/lib/slack/schedule-manager";
 import { CustomUser } from "@/lib/types";
 import { unsubscribe } from "@/lib/unsend";
 
@@ -157,6 +158,11 @@ export default async function handle(
         },
       });
 
+      await prisma.slackIntegration.findUnique({
+        where: { teamId },
+        select: { id: true },
+      });
+
       let files: string[] = [];
       let hasBlobDocuments = false;
 
@@ -217,18 +223,21 @@ export default async function handle(
         team.domains && domainPromises,
         // delete subscription, if exists on team
         team.stripeId &&
-          cancelSubscription(team.stripeId, isOldAccount(team.plan)),
+        cancelSubscription(team.stripeId, isOldAccount(team.plan)),
         // delete user from contact book
         unsubscribe((session.user as CustomUser).email ?? ""),
         // delete user, if no other teams
         userTeams.length === 1 &&
-          prisma.user.delete({
-            where: {
-              id: (session.user as CustomUser).id,
-            },
-          }),
+        prisma.user.delete({
+          where: {
+            id: (session.user as CustomUser).id,
+          },
+        }),
         // delete team branding from redis
         redis.del(`brand:logo:${teamId}`),
+        slackScheduleManager.cleanupTeamSchedules(teamId).catch((error) => {
+          console.error('Error cleaning up Slack schedules for team:', error);
+        }),
         // delete team
         prisma.team.delete({
           where: {

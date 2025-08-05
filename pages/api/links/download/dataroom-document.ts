@@ -5,6 +5,7 @@ import { ItemType, ViewType } from "@prisma/client";
 import { getFile } from "@/lib/files/get-file";
 import prisma from "@/lib/prisma";
 import { getIpAddress } from "@/lib/utils/ip";
+import { notifyDocumentDownload } from "@/lib/slack/events";
 
 export const config = {
   maxDuration: 180,
@@ -44,6 +45,7 @@ export default async function handle(
               watermarkConfig: true,
               name: true,
               permissionGroupId: true,
+              teamId: true,
             },
           },
           groupId: true,
@@ -163,6 +165,23 @@ export default async function handle(
           verified: view.verified,
         },
       });
+
+      if (view.link.teamId) {
+        try {
+          await notifyDocumentDownload({
+            teamId: view.link.teamId,
+            documentId,
+            dataroomId: view.dataroom.id,
+            linkId,
+            viewerEmail: view.viewerEmail ?? undefined,
+            viewerId: view.viewerId ?? undefined,
+          });
+        } catch (error) {
+          console.error("Error sending Slack notification:", error);
+        }
+      } else {
+        console.log("No teamId found, skipping Slack notification");
+      }
 
       const file =
         view.link.enableWatermark &&

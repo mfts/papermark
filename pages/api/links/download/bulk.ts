@@ -7,6 +7,7 @@ import { ItemType, ViewType } from "@prisma/client";
 import { getLambdaClientForTeam } from "@/lib/files/aws-client";
 import prisma from "@/lib/prisma";
 import { getIpAddress } from "@/lib/utils/ip";
+import { notifyDocumentDownload } from "@/lib/slack/events";
 
 export const config = {
   maxDuration: 180,
@@ -46,6 +47,7 @@ export default async function handle(
           groupId: true,
           dataroom: {
             select: {
+              id: true,
               teamId: true,
               folders: {
                 select: {
@@ -271,7 +273,7 @@ export default async function handle(
             // Use .file if watermark is enabled and document is PDF, otherwise use .originalFile
             const fileKey =
               view.link.enableWatermark &&
-              doc.document.versions[0].type === "pdf"
+                doc.document.versions[0].type === "pdf"
                 ? doc.document.versions[0].file
                 : (doc.document.versions[0].originalFile ??
                   doc.document.versions[0].file);
@@ -295,6 +297,25 @@ export default async function handle(
         return res.status(404).json({ error: "No files to download" });
       }
 
+      if (view.dataroom?.teamId) {
+        try {
+          await notifyDocumentDownload({
+            teamId: view.dataroom.teamId,
+            documentId: undefined, // Bulk download, no specific document
+            dataroomId: view.dataroom.id,
+            linkId,
+            viewerEmail: view.viewerEmail ?? undefined,
+            viewerId: undefined,
+            metadata: {
+              documentCount: downloadDocuments.length,
+              isBulkDownload: true,
+            },
+          });
+        } catch (error) {
+          console.error("Error sending Slack notification:", error);
+        }
+      }
+
       // Get team-specific storage configuration
       const teamId = view.dataroom!.teamId;
       const [client, storageConfig] = await Promise.all([
@@ -311,16 +332,16 @@ export default async function handle(
           folderStructure: folderStructure,
           watermarkConfig: view.link.enableWatermark
             ? {
-                enabled: true,
-                config: view.link.watermarkConfig,
-                viewerData: {
-                  email: view.viewerEmail,
-                  date: new Date(view.viewedAt).toLocaleDateString(),
-                  time: new Date(view.viewedAt).toLocaleTimeString(),
-                  link: view.link.name,
-                  ipAddress: getIpAddress(req.headers),
-                },
-              }
+              enabled: true,
+              config: view.link.watermarkConfig,
+              viewerData: {
+                email: view.viewerEmail,
+                date: new Date(view.viewedAt).toLocaleDateString(),
+                time: new Date(view.viewedAt).toLocaleTimeString(),
+                link: view.link.name,
+                ipAddress: getIpAddress(req.headers),
+              },
+            }
             : { enabled: false },
         }),
       };
