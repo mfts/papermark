@@ -1,11 +1,7 @@
 import { schedules } from "@trigger.dev/sdk/v3";
 import { processSlackDigestJob } from "@/lib/trigger/slack-digest";
 import prisma from "@/lib/prisma";
-
 export class SlackScheduleManager {
-    /**
-     * Create or update a schedule for a Slack integration
-     */
     async createOrUpdateSchedule(integration: any): Promise<void> {
         try {
             await this.deleteSchedule(integration.id);
@@ -18,12 +14,6 @@ export class SlackScheduleManager {
             const cronPattern = this.generateCronPattern(integration);
             const timezone = integration.timezone || 'UTC';
 
-            console.log(`Creating schedule for integration ${integration.id}:`, {
-                cron: cronPattern,
-                timezone: timezone,
-                frequency: integration.frequency
-            });
-
             await schedules.create({
                 task: processSlackDigestJob.id,
                 cron: cronPattern,
@@ -31,18 +21,12 @@ export class SlackScheduleManager {
                 externalId: integration.id,
                 deduplicationKey: `slack-integration-${integration.id}`,
             });
-
-            console.log(`Successfully created schedule for integration ${integration.id}`);
-
         } catch (error) {
-            console.error(`Error creating schedule for integration ${integration.id}:`, error);
+            console.log(error)
             throw error;
         }
     }
 
-    /**
-     * Delete a schedule for a Slack integration
-     */
     async deleteSchedule(integrationId: string): Promise<void> {
         try {
             const allSchedules = await schedules.list();
@@ -53,7 +37,6 @@ export class SlackScheduleManager {
 
             if (integrationSchedule) {
                 await schedules.del(integrationSchedule.id);
-                console.log(`Deleted schedule for integration ${integrationId}`);
             } else {
                 console.log(`No schedule found for integration ${integrationId}`);
             }
@@ -63,9 +46,6 @@ export class SlackScheduleManager {
         }
     }
 
-    /**
-     * Clean up old notifications when switching from instant to digest
-     */
     async cleanupOldNotifications(integrationId: string): Promise<void> {
         try {
             await prisma.slackNotification.deleteMany({
@@ -86,15 +66,15 @@ export class SlackScheduleManager {
         const [hours, minutes] = time.split(':').map(Number);
 
         if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-            console.warn(`Invalid time format: ${time}, using default 10:00`);
             return `0 10 * * *`;
         }
 
         switch (integration.frequency) {
-            case 'daily':
+            case 'daily': {
                 return `${minutes} ${hours} * * *`;
+            }
 
-            case 'weekly':
+            case 'weekly': {
                 const weeklyDay = integration.weeklyDay || 'monday';
                 const dayMap: Record<string, number> = {
                     'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3,
@@ -108,9 +88,11 @@ export class SlackScheduleManager {
                 }
 
                 return `${minutes} ${hours} * * ${dayOfWeek}`;
+            }
 
-            default:
+            default: {
                 return `0 10 * * *`;
+            }
         }
     }
 
@@ -138,7 +120,7 @@ export class SlackScheduleManager {
                 try {
                     await this.deleteSchedule(integration.id);
                 } catch (error) {
-                    console.error(`Error deleting schedule for integration ${integration.id}:`, error)
+                    console.error(`Error deleting schedule for integration ${integration.id}:`, error);
                 }
             }
         } catch (error) {

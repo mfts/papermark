@@ -158,17 +158,11 @@ export default async function handle(
         },
       });
 
-      await prisma.slackIntegration.findUnique({
-        where: { teamId },
-        select: { id: true },
-      });
-
       let files: string[] = [];
       let hasBlobDocuments = false;
 
       if (documentsUsingBlob) {
         hasBlobDocuments = true;
-        // flatten documents and extract file fields
         files = documentsUsingBlob.flatMap((doc) => [
           doc.file,
           ...doc.versions.flatMap((version) => [

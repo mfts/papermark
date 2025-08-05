@@ -2,6 +2,7 @@ import { Clock, Globe, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { getTimezoneOptions } from "@/lib/slack/timezone-utils";
+import { NotificationFrequency, SlackChannelConfig } from "@/lib/slack/types";
 
 import {
   Card,
@@ -23,17 +24,34 @@ import { Separator } from "@/components/ui/separator";
 
 import { BadgeTooltip } from "../ui/tooltip";
 
+interface SlackIntegration {
+  id: string;
+  workspaceId: string;
+  workspaceName: string;
+  workspaceUrl: string;
+  botUserId: string;
+  botUsername: string;
+  enabled: boolean;
+  notificationTypes: {
+    document_view: boolean;
+    dataroom_access: boolean;
+    document_download: boolean;
+    document_reaction: boolean;
+  };
+  frequency: NotificationFrequency;
+  timezone: string;
+  dailyTime?: string;
+  weeklyDay?: string;
+  defaultChannel?: string;
+  enabledChannels: Record<string, SlackChannelConfig>;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface SlackFrequencySettingsProps {
   teamId: string;
-  integration: {
-    id: string;
-    frequency: "instant" | "daily" | "weekly";
-    timezone: string;
-    dailyTime?: string;
-    weeklyDay?: string;
-    enabledChannels: Record<string, any>;
-  };
-  onUpdate: (updatedIntegration: any) => void;
+  integration: SlackIntegration;
+  onUpdate: (updatedIntegration: SlackIntegration) => void;
 }
 
 const timezones = getTimezoneOptions();
@@ -53,7 +71,11 @@ const weekDays = [
   { value: "sunday", label: "Sunday" },
 ];
 
-const frequencyOptions = [
+const frequencyOptions: Array<{
+  value: NotificationFrequency;
+  label: string;
+  tooltip: string;
+}> = [
   {
     value: "instant",
     label: "Instantly",
@@ -83,20 +105,31 @@ export default function SlackFrequencySettings({
     updates: Partial<typeof integration>,
     successMessage?: string,
   ) => {
-    const response = await fetch(`/api/teams/${teamId}/slack`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...integration, ...updates }),
-    });
+    try {
+      const response = await fetch(`/api/teams/${teamId}/slack`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...integration, ...updates }),
+      });
 
-    if (response.ok) {
-      const updatedIntegration = await response.json();
-      onUpdate(updatedIntegration);
-      if (successMessage) {
-        toast.success(successMessage);
+      if (response.ok) {
+        const updatedIntegration = await response.json();
+        onUpdate(updatedIntegration);
+        if (successMessage) {
+          toast.success(successMessage);
+        }
+      } else {
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Unknown error" }));
+        throw new Error(
+          errorData.error || `Failed to update settings (${response.status})`,
+        );
       }
-    } else {
-      throw new Error("Failed to update settings");
+    } catch (error) {
+      throw error instanceof Error
+        ? error
+        : new Error("Failed to update settings");
     }
   };
 
@@ -126,29 +159,32 @@ export default function SlackFrequencySettings({
     });
   };
 
-  const updateFrequency = async (frequency: "instant" | "daily" | "weekly") => {
+  const updateFrequency = async (frequency: NotificationFrequency) => {
     const updatePromise = async () => {
       await updateIntegration({ frequency });
 
       if (frequency === "daily" || frequency === "weekly") {
-        const updatedChannels = { ...integration.enabledChannels };
-        let channelsUpdated = false;
+        const updatedChannels = Object.keys(integration.enabledChannels).reduce(
+          (acc, channelId) => {
+            const channel = integration.enabledChannels[channelId];
+            if (channel && !channel.notificationTypes.includes("digest")) {
+              acc[channelId] = {
+                ...channel,
+                notificationTypes: [...channel.notificationTypes, "digest"],
+              };
+            } else {
+              acc[channelId] = channel;
+            }
+            return acc;
+          },
+          {} as Record<string, SlackChannelConfig>,
+        );
 
-        Object.keys(updatedChannels).forEach((channelId) => {
-          if (
-            updatedChannels[channelId] &&
-            !updatedChannels[channelId].notificationTypes.includes("digest")
-          ) {
-            updatedChannels[channelId] = {
-              ...updatedChannels[channelId],
-              notificationTypes: [
-                ...updatedChannels[channelId].notificationTypes,
-                "digest",
-              ],
-            };
-            channelsUpdated = true;
-          }
-        });
+        const channelsUpdated = Object.keys(updatedChannels).some(
+          (channelId) =>
+            updatedChannels[channelId] !==
+            integration.enabledChannels[channelId],
+        );
 
         if (channelsUpdated) {
           await updateIntegration({ enabledChannels: updatedChannels });
@@ -189,7 +225,7 @@ export default function SlackFrequencySettings({
         <RadioGroup
           value={integration.frequency}
           onValueChange={(value) =>
-            updateFrequency(value as "instant" | "daily" | "weekly")
+            updateFrequency(value as NotificationFrequency)
           }
         >
           <div className="flex flex-row space-x-6">

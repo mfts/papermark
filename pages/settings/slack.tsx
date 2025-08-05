@@ -56,53 +56,91 @@ export default function SlackSettings() {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const [error, setError] = useState<string | null>(null);
-  const [reactError, setReactError] = useState<string | null>(null);
-
   const [integration, setIntegration] = useState<SlackIntegration | null>(null);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [showChannelModal, setShowChannelModal] = useState(false);
 
+  const handleIntegrationUpdate = (updatedIntegration: SlackIntegration) => {
+    setIntegration(updatedIntegration);
+  };
+
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+
     if (router.query.success) {
       toast.success("Slack integration connected successfully!");
-      setTimeout(() => {
+
+      if (router.query.warning) {
+        toast.warning(`Warning: ${router.query.warning}`);
+      }
+
+      timeoutId = setTimeout(() => {
         router.replace("/settings/slack", undefined, { shallow: true });
       }, 100);
-    }
-    if (router.query.error) {
+    } else if (router.query.error) {
       toast.error(`Failed to connect Slack: ${router.query.error}`);
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         router.replace("/settings/slack", undefined, { shallow: true });
       }, 100);
     }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [router.query]);
 
-  useEffect(() => {
-    if (!teamId) return;
+  const fetchIntegration = async (controller: AbortController) => {
+    try {
+      setError(null);
+      setLoading(true);
 
-    const fetchIntegration = async () => {
-      try {
+      const response = await fetch(`/api/teams/${teamId}/slack`, {
+        signal: controller.signal,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIntegration(data);
         setError(null);
-        const response = await fetch(`/api/teams/${teamId}/slack`);
-        if (response.ok) {
-          const data = await response.json();
-          setIntegration(data);
-        } else if (response.status === 404) {
-          setIntegration(null);
-        } else {
-          const errorData = await response.json();
-          setError(errorData.error || "Failed to fetch integration");
+      } else if (response.status === 404) {
+        setIntegration(null);
+        setError(null);
+      } else {
+        let errorData: { error?: string } = {};
+        try {
+          errorData = await response.json();
+        } catch {
+          console.log("error");
         }
-      } catch (error) {
+        setError(errorData.error || "Failed to fetch integration");
+        setIntegration(null);
+      }
+    } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+      } else {
         console.error("Error fetching Slack integration:", error);
         setError("Failed to fetch integration");
-      } finally {
-        setLoading(false);
+        setIntegration(null);
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchIntegration();
+  useEffect(() => {
+    if (!teamId) {
+      setIntegration(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    fetchIntegration(controller);
+
+    return () => controller.abort();
   }, [teamId]);
 
   const handleConnect = async () => {
@@ -181,20 +219,6 @@ export default function SlackSettings() {
       },
     );
   };
-
-  if (reactError) {
-    return (
-      <AppLayout>
-        <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
-          <SettingsHeader />
-          <Alert className="mb-4">
-            <XCircleIcon className="h-4 w-4" />
-            <AlertDescription>React Error: {reactError}</AlertDescription>
-          </Alert>
-        </main>
-      </AppLayout>
-    );
-  }
 
   return (
     <AppLayout>
@@ -411,7 +435,7 @@ export default function SlackSettings() {
                   <SlackFrequencySettings
                     teamId={teamId!}
                     integration={integration!}
-                    onUpdate={setIntegration}
+                    onUpdate={handleIntegrationUpdate}
                   />
                   <SlackChannelModal
                     open={showChannelModal}

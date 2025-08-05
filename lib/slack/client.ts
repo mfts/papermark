@@ -1,4 +1,5 @@
 import { SlackOAuthResponse, SlackChannel, SlackMessage, SlackWorkspaceInfo } from './types';
+import { decryptSlackToken } from '@/lib/utils';
 
 export class SlackClient {
     private clientId: string;
@@ -15,6 +16,10 @@ export class SlackClient {
         }
     }
 
+    private decryptToken(accessToken: string): string {
+        return decryptSlackToken(accessToken);
+    }
+
     /**
      * Get OAuth URL for Slack app installation
      */
@@ -26,14 +31,7 @@ export class SlackClient {
             state: state,
         });
 
-        // Point at the correct OAuth authorization endpoint:
         const oauthUrl = `${this.oauthUrl}?${params.toString()}`;
-
-        // Debug logging
-        console.log('SlackClient: Generated OAuth URL:', oauthUrl);
-        console.log('SlackClient: Client ID:', this.clientId);
-        console.log('SlackClient: Redirect URI:', redirectUri);
-        console.log('SlackClient: State:', state);
 
         return oauthUrl;
     }
@@ -72,9 +70,10 @@ export class SlackClient {
      * Get workspace information
      */
     async getWorkspaceInfo(accessToken: string): Promise<SlackWorkspaceInfo> {
+        const decryptedToken = this.decryptToken(accessToken);
         const response = await fetch(`${this.baseUrl}/team.info`, {
             headers: {
-                'Authorization': `Bearer ${accessToken}`,
+                'Authorization': `Bearer ${decryptedToken}`,
                 'Content-Type': 'application/json',
             },
         });
@@ -101,9 +100,10 @@ export class SlackClient {
      * Get bot information
      */
     async getBotInfo(accessToken: string): Promise<{ id: string; name: string }> {
+        const decryptedToken = this.decryptToken(accessToken);
         const response = await fetch(`${this.baseUrl}/auth.test`, {
             headers: {
-                'Authorization': `Bearer ${accessToken}`,
+                'Authorization': `Bearer ${decryptedToken}`,
                 'Content-Type': 'application/json',
             },
         });
@@ -129,9 +129,10 @@ export class SlackClient {
      */
     async getChannels(accessToken: string): Promise<SlackChannel[]> {
         try {
+            const decryptedToken = this.decryptToken(accessToken);
             const response = await fetch(`${this.baseUrl}/conversations.list?types=public_channel,private_channel`, {
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`,
+                    'Authorization': `Bearer ${decryptedToken}`,
                     'Content-Type': 'application/json',
                 },
             });
@@ -155,7 +156,6 @@ export class SlackClient {
             }));
         } catch (error) {
             console.error('SlackClient.getChannels error:', error);
-            console.error('Access token (first 10 chars):', accessToken ? accessToken.substring(0, 10) + '...' : 'undefined');
             throw error;
         }
     }
@@ -164,10 +164,11 @@ export class SlackClient {
      * Send message to Slack channel
      */
     async sendMessage(accessToken: string, message: SlackMessage): Promise<{ ok: boolean; ts?: string; error?: string }> {
+        const decryptedToken = this.decryptToken(accessToken);
         const response = await fetch(`${this.baseUrl}/chat.postMessage`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${accessToken}`,
+                'Authorization': `Bearer ${decryptedToken}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(message),

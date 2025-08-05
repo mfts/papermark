@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Hash, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -61,14 +61,8 @@ export default function SlackChannelModal({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Fetch channels when modal opens
-  useEffect(() => {
-    if (open) {
-      fetchChannels();
-    }
-  }, [open, teamId]);
-
-  const fetchChannels = async () => {
+  // Memoize fetchChannels to prevent stale closures
+  const fetchChannels = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/teams/${teamId}/slack/channels`);
@@ -83,7 +77,13 @@ export default function SlackChannelModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [teamId]);
+
+  useEffect(() => {
+    if (open) {
+      fetchChannels();
+    }
+  }, [open, fetchChannels]);
 
   const handleChannelToggle = (channelId: string, channelName: string) => {
     setSelectedChannels((prev) => {

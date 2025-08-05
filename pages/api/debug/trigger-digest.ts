@@ -21,6 +21,10 @@ export default async function handler(
     const userId = (session.user as CustomUser).id;
     const { teamId } = req.query as { teamId: string };
 
+    if (!teamId || typeof teamId !== 'string') {
+        return res.status(400).json({ error: 'Invalid or missing teamId parameter' });
+    }
+
     try {
         // Verify user has access to team
         const userTeam = await prisma.userTeam.findUnique({
@@ -51,9 +55,6 @@ export default async function handler(
                 status: 'PENDING',
             },
         });
-
-        console.log(`[DEBUG] Manually triggering digest for integration ${integration.id}`);
-        console.log(`[DEBUG] Pending notifications before: ${pendingBefore}`);
 
         await processSlackDigests(integration.id);
 

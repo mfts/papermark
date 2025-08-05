@@ -5,6 +5,7 @@ import { slackClient } from '@/lib/slack/client';
 import { CustomUser } from '@/lib/types';
 import prisma from '@/lib/prisma';
 import { slackScheduleManager } from '@/lib/slack/schedule-manager';
+import { encryptSlackToken } from '@/lib/utils';
 
 export default async function handler(
     req: NextApiRequest,
@@ -19,7 +20,6 @@ export default async function handler(
         if (!session) {
             return res.status(401).json({ error: 'Unauthorized' });
         }
-        console.log('req.query', req.query)
         const { code, state, error } = req.query as { code: string; state: string; error?: string };
 
         const userId = (session.user as CustomUser).id;
@@ -87,7 +87,7 @@ export default async function handler(
                 workspaceId: workspaceInfo.id,
                 workspaceName: workspaceInfo.name,
                 workspaceUrl: workspaceInfo.url,
-                accessToken: oauthResponse.access_token,
+                accessToken: encryptSlackToken(oauthResponse.access_token),
                 botUserId: botInfo.id,
                 botUsername: botInfo.name,
                 enabledChannels: {},
@@ -104,14 +104,23 @@ export default async function handler(
             },
         });
 
+        let scheduleWarning = false;
         try {
             await slackScheduleManager.createOrUpdateSchedule(integration);
         } catch (scheduleError) {
             console.error('Error creating schedule for new integration:', scheduleError);
+            scheduleWarning = true;
+        }
+        const redirectParams = new URLSearchParams({
+            success: 'true',
+            integrationId: integration.id,
+        });
+
+        if (scheduleWarning) {
+            redirectParams.append('warning', 'Schedule creation failed.');
         }
 
-        // Redirect back to settings with success
-        return res.redirect(`/settings/slack?success=true&integrationId=${integration.id}`);
+        return res.redirect(`/settings/slack?${redirectParams.toString()}`);
 
     } catch (error) {
         console.error('Slack OAuth callback error:', error);

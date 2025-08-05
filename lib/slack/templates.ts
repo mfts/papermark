@@ -1,4 +1,5 @@
 import { SlackEventData } from "./events";
+import prisma from "@/lib/prisma";
 
 export interface SlackChannelConfig {
     id: string;
@@ -18,7 +19,6 @@ export interface SlackMessage {
 
 export async function createSlackMessage(
     eventData: SlackEventData,
-    channel: SlackChannelConfig
 ): Promise<SlackMessage | null> {
     try {
         switch (eventData.eventType) {
@@ -448,8 +448,7 @@ export async function createDigestMessage(
 ): Promise<SlackMessage> {
     const team = await getTeamInfo(teamId);
 
-    // Get detailed activity breakdown
-    const activityDetails = await generateActivityDetails(events, teamId);
+    const activityDetails = await generateActivityDetails(events);
 
     const summaryBlocks = [];
 
@@ -553,8 +552,7 @@ export async function createDigestMessage(
  * Generate detailed activity breakdown from events
  */
 async function generateActivityDetails(
-    events: Array<{ eventData: SlackEventData; count: number }>,
-    teamId: string
+    events: Array<{ eventData: SlackEventData; count: number }>
 ): Promise<{
     documentActivities: Array<{
         eventType: string;
@@ -588,31 +586,53 @@ async function generateActivityDetails(
         viewerEmail?: string;
     }> = [];
 
-    // Process each event
+    const uniqueDocumentIds = new Set<string>();
+    const uniqueDataroomIds = new Set<string>();
+    const uniqueLinkIds = new Set<string>();
+
+    const eventsToProcess: Array<{ eventData: SlackEventData; count: number }> = [];
+
     for (const { eventData, count } of events) {
-        // Handle multiple occurrences of the same event
         for (let i = 0; i < count; i++) {
+            eventsToProcess.push({ eventData, count: 1 });
+
             if (eventData.documentId) {
-                const doc = await getDocumentInfo(eventData.documentId);
-                documentActivities.push({
-                    eventType: eventData.eventType,
-                    documentName: doc?.name || 'Unknown Document',
-                    viewerEmail: eventData.viewerEmail
-                });
+                uniqueDocumentIds.add(eventData.documentId);
             } else if (eventData.dataroomId) {
-                const dataroom = await getDataroomInfo(eventData.dataroomId);
-                dataroomActivities.push({
-                    dataroomName: dataroom?.name || 'Unknown Dataroom',
-                    viewerEmail: eventData.viewerEmail
-                });
+                uniqueDataroomIds.add(eventData.dataroomId);
             } else if (eventData.linkId) {
-                const link = await getLinkInfo(eventData.linkId);
-                linkActivities.push({
-                    eventType: eventData.eventType,
-                    linkName: link?.name || 'Unknown Link',
-                    viewerEmail: eventData.viewerEmail
-                });
+                uniqueLinkIds.add(eventData.linkId);
             }
+        }
+    }
+
+    const [documents, datarooms, links] = await Promise.all([
+        uniqueDocumentIds.size > 0 ? batchGetDocumentInfo(Array.from(uniqueDocumentIds)) : Promise.resolve(new Map()),
+        uniqueDataroomIds.size > 0 ? batchGetDataroomInfo(Array.from(uniqueDataroomIds)) : Promise.resolve(new Map()),
+        uniqueLinkIds.size > 0 ? batchGetLinkInfo(Array.from(uniqueLinkIds)) : Promise.resolve(new Map()),
+    ]);
+
+    for (const { eventData } of eventsToProcess) {
+        if (eventData.documentId) {
+            const doc = documents.get(eventData.documentId);
+            documentActivities.push({
+                eventType: eventData.eventType,
+                documentName: doc?.name || 'Unknown Document',
+                viewerEmail: eventData.viewerEmail
+            });
+        } else if (eventData.dataroomId) {
+            const dataroom = datarooms.get(eventData.dataroomId);
+            dataroomActivities.push({
+                dataroomName: dataroom?.name || 'Unknown Dataroom',
+                viewerEmail: eventData.viewerEmail
+            });
+        } else if (eventData.linkId) {
+            const link = links.get(eventData.linkId);
+            linkActivities.push({
+                eventType: eventData.eventType,
+                linkName: link?.name || `Link ${link?.id.slice(0, 5)}`,
+                viewerEmail: eventData.viewerEmail
+            });
         }
     }
 
@@ -644,7 +664,6 @@ function getActivityAction(eventType: string): string {
 // Helper functions
 async function getDocumentInfo(documentId: string) {
     try {
-        const prisma = (await import("@/lib/prisma")).default;
         return await prisma.document.findUnique({
             where: { id: documentId },
             select: {
@@ -660,9 +679,28 @@ async function getDocumentInfo(documentId: string) {
     }
 }
 
+async function batchGetDocumentInfo(documentIds: string[]) {
+    try {
+        const documents = await prisma.document.findMany({
+            where: { id: { in: documentIds } },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                type: true,
+            },
+        });
+        const documentMap = new Map();
+        documents.forEach(doc => documentMap.set(doc.id, doc));
+        return documentMap;
+    } catch (error) {
+        console.error('Error fetching batch document info:', error);
+        return new Map();
+    }
+}
+
 async function getDataroomInfo(dataroomId: string) {
     try {
-        const prisma = (await import("@/lib/prisma")).default;
         return await prisma.dataroom.findUnique({
             where: { id: dataroomId },
             select: {
@@ -685,9 +723,37 @@ async function getDataroomInfo(dataroomId: string) {
     }
 }
 
+async function batchGetDataroomInfo(dataroomIds: string[]) {
+    try {
+        const datarooms = await prisma.dataroom.findMany({
+            where: { id: { in: dataroomIds } },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                _count: {
+                    select: {
+                        documents: true,
+                    },
+                },
+            },
+        });
+        const dataroomMap = new Map();
+        datarooms.forEach(dataroom => {
+            dataroomMap.set(dataroom.id, {
+                ...dataroom,
+                documentCount: dataroom._count.documents,
+            });
+        });
+        return dataroomMap;
+    } catch (error) {
+        console.error('Error fetching batch dataroom info:', error);
+        return new Map();
+    }
+}
+
 async function getUserInfo(userId: string) {
     try {
-        const prisma = (await import("@/lib/prisma")).default;
         return await prisma.user.findUnique({
             where: { id: userId },
             select: {
@@ -704,7 +770,6 @@ async function getUserInfo(userId: string) {
 
 async function getTeamInfo(teamId: string) {
     try {
-        const prisma = (await import("@/lib/prisma")).default;
         return await prisma.team.findUnique({
             where: { id: teamId },
             select: {
@@ -720,7 +785,6 @@ async function getTeamInfo(teamId: string) {
 
 async function getLinkInfo(linkId: string) {
     try {
-        const prisma = (await import("@/lib/prisma")).default;
         return await prisma.link.findUnique({
             where: { id: linkId },
             select: {
@@ -735,12 +799,22 @@ async function getLinkInfo(linkId: string) {
     }
 }
 
-function getEventDisplayName(eventType: string): string {
-    switch (eventType) {
-        case 'document_view': return 'Document Views';
-        case 'dataroom_access': return 'Dataroom Access';
-        case 'document_download': return 'Document Downloads';
-        case 'document_reaction': return 'Document Reactions';
-        default: return 'Unknown Events';
+async function batchGetLinkInfo(linkIds: string[]) {
+    try {
+        const links = await prisma.link.findMany({
+            where: { id: { in: linkIds } },
+            select: {
+                id: true,
+                name: true,
+                linkType: true,
+            },
+        });
+
+        const linkMap = new Map();
+        links.forEach(link => linkMap.set(link.id, link));
+        return linkMap;
+    } catch (error) {
+        console.error('Error fetching batch link info:', error);
+        return new Map();
     }
-} 
+}

@@ -148,16 +148,18 @@ export class SlackDigestProcessor {
         }
 
         try {
-            await prisma.slackNotification.updateMany({
-                where: {
-                    id: {
-                        in: notificationIds,
+            await prisma.$transaction(async (tx) => {
+                await tx.slackNotification.updateMany({
+                    where: {
+                        id: {
+                            in: notificationIds,
+                        },
                     },
-                },
-                data: {
-                    status: 'PROCESSED',
-                    processedAt: new Date(),
-                },
+                    data: {
+                        status: 'PROCESSED',
+                        processedAt: new Date(),
+                    },
+                });
             });
         } catch (error) {
             console.error(`[${new Date().toISOString()}] Error marking notifications as processed:`, error);
@@ -174,16 +176,18 @@ export class SlackDigestProcessor {
         }
 
         try {
-            await prisma.slackNotification.updateMany({
-                where: {
-                    id: {
-                        in: notificationIds,
+            await prisma.$transaction(async (tx) => {
+                await tx.slackNotification.updateMany({
+                    where: {
+                        id: {
+                            in: notificationIds,
+                        },
                     },
-                },
-                data: {
-                    status: 'FAILED',
-                    processedAt: new Date(),
-                },
+                    data: {
+                        status: 'FAILED',
+                        processedAt: new Date(),
+                    },
+                });
             });
         } catch (error) {
             console.error(`[${new Date().toISOString()}] Error marking notifications as failed:`, error);

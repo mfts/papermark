@@ -1,3 +1,4 @@
+import { SlackIntegration } from "@prisma/client";
 import { SlackClient } from "./client";
 import { createSlackMessage } from "./templates";
 import prisma from "@/lib/prisma";
@@ -27,18 +28,13 @@ export class SlackEventManager {
 
             const integration = await this.getSlackIntegration(eventData.teamId);
             if (!integration || !integration.enabled) {
-                console.log("No integration found or integration disabled for team:", eventData.teamId);
                 return;
             }
 
-            console.log("Integration found:", { enabled: integration.enabled, frequency: integration.frequency });
 
             if (!this.isEventTypeEnabled(eventData.eventType, integration)) {
-                console.log("Event type not enabled:", eventData.eventType, "Integration notification types:", integration.notificationTypes);
                 return;
             }
-
-            console.log("Event type enabled, processing...");
 
             if (integration.frequency === 'instant') {
                 await this.sendInstantNotification(eventData, integration);
@@ -56,27 +52,25 @@ export class SlackEventManager {
      */
     private async sendInstantNotification(
         eventData: SlackEventData,
-        integration: any
+        integration: SlackIntegration
     ): Promise<void> {
         try {
             const channels = await this.getNotificationChannels(eventData, integration);
 
             if (channels.length === 0) {
-                console.log(`No enabled channels found for event type ${eventData.eventType}`);
                 return;
             }
 
 
             for (const channel of channels) {
                 try {
-                    const message = await createSlackMessage(eventData, channel);
+                    const message = await createSlackMessage(eventData);
                     if (message) {
                         const slackMessage = {
                             ...message,
                             channel: channel.id
                         };
                         await this.client.sendMessage(integration.accessToken, slackMessage);
-                        console.log(`Sent instant notification to channel ${channel.name || channel.id}`);
                     }
                 } catch (channelError) {
                     console.error(`Error sending to channel ${channel.name || channel.id}:`, channelError);
@@ -107,15 +101,13 @@ export class SlackEventManager {
         }
     }
 
-    private async getSlackIntegration(teamId: string) {
+    private async getSlackIntegration(teamId: string): Promise<SlackIntegration | null> {
         return await prisma.slackIntegration.findFirst({
             where: { teamId, enabled: true },
         });
     }
 
-    /**
-     * Check if event type is enabled in integration config
-     */
+
     private isEventTypeEnabled(
         eventType: string,
         integration: any
@@ -124,19 +116,15 @@ export class SlackEventManager {
         return notificationTypes[eventType] || false;
     }
 
-    /**
-     * Get channels to send notifications to
-     */
     private async getNotificationChannels(
         eventData: SlackEventData,
-        integration: any
+        integration: SlackIntegration
     ): Promise<any[]> {
         const enabledChannels = integration.enabledChannels || {};
         return Object.values(enabledChannels)
             .filter((channel: any) => channel.enabled)
             .filter((channel: any) => channel.notificationTypes && channel.notificationTypes.includes(eventData.eventType));
     }
-
 }
 
 
