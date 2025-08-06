@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { sendConversationTeamNotification } from "@/ee/features/conversations/emails/lib/send-conversation-team-notification";
 import { getDisplayNameFromPlan } from "@/ee/stripe/functions/get-display-name-from-plan";
 import { z } from "zod";
 
@@ -115,7 +114,6 @@ export default async function handle(
     res.status(200).json({
       message: "Successfully sent pause resume reminder to team members",
       notified: teamMemberEmails.length,
-      teamMemberEmails,
     });
     return;
   } catch (error) {
@@ -124,6 +122,8 @@ export default async function handle(
       type: "error",
       mention: true,
     });
-    return res.status(500).json({ message: (error as Error).message });
+    return res
+      .status(500)
+      .json({ message: "Failed to send pause resume reminder" });
   }
 }

@@ -35,8 +35,6 @@ export default async function getSubscriptionItem(
     };
   }
 
-  console.log(discount);
-
   return {
     id: subscriptionItem.id,
     currentPeriodStart: subscription.current_period_start,

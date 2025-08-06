@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
 
 import { type CancellationReason } from "../lib/constants";
 import { ConfirmCancellationModal } from "./confirm-cancellation-modal";
@@ -42,7 +41,6 @@ export function CancellationModal({
   const [loading, setLoading] = useState(false);
 
   const { currentTeamId } = useTeam();
-  const { mutate: mutatePlan } = usePlan();
   const analytics = useAnalytics();
 
   const reasons: { value: CancellationReason; label: string }[] = [
@@ -60,7 +58,6 @@ export function CancellationModal({
   useEffect(() => {
     if (!open) {
       const timeoutId = setTimeout(() => {
-        console.log("Modal closed, resetting state");
         setCurrentStep("pause-offer");
         setSelectedReason(null);
         setFeedback("");
