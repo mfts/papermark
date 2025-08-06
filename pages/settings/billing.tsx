@@ -33,12 +33,18 @@ export default function Billing() {
       });
 
       sendGTMEvent({ event: "upgraded" });
+
+      // Remove the success query parameter
+      router.replace("/settings/billing", undefined, { shallow: true });
     }
 
     if (router.query.cancel) {
       analytics.capture("Stripe Checkout Cancelled", {
         teamId: teamId,
       });
+
+      // Remove the cancel query parameter
+      router.replace("/settings/billing", undefined, { shallow: true });
     }
   }, [router.query]);
 

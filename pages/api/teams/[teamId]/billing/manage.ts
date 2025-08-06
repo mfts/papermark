@@ -1,10 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { stripeInstance } from "@/ee/stripe";
-import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
 import { getQuantityFromPriceId } from "@/ee/stripe/functions/get-quantity-from-plan";
 import getSubscriptionItem from "@/ee/stripe/functions/get-subscription-item";
-import { PLANS, isOldAccount } from "@/ee/stripe/utils";
+import { isOldAccount } from "@/ee/stripe/utils";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
@@ -43,6 +42,7 @@ export default async function handle(
       addSeat,
       proAnnualBanner,
       return_url,
+      type = "manage",
     } = req.body as {
       priceId: string;
       upgradePlan: boolean;
@@ -50,6 +50,11 @@ export default async function handle(
       addSeat?: boolean;
       proAnnualBanner?: boolean;
       return_url?: string;
+      type?:
+        | "manage"
+        | "invoices"
+        | "subscription_update"
+        | "payment_method_update";
     };
     try {
       const team = await prisma.team.findUnique({
@@ -79,7 +84,11 @@ export default async function handle(
         return res.status(400).json({ error: "No subscription ID" });
       }
 
-      const subscriptionItemId = await getSubscriptionItem(
+      const {
+        id: subscriptionItemId,
+        currentPeriodStart,
+        currentPeriodEnd,
+      } = await getSubscriptionItem(
         team.subscriptionId,
         isOldAccount(team.plan),
       );
@@ -90,7 +99,8 @@ export default async function handle(
       const { url } = await stripe.billingPortal.sessions.create({
         customer: team.stripeId,
         return_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
-        ...((upgradePlan || addSeat) &&
+        ...(type === "manage" &&
+          (upgradePlan || addSeat) &&
           subscriptionItemId && {
             flow_data: {
               type: "subscription_update_confirm",
@@ -116,6 +126,14 @@ export default async function handle(
               },
             },
           }),
+        ...(type === "subscription_update" && {
+          flow_data: {
+            type: "subscription_update",
+            subscription_update: {
+              subscription: team.subscriptionId,
+            },
+          },
+        }),
       });
 
       waitUntil(identifyUser(userEmail ?? userId));
