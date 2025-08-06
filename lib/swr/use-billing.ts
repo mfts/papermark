@@ -1,5 +1,6 @@
 import { useTeam } from "@/context/team-context";
 import { PLAN_NAME_MAP } from "@/ee/stripe/constants";
+import { SubscriptionDiscount } from "@/ee/stripe/functions/get-subscription-item";
 import useSWR from "swr";
 
 import { fetcher } from "@/lib/utils";
@@ -47,8 +48,13 @@ type PlanWithOld = `${BasePlan}+old` | `${BasePlan}+drtrial+old`;
 
 type PlanResponse = {
   plan: BasePlan | PlanWithTrial | PlanWithOld;
+  startsAt: Date | null;
+  endsAt: Date | null;
+  pauseStartsAt: Date | null;
+  cancelledAt: Date | null;
   isCustomer: boolean;
   subscriptionCycle: "monthly" | "yearly";
+  discount: SubscriptionDiscount | null;
 };
 
 interface PlanDetails {
@@ -69,12 +75,19 @@ function parsePlan(plan: BasePlan | PlanWithTrial | PlanWithOld): PlanDetails {
   };
 }
 
-export function usePlan() {
+export function usePlan({
+  withDiscount = false,
+}: { withDiscount?: boolean } = {}) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: plan, error } = useSWR<PlanResponse>(
-    teamId && `/api/teams/${teamId}/billing/plan`,
+  const {
+    data: plan,
+    error,
+    mutate,
+  } = useSWR<PlanResponse>(
+    teamId &&
+      `/api/teams/${teamId}/billing/plan${withDiscount ? "?withDiscount=true" : ""}`,
     fetcher,
   );
 
@@ -86,11 +99,19 @@ export function usePlan() {
   return {
     plan: parsedPlan.plan ?? "free",
     planName: PLAN_NAME_MAP[parsedPlan.plan ?? "free"],
+    originalPlan: parsedPlan.plan + (parsedPlan.old ? "+old" : ""),
     trial: parsedPlan.trial,
     isTrial: !!parsedPlan.trial,
     isOldAccount: parsedPlan.old,
     isCustomer: plan?.isCustomer,
     isAnnualPlan: plan?.subscriptionCycle === "yearly",
+    startsAt: plan?.startsAt,
+    endsAt: plan?.endsAt,
+    cancelledAt: plan?.cancelledAt,
+    isPaused: !!plan?.pauseStartsAt,
+    isCancelled: !!plan?.cancelledAt,
+    pauseStartsAt: plan?.pauseStartsAt,
+    discount: plan?.discount || null,
     isFree: parsedPlan.plan === "free",
     isStarter: parsedPlan.plan === "starter",
     isPro: parsedPlan.plan === "pro",
@@ -100,5 +121,6 @@ export function usePlan() {
     isDataroomsPlus: parsedPlan.plan === "datarooms-plus",
     loading: !plan && !error,
     error,
+    mutate,
   };
 }
