@@ -30,6 +30,9 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
           users: {
             some: {
               userId: userId,
+              role: {
+                in: ["ADMIN", "MANAGER"],
+              },
             },
           },
         },
