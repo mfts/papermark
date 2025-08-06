@@ -37,17 +37,18 @@ export function AddSeatModal({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const analytics = useAnalytics();
-  const { plan: userPlan, planName, isAnnualPlan } = usePlan();
+  const { plan: userPlan, planName, isAnnualPlan, isOldAccount } = usePlan();
   const { limits } = useLimits();
 
   const [quantity, setQuantity] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
 
   // Get the minimum quantity for the current plan
-  const priceId = getPriceIdFromPlan(
-    planName,
-    isAnnualPlan ? "yearly" : "monthly",
-  );
+  const priceId = getPriceIdFromPlan({
+    planSlug: userPlan,
+    isOld: isOldAccount,
+    period: isAnnualPlan ? "yearly" : "monthly",
+  });
   const minQuantity = getQuantityFromPriceId(priceId);
 
   // Set initial quantity to 1 (adding one seat)
