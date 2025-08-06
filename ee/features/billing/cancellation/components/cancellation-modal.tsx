@@ -241,7 +241,6 @@ export function CancellationModal({
         open={open}
         onOpenChange={onOpenChange}
         reason={selectedReason}
-        onBack={handleBack}
         onDecline={() => setCurrentStep("confirm")}
       />
     );
