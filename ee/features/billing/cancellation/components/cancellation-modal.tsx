@@ -1,27 +1,19 @@
-import { useRouter } from "next/router";
-
 import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import { mutate } from "swr";
 
-import { Button } from "@/components/ui/button";
-import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { Modal } from "@/components/ui/modal";
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
 
+import { type CancellationReason } from "../lib/constants";
 import { ConfirmCancellationModal } from "./confirm-cancellation-modal";
 import { FeedbackModal } from "./feedback-modal";
 import { PauseSubscriptionModal } from "./pause-subscription-modal";
+import { CancellationBaseModal } from "./reason-base-modal";
 import { RetentionOfferModal } from "./retention-offer-modal";
 import { ScheduleCallModal } from "./schedule-call-modal";
-
-type CancellationReason =
-  | "too-expensive"
-  | "not-using-enough"
-  | "missing-features"
-  | "technical-issues"
-  | "switching-competitor"
-  | "other";
 
 type CancellationStep =
   | "reason"
@@ -49,28 +41,18 @@ export function CancellationModal({
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Absolutely ensure we start with pause offer when component mounts
-  useEffect(() => {
-    setCurrentStep("pause-offer");
-    setSelectedReason(null);
-    setFeedback("");
-    setLoading(false);
-  }, []); // Run once on mount
-
-  // Debug state changes
-  useEffect(() => {
-    console.log("Current step changed to:", currentStep);
-  }, [currentStep]);
-
-  const router = useRouter();
-  const teamInfo = useTeam();
+  const { currentTeamId } = useTeam();
+  const { mutate: mutatePlan } = usePlan();
+  const analytics = useAnalytics();
 
   const reasons: { value: CancellationReason; label: string }[] = [
-    { value: "too-expensive", label: "Too expensive" },
-    { value: "not-using-enough", label: "I'm not using it enough" },
-    { value: "missing-features", label: "Missing features I need" },
-    { value: "technical-issues", label: "Technical issues" },
-    { value: "switching-competitor", label: "Switching to a competitor" },
+    { value: "too_expensive", label: "It's too expensive" },
+    { value: "unused", label: "I don't use the service enough" },
+    { value: "missing_features", label: "Some features are missing" },
+    {
+      value: "switched_service",
+      label: "I'm switching to a different service",
+    },
     { value: "other", label: "Other reason" },
   ];
 
@@ -92,19 +74,16 @@ export function CancellationModal({
     setSelectedReason(reason);
     // Route based on reason - only "other" goes to feedback first
     switch (reason) {
-      case "too-expensive":
+      case "too_expensive":
         setCurrentStep("retention-offer");
         break;
-      case "not-using-enough":
-        setCurrentStep("pause-offer");
+      case "unused":
+        setCurrentStep("confirm"); // Go directly to cancellation flow for unused
         break;
-      case "missing-features":
+      case "missing_features":
         setCurrentStep("schedule-call");
         break;
-      case "technical-issues":
-        setCurrentStep("retention-offer");
-        break;
-      case "switching-competitor":
+      case "switched_service":
         setCurrentStep("retention-offer");
         break;
       case "other":
@@ -131,10 +110,10 @@ export function CancellationModal({
         break;
       case "confirm":
         // Go back to the appropriate step based on reason
-        if (selectedReason === "missing-features") {
+        if (selectedReason === "missing_features") {
           setCurrentStep("schedule-call");
-        } else if (selectedReason === "not-using-enough") {
-          setCurrentStep("pause-offer");
+        } else if (selectedReason === "unused") {
+          setCurrentStep("reason"); // Go back to reason selection for unused
         } else if (selectedReason === "other") {
           setCurrentStep("feedback"); // Go back to "other" feedback
         } else {
@@ -155,6 +134,53 @@ export function CancellationModal({
     onOpenChange(false);
   };
 
+  const handleFinalFeedbackSubmit = async () => {
+    if (!currentTeamId || !selectedReason) return;
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `/api/teams/${currentTeamId}/billing/cancellation-feedback`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reason: selectedReason,
+            feedback: feedback,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // Track in PostHog
+        analytics.capture("Cancellation Feedback Submitted", {
+          teamId: currentTeamId,
+          reason: selectedReason,
+          reasonLabel: data.feedbackData?.reasonLabel || selectedReason,
+          feedback: feedback || "",
+          hasCustomFeedback: !!feedback,
+        });
+
+        toast.success("Thank you for your feedback!");
+        mutate(`/api/teams/${currentTeamId}/billing/plan`);
+        mutate(`/api/teams/${currentTeamId}/billing/plan?withDiscount=true`);
+        onOpenChange(false);
+      } else {
+        throw new Error("Failed to submit feedback");
+      }
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      toast.error("Sorry, we couldn't submit your feedback. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!open) {
     return null;
   }
@@ -171,53 +197,28 @@ export function CancellationModal({
     );
   }
 
-  if (currentStep === "reason") {
+  if (currentStep === "reason" || !selectedReason) {
     return (
-      <Modal
-        showModal={open}
-        setShowModal={(show: boolean | ((prev: boolean) => boolean)) => {
-          if (typeof show === "function") {
-            onOpenChange(show(open));
-          } else {
-            onOpenChange(show);
-          }
-        }}
-        className="max-w-lg"
+      <CancellationBaseModal
+        open={open}
+        onOpenChange={onOpenChange}
+        title="Why do you want to cancel?"
+        description="Help us understand what we could improve"
+        showKeepButton={true}
+        onBack={handleBack}
       >
-        <div className="flex flex-col items-center justify-center space-y-3 border-b border-border bg-white px-4 py-4 pt-8 dark:border-gray-900 dark:bg-gray-900 sm:px-8">
-          <DialogTitle className="text-2xl font-semibold">
-            Why do you want to cancel?
-          </DialogTitle>
-          <DialogDescription className="text-center text-base text-muted-foreground">
-            Help us understand what we could improve
-          </DialogDescription>
+        <div className="space-y-3">
+          {reasons.map((reason) => (
+            <button
+              key={reason.value}
+              onClick={() => handleReasonClick(reason.value)}
+              className="w-full rounded-lg border border-gray-200 bg-white p-4 text-left transition-colors hover:ring-1 hover:ring-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:hover:ring-gray-200"
+            >
+              <div className="text-sm font-medium">{reason.label}</div>
+            </button>
+          ))}
         </div>
-
-        <div className="px-4 py-6 dark:bg-gray-900 sm:px-8">
-          <div className="space-y-3">
-            {reasons.map((reason) => (
-              <button
-                key={reason.value}
-                onClick={() => handleReasonClick(reason.value)}
-                className="w-full rounded-lg border border-gray-200 bg-white p-4 text-left transition-colors hover:ring-1 hover:ring-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:hover:ring-gray-200"
-              >
-                <div className="text-sm font-medium">{reason.label}</div>
-              </button>
-            ))}
-
-            <div className="flex items-center justify-between border-t pt-4">
-              <Button
-                variant="ghost"
-                onClick={handleBack}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Modal>
+      </CancellationBaseModal>
     );
   }
 
@@ -226,7 +227,7 @@ export function CancellationModal({
       <RetentionOfferModal
         open={open}
         onOpenChange={onOpenChange}
-        reason={selectedReason!}
+        reason={selectedReason}
         onBack={handleBack}
         onDecline={() => setCurrentStep("confirm")}
         onClose={handleClose}
@@ -239,28 +240,9 @@ export function CancellationModal({
       <ScheduleCallModal
         open={open}
         onOpenChange={onOpenChange}
-        reason={selectedReason!}
+        reason={selectedReason}
         onBack={handleBack}
         onDecline={() => setCurrentStep("confirm")}
-      />
-    );
-  }
-
-  if (currentStep === "confirm") {
-    return (
-      <ConfirmCancellationModal
-        open={open}
-        onOpenChange={onOpenChange}
-        onBack={handleBack}
-        onClose={handleClose}
-        reason={selectedReason!}
-        feedback={feedback}
-        onConfirm={() => {
-          console.log(
-            "Confirm cancellation onConfirm called, setting step to final-feedback",
-          );
-          setCurrentStep("final-feedback");
-        }} // After confirming cancellation, show final feedback
       />
     );
   }
@@ -270,7 +252,7 @@ export function CancellationModal({
       <FeedbackModal
         open={open}
         onOpenChange={onOpenChange}
-        reason={selectedReason!}
+        reason={selectedReason}
         feedback={feedback}
         onFeedbackChange={setFeedback}
         onBack={handleBack}
@@ -283,22 +265,31 @@ export function CancellationModal({
     );
   }
 
+  if (currentStep === "confirm") {
+    return (
+      <ConfirmCancellationModal
+        open={open}
+        onOpenChange={onOpenChange}
+        onConfirmCancellation={() => {
+          // After cancellation is confirmed, show feedback modal
+          setCurrentStep("final-feedback");
+        }}
+      />
+    );
+  }
+
   if (currentStep === "final-feedback") {
-    console.log("Rendering final-feedback modal");
     return (
       <FeedbackModal
         open={open}
         onOpenChange={onOpenChange}
-        reason={selectedReason!}
+        reason={selectedReason}
         feedback={feedback}
         onFeedbackChange={setFeedback}
         onBack={handleBack}
-        onContinue={() => {
-          // Final step - close modal after feedback
-          console.log("Final feedback submitted, closing modal");
-          onOpenChange(false);
-        }}
-        isFinalStep={true} // This is the final "Sorry to see you go" feedback
+        onContinue={handleFinalFeedbackSubmit}
+        isFinalStep={true} // This is the final feedback
+        loading={loading}
       />
     );
   }

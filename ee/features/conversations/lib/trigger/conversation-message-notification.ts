@@ -202,12 +202,6 @@ export const sendConversationTeamMemberNotificationTask = task({
       },
       select: {
         userId: true,
-        user: {
-          select: {
-            id: true,
-            email: true,
-          },
-        },
       },
     });
 

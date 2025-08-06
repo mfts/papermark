@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { handleRoute } from "@/ee/features/billing/cancellation/api/cancel-route";
+import { handleRoute } from "@/ee/features/billing/cancellation/api/reactivate-route";
 
 export const config = {
   // in order to enable `waitUntil` function

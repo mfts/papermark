@@ -5,6 +5,11 @@ import { useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { mutate } from "swr";
+
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+import { timeIn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -26,19 +31,17 @@ export function PauseSubscriptionModal({
   onClose,
 }: PauseSubscriptionModalProps) {
   const [loading, setLoading] = useState(false);
-  const teamInfo = useTeam();
+  const { currentTeamId } = useTeam();
+  const { endsAt, plan } = usePlan();
+  const analytics = useAnalytics();
 
   const handlePauseSubscription = async () => {
-    if (!teamInfo?.currentTeam?.id) {
-      toast.error("Team information not found");
-      return;
-    }
-
+    if (!currentTeamId) return;
     setLoading(true);
 
     try {
       const response = await fetch(
-        `/api/teams/${teamInfo.currentTeam.id}/billing/pause`,
+        `/api/teams/${currentTeamId}/billing/pause`,
         {
           method: "POST",
           headers: {
@@ -51,13 +54,19 @@ export function PauseSubscriptionModal({
         throw new Error("Failed to pause subscription");
       }
 
-      const data = await response.json();
+      // Track the pause event for analytics
+      analytics.capture("Subscription Paused", {
+        teamId: currentTeamId,
+        plan: plan,
+        pauseStartsAt: pauseStartsAt.toISOString(),
+        pauseEndsAt: pauseEndsAt.toISOString(),
+        pauseDurationDays: 90,
+      });
 
       toast.success("Subscription paused successfully!");
+      mutate(`/api/teams/${currentTeamId}/billing/plan`);
+      mutate(`/api/teams/${currentTeamId}/billing/plan?withDiscount=true`);
       onClose();
-
-      // Refresh the page to show updated billing status
-      window.location.reload();
     } catch (error) {
       console.error("Error pausing subscription:", error);
       toast.error("Failed to pause subscription. Please try again.");
@@ -65,6 +74,31 @@ export function PauseSubscriptionModal({
       setLoading(false);
     }
   };
+
+  const pauseStartsAt = endsAt ? new Date(endsAt) : new Date();
+  const pauseEndsAt = new Date(pauseStartsAt);
+  pauseEndsAt.setDate(pauseStartsAt.getDate() + 90);
+
+  const pauseStartsAtString = new Date(pauseStartsAt).toLocaleDateString(
+    "en-US",
+    {
+      month: "long",
+      day: "numeric",
+      year:
+        new Date(pauseStartsAt).getFullYear() === new Date().getFullYear()
+          ? undefined
+          : "numeric",
+    },
+  );
+
+  const pauseEndsAtString = new Date(pauseEndsAt).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year:
+      new Date(pauseEndsAt).getFullYear() === new Date().getFullYear()
+        ? undefined
+        : "numeric",
+  });
 
   return (
     <Modal
@@ -97,13 +131,13 @@ export function PauseSubscriptionModal({
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-500" />
                 <span className="text-sm font-medium text-green-800 dark:text-green-700">
-                  You pay €0 for 3 months
+                  You pay $0 for 3 months
                 </span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-500" />
                 <span className="text-sm font-medium text-green-800 dark:text-green-700">
-                  All your custom links continue to work
+                  All your links continue to work
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -129,7 +163,10 @@ export function PauseSubscriptionModal({
             <div className="space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center justify-between">
                 <span>Pause starts:</span>
-                <span className="font-medium">Today</span>
+                <span className="font-medium">
+                  {pauseStartsAtString}{" "}
+                  <span className="italic">({timeIn(pauseStartsAt)})</span>
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Reminder email:</span>
@@ -137,15 +174,7 @@ export function PauseSubscriptionModal({
               </div>
               <div className="flex items-center justify-between">
                 <span>Auto-resume date:</span>
-                <span className="font-medium">
-                  {new Date(
-                    Date.now() + 90 * 24 * 60 * 60 * 1000,
-                  ).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
+                <span className="font-medium">{pauseEndsAtString}</span>
               </div>
             </div>
           </div>

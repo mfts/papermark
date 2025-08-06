@@ -170,6 +170,15 @@ export const timeAgo = (timestamp?: Date): string => {
   return `${ms(diff)} ago`;
 };
 
+export const timeIn = (timestamp?: Date): string => {
+  if (!timestamp) return "Just now";
+  const diff = new Date(timestamp).getTime() - Date.now();
+  if (diff < 60000) {
+    return "Just now";
+  }
+  return `in ${ms(diff, { long: true })}`;
+};
+
 export const durationFormat = (durationInMilliseconds?: number): string => {
   if (!durationInMilliseconds) return "0 secs";
 
