@@ -54,6 +54,10 @@ export function PauseSubscriptionModal({
         throw new Error("Failed to pause subscription");
       }
 
+      const pauseStartsAt = endsAt ? new Date(endsAt) : new Date();
+      const pauseEndsAt = new Date(pauseStartsAt);
+      pauseEndsAt.setDate(pauseStartsAt.getDate() + 90);
+
       // Track the pause event for analytics
       analytics.capture("Subscription Paused", {
         teamId: currentTeamId,

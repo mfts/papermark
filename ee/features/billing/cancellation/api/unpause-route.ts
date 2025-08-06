@@ -60,14 +60,14 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
         return res.status(400).json({ error: "No subscription ID" });
       }
 
+      if (!team.pauseStartsAt || !team.pauseEndsAt) {
+        return res.status(400).json({ error: "Subscription is not paused" });
+      }
+
       const isOldAccount = team.plan.includes("+old");
       const stripe = stripeInstance(isOldAccount);
 
-      const pauseStartsAt = team.endsAt ? new Date(team.endsAt) : new Date();
-      const pauseEndsAt = new Date(pauseStartsAt);
-      pauseEndsAt.setDate(pauseStartsAt.getDate() + 90);
-
-      // Pause the subscription in Stripe
+      // Unpause the subscription in Stripe
       await stripe.subscriptions.update(team.subscriptionId, {
         pause_collection: "",
       });
@@ -102,15 +102,15 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
 
       res.status(200).json({
         success: true,
-        message: "Subscription paused successfully",
+        message: "Subscription unpaused successfully",
       });
     } catch (error) {
-      console.error("Error pausing subscription:", error);
+      console.error("Error unpausing subscription:", error);
       await log({
-        message: `Error pausing subscription for team ${teamId}: ${error}`,
+        message: `Error unpausing subscription for team ${teamId}: ${error}`,
         type: "error",
       });
-      res.status(500).json({ error: "Failed to pause subscription" });
+      res.status(500).json({ error: "Failed to unpause subscription" });
     }
   } else {
     res.setHeader("Allow", ["POST"]);
