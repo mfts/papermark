@@ -11,24 +11,28 @@ export function getPriceIdFromPlan({
   isOld?: boolean;
   period: "monthly" | "yearly";
 }) {
+  if (!planSlug && !planName) {
+    throw new Error("Either planSlug or planName must be provided");
+  }
   const env =
     process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "production" : "test";
 
-  if (planSlug) {
-    const accountType = isOld ? "old" : isOldAccount(planSlug) ? "old" : "new";
-    const cleanPlanSlug = planSlug.split("+")[0];
+  const planIdentifier = planSlug || planName;
+  const accountType = isOld
+    ? "old"
+    : isOldAccount(planIdentifier!)
+      ? "old"
+      : "new";
+  const cleanPlan = planIdentifier!.split("+")[0];
 
-    const priceId = PLANS.find((p) => p.slug === cleanPlanSlug)?.price[period]
-      .priceIds[env][accountType];
-    return priceId;
+  const plan = PLANS.find((p) =>
+    planSlug ? p.slug === cleanPlan : p.name === cleanPlan,
+  );
+
+  if (!plan) {
+    console.error(`Plan not found: ${cleanPlan}`);
+    return undefined;
   }
 
-  if (planName) {
-    const accountType = isOld ? "old" : isOldAccount(planName) ? "old" : "new";
-    const cleanPlanName = planName.split("+")[0];
-
-    const priceId = PLANS.find((p) => p.name === cleanPlanName)?.price[period]
-      .priceIds[env][accountType];
-    return priceId;
-  }
+  return plan.price[period].priceIds[env][accountType];
 }
