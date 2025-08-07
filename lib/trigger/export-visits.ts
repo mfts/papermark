@@ -636,6 +636,7 @@ async function exportDataroomVisits(
     }
 
     exportData.push({
+      dataroomViewId: dataroomView.id, // Add the unique view ID for direct matching
       dataroomViewedAt: dataroomView.viewedAt.toISOString(),
       dataroomDownloadedAt: dataroomView.downloadedAt?.toISOString() || "NaN",
       viewerName: dataroomView.viewerName || "NaN",
@@ -651,6 +652,12 @@ async function exportDataroomVisits(
       documentViews: documentViewDetails,
     });
   }
+
+  // Create a map for efficient dataroom view lookups by ID
+  const dataroomViewMap = new Map();
+  dataroomViews.forEach((view) => {
+    dataroomViewMap.set(view.id, view);
+  });
 
   // Get user agent data for all document views at once with rate limiting
   const userAgentDataMap = new Map();
@@ -731,13 +738,8 @@ async function exportDataroomVisits(
         "NaN",
       ];
 
-      // Add custom field values for this dataroom view
-      const dataroomView = dataroomViews.find(
-        (dv) =>
-          dv.viewedAt.toISOString() === view.dataroomViewedAt &&
-          (dv.viewerName || "NaN") === view.viewerName &&
-          (dv.viewerEmail || "NaN") === view.viewerEmail,
-      );
+      // Add custom field values for this dataroom view using direct ID lookup
+      const dataroomView = dataroomViewMap.get(view.dataroomViewId);
       rowData.push(
         ...extractCustomFieldValues(dataroomView, uniqueCustomFields),
       );
@@ -771,13 +773,8 @@ async function exportDataroomVisits(
           userAgentData?.data[0]?.city || "NaN",
         ];
 
-        // Add custom field values for this dataroom view
-        const dataroomView = dataroomViews.find(
-          (dv) =>
-            dv.viewedAt.toISOString() === view.dataroomViewedAt &&
-            (dv.viewerName || "NaN") === view.viewerName &&
-            (dv.viewerEmail || "NaN") === view.viewerEmail,
-        );
+        // Add custom field values for this dataroom view using direct ID lookup
+        const dataroomView = dataroomViewMap.get(view.dataroomViewId);
         rowData.push(
           ...extractCustomFieldValues(dataroomView, uniqueCustomFields),
         );
