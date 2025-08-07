@@ -36,15 +36,13 @@ const Onboarding1Email = () => {
               With Papermark you can upload different kind of documents and turn
               them into shareable links:
             </Text>
+            <ul className="list-inside list-disc text-sm">
+              <li>PDFs</li>
+              <li>Excel, CSV files</li>
+              <li>Notion via link</li>
+            </ul>
             <Text className="text-sm">
-              <ul className="list-inside list-disc text-sm">
-                <li>PDFs</li>
-                <li>Excel, CSV files</li>
-                <li>Notion via link</li>
-              </ul>
-              <Text className="text-sm">
-                (All Notion changes are instantly reflected in shared documents)
-              </Text>
+              (All Notion changes are instantly reflected in shared documents)
             </Text>
             <Text className="text-sm">
               You can also use <strong>Bulk upload 💫</strong> Just drop many

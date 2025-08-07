@@ -13,8 +13,12 @@ import {
   Text,
 } from "@react-email/components";
 
-const Onboarding2Email = () => {
-  const previewText = `The document sharing infrastructure for the modern web`;
+interface SlackIntegrationEmailProps {
+  name: string | null | undefined;
+}
+
+const SlackIntegrationEmail = ({ name }: SlackIntegrationEmailProps) => {
+  const previewText = `See who viewed your documents in slack in 2 clicks`;
 
   return (
     <Html>
@@ -27,38 +31,33 @@ const Onboarding2Email = () => {
               <span className="font-bold tracking-tighter">Papermark</span>
             </Text>
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
-              Set link permissions
+              Connect Slack in 2 clicks
             </Text>
             <Text className="text-sm">
-              There are many ways how you can protect your documents!
+              Hi{name && ` ${name}`}!
             </Text>
             <Text className="text-sm">
-              With Papermark you can use different link settings for shared
-              documents and data rooms:
+             We offer direct integration to Slack, and it's free for all users for 30 days.
             </Text>
-            <ul className="list-inside list-disc text-sm">
-              <li>Require email to view</li>
-              <li>Expiration date</li>
-              <li>Allow & block list 🌟</li>
-              <li>Email verification</li>
-              <li>Password protection</li>
-              <li>NDA and other agreements</li>
-              <li>Screenshot protection</li>
-            </ul>
-            {/* <Text className="text-sm">You can also use Bulk upload</Text> */}
+            <Text className="text-sm">
+              With our Slack integration, you can get real-time notifications 
+              about document and data roomviews directly in your Slack channels !
+            </Text>
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.com/documents?utm_source=onboarding&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
+                href={`${process.env.NEXT_PUBLIC_BASE_URL}/settings/integrations`}
                 style={{ padding: "12px 20px" }}
               >
-                To my link settings
+                See who viewed your documents in Slack
               </Button>
             </Section>
+          
             <Text className="text-sm">
-              Additionally you can turn on/off: downloading, notifications,
-              feedback, and cta settings
+              If you have any questions or need help setting it up, just 
+              respond to this email. I'm always happy to help!
             </Text>
+            <Text className="text-sm text-gray-400">Marc from Papermark</Text>
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">
@@ -72,11 +71,8 @@ const Onboarding2Email = () => {
                 </a>
               </Text>
               <Text className="text-xs">
-                If you have any feedback or questions about this email, simply
-                reply to it. I&apos;d love to hear from you!{" "}
+                Feel free to always reach out to me or our support team.
               </Text>
-
-              <Text className="text-xs">Stop this onboarding sequence</Text>
             </Section>
           </Container>
         </Body>
@@ -85,4 +81,4 @@ const Onboarding2Email = () => {
   );
 };
 
-export default Onboarding2Email;
+export default SlackIntegrationEmail;

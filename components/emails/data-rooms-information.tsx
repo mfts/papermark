@@ -30,30 +30,27 @@ const Onboarding3Email = () => {
               Virtual Data Rooms
             </Text>
             <Text className="text-sm">Unlimited branded data rooms!</Text>
-            <Text className="text-sm">With Papermark Data Rooms you can:</Text>
+            <Text className="text-sm">With Papermark Data Rooms plan you can:</Text>
+            <ul className="list-inside list-disc text-sm">
+              <li>Share data rooms with one link</li>
+              <li>Upload unlimited files</li>
+              <li>Create unlimited folders and subfolders</li>
+              <li>
+                Connect your <strong>custom domain 💫</strong>{" "}
+              </li>
+              <li>Create fully branded experience </li>
+              <li>Use advanced link settings</li>
+    
+            </ul>
             <Text className="text-sm">
-              <ul className="list-inside list-disc text-sm">
-                <li>Share data rooms with one link</li>
-                <li>Upload unlimited files</li>
-                <li>Create unlimited folders and subfolders</li>
-                <li>
-                  Connect your <strong>custom domain 💫</strong>{" "}
-                </li>
-                <li>Create fully branded experience </li>
-                <li>Use advanced link settings</li>
-                <li>Create full whitelabeling</li>
-                <li>Build self-hosted expereince</li>
-              </ul>
-              <Text className="text-sm">
-                All about Papermark{" "}
-                <a
-                  href="https://www.papermark.com/data-room"
-                  className="text-blue-500 underline"
-                >
-                  Data Rooms
-                </a>{" "}
-                features and plans
-              </Text>
+              All about Papermark{" "}
+              <a
+                href="https://www.papermark.com/data-room"
+                className="text-blue-500 underline"
+              >
+                Data Rooms
+              </a>{" "}
+              features and plans
             </Text>
             {/* <Text className="text-sm">You can also use Bulk upload</Text> */}
             <Section className="mb-[32px] mt-[32px] text-center">
