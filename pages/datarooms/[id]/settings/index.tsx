@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 export default function Settings() {
   const { dataroom } = useDataroom();
@@ -37,6 +39,34 @@ export default function Settings() {
   if (!dataroom) {
     return <div>Loading...</div>;
   }
+
+  const handleToggleShowLastUpdated = async (checked: boolean) => {
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/datarooms/${dataroom.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ showLastUpdated: checked }),
+        },
+      );
+
+      if (response.status === 200) {
+        await Promise.all([
+          mutate(`/api/teams/${teamId}/datarooms`),
+          mutate(`/api/teams/${teamId}/datarooms/${dataroom.id}`),
+        ]);
+        toast.success("Successfully updated display settings!");
+      } else {
+        const { error } = await response.json();
+        toast.error(error.message);
+      }
+    } catch (error) {
+      toast.error("Failed to update display settings");
+    }
+  };
 
   return (
     <AppLayout>
@@ -89,6 +119,31 @@ export default function Settings() {
                 })
               }
             />
+            <Card>
+              <CardHeader>
+                <CardTitle>Display Settings</CardTitle>
+                <CardDescription>
+                  Control how your dataroom appears to viewers.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="show-last-updated">Show Last Updated</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Display the &quot;Last updated&quot; information in the
+                      dataroom banner.
+                    </p>
+                  </div>
+                  <Switch
+                    id="show-last-updated"
+                    checked={dataroom.showLastUpdated ?? true}
+                    onCheckedChange={handleToggleShowLastUpdated}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />
             <Card className="bg-transparent">
               <CardHeader>
