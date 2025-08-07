@@ -114,7 +114,6 @@ model Team {
   ignoredDomains  String[] // Domains that are ignored for the team
   globalBlockList String[]
 }
-
 model Brand {
   id          String  @id @default(cuid())
   logo        String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
@@ -125,28 +124,6 @@ model Brand {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-enum Role {
-  ADMIN
-  MANAGER
-  MEMBER
-}
-
-model UserTeam {
-  role   Role   @default(MEMBER)
-  status String @default("ACTIVE")
-  userId String
-  teamId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-
-  blockedAt               DateTime? // When the user was blocked
-  notificationPreferences Json? // Format: { yearInReview: { "enabled": false } }
-
-  @@id([userId, teamId])
-  @@index([userId])
-  @@index([teamId])
 }
 
 model VerificationToken {
