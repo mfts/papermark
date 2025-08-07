@@ -162,49 +162,11 @@ export default function SlackFrequencySettings({
   const updateFrequency = async (frequency: NotificationFrequency) => {
     const updatePromise = async () => {
       await updateIntegration({ frequency });
-
-      if (frequency === "daily" || frequency === "weekly") {
-        const updatedChannels = Object.keys(integration.enabledChannels).reduce(
-          (acc, channelId) => {
-            const channel = integration.enabledChannels[channelId];
-            if (channel && !channel.notificationTypes.includes("digest")) {
-              acc[channelId] = {
-                ...channel,
-                notificationTypes: [...channel.notificationTypes, "digest"],
-              };
-            } else {
-              acc[channelId] = channel;
-            }
-            return acc;
-          },
-          {} as Record<string, SlackChannelConfig>,
-        );
-
-        const channelsUpdated = Object.keys(updatedChannels).some(
-          (channelId) =>
-            updatedChannels[channelId] !==
-            integration.enabledChannels[channelId],
-        );
-
-        if (channelsUpdated) {
-          await updateIntegration({ enabledChannels: updatedChannels });
-        }
-      }
     };
 
     toast.promise(updatePromise(), {
       loading: `Updating notification frequency to ${frequency}...`,
-      success: (data) => {
-        const messages = [`Frequency updated to ${frequency}`];
-
-        if (frequency === "daily" || frequency === "weekly") {
-          messages.push(
-            "Digest summaries automatically enabled for all selected channels",
-          );
-        }
-
-        return messages.join(". ");
-      },
+      success: `Frequency updated to ${frequency}`,
       error: "Failed to update notification frequency. Please try again.",
     });
   };
@@ -259,10 +221,6 @@ export default function SlackFrequencySettings({
                 <p className="text-sm text-muted-foreground">
                   Choose when to receive your {integration.frequency} digest
                   notifications
-                </p>
-                <p className="mt-1 text-xs text-blue-600">
-                  💡 Digest summaries will be automatically enabled for all
-                  selected channels
                 </p>
               </div>
 

@@ -1,14 +1,22 @@
 import { useRouter } from "next/router";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { CircleHelpIcon, Hash, Settings, X, XCircleIcon } from "lucide-react";
+import { CircleHelpIcon, Hash, Settings, XCircleIcon } from "lucide-react";
 import { toast } from "sonner";
+
+import { useSlackChannels } from "@/lib/swr/use-slack-channels";
+import { useSlackIntegration } from "@/lib/swr/use-slack-integration";
+import {
+  SlackChannelConfig,
+  SlackIntegration,
+  SlackIntegrationResponse,
+  UpdateSlackIntegrationRequest,
+} from "@/lib/types/slack";
 
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
-import SlackChannelModal from "@/components/settings/slack-channel-modal";
 import SlackFrequencySettings from "@/components/settings/slack-frequency-settings";
 import SlackSettingsSkeleton from "@/components/settings/slack-settings-skeleton";
 import { SlackIcon } from "@/components/shared/icons/slack-icon";
@@ -23,46 +31,69 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { MultiSelect } from "@/components/ui/multi-select-v2";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-
-interface SlackIntegration {
-  id: string;
-  workspaceId: string;
-  workspaceName: string;
-  workspaceUrl: string;
-  botUserId: string;
-  botUsername: string;
-  enabled: boolean;
-  notificationTypes: {
-    document_view: boolean;
-    dataroom_access: boolean;
-    document_download: boolean;
-    document_reaction: boolean;
-  };
-  frequency: "instant" | "daily" | "weekly";
-  timezone: string;
-  dailyTime?: string;
-  weeklyDay?: string;
-  defaultChannel?: string;
-  enabledChannels: Record<string, any>;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export default function SlackSettings() {
   const router = useRouter();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const [error, setError] = useState<string | null>(null);
-  const [integration, setIntegration] = useState<SlackIntegration | null>(null);
-  const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
-  const [showChannelModal, setShowChannelModal] = useState(false);
+  const [isChannelPopoverOpen, setIsChannelPopoverOpen] = useState(false);
+  const [pendingChannelUpdate, setPendingChannelUpdate] = useState(false);
+
+  // Use SWR hook for integration data
+  const {
+    integration,
+    error: integrationError,
+    loading: loadingIntegration,
+    mutate: mutateIntegration,
+  } = useSlackIntegration({
+    teamId,
+    enabled: !!teamId,
+  });
+
+  const {
+    channels,
+    loading: loadingChannels,
+    error: channelsError,
+    mutate: mutateChannels,
+  } = useSlackChannels({
+    teamId,
+    enabled: !!integration,
+  });
+
+  const ChannelIcon = useMemo(
+    () => <Hash className="h-4 w-4 text-muted-foreground" />,
+    [],
+  );
+
+  const filteredChannels = useMemo(
+    () => channels.filter((channel) => !channel.is_archived),
+    [channels],
+  );
+
+  const channelOptions = useMemo(
+    () =>
+      filteredChannels.map((channel) => ({
+        value: channel.id,
+        label: channel.name,
+        icon: ChannelIcon,
+        meta: {
+          color: "slate",
+          description: channel.is_private
+            ? "Private channel"
+            : "Public channel",
+        },
+      })),
+    [filteredChannels, ChannelIcon],
+  );
 
   const handleIntegrationUpdate = (updatedIntegration: SlackIntegration) => {
-    setIntegration(updatedIntegration);
+    mutateIntegration(updatedIntegration, false);
   };
 
   useEffect(() => {
@@ -70,6 +101,7 @@ export default function SlackSettings() {
 
     if (router.query.success) {
       toast.success("Slack integration connected successfully!");
+      mutateIntegration();
 
       if (router.query.warning) {
         toast.warning(`Warning: ${router.query.warning}`);
@@ -88,60 +120,7 @@ export default function SlackSettings() {
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [router.query]);
-
-  const fetchIntegration = async (controller: AbortController) => {
-    try {
-      setError(null);
-      setLoading(true);
-
-      const response = await fetch(`/api/teams/${teamId}/slack`, {
-        signal: controller.signal,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setIntegration(data);
-        setError(null);
-      } else if (response.status === 404) {
-        setIntegration(null);
-        setError(null);
-      } else {
-        let errorData: { error?: string } = {};
-        try {
-          errorData = await response.json();
-        } catch {
-          console.log("error");
-        }
-        setError(errorData.error || "Failed to fetch integration");
-        setIntegration(null);
-      }
-    } catch (error: unknown) {
-      if (error instanceof DOMException && error.name === "AbortError") {
-      } else {
-        console.error("Error fetching Slack integration:", error);
-        setError("Failed to fetch integration");
-        setIntegration(null);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!teamId) {
-      setIntegration(null);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    const controller = new AbortController();
-
-    fetchIntegration(controller);
-
-    return () => controller.abort();
-  }, [teamId]);
+  }, [router.query, mutateIntegration]);
 
   const handleConnect = async () => {
     if (!teamId) return;
@@ -174,7 +153,7 @@ export default function SlackSettings() {
       });
 
       if (response.ok) {
-        setIntegration(null);
+        mutateIntegration(undefined, false);
       } else {
         const data = await response.json();
         throw new Error(data.error || "Failed to disconnect Slack");
@@ -188,37 +167,180 @@ export default function SlackSettings() {
     });
   };
 
-  const handleChannelsUpdate = async (channels: Record<string, any>) => {
-    if (!teamId || !integration) return;
+  const handleChannelsUpdate = useCallback(
+    async (selectedChannelIds: string[]) => {
+      if (!teamId || !integration) return;
+      setIsChannelPopoverOpen(false);
 
-    await toast.promise(
-      async () => {
+      const updatePromise = async () => {
+        const validChannelIds = selectedChannelIds.filter((id) =>
+          channels.some((channel) => channel.id === id),
+        );
+
+        if (validChannelIds.length !== selectedChannelIds.length) {
+          throw new Error("Some selected channels are no longer available");
+        }
+
+        const updatedChannels = validChannelIds.reduce(
+          (acc, channelId) => {
+            const channel = channels.find((c) => c.id === channelId);
+            if (channel) {
+              acc[channelId] = {
+                id: channelId,
+                name: channel.name,
+                enabled: true,
+                notificationTypes: [
+                  "document_view",
+                  "dataroom_access",
+                  "document_download",
+                  "document_reaction",
+                ],
+              } as SlackChannelConfig;
+            }
+            return acc;
+          },
+          {} as Record<string, SlackChannelConfig>,
+        );
+        const previousIntegration = integration;
+        mutateIntegration(
+          {
+            ...integration,
+            enabledChannels: updatedChannels,
+          },
+          false,
+        );
+
+        try {
+          const requestBody = {
+            enabledChannels: updatedChannels,
+          };
+
+          const startTime = performance.now();
+          const response = await fetch(`/api/teams/${teamId}/slack/channels`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestBody),
+          });
+          const endTime = performance.now();
+
+          // Log performance for debugging
+          console.log(`Channel update API call took ${endTime - startTime}ms`);
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(
+              errorData.error || "Failed to update channel settings",
+            );
+          }
+
+          const result = await response.json();
+
+          // Handle the simplified response
+          if (result.success) {
+            mutateIntegration(
+              {
+                ...integration,
+                enabledChannels: result.enabledChannels,
+                updatedAt: result.updatedAt,
+              },
+              false,
+            );
+          } else {
+            // Fallback for full integration response
+            mutateIntegration(result, false);
+          }
+
+          mutateChannels();
+
+          return "Channel settings updated successfully";
+        } catch (error) {
+          // Rollback on error
+          mutateIntegration(previousIntegration, false);
+          throw error;
+        }
+      };
+
+      toast.promise(updatePromise(), {
+        loading: "Updating channel settings...",
+        success: (message) => message,
+        error: (error) => error.message || "Failed to update channel settings",
+      });
+    },
+    [
+      teamId,
+      integration,
+      channels,
+      mutateChannels,
+      mutateIntegration,
+      setIsChannelPopoverOpen,
+    ],
+  );
+
+  const debouncedChannelsUpdate = (selectedChannelIds: string[]) => {
+    setPendingChannelUpdate(true);
+    handleChannelsUpdate(selectedChannelIds).finally(() => {
+      setPendingChannelUpdate(false);
+    });
+  };
+
+  const handleIntegrationToggle = useCallback(
+    async (checked: boolean) => {
+      if (!teamId || !integration) return;
+
+      const togglePromise = async () => {
+        const previousState = integration.enabled;
+
+        // Optimistic update
+        mutateIntegration(
+          {
+            ...integration,
+            enabled: checked,
+          },
+          false,
+        );
+
+        const requestBody: UpdateSlackIntegrationRequest = {
+          ...integration,
+          enabled: checked,
+        };
+
         const response = await fetch(`/api/teams/${teamId}/slack`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...integration,
-            enabledChannels: channels,
-          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.error || "Failed to update channel settings",
+          // Rollback on error
+          mutateIntegration(
+            {
+              ...integration,
+              enabled: previousState,
+            },
+            false,
           );
+          throw new Error("Failed to update notification settings");
         }
 
-        const updatedIntegration = await response.json();
-        setIntegration(updatedIntegration);
-      },
-      {
-        loading: "Updating channels...",
-        success: "Channel settings updated successfully",
-        error: (err) => err?.message || "Failed to update channel settings",
-      },
-    );
-  };
+        const updatedIntegration: SlackIntegrationResponse =
+          await response.json();
+        mutateIntegration(updatedIntegration, false);
+
+        return checked
+          ? "Slack notifications enabled"
+          : "Slack notifications disabled";
+      };
+
+      toast.promise(togglePromise(), {
+        loading: "Updating notification settings...",
+        success: (message) => message,
+        error: "Failed to update notification settings",
+      });
+    },
+    [teamId, integration, mutateIntegration],
+  );
 
   return (
     <AppLayout>
@@ -226,14 +348,14 @@ export default function SlackSettings() {
         <SettingsHeader />
 
         <div>
-          {error && (
+          {integrationError && (
             <Alert className="mb-4">
               <XCircleIcon className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{integrationError.message}</AlertDescription>
             </Alert>
           )}
 
-          {loading ? (
+          {loadingIntegration ? (
             <SlackSettingsSkeleton />
           ) : (
             <>
@@ -326,108 +448,85 @@ export default function SlackSettings() {
                               Receive notifications in your Slack channels
                             </p>
                           </div>
-                          <Switch
-                            checked={integration.enabled}
-                            onCheckedChange={async (checked) => {
-                              try {
-                                const response = await fetch(
-                                  `/api/teams/${teamId}/slack`,
-                                  {
-                                    method: "PUT",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                      ...integration,
-                                      enabled: checked,
-                                    }),
-                                  },
-                                );
-                                if (response.ok) {
-                                  setIntegration(await response.json());
-                                  toast.success(
-                                    checked
-                                      ? "Slack notifications enabled"
-                                      : "Slack notifications disabled",
-                                  );
-                                }
-                              } catch (error) {
-                                toast.error(
-                                  "Failed to update notification settings",
-                                );
-                              }
-                            }}
-                          />
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={integration.enabled}
+                              disabled={false}
+                              onCheckedChange={handleIntegrationToggle}
+                            />
+                          </div>
                         </div>
 
                         <Separator />
                         <div className="space-y-3">
                           <div>
-                            <label className="flex items-center gap-2 text-sm font-medium">
+                            <Label className="flex items-center gap-2 text-sm font-medium">
                               Slack channel(s) *
                               <BadgeTooltip
                                 content="Get notifications in Slack based on frequency settings when someone views, downloads, or interacts with your documents and datarooms"
-                                key="tag_tooltip"
+                                key="channel_tooltip"
                               >
                                 <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
                               </BadgeTooltip>
-                            </label>
+                            </Label>
                             <p className="text-sm text-muted-foreground">
                               Select the Slack channel(s) where you want to
-                              receive new mentions.
+                              receive notifications.
                             </p>
                           </div>
 
-                          <div className="flex items-center rounded-lg border border-border bg-background">
-                            <div className="flex flex-1 items-center gap-2 px-1">
-                              {Object.keys(integration.enabledChannels || {})
-                                .length > 0 ? (
-                                Object.entries(integration.enabledChannels).map(
-                                  ([channelId, channel]: [string, any]) => (
-                                    <div
-                                      key={channelId}
-                                      className="flex items-center gap-1.5 rounded-md border bg-background px-2 py-1 text-sm shadow-sm"
-                                    >
-                                      <Hash className="h-3 w-3 text-muted-foreground" />
-                                      <span className="text-sm font-medium text-foreground">
-                                        {channel.name}
-                                      </span>
-                                      <button
-                                        onClick={() =>
-                                          handleChannelsUpdate(
-                                            Object.fromEntries(
-                                              Object.entries(
-                                                integration.enabledChannels,
-                                              ).filter(
-                                                ([id]) => id !== channelId,
-                                              ),
-                                            ),
-                                          )
-                                        }
-                                        className="ml-1 rounded-full p-0.5 text-muted-foreground transition-all duration-200 hover:scale-110 hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                                        aria-label={`Remove ${channel.name} channel`}
-                                      >
-                                        <X className="h-3 w-3" />
-                                      </button>
-                                    </div>
-                                  ),
-                                )
-                              ) : (
-                                <span className="pl-2 text-sm text-muted-foreground">
-                                  No channels selected
-                                </span>
-                              )}
+                          {!integration ? (
+                            <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600 dark:border-gray-600 dark:border-t-gray-400"></div>
+                              <span>Loading integration...</span>
                             </div>
-                            <div className="h-9 w-px bg-border" />
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => setShowChannelModal(true)}
-                              className="shrink-0 rounded-l-none border-0 px-3 py-1.5 text-sm font-medium"
-                            >
-                              Select Channels
-                            </Button>
-                          </div>
+                          ) : channelsError ? (
+                            <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+                              <div className="flex items-center gap-2">
+                                <XCircleIcon className="h-4 w-4" />
+                                <div>
+                                  <p className="font-medium">
+                                    Failed to load channels
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ) : loadingChannels ? (
+                            <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600 dark:border-gray-600 dark:border-t-gray-400"></div>
+                              <span>Loading channels...</span>
+                            </div>
+                          ) : channels.length === 0 ? (
+                            <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                              <Hash className="h-4 w-4" />
+                              <div>
+                                <p className="font-medium">
+                                  No channels available
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <MultiSelect
+                              loading={false}
+                              options={channelOptions}
+                              value={Object.keys(
+                                integration.enabledChannels || {},
+                              )}
+                              setIsPopoverOpen={setIsChannelPopoverOpen}
+                              isPopoverOpen={isChannelPopoverOpen}
+                              onValueChange={debouncedChannelsUpdate}
+                              placeholder={
+                                pendingChannelUpdate
+                                  ? "Saving changes..."
+                                  : "Select channels..."
+                              }
+                              maxCount={5}
+                              searchPlaceholder="Search channels..."
+                              triggerIcon={
+                                <Hash className="h-4 w-4 text-muted-foreground" />
+                              }
+                            />
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -436,13 +535,6 @@ export default function SlackSettings() {
                     teamId={teamId!}
                     integration={integration!}
                     onUpdate={handleIntegrationUpdate}
-                  />
-                  <SlackChannelModal
-                    open={showChannelModal}
-                    onOpenChange={setShowChannelModal}
-                    teamId={teamId!}
-                    onChannelsUpdate={handleChannelsUpdate}
-                    currentChannels={integration.enabledChannels}
                   />
                 </div>
               )}

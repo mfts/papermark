@@ -89,7 +89,7 @@ export class SlackDigestProcessor {
             }
 
         } catch (error) {
-            throw error; 
+            throw error;
         }
     }
 
@@ -130,7 +130,7 @@ export class SlackDigestProcessor {
 
             const channels = Object.values(integration.enabledChannels)
                 .filter((channel: any) => channel && channel.enabled)
-                .filter((channel: any) => channel.notificationTypes && channel.notificationTypes.includes('digest'));
+                .filter((channel: any) => channel.notificationTypes && channel.notificationTypes.length > 0);
 
             return channels;
         } catch (error) {

@@ -98,26 +98,36 @@ async function handleUpdate(
             enabledChannels,
         } = req.body;
 
-        const integration = await prisma.slackIntegration.findUnique({
-            where: { teamId },
-        });
+        if (enabledChannels && Object.keys(req.body).length === 1) {
+            await prisma.slackIntegration.update({
+                where: { teamId },
+                data: { enabledChannels },
+            });
 
-        if (!integration) {
-            return res.status(404).json({ error: 'Slack integration not found' });
+            return res.status(200).json({
+                success: true,
+                enabledChannels,
+                updatedAt: new Date().toISOString()
+            });
+        }
+        const updateData: any = {};
+
+        if (enabled !== undefined) updateData.enabled = enabled;
+        if (notificationTypes) updateData.notificationTypes = notificationTypes;
+        if (frequency) updateData.frequency = frequency;
+        if (timezone) updateData.timezone = timezone;
+        if (dailyTime !== undefined) updateData.dailyTime = dailyTime;
+        if (weeklyDay !== undefined) updateData.weeklyDay = weeklyDay;
+        if (defaultChannel !== undefined) updateData.defaultChannel = defaultChannel;
+        if (enabledChannels) updateData.enabledChannels = enabledChannels;
+
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({ error: 'No fields to update' });
         }
 
         const updatedIntegration = await prisma.slackIntegration.update({
             where: { teamId },
-            data: {
-                enabled: enabled !== undefined ? enabled : integration.enabled,
-                notificationTypes: notificationTypes || integration.notificationTypes,
-                frequency: frequency || integration.frequency,
-                timezone: timezone || integration.timezone,
-                dailyTime: dailyTime !== undefined ? dailyTime : integration.dailyTime,
-                weeklyDay: weeklyDay !== undefined ? weeklyDay : integration.weeklyDay,
-                defaultChannel: defaultChannel !== undefined ? defaultChannel : integration.defaultChannel,
-                enabledChannels: enabledChannels || integration.enabledChannels,
-            },
+            data: updateData,
             select: {
                 id: true,
                 workspaceId: true,
@@ -138,10 +148,18 @@ async function handleUpdate(
             },
         });
 
-        try {
-            await slackScheduleManager.createOrUpdateSchedule(updatedIntegration);
-        } catch (scheduleError) {
-            console.error('Error updating schedule for integration:', scheduleError);
+        const scheduleNeedsUpdate =
+            frequency !== undefined ||
+            timezone !== undefined ||
+            dailyTime !== undefined ||
+            weeklyDay !== undefined;
+
+        if (scheduleNeedsUpdate) {
+            try {
+                await slackScheduleManager.createOrUpdateSchedule(updatedIntegration);
+            } catch (scheduleError) {
+                console.error('Error updating schedule for integration:', scheduleError);
+            }
         }
 
         return res.status(200).json(updatedIntegration);

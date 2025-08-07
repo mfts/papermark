@@ -6,6 +6,7 @@ import { CustomUser } from '@/lib/types';
 import prisma from '@/lib/prisma';
 import { slackScheduleManager } from '@/lib/slack/schedule-manager';
 import { encryptSlackToken } from '@/lib/utils';
+import { sendSlackIntegrationNotification } from '@/lib/emails/send-slack-integration-notification';
 
 export default async function handler(
     req: NextApiRequest,
@@ -103,6 +104,56 @@ export default async function handler(
                 dailyTime: '10:00',
             },
         });
+
+        try {
+            const team = await prisma.team.findUnique({
+                where: { id: teamId },
+                include: {
+                    users: {
+                        include: {
+                            user: true,
+                        },
+                    },
+                },
+            });
+
+            if (!team) {
+                console.warn(`Team with id ${teamId} not found.`);
+                return;
+            }
+
+            if (!team.users.length) {
+                console.warn(`Team "${team.name}" has no users to notify.`);
+                return;
+            }
+
+            const settingsUrl = `${process.env.NEXTAUTH_URL}/settings/slack`;
+
+            const usersWithEmail = team.users.filter(userTeam => userTeam.user.email);
+
+            const emailPromises = usersWithEmail.map(async (userTeam) => {
+                try {
+                    await sendSlackIntegrationNotification({
+                        userEmail: userTeam.user.email!,
+                        teamName: team.name,
+                        settingsUrl,
+                    });
+                } catch (emailError) {
+                    console.error(`Failed to send Slack integration notification email to ${userTeam.user.email}:`, emailError);
+                }
+            });
+
+            await Promise.allSettled(emailPromises)
+                .then(results => {
+                    const rejected = results.filter(r => r.status === 'rejected');
+                    if (rejected.length) {
+                        console.error('Some Slack integration notification emails failed:', rejected);
+                    }
+                });
+        } catch (err) {
+            console.error('Unexpected error sending Slack integration notification emails:', err);
+        }
+
 
         let scheduleWarning = false;
         try {
