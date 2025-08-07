@@ -375,19 +375,31 @@ async function exportDocumentVisits(
 }
 
 // Helper function to extract all unique custom fields from views
-function collectUniqueCustomFields(views: any[]): Array<{ identifier: string; label: string }> {
+function collectUniqueCustomFields(
+  views: any[],
+): Array<{ identifier: string; label: string }> {
   const uniqueFields = new Map<string, string>();
-  
-  views.forEach((view) => {
-    if (view.customFieldResponse?.data && Array.isArray(view.customFieldResponse.data)) {
-      view.customFieldResponse.data.forEach((field: any) => {
-        if (field.identifier && field.label) {
-          uniqueFields.set(field.identifier, field.label);
-        }
+
+  views.forEach((view, index) => {
+    try {
+      if (
+        view &&
+        view.customFieldResponse?.data &&
+        Array.isArray(view.customFieldResponse.data)
+      ) {
+        view.customFieldResponse.data.forEach((field: any) => {
+          if (field.identifier && field.label) {
+            uniqueFields.set(field.identifier, field.label);
+          }
+        });
+      }
+    } catch (error) {
+      logger.warn(`Error processing custom fields for view ${index}:`, {
+        error: String(error),
       });
     }
   });
-  
+
   // Sort by identifier for consistent column ordering
   return Array.from(uniqueFields.entries())
     .sort(([a], [b]) => a.localeCompare(b))
@@ -395,7 +407,9 @@ function collectUniqueCustomFields(views: any[]): Array<{ identifier: string; la
 }
 
 // Helper function to generate custom field headers
-function generateCustomFieldHeaders(uniqueFields: Array<{ identifier: string; label: string }>): string[] {
+function generateCustomFieldHeaders(
+  uniqueFields: Array<{ identifier: string; label: string }>,
+): string[] {
   const headers: string[] = [];
   uniqueFields.forEach((field, index) => {
     headers.push(`Custom Field ${index + 1} Label`);
@@ -407,35 +421,52 @@ function generateCustomFieldHeaders(uniqueFields: Array<{ identifier: string; la
 // Helper function to extract custom field values for a specific view
 function extractCustomFieldValues(
   view: any,
-  uniqueFields: Array<{ identifier: string; label: string }>
+  uniqueFields: Array<{ identifier: string; label: string }>,
 ): string[] {
   const values: string[] = [];
-  
-  // Create a map of the current view's custom field responses
-  const responseMap = new Map<string, { label: string; response: string }>();
-  if (view.customFieldResponse?.data && Array.isArray(view.customFieldResponse.data)) {
-    view.customFieldResponse.data.forEach((field: any) => {
-      if (field.identifier) {
-        responseMap.set(field.identifier, {
-          label: field.label || "NaN",
-          response: field.response || "NaN",
-        });
+
+  try {
+    // Create a map of the current view's custom field responses
+    const responseMap = new Map<string, { label: string; response: string }>();
+
+    // Check if view exists and has customFieldResponse
+    if (
+      view &&
+      view.customFieldResponse?.data &&
+      Array.isArray(view.customFieldResponse.data)
+    ) {
+      view.customFieldResponse.data.forEach((field: any) => {
+        if (field && field.identifier) {
+          responseMap.set(field.identifier, {
+            label: field.label || "NaN",
+            response: field.response || "NaN",
+          });
+        }
+      });
+    }
+
+    // Fill in values for each unique field in order
+    uniqueFields.forEach((field) => {
+      const response = responseMap.get(field.identifier);
+      if (response) {
+        values.push(response.label);
+        values.push(response.response);
+      } else {
+        values.push("NaN");
+        values.push("NaN");
       }
     });
+  } catch (error) {
+    logger.warn(`Error extracting custom field values:`, {
+      error: String(error),
+    });
+    // Fill with NaN values if there's an error
+    uniqueFields.forEach(() => {
+      values.push("NaN");
+      values.push("NaN");
+    });
   }
-  
-  // Fill in values for each unique field in order
-  uniqueFields.forEach((field) => {
-    const response = responseMap.get(field.identifier);
-    if (response) {
-      values.push(response.label);
-      values.push(response.response);
-    } else {
-      values.push("NaN");
-      values.push("NaN");
-    }
-  });
-  
+
   return values;
 }
 
@@ -668,10 +699,10 @@ async function exportDataroomVisits(
     "Country",
     "City",
   ];
-  
+
   // Add dynamic custom field headers
   headers.push(...generateCustomFieldHeaders(uniqueCustomFields));
-  
+
   csvRows.push(createCsvRow(headers));
 
   exportData.forEach((view) => {
@@ -699,15 +730,18 @@ async function exportDataroomVisits(
         "NaN",
         "NaN",
       ];
-      
+
       // Add custom field values for this dataroom view
-      const dataroomView = dataroomViews.find(dv => 
-        dv.viewedAt.toISOString() === view.dataroomViewedAt &&
-        dv.viewerName === view.viewerName &&
-        dv.viewerEmail === view.viewerEmail
+      const dataroomView = dataroomViews.find(
+        (dv) =>
+          dv.viewedAt.toISOString() === view.dataroomViewedAt &&
+          (dv.viewerName || "NaN") === view.viewerName &&
+          (dv.viewerEmail || "NaN") === view.viewerEmail,
       );
-      rowData.push(...extractCustomFieldValues(dataroomView, uniqueCustomFields));
-      
+      rowData.push(
+        ...extractCustomFieldValues(dataroomView, uniqueCustomFields),
+      );
+
       csvRows.push(createCsvRow(rowData));
     } else {
       view.documentViews.forEach((docView) => {
@@ -738,12 +772,15 @@ async function exportDataroomVisits(
         ];
 
         // Add custom field values for this dataroom view
-        const dataroomView = dataroomViews.find(dv => 
-          dv.viewedAt.toISOString() === view.dataroomViewedAt &&
-          dv.viewerName === view.viewerName &&
-          dv.viewerEmail === view.viewerEmail
+        const dataroomView = dataroomViews.find(
+          (dv) =>
+            dv.viewedAt.toISOString() === view.dataroomViewedAt &&
+            (dv.viewerName || "NaN") === view.viewerName &&
+            (dv.viewerEmail || "NaN") === view.viewerEmail,
         );
-        rowData.push(...extractCustomFieldValues(dataroomView, uniqueCustomFields));
+        rowData.push(
+          ...extractCustomFieldValues(dataroomView, uniqueCustomFields),
+        );
 
         csvRows.push(createCsvRow(rowData));
       });
