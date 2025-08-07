@@ -34,6 +34,7 @@ import CustomFieldsSection from "./custom-fields-section";
 import IndexFileSection from "./index-file-section";
 import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
+import SecuredByPapermarkSection from "./secured-by-papermark-section";
 import UploadSection from "./upload-section";
 import WatermarkSection from "./watermark-section";
 
@@ -301,7 +302,12 @@ export const LinkOptions = ({
           handleUpgradeStateChange={handleUpgradeStateChange}
         />
       ) : null}
-
+      {linkType === LinkType.DATAROOM_LINK && (
+        <SecuredByPapermarkSection
+          {...{ data, setData }}
+          presets={currentPreset}
+        />
+      )}
       <UpgradePlanModal
         clickedPlan={upgradePlan}
         open={openUpgradeModal}
