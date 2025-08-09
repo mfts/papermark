@@ -7,11 +7,37 @@ export function getPlanFromPriceId(
   const env =
     process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "production" : "test";
   const accountType = isOldAccount ? "old" : "new";
-  return PLANS.find(
+  const plan = PLANS.find(
     (plan) =>
       plan.price.monthly.priceIds[env][accountType] === priceId ||
       plan.price.yearly.priceIds[env][accountType] === priceId,
-  )!;
+  );
+
+  if (!plan) {
+    console.error(
+      `Plan not found for priceId: ${priceId}, isOldAccount: ${isOldAccount}, env: ${env}`,
+    );
+    // Return a default plan object for old accounts to prevent crashes
+    return {
+      name: "Free",
+      slug: "free",
+      minQuantity: 1,
+      price: {
+        monthly: {
+          amount: 0,
+          unitPrice: 0,
+          priceIds: { [env]: { [accountType]: priceId } },
+        },
+        yearly: {
+          amount: 0,
+          unitPrice: 0,
+          priceIds: { [env]: { [accountType]: priceId } },
+        },
+      },
+    };
+  }
+
+  return plan;
 }
 
 // custom type coercion because Stripe's types are wrong
