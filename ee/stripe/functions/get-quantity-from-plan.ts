@@ -8,7 +8,7 @@ export function getQuantityFromPriceId(priceId?: string) {
     const plan = getPlanFromPriceId(priceId);
     return plan.minQuantity ?? 1;
   } catch (error) {
-    console.error(`Error getting quantity for priceId: ${priceId}`, error);
+    console.error("Error getting quantity for priceId: %s", priceId, error);
     return 1;
   }
 }
