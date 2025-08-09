@@ -8,6 +8,7 @@ import slugify from "@sindresorhus/slugify";
 import { getLambdaClientForTeam } from "@/lib/files/aws-client";
 import prisma from "@/lib/prisma";
 import { getIpAddress } from "@/lib/utils/ip";
+import { notifyDocumentDownload } from "@/lib/slack/events";
 
 export const config = {
   maxDuration: 180,
@@ -293,6 +294,26 @@ export default async function handler(
         path: rootPath,
         files: [],
       };
+    }
+
+    if (view.link.teamId) {
+      try {
+        await notifyDocumentDownload({
+          teamId: view.link.teamId,
+          documentId: undefined,
+          dataroomId,
+          linkId,
+          viewerEmail: view.viewerEmail ?? undefined,
+          viewerId: undefined,
+          metadata: {
+            folderName: rootFolder.name,
+            documentCount: allDocuments.length,
+            isFolderDownload: true,
+          },
+        });
+      } catch (error) {
+        console.error("Error sending Slack notification:", error);
+      }
     }
 
     // Get team-specific storage configuration
