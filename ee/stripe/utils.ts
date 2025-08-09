@@ -7,11 +7,19 @@ export function getPlanFromPriceId(
   const env =
     process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "production" : "test";
   const accountType = isOldAccount ? "old" : "new";
-  return PLANS.find(
+  const plan = PLANS.find(
     (plan) =>
-      plan.price.monthly.priceIds[env][accountType] === priceId ||
-      plan.price.yearly.priceIds[env][accountType] === priceId,
-  )!;
+      (plan.price.monthly.priceIds[env][accountType] === priceId ||
+        plan.price.yearly.priceIds[env][accountType] === priceId) &&
+      priceId !== "", // Exclude empty price IDs (used for free plan)
+  );
+
+  if (!plan) {
+    console.error(`Plan not found for priceId: ${priceId}`);
+    return null;
+  }
+
+  return plan;
 }
 
 // custom type coercion because Stripe's types are wrong
@@ -50,6 +58,41 @@ export function isUpgradedCustomer(
 }
 
 export const PLANS = [
+  {
+    name: "Free",
+    slug: "free",
+    minQuantity: 1,
+    price: {
+      monthly: {
+        amount: 0,
+        unitPrice: 0,
+        priceIds: {
+          test: {
+            old: "",
+            new: "",
+          },
+          production: {
+            old: "",
+            new: "",
+          },
+        },
+      },
+      yearly: {
+        amount: 0,
+        unitPrice: 0,
+        priceIds: {
+          test: {
+            old: "",
+            new: "",
+          },
+          production: {
+            old: "",
+            new: "",
+          },
+        },
+      },
+    },
+  },
   {
     name: "Pro",
     slug: "pro",
