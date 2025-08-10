@@ -184,6 +184,7 @@ export default async function handler(
               uploadFolderId: linkData.uploadFolderId,
             }),
             showBanner: linkData.showBanner,
+            securedByPapermark: linkData.securedByPapermark,
             ...(linkData.customFields && {
               customFields: {
                 createMany: {
