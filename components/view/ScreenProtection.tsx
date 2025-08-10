@@ -35,7 +35,7 @@ export const ScreenProtector = () => {
   // macOS screenshot shortcuts
   useHotkeys(
     [
-      "meta+shirt",
+      "meta+shift",
       "meta+shift+3", // Cmd + Shift + 3 (full screen)
       "meta+shift+4", // Cmd + Shift + 4 (selection)
       "meta+shift+5", // Cmd + Shift + 5 (screenshot utility)
