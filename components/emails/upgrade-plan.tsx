@@ -72,22 +72,11 @@ const UpgradePlanEmail = ({
               Hey{name && ` ${name}`}!
             </Text>
             <Text className="text-sm">
-              My name is Marc, and I&apos;m the founder of Papermark. I wanted
+              Marc is here. I wanted
               to personally reach out to thank you for upgrading to Papermark{" "}
               {planType}!
             </Text>
-            <Text className="text-sm leading-6 text-black">
-              As you might already know, we are a bootstrapped and{" "}
-              <Link
-                href="https://github.com/mfts/papermark"
-                target="_blank"
-                className="font-medium text-emerald-500 no-underline"
-              >
-                open-source
-              </Link>{" "}
-              business. Your support means the world to us and helps us continue
-              to build and improve Papermark.
-            </Text>
+            
             <Text className="text-sm leading-6 text-black">
               On the {planType} plan, you now have access to:
             </Text>
