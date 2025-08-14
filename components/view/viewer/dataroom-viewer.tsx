@@ -242,7 +242,7 @@ export default function DataroomViewer({
             new Date(folder.updatedAt);
 
           const allDocumentsCanDownload =
-            folderDocuments.length > 0 &&
+            folderDocuments.length === 0 || // Allow download for empty folders
             folderDocuments.every((doc) => {
               const accessControl = accessControls.find(
                 (access) => access.itemId === doc.dataroomDocumentId,
