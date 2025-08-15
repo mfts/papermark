@@ -37,6 +37,10 @@ const Collection = dynamic(() =>
   ),
 );
 
+const Code = dynamic(() =>
+  import("react-notion-x/build/third-party/code").then((m) => m.Code),
+);
+
 export const NotionPage = ({
   recordMap,
   versionNumber,
@@ -432,6 +436,7 @@ export const NotionPage = ({
           disableHeader={true}
           components={{
             Collection,
+            Code,
             PageLink: (props: {
               className: string;
               href: any;
