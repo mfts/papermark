@@ -71,7 +71,7 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
       // Pause the subscription in Stripe
       await stripe.subscriptions.update(team.subscriptionId, {
         pause_collection: {
-          behavior: "void",
+          behavior: "mark_uncollectible",
           resumes_at: pauseEndsAt.getTime() / 1000, // Convert to seconds
         },
         metadata: {
