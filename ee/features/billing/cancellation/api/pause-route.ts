@@ -72,7 +72,7 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
       await stripe.subscriptions.update(team.subscriptionId, {
         pause_collection: {
           behavior: "mark_uncollectible",
-          resumes_at: pauseEndsAt.getTime() / 1000, // Convert to seconds
+          resumes_at: Math.floor(pauseEndsAt.getTime() / 1000), // seconds (int)
         },
         metadata: {
           pause_starts_at: pauseStartsAt.toISOString(),
