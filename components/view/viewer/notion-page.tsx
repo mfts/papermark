@@ -37,8 +37,9 @@ const Collection = dynamic(() =>
   ),
 );
 
-const Code = dynamic(() =>
-  import("react-notion-x/build/third-party/code").then((m) => m.Code),
+const Code = dynamic(
+  () => import("react-notion-x/build/third-party/code").then((m) => m.Code),
+  { ssr: false, loading: () => null },
 );
 
 export const NotionPage = ({
@@ -223,7 +224,7 @@ export const NotionPage = ({
           recordMapCache.current[pageId] = newRecordMap;
           setRecordMapState(newRecordMap);
           const firstBlockId = Object.keys(newRecordMap.block)[0];
-          const firstBlock = recordMap.block[firstBlockId];
+          const firstBlock = newRecordMap.block[firstBlockId];
           setSubTitle(
             firstBlock?.value?.properties?.title?.[0]?.[0] || "Untitled",
           );
@@ -248,7 +249,7 @@ export const NotionPage = ({
   );
 
   // Use useMemo to memoize the effect of fetching the subpage
-  useMemo(() => {
+  useEffect(() => {
     fetchSubPage(subPageId);
   }, [subPageId, fetchSubPage]);
 
