@@ -94,6 +94,22 @@ export default function DocumentPage() {
                 <AddLinkButton key={"create-link"} />,
               ]}
             />
+            {/* TODO: remove this or keep it? */}
+            {/* 
+            <NavMenu
+              navigation={[
+                {
+                  label: "Overview",
+                  href: `/documents/${prismaDocument.id}`,
+                  segment: `${prismaDocument.id}`,
+                },  
+                {
+                  label: "Versions",
+                  href: `/documents/${prismaDocument.id}/versions`,
+                  segment: "versions",
+                },
+              ]}
+            /> */}
 
             {/* Document Analytics */}
             {primaryVersion.type !== "video" && (

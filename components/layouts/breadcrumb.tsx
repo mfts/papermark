@@ -30,9 +30,12 @@ const FOLDERS_TO_DISPLAY = 1; // Only show the last folder in the path
 
 const SingleDocumentBreadcrumb = () => {
   const { document } = useDocument();
+  const router = useRouter();
   const { folders } = useFolderWithParents({
     name: document?.folder?.path ? [document.folder.path] : [],
   });
+
+  const isVersionsPage = router.pathname === "/documents/[id]/versions";
 
   return (
     <Breadcrumb>
@@ -95,11 +98,32 @@ const SingleDocumentBreadcrumb = () => {
           ))
         )}
         {document && (
-          <BreadcrumbItem>
-            <BreadcrumbPage className="max-w-[200px] truncate">
-              {document.name}
-            </BreadcrumbPage>
-          </BreadcrumbItem>
+          <>
+            <BreadcrumbItem>
+              {isVersionsPage ? (
+                <BreadcrumbLink asChild>
+                  <Link
+                    href={`/documents/${document.id}`}
+                    className="max-w-[200px] truncate"
+                  >
+                    {document.name}
+                  </Link>
+                </BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage className="max-w-[200px] truncate">
+                  {document.name}
+                </BreadcrumbPage>
+              )}
+            </BreadcrumbItem>
+            {isVersionsPage && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Versions</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            )}
+          </>
         )}
       </BreadcrumbList>
     </Breadcrumb>
@@ -475,6 +499,11 @@ export const AppBreadcrumb = () => {
 
     // Single document route
     if (path === "/documents/[id]" && id) {
+      return <SingleDocumentBreadcrumb />;
+    }
+
+    // Single document versions route
+    if (path === "/documents/[id]/versions" && id) {
       return <SingleDocumentBreadcrumb />;
     }
 
