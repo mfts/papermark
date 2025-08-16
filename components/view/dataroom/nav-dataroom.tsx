@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { DataroomBrand } from "@prisma/client";
 import { BadgeInfoIcon, Download, MessagesSquareIcon } from "lucide-react";
@@ -8,15 +8,15 @@ import { toast } from "sonner";
 
 import { formatDate } from "@/lib/utils";
 
+import { Button } from "@/components/ui/button";
+import { ButtonTooltip } from "@/components/ui/tooltip";
 import {
-  ButtonTooltip,
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { Button } from "../../ui/button";
 import { ConversationSidebar } from "../conversations/sidebar";
 
 const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
@@ -215,12 +215,14 @@ export default function DataroomNav({
         <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
           <div className="px-5 py-2 sm:px-10">
             <div className="text-3xl">{dataroom.name}</div>
-            <time
-              className="text-sm"
-              dateTime={new Date(dataroom.lastUpdatedAt).toISOString()}
-            >
-              {`Last updated ${formatDate(dataroom.lastUpdatedAt)}`}
-            </time>
+            {(dataroom.showLastUpdated ?? true) && (
+              <time
+                className="text-sm"
+                dateTime={new Date(dataroom.lastUpdatedAt).toISOString()}
+              >
+                {`Last updated ${formatDate(dataroom.lastUpdatedAt)}`}
+              </time>
+            )}
           </div>
         </div>
       </div>
