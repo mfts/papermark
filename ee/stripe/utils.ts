@@ -1,5 +1,39 @@
 import Stripe from "stripe";
 
+// Historical price IDs that are no longer in the main PLANS configuration
+// but still need to be supported for existing subscriptions
+const HISTORICAL_PRICE_IDS: Record<string, Record<string, string>> = {
+  production: {
+    // Business plan historical prices
+    price_1OuYeIFJyGSZ96lhwH58Y1kU: "business", // Old business plan
+    // Add more historical price IDs here as needed
+  },
+  test: {
+    // Add test environment historical price IDs if needed
+  },
+};
+
+function getHistoricalPlanFromPriceId(priceId: string, env: string) {
+  const planSlug = HISTORICAL_PRICE_IDS[env]?.[priceId];
+  if (!planSlug) {
+    return null;
+  }
+
+  // Find the current plan configuration for this slug
+  const currentPlan = PLANS.find((plan) => plan.slug === planSlug);
+  if (!currentPlan) {
+    return null;
+  }
+
+  // Return a plan object that maintains the current plan structure
+  // but indicates it's from a historical price ID
+  return {
+    ...currentPlan,
+    // Mark this as a historical price for logging purposes
+    _historical: true,
+  };
+}
+
 export function getPlanFromPriceId(
   priceId: string,
   isOldAccount: boolean = false,
@@ -14,27 +48,20 @@ export function getPlanFromPriceId(
   );
 
   if (!plan) {
+    // Check historical price IDs for known legacy prices
+    const historicalPlan = getHistoricalPlanFromPriceId(priceId, env);
+    if (historicalPlan) {
+      console.log(
+        `Found historical plan mapping for priceId: ${priceId} -> ${historicalPlan.slug}`,
+      );
+      return historicalPlan;
+    }
+
     console.error(
       `Plan not found for priceId: ${priceId}, isOldAccount: ${isOldAccount}, env: ${env}`,
     );
-    // Return a default plan object for old accounts to prevent crashes
-    return {
-      name: "Free",
-      slug: "free",
-      minQuantity: 1,
-      price: {
-        monthly: {
-          amount: 0,
-          unitPrice: 0,
-          priceIds: { [env]: { [accountType]: priceId } },
-        },
-        yearly: {
-          amount: 0,
-          unitPrice: 0,
-          priceIds: { [env]: { [accountType]: priceId } },
-        },
-      },
-    };
+    // Return null instead of a fake free plan to prevent unintended downgrades
+    return null;
   }
 
   return plan;
