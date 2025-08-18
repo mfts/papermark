@@ -53,6 +53,7 @@ export default async function handler(
           teamId: teamId,
         },
         select: {
+          allowBulkDownload: true,
           folders: {
             select: {
               id: true,
@@ -86,6 +87,11 @@ export default async function handler(
       });
       if (!dataroom) {
         return res.status(404).end("Dataroom not found");
+      }
+
+      // if dataroom does not allow bulk download, we should not allow the download
+      if (!dataroom.allowBulkDownload) {
+        return res.status(403).json({ error: "Bulk download is disabled for this dataroom" });
       }
       let downloadFolders = dataroom.folders;
       let downloadDocuments = dataroom.documents;
