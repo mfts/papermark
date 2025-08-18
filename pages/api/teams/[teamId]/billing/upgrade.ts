@@ -54,6 +54,12 @@ export default async function handle(
 
     const oldAccount = isOldAccount(team.plan);
     const plan = getPlanFromPriceId(priceId, oldAccount);
+
+    if (!plan) {
+      res.status(400).json({ error: "Invalid price ID" });
+      return;
+    }
+
     const minimumQuantity = plan.minQuantity;
 
     let stripeSession;
