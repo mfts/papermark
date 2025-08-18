@@ -25,10 +25,10 @@ export async function customerSubsciptionUpdated(
 
   if (!plan) {
     await log({
-      message: `Invalid price ID in customer.subscription.updated event: ${priceId}`,
+      message: `Invalid price ID in customer.subscription.updated event: ${priceId}, isOldAccount: ${isOldAccount}. Skipping webhook processing to prevent unintended plan changes.`,
       type: "error",
     });
-    return;
+    return res.status(200).json({ received: true });
   }
 
   const stripeId = subscriptionUpdated.customer.toString();
