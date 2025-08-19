@@ -234,6 +234,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
           linkType: "DATAROOM_LINK",
           link: {
             ...linkData,
+            teamId: teamId,
             dataroomDocument: {
               ...linkData.dataroomDocument,
               document: {

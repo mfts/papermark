@@ -3,7 +3,12 @@ import { NextApiRequest, NextApiResponse } from "next";
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, StandardFonts, degrees, rgb } from "pdf-lib";
 
-import { hexToRgb, log, safeTemplateReplace } from "@/lib/utils";
+import {
+  getFileNameWithPdfExtension,
+  hexToRgb,
+  log,
+  safeTemplateReplace,
+} from "@/lib/utils";
 
 // This function can run for a maximum of 120 seconds
 export const config = {
@@ -252,12 +257,14 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  const { url, watermarkConfig, viewerData, numPages } = req.body as {
-    url: string;
-    watermarkConfig: WatermarkConfig;
-    viewerData: ViewerData;
-    numPages: number;
-  };
+  const { url, watermarkConfig, viewerData, numPages, originalFileName } =
+    req.body as {
+      url: string;
+      watermarkConfig: WatermarkConfig;
+      viewerData: ViewerData;
+      numPages: number;
+      originalFileName?: string;
+    };
 
   try {
     // Fetch the PDF data
@@ -294,7 +301,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      'attachment; filename="watermarked.pdf"',
+      `attachment; filename="${encodeURIComponent(getFileNameWithPdfExtension(originalFileName))}"`,
     );
 
     res.status(200).send(Buffer.from(pdfBytes));

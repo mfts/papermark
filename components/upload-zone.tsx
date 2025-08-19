@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentStorageType } from "@prisma/client";
@@ -10,7 +10,11 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
-import { SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
+import {
+  FREE_PLAN_ACCEPTED_FILE_TYPES,
+  FULL_PLAN_ACCEPTED_FILE_TYPES,
+  SUPPORTED_DOCUMENT_MIME_TYPES,
+} from "@/lib/constants";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
 import { resumableUpload } from "@/lib/files/tus-upload";
 import {
@@ -33,46 +37,9 @@ import { getPagesCount } from "@/lib/utils/get-page-number-count";
 // Originally these mime values were directly used in the dropzone hook.
 // There was a solid reason to take them out of the scope, primarily to solve a browser compatibility issue to determine the file type when user dropped a folder.
 // you will figure out how this change helped to fix the compatibility issue once you have went through reading of `getFilesFromDropEvent` and `traverseFolder`
-const acceptableDropZoneMimeTypesWhenIsFreePlanAndNotTrail = {
-  "application/pdf": [], // ".pdf"
-  "application/vnd.ms-excel": [], // ".xls"
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
-  "text/csv": [], // ".csv"
-  "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
-  "image/png": [], // ".png"
-  "image/jpeg": [], // ".jpeg"
-  "image/jpg": [], // ".jpg"
-};
-const allAcceptableDropZoneMimeTypes = {
-  "application/pdf": [], // ".pdf"
-  "application/vnd.ms-excel": [], // ".xls"
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
-  "application/vnd.ms-excel.sheet.macroEnabled.12": [".xlsm"], // ".xlsm"
-  "text/csv": [], // ".csv"
-  "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [], // ".docx"
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-    [], // ".pptx"
-  "application/vnd.ms-powerpoint": [], // ".ppt"
-  "application/msword": [], // ".doc"
-  "application/vnd.oasis.opendocument.text": [], // ".odt"
-  "application/vnd.oasis.opendocument.presentation": [], // ".odp"
-  "image/vnd.dwg": [".dwg"], // ".dwg"
-  "image/vnd.dxf": [".dxf"], // ".dxf"
-  "image/png": [], // ".png"
-  "image/jpeg": [], // ".jpeg"
-  "image/jpg": [], // ".jpg"
-  "application/zip": [], // ".zip"
-  "application/x-zip-compressed": [], // ".zip"
-  "video/mp4": [], // ".mp4"
-  "video/webm": [], // ".webm"
-  "video/quicktime": [], // ".mov"
-  "video/x-msvideo": [], // ".avi"
-  "video/ogg": [], // ".ogg"
-  "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
-  "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
-  "application/vnd.ms-outlook": [".msg"], // ".msg"
-};
+const acceptableDropZoneMimeTypesWhenIsFreePlanAndNotTrial =
+  FREE_PLAN_ACCEPTED_FILE_TYPES;
+const allAcceptableDropZoneMimeTypes = FULL_PLAN_ACCEPTED_FILE_TYPES;
 
 interface FileWithPaths extends File {
   path?: string;
@@ -134,8 +101,6 @@ export default function UploadZone({
     ? limits?.documents - limits?.usage?.documents
     : 0;
 
-  const [progress, setProgress] = useState<number>(0);
-  const [showProgress, setShowProgress] = useState(false);
   const uploadProgress = useRef<number[]>([]);
 
   const fileSizeLimits = useMemo(
@@ -150,7 +115,7 @@ export default function UploadZone({
 
   const acceptableDropZoneFileTypes =
     isFree && !isTrial
-      ? acceptableDropZoneMimeTypesWhenIsFreePlanAndNotTrail
+      ? acceptableDropZoneMimeTypesWhenIsFreePlanAndNotTrial
       : allAcceptableDropZoneMimeTypes;
 
   // this var will help to determine the correct api endpoint to request folder creation (If needed).

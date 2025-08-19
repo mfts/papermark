@@ -31,6 +31,9 @@ model Dataroom {
   // unified permission strategy
   defaultPermissionStrategy DefaultPermissionStrategy @default(INHERIT_FROM_PARENT)
 
+  // bulk download setting
+  allowBulkDownload Boolean @default(true) // Allow bulk download of entire dataroom
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

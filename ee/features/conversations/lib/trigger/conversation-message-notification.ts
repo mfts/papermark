@@ -179,3 +179,94 @@ export const sendConversationMessageNotificationTask = task({
     return;
   },
 });
+
+// New task specifically for notifying team members when viewers write messages
+export const sendConversationTeamMemberNotificationTask = task({
+  id: "send-conversation-team-member-notification",
+  retry: { maxAttempts: 3 },
+  run: async (payload: NotificationPayload) => {
+    logger.info("Starting team member notifications", {
+      conversationId: payload.conversationId,
+      teamId: payload.teamId,
+    });
+
+    // Get team members (ADMIN/MANAGER) for this team
+    const teamMembers = await prisma.userTeam.findMany({
+      where: {
+        teamId: payload.teamId,
+        role: {
+          in: ["ADMIN", "MANAGER"],
+        },
+        // Only active team members (not blocked)
+        blockedAt: null,
+      },
+      select: {
+        userId: true,
+      },
+    });
+
+    if (!teamMembers || teamMembers.length === 0) {
+      logger.info("No team members found for this conversation", {
+        conversationId: payload.conversationId,
+        teamId: payload.teamId,
+      });
+      return;
+    }
+
+    logger.info("Found team members for notification", {
+      teamMemberCount: teamMembers.length,
+      teamId: payload.teamId,
+      conversationId: payload.conversationId,
+    });
+
+    // Send notification to all team members at once
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/jobs/send-conversation-team-member-notification`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            conversationId: payload.conversationId,
+            dataroomId: payload.dataroomId,
+            senderUserId: payload.senderUserId,
+            teamId: payload.teamId,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        logger.error("Failed to send team member notifications", {
+          dataroomId: payload.dataroomId,
+          teamId: payload.teamId,
+          error: await response.text(),
+        });
+      } else {
+        const result = (await response.json()) as {
+          message: string;
+          notified: number;
+        };
+        logger.info("Team member notifications sent successfully", {
+          teamId: payload.teamId,
+          notified: result.notified,
+          message: result.message,
+        });
+      }
+    } catch (error) {
+      logger.error("Error sending team member notifications", {
+        teamId: payload.teamId,
+        error,
+      });
+    }
+
+    logger.info("Completed team member notifications", {
+      conversationId: payload.conversationId,
+      teamId: payload.teamId,
+      teamMemberCount: teamMembers.length,
+    });
+    return;
+  },
+});

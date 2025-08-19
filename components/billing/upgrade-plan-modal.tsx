@@ -9,7 +9,7 @@ import { getStripe } from "@/ee/stripe/client";
 import { Feature, PlanEnum, getPlanFeatures } from "@/ee/stripe/constants";
 import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
 import { PLANS } from "@/ee/stripe/utils";
-import { CheckIcon, CircleHelpIcon, Users2Icon } from "lucide-react";
+import { CheckIcon, CircleHelpIcon, Users2Icon, XIcon } from "lucide-react";
 
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
@@ -52,7 +52,11 @@ const FeatureItem = ({ feature }: { feature: Feature }) => {
     return (
       <div className={cn("justify-between gap-x-8", baseClasses)}>
         <div className="flex items-center gap-x-3">
-          <CheckIcon className="h-5 w-5 flex-shrink-0 text-[#fb7a00]" />
+          {feature.isNotIncluded ? (
+            <XIcon className="h-5 w-5 flex-shrink-0 text-gray-500" />
+          ) : (
+            <CheckIcon className="h-5 w-5 flex-shrink-0 text-[#fb7a00]" />
+          )}
           <span>{feature.text}</span>
         </div>
         {feature.tooltip && (
@@ -75,7 +79,11 @@ const FeatureItem = ({ feature }: { feature: Feature }) => {
 
   return (
     <div className={cn("text-sm", baseClasses)}>
-      <CheckIcon className="mr-3 h-5 w-5 flex-shrink-0 text-[#fb7a00]" />
+      {feature.isNotIncluded ? (
+        <XIcon className="mr-3 h-5 w-5 flex-shrink-0 text-gray-500" />
+      ) : (
+        <CheckIcon className="mr-3 h-5 w-5 flex-shrink-0 text-[#fb7a00]" />
+      )}
       <div className="flex items-center gap-2">
         <span>{feature.text}</span>
         {feature.tooltip && (
@@ -312,10 +320,11 @@ export function UpgradePlanModal({
                     loading={selectedPlan === planOption}
                     disabled={selectedPlan !== null}
                     onClick={() => {
-                      const priceId = getPriceIdFromPlan(
-                        displayPlanName,
+                      const priceId = getPriceIdFromPlan({
+                        planName: displayPlanName,
                         period,
-                      );
+                        isOld: isOldAccount,
+                      });
 
                       setSelectedPlan(planOption);
                       if (isCustomer && teamPlan !== "free") {

@@ -25,6 +25,7 @@ export interface Feature {
   isUsers?: boolean;
   usersIncluded?: number;
   isHighlighted?: boolean;
+  isNotIncluded?: boolean;
 }
 
 export interface PlanFeatures {
@@ -74,6 +75,7 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
       { id: "branding", text: "Remove Papermark branding" },
       { id: "custom-branding", text: "Custom branding" },
       { id: "retention", text: "1-year analytics retention" },
+      { id: "no-datarooms", text: "No datarooms included", isNotIncluded: true },
     ],
   },
   [PlanEnum.Business]: {

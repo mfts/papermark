@@ -47,7 +47,7 @@ export async function checkoutSessionCompleted(
 
   if (!plan) {
     await log({
-      message: `Invalid price ID in checkout.session.completed event: ${priceId}`,
+      message: `Invalid price ID in checkout.session.completed event: ${priceId}, isOldAccount: ${isOldAccount}. Skipping webhook processing to prevent unintended plan changes.`,
       type: "error",
     });
     return;

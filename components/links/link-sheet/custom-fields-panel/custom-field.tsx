@@ -100,7 +100,7 @@ export default memo(function CustomField({
               <SelectItem value="SHORT_TEXT">Short Text</SelectItem>
               <SelectItem value="LONG_TEXT">Long Text</SelectItem>
               <SelectItem value="NUMBER">Number</SelectItem>
-              {/* <SelectItem value="PHONE_NUMBER">Phone</SelectItem> */}
+              <SelectItem value="PHONE_NUMBER">Phone</SelectItem>
               <SelectItem value="URL">URL</SelectItem>
             </SelectContent>
           </Select>

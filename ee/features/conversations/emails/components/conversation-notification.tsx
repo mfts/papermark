@@ -62,14 +62,7 @@ export default function ConversationNotification({
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
-                  target="_blank"
-                >
-                  papermark.com
-                </a>
+                © {new Date().getFullYear()} Papermark, Inc.
               </Text>
               <Text className="text-xs">
                 You received this email from{" "}
