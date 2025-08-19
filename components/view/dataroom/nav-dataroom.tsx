@@ -23,6 +23,7 @@ const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
 
 export default function DataroomNav({
   allowDownload,
+  allowBulkDownload,
   brand,
   viewId,
   linkId,
@@ -34,6 +35,7 @@ export default function DataroomNav({
   isTeamMember,
 }: {
   allowDownload?: boolean;
+  allowBulkDownload?: boolean;
   brand?: Partial<DataroomBrand>;
   viewId?: string;
   linkId?: string;
@@ -187,7 +189,7 @@ export default function DataroomNav({
                 </Tooltip>
               </TooltipProvider>
             )}
-            {allowDownload ? (
+            {allowDownload && allowBulkDownload ? (
               <ButtonTooltip content="Download Dataroom">
                 <Button
                   onClick={downloadDataroom}
