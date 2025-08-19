@@ -100,11 +100,12 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      const { name, enableChangeNotifications, defaultPermissionStrategy } =
+      const { name, enableChangeNotifications, defaultPermissionStrategy, allowBulkDownload } =
         req.body as {
           name?: string;
           enableChangeNotifications?: boolean;
           defaultPermissionStrategy?: DefaultPermissionStrategy;
+          allowBulkDownload?: boolean;
         };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
@@ -132,6 +133,9 @@ export default async function handle(
             enableChangeNotifications,
           }),
           ...(defaultPermissionStrategy && { defaultPermissionStrategy }),
+          ...(typeof allowBulkDownload === "boolean" && {
+            allowBulkDownload,
+          }),
         },
       });
 

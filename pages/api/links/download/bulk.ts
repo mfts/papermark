@@ -47,6 +47,7 @@ export default async function handle(
           dataroom: {
             select: {
               teamId: true,
+              allowBulkDownload: true,
               folders: {
                 select: {
                   id: true,
@@ -105,6 +106,11 @@ export default async function handle(
       // if dataroom does not exist, we should not allow the download
       if (!view.dataroom) {
         return res.status(404).json({ error: "Error downloading" });
+      }
+
+      // if dataroom does not allow bulk download, we should not allow the download
+      if (!view.dataroom.allowBulkDownload) {
+        return res.status(403).json({ error: "Bulk download is disabled for this dataroom" });
       }
 
       // if viewedAt is longer than 23 hours ago, we should not allow the download
