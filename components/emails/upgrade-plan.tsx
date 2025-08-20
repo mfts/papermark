@@ -72,11 +72,10 @@ const UpgradePlanEmail = ({
               Hey{name && ` ${name}`}!
             </Text>
             <Text className="text-sm">
-              Marc is here. I wanted
-              to personally reach out to thank you for upgrading to Papermark{" "}
-              {planType}!
+              Marc is here. I wanted to personally reach out to thank you for
+              upgrading to Papermark {planType}!
             </Text>
-            
+
             <Text className="text-sm leading-6 text-black">
               On the {planType} plan, you now have access to:
             </Text>
@@ -115,7 +114,7 @@ const UpgradePlanEmail = ({
                 © {new Date().getFullYear()}{" "}
                 <a
                   href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
+                  className="text-gray-400 no-underline"
                   target="_blank"
                 >
                   papermark.com

@@ -17,7 +17,7 @@ export default function TeamInvitation({
   senderName,
   senderEmail,
   teamName,
-  url,
+  url = "https://app.papermark.com",
 }: {
   senderName: string;
   senderEmail: string;
@@ -65,7 +65,7 @@ export default function TeamInvitation({
                 © {new Date().getFullYear()}{" "}
                 <a
                   href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
+                  className="text-gray-400 no-underline"
                   target="_blank"
                 >
                   papermark.com

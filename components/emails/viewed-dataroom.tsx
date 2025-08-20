@@ -67,9 +67,9 @@ export default function ViewedDataroom({
               >
                 See my dataroom insights
               </Button>
-              </Section>
+            </Section>
             <Text className="text-sm leading-6 text-black">
-             Receive view notifications in your{" "}
+              Receive view notifications in your{" "}
               <Link
                 href="https://app.papermark.com/settings/general"
                 className="text-blue-500 underline"
@@ -77,16 +77,16 @@ export default function ViewedDataroom({
               >
                 Slack
               </Link>{" "}
-              channel. Stay informed, stay ahead with Papermark. 
+              channel. Stay informed, stay ahead with Papermark.
             </Text>
-          
+
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">
                 © {new Date().getFullYear()}{" "}
                 <a
                   href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
+                  className="text-gray-400 no-underline"
                   target="_blank"
                 >
                   papermark.com

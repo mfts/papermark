@@ -14,6 +14,8 @@ import {
   Text,
 } from "@react-email/components";
 
+import { Footer } from "./shared/footer";
+
 export default function CustomDomainSetup({
   name = "there",
   currentPlan = "Free",
@@ -32,7 +34,8 @@ export default function CustomDomainSetup({
     } else {
       return {
         title: "Interested in custom domains? 🚀",
-        subtitle: "Learn how custom domains can enhance your document sharing experience.",
+        subtitle:
+          "Learn how custom domains can enhance your document sharing experience.",
       };
     }
   };
@@ -52,12 +55,8 @@ export default function CustomDomainSetup({
             <Text className="mx-0 my-7 p-0 text-center text-xl font-semibold text-black">
               {title}
             </Text>
-            <Text className="text-sm leading-6 text-black">
-              Hi {name},
-            </Text>
-            <Text className="text-sm leading-6 text-black">
-              {subtitle}
-            </Text>
+            <Text className="text-sm leading-6 text-black">Hi {name},</Text>
+            <Text className="text-sm leading-6 text-black">{subtitle}</Text>
 
             {!hasAccess && (
               <>
@@ -65,19 +64,25 @@ export default function CustomDomainSetup({
                   <strong>Custom domains are available: </strong>
                 </Text>
                 <ul className="list-inside list-disc text-sm">
-                  <li><strong>Business Plan:</strong> Custom domain for documents</li>
-                  <li><strong>Data Rooms Plan:</strong> Custom domain for data rooms</li>
-                  <li><strong>Data Rooms Plus:</strong> Unlimited custom domains for data rooms and documents</li>
+                  <li>
+                    <strong>Business:</strong> Custom domain for documents
+                  </li>
+                  <li>
+                    <strong>Data Rooms:</strong> Custom domain for data rooms
+                  </li>
+                  <li>
+                    <strong>Data Rooms Plus:</strong> Unlimited custom domains
+                    for data rooms and documents
+                  </li>
                 </ul>
               </>
             )}
-            
 
             <Text className="text-sm leading-6 text-black">
               <strong>Setting up your custom domain:</strong>
             </Text>
             <ol className="list-inside list-decimal text-sm">
-              <li>Choose your subdomain (e.g., docs.yourcompany.com)</li>
+              <li>Choose your subdomain (e.g. docs.yourcompany.com)</li>
               <li>Add a CNAME record pointing to papermark.com</li>
               <li>Configure the domain in your Papermark settings</li>
               <li>Start sharing with your branded domain!</li>
@@ -98,7 +103,7 @@ export default function CustomDomainSetup({
                   href={`https://app.papermark.com/settings/upgrade`}
                   style={{ padding: "12px 20px" }}
                 >
-                  Upgrade to get custom domains
+                  Upgrade to use custom domains
                 </Button>
               )}
             </Section>
@@ -129,26 +134,10 @@ export default function CustomDomainSetup({
               )}
             </Text>
 
-            <Hr />
-            <Section className="mt-8 text-gray-400">
-              <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
-                  target="_blank"
-                >
-                  papermark.com
-                </a>
-              </Text>
-              <Text className="text-xs">
-                If you have any questions about setting up your custom domain,
-                simply reply to this email. We'd love to help you get started!
-              </Text>
-            </Section>
+            <Footer footerText="If you have any questions about setting up your custom domain, simply reply to this email. We'd love to help you get started!" />
           </Container>
         </Body>
       </Tailwind>
     </Html>
   );
-} 
+}

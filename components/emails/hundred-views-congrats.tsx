@@ -1,25 +1,30 @@
-import React from "react";
-
-import { Body, Head, Html, Link, Preview, Tailwind, Text } from "@react-email/components";
+import {
+  Body,
+  Head,
+  Html,
+  Link,
+  Tailwind,
+  Text,
+} from "@react-email/components";
 
 interface HundredViewsCongratsEmailProps {
   name: string | null | undefined;
 }
 
-const HundredViewsCongratsEmail = ({ name }: HundredViewsCongratsEmailProps) => {
+const HundredViewsCongratsEmail = ({
+  name,
+}: HundredViewsCongratsEmailProps) => {
   return (
     <Html>
       <Head />
-      <Preview>100 views on Papermark. Awesome, {name}</Preview>
       <Tailwind>
         <Body className="font-sans text-sm">
-          <Text>Hi {name},</Text>
+          <Text>Hi{name && ` ${name}`},</Text>
           <Text>
-            I'm Marc, founder of Papermark. Congrats on 100 views on your documents.
+            I'm Marc, founder of Papermark. Congrats on 100 views on your
+            documents.
           </Text>
-          <Text>
-            Would you help others discover us too?
-          </Text>
+          <Text>Would you help others discover us too?</Text>
           <Text>
             <Link
               href="https://www.g2.com/products/papermark/reviews"
@@ -29,9 +34,7 @@ const HundredViewsCongratsEmail = ({ name }: HundredViewsCongratsEmailProps) => 
               Leave a review on G2 →
             </Link>
           </Text>
-          <Text>
-            Small gift from us inside.
-          </Text>
+          <Text>Small gift from us inside.</Text>
           <Text>
             Thanks so much,
             <br />

@@ -37,8 +37,8 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
             </Text>
             <Text className="text-sm">
               My name is Marc, and I&apos;m the founder of Papermark – the
-              open-source DocSend alternative for securely sharing documents and data rooms. I&apos;m excited to have you on
-              board!
+              open-source DocSend alternative for securely sharing documents and
+              data rooms. I&apos;m excited to have you on board!
             </Text>
             <Text className="text-sm">
               Here are a few things you can do to get started:
@@ -47,7 +47,7 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
               <li>Turn your documents into shareable links</li>
               <li>Create secure virtual data rooms</li>
               <li>
-                Share your documents {" "}
+                Share your documents{" "}
                 <span className="italic">(with custom domain)✨</span>
               </li>
               <li>Watch the page by page views come in real-time</li>
@@ -61,22 +61,21 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
                 Get Started
               </Button>
             </Section>
-           
+
             <Section className="mt-4">
               <Text className="text-sm">
                 If you have any questions or feedback just respond to this
-                email.  <Link
-                    href="https://cal.com/marcseitz/papermark"
-                    target="_blank"
-                  >
-                    Book
-                  </Link> {" "}a call to talk enterprise. I&apos;m always happy to help!
-                 
+                email.{" "}
+                <Link
+                  href="https://cal.com/marcseitz/papermark"
+                  target="_blank"
+                >
+                  Book
+                </Link>{" "}
+                a call to talk enterprise. I&apos;m always happy to help!
               </Text>
-         
-              <Text className="text-sm text-gray-400">Marc from Papermark
-              
-                  </Text>
+
+              <Text className="text-sm text-gray-400">Marc from Papermark</Text>
             </Section>
             <Hr />
             <Section className="mt-8 text-gray-400">
@@ -84,33 +83,41 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
                 © {new Date().getFullYear()}{" "}
                 <a
                   href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
+                  className="text-gray-400 no-underline"
                   target="_blank"
                 >
                   papermark.com
                 </a>
               </Text>
               <Text className="text-xs">
-              <Link href="https://www.papermark.com/customers" target="_blank" className="text-gray-400 text-xs">
-              Customer stories 
-                  </Link>
-              <Link href="https://x.com/papermarkio" target="_blank" className="text-gray-400 text-xs">
-              · Twitter
-                  </Link>
-                  <Link
-                    href="https://www.linkedin.com/company/papermarkio"
-                    target="_blank"
-                    className="text-gray-400 text-xs"
-                  >
-                    · LinkedIn
-                  </Link>
-                  <Link
-                    href="https://github.com/mfts/papermark"
-                    target="_blank"
-                    className="text-gray-400 text-xs"
-                  >
-                    · GitHub
-                  </Link>
+                <Link
+                  href="https://www.papermark.com/customers"
+                  target="_blank"
+                  className="text-xs text-gray-400"
+                >
+                  Customer stories
+                </Link>
+                <Link
+                  href="https://x.com/papermarkio"
+                  target="_blank"
+                  className="text-xs text-gray-400"
+                >
+                  · Twitter
+                </Link>
+                <Link
+                  href="https://www.linkedin.com/company/papermarkio"
+                  target="_blank"
+                  className="text-xs text-gray-400"
+                >
+                  · LinkedIn
+                </Link>
+                <Link
+                  href="https://github.com/mfts/papermark"
+                  target="_blank"
+                  className="text-xs text-gray-400"
+                >
+                  · GitHub
+                </Link>
               </Text>
             </Section>
           </Container>

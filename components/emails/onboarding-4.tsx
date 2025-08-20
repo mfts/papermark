@@ -35,8 +35,7 @@ const Onboarding4Email = () => {
             <Text className="text-sm">With Papermark you can:</Text>
             <ul className="list-inside list-disc text-sm">
               <li>
-                Share documnets with your{" "}
-                <strong>custom domain💫</strong>{" "}
+                Share documnets with your <strong>custom domain💫</strong>{" "}
               </li>
 
               <li>Remove &quot;powered by Papermark&quot;</li>
@@ -74,7 +73,7 @@ const Onboarding4Email = () => {
                 © {new Date().getFullYear()}{" "}
                 <a
                   href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
+                  className="text-gray-400 no-underline"
                   target="_blank"
                 >
                   papermark.com
