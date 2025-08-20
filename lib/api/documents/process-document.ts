@@ -3,6 +3,7 @@ import { parsePageId } from "notion-utils";
 import { DocumentData } from "@/lib/documents/create-document";
 import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import notion from "@/lib/notion";
+import { getNotionPageIdFromSlug } from "@/lib/notion/utils";
 import prisma from "@/lib/prisma";
 import { convertCadToPdfTask } from "@/lib/trigger/convert-files";
 import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
@@ -49,7 +50,17 @@ export const processDocument = async ({
   // Check whether the Notion page is publically accessible or not
   if (type === "notion") {
     try {
-      const pageId = parsePageId(key, { uuid: false });
+      let pageId = parsePageId(key, { uuid: false });
+
+      // If parsePageId fails, try to get page ID from slug
+      if (!pageId) {
+        try {
+          pageId = await getNotionPageIdFromSlug(key);
+        } catch (slugError) {
+          throw new Error("Unable to extract page ID from Notion URL");
+        }
+      }
+
       // if the page isn't accessible then end the process here.
       if (!pageId) {
         throw new Error("Notion page not found");
