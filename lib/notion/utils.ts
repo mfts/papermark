@@ -74,3 +74,55 @@ export const addSignedUrls: NotionAPI["addSignedUrls"] = async ({
     }
   }
 };
+
+export async function getNotionPageIdFromSlug(url: string) {
+  // Parse the URL to extract domain and slug
+  const urlObj = new URL(url);
+  const hostname = urlObj.hostname;
+
+  // Extract domain from hostname (e.g., "domain" from "domain.notion.site")
+  const domainMatch = hostname.match(/^([^.]+)\.notion\.site$/);
+  if (!domainMatch) {
+    throw new Error("Invalid Notion site URL format: ${url}");
+  }
+
+  const spaceDomain = domainMatch[1];
+
+  // Extract slug from pathname (remove leading slash)
+  // If slug is missing, we will try to get page just by using spaceDomain
+  let slug = urlObj.pathname.substring(1) || "";
+
+  // Make request to Notion's internal API
+  const apiUrl =
+    "https://${spaceDomain}.notion.site/api/v3/getPublicPageDataForDomain";
+  const payload = {
+    type: "block-space",
+    name: "page",
+    slug: slug,
+    spaceDomain: spaceDomain,
+    requestedOnPublicDomain: true,
+  };
+
+  const response = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": "Mozilla/5.0 (compatible; MyApp/1.0)",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      "Notion API request failed: ${response.status} ${response.statusText}",
+    );
+  }
+
+  const data = await response.json();
+
+  if (data.pageId) {
+    return data.pageId;
+  } else {
+    throw new Error("No pageId found in Notion API response");
+  }
+}
