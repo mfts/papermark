@@ -176,21 +176,36 @@ export function useDocumentThumbnail(
   documentId: string,
   versionNumber?: number,
 ) {
-  const { data, error } = useSWR<{ imageUrl: string }>(
-    pageNumber === 0
+  const { data, error, isLoading, isValidating } = useSWR<{ imageUrl: string }>(
+    // Only make request if we have valid parameters
+    pageNumber === 0 || !documentId
       ? null
       : `/api/jobs/get-thumbnail?documentId=${documentId}&pageNumber=${pageNumber}&versionNumber=${versionNumber}`,
     fetcher,
     {
       dedupingInterval: 1200000,
       revalidateOnFocus: false,
-      // revalidateOnMount: false,
       revalidateIfStale: false,
       refreshInterval: 0,
+      // Add error retry with exponential backoff for 404s (document processing)
+      errorRetryCount: 3,
+      errorRetryInterval: 2000,
+      shouldRetryOnError: (error) => {
+        // Retry on 404s (thumbnail not ready) but not on other errors
+        if (error?.status === 404) return true;
+        if (error?.status === 500) return false; // Don't retry server errors
+        return true;
+      },
+      onError: (error, key) => {
+        // Log errors for debugging but don't throw
+        if (error?.status !== 404) {
+          console.warn(`Thumbnail fetch error for ${key}:`, error);
+        }
+      },
     },
   );
 
-  if (pageNumber === 0) {
+  if (pageNumber === 0 || !documentId) {
     return {
       data: null,
       loading: false,
@@ -200,7 +215,7 @@ export function useDocumentThumbnail(
 
   return {
     data,
-    loading: !error && !data,
+    loading: isLoading || isValidating,
     error,
   };
 }

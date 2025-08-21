@@ -6,6 +6,15 @@ export const getFileForDocumentPage = async (
   documentId: string,
   versionNumber?: number,
 ): Promise<string> => {
+  // Validate input parameters
+  if (!documentId || typeof documentId !== "string") {
+    throw new Error("Invalid document ID provided");
+  }
+
+  if (!pageNumber || pageNumber < 1) {
+    throw new Error("Invalid page number provided");
+  }
+
   const documentVersions = await prisma.documentVersion.findMany({
     where: {
       documentId: documentId,
@@ -15,6 +24,7 @@ export const getFileForDocumentPage = async (
     },
     select: {
       id: true,
+      versionNumber: true,
     },
     orderBy: {
       versionNumber: "desc",
@@ -24,7 +34,7 @@ export const getFileForDocumentPage = async (
 
   if (documentVersions.length === 0) {
     throw new Error(
-      `Latest document version from document id ${documentId} with document id ${documentId} not found`,
+      `Document version not found for document ${documentId}${versionNumber ? ` version ${versionNumber}` : " (primary version)"}`,
     );
   }
 
@@ -44,13 +54,37 @@ export const getFileForDocumentPage = async (
   });
 
   if (!documentPage) {
+    // Check if the document version exists but the page doesn't (document might still be processing)
+    const versionExists = await prisma.documentVersion.findUnique({
+      where: { id: documentVersion.id },
+      select: {
+        id: true,
+        hasPages: true,
+        _count: {
+          select: { pages: true },
+        },
+      },
+    });
+
+    if (versionExists && versionExists._count.pages === 0) {
+      throw new Error(
+        `Document is still processing. Page ${pageNumber} not available yet for document ${documentId}`,
+      );
+    }
+
     throw new Error(
-      `Document page ${pageNumber} with version id ${documentId} not found`,
+      `Page ${pageNumber} not found for document ${documentId} version ${documentVersion.versionNumber}`,
     );
   }
 
-  return getFile({
-    type: documentPage.storageType,
-    data: documentPage.file,
-  });
+  try {
+    return await getFile({
+      type: documentPage.storageType,
+      data: documentPage.file,
+    });
+  } catch (error) {
+    throw new Error(
+      `Failed to retrieve file for page ${pageNumber} of document ${documentId}: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
 };
