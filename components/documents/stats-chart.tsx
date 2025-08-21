@@ -3,7 +3,6 @@ import ErrorPage from "next/error";
 import { TStatsData } from "@/lib/swr/use-stats";
 
 import BarChartComponent from "../charts/bar-chart";
-import StatsChartDummy from "./stats-chart-dummy";
 import StatsChartSkeleton from "./stats-chart-skeleton";
 
 export default function StatsChart({
@@ -36,8 +35,9 @@ export default function StatsChart({
   }));
 
   const swrData = stats?.duration;
+  const hasRealData = stats && stats.views.length > 0;
 
-  if (swrData) {
+  if (swrData && hasRealData) {
     swrData.data.forEach((dataItem) => {
       const pageIndex = durationData.findIndex(
         (item) => item.pageNumber === dataItem.pageNumber,
@@ -81,11 +81,28 @@ export default function StatsChart({
     );
   }
 
-  return stats && stats.views.length > 0 ? (
+  // If no real data, generate dummy data with some sample durations
+  if (!hasRealData) {
+    durationData = Array.from({ length: totalPagesMax }, (_, i) => ({
+      pageNumber: (i + 1).toString(),
+      data: [
+        {
+          versionNumber: 1,
+          avg_duration: 16000 / (i + 1), // Decreasing duration like the original dummy
+        },
+      ],
+    }));
+  }
+
+  const isDummy = !hasRealData;
+
+  return (
     <div className="rounded-bl-lg border-b border-l pb-0.5 pl-0.5 md:pb-1 md:pl-1">
-      <BarChartComponent data={durationData} />
+      <BarChartComponent 
+        data={durationData} 
+        documentId={documentId} 
+        isDummy={isDummy}
+      />
     </div>
-  ) : (
-    <StatsChartDummy totalPagesMax={totalPagesMax} />
   );
 }

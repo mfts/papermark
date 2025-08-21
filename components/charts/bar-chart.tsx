@@ -64,13 +64,20 @@ export default function BarChartComponent({
   isSum = false,
   isDummy = false,
   versionNumber,
+  documentId,
 }: {
   data: any;
   isSum?: boolean;
   isDummy?: boolean;
   versionNumber?: number;
+  documentId?: string;
 }) {
   const [, setValue] = useState<any>(null);
+
+  // Create a tooltip component that has access to documentId
+  const TooltipWithDocumentId = (props: any) => (
+    <CustomTooltip {...props} documentId={documentId} />
+  );
 
   if (isSum) {
     const renamedData = renameSumDurationKey(data, versionNumber);
@@ -86,7 +93,7 @@ export default function BarChartComponent({
         yAxisWidth={50}
         showGridLines={false}
         onValueChange={(v) => setValue(v)}
-        customTooltip={isDummy ? undefined : CustomTooltip}
+        customTooltip={TooltipWithDocumentId}
       />
     );
   }
@@ -112,7 +119,7 @@ export default function BarChartComponent({
       yAxisWidth={50}
       showGridLines={false}
       onValueChange={(v) => setValue(v)}
-      customTooltip={isDummy ? undefined : CustomTooltip}
+      customTooltip={CustomTooltip}
     />
   );
 }
