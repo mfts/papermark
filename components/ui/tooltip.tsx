@@ -106,22 +106,21 @@ export const BadgeTooltip = ({
   );
 };
 
-export const ButtonTooltip = ({
-  content,
-  sideOffset = 0,
-  className,
-  children,
-  link,
-}: {
-  content: string;
-  sideOffset?: number;
-  className?: string;
-  children: React.ReactNode;
-  link?: string;
-}) => {
+export const ButtonTooltip = React.forwardRef<
+  HTMLDivElement,
+  {
+    content: string;
+    sideOffset?: number;
+    className?: string;
+    children: React.ReactNode;
+    link?: string;
+  }
+>(({ content, sideOffset = 0, className, children, link }, ref) => {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipTrigger asChild ref={ref}>
+        {children}
+      </TooltipTrigger>
       <TooltipPortal>
         <TooltipContent
           sideOffset={sideOffset}
@@ -149,7 +148,9 @@ export const ButtonTooltip = ({
       </TooltipPortal>
     </Tooltip>
   );
-};
+});
+
+ButtonTooltip.displayName = "ButtonTooltip";
 
 export {
   Tooltip,
