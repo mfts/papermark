@@ -13,8 +13,8 @@
     "postinstall": "prisma generate",
     "vercel-build": "prisma migrate deploy && next build",
     "email": "email dev --dir ./components/emails --port 3001",
-    "trigger:v3:dev": "npx trigger.dev@latest dev",
-    "trigger:v3:deploy": "npx trigger.dev@latest deploy",
+    "trigger:v3:dev": "npx trigger.dev@3 dev",
+    "trigger:v3:deploy": "npx trigger.dev@3 deploy",
     "stripe:webhook": "pkgx stripe listen --forward-to localhost:3000/api/stripe/webhook",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,mdx}\"",
     "dev:prisma": "npx prisma generate && npx prisma migrate deploy"
