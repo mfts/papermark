@@ -235,6 +235,8 @@ export default function LinkSheet({
     if (!preset) return;
 
     setData((prev) => {
+      const isGroupLink = prev.audienceType === LinkAudienceType.GROUP;
+
       return {
         ...prev,
         name: prev.name, // Keep existing name
@@ -243,8 +245,13 @@ export default function LinkSheet({
         emailProtected: preset.emailProtected ?? prev.emailProtected,
         emailAuthenticated:
           preset.emailAuthenticated ?? prev.emailAuthenticated,
-        allowList: preset.allowList || prev.allowList,
-        denyList: preset.denyList || prev.denyList,
+        // For group links, ignore allow/deny lists from presets as access is controlled by group membership
+        allowList: isGroupLink
+          ? prev.allowList
+          : preset.allowList || prev.allowList,
+        denyList: isGroupLink
+          ? prev.denyList
+          : preset.denyList || prev.denyList,
         password: preset.password || prev.password,
         enableCustomMetatag:
           preset.enableCustomMetaTag ?? prev.enableCustomMetatag,
