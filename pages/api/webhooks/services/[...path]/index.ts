@@ -446,8 +446,13 @@ async function handleDocumentCreate(
         enableScreenshotProtection: link.enableScreenshotProtection,
         audienceType: link.audienceType,
         groupId: isGroupAudience ? link.groupId : null,
-        allowList: link.allowList || preset?.allowList,
-        denyList: link.denyList || preset?.denyList,
+        // For group links, ignore allow/deny lists from presets as access is controlled by group membership
+        allowList: isGroupAudience
+          ? link.allowList
+          : (link.allowList ?? preset?.allowList),
+        denyList: isGroupAudience
+          ? link.denyList
+          : (link.denyList ?? preset?.denyList),
         ...(preset?.enableCustomMetaTag && {
           enableCustomMetatag: preset?.enableCustomMetaTag,
           metaTitle: preset?.metaTitle,
@@ -652,8 +657,13 @@ async function handleLinkCreate(
         enableScreenshotProtection: link.enableScreenshotProtection,
         audienceType: link.audienceType,
         groupId: isGroupAudience ? link.groupId : null,
-        allowList: link.allowList || preset?.allowList,
-        denyList: link.denyList || preset?.denyList,
+        // For group links, ignore allow/deny lists from presets as access is controlled by group membership
+        allowList: isGroupAudience
+          ? link.allowList
+          : link.allowList || preset?.allowList,
+        denyList: isGroupAudience
+          ? link.denyList
+          : link.denyList || preset?.denyList,
         ...(preset?.enableCustomMetaTag && {
           enableCustomMetatag: preset?.enableCustomMetaTag,
           metaTitle: preset?.metaTitle,
