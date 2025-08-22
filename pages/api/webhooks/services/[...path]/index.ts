@@ -449,10 +449,10 @@ async function handleDocumentCreate(
         // For group links, ignore allow/deny lists from presets as access is controlled by group membership
         allowList: isGroupAudience
           ? link.allowList
-          : link.allowList || preset?.allowList,
+          : (link.allowList ?? preset?.allowList),
         denyList: isGroupAudience
           ? link.denyList
-          : link.denyList || preset?.denyList,
+          : (link.denyList ?? preset?.denyList),
         ...(preset?.enableCustomMetaTag && {
           enableCustomMetatag: preset?.enableCustomMetaTag,
           metaTitle: preset?.metaTitle,
