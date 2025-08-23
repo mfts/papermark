@@ -290,7 +290,12 @@ async function handleDocumentCreate(
 
   // 5. Validate response content type matches expected
   const responseContentType = response.headers.get("content-type");
-  if (responseContentType && !responseContentType.startsWith(contentType)) {
+  if (!responseContentType || responseContentType.startsWith("text/html")) {
+    return res
+      .status(400)
+      .json({ error: "Remote resource is not a supported file type" });
+  }
+  if (!responseContentType.startsWith(contentType)) {
     console.warn(
       `Content type mismatch: expected ${contentType}, got ${responseContentType}`,
     );

@@ -54,7 +54,7 @@ export default async function handle(
       url: fileUrl,
       storageType,
       numPages,
-      type: fileType,
+      type,
       folderPathName,
       fileSize,
       contentType,
@@ -65,9 +65,6 @@ export default async function handle(
         teamId,
         userId,
       });
-
-      // Get passed type property or alternatively, the file extension and save it as the type
-      const type = fileType || getExtension(name);
 
       const folder = await prisma.folder.findUnique({
         where: {
@@ -89,7 +86,7 @@ export default async function handle(
           file: fileUrl,
           originalFile: fileUrl,
           contentType,
-          type: type,
+          type,
           storageType,
           ownerId: (session.user as CustomUser).id,
           teamId: teamId,
@@ -106,7 +103,7 @@ export default async function handle(
           versions: {
             create: {
               file: fileUrl,
-              type: type,
+              type,
               storageType,
               originalFile: fileUrl,
               contentType,

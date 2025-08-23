@@ -57,6 +57,11 @@ export const validateUrlSSRFProtection = (url: string): boolean => {
       return false;
     }
 
+    // Block IPv6 link-local addresses (fe80::/10)
+    if (hostname.toLowerCase().startsWith("fe80:")) {
+      return false;
+    }
+
     return true;
   } catch {
     return false;
