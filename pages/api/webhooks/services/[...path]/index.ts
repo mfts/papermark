@@ -19,6 +19,7 @@ import {
 } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
+import { webhookFileUrlSchema } from "@/lib/zod/url-validation";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -53,7 +54,7 @@ const BaseSchema = z.object({
 
 const DocumentCreateSchema = BaseSchema.extend({
   resourceType: z.literal("document.create"),
-  fileUrl: z.string().url(),
+  fileUrl: webhookFileUrlSchema,
   name: z.string(),
   contentType: z.string(),
   dataroomId: z.string().optional(),
@@ -287,12 +288,21 @@ async function handleDocumentCreate(
     return res.status(400).json({ error: "Failed to fetch file from URL" });
   }
 
-  // 5. Convert to buffer
+  // 5. Validate response content type matches expected
+  const responseContentType = response.headers.get("content-type");
+  if (responseContentType && !responseContentType.startsWith(contentType)) {
+    console.warn(
+      `Content type mismatch: expected ${contentType}, got ${responseContentType}`,
+    );
+    // Log but don't fail - some services return generic types
+  }
+
+  // 6. Convert to buffer
   const fileBuffer = Buffer.from(await response.arrayBuffer());
 
   console.log("Uploading file to storage", teamId, name, contentType);
 
-  // Upload the file to storage
+  // 7. Upload the file to storage
   const { type: storageType, data: fileData } = await putFileServer({
     file: {
       name: name,
@@ -307,7 +317,7 @@ async function handleDocumentCreate(
     return res.status(500).json({ error: "Failed to save file to storage" });
   }
 
-  // 6. Create document using our service
+  // 8. Create document using our service
   // Note: The createDocument function doesn't accept linkData in its parameters
   // so we will just pass createLink flag
   const documentCreationResponse = await createDocument({

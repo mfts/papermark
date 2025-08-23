@@ -11,6 +11,7 @@ import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log, serializeFileSize } from "@/lib/utils";
 import { conversionQueue } from "@/lib/utils/trigger-utils";
+import { documentUploadSchema } from "@/lib/zod/url-validation";
 
 import { authOptions } from "../../../auth/[...nextauth]";
 
@@ -30,7 +31,24 @@ export default async function handle(
 
     const userId = (session.user as CustomUser).id;
 
-    // Assuming data is an object with `name` and `description` properties
+    // Validate request body using Zod schema for security
+    const validationResult = documentUploadSchema.safeParse({
+      ...req.body,
+      // Ensure type field is provided for validation
+      type: req.body.type || getExtension(req.body.name),
+    });
+
+    if (!validationResult.success) {
+      log({
+        message: `Agreement document validation failed for teamId: ${teamId}. Errors: ${JSON.stringify(validationResult.error.errors)}`,
+        type: "error",
+      });
+      return res.status(400).json({
+        error: "Invalid agreement document data",
+        details: validationResult.error.errors,
+      });
+    }
+
     const {
       name,
       url: fileUrl,
@@ -40,16 +58,7 @@ export default async function handle(
       folderPathName,
       fileSize,
       contentType,
-    } = req.body as {
-      name: string;
-      url: string;
-      storageType: DocumentStorageType;
-      numPages?: number;
-      type?: string;
-      folderPathName?: string;
-      fileSize?: number;
-      contentType: string;
-    };
+    } = validationResult.data;
 
     try {
       const { team } = await getTeamWithUsersAndDocument({
