@@ -140,9 +140,11 @@ export const documentUploadSchema = z
       .min(1, "Document name is required")
       .max(255, "Document name too long"),
     url: filePathSchema,
-    storageType: z.enum(["S3_PATH", "VERCEL_BLOB"], {
-      errorMap: () => ({ message: "Invalid storage type" }),
-    }),
+    storageType: z
+      .enum(["S3_PATH", "VERCEL_BLOB"], {
+        errorMap: () => ({ message: "Invalid storage type" }),
+      })
+      .optional(),
     numPages: z.number().int().positive().optional(),
     type: z.enum(
       SUPPORTED_DOCUMENT_SIMPLE_TYPES as unknown as readonly [
@@ -166,12 +168,18 @@ export const documentUploadSchema = z
           errorMap: () => ({ message: "Unsupported content type" }),
         },
       )
-      .or(z.literal("text/html")), // Allow text/html for Notion documents
+      .or(z.literal("text/html")) // Allow text/html for Notion documents
+      .optional(), // Make contentType optional for Notion files
     createLink: z.boolean().optional(),
     fileSize: z.number().int().positive().optional(),
   })
   .refine(
     (data) => {
+      // Skip content type validation if it's not provided (e.g., for Notion files)
+      if (!data.contentType) {
+        return true;
+      }
+
       // Validate that content type matches the declared file type
       const expectedType = getSupportedContentType(data.contentType);
 
@@ -189,6 +197,26 @@ export const documentUploadSchema = z
   )
   .refine(
     (data) => {
+      // Skip storage type validation if not provided (e.g., for Notion files)
+      if (!data.storageType) {
+        // For Notion URLs, storage type is not required
+        if (data.url.startsWith("https://")) {
+          try {
+            const urlObj = new URL(data.url);
+            const hostname = urlObj.hostname;
+            return (
+              hostname === "www.notion.so" ||
+              hostname === "notion.so" ||
+              hostname.endsWith(".notion.site")
+            );
+          } catch {
+            return false;
+          }
+        }
+        // For file paths without storage type, this is invalid
+        return false;
+      }
+
       // Validate storage type consistency with path format
       if (data.storageType === "S3_PATH") {
         // S3_PATH should use file paths, not URLs
@@ -217,7 +245,8 @@ export const documentUploadSchema = z
       return false;
     },
     {
-      message: "Storage type does not match the URL/path format",
+      message:
+        "Storage type does not match the URL/path format, or missing storage type for non-Notion files",
       path: ["storageType"],
     },
   );
