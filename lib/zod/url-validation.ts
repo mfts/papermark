@@ -177,7 +177,7 @@ export const documentUploadSchema = z
     (data) => {
       // Skip content type validation if it's not provided (e.g., for Notion files)
       if (!data.contentType) {
-        return true;
+        return data.type === "notion";
       }
 
       // Validate that content type matches the declared file type
