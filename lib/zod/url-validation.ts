@@ -169,7 +169,7 @@ export const documentUploadSchema = z
         },
       )
       .or(z.literal("text/html")) // Allow text/html for Notion documents
-      .nullable(), // Make contentType optional for Notion files
+      .nullish(), // Make contentType optional for Notion files
     createLink: z.boolean().optional(),
     fileSize: z.number().int().positive().optional(),
   })

@@ -280,7 +280,7 @@ export default async function handle(
           storageType,
           numPages,
           supportedFileType: fileType,
-          contentType,
+          contentType: contentType || null,
           fileSize,
           enableExcelAdvancedMode:
             fileType === "sheet" &&
