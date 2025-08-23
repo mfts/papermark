@@ -144,7 +144,7 @@ export const documentUploadSchema = z
       .enum(["S3_PATH", "VERCEL_BLOB"], {
         errorMap: () => ({ message: "Invalid storage type" }),
       })
-      .optional(),
+      .default("VERCEL_BLOB"),
     numPages: z.number().int().positive().optional(),
     type: z.enum(
       SUPPORTED_DOCUMENT_SIMPLE_TYPES as unknown as readonly [
@@ -169,7 +169,7 @@ export const documentUploadSchema = z
         },
       )
       .or(z.literal("text/html")) // Allow text/html for Notion documents
-      .optional(), // Make contentType optional for Notion files
+      .nullable(), // Make contentType optional for Notion files
     createLink: z.boolean().optional(),
     fileSize: z.number().int().positive().optional(),
   })
