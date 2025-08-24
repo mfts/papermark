@@ -17,7 +17,10 @@ import {
   isDataUrl,
   uploadImage,
 } from "@/lib/utils";
-import { getSupportedContentType } from "@/lib/utils/get-content-type";
+import {
+  getExtensionFromContentType,
+  getSupportedContentType,
+} from "@/lib/utils/get-content-type";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
 import { webhookFileUrlSchema } from "@/lib/zod/url-validation";
 
@@ -40,6 +43,7 @@ const LinkSchema = z.object({
   enableNotification: z.boolean().optional(),
   enableFeedback: z.boolean().optional(),
   enableScreenshotProtection: z.boolean().optional(),
+  showBanner: z.boolean().optional(),
   audienceType: z.enum(["GENERAL", "GROUP", "TEAM"]).optional(),
   groupId: z.string().optional(),
   allowList: z.array(z.string()).optional(),
@@ -305,12 +309,37 @@ async function handleDocumentCreate(
   // 6. Convert to buffer
   const fileBuffer = Buffer.from(await response.arrayBuffer());
 
-  console.log("Uploading file to storage", teamId, name, contentType);
+  // Ensure filename has proper extension, based on the actual response content-type when available
+  let fileName = name?.trim();
+  const actualContentType = (
+    responseContentType?.split(";")[0] ?? contentType
+  ).trim();
+  const expectedExtension = getExtensionFromContentType(actualContentType);
+  if (expectedExtension) {
+    const lower = fileName.toLowerCase();
+    const dotIdx = lower.lastIndexOf(".");
+    const currentExt = dotIdx !== -1 ? lower.slice(dotIdx + 1) : null;
+    // Minimal alias map to avoid double extensions (e.g., jpg vs jpeg)
+    const alias: Record<string, string[]> = {
+      jpeg: ["jpeg", "jpg"],
+      jpg: ["jpg", "jpeg"],
+      tiff: ["tiff", "tif"],
+    };
+    const matches =
+      !!currentExt &&
+      (currentExt === expectedExtension ||
+        (alias[expectedExtension]?.includes(currentExt) ?? false));
+    if (!matches) {
+      fileName = `${fileName}.${expectedExtension}`;
+    }
+  }
+
+  console.log("Uploading file to storage", teamId, fileName, contentType);
 
   // 7. Upload the file to storage
   const { type: storageType, data: fileData } = await putFileServer({
     file: {
-      name: name,
+      name: fileName,
       type: contentType,
       buffer: fileBuffer,
     },
@@ -327,7 +356,7 @@ async function handleDocumentCreate(
   // so we will just pass createLink flag
   const documentCreationResponse = await createDocument({
     documentData: {
-      name: name,
+      name: fileName,
       key: fileData,
       storageType: storageType,
       contentType: contentType,
@@ -459,6 +488,7 @@ async function handleDocumentCreate(
         enableNotification: link.enableNotification,
         enableFeedback: link.enableFeedback,
         enableScreenshotProtection: link.enableScreenshotProtection,
+        showBanner: link.showBanner,
         audienceType: link.audienceType,
         groupId: isGroupAudience ? link.groupId : null,
         // For group links, ignore allow/deny lists from presets as access is controlled by group membership
@@ -670,6 +700,7 @@ async function handleLinkCreate(
         enableNotification: link.enableNotification,
         enableFeedback: link.enableFeedback,
         enableScreenshotProtection: link.enableScreenshotProtection,
+        showBanner: link.showBanner,
         audienceType: link.audienceType,
         groupId: isGroupAudience ? link.groupId : null,
         // For group links, ignore allow/deny lists from presets as access is controlled by group membership
@@ -846,6 +877,7 @@ async function handleDataroomCreate(
           enableNotification: link.enableNotification,
           enableFeedback: link.enableFeedback,
           enableScreenshotProtection: link.enableScreenshotProtection,
+          showBanner: link.showBanner,
           audienceType: link.audienceType,
           groupId: isGroupAudience ? link.groupId : null,
           allowList: link.allowList || preset?.allowList,
