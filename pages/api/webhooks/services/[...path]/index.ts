@@ -309,14 +309,29 @@ async function handleDocumentCreate(
   // 6. Convert to buffer
   const fileBuffer = Buffer.from(await response.arrayBuffer());
 
-  // Ensure filename has proper extension
-  let fileName = name;
-  const expectedExtension = getExtensionFromContentType(contentType);
-  if (
-    expectedExtension &&
-    !fileName.toLowerCase().endsWith(`.${expectedExtension}`)
-  ) {
-    fileName = `${name}.${expectedExtension}`;
+  // Ensure filename has proper extension, based on the actual response content-type when available
+  let fileName = name?.trim();
+  const actualContentType = (
+    responseContentType?.split(";")[0] ?? contentType
+  ).trim();
+  const expectedExtension = getExtensionFromContentType(actualContentType);
+  if (expectedExtension) {
+    const lower = fileName.toLowerCase();
+    const dotIdx = lower.lastIndexOf(".");
+    const currentExt = dotIdx !== -1 ? lower.slice(dotIdx + 1) : null;
+    // Minimal alias map to avoid double extensions (e.g., jpg vs jpeg)
+    const alias: Record<string, string[]> = {
+      jpeg: ["jpeg", "jpg"],
+      jpg: ["jpg", "jpeg"],
+      tiff: ["tiff", "tif"],
+    };
+    const matches =
+      !!currentExt &&
+      (currentExt === expectedExtension ||
+        (alias[expectedExtension]?.includes(currentExt) ?? false));
+    if (!matches) {
+      fileName = `${fileName}.${expectedExtension}`;
+    }
   }
 
   console.log("Uploading file to storage", teamId, fileName, contentType);
