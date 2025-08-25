@@ -19,6 +19,7 @@ import z from "zod";
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
+import { useDocument } from "@/lib/swr/use-document";
 import { useDomains } from "@/lib/swr/use-domains";
 import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews } from "@/lib/types";
@@ -32,6 +33,7 @@ import DomainSection from "@/components/links/link-sheet/domain-section";
 import { LinkOptions } from "@/components/links/link-sheet/link-options";
 import LinkSuccessSheet from "@/components/links/link-sheet/link-success-sheet";
 import TagSection from "@/components/links/link-sheet/tags/tag-section";
+import { isDocumentProcessing } from "@/components/documents/document-preview-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -119,6 +121,12 @@ export function DataroomLinkSheet({
   const [createdLink, setCreatedLink] = useState<LinkWithViews | null>(null);
   const [hasCustomPermissions, setHasCustomPermissions] =
     useState<boolean>(false);
+
+  // Check if document is processing (only for document links)
+  const { document, primaryVersion } = useDocument();
+  const isDocumentCurrentlyProcessing = 
+    linkType === LinkType.DOCUMENT_LINK && 
+    isDocumentProcessing(primaryVersion);
 
   const isPresetsAllowed =
     isTrial ||
@@ -1009,6 +1017,7 @@ export function DataroomLinkSheet({
                     type="button"
                     variant="link"
                     loading={isLoading}
+                    disabled={isDocumentCurrentlyProcessing}
                     onClick={(e) => handleSubmit(e, true)}
                     className="flex items-center gap-2"
                   >
