@@ -32,34 +32,26 @@ const DataroomTrialEnd = ({ name }: DataroomTrialEnd) => {
               <span className="font-bold tracking-tighter">Papermark</span>
             </Text>
             <Text className="font-seminbold mx-0 mb-8 mt-4 p-0 text-center text-xl">
-              Your dataroom trial has expired
+              Your Data Room plan trial has expired
             </Text>
             <Text className="text-sm leading-6 text-black">
               Hey{name && ` ${name}`}!
             </Text>
             <Text className="text-sm leading-6 text-black">
-              Your Papermark dataroom trial has expired.{" "}
+              Your Papermark Data Room plantrial has expired.{" "}
               <Link href={`https://app.papermark.com/settings/billing`}>
                 Upgrade now
               </Link>{" "}
               to:
             </Text>
-            <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Create new datarooms
-            </Text>
-            <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Share datarooms with your{" "}
-              <span className="font-bold">custom domain</span>
-            </Text>
-            <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Invite your <span className="font-bold">team members</span>
-            </Text>
-            <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Share <span className="font-bold">unlimited documents</span>
-            </Text>
-            <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Upload <span className="font-bold">large</span> files
-            </Text>
+            <ul className="list-inside list-disc text-sm">
+              <li>Create new datarooms</li>
+              <li>Upload <strong>large</strong> files</li>
+              <li>Invite your <strong>team members</strong></li>
+              <li>Protect documents with <strong>advanced access controls</strong></li>
+              <li>Share documents and data rooms with <strong>custom domain</strong></li>
+              <li>Access advanced analytics and audit logs</li>
+            </ul>
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"

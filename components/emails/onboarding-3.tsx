@@ -36,20 +36,15 @@ const Onboarding3Email = () => {
               With Papermark you can track progress on each page of your
               document and other analytics:
             </Text>
-            <Text className="text-sm">
-              <ul className="list-inside list-disc text-sm">
-                <li>
-                  Track time on <strong>each page 💫</strong>{" "}
-                </li>
-                <li>See who viewed your documents</li>
-                <li>Capture email </li>
-                <li>Receive feedback</li>
-                <li>Ask questions and get answers</li>
-              </ul>
-              {/* <Text className="text-sm">
-                (All Notion changes are instantly reflected in shared documents)
-              </Text> */}
-            </Text>
+            <ul className="list-inside list-disc text-sm">
+              <li>
+                Track time on <strong>each page 💫</strong>{" "}
+              </li>
+              <li>See who viewed your documents</li>
+              <li>Capture email </li>
+              <li>Receive feedback</li>
+              <li>Ask questions and get answers</li>
+            </ul>
             {/* <Text className="text-sm">You can also use Bulk upload</Text> */}
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button

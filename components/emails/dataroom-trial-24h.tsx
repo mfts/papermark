@@ -7,6 +7,7 @@ import {
   Head,
   Hr,
   Html,
+  Link,
   Preview,
   Section,
   Tailwind,
@@ -18,7 +19,7 @@ interface TrialEndReminderEmail {
 }
 
 const TrialEndReminderEmail = ({ name }: TrialEndReminderEmail) => {
-  const previewText = `Upgrade to Papermark Pro`;
+  const previewText = `Upgrade to Papermark Data Rooms Plan`;
 
   return (
     <Html>
@@ -31,43 +32,38 @@ const TrialEndReminderEmail = ({ name }: TrialEndReminderEmail) => {
               <span className="font-bold tracking-tighter">Papermark</span>
             </Text>
             <Text className="font-seminbold mx-0 mb-8 mt-4 p-0 text-center text-xl">
-              Your pro trial is almost over
+              Your Data Room plan trial expires in 24 hours
             </Text>
             <Text className="text-sm leading-6 text-black">
               Hey{name && ` ${name}`}!
             </Text>
             <Text className="text-sm leading-6 text-black">
-              Your Papermark Pro trial is almost over. If you want to continue
-              enjoying the Pro features, please consider upgrading your plan.
+              Your Papermark Data Room plan trial expires in 24 hours. Don't lose access to these features -{" "}
+              <Link href={`https://app.papermark.com/settings/billing`}>
+                upgrade today
+              </Link>:
             </Text>
-            <Text className="text-sm leading-6 text-black">
-              On the Pro plan, you have access to:
-            </Text>
-            <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Custom domains
-            </Text>
-            <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Team members
-            </Text>
-            <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Unlimited documents
-            </Text>
-            <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Large file uploads
-            </Text>
+            <ul className="list-inside list-disc text-sm">
+              <li>Build unlimited <strong>data rooms</strong></li>
+              <li>Upload files of any <strong>size</strong></li>
+              <li>Collaborate with your <strong>team</strong></li>
+              <li>Set up <strong>secure link permissions</strong> and controls</li>
+              <li>Brand everything with your <strong>custom domain</strong></li>
+              <li>Track detailed <strong>analytics</strong> and user activity</li>
+            </ul>
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
                 href={`https://app.papermark.com/settings/billing`}
                 style={{ padding: "12px 20px" }}
               >
-                Upgrade your plan
+                Upgrade now
               </Button>
             </Section>
             <Text className="text-sm font-semibold">
-              <span className="text-red-500">⚠️</span> Links with custom domains
-              will be <span className="text-red-500 underline">disabled</span>{" "}
-              after your trial.
+              <span className="text-red-500">⚠️</span> Dataroom links and links
+              with advanced access controls will be{" "}
+              <span className="text-red-500 underline">disabled</span> in 24 hours.
             </Text>
             <Text className="text-sm text-gray-400">Marc from Papermark</Text>
             <Hr />
