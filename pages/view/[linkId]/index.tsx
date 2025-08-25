@@ -154,7 +154,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
             teamId === "clup33by90000oewh4rfvp2eg",
         },
-        revalidate: brand || recordMap ? 10 : false,
+        revalidate: brand || recordMap ? 10 : 60,
       };
     }
 
