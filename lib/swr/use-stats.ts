@@ -17,9 +17,15 @@ export type TStatsData = {
   totalViews: number;
 };
 
-export function useStats({
-  excludeTeamMembers,
-}: { excludeTeamMembers?: boolean } = {}) {
+export type AnalyticsFilters = {
+  excludeTeamMembers?: boolean;
+  includeLinks?: string;
+  filterByViewer?: string;
+  excludeLinks?: string;
+  excludeViewers?: string;
+};
+
+export function useStats(filters: AnalyticsFilters = {}) {
   // this gets the data for a document's graph of all views
   const router = useRouter();
   const teamInfo = useTeam();
@@ -29,10 +35,31 @@ export function useStats({
     id: string;
   };
 
+  const queryParams = new URLSearchParams();
+
+  if (filters.excludeTeamMembers) {
+    queryParams.append("excludeTeamMembers", "true");
+  }
+  if (filters.includeLinks) {
+    queryParams.append("includeLinks", filters.includeLinks);
+  }
+  if (filters.filterByViewer) {
+    queryParams.append("filterByViewer", filters.filterByViewer);
+  }
+  if (filters.excludeLinks) {
+    queryParams.append("excludeLinks", filters.excludeLinks);
+  }
+  if (filters.excludeViewers) {
+    queryParams.append("excludeViewers", filters.excludeViewers);
+  }
+
+  const queryString = queryParams.toString();
+  const urlSuffix = queryString ? `?${queryString}` : "";
+  console.log('urlSuffix', urlSuffix);
   const { data: stats, error } = useSWR<TStatsData>(
     id &&
       teamId &&
-      `/api/teams/${teamId}/documents/${encodeURIComponent(id)}/stats${excludeTeamMembers ? "?excludeTeamMembers=true" : ""}`,
+    `/api/teams/${teamId}/documents/${encodeURIComponent(id)}/stats${urlSuffix}`,
     fetcher,
     {
       dedupingInterval: 10000,
