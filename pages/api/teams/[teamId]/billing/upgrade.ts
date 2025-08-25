@@ -113,6 +113,9 @@ export default async function handle(
         mode: "subscription",
         allow_promotion_codes: true,
         client_reference_id: teamId,
+        metadata: {
+          dubCustomerId: userId,
+        },
       });
     }
 
