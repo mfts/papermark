@@ -1,5 +1,5 @@
 import { NotionAPI } from "notion-client";
-import { getPageContentBlockIds } from "notion-utils";
+import { getPageContentBlockIds, parsePageId } from "notion-utils";
 
 import notion from "./index";
 
@@ -84,14 +84,15 @@ export function extractPageIdFromCustomNotionUrl(url: string): string | null {
     const urlObj = new URL(url);
     const pathname = urlObj.pathname;
 
-    // Look for a 32-character hex string in the pathname (typical Notion page ID format)
-    // This usually appears at the end of the slug, often preceded by a dash
-    // Use word boundaries to ensure we match exactly 32 characters
-    const pageIdMatch = pathname.match(/\b[a-f0-9]{32}\b/i);
+    // Try robust parser first (handles hyphenated and plain IDs)
+    const parsed = parsePageId(url) || parsePageId(pathname);
+    if (parsed) return parsed;
 
-    if (pageIdMatch) {
-      return pageIdMatch[0];
-    }
+    // Fallback: match either plain 32-hex or hyphenated UUID-like Notion ID
+    const pageIdMatch = pathname.match(
+      /\b(?:[a-f0-9]{32}|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\b/i,
+    );
+    if (pageIdMatch) return parsePageId(pageIdMatch[0]) ?? pageIdMatch[0];
 
     return null;
   } catch {
@@ -125,8 +126,18 @@ export async function getNotionPageIdFromSlug(
   const urlObj = new URL(url);
   const hostname = urlObj.hostname;
 
-  // First, try to handle custom Notion domains
-  if (!hostname.endsWith(".notion.site")) {
+  const isNotionSo = hostname === "www.notion.so" || hostname === "notion.so";
+  const isNotionSite = hostname.endsWith(".notion.site");
+
+  // notion.so: extract ID from path directly
+  if (isNotionSo) {
+    const pageId = parsePageId(url) ?? parsePageId(urlObj.pathname);
+    if (pageId) return pageId;
+    throw new Error(`Unable to extract page ID from Notion URL: ${url}`);
+  }
+
+  // Custom domains (non notion.site, non notion.so)
+  if (!isNotionSite) {
     const pageId = extractPageIdFromCustomNotionUrl(url);
     if (pageId) {
       // Verify the page exists before returning the ID
