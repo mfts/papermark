@@ -1,9 +1,14 @@
+import { parsePageId } from "notion-utils";
 import { z } from "zod";
 
 import {
   SUPPORTED_DOCUMENT_MIME_TYPES,
   SUPPORTED_DOCUMENT_SIMPLE_TYPES,
 } from "@/lib/constants";
+import {
+  getNotionPageIdFromSlug,
+  isCustomNotionDomain,
+} from "@/lib/notion/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
 /**
@@ -112,13 +117,43 @@ const createFilePathValidator = () => {
     .string()
     .min(1, "File path is required")
     .refine(
-      (path) => {
+      async (path) => {
         // Case 1: Notion URLs - must start with notion domains
         if (path.startsWith("https://")) {
           try {
             const urlObj = new URL(path);
             const hostname = urlObj.hostname;
-            return validateUrlHostname(hostname);
+
+            // Valid notion domains
+            const validNotionDomains = ["www.notion.so", "notion.so"];
+
+            // Check for notion.site subdomains (e.g., example-something.notion.site)
+            const isNotionSite = hostname.endsWith(".notion.site");
+            const isValidNotionDomain = validNotionDomains.includes(hostname);
+
+            // Check for vercel blob storage
+            let isVercelBlob = false;
+            if (process.env.VERCEL_BLOB_HOST) {
+              isVercelBlob = hostname.startsWith(process.env.VERCEL_BLOB_HOST);
+            }
+
+            // If it's not a standard Notion domain or Vercel blob, check if it's a custom Notion domain
+            if (!isNotionSite && !isValidNotionDomain && !isVercelBlob) {
+              try {
+                let pageId = parsePageId(path);
+                if (!pageId) {
+                  const pageIdFromSlug = await getNotionPageIdFromSlug(path);
+                  if (pageIdFromSlug) {
+                    pageId = pageIdFromSlug;
+                  }
+                }
+                return !!pageId;
+              } catch {
+                return false;
+              }
+            }
+
+            return isNotionSite || isValidNotionDomain || isVercelBlob;
           } catch {
             return false;
           }
@@ -147,6 +182,65 @@ const createFilePathValidator = () => {
 
 // File path validation schema
 export const filePathSchema = createFilePathValidator();
+
+// Dedicated Notion URL validation schema for URL updates
+export const notionUrlUpdateSchema = z
+  .string()
+  .url("Invalid URL format")
+  .refine(
+    async (url) => {
+      try {
+        const urlObj = new URL(url);
+        const hostname = urlObj.hostname;
+
+        // Valid notion domains
+        const validNotionDomains = ["www.notion.so", "notion.so"];
+        const isNotionSite = hostname.endsWith(".notion.site");
+        const isValidNotionDomain = validNotionDomains.includes(hostname);
+
+        // If it's a standard Notion domain, try to extract page ID
+        if (isNotionSite || isValidNotionDomain) {
+          let pageId = parsePageId(url);
+          if (!pageId) {
+            try {
+              const pageIdFromSlug = await getNotionPageIdFromSlug(url);
+              pageId = pageIdFromSlug || undefined;
+            } catch {
+              return false;
+            }
+          }
+          return !!pageId;
+        }
+
+        // For custom domains, try to extract and validate page ID
+        try {
+          let pageId = parsePageId(url);
+          if (!pageId) {
+            const pageIdFromSlug = await getNotionPageIdFromSlug(url);
+            pageId = pageIdFromSlug || undefined;
+          }
+          return !!pageId;
+        } catch {
+          return false;
+        }
+      } catch {
+        return false;
+      }
+    },
+    {
+      message:
+        "Must be a valid Notion URL (supports notion.so, notion.site, and custom domains)",
+    },
+  )
+  .refine(
+    (url) => {
+      // Additional security checks
+      return validatePathSecurity(url) && validateUrlSSRFProtection(url);
+    },
+    {
+      message: "URL contains invalid characters or targets internal resources",
+    },
+  );
 
 // Document upload validation schema with comprehensive type and content validation
 export const documentUploadSchema = z
@@ -212,7 +306,7 @@ export const documentUploadSchema = z
     },
   )
   .refine(
-    (data) => {
+    async (data) => {
       // Skip storage type validation if not provided (e.g., for Notion files)
       if (!data.storageType) {
         // For Notion URLs, storage type is not required
@@ -220,11 +314,21 @@ export const documentUploadSchema = z
           try {
             const urlObj = new URL(data.url);
             const hostname = urlObj.hostname;
-            return (
+            const isStandardNotion =
               hostname === "www.notion.so" ||
               hostname === "notion.so" ||
-              hostname.endsWith(".notion.site")
-            );
+              hostname.endsWith(".notion.site");
+
+            if (isStandardNotion) {
+              return true;
+            }
+
+            // Check if it's a custom Notion domain
+            try {
+              return await isCustomNotionDomain(data.url);
+            } catch {
+              return false;
+            }
           } catch {
             return false;
           }
@@ -243,7 +347,22 @@ export const documentUploadSchema = z
           // Must be a Notion URL for VERCEL_BLOB
           try {
             const urlObj = new URL(data.url);
-            return validateUrlHostname(urlObj.hostname);
+            const hostname = urlObj.hostname;
+            const isStandardNotion =
+              hostname === "www.notion.so" ||
+              hostname === "notion.so" ||
+              hostname.endsWith(".notion.site");
+
+            if (isStandardNotion) {
+              return true;
+            }
+
+            // Check if it's a custom Notion domain
+            try {
+              return await isCustomNotionDomain(data.url);
+            } catch {
+              return false;
+            }
           } catch {
             return false;
           }

@@ -75,15 +75,75 @@ export const addSignedUrls: NotionAPI["addSignedUrls"] = async ({
   }
 };
 
-export async function getNotionPageIdFromSlug(url: string) {
+/**
+ * Extracts page ID from custom Notion domain URLs
+ * For custom domains, the page ID is typically embedded in the URL slug
+ */
+export function extractPageIdFromCustomNotionUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+
+    // Look for a 32-character hex string in the pathname (typical Notion page ID format)
+    // This usually appears at the end of the slug, often preceded by a dash
+    // Use word boundaries to ensure we match exactly 32 characters
+    const pageIdMatch = pathname.match(/\b[a-f0-9]{32}\b/i);
+
+    if (pageIdMatch) {
+      return pageIdMatch[0];
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if a URL is potentially a custom Notion domain by attempting to extract a page ID
+ * and verifying the page exists
+ */
+export async function isCustomNotionDomain(url: string): Promise<boolean> {
+  try {
+    const pageId = extractPageIdFromCustomNotionUrl(url);
+    if (!pageId) {
+      return false;
+    }
+
+    // Try to fetch the page to verify it exists and is accessible
+    await notion.getPage(pageId);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function getNotionPageIdFromSlug(
+  url: string,
+): Promise<string | null> {
   // Parse the URL to extract domain and slug
   const urlObj = new URL(url);
   const hostname = urlObj.hostname;
 
+  // First, try to handle custom Notion domains
+  if (!hostname.endsWith(".notion.site")) {
+    const pageId = extractPageIdFromCustomNotionUrl(url);
+    if (pageId) {
+      // Verify the page exists before returning the ID
+      try {
+        await notion.getPage(pageId);
+        return pageId;
+      } catch {
+        throw new Error(`Custom Notion domain page not accessible: ${url}`);
+      }
+    }
+    throw new Error(`Unable to extract page ID from custom domain URL: ${url}`);
+  }
+
   // Extract domain from hostname (e.g., "domain" from "domain.notion.site")
   const domainMatch = hostname.match(/^([^.]+)\.notion\.site$/);
   if (!domainMatch) {
-    throw new Error("Invalid Notion site URL format: ${url}");
+    throw new Error(`Invalid Notion site URL format: ${url}`);
   }
 
   const spaceDomain = domainMatch[1];
@@ -93,8 +153,7 @@ export async function getNotionPageIdFromSlug(url: string) {
   let slug = urlObj.pathname.substring(1) || "";
 
   // Make request to Notion's internal API
-  const apiUrl =
-    "https://${spaceDomain}.notion.site/api/v3/getPublicPageDataForDomain";
+  const apiUrl = `https://${spaceDomain}.notion.site/api/v3/getPublicPageDataForDomain`;
   const payload = {
     type: "block-space",
     name: "page",
@@ -114,7 +173,7 @@ export async function getNotionPageIdFromSlug(url: string) {
 
   if (!response.ok) {
     throw new Error(
-      "Notion API request failed: ${response.status} ${response.statusText}",
+      `Notion API request failed: ${response.status} ${response.statusText}`,
     );
   }
 
