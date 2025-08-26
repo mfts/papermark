@@ -55,7 +55,8 @@ export const processDocument = async ({
       // If parsePageId fails, try to get page ID from slug
       if (!pageId) {
         try {
-          pageId = await getNotionPageIdFromSlug(key);
+          const pageIdFromSlug = await getNotionPageIdFromSlug(key);
+          pageId = pageIdFromSlug || undefined;
         } catch (slugError) {
           throw new Error("Unable to extract page ID from Notion URL");
         }

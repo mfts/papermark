@@ -411,9 +411,7 @@ export function AddDocumentModal({
     if (validateNotionPageId === null) {
       try {
         const pageId = await getNotionPageIdFromSlug(notionLink);
-        if (pageId) {
-          validateNotionPageId = pageId;
-        }
+        validateNotionPageId = pageId || undefined;
       } catch (slugError) {
         toast.error("Please enter a valid Notion link to proceed.");
         return;
