@@ -187,6 +187,9 @@ export const filePathSchema = createFilePathValidator();
 export const notionUrlUpdateSchema = z
   .string()
   .url("Invalid URL format")
+  .refine((url) => url.startsWith("https://"), {
+    message: "Notion URL must use HTTPS",
+  })
   .refine(
     async (url) => {
       try {
