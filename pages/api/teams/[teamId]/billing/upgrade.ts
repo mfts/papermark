@@ -116,7 +116,7 @@ export default async function handle(
         mode: "subscription",
         allow_promotion_codes: true,
         client_reference_id: teamId,
-        ...dubDiscount,
+        ...(dubDiscount ?? {}),
         metadata: {
           dubCustomerId: userId,
         },
