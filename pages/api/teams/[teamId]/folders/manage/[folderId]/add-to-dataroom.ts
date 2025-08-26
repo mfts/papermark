@@ -94,7 +94,10 @@ export default async function handle(
       teamId: string;
       folderId: string;
     };
-    const { dataroomId } = req.body as { dataroomId: string };
+    const { dataroomId, folderPathName } = req.body as {
+      dataroomId: string;
+      folderPathName?: string;
+    };
     const userId = (session.user as CustomUser).id;
 
     try {
@@ -129,6 +132,30 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
+      let parentFolderId: string | undefined = undefined;
+
+      if (folderPathName) {
+        const dataroomFolder = await prisma.dataroomFolder.findUnique({
+          where: {
+            dataroomId_path: {
+              dataroomId,
+              path: "/" + folderPathName,
+            },
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        if (!dataroomFolder) {
+          return res.status(404).json({
+            message: "Folder not found.",
+          });
+        }
+
+        parentFolderId = dataroomFolder.id;
+      }
+
       if (team.plan === "free" || team.plan === "pro") {
         return res.status(403).json({
           message: "Upgrade your plan to use datarooms.",
@@ -137,7 +164,12 @@ export default async function handle(
 
       try {
         const folderContents = await fetchFolderContents(folderId);
-        await createDataroomStructure(dataroomId, folderContents);
+        await createDataroomStructure(
+          dataroomId,
+          folderContents,
+          folderPathName ? "/" + folderPathName : undefined,
+          parentFolderId || undefined,
+        );
 
         // const folderWithDocuments = await prisma.folder.findUnique({
         //   where: {
