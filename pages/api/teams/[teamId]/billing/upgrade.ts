@@ -6,7 +6,7 @@ import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
-import { dub, getDubDiscountForExternalUserId } from "@/lib/dub";
+import { getDubDiscountForExternalUserId } from "@/lib/dub";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -114,9 +114,8 @@ export default async function handle(
           enabled: true,
         },
         mode: "subscription",
-        allow_promotion_codes: true,
         client_reference_id: teamId,
-        ...(dubDiscount ?? {}),
+        ...(dubDiscount ?? { allow_promotion_codes: true }),
         metadata: {
           dubCustomerId: userId,
         },
