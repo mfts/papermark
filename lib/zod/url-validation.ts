@@ -87,11 +87,20 @@ const validateUrlHostname = (hostname: string): boolean => {
 
   // Check for vercel blob storage
   let isVercelBlob = false;
+
+  const normalizedHostname = hostname.toLowerCase().trim();
+
   if (process.env.VERCEL_BLOB_HOST) {
-    isVercelBlob = hostname.includes(process.env.VERCEL_BLOB_HOST);
+
+    const normalizedBlobHost = process.env.VERCEL_BLOB_HOST.toLowerCase().trim();
+    // Use exact match or suffix-with-dot to prevent bypasses
+    isVercelBlob = normalizedHostname === normalizedBlobHost ||
+      normalizedHostname.endsWith("." + normalizedBlobHost);
   } else {
     // Fallback: check for common Vercel Blob patterns if env var is not set
-    isVercelBlob = hostname.includes("vercel-storage.com");
+    // Use exact match or suffix-with-dot to prevent bypasses
+    isVercelBlob = normalizedHostname === "vercel-storage.com" ||
+      normalizedHostname.endsWith(".vercel-storage.com");
   }
 
   return isNotionSite || isValidNotionDomain || isVercelBlob;
