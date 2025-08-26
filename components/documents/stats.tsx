@@ -1,12 +1,9 @@
-import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryState } from "nuqs";
 
-import { useState } from "react";
+import { useDocumentAnalyticsFilters } from "@/lib/swr/use-document-analytics-filters";
+import { AnalyticsFilters, useStats } from "@/lib/swr/use-stats";
 
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-
-import { useStats } from "@/lib/swr/use-stats";
-
+import AnalyticsFiltersComponent from "./analytics-filters";
 import StatsCard from "./stats-card";
 import StatsChart from "./stats-chart";
 
@@ -17,38 +14,49 @@ export const StatsComponent = ({
   documentId: string;
   numPages: number;
 }) => {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+  const [excludeInternal] = useQueryState("excludeInternal", {
+    defaultValue: false,
+    parse: (value) => value === "true",
+    serialize: (value) => value.toString(),
+  });
 
-  const initialExclude = searchParams?.get("excludeInternal") === "true";
-  const [excludeTeamMembers, setExcludeTeamMembers] =
-    useState<boolean>(initialExclude);
+  const [includeLinks] = useQueryState("includeLinks", {
+    defaultValue: "",
+  });
 
-  const statsData = useStats({ excludeTeamMembers });
+  const [filterByViewer] = useQueryState("filterByViewer", {
+    defaultValue: "",
+  });
 
-  const onToggle = (checked: boolean) => {
-    setExcludeTeamMembers(checked);
-    const params = new URLSearchParams(searchParams?.toString());
-    params.set("excludeInternal", checked.toString());
-    router.push(`${documentId}/?${params.toString()}`);
+  const [excludeLinks] = useQueryState("excludeLinks", {
+    defaultValue: "",
+  });
+
+  const [excludeViewers] = useQueryState("excludeViewers", {
+    defaultValue: "",
+  });
+
+  const filters: AnalyticsFilters = {
+    excludeTeamMembers: excludeInternal,
+    includeLinks: includeLinks || undefined,
+    filterByViewer: filterByViewer || undefined,
+    excludeLinks: excludeLinks || undefined,
+    excludeViewers: excludeViewers || undefined,
   };
+
+  const statsData = useStats(filters);
+
+  const { data: filterData, loading: filterDataLoading } =
+    useDocumentAnalyticsFilters(includeLinks);
 
   return (
     <>
-      <div className="flex items-center justify-end space-x-2">
-        <Switch
-          disabled={statsData.loading || statsData.error}
-          id="toggle-stats"
-          checked={excludeTeamMembers}
-          onCheckedChange={onToggle}
-        />
-        <Label
-          htmlFor="toggle-stats"
-          className={excludeTeamMembers ? "" : "text-muted-foreground"}
-        >
-          Exclude internal visits
-        </Label>
-      </div>
+      {/* Analytics Filters */}
+      <AnalyticsFiltersComponent
+        documentId={documentId}
+        availableLinks={filterData?.availableLinks || []}
+        availableViewers={filterData?.availableViewers || []}
+      />
 
       {/* Stats Chart */}
       <StatsChart
