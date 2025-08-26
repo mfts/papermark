@@ -32,7 +32,7 @@ export default async function handle(
       id: string;
     };
     // Validate request body using Zod schema for security
-    const validationResult = documentUploadSchema.safeParse({
+    const validationResult = await documentUploadSchema.safeParseAsync({
       ...req.body,
       name: `Version ${new Date().toISOString()}`, // Dummy name for validation
     });
