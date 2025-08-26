@@ -111,6 +111,7 @@ export async function fetchDataroomLinkData({
           name: true,
           teamId: true,
           allowBulkDownload: true,
+          createdAt: true,
           documents: {
             where:
               groupPermissions.length > 0 || effectiveGroupId
