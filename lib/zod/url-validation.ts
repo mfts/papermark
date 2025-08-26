@@ -76,6 +76,27 @@ export const validateUrlSecurity = (url: string): boolean => {
   return validatePathSecurity(url) && validateUrlSSRFProtection(url);
 };
 
+// Helper function to validate URL hostnames for different storage types
+const validateUrlHostname = (hostname: string): boolean => {
+  // Valid notion domains
+  const validNotionDomains = ["www.notion.so", "notion.so"];
+
+  // Check for notion.site subdomains (e.g., example-something.notion.site)
+  const isNotionSite = hostname.endsWith(".notion.site");
+  const isValidNotionDomain = validNotionDomains.includes(hostname);
+
+  // Check for vercel blob storage
+  let isVercelBlob = false;
+  if (process.env.VERCEL_BLOB_HOST) {
+    isVercelBlob = hostname.includes(process.env.VERCEL_BLOB_HOST);
+  } else {
+    // Fallback: check for common Vercel Blob patterns if env var is not set
+    isVercelBlob = hostname.includes("vercel-storage.com");
+  }
+
+  return isNotionSite || isValidNotionDomain || isVercelBlob;
+};
+
 // Custom validator for file paths - either Notion URLs or S3 storage paths
 const createFilePathValidator = () => {
   return z
@@ -88,21 +109,7 @@ const createFilePathValidator = () => {
           try {
             const urlObj = new URL(path);
             const hostname = urlObj.hostname;
-
-            // Valid notion domains
-            const validNotionDomains = ["www.notion.so", "notion.so"];
-
-            // Check for notion.site subdomains (e.g., example-something.notion.site)
-            const isNotionSite = hostname.endsWith(".notion.site");
-            const isValidNotionDomain = validNotionDomains.includes(hostname);
-
-            // Check for vercel blob storage
-            let isVercelBlob = false;
-            if (process.env.VERCEL_BLOB_HOST) {
-              isVercelBlob = hostname.startsWith(process.env.VERCEL_BLOB_HOST);
-            }
-
-            return isNotionSite || isValidNotionDomain || isVercelBlob;
+            return validateUrlHostname(hostname);
           } catch {
             return false;
           }
@@ -227,12 +234,7 @@ export const documentUploadSchema = z
           // Must be a Notion URL for VERCEL_BLOB
           try {
             const urlObj = new URL(data.url);
-            const hostname = urlObj.hostname;
-            return (
-              hostname === "www.notion.so" ||
-              hostname === "notion.so" ||
-              hostname.endsWith(".notion.site")
-            );
+            return validateUrlHostname(urlObj.hostname);
           } catch {
             return false;
           }
