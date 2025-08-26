@@ -32,7 +32,7 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     // Validate request body using Zod schema for security
-    const validationResult = documentUploadSchema.safeParse({
+    const validationResult = await documentUploadSchema.safeParseAsync({
       ...req.body,
       // Ensure type field is provided for validation
       type: req.body.type || getExtension(req.body.name),

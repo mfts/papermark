@@ -405,19 +405,20 @@ export function AddDocumentModal({
     }
 
     // Try to validate the Notion page URL
-    let validateNotionPageURL = parsePageId(notionLink);
+    let validateNotionPageId = parsePageId(notionLink);
 
     // If parsePageId fails, try to get page ID from slug
-    if (validateNotionPageURL === null) {
+    if (validateNotionPageId === null) {
       try {
-        validateNotionPageURL = await getNotionPageIdFromSlug(notionLink);
+        const pageId = await getNotionPageIdFromSlug(notionLink);
+        validateNotionPageId = pageId || undefined;
       } catch (slugError) {
         toast.error("Please enter a valid Notion link to proceed.");
         return;
       }
     }
 
-    if (!validateNotionPageURL) {
+    if (!validateNotionPageId) {
       toast.error("Please enter a valid Notion link to proceed.");
       return;
     }

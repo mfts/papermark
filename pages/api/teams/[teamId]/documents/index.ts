@@ -242,7 +242,9 @@ export default async function handle(
     }
 
     // Validate request body using Zod schema for security
-    const validationResult = documentUploadSchema.safeParse(req.body);
+    const validationResult = await documentUploadSchema.safeParseAsync(
+      req.body,
+    );
 
     if (!validationResult.success) {
       log({
