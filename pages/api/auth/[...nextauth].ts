@@ -200,21 +200,6 @@ export const authOptions: NextAuthOptions = {
         await subscribe(message.user.email);
       }
     },
-    // INFO: modified below function to track leads
-    async signIn(message) {
-      if (typeof window !== "undefined") {
-        try {
-          await fetch("/api/auth-plus/set-cookie");
-        } catch (error) {
-          console.error("Failed to set additional cookie", error);
-        }
-      }
-      await identifyUser(message.user.email ?? message.user.id);
-      await trackAnalytics({
-        event: "User Signed In",
-        email: message.user.email,
-      });
-    },
   },
 };
 
@@ -224,30 +209,31 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
     events: {
       ...authOptions.events,
       signIn: async (message) => {
-        if (typeof window !== "undefined") {
-          try {
-            await fetch("/api/auth-plus/set-cookie");
-          } catch (error) {
-            console.error("Failed to set additional cookie", error);
-          }
-        }
-        await identifyUser(message.user.email ?? message.user.id);
-        await trackAnalytics({
-          event: "User Signed In",
-          email: message.user.email,
-        });
+        // Identify and track sign-in without blocking the event flow
+        await Promise.allSettled([
+          identifyUser(message.user.email ?? message.user.id),
+          trackAnalytics({
+            event: "User Signed In",
+            email: message.user.email,
+          }),
+        ]);
 
         if (message.isNewUser) {
           const { dub_id } = req.cookies;
-          if (dub_id) {
-            await dub.track.lead({
-              clickId: dub_id,
-              eventName: "Sign Up",
-              customerExternalId: message.user.id,
-              customerName: message.user.name,
-              customerEmail: message.user.email,
-              customerAvatar: message.user.image,
-            });
+          // Only fire lead event if Dub is enabled
+          if (dub_id && process.env.DUB_API_KEY) {
+            try {
+              await dub.track.lead({
+                clickId: dub_id,
+                eventName: "Sign Up",
+                customerExternalId: message.user.id,
+                customerName: message.user.name,
+                customerEmail: message.user.email,
+                customerAvatar: message.user.image ?? undefined,
+              });
+            } catch (err) {
+              console.error("dub.track.lead failed", err);
+            }
           }
         }
       },
