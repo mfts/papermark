@@ -6,6 +6,7 @@ import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import { dub } from "@/lib/dub";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -76,6 +77,11 @@ export default async function handle(
       }),
     };
 
+    const customer = await dub.customers.list({
+      externalId: userId, // their user ID within your app
+      includeExpandedFields: true,
+    });
+
     const stripe = stripeInstance(oldAccount);
     if (team.stripeId) {
       // if the team already has a stripeId (i.e. is a customer) let's use as a customer
@@ -113,19 +119,33 @@ export default async function handle(
         mode: "subscription",
         allow_promotion_codes: true,
         client_reference_id: teamId,
+        ...(customer.length > 0 &&
+          customer[0].discount?.couponId && {
+            discounts: [
+              {
+                coupon:
+                  process.env.NODE_ENV !== "production" &&
+                  customer[0].discount.couponTestId
+                    ? customer[0].discount.couponTestId
+                    : customer[0].discount.couponId,
+              },
+            ],
+          }),
         metadata: {
           dubCustomerId: userId,
         },
       });
     }
 
-    waitUntil(identifyUser(userEmail ?? userId));
     waitUntil(
-      trackAnalytics({
-        event: "Stripe Checkout Clicked",
-        teamId,
-        priceId: priceId,
-      }),
+      Promise.all([
+        identifyUser(userEmail ?? userId),
+        trackAnalytics({
+          event: "Stripe Checkout Clicked",
+          teamId,
+          priceId: priceId,
+        }),
+      ]),
     );
 
     return res.status(200).json(stripeSession);
