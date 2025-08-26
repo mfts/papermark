@@ -185,12 +185,32 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 
       const { teamId } = link.dataroom;
 
-      const lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
-        return Math.max(
-          max,
-          new Date(doc.document.versions[0].updatedAt).getTime(),
-        );
-      }, 0);
+      // Calculate lastUpdatedAt based on documents and folders
+      let lastUpdatedAt;
+      const allTimestamps = [];
+      
+      // Collect timestamps from documents
+      link.dataroom.documents.forEach(doc => {
+        if (doc.document.versions && doc.document.versions.length > 0) {
+          allTimestamps.push(new Date(doc.document.versions[0].updatedAt).getTime());
+        }
+      });
+      
+      // Collect timestamps from folders
+      if (link.dataroom.folders) {
+        link.dataroom.folders.forEach(folder => {
+          if (folder.updatedAt) {
+            allTimestamps.push(new Date(folder.updatedAt).getTime());
+          }
+        });
+      }
+      
+      // If no documents or folders, use dataroom's updatedAt; otherwise use latest timestamp
+      if (allTimestamps.length === 0) {
+        lastUpdatedAt = new Date(link.dataroom.updatedAt).getTime();
+      } else {
+        lastUpdatedAt = Math.max(...allTimestamps);
+      }
 
       return {
         props: {
