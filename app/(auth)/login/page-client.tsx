@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { cn } from "@/lib/utils";
+import Eye from "@/components/shared/icons/eye";
+import EyeOff from "@/components/shared/icons/eye-off";
 
 import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
 import Google from "@/components/shared/icons/google";
@@ -25,15 +27,18 @@ export default function Login() {
   const { next } = useParams as { next?: string };
 
   const [lastUsed, setLastUsed] = useLastUsed();
-  const authMethods = ["google", "email", "linkedin", "passkey"] as const;
+  const authMethods = ["password", "google", "email", "linkedin", "passkey"] as const;
   type AuthMethod = (typeof authMethods)[number];
   const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>(
     undefined,
   );
   const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [emailButtonText, setEmailButtonText] = useState<string>(
     "Continue with Email",
   );
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isPasswordMode, setIsPasswordMode] = useState<boolean>(false);
 
   const emailSchema = z
     .string()
@@ -77,23 +82,46 @@ export default function Login() {
                 return;
               }
 
-              setClickedMethod("email");
-              signIn("email", {
-                email: emailValidation.data,
-                redirect: false,
-                ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-              }).then((res) => {
-                if (res?.ok && !res?.error) {
-                  setEmail("");
-                  setLastUsed("credentials");
-                  setEmailButtonText("Email sent - check your inbox!");
-                  toast.success("Email sent - check your inbox!");
-                } else {
-                  setEmailButtonText("Error sending email - try again?");
-                  toast.error("Error sending email - try again?");
+              if (isPasswordMode) {
+                if (!password) {
+                  toast.error("Password is required");
+                  return;
                 }
-                setClickedMethod(undefined);
-              });
+                
+                setClickedMethod("password");
+                signIn("credentials", {
+                  email: emailValidation.data,
+                  password,
+                  redirect: false,
+                  ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+                }).then((res) => {
+                  if (res?.ok && !res?.error) {
+                    setLastUsed("password");
+                    // Redirect will happen automatically
+                  } else {
+                    toast.error(res?.error || "Invalid credentials");
+                  }
+                  setClickedMethod(undefined);
+                });
+              } else {
+                setClickedMethod("email");
+                signIn("email", {
+                  email: emailValidation.data,
+                  redirect: false,
+                  ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+                }).then((res) => {
+                  if (res?.ok && !res?.error) {
+                    setEmail("");
+                    setLastUsed("credentials");
+                    setEmailButtonText("Email sent - check your inbox!");
+                    toast.success("Email sent - check your inbox!");
+                  } else {
+                    setEmailButtonText("Error sending email - try again?");
+                    toast.error("Error sending email - try again?");
+                  }
+                  setClickedMethod(undefined);
+                });
+              }
             }}
           >
             <Label className="sr-only" htmlFor="email">
@@ -117,22 +145,82 @@ export default function Login() {
                   : "ring-gray-200",
               )}
             />
+            
+            {isPasswordMode && (
+              <div className="relative">
+                <Label className="sr-only" htmlFor="password">
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  placeholder="Enter your password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  disabled={clickedMethod === "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={cn(
+                    "flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white",
+                  )}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3"
+                >
+                  {showPassword ? (
+                    <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  ) : (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+            )}
+
             <div className="relative">
               <Button
                 type="submit"
-                loading={clickedMethod === "email"}
-                disabled={!emailValidation.success || !!clickedMethod}
+                loading={clickedMethod === "email" || clickedMethod === "password"}
+                disabled={!emailValidation.success || (isPasswordMode && !password) || !!clickedMethod}
                 className={cn(
                   "focus:shadow-outline w-full transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none",
-                  clickedMethod === "email"
+                  clickedMethod === "email" || clickedMethod === "password"
                     ? "bg-black"
                     : "bg-gray-800 hover:bg-gray-900",
                 )}
               >
-                {emailButtonText}
+                {isPasswordMode ? "Sign In" : emailButtonText}
               </Button>
-              {lastUsed === "credentials" && <LastUsed />}
+              {(lastUsed === "credentials" || lastUsed === "password") && <LastUsed />}
             </div>
+
+            {isPasswordMode && (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsPasswordMode(false)}
+                  className="text-sm text-gray-600 hover:text-gray-800 underline"
+                >
+                  Use magic link instead
+                </button>
+                <span className="mx-2 text-gray-400">|</span>
+                <Link href="/forgot-password" className="text-sm text-gray-600 hover:text-gray-800 underline">
+                  Forgot password?
+                </Link>
+              </div>
+            )}
+
+            {!isPasswordMode && (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsPasswordMode(true)}
+                  className="text-sm text-gray-600 hover:text-gray-800 underline"
+                >
+                  Use password instead
+                </button>
+              </div>
+            )}
           </form>
           <p className="py-4 text-center">or</p>
           <div className="flex flex-col space-y-2 px-4 sm:px-12">
@@ -202,6 +290,15 @@ export default function Login() {
               </Button>
             </div>
           </div>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <Link href="/register" className="font-medium text-gray-900 underline hover:text-gray-700">
+                Sign up
+              </Link>
+            </p>
+          </div>
+          
           <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-12">
             By clicking continue, you acknowledge that you have read and agree
             to Papermark&apos;s{" "}
