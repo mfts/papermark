@@ -32,6 +32,8 @@ export default async function PostHogMiddleware(req: NextRequest) {
     "x-forwarded-host",
     "x-forwarded-proto",
     "x-real-ip",
+    // PostHog specific headers
+    "x-posthog-*",
   ];
 
   // Copy allowed headers from the original request
@@ -59,6 +61,8 @@ export default async function PostHogMiddleware(req: NextRequest) {
   url.pathname = url.pathname.replace(/^\/ingest/, "");
 
   return NextResponse.rewrite(url, {
-    headers: forwardHeaders,
+    request: {
+      headers: forwardHeaders,
+    },
   });
 }
