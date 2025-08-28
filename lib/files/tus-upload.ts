@@ -31,9 +31,19 @@ export function resumableUpload({
   teamId,
   numPages,
   relativePath,
-}: ResumableUploadParams) {
-  return new Promise<{ upload: tus.Upload; complete: Promise<UploadResult> }>(
-    (resolve, reject) => {
+}: ResumableUploadParams): Promise<{
+  upload: tus.Upload;
+  complete: Promise<UploadResult>;
+}> {
+  const retryDelays = [0, 3000, 5000, 10000, 15000, 20000];
+
+  return new Promise((resolve, reject) => {
+    let attempt = 0;
+    let networkTimeoutId: NodeJS.Timeout | undefined;
+
+    const createUpload = () => {
+      console.log(`Starting upload attempt ${attempt + 1}/6`);
+
       let completeResolve: (
         value: UploadResult | PromiseLike<UploadResult>,
       ) => void;
@@ -41,9 +51,11 @@ export function resumableUpload({
         completeResolve = res;
       });
 
+      let isTimedOut = false;
+
       const upload = new tus.Upload(file, {
         endpoint: `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/tus`,
-        retryDelays: [0, 3000, 5000, 10000],
+        retryDelays,
         uploadDataDuringCreation: true,
         removeFingerprintOnSuccess: true,
         metadata: {
@@ -56,25 +68,96 @@ export function resumableUpload({
         },
         chunkSize: 4 * 1024 * 1024,
         onError: (error) => {
-          onError && onError(error);
-          console.error("Failed because: " + error);
+          if (networkTimeoutId) clearTimeout(networkTimeoutId);
+          console.error(`TUS onError called on attempt ${attempt + 1}:`, error);
+
+          if (isTimedOut) {
+            console.log(
+              "Error was caused by our manual timeout, handling retry...",
+            );
+            return; // Let the timeout handler deal with retries
+          }
+
+          // Check if we should retry this error
+          const shouldRetry = attempt < retryDelays.length - 1;
+          const detailedError = error as tus.DetailedError;
+          const isRetryableError =
+            !detailedError.originalResponse || // Network error
+            error.message?.toLowerCase().includes("timeout") ||
+            error.message?.toLowerCase().includes("network") ||
+            error.message?.toLowerCase().includes("err_timed_out") ||
+            [0, 502, 503, 504].includes(
+              detailedError.originalResponse?.getStatus() || 0,
+            );
+
+          if (shouldRetry && isRetryableError) {
+            attempt++;
+            const delay = retryDelays[attempt] || 10000;
+            console.log(
+              `Retrying upload in ${delay}ms (attempt ${attempt + 1}/${retryDelays.length})`,
+            );
+
+            setTimeout(() => {
+              const newUpload = createUpload();
+              resolve(newUpload);
+            }, delay);
+            return;
+          }
+
+          // No more retries or non-retryable error
+          console.error("Upload failed after all retries:", error);
+          onError?.(error);
           reject(error);
         },
         onShouldRetry(error, retryAttempt, options) {
-          console.error(`Should retry upload. Attempt ${retryAttempt}`);
-          var status = error.originalResponse
-            ? error.originalResponse.getStatus()
-            : 0;
-          // Do not retry if the status is a 500.
-          if (status === 500 || status === 403) {
-            return false;
-          }
-          // For any other status code, we retry.
+          // We see this message, great! TUS internal retry system is working
+          console.error(
+            `TUS onShouldRetry called - Attempt ${retryAttempt}, Error:`,
+            error,
+          );
+
+          // Let TUS handle these retries first, then we'll handle network timeouts separately
           return true;
         },
-        onProgress,
+        onProgress: (bytesUploaded, bytesTotal) => {
+          // Reset timeout on any progress
+          if (networkTimeoutId) clearTimeout(networkTimeoutId);
+
+          // Set a new timeout
+          networkTimeoutId = setTimeout(() => {
+            console.error(
+              `Network timeout after ${60_000}ms of no progress (attempt ${attempt + 1})`,
+            );
+            isTimedOut = true;
+            upload.abort();
+
+            // Handle retry after timeout
+            const shouldRetry = attempt < retryDelays.length - 1;
+            if (shouldRetry) {
+              attempt++;
+              const delay = retryDelays[attempt] || 10000;
+              console.log(
+                `Retrying after network timeout in ${delay}ms (attempt ${attempt + 1}/${retryDelays.length})`,
+              );
+
+              setTimeout(() => {
+                const newUpload = createUpload();
+                resolve(newUpload);
+              }, delay);
+            } else {
+              console.error(
+                "Upload failed after network timeout with no retries left",
+              );
+              onError?.(new Error("Network timeout after 60000ms"));
+              reject(new Error("Network timeout after 60000ms"));
+            }
+          }, 60_000);
+
+          onProgress?.(bytesUploaded, bytesTotal);
+        },
         onSuccess: () => {
-          console.log("Uploaded successfully");
+          if (networkTimeoutId) clearTimeout(networkTimeoutId);
+          console.log("Upload completed successfully!");
           const id = upload.url!.split("/api/file/tus/")[1];
           // if id contains a slash, then we use it as it otherwise we need to convert from buffer base64URL to utf-8
           const newId = id.includes("/") ? id : decodeBase64Url(id);
@@ -91,23 +174,60 @@ export function resumableUpload({
         },
       });
 
+      // Set initial timeout
+      networkTimeoutId = setTimeout(() => {
+        console.error(
+          `Initial network timeout after ${60_000}ms (attempt ${attempt + 1})`,
+        );
+        isTimedOut = true;
+        upload.abort();
+
+        // Handle retry after timeout
+        const shouldRetry = attempt < retryDelays.length - 1;
+        if (shouldRetry) {
+          attempt++;
+          const delay = retryDelays[attempt] || 10000;
+          console.log(
+            `Retrying after initial timeout in ${delay}ms (attempt ${attempt + 1}/${retryDelays.length})`,
+          );
+
+          setTimeout(() => {
+            const newUpload = createUpload();
+            resolve(newUpload);
+          }, delay);
+        } else {
+          console.error(
+            "Upload failed after initial timeout with no retries left",
+          );
+          onError?.(new Error("Initial network timeout after 60000ms"));
+          reject(new Error("Initial network timeout after 60000ms"));
+        }
+      }, 60_000);
+
       // Check if there are any previous uploads to continue.
       upload
         .findPreviousUploads()
         .then((previousUploads) => {
-          // Found previous uploads so we select the first one.
           if (previousUploads.length) {
+            console.log("Resuming from previous upload...");
             upload.resumeFromPreviousUpload(previousUploads[0]);
           }
-
           upload.start();
-          resolve({ upload, complete });
         })
         .catch((error) => {
           console.error("Error finding previous uploads:", error);
           upload.start();
-          resolve({ upload, complete });
         });
-    },
-  );
+
+      return { upload, complete };
+    };
+
+    // Start the first upload attempt
+    try {
+      const result = createUpload();
+      resolve(result);
+    } catch (error) {
+      reject(error);
+    }
+  });
 }
