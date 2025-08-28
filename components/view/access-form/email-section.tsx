@@ -6,6 +6,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { cn } from "@/lib/utils";
 import { determineTextColor } from "@/lib/utils/determine-text-color";
 import { validateEmail } from "@/lib/utils/validate-email";
+import { isDisposableEmail } from "@/lib/utils/disposable-email-validator";
 
 import { DEFAULT_ACCESS_FORM_TYPE } from ".";
 
@@ -46,14 +47,27 @@ export default function EmailSection({
 
   const debouncedValidation = useDebouncedCallback(
     (value: string) => {
-      const isValid = !value || validateEmail(value);
-      if (isDirty && value && !isValid) {
-        setEmailError("Please enter a valid email address");
-      } else {
+      if (!value) {
         setEmailError(null);
+        onValidationChange?.(true);
+        return;
       }
+
+      const isValid = validateEmail(value);
+      const isDisposable = isValid ? isDisposableEmail(value) : false;
+
+      if (isDirty && value) {
+        if (!isValid) {
+          setEmailError("Please enter a valid email address");
+        } else if (isDisposable) {
+          setEmailError("Disposable email addresses are not allowed. Please use a permanent email address.");
+        } else {
+          setEmailError(null);
+        }
+      }
+      
       // Notify parent component about validation status
-      onValidationChange?.(isValid);
+      onValidationChange?.(isValid && !isDisposable);
     },
     500, // 500ms delay
   );
@@ -78,11 +92,26 @@ export default function EmailSection({
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsDirty(true);
     const value = e.target.value;
-    const isValid = !value || validateEmail(value);
-    if (value && !isValid) {
-      setEmailError("Please enter a valid email address");
+    
+    if (!value) {
+      setEmailError(null);
+      onValidationChange?.(true);
+      return;
     }
-    onValidationChange?.(isValid);
+
+    const isValid = validateEmail(value);
+    const isDisposable = isValid ? isDisposableEmail(value) : false;
+
+    if (value) {
+      if (!isValid) {
+        setEmailError("Please enter a valid email address");
+      } else if (isDisposable) {
+        setEmailError("Disposable email addresses are not allowed. Please use a permanent email address.");
+      } else {
+        setEmailError(null);
+      }
+    }
+    onValidationChange?.(isValid && !isDisposable);
   };
 
   const handleFocus = () => {

@@ -17,6 +17,7 @@ import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { subscribe } from "@/lib/unsend";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
+import { isDisposableEmail } from "@/lib/utils/disposable-email-validator";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -126,7 +127,7 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     signIn: async ({ user }) => {
-      if (!user.email || (await isBlacklistedEmail(user.email))) {
+      if (!user.email || (await isBlacklistedEmail(user.email)) || isDisposableEmail(user.email)) {
         await identifyUser(user.email ?? user.id);
         await trackAnalytics({
           event: "User Sign In Attempted",
