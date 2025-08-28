@@ -251,8 +251,26 @@ export default function UploadZone({
               ),
             );
 
+            // Provide more specific error messages
+            let errorMessage = "Error uploading file";
+            if (error.message?.toLowerCase().includes("timeout")) {
+              errorMessage = "Upload timed out. Please try again.";
+            } else if (error.message?.toLowerCase().includes("network")) {
+              errorMessage =
+                "Network error. Please check your connection and try again.";
+            } else if ((error as any).originalResponse) {
+              const status = (error as any).originalResponse.getStatus();
+              if (status === 413) {
+                errorMessage = "File too large for upload";
+              } else if (status >= 500) {
+                errorMessage = "Server error. Please try again later.";
+              } else if (status === 403) {
+                errorMessage = "Upload not permitted";
+              }
+            }
+
             setRejectedFiles((prev) => [
-              { fileName: file.name, message: "Error uploading file" },
+              { fileName: file.name, message: errorMessage },
               ...prev,
             ]);
           },
