@@ -42,6 +42,7 @@ model Link {
   agreement                  Agreement? @relation(fields: [agreementId], references: [id], onDelete: SetNull)
   agreementId                String? // This can be nullable, representing links without agreements
   showBanner                 Boolean?   @default(false) // Optional give user a option to show the banner and end of document signup form
+  securedByPapermark         Boolean?   @default(false)
   enableWatermark            Boolean?   @default(false) // Optional give user a option to enable the watermark
   watermarkConfig            Json? // This will store the watermark configuration: {text: "Confidential", isTiled: false, color: "#000000", fontSize: 12, opacity: 0.5, rotation: 30, position: "top-right"}
 
@@ -116,6 +117,8 @@ model LinkPreset {
 
   enableAgreement Boolean? @default(false)
   agreementId     String?
+
+  securedByPapermark Boolean? @default(false)
 
   enableCustomFields Boolean? @default(false)
   customFields       Json? //[{type: "SHORT_TEXT", identifier: "name", label: "Name", required: true}]

@@ -208,6 +208,7 @@ export default function LinksTable({
       enableAgreement: link.enableAgreement ? link.enableAgreement : false,
       agreementId: link.agreementId,
       showBanner: link.showBanner ?? false,
+      securedByPapermark: link.securedByPapermark ?? false,
       enableWatermark: link.enableWatermark ?? false,
       watermarkConfig: link.watermarkConfig as WatermarkConfig | null,
       audienceType: link.audienceType,

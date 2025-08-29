@@ -78,6 +78,7 @@ export const DEFAULT_LINK_PROPS = (
   enableAgreement: false,
   agreementId: null,
   showBanner: linkType === LinkType.DOCUMENT_LINK ? showBanner : false,
+  securedByPapermark: linkType === LinkType.DATAROOM_LINK ? true : false,
   enableWatermark: false,
   watermarkConfig: null,
   audienceType: groupId ? LinkAudienceType.GROUP : LinkAudienceType.GENERAL,
@@ -120,6 +121,7 @@ export type DEFAULT_LINK_TYPE = {
   enableAgreement: boolean; // agreement
   agreementId: string | null;
   showBanner: boolean;
+  securedByPapermark: boolean;
   enableWatermark: boolean;
   watermarkConfig: WatermarkConfig | null;
   audienceType: LinkAudienceType;

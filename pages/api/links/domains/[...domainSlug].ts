@@ -54,6 +54,7 @@ export default async function handle(
           enableScreenshotProtection: true,
           enableIndexFile: true,
           metaTitle: true,
+          securedByPapermark: true,
           metaDescription: true,
           metaImage: true,
           metaFavicon: true,
