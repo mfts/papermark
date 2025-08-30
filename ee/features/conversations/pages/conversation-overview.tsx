@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { ConversationListItem } from "@/ee/features/conversations/components/dashboard/conversation-list-item";
 import { ConversationsNotEnabledBanner } from "@/ee/features/conversations/components/dashboard/conversations-not-enabled-banner";
-import { PublishedFAQ } from "@/ee/features/conversations/components/dashboard/published-faq-table";
 import {
   BookOpenCheckIcon,
   Loader2,
