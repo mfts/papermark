@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { z } from "zod";
+
 import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
 import prisma from "@/lib/prisma";
+
+// Validation schema for query parameters
+const visitorFAQParamsSchema = z.object({
+  linkId: z.string().cuid("Invalid link ID format"),
+  dataroomId: z.string().cuid("Invalid dataroom ID format"),
+  documentId: z.string().cuid("Invalid document ID format").optional(), // This is actually dataroomDocumentId
+});
 
 export interface VisitorFAQResponse {
   id: string;
@@ -19,16 +28,25 @@ export interface VisitorFAQResponse {
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
-    const linkId = searchParams.get("linkId");
-    const dataroomId = searchParams.get("dataroomId");
-    const documentId = searchParams.get("documentId");
 
-    if (!linkId || !dataroomId) {
+    // Validate query parameters
+    const paramValidation = visitorFAQParamsSchema.safeParse({
+      linkId: searchParams.get("linkId"),
+      dataroomId: searchParams.get("dataroomId"),
+      documentId: searchParams.get("documentId"), // This is actually dataroomDocumentId
+    });
+
+    if (!paramValidation.success) {
       return NextResponse.json(
-        { error: "linkId and dataroomId are required" },
+        {
+          error: "Invalid parameters",
+          details: paramValidation.error.errors[0]?.message,
+        },
         { status: 400 },
       );
     }
+
+    const { linkId, dataroomId, documentId } = paramValidation.data;
 
     // Verify dataroom session
     const session = await verifyDataroomSession(req, linkId, dataroomId);

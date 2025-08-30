@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
+import { z } from "zod";
 
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { fetcher, timeAgo } from "@/lib/utils";
@@ -56,6 +57,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { ConversationSummary } from "./conversation-overview";
+
+const apiParamSchema = z.object({
+  teamId: z.string().cuid("Invalid team ID"),
+  dataroomId: z.string().cuid("Invalid dataroom ID"),
+  faqId: z.string().cuid("Invalid FAQ ID"),
+});
 
 export interface PublishedFAQ {
   id: string;
@@ -124,7 +131,7 @@ export default function FAQOverview() {
     error,
   } = useSWR<PublishedFAQ[]>(
     dataroom && teamId
-      ? `/api/teams/${teamId}/datarooms/${dataroom.id}/faq`
+      ? `/api/teams/${teamId}/datarooms/${dataroom.id}/faqs`
       : null,
     fetcher,
     {
@@ -160,9 +167,20 @@ export default function FAQOverview() {
   const handleStatusToggle = async (faq: PublishedFAQ) => {
     const newStatus = faq.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED";
 
+    const paramValidation = apiParamSchema.safeParse({
+      teamId,
+      dataroomId: dataroom?.id,
+      faqId: faq.id,
+    });
+
+    if (!paramValidation.success) {
+      toast.error("Invalid team, dataroom, or FAQ ID");
+      return;
+    }
+
     try {
       const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroom?.id}/faq/${faq.id}`,
+        `/api/teams/${paramValidation.data.teamId}/datarooms/${paramValidation.data.dataroomId}/faqs/${paramValidation.data.faqId}`,
         {
           method: "PUT",
           headers: {
@@ -176,8 +194,13 @@ export default function FAQOverview() {
         throw new Error("Failed to update FAQ status");
       }
 
-      toast.success(`FAQ ${newStatus.toLowerCase()} successfully`);
-      mutate(`/api/teams/${teamId}/datarooms/${dataroom?.id}/faq`);
+      const isPublish = newStatus === "PUBLISHED";
+      toast.success(
+        `FAQ ${isPublish ? "published" : "unpublished"} successfully`,
+      );
+      mutate(
+        `/api/teams/${paramValidation.data.teamId}/datarooms/${paramValidation.data.dataroomId}/faqs`,
+      );
     } catch (error) {
       console.error("Error updating FAQ status:", error);
       toast.error("Failed to update FAQ status");
@@ -185,14 +208,22 @@ export default function FAQOverview() {
   };
 
   const handleDelete = async (faqId: string) => {
-    if (!dataroom || !teamId) {
-      toast.error("Failed to delete FAQ");
+    setIsDeleting(true);
+
+    const paramValidation = apiParamSchema.safeParse({
+      teamId,
+      dataroomId: dataroom?.id,
+      faqId,
+    });
+
+    if (!paramValidation.success) {
+      toast.error("Invalid team, dataroom, or FAQ ID");
       return;
     }
-    setIsDeleting(true);
+
     try {
       const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroom.id}/faq/${faqId}`,
+        `/api/teams/${paramValidation.data.teamId}/datarooms/${paramValidation.data.dataroomId}/faqs/${paramValidation.data.faqId}`,
         {
           method: "DELETE",
         },
@@ -203,7 +234,9 @@ export default function FAQOverview() {
       }
 
       toast.success("FAQ deleted successfully");
-      mutate(`/api/teams/${teamId}/datarooms/${dataroom.id}/faq`);
+      mutate(
+        `/api/teams/${paramValidation.data.teamId}/datarooms/${paramValidation.data.dataroomId}/faqs`,
+      );
       setIsDeleteModalOpen(false);
       setFaqToDelete(null);
     } catch (error) {
@@ -497,7 +530,7 @@ export default function FAQOverview() {
                   setFaqToEdit(null);
                 }}
                 onSuccess={() => {
-                  mutate(`/api/teams/${teamId}/datarooms/${dataroom?.id}/faq`);
+                  mutate(`/api/teams/${teamId}/datarooms/${dataroom?.id}/faqs`);
                   setIsEditModalOpen(false);
                   setFaqToEdit(null);
                 }}

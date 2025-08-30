@@ -20,7 +20,7 @@ export function ConversationMessage({
   isPublished?: boolean;
   onSelect?: (messageId: string, isVisitor: boolean) => void;
 }) {
-  const isVisitor = message.viewerId !== null;
+  const isVisitor = message.viewerId != null;
   const canBeSelected =
     isSelectable &&
     ((isVisitor && !isAuthor) || // Visitor questions

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import { BookOpen, Check, FileText, Link2 } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +24,25 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { PublishedFAQ } from "../../pages/faq-overview";
+
+// Frontend validation schemas
+const editFAQFormSchema = z.object({
+  editedQuestion: z
+    .string()
+    .min(10, "Question must be at least 10 characters")
+    .max(1000, "Question too long"),
+  answer: z
+    .string()
+    .min(10, "Answer must be at least 10 characters")
+    .max(2000, "Answer too long"),
+  visibilityMode: z.enum(["PUBLIC_DATAROOM", "PUBLIC_LINK", "PUBLIC_DOCUMENT"]),
+});
+
+const apiParamSchema = z.object({
+  teamId: z.string().cuid("Invalid team ID"),
+  dataroomId: z.string().cuid("Invalid dataroom ID"),
+  faqId: z.string().cuid("Invalid FAQ ID"),
+});
 
 interface EditFAQModalProps {
   faq: PublishedFAQ;
@@ -96,40 +116,45 @@ export function EditFAQModal({
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic validation
-    if (
-      !formData.editedQuestion.trim() ||
-      formData.editedQuestion.length < 10
-    ) {
-      toast.error("Question must be at least 10 characters");
-      return;
-    }
-
-    if (!formData.answer.trim() || formData.answer.length < 10) {
-      toast.error("Answer must be at least 10 characters");
-      return;
-    }
-
-    setIsUpdating(true);
     try {
-      const payload = {
-        ...formData,
-      };
+      // Validate API parameters
+      const paramValidation = apiParamSchema.safeParse({
+        teamId,
+        dataroomId,
+        faqId: faq.id,
+      });
+
+      if (!paramValidation.success) {
+        toast.error("Invalid team, dataroom, or FAQ ID");
+        return;
+      }
+
+      // Validate form data
+      const formValidation = editFAQFormSchema.safeParse(formData);
+
+      if (!formValidation.success) {
+        const firstError = formValidation.error.errors[0];
+        toast.error(firstError.message);
+        return;
+      }
+
+      setIsUpdating(true);
+      const validatedData = formValidation.data;
 
       const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/faq/${faq.id}`,
+        `/api/teams/${paramValidation.data.teamId}/datarooms/${paramValidation.data.dataroomId}/faqs/${paramValidation.data.faqId}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(validatedData),
         },
       );
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to update FAQ");
+        throw new Error(error.error || error.details || "Failed to update FAQ");
       }
 
       toast.success("FAQ updated successfully!");

@@ -2,17 +2,70 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
+import { z } from "zod";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { validateContent } from "@/lib/utils/sanitize-html";
 
+// Zod validation schemas
+const paramSchema = z.object({
+  teamId: z.string().cuid("Invalid team ID format"),
+  id: z.string().cuid("Invalid dataroom ID format"),
+  faqId: z.string().cuid("Invalid FAQ ID format").optional(),
+});
+
+const publishFAQSchema = z.object({
+  editedQuestion: z
+    .string()
+    .min(10, "Question must be at least 10 characters")
+    .max(1000, "Question too long"),
+  originalQuestion: z.string().optional(),
+  answer: z
+    .string()
+    .min(10, "Answer must be at least 10 characters")
+    .max(2000, "Answer too long"),
+  visibilityMode: z.enum(["PUBLIC_DATAROOM", "PUBLIC_LINK", "PUBLIC_DOCUMENT"]),
+  linkId: z.string().cuid("Invalid link ID format").optional(),
+  dataroomDocumentId: z.string().cuid("Invalid document ID format").optional(),
+  sourceConversationId: z
+    .string()
+    .cuid("Invalid conversation ID format")
+    .optional(),
+  questionMessageId: z
+    .string()
+    .cuid("Invalid question message ID format")
+    .optional(),
+  answerMessageId: z
+    .string()
+    .cuid("Invalid answer message ID format")
+    .optional(),
+  isAnonymized: z.boolean().default(true),
+  documentPageNumber: z.number().int().min(1).optional(),
+  documentVersionNumber: z.number().int().min(1).optional(),
+});
+
+const updateFAQSchema = z.object({
+  editedQuestion: z
+    .string()
+    .min(10, "Question must be at least 10 characters")
+    .max(1000, "Question too long")
+    .optional(),
+  answer: z
+    .string()
+    .min(10, "Answer must be at least 10 characters")
+    .max(2000, "Answer too long")
+    .optional(),
+  visibilityMode: z
+    .enum(["PUBLIC_DATAROOM", "PUBLIC_LINK", "PUBLIC_DOCUMENT"])
+    .optional(),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
+});
+
 export interface PublishFAQInput {
-  title?: string;
   editedQuestion: string;
   originalQuestion?: string;
   answer: string;
-  description?: string;
   linkId?: string;
   dataroomDocumentId?: string;
   sourceConversationId?: string;
@@ -21,29 +74,52 @@ export interface PublishFAQInput {
   visibilityMode: "PUBLIC_DATAROOM" | "PUBLIC_LINK" | "PUBLIC_DOCUMENT";
   status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   isAnonymized?: boolean;
-  tags?: string[];
   documentPageNumber?: number;
   documentVersionNumber?: number;
 }
 
 // Route mapping object to handle different paths
 const routeHandlers = {
-  // POST /api/teams/[teamId]/datarooms/[dataroomId]/faq
+  // POST /api/teams/[teamId]/datarooms/[dataroomId]/faqs
   "POST /": async (req: NextApiRequest, res: NextApiResponse) => {
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { teamId, id: dataroomId } = req.query as {
-      teamId: string;
-      id: string;
-    };
-
-    const userId = (session.user as CustomUser).id;
-    const data = req.body as PublishFAQInput;
-
     try {
+      // Validate URL parameters
+      const paramValidation = paramSchema.safeParse({
+        teamId: req.query.teamId,
+        id: req.query.id,
+      });
+
+      if (!paramValidation.success) {
+        return res.status(400).json({
+          error: "Invalid parameters",
+          details: paramValidation.error.errors[0]?.message,
+        });
+      }
+
+      const { teamId, id: dataroomId } = paramValidation.data;
+
+      // Validate request body
+      const bodyValidation = publishFAQSchema.safeParse(req.body);
+
+      if (!bodyValidation.success) {
+        return res.status(400).json({
+          error: "Invalid request data",
+          details: bodyValidation.error.errors[0]?.message,
+        });
+      }
+
+      const data = bodyValidation.data;
+      const userId = (session.user as CustomUser).id;
+
+      // Sanitize content for creation
+      const createSanitizedQuestion = validateContent(data.editedQuestion);
+      const createSanitizedAnswer = validateContent(data.answer);
+
       // Verify team access to dataroom
       const dataroom = await prisma.dataroom.findUnique({
         where: {
@@ -61,13 +137,6 @@ const routeHandlers = {
 
       if (!dataroom) {
         return res.status(404).json({ error: "Dataroom not found" });
-      }
-
-      // Validate required fields
-      if (!data.editedQuestion || !data.answer) {
-        return res.status(400).json({
-          error: "Question and answer are required",
-        });
       }
 
       // Validate visibility mode and related fields
@@ -118,22 +187,42 @@ const routeHandlers = {
         }
       }
 
-      // Sanitize content
-      const sanitizedQuestion = validateContent(data.editedQuestion);
-      const sanitizedAnswer = validateContent(data.answer);
+      // Validate that referenced messages (if any) belong to the same conversation/dataroom
+      if (
+        data.sourceConversationId &&
+        (data.questionMessageId || data.answerMessageId)
+      ) {
+        const msgs = await prisma.message.findMany({
+          where: {
+            id: {
+              in: [data.questionMessageId, data.answerMessageId].filter(
+                Boolean,
+              ) as string[],
+            },
+            conversation: { id: data.sourceConversationId, dataroomId },
+          },
+          select: { id: true },
+        });
+        const providedCount = [
+          data.questionMessageId,
+          data.answerMessageId,
+        ].filter(Boolean).length;
+        if (msgs.length !== providedCount) {
+          return res.status(400).json({
+            error:
+              "Message references must belong to the specified conversation and dataroom",
+          });
+        }
+      }
 
       // Create the published FAQ
       const publishedFAQ = await prisma.dataroomFaqItem.create({
         data: {
-          title: data.title,
-          editedQuestion: sanitizedQuestion,
+          editedQuestion: createSanitizedQuestion,
           originalQuestion: data.originalQuestion
             ? validateContent(data.originalQuestion)
             : null,
-          answer: sanitizedAnswer,
-          description: data.description
-            ? validateContent(data.description)
-            : null,
+          answer: createSanitizedAnswer,
           dataroomId,
           linkId: data.linkId,
           dataroomDocumentId: data.dataroomDocumentId,
@@ -144,7 +233,6 @@ const routeHandlers = {
           publishedByUserId: userId,
           visibilityMode: data.visibilityMode,
           isAnonymized: data.isAnonymized ?? true,
-          tags: data.tags || [],
           documentPageNumber: data.documentPageNumber,
           documentVersionNumber: data.documentVersionNumber,
         },
@@ -175,21 +263,29 @@ const routeHandlers = {
     }
   },
 
-  // GET /api/teams/[teamId]/datarooms/[id]/faq
+  // GET /api/teams/[teamId]/datarooms/[id]/faqs
   "GET /": async (req: NextApiRequest, res: NextApiResponse) => {
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { teamId, id: dataroomId } = req.query as {
-      teamId: string;
-      id: string;
-    };
-
-    const userId = (session.user as CustomUser).id;
-
     try {
+      // Validate URL parameters
+      const paramValidation = paramSchema.safeParse({
+        teamId: req.query.teamId,
+        id: req.query.id,
+      });
+
+      if (!paramValidation.success) {
+        return res.status(400).json({
+          error: "Invalid parameters",
+          details: paramValidation.error.errors[0]?.message,
+        });
+      }
+
+      const { teamId, id: dataroomId } = paramValidation.data;
+      const userId = (session.user as CustomUser).id;
       // Verify team access to dataroom
       const dataroom = await prisma.dataroom.findUnique({
         where: {
@@ -252,27 +348,42 @@ const routeHandlers = {
     }
   },
 
-  // PUT /api/teams/[teamId]/datarooms/[id]/faq/[faqId]
+  // PUT /api/teams/[teamId]/datarooms/[id]/faqs/[faqId]
   "PUT /[faqId]": async (req: NextApiRequest, res: NextApiResponse) => {
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const {
-      teamId,
-      id: dataroomId,
-      faqId,
-    } = req.query as {
-      teamId: string;
-      id: string;
-      faqId: string;
-    };
-
-    const userId = (session.user as CustomUser).id;
-    const data = req.body as Partial<PublishFAQInput>;
-
     try {
+      // Validate URL parameters
+      const paramValidation = paramSchema.safeParse({
+        teamId: req.query.teamId,
+        id: req.query.id,
+        faqId: req.query.faqId,
+      });
+
+      if (!paramValidation.success) {
+        return res.status(400).json({
+          error: "Invalid parameters",
+          details: paramValidation.error.errors[0]?.message,
+        });
+      }
+
+      const { teamId, id: dataroomId, faqId } = paramValidation.data;
+
+      // Validate request body
+      const bodyValidation = updateFAQSchema.safeParse(req.body);
+
+      if (!bodyValidation.success) {
+        return res.status(400).json({
+          error: "Invalid request data",
+          details: bodyValidation.error.errors[0]?.message,
+        });
+      }
+
+      const data = bodyValidation.data;
+      const userId = (session.user as CustomUser).id;
       // Verify team access and FAQ ownership
       const existingFAQ = await prisma.dataroomFaqItem.findFirst({
         where: {
@@ -294,18 +405,13 @@ const routeHandlers = {
       // Prepare update data
       const updateData: any = {};
 
-      if (data.title !== undefined) updateData.title = data.title;
       if (data.editedQuestion)
         updateData.editedQuestion = validateContent(data.editedQuestion);
       if (data.answer) updateData.answer = validateContent(data.answer);
-      if (data.description !== undefined)
-        updateData.description = data.description
-          ? validateContent(data.description)
-          : null;
+
       if (data.status !== undefined) updateData.status = data.status;
       if (data.visibilityMode !== undefined)
         updateData.visibilityMode = data.visibilityMode;
-      if (data.tags !== undefined) updateData.tags = data.tags;
 
       // Update the FAQ
       const updatedFAQ = await prisma.dataroomFaqItem.update({
@@ -338,26 +444,30 @@ const routeHandlers = {
     }
   },
 
-  // DELETE /api/teams/[teamId]/datarooms/[id]/faq/[faqId]
+  // DELETE /api/teams/[teamId]/datarooms/[id]/faqs/[faqId]
   "DELETE /[faqId]": async (req: NextApiRequest, res: NextApiResponse) => {
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const {
-      teamId,
-      id: dataroomId,
-      faqId,
-    } = req.query as {
-      teamId: string;
-      id: string;
-      faqId: string;
-    };
-
-    const userId = (session.user as CustomUser).id;
-
     try {
+      // Validate URL parameters
+      const paramValidation = paramSchema.safeParse({
+        teamId: req.query.teamId,
+        id: req.query.id,
+        faqId: req.query.faqId,
+      });
+
+      if (!paramValidation.success) {
+        return res.status(400).json({
+          error: "Invalid parameters",
+          details: paramValidation.error.errors[0]?.message,
+        });
+      }
+
+      const { teamId, id: dataroomId, faqId } = paramValidation.data;
+      const userId = (session.user as CustomUser).id;
       // Verify team access and FAQ ownership
       const existingFAQ = await prisma.dataroomFaqItem.findFirst({
         where: {

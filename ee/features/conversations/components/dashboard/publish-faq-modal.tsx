@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 import { BookOpen, Check, FileText, Link2 } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +22,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+
+// Frontend validation schemas
+const publishFAQFormSchema = z.object({
+  editedQuestion: z
+    .string()
+    .min(10, "Question must be at least 10 characters")
+    .max(1000, "Question too long"),
+  answer: z
+    .string()
+    .min(10, "Answer must be at least 10 characters")
+    .max(2000, "Answer too long"),
+  visibilityMode: z.enum(["PUBLIC_DATAROOM", "PUBLIC_LINK", "PUBLIC_DOCUMENT"]),
+  questionMessageId: z.string().cuid("Invalid question message ID"),
+  answerMessageId: z.string().cuid("Invalid answer message ID"),
+});
+
+const apiParamSchema = z.object({
+  teamId: z.string().cuid("Invalid team ID"),
+  dataroomId: z.string().cuid("Invalid dataroom ID"),
+});
 
 interface Message {
   id: string;
@@ -138,31 +159,48 @@ export function PublishFAQModal({
       return;
     }
 
-    if (
-      !formData.editedQuestion.trim() ||
-      formData.editedQuestion.length < 10
-    ) {
-      toast.error("Question must be at least 10 characters");
-      return;
-    }
-
-    if (!formData.answer.trim() || formData.answer.length < 10) {
-      toast.error("Answer must be at least 10 characters");
-      return;
-    }
-
-    setIsPublishing(true);
     try {
-      const payload = {
+      // Validate API parameters
+      const paramValidation = apiParamSchema.safeParse({
+        teamId,
+        dataroomId,
+      });
+
+      if (!paramValidation.success) {
+        toast.error("Invalid team or dataroom ID");
+        return;
+      }
+
+      // Validate form data
+      const formValidation = publishFAQFormSchema.safeParse({
         ...formData,
+        questionMessageId: selectedQuestionMessage.id,
+        answerMessageId: selectedAnswerMessage.id,
+      });
+
+      if (!formValidation.success) {
+        const firstError = formValidation.error.errors[0];
+        toast.error(firstError.message);
+        return;
+      }
+
+      const validatedData = formValidation.data;
+      setIsPublishing(true);
+
+      const payload = {
+        editedQuestion: validatedData.editedQuestion,
+        answer: validatedData.answer,
+        visibilityMode: validatedData.visibilityMode,
         sourceConversationId: conversation.id,
         linkId: conversation.linkId,
         dataroomDocumentId: conversation.dataroomDocument?.id || null,
         isAnonymized: true, // Always anonymize published FAQs
+        questionMessageId: validatedData.questionMessageId,
+        answerMessageId: validatedData.answerMessageId,
       };
 
       const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/faq`,
+        `/api/teams/${paramValidation.data.teamId}/datarooms/${paramValidation.data.dataroomId}/faqs`,
         {
           method: "POST",
           headers: {
@@ -174,7 +212,9 @@ export function PublishFAQModal({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to publish FAQ");
+        throw new Error(
+          error.error || error.details || "Failed to publish FAQ",
+        );
       }
 
       toast.success("FAQ published successfully!");

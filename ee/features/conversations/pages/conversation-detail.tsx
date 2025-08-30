@@ -213,7 +213,7 @@ export default function ConversationDetailPage() {
   // Fetch published FAQs
   const { data: faqs = [] } = useSWR<PublishedFAQ[]>(
     dataroom && teamId
-      ? `/api/teams/${teamId}/datarooms/${dataroom.id}/faq`
+      ? `/api/teams/${teamId}/datarooms/${dataroom.id}/faqs`
       : null,
     fetcher,
     {
@@ -683,6 +683,11 @@ export default function ConversationDetailPage() {
             setSelectedQuestionId(null);
             setSelectedAnswerId(null);
             toast.success("FAQ published successfully!");
+            mutate(
+              teamId && dataroom?.id
+                ? `/api/teams/${teamId}/datarooms/${dataroom.id}/faqs`
+                : null,
+            );
           }}
           selectedQuestionMessage={getSelectedMessages()?.questionMessage}
           selectedAnswerMessage={getSelectedMessages()?.answerMessage}

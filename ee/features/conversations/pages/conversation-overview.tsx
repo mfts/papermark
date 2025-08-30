@@ -113,7 +113,7 @@ export default function DataroomConversationsPage() {
   // Fetch published FAQs
   const { data: faqs = [] } = useSWR<PublishedFAQ[]>(
     dataroom && teamId
-      ? `/api/teams/${teamId}/datarooms/${dataroom.id}/faq`
+      ? `/api/teams/${teamId}/datarooms/${dataroom.id}/faqs`
       : null,
     fetcher,
     {
