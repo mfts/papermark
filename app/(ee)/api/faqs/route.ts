@@ -9,7 +9,7 @@ import prisma from "@/lib/prisma";
 const visitorFAQParamsSchema = z.object({
   linkId: z.string().cuid("Invalid link ID format"),
   dataroomId: z.string().cuid("Invalid dataroom ID format"),
-  documentId: z.string().cuid("Invalid document ID format").optional(), // This is actually dataroomDocumentId
+  documentId: z.string().cuid("Invalid document ID format").nullish(), // This is actually dataroomDocumentId
 });
 
 export interface VisitorFAQResponse {
