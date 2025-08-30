@@ -19,6 +19,9 @@ model Dataroom {
   conversationsEnabled Boolean        @default(false)
   conversations        Conversation[]
 
+  // FAQ system
+  faqItems DataroomFaqItem[]
+
   // upload external documents
   uploadedDocuments DocumentUpload[]
 
@@ -51,6 +54,9 @@ model DataroomDocument {
   orderIndex Int?
 
   conversations Conversation[]
+
+  // FAQ system
+  dataroomFAQs DataroomFaqItem[]
 
   uploadedDocuments DocumentUpload[]
 

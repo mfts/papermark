@@ -27,6 +27,8 @@ const badgeVariants = cva(
           "border-transparent bg-orange-50 text-orange-700 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50",
         watermark:
           "border-transparent bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50",
+        notification:
+          "px-1.5 rounded-sm bg-secondary text-secondary-foreground border-transparent",
       },
     },
     defaultVariants: {

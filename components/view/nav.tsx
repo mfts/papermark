@@ -291,22 +291,12 @@ export default function Nav({
             )}
             {/* Conversation toggle button for dataroom documents */}
             {isDataroom && conversationsEnabled && (
-              <TooltipProvider delayDuration={100}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={() => setShowConversations(!showConversations)}
-                      className="size-8 bg-gray-900 text-white hover:bg-gray-900/80 sm:size-10"
-                      size="icon"
-                    >
-                      <MessageCircle className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Toggle conversations</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Button
+                onClick={() => setShowConversations(!showConversations)}
+                className="bg-gray-900 text-white hover:bg-gray-900/80"
+              >
+                View FAQ
+              </Button>
             )}
             {embeddedLinks && embeddedLinks.length > 0 ? (
               <DropdownMenu>

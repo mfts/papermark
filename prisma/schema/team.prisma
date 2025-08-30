@@ -19,6 +19,7 @@ model Team {
   restrictedTokens  RestrictedToken[]
   webhooks          Webhook[]
   conversations     Conversation[]
+  dataroomFaqItems      DataroomFaqItem[]
   uploadedDocuments DocumentUpload[]
   Tag               Tag[]
 
