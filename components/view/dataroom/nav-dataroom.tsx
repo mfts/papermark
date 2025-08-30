@@ -3,7 +3,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 import { DataroomBrand } from "@prisma/client";
-import { BadgeInfoIcon, Download, MessagesSquareIcon } from "lucide-react";
+import { BadgeInfoIcon, Download } from "lucide-react";
 import { toast } from "sonner";
 
 import { formatDate } from "@/lib/utils";
@@ -172,22 +172,9 @@ export default function DataroomNav({
               </TooltipProvider>
             ) : null}
             {conversationsEnabled && (
-              <TooltipProvider delayDuration={100}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={() => setShowConversations(!showConversations)}
-                      className="size-8 bg-gray-900 text-white hover:bg-gray-900/80 sm:size-10"
-                      size="icon"
-                    >
-                      <MessagesSquareIcon className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Toggle conversations</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Button onClick={() => setShowConversations(!showConversations)}>
+                View FAQ
+              </Button>
             )}
             {allowDownload && allowBulkDownload ? (
               <ButtonTooltip content="Download Dataroom">

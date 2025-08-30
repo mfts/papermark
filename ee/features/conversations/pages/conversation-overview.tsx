@@ -1,10 +1,17 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { useTeam } from "@/context/team-context";
 import { ConversationListItem } from "@/ee/features/conversations/components/dashboard/conversation-list-item";
 import { ConversationsNotEnabledBanner } from "@/ee/features/conversations/components/dashboard/conversations-not-enabled-banner";
-import { Loader2, MessageSquare, Search } from "lucide-react";
+import {
+  BookOpenCheckIcon,
+  Loader2,
+  MessageSquare,
+  Search,
+} from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import z from "zod";
@@ -12,6 +19,7 @@ import z from "zod";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import useLimits from "@/lib/swr/use-limits";
 import { fetcher } from "@/lib/utils";
+import { localStorage as safeLocalStorage } from "@/lib/webstorage";
 
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
@@ -28,8 +36,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface ConversationSummary {
+import { PublishedFAQ } from "./faq-overview";
+
+export interface ConversationSummary {
   id: string;
   title: string | null;
   createdAt: string;
@@ -54,7 +65,7 @@ export default function DataroomConversationsPage() {
   const router = useRouter();
   const { limits } = useLimits();
   const { dataroom } = useDataroom();
-  const teamId = router.query.teamId || dataroom?.teamId;
+  const { currentTeamId: teamId } = useTeam();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -64,19 +75,22 @@ export default function DataroomConversationsPage() {
   const [localConversationsEnabled, setLocalConversationsEnabled] = useState<
     boolean | undefined
   >(undefined);
-  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const [activeTab, setActiveTab] = useState("conversations");
 
-  // Initialize local state from dataroom and check banner dismissed state
+  // Memoize banner dismissed state to avoid localStorage reads on every render
+  const isBannerDismissed = useMemo(() => {
+    if (!dataroom?.id) return false;
+    return (
+      safeLocalStorage.getItem(
+        `dataroom-${dataroom.id}-conversations-banner-dismissed`,
+      ) === "true"
+    );
+  }, [dataroom?.id]);
+
+  // Initialize local state from dataroom
   useEffect(() => {
     if (dataroom) {
       setLocalConversationsEnabled(dataroom.conversationsEnabled);
-
-      // Check if banner has been dismissed
-      const isDismissed =
-        localStorage.getItem(
-          `dataroom-${dataroom.id}-conversations-banner-dismissed`,
-        ) === "true";
-      setIsBannerDismissed(isDismissed);
     }
   }, [dataroom]);
 
@@ -97,6 +111,19 @@ export default function DataroomConversationsPage() {
         },
       },
     );
+
+  // Fetch published FAQs
+  const { data: faqs = [] } = useSWR<PublishedFAQ[]>(
+    dataroom && teamId
+      ? `/api/teams/${teamId}/datarooms/${dataroom.id}/faqs`
+      : null,
+    fetcher,
+    {
+      revalidateOnFocus: true,
+      dedupingInterval: 10000,
+      keepPreviousData: true,
+    },
+  );
 
   // Filter conversations based on search query
   const filteredConversations = conversations.filter((conversation) => {
@@ -190,78 +217,108 @@ export default function DataroomConversationsPage() {
           />
         )}
 
-        <div className="h-[calc(100vh-16rem)] overflow-hidden rounded-md border">
-          <div className="flex h-full flex-col md:flex-row">
-            {/* Sidebar with conversations list */}
-            <div className="flex h-full w-full flex-col border-r md:w-96">
-              <div className="flex items-center justify-between p-4">
-                <h2 className="text-lg font-semibold">Conversations</h2>
-                <Badge variant="secondary">{conversations.length}</Badge>
-              </div>
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
+          <TabsList>
+            <TabsTrigger
+              value="conversations"
+              className="flex items-center gap-2"
+            >
+              <MessageSquare className="h-4 w-4" />
+              Conversations
+              <Badge variant="notification">{conversations.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="faqs" asChild>
+              <Link
+                href={`/datarooms/${dataroom.id}/conversations/faqs`}
+                className="flex items-center gap-2"
+              >
+                <BookOpenCheckIcon className="h-4 w-4" />
+                Published FAQs
+                <Badge variant="notification">{faqs.length}</Badge>
+              </Link>
+            </TabsTrigger>
+          </TabsList>
 
-              <div className="flex items-center px-4 pb-4">
-                <div className="relative w-full">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search conversations..."
-                    className="pl-8"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
+          <TabsContent value="conversations" className="space-y-0">
+            <div className="h-[calc(100vh-20rem)] overflow-hidden rounded-md border">
+              <div className="flex h-full flex-col md:flex-row">
+                {/* Sidebar with conversations list */}
+                <div className="flex h-full w-full flex-col border-r md:w-96">
+                  {/* <div className="flex items-center justify-between p-4">
+                    <h2 className="text-lg font-semibold">Conversations</h2>
+                  </div> */}
 
-              <div className="flex h-[calc(100%-7.5rem)] flex-col">
-                <div className="m-0 flex-1 overflow-hidden">
-                  <ScrollArea className="h-full">
-                    <div className="flex flex-col gap-2 p-4 pt-0">
-                      {isLoadingConversations ? (
-                        <div className="flex h-20 items-center justify-center">
-                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                        </div>
-                      ) : filteredConversations.length === 0 ? (
-                        <div className="flex h-20 items-center justify-center">
-                          <p className="text-sm text-muted-foreground">
-                            No conversations found
-                          </p>
-                        </div>
-                      ) : (
-                        // Sort by most recent first
-                        [...filteredConversations]
-                          .sort(
-                            (a, b) =>
-                              new Date(b.updatedAt).getTime() -
-                              new Date(a.updatedAt).getTime(),
-                          )
-                          .map((conversation) => (
-                            <ConversationListItem
-                              key={conversation.id}
-                              navigateToConversation={navigateToConversation}
-                              conversation={conversation}
-                              isActive={false}
-                            />
-                          ))
-                      )}
+                  <div className="flex items-center p-4">
+                    <div className="relative w-full">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search conversations..."
+                        className="pl-8"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
                     </div>
-                  </ScrollArea>
+                  </div>
+
+                  <div className="flex h-[calc(100%-7.5rem)] flex-col">
+                    <div className="m-0 flex-1 overflow-hidden">
+                      <ScrollArea className="h-full">
+                        <div className="flex flex-col gap-2 p-4 pt-0">
+                          {isLoadingConversations ? (
+                            <div className="flex h-20 items-center justify-center">
+                              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                            </div>
+                          ) : filteredConversations.length === 0 ? (
+                            <div className="flex h-20 items-center justify-center">
+                              <p className="text-sm text-muted-foreground">
+                                No conversations found
+                              </p>
+                            </div>
+                          ) : (
+                            // Sort by most recent first
+                            [...filteredConversations]
+                              .sort(
+                                (a, b) =>
+                                  new Date(b.updatedAt).getTime() -
+                                  new Date(a.updatedAt).getTime(),
+                              )
+                              .map((conversation) => (
+                                <ConversationListItem
+                                  key={conversation.id}
+                                  navigateToConversation={
+                                    navigateToConversation
+                                  }
+                                  conversation={conversation}
+                                  isActive={false}
+                                />
+                              ))
+                          )}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Empty state for the right panel */}
+                <div className="hidden flex-1 items-center justify-center md:flex">
+                  <div className="text-center">
+                    <MessageSquare className="mx-auto h-10 w-10 text-muted-foreground" />
+                    <p className="mt-2 text-sm font-medium">
+                      Select a conversation
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Choose a conversation to view and reply
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Empty state for the right panel */}
-            <div className="hidden flex-1 items-center justify-center md:flex">
-              <div className="text-center">
-                <MessageSquare className="mx-auto h-10 w-10 text-muted-foreground" />
-                <p className="mt-2 text-sm font-medium">
-                  Select a conversation
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Choose a conversation to view and reply
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Delete Confirmation Dialog */}
