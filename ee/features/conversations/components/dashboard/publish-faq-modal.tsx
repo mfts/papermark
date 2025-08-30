@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 
+import {
+  faqParamSchema,
+  publishFAQFormSchema,
+} from "@/ee/features/conversations/lib/schemas/faq";
 import { BookOpen, Check, FileText, Link2 } from "lucide-react";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,26 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-
-// Frontend validation schemas
-const publishFAQFormSchema = z.object({
-  editedQuestion: z
-    .string()
-    .min(10, "Question must be at least 10 characters")
-    .max(1000, "Question too long"),
-  answer: z
-    .string()
-    .min(10, "Answer must be at least 10 characters")
-    .max(2000, "Answer too long"),
-  visibilityMode: z.enum(["PUBLIC_DATAROOM", "PUBLIC_LINK", "PUBLIC_DOCUMENT"]),
-  questionMessageId: z.string().cuid("Invalid question message ID"),
-  answerMessageId: z.string().cuid("Invalid answer message ID"),
-});
-
-const apiParamSchema = z.object({
-  teamId: z.string().cuid("Invalid team ID"),
-  dataroomId: z.string().cuid("Invalid dataroom ID"),
-});
 
 interface Message {
   id: string;
@@ -161,9 +144,9 @@ export function PublishFAQModal({
 
     try {
       // Validate API parameters
-      const paramValidation = apiParamSchema.safeParse({
+      const paramValidation = faqParamSchema.safeParse({
         teamId,
-        dataroomId,
+        id: dataroomId,
       });
 
       if (!paramValidation.success) {
@@ -194,13 +177,16 @@ export function PublishFAQModal({
         sourceConversationId: conversation.id,
         linkId: conversation.linkId,
         dataroomDocumentId: conversation.dataroomDocument?.id || null,
+        ...(conversation.dataroomDocument?.id
+          ? { dataroomDocumentId: conversation.dataroomDocument.id }
+          : {}),
         isAnonymized: true, // Always anonymize published FAQs
         questionMessageId: validatedData.questionMessageId,
         answerMessageId: validatedData.answerMessageId,
       };
 
       const response = await fetch(
-        `/api/teams/${paramValidation.data.teamId}/datarooms/${paramValidation.data.dataroomId}/faqs`,
+        `/api/teams/${paramValidation.data.teamId}/datarooms/${paramValidation.data.id}/faqs`,
         {
           method: "POST",
           headers: {

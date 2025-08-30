@@ -19,6 +19,7 @@ import z from "zod";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import useLimits from "@/lib/swr/use-limits";
 import { fetcher } from "@/lib/utils";
+import { localStorage as safeLocalStorage } from "@/lib/webstorage";
 
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
@@ -36,6 +37,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import { PublishedFAQ } from "./faq-overview";
 
 export interface ConversationSummary {
   id: string;
@@ -78,7 +81,7 @@ export default function DataroomConversationsPage() {
   const isBannerDismissed = useMemo(() => {
     if (!dataroom?.id) return false;
     return (
-      localStorage.getItem(
+      safeLocalStorage.getItem(
         `dataroom-${dataroom.id}-conversations-banner-dismissed`,
       ) === "true"
     );

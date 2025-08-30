@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 
+import {
+  editFAQFormSchema,
+  faqParamSchema,
+} from "@/ee/features/conversations/lib/schemas/faq";
 import { BookOpen, Check, FileText, Link2 } from "lucide-react";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,25 +27,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { PublishedFAQ } from "../../pages/faq-overview";
-
-// Frontend validation schemas
-const editFAQFormSchema = z.object({
-  editedQuestion: z
-    .string()
-    .min(10, "Question must be at least 10 characters")
-    .max(1000, "Question too long"),
-  answer: z
-    .string()
-    .min(10, "Answer must be at least 10 characters")
-    .max(2000, "Answer too long"),
-  visibilityMode: z.enum(["PUBLIC_DATAROOM", "PUBLIC_LINK", "PUBLIC_DOCUMENT"]),
-});
-
-const apiParamSchema = z.object({
-  teamId: z.string().cuid("Invalid team ID"),
-  dataroomId: z.string().cuid("Invalid dataroom ID"),
-  faqId: z.string().cuid("Invalid FAQ ID"),
-});
 
 interface EditFAQModalProps {
   faq: PublishedFAQ;
@@ -118,9 +102,9 @@ export function EditFAQModal({
 
     try {
       // Validate API parameters
-      const paramValidation = apiParamSchema.safeParse({
+      const paramValidation = faqParamSchema.safeParse({
         teamId,
-        dataroomId,
+        id: dataroomId,
         faqId: faq.id,
       });
 
@@ -142,7 +126,7 @@ export function EditFAQModal({
       const validatedData = formValidation.data;
 
       const response = await fetch(
-        `/api/teams/${paramValidation.data.teamId}/datarooms/${paramValidation.data.dataroomId}/faqs/${paramValidation.data.faqId}`,
+        `/api/teams/${paramValidation.data.teamId}/datarooms/${paramValidation.data.id}/faqs/${paramValidation.data.faqId}`,
         {
           method: "PUT",
           headers: {

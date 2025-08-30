@@ -1,82 +1,17 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import {
+  PublishFAQInput,
+  faqParamSchema,
+  publishFAQSchema,
+  updateFAQSchema,
+} from "@/ee/features/conversations/lib/schemas/faq";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
-import { z } from "zod";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { validateContent } from "@/lib/utils/sanitize-html";
-
-// Zod validation schemas
-const paramSchema = z.object({
-  teamId: z.string().cuid("Invalid team ID format"),
-  id: z.string().cuid("Invalid dataroom ID format"),
-  faqId: z.string().cuid("Invalid FAQ ID format").optional(),
-});
-
-const publishFAQSchema = z.object({
-  editedQuestion: z
-    .string()
-    .min(10, "Question must be at least 10 characters")
-    .max(1000, "Question too long"),
-  originalQuestion: z.string().optional(),
-  answer: z
-    .string()
-    .min(10, "Answer must be at least 10 characters")
-    .max(2000, "Answer too long"),
-  visibilityMode: z.enum(["PUBLIC_DATAROOM", "PUBLIC_LINK", "PUBLIC_DOCUMENT"]),
-  linkId: z.string().cuid("Invalid link ID format").optional(),
-  dataroomDocumentId: z.string().cuid("Invalid document ID format").optional(),
-  sourceConversationId: z
-    .string()
-    .cuid("Invalid conversation ID format")
-    .optional(),
-  questionMessageId: z
-    .string()
-    .cuid("Invalid question message ID format")
-    .optional(),
-  answerMessageId: z
-    .string()
-    .cuid("Invalid answer message ID format")
-    .optional(),
-  isAnonymized: z.boolean().default(true),
-  documentPageNumber: z.number().int().min(1).optional(),
-  documentVersionNumber: z.number().int().min(1).optional(),
-});
-
-const updateFAQSchema = z.object({
-  editedQuestion: z
-    .string()
-    .min(10, "Question must be at least 10 characters")
-    .max(1000, "Question too long")
-    .optional(),
-  answer: z
-    .string()
-    .min(10, "Answer must be at least 10 characters")
-    .max(2000, "Answer too long")
-    .optional(),
-  visibilityMode: z
-    .enum(["PUBLIC_DATAROOM", "PUBLIC_LINK", "PUBLIC_DOCUMENT"])
-    .optional(),
-  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
-});
-
-export interface PublishFAQInput {
-  editedQuestion: string;
-  originalQuestion?: string;
-  answer: string;
-  linkId?: string;
-  dataroomDocumentId?: string;
-  sourceConversationId?: string;
-  questionMessageId?: string;
-  answerMessageId?: string;
-  visibilityMode: "PUBLIC_DATAROOM" | "PUBLIC_LINK" | "PUBLIC_DOCUMENT";
-  status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
-  isAnonymized?: boolean;
-  documentPageNumber?: number;
-  documentVersionNumber?: number;
-}
 
 // Route mapping object to handle different paths
 const routeHandlers = {
@@ -89,7 +24,7 @@ const routeHandlers = {
 
     try {
       // Validate URL parameters
-      const paramValidation = paramSchema.safeParse({
+      const paramValidation = faqParamSchema.safeParse({
         teamId: req.query.teamId,
         id: req.query.id,
       });
@@ -272,7 +207,7 @@ const routeHandlers = {
 
     try {
       // Validate URL parameters
-      const paramValidation = paramSchema.safeParse({
+      const paramValidation = faqParamSchema.safeParse({
         teamId: req.query.teamId,
         id: req.query.id,
       });
@@ -357,7 +292,7 @@ const routeHandlers = {
 
     try {
       // Validate URL parameters
-      const paramValidation = paramSchema.safeParse({
+      const paramValidation = faqParamSchema.safeParse({
         teamId: req.query.teamId,
         id: req.query.id,
         faqId: req.query.faqId,
@@ -453,7 +388,7 @@ const routeHandlers = {
 
     try {
       // Validate URL parameters
-      const paramValidation = paramSchema.safeParse({
+      const paramValidation = faqParamSchema.safeParse({
         teamId: req.query.teamId,
         id: req.query.id,
         faqId: req.query.faqId,
