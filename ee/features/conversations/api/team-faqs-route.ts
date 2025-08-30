@@ -122,30 +122,32 @@ const routeHandlers = {
         }
       }
 
-      // Validate that referenced messages (if any) belong to the same conversation/dataroom
-      if (
-        data.sourceConversationId &&
-        (data.questionMessageId || data.answerMessageId)
-      ) {
+      // Validate that referenced messages (if any) belong to this dataroom (and conversation, if provided)
+      const messageIds = [data.questionMessageId, data.answerMessageId].filter(
+        Boolean,
+      ) as string[];
+
+      if (messageIds.length > 0) {
         const msgs = await prisma.message.findMany({
           where: {
-            id: {
-              in: [data.questionMessageId, data.answerMessageId].filter(
-                Boolean,
-              ) as string[],
+            id: { in: messageIds },
+            conversation: {
+              dataroomId,
+              ...(data.sourceConversationId
+                ? { id: data.sourceConversationId }
+                : {}),
             },
-            conversation: { id: data.sourceConversationId, dataroomId },
           },
           select: { id: true },
         });
-        const providedCount = [
-          data.questionMessageId,
-          data.answerMessageId,
-        ].filter(Boolean).length;
-        if (msgs.length !== providedCount) {
+
+        if (msgs.length !== messageIds.length) {
           return res.status(400).json({
             error:
-              "Message references must belong to the specified conversation and dataroom",
+              "Message references must belong to the dataroom" +
+              (data.sourceConversationId
+                ? " and the specified conversation"
+                : ""),
           });
         }
       }
