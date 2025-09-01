@@ -18,10 +18,7 @@ export const publishFAQSchema = baseFAQSchema
   .extend({
     originalQuestion: z.string().optional(),
     linkId: z.string().cuid("Invalid link ID format").optional(),
-    dataroomDocumentId: z
-      .string()
-      .cuid("Invalid document ID format")
-      .optional(),
+    dataroomDocumentId: z.string().cuid("Invalid document ID format").nullish(),
     sourceConversationId: z
       .string()
       .cuid("Invalid conversation ID format")
