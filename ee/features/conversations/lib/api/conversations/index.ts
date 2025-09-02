@@ -312,22 +312,10 @@ export const conversationService = {
         teamId,
         team: { users: { some: { userId } } },
       },
-      include: {
-        team: {
-          include: {
-            users: true,
-          },
-        },
-      },
     });
 
     if (!conversation) {
       throw new Error("Conversation not found");
-    }
-
-    // Check if user has access to this conversation's dataroom
-    if (conversation.team.users.length === 0) {
-      throw new Error("Unauthorized to delete this conversation");
     }
 
     // Delete the conversation (cascade will handle related data like messages, participants, etc.)
