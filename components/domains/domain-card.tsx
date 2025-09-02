@@ -14,6 +14,8 @@ import {
 import { motion } from "motion/react";
 import { mutate } from "swr";
 
+import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,8 +25,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
-
-import { cn } from "@/lib/utils";
 
 import { useDeleteDomainModal } from "./delete-domain-modal";
 import DomainConfiguration from "./domain-configuration";
@@ -99,16 +99,8 @@ export default function DomainCard({
               </div>
             </div>
             <div className="overflow-hidden">
-              <div className="flex items-center gap-1.5 sm:gap-2.5">
-                <a
-                  href={`http://${domain}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="truncate text-sm font-medium"
-                  title={domain}
-                >
-                  {domain}
-                </a>
+              <div className="flex items-center gap-1.5 truncate text-sm font-medium sm:gap-2.5">
+                {domain}
 
                 {isDefault ? (
                   <span className="xs:px-3 xs:py-1 flex items-center gap-1 rounded-full bg-sky-400/[.15] px-1.5 py-0.5 text-xs font-medium text-sky-600">

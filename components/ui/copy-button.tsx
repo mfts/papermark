@@ -1,0 +1,58 @@
+"use client";
+
+import { VariantProps, cva } from "class-variance-authority";
+import { CheckIcon, CopyIcon, LucideIcon } from "lucide-react";
+import { toast } from "sonner";
+
+import { useCopyToClipboard } from "@/lib/hooks/use-copy-to-clipboard";
+import { cn } from "@/lib/utils";
+
+const copyButtonVariants = cva(
+  "relative group rounded-full p-1.5 transition-all duration-75",
+  {
+    variants: {
+      variant: {
+        default: "bg-transparent hover:bg-neutral-100 active:bg-neutral-200",
+        neutral: "bg-transparent hover:bg-neutral-100 active:bg-neutral-200",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
+
+export function CopyButton({
+  variant = "default",
+  value,
+  className,
+  icon,
+  successMessage,
+}: {
+  value: string;
+  className?: string;
+  icon?: LucideIcon;
+  successMessage?: string;
+} & VariantProps<typeof copyButtonVariants>) {
+  const [copied, copyToClipboard] = useCopyToClipboard();
+  const Comp = icon || CopyIcon;
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        toast.promise(copyToClipboard(value), {
+          success: successMessage || "Copied to clipboard!",
+        });
+      }}
+      className={cn(copyButtonVariants({ variant }), className)}
+      type="button"
+    >
+      <span className="sr-only">Copy</span>
+      {copied ? (
+        <CheckIcon className="h-3.5 w-3.5" />
+      ) : (
+        <Comp className="h-3.5 w-3.5" />
+      )}
+    </button>
+  );
+}
