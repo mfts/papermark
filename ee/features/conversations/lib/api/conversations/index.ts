@@ -296,4 +296,45 @@ export const conversationService = {
 
     return { success: true, markedCount: conversation.messages.length };
   },
+
+  // Delete a conversation and all related data
+  async deleteConversation(
+    conversationId: string,
+    userId: string,
+    dataroomId: string,
+    teamId: string,
+  ) {
+    // First verify the conversation exists and user has access
+    const conversation = await prisma.conversation.findUnique({
+      where: {
+        id: conversationId,
+        dataroomId,
+        teamId,
+        team: { users: { some: { userId } } },
+      },
+      include: {
+        team: {
+          include: {
+            users: true,
+          },
+        },
+      },
+    });
+
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    // Check if user has access to this conversation's dataroom
+    if (conversation.team.users.length === 0) {
+      throw new Error("Unauthorized to delete this conversation");
+    }
+
+    // Delete the conversation (cascade will handle related data like messages, participants, etc.)
+    await prisma.conversation.delete({
+      where: { id: conversationId },
+    });
+
+    return { success: true };
+  },
 };
