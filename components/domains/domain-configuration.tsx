@@ -105,8 +105,9 @@ export default function DomainConfiguration({
             name: recordType === "A" ? "@" : (subdomain ?? "www"),
             value:
               recordType === "A"
-                ? (configJson.recommendedIPv4[0].value[0] ?? "76.76.21.21")
-                : (configJson.recommendedCNAME[0].value ??
+                ? (configJson?.recommendedIPv4?.[0]?.value?.[0] ??
+                  "76.76.21.21")
+                : (configJson?.recommendedCNAME?.[0]?.value ??
                   "cname.vercel-dns.com"),
             ttl: "86400",
           },
