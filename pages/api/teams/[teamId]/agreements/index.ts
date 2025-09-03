@@ -86,9 +86,10 @@ export default async function handle(
         return res.status(401).json("Unauthorized");
       }
 
-      const { name, link, requireName } = req.body as {
+      const { name, content, contentType, requireName } = req.body as {
         name: string;
-        link: string;
+        content: string;
+        contentType: string;
         requireName: boolean;
       };
 
@@ -96,7 +97,8 @@ export default async function handle(
         data: {
           teamId,
           name,
-          content: link,
+          content,
+          contentType: contentType || "LINK",
           requireName,
         },
       });

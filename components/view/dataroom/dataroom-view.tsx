@@ -246,6 +246,7 @@ export default function DataroomView({
         requireAgreement={enableAgreement!}
         agreementName={link.agreement?.name}
         agreementContent={link.agreement?.content}
+        agreementContentType={link.agreement?.contentType}
         requireName={link.agreement?.requireName}
         isLoading={isLoading}
         disableEditEmail={disableEditEmail}
