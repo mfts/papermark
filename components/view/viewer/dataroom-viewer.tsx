@@ -14,6 +14,7 @@ import { PanelLeftIcon, XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { sortByIndexThenName } from "@/lib/utils/sort-items-by-index-name";
+import { calculateHierarchicalIndexes } from "@/lib/utils/hierarchical-index";
 
 import { ViewFolderTree } from "@/components/datarooms/folders";
 import { SearchBoxPersisted } from "@/components/search-box";
@@ -289,7 +290,27 @@ export default function DataroomViewer({
     searchQuery,
   ]);
 
+  // Calculate hierarchical indexes for all items
+  const hierarchicalIndexes = useMemo(() => {
+    if (!folders || !mixedItems.length) return new Map();
+    
+    const indexableItems = mixedItems.map(item => ({
+      id: "versions" in item ? item.dataroomDocumentId : item.id,
+      name: item.name,
+      orderIndex: item.orderIndex,
+      itemType: "versions" in item ? "document" : "folder",
+      parentId: "versions" in item ? undefined : item.parentId,
+      folderId: "versions" in item ? item.folderId : undefined,
+      path: "versions" in item ? undefined : item.path,
+    }));
+    
+    return calculateHierarchicalIndexes(indexableItems, folders);
+  }, [mixedItems, folders]);
+
   const renderItem = (item: FolderOrDocument) => {
+    const lookupId = "versions" in item ? item.dataroomDocumentId : item.id;
+    const hierarchicalIndex = hierarchicalIndexes.get(lookupId) || "";
+    
     if ("versions" in item) {
       const isProcessing =
         ["docs", "slides", "pdf"].includes(item.versions[0].type) &&
@@ -304,6 +325,7 @@ export default function DataroomViewer({
           isPreview={!!isPreview}
           allowDownload={allowDownload && item.canDownload}
           isProcessing={isProcessing}
+          hierarchicalIndex={hierarchicalIndex}
         />
       );
     }
@@ -318,6 +340,7 @@ export default function DataroomViewer({
         linkId={linkId}
         viewId={viewId}
         allowDownload={item.allowDownload}
+        hierarchicalIndex={hierarchicalIndex}
       />
     );
   };
