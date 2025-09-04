@@ -24,12 +24,7 @@ export interface SlackIntegration {
         document_view: boolean;
         dataroom_access: boolean;
         document_download: boolean;
-        document_reaction: boolean;
     };
-    frequency: "instant" | "daily" | "weekly";
-    timezone: string;
-    dailyTime?: string;
-    weeklyDay?: string;
     defaultChannel?: string;
     enabledChannels: Record<string, SlackChannelConfig>;
     createdAt: string;
@@ -40,10 +35,6 @@ export interface SlackIntegration {
 export interface UpdateSlackIntegrationRequest {
     enabled?: boolean;
     notificationTypes?: SlackIntegration['notificationTypes'];
-    frequency?: SlackIntegration['frequency'];
-    timezone?: string;
-    dailyTime?: string;
-    weeklyDay?: string;
     defaultChannel?: string;
     enabledChannels?: Record<string, SlackChannelConfig>;
 }

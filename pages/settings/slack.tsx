@@ -17,7 +17,6 @@ import {
 
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
-import SlackFrequencySettings from "@/components/settings/slack-frequency-settings";
 import SlackSettingsSkeleton from "@/components/settings/slack-settings-skeleton";
 import { SlackIcon } from "@/components/shared/icons/slack-icon";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -193,7 +192,6 @@ export default function SlackSettings() {
                   "document_view",
                   "dataroom_access",
                   "document_download",
-                  "document_reaction",
                 ],
               } as SlackChannelConfig;
             }
@@ -348,13 +346,6 @@ export default function SlackSettings() {
         <SettingsHeader />
 
         <div>
-          {integrationError && (
-            <Alert className="mb-4">
-              <XCircleIcon className="h-4 w-4" />
-              <AlertDescription>{integrationError.message}</AlertDescription>
-            </Alert>
-          )}
-
           {loadingIntegration ? (
             <SlackSettingsSkeleton />
           ) : (
@@ -463,7 +454,7 @@ export default function SlackSettings() {
                             <Label className="flex items-center gap-2 text-sm font-medium">
                               Slack channel(s) *
                               <BadgeTooltip
-                                content="Get notifications in Slack based on frequency settings when someone views, downloads, or interacts with your documents and datarooms"
+                                content="Get instant notifications in Slack when someone views, downloads, or interacts with your documents and datarooms"
                                 key="channel_tooltip"
                               >
                                 <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
@@ -531,11 +522,6 @@ export default function SlackSettings() {
                       </div>
                     </CardContent>
                   </Card>
-                  <SlackFrequencySettings
-                    teamId={teamId!}
-                    integration={integration!}
-                    onUpdate={handleIntegrationUpdate}
-                  />
                 </div>
               )}
             </>

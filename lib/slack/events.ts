@@ -36,11 +36,7 @@ export class SlackEventManager {
                 return;
             }
 
-            if (integration.frequency === 'instant') {
-                await this.sendInstantNotification(eventData, integration);
-            } else {
-                await this.storeForDigest(eventData, integration);
-            }
+            await this.sendInstantNotification(eventData, integration);
 
         } catch (error) {
             console.error('Error processing Slack event:', error);
@@ -81,25 +77,7 @@ export class SlackEventManager {
         }
     }
 
-    private async storeForDigest(
-        eventData: SlackEventData,
-        integration: any
-    ): Promise<void> {
-        try {
-            await prisma.slackNotification.create({
-                data: {
-                    teamId: eventData.teamId,
-                    slackIntegrationId: integration.id,
-                    eventType: eventData.eventType,
-                    eventData: JSON.parse(JSON.stringify(eventData)),
-                    status: 'PENDING',
-                    scheduledFor: new Date(),
-                },
-            });
-        } catch (error) {
-            console.error('Error storing digest notification:', error);
-        }
-    }
+
 
     private async getSlackIntegration(teamId: string): Promise<SlackIntegration | null> {
         return await prisma.slackIntegration.findFirst({
@@ -143,6 +121,3 @@ export async function notifyDocumentDownload(data: Omit<SlackEventData, 'eventTy
     await slackEventManager.processEvent({ ...data, eventType: 'document_download' });
 }
 
-export async function notifyDocumentReaction(data: Omit<SlackEventData, 'eventType'>) {
-    await slackEventManager.processEvent({ ...data, eventType: 'document_reaction' });
-} 

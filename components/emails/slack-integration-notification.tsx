@@ -42,7 +42,7 @@ export default function SlackIntegrationNotification({
             </Text>
             <Text className="text-sm leading-6 text-black">
               You can now receive notifications about document views, dataroom
-              access, downloads, and reactions directly in your Slack channels.
+              access and downloads directly in your Slack channels.
             </Text>
             <Section className="my-8 text-center">
               <Button

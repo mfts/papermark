@@ -659,7 +659,7 @@ export async function POST(request: NextRequest) {
             }),
           );
 
-          if (link.teamId) {
+          if (link.teamId && !isPreview) {
             waitUntil(
               (async () => {
                 try {
@@ -787,7 +787,8 @@ export async function POST(request: NextRequest) {
           select: { id: true },
         });
         console.timeEnd("create-view");
-        if (link.teamId) {
+        // Only send Slack notifications for non-preview views
+        if (link.teamId && !isPreview) {
           waitUntil(
             (async () => {
               try {

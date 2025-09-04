@@ -637,17 +637,19 @@ export async function POST(request: NextRequest) {
             enableNotification: link.enableNotification,
           }),
         );
-        waitUntil(
-          notifyDocumentView({
-            teamId: link.teamId!,
-            documentId,
-            linkId,
-            viewerEmail: email ?? undefined,
-            viewerId: viewer?.id ?? undefined,
-          }).catch((error) => {
-            console.error("Error sending Slack notification:", error);
-          })
-        );
+        if (!isPreview) {
+          waitUntil(
+            notifyDocumentView({
+              teamId: link.teamId!,
+              documentId,
+              linkId,
+              viewerEmail: email ?? undefined,
+              viewerId: viewer?.id ?? undefined,
+            }).catch((error) => {
+              console.error("Error sending Slack notification:", error);
+            })
+          );
+        }
       }
 
       const returnObject = {

@@ -4,7 +4,7 @@ import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import { slackClient } from '@/lib/slack/client';
 import { CustomUser } from '@/lib/types';
 import prisma from '@/lib/prisma';
-import { slackScheduleManager } from '@/lib/slack/schedule-manager';
+
 import { encryptSlackToken } from '@/lib/utils';
 import { sendSlackIntegrationNotification } from '@/lib/emails/send-slack-integration-notification';
 
@@ -96,12 +96,8 @@ export default async function handler(
                     document_view: true,
                     dataroom_access: true,
                     document_download: true,
-                    document_reaction: true,
                 },
                 enabled: true,
-                frequency: 'instant',
-                timezone: 'UTC',
-                dailyTime: '10:00',
             },
         });
 
@@ -155,21 +151,10 @@ export default async function handler(
         }
 
 
-        let scheduleWarning = false;
-        try {
-            await slackScheduleManager.createOrUpdateSchedule(integration);
-        } catch (scheduleError) {
-            console.error('Error creating schedule for new integration:', scheduleError);
-            scheduleWarning = true;
-        }
         const redirectParams = new URLSearchParams({
             success: 'true',
             integrationId: integration.id,
         });
-
-        if (scheduleWarning) {
-            redirectParams.append('warning', 'Schedule creation failed.');
-        }
 
         return res.redirect(`/settings/slack?${redirectParams.toString()}`);
 

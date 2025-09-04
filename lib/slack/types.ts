@@ -54,7 +54,6 @@ export interface SlackNotificationConfig {
     document_view: boolean;
     dataroom_access: boolean;
     document_download: boolean;
-    document_reaction: boolean;
 }
 
 export interface SlackChannelConfig {
@@ -64,15 +63,9 @@ export interface SlackChannelConfig {
     notificationTypes: string[];
 }
 
-export type NotificationFrequency = 'instant' | 'daily' | 'weekly';
-
 export interface SlackIntegrationConfig {
     enabled: boolean;
     notificationTypes: SlackNotificationConfig;
-    frequency: NotificationFrequency;
-    timezone: string;
-    dailyTime?: string; // "10:00"
-    weeklyDay?: string; // "monday"
     defaultChannel?: string;
     enabledChannels: Record<string, SlackChannelConfig>;
 } 

@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import { CustomUser } from '@/lib/types';
 import prisma from '@/lib/prisma';
-import { slackScheduleManager } from '@/lib/slack/schedule-manager';
+
 
 export default async function handler(
     req: NextApiRequest,
@@ -59,10 +59,6 @@ async function handleGet(
                 botUsername: true,
                 enabled: true,
                 notificationTypes: true,
-                frequency: true,
-                timezone: true,
-                dailyTime: true,
-                weeklyDay: true,
                 defaultChannel: true,
                 enabledChannels: true,
                 createdAt: true,
@@ -90,10 +86,6 @@ async function handleUpdate(
         const {
             enabled,
             notificationTypes,
-            frequency,
-            timezone,
-            dailyTime,
-            weeklyDay,
             defaultChannel,
             enabledChannels,
         } = req.body;
@@ -114,10 +106,6 @@ async function handleUpdate(
 
         if (enabled !== undefined) updateData.enabled = enabled;
         if (notificationTypes) updateData.notificationTypes = notificationTypes;
-        if (frequency) updateData.frequency = frequency;
-        if (timezone) updateData.timezone = timezone;
-        if (dailyTime !== undefined) updateData.dailyTime = dailyTime;
-        if (weeklyDay !== undefined) updateData.weeklyDay = weeklyDay;
         if (defaultChannel !== undefined) updateData.defaultChannel = defaultChannel;
         if (enabledChannels) updateData.enabledChannels = enabledChannels;
 
@@ -137,10 +125,6 @@ async function handleUpdate(
                 botUsername: true,
                 enabled: true,
                 notificationTypes: true,
-                frequency: true,
-                timezone: true,
-                dailyTime: true,
-                weeklyDay: true,
                 defaultChannel: true,
                 enabledChannels: true,
                 createdAt: true,
@@ -148,19 +132,7 @@ async function handleUpdate(
             },
         });
 
-        const scheduleNeedsUpdate =
-            frequency !== undefined ||
-            timezone !== undefined ||
-            dailyTime !== undefined ||
-            weeklyDay !== undefined;
 
-        if (scheduleNeedsUpdate) {
-            try {
-                await slackScheduleManager.createOrUpdateSchedule(updatedIntegration);
-            } catch (scheduleError) {
-                console.error('Error updating schedule for integration:', scheduleError);
-            }
-        }
 
         return res.status(200).json(updatedIntegration);
     } catch (error) {
@@ -182,16 +154,6 @@ async function handleDelete(
         if (!integration) {
             return res.status(404).json({ error: 'Slack integration not found' });
         }
-
-        try {
-            await slackScheduleManager.deleteSchedule(integration.id);
-        } catch (scheduleError) {
-            console.error('Error deleting schedule for integration:', scheduleError);
-        }
-
-        await prisma.slackNotification.deleteMany({
-            where: { slackIntegrationId: integration.id },
-        });
 
         await prisma.slackIntegration.delete({
             where: { teamId },

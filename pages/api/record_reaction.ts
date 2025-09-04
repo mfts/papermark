@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import prisma from "@/lib/prisma";
-import { notifyDocumentReaction } from "@/lib/slack/events";
 
 export default async function handle(
   req: NextApiRequest,
@@ -47,24 +46,7 @@ export default async function handle(
       return;
     }
 
-    if (reaction.view.teamId) {
-      try {
-        await notifyDocumentReaction({
-          teamId: reaction.view.teamId,
-          documentId: reaction.view.documentId ?? undefined,
-          dataroomId: reaction.view.dataroomId ?? undefined,
-          linkId: reaction.view.linkId ?? undefined,
-          viewerEmail: reaction.view.viewerEmail ?? undefined,
-          viewerId: reaction.view.viewerId ?? undefined,
-          metadata: {
-            reaction: type,
-            pageNumber: pageNumber,
-          },
-        });
-      } catch (error) {
-        console.error("Error sending Slack notification:", error);
-      }
-    }
+
 
     res.status(200).json({ message: "Reaction recorded" });
     return;
