@@ -2,9 +2,9 @@ import { Dispatch, SetStateAction } from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 
-import { Checkbox } from "@/components/ui/checkbox";
-
 import { determineTextColor } from "@/lib/utils/determine-text-color";
+
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { DEFAULT_ACCESS_FORM_TYPE } from ".";
 
@@ -13,6 +13,7 @@ export default function AgreementSection({
   setData,
   agreementContent,
   agreementName,
+  agreementContentType,
   brand,
   useCustomAccessForm,
 }: {
@@ -20,12 +21,15 @@ export default function AgreementSection({
   setData: Dispatch<SetStateAction<DEFAULT_ACCESS_FORM_TYPE>>;
   agreementContent: string;
   agreementName: string;
+  agreementContentType?: string;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   useCustomAccessForm?: boolean;
 }) {
   const handleCheckChange = (checked: boolean) => {
     setData((prevData) => ({ ...prevData, hasConfirmedAgreement: checked }));
   };
+
+  const isTextContent = agreementContentType === "TEXT";
 
   return (
     <div className="relative flex items-start space-x-2 pt-5">
@@ -40,19 +44,25 @@ export default function AgreementSection({
           color: determineTextColor(brand?.accentColor),
         }}
       >
-        I have reviewed and agree to the terms of this{" "}
-        <a
-          href={`${agreementContent}`}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="underline hover:text-gray-200"
-          style={{
-            color: determineTextColor(brand?.accentColor),
-          }}
-        >
-          {agreementName}
-        </a>
-        .
+        {isTextContent ? (
+          <span className="whitespace-pre-line">{agreementContent}</span>
+        ) : (
+          <>
+            I have reviewed and agree to the terms of this{" "}
+            <a
+              href={`${agreementContent}`}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="underline hover:text-gray-200"
+              style={{
+                color: determineTextColor(brand?.accentColor),
+              }}
+            >
+              {agreementName}
+            </a>
+            .
+          </>
+        )}
       </label>
     </div>
   );

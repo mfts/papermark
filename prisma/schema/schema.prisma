@@ -377,7 +377,8 @@ model FeedbackResponse {
 model Agreement {
   id      String @id @default(cuid())
   name    String // Easily identifiable name for the agreement
-  content String // This will store the agreement content
+  content String // This will store the agreement content (URL or text)
+  contentType String @default("LINK") // "LINK" or "TEXT" - determines how content should be displayed
 
   links     Link[]
   responses AgreementResponse[]

@@ -36,6 +36,7 @@ export default function AccessForm({
   requireAgreement,
   agreementName,
   agreementContent,
+  agreementContentType,
   requireName,
   isLoading,
   linkId,
@@ -54,6 +55,7 @@ export default function AccessForm({
   requireAgreement?: boolean;
   agreementName?: string;
   agreementContent?: string;
+  agreementContentType?: string;
   requireName?: boolean;
   isLoading: boolean;
   linkId?: string;
@@ -167,6 +169,7 @@ export default function AccessForm({
                 {...{ data, setData, brand }}
                 agreementContent={agreementContent}
                 agreementName={agreementName}
+                agreementContentType={agreementContentType}
                 useCustomAccessForm={useCustomAccessForm}
               />
             ) : null}
