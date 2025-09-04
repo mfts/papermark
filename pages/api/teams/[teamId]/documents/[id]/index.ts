@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { TeamError, errorhandler } from "@/lib/errorHandler";
 import { deleteFile } from "@/lib/files/delete-file-server";
 import prisma from "@/lib/prisma";
+import { ratelimit } from "@/lib/redis";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { serializeFileSize } from "@/lib/utils";
@@ -27,6 +28,20 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
+      // Per-user, per-document rate limit to prevent abuse
+      // Default: 120 requests per minute per user per document
+      const { success, limit, remaining, reset } = await ratelimit(
+        120,
+        "1 m",
+      ).limit(`doc:${docId}:team:${teamId}:user:${userId}`);
+
+      res.setHeader("X-RateLimit-Limit", limit.toString());
+      res.setHeader("X-RateLimit-Remaining", remaining.toString());
+      res.setHeader("X-RateLimit-Reset", reset.toString());
+      if (!success) {
+        return res.status(429).json({ error: "Too many requests" });
+      }
+
       const { document } = await getTeamWithUsersAndDocument({
         teamId,
         userId,

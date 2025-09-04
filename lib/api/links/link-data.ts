@@ -110,6 +110,8 @@ export async function fetchDataroomLinkData({
           id: true,
           name: true,
           teamId: true,
+          allowBulkDownload: true,
+          createdAt: true,
           documents: {
             where:
               groupPermissions.length > 0 || effectiveGroupId
@@ -280,6 +282,7 @@ export async function fetchDataroomDocumentLinkData({
         select: {
           id: true,
           name: true,
+          allowBulkDownload: true,
           documents: {
             where: { id: dataroomDocumentId },
             select: {

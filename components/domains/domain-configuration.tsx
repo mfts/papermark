@@ -6,6 +6,7 @@ import { getSubdomain } from "@/lib/domains";
 import { DomainVerificationStatusProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+import { CopyButton } from "../ui/copy-button";
 import { TabSelect } from "../ui/tab-select";
 
 export default function DomainConfiguration({
@@ -18,30 +19,6 @@ export default function DomainConfiguration({
   const { domainJson, configJson } = response;
   const subdomain = getSubdomain(domainJson.name, domainJson.apexName);
   const [recordType, setRecordType] = useState(!!subdomain ? "CNAME" : "A");
-
-  if (status === "Pending Verification") {
-    const txtVerification = domainJson.verification.find(
-      (x: any) => x.type === "TXT",
-    );
-    return (
-      <div>
-        <DnsRecord
-          instructions={`Please set the following TXT record on <code>${domainJson.apexName}</code> to prove ownership of <code>${domainJson.name}</code>:`}
-          records={[
-            {
-              type: txtVerification.type,
-              name: txtVerification.domain.slice(
-                0,
-                txtVerification.domain.length - domainJson.apexName.length - 1,
-              ),
-              value: txtVerification.value,
-            },
-          ]}
-          warning="Warning: if you are using this domain for another site, setting this TXT record will transfer domain ownership away from that site and break it. Please exercise caution when setting this record; make sure that the domain that is shown in the TXT verification value is actually the <b><i>domain you want to use on Papermark.io</i></b> – <b><i>not your production site</i></b>."
-        />
-      </div>
-    );
-  }
 
   if (status === "Conflicting DNS Records") {
     return (
@@ -95,6 +72,11 @@ export default function DomainConfiguration({
     );
   }
 
+  const txtVerification =
+    status === "Pending Verification"
+      ? domainJson.verification.find((x: any) => x.type === "TXT")
+      : undefined;
+
   return (
     <div className="pt-2">
       <div className="-ml-1.5 border-b border-gray-200 dark:border-gray-400">
@@ -116,15 +98,39 @@ export default function DomainConfiguration({
           recordType === "A" ? "apex domain" : "subdomain"
         } <code>${
           recordType === "A" ? domainJson.apexName : domainJson.name
-        }</code>, set the following ${recordType} record on your DNS provider:`}
+        }</code>, set the following ${txtVerification ? "records" : `${recordType} record`} on your DNS provider:`}
         records={[
           {
             type: recordType,
             name: recordType === "A" ? "@" : (subdomain ?? "www"),
-            value: recordType === "A" ? `76.76.21.21` : `cname.vercel-dns.com`,
+            value:
+              recordType === "A"
+                ? (configJson?.recommendedIPv4?.[0]?.value?.[0] ??
+                  "76.76.21.21")
+                : (configJson?.recommendedCNAME?.[0]?.value ??
+                  "cname.vercel-dns.com"),
             ttl: "86400",
           },
+          ...(txtVerification
+            ? [
+                {
+                  type: txtVerification.type,
+                  name: txtVerification.domain.slice(
+                    0,
+                    txtVerification.domain.length -
+                      domainJson.apexName.length -
+                      1,
+                  ),
+                  value: txtVerification.value,
+                },
+              ]
+            : []),
         ]}
+        warning={
+          txtVerification
+            ? "Warning: if you are using this domain for another site, setting this TXT record will transfer domain ownership away from that site and break it. Please exercise caution when setting this record; make sure that the domain that is shown in the TXT verification value is actually the <b><i>domain you want to use on Papermark</i></b> – <b><i>not your production site</i></b>."
+            : undefined
+        }
       />
     </div>
   );
@@ -151,16 +157,16 @@ const DnsRecord = ({
   const hasTtl = records.some((x) => x.ttl);
 
   return (
-    <div className="mt-3 text-left text-gray-600">
-      <div className="my-5 text-gray-600 dark:text-gray-400">
+    <div className="mt-3 text-left text-gray-600 dark:text-gray-400">
+      <div className="my-5">
         <MarkdownText text={instructions} />
       </div>
       <div
         className={cn(
           "grid items-end gap-x-10 gap-y-1 overflow-x-auto rounded-lg bg-gray-100/80 p-4 text-sm scrollbar-hide",
           hasTtl
-            ? "grid-cols-[repeat(4,min-content)]"
-            : "grid-cols-[repeat(3,min-content)]",
+            ? "grid-cols-[repeat(4,max-content)]"
+            : "grid-cols-[repeat(3,max-content)]",
         )}
       >
         {["Type", "Name", "Value"].concat(hasTtl ? "TTL" : []).map((s) => (
@@ -179,11 +185,11 @@ const DnsRecord = ({
             </p>
             <p key={record.value} className="flex items-end gap-1 font-mono">
               {record.value}{" "}
-              {/* <CopyButton
+              <CopyButton
                 variant="neutral"
                 className="-mb-0.5"
                 value={record.value}
-              /> */}
+              />
             </p>
             {hasTtl && (
               <p key={record.ttl} className="font-mono">

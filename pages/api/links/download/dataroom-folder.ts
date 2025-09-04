@@ -11,7 +11,7 @@ import { getIpAddress } from "@/lib/utils/ip";
 import { notifyDocumentDownload } from "@/lib/slack/events";
 
 export const config = {
-  maxDuration: 180,
+  maxDuration: 300,
 };
 
 export default async function handler(

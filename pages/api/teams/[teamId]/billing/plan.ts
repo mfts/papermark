@@ -48,7 +48,11 @@ export default async function handle(
         },
       });
 
-      const isCustomer = !!team?.stripeId;
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+
+      const isCustomer = !!team.stripeId;
 
       // calculate the plan cycle either yearly or monthly based on the startsAt and endsAt dates
       let subscriptionCycle = "monthly";
@@ -82,13 +86,13 @@ export default async function handle(
       }
 
       return res.status(200).json({
-        plan: team?.plan,
-        startsAt: team?.startsAt,
-        endsAt: team?.endsAt,
+        plan: team.plan,
+        startsAt: team.startsAt,
+        endsAt: team.endsAt,
         isCustomer,
         subscriptionCycle,
-        pauseStartsAt: team?.pauseStartsAt,
-        cancelledAt: team?.cancelledAt,
+        pauseStartsAt: team.pauseStartsAt,
+        cancelledAt: team.cancelledAt,
         discount,
       });
     } catch (error) {

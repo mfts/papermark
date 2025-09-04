@@ -1,3 +1,5 @@
+import { NextApiRequest, NextApiResponse } from "next";
+
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import PasskeyProvider from "@teamhanko/passkeys-next-auth-provider";
 import NextAuth, { type NextAuthOptions } from "next-auth";
@@ -6,6 +8,7 @@ import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import { dub } from "@/lib/dub";
 import { isBlacklistedEmail } from "@/lib/edge-config/blacklist";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
 import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
@@ -197,21 +200,47 @@ export const authOptions: NextAuthOptions = {
         await subscribe(message.user.email);
       }
     },
-    async signIn(message) {
-      if (typeof window !== "undefined") {
-        try {
-          await fetch("/api/auth-plus/set-cookie");
-        } catch (error) {
-          console.error("Failed to set additional cookie", error);
-        }
-      }
-      await identifyUser(message.user.email ?? message.user.id);
-      await trackAnalytics({
-        event: "User Signed In",
-        email: message.user.email,
-      });
-    },
   },
 };
 
-export default NextAuth(authOptions);
+const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
+  return {
+    ...authOptions,
+    events: {
+      ...authOptions.events,
+      signIn: async (message) => {
+        // Identify and track sign-in without blocking the event flow
+        await Promise.allSettled([
+          identifyUser(message.user.email ?? message.user.id),
+          trackAnalytics({
+            event: "User Signed In",
+            email: message.user.email,
+          }),
+        ]);
+
+        if (message.isNewUser) {
+          const { dub_id } = req.cookies;
+          // Only fire lead event if Dub is enabled
+          if (dub_id && process.env.DUB_API_KEY) {
+            try {
+              await dub.track.lead({
+                clickId: dub_id,
+                eventName: "Sign Up",
+                customerExternalId: message.user.id,
+                customerName: message.user.name,
+                customerEmail: message.user.email,
+                customerAvatar: message.user.image ?? undefined,
+              });
+            } catch (err) {
+              console.error("dub.track.lead failed", err);
+            }
+          }
+        }
+      },
+    },
+  };
+};
+
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  return NextAuth(req, res, getAuthOptions(req));
+}

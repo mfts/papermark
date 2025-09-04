@@ -631,6 +631,69 @@ const routeHandlers = {
       return res.status(500).json({ error: "Internal server error" });
     }
   },
+
+  // DELETE /api/teams/[teamId]/datarooms/[dataroomId]/conversations/[conversationId]
+  "DELETE /[conversationId]": async (
+    req: NextApiRequest,
+    res: NextApiResponse,
+  ) => {
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const {
+      teamId,
+      id: dataroomId,
+      conversations: [conversationId],
+    } = req.query as {
+      teamId: string;
+      id: string;
+      conversations: string[];
+    };
+
+    const userId = (session.user as CustomUser).id;
+
+    try {
+      // Verify user has access to the dataroom
+      const dataroom = await prisma.dataroom.findUnique({
+        where: {
+          id: dataroomId,
+          team: {
+            id: teamId,
+            users: { some: { userId } },
+          },
+        },
+      });
+
+      if (!dataroom) {
+        return res.status(404).json({ error: "Dataroom not found" });
+      }
+
+      // Delete the conversation using the service
+      await conversationService.deleteConversation(
+        conversationId,
+        userId,
+        dataroomId,
+        teamId,
+      );
+
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+      if (error instanceof Error) {
+        if (error.message === "Conversation not found") {
+          return res.status(404).json({ error: "Conversation not found" });
+        }
+        if (error.message === "Unauthorized to delete this conversation") {
+          return res
+            .status(403)
+            .json({ error: "Unauthorized to delete this conversation" });
+        }
+      }
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  },
 };
 
 // Main handler that will be imported by the catchall route

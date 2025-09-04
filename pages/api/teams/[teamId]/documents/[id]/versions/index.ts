@@ -13,6 +13,7 @@ import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { conversionQueue } from "@/lib/utils/trigger-utils";
+import { documentUploadSchema } from "@/lib/zod/url-validation";
 
 export default async function handle(
   req: NextApiRequest,
@@ -30,15 +31,25 @@ export default async function handle(
       teamId: string;
       id: string;
     };
+    // Validate request body using Zod schema for security
+    const validationResult = await documentUploadSchema.safeParseAsync({
+      ...req.body,
+      name: `Version ${new Date().toISOString()}`, // Dummy name for validation
+    });
+
+    if (!validationResult.success) {
+      log({
+        message: `Document version validation failed for documentId: ${documentId}, teamId: ${teamId}. Errors: ${JSON.stringify(validationResult.error.errors)}`,
+        type: "error",
+      });
+      return res.status(400).json({
+        error: "Invalid document version data",
+        details: validationResult.error.errors,
+      });
+    }
+
     const { url, type, numPages, storageType, contentType, fileSize } =
-      req.body as {
-        url: string;
-        type: string;
-        numPages: number;
-        storageType: DocumentStorageType;
-        contentType: string;
-        fileSize: number | undefined;
-      };
+      validationResult.data;
 
     const userId = (session.user as CustomUser).id;
 

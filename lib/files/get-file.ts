@@ -27,7 +27,6 @@ export const getFile = async ({
   return url;
 };
 
-
 const fetchPresignedUrl = async (
   endpoint: string,
   headers: Record<string, string>,
@@ -46,14 +45,17 @@ const fetchPresignedUrl = async (
     if (contentType && contentType.includes("application/json")) {
       try {
         const error = await response.json();
-        errorMessage = error.message || `Request failed with status ${response.status}`;
+        errorMessage =
+          error.message || `Request failed with status ${response.status}`;
       } catch (parseError) {
         const textError = await response.text();
-        errorMessage = textError || `Request failed with status ${response.status}`;
+        errorMessage =
+          textError || `Request failed with status ${response.status}`;
       }
     } else {
       const textError = await response.text();
-      errorMessage = textError || `Request failed with status ${response.status}`;
+      errorMessage =
+        textError || `Request failed with status ${response.status}`;
     }
 
     throw new Error(errorMessage);
@@ -64,7 +66,8 @@ const fetchPresignedUrl = async (
 };
 
 const getFileFromS3 = async (key: string) => {
-  const isServer = typeof window === 'undefined' && !!process.env.INTERNAL_API_KEY;
+  const isServer =
+    typeof window === "undefined" && !!process.env.INTERNAL_API_KEY;
 
   if (isServer) {
     return fetchPresignedUrl(

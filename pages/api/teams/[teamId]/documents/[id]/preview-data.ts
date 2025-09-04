@@ -7,7 +7,7 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
-import { authOptions } from "../../auth/[...nextauth]";
+import { authOptions } from "../../../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
@@ -23,10 +23,26 @@ export default async function handle(
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const { id: documentId } = req.query as { id: string };
+  const { id: documentId, teamId } = req.query as {
+    id: string;
+    teamId: string;
+  };
   const userId = (session.user as CustomUser).id;
 
   try {
+    const team = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+        users: {
+          some: { userId },
+        },
+      },
+    });
+
+    if (!team) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     // Fetch document and verify team membership
     const document = await prisma.document.findUnique({
       where: { id: documentId },

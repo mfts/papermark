@@ -17,8 +17,12 @@ import {
   isDataUrl,
   uploadImage,
 } from "@/lib/utils";
-import { getSupportedContentType } from "@/lib/utils/get-content-type";
+import {
+  getExtensionFromContentType,
+  getSupportedContentType,
+} from "@/lib/utils/get-content-type";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
+import { webhookFileUrlSchema } from "@/lib/zod/url-validation";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -39,6 +43,7 @@ const LinkSchema = z.object({
   enableNotification: z.boolean().optional(),
   enableFeedback: z.boolean().optional(),
   enableScreenshotProtection: z.boolean().optional(),
+  showBanner: z.boolean().optional(),
   audienceType: z.enum(["GENERAL", "GROUP", "TEAM"]).optional(),
   groupId: z.string().optional(),
   allowList: z.array(z.string()).optional(),
@@ -53,7 +58,7 @@ const BaseSchema = z.object({
 
 const DocumentCreateSchema = BaseSchema.extend({
   resourceType: z.literal("document.create"),
-  fileUrl: z.string().url(),
+  fileUrl: webhookFileUrlSchema,
   name: z.string(),
   contentType: z.string(),
   dataroomId: z.string().optional(),
@@ -287,15 +292,54 @@ async function handleDocumentCreate(
     return res.status(400).json({ error: "Failed to fetch file from URL" });
   }
 
-  // 5. Convert to buffer
+  // 5. Validate response content type matches expected
+  const responseContentType = response.headers.get("content-type");
+  if (!responseContentType || responseContentType.startsWith("text/html")) {
+    return res
+      .status(400)
+      .json({ error: "Remote resource is not a supported file type" });
+  }
+  if (!responseContentType.startsWith(contentType)) {
+    console.warn(
+      `Content type mismatch: expected ${contentType}, got ${responseContentType}`,
+    );
+    // Log but don't fail - some services return generic types
+  }
+
+  // 6. Convert to buffer
   const fileBuffer = Buffer.from(await response.arrayBuffer());
 
-  console.log("Uploading file to storage", teamId, name, contentType);
+  // Ensure filename has proper extension, based on the actual response content-type when available
+  let fileName = name?.trim();
+  const actualContentType = (
+    responseContentType?.split(";")[0] ?? contentType
+  ).trim();
+  const expectedExtension = getExtensionFromContentType(actualContentType);
+  if (expectedExtension) {
+    const lower = fileName.toLowerCase();
+    const dotIdx = lower.lastIndexOf(".");
+    const currentExt = dotIdx !== -1 ? lower.slice(dotIdx + 1) : null;
+    // Minimal alias map to avoid double extensions (e.g., jpg vs jpeg)
+    const alias: Record<string, string[]> = {
+      jpeg: ["jpeg", "jpg"],
+      jpg: ["jpg", "jpeg"],
+      tiff: ["tiff", "tif"],
+    };
+    const matches =
+      !!currentExt &&
+      (currentExt === expectedExtension ||
+        (alias[expectedExtension]?.includes(currentExt) ?? false));
+    if (!matches) {
+      fileName = `${fileName}.${expectedExtension}`;
+    }
+  }
 
-  // Upload the file to storage
+  console.log("Uploading file to storage", teamId, fileName, contentType);
+
+  // 7. Upload the file to storage
   const { type: storageType, data: fileData } = await putFileServer({
     file: {
-      name: name,
+      name: fileName,
       type: contentType,
       buffer: fileBuffer,
     },
@@ -307,12 +351,12 @@ async function handleDocumentCreate(
     return res.status(500).json({ error: "Failed to save file to storage" });
   }
 
-  // 6. Create document using our service
+  // 8. Create document using our service
   // Note: The createDocument function doesn't accept linkData in its parameters
   // so we will just pass createLink flag
   const documentCreationResponse = await createDocument({
     documentData: {
-      name: name,
+      name: fileName,
       key: fileData,
       storageType: storageType,
       contentType: contentType,
@@ -444,10 +488,16 @@ async function handleDocumentCreate(
         enableNotification: link.enableNotification,
         enableFeedback: link.enableFeedback,
         enableScreenshotProtection: link.enableScreenshotProtection,
+        showBanner: link.showBanner,
         audienceType: link.audienceType,
         groupId: isGroupAudience ? link.groupId : null,
-        allowList: link.allowList || preset?.allowList,
-        denyList: link.denyList || preset?.denyList,
+        // For group links, ignore allow/deny lists from presets as access is controlled by group membership
+        allowList: isGroupAudience
+          ? link.allowList
+          : (link.allowList ?? preset?.allowList),
+        denyList: isGroupAudience
+          ? link.denyList
+          : (link.denyList ?? preset?.denyList),
         ...(preset?.enableCustomMetaTag && {
           enableCustomMetatag: preset?.enableCustomMetaTag,
           metaTitle: preset?.metaTitle,
@@ -650,10 +700,16 @@ async function handleLinkCreate(
         enableNotification: link.enableNotification,
         enableFeedback: link.enableFeedback,
         enableScreenshotProtection: link.enableScreenshotProtection,
+        showBanner: link.showBanner,
         audienceType: link.audienceType,
         groupId: isGroupAudience ? link.groupId : null,
-        allowList: link.allowList || preset?.allowList,
-        denyList: link.denyList || preset?.denyList,
+        // For group links, ignore allow/deny lists from presets as access is controlled by group membership
+        allowList: isGroupAudience
+          ? link.allowList
+          : link.allowList || preset?.allowList,
+        denyList: isGroupAudience
+          ? link.denyList
+          : link.denyList || preset?.denyList,
         ...(preset?.enableCustomMetaTag && {
           enableCustomMetatag: preset?.enableCustomMetaTag,
           metaTitle: preset?.metaTitle,
@@ -821,6 +877,7 @@ async function handleDataroomCreate(
           enableNotification: link.enableNotification,
           enableFeedback: link.enableFeedback,
           enableScreenshotProtection: link.enableScreenshotProtection,
+          showBanner: link.showBanner,
           audienceType: link.audienceType,
           groupId: isGroupAudience ? link.groupId : null,
           allowList: link.allowList || preset?.allowList,

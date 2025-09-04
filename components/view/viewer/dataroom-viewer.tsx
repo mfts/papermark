@@ -113,9 +113,10 @@ export default function DataroomViewer({
   isEmbedded?: boolean;
   viewerEmail?: string;
 }) {
-  const { documents, folders } = dataroom as {
+  const { documents, folders, allowBulkDownload } = dataroom as {
     documents: DataroomDocument[];
     folders: DataroomFolder[];
+    allowBulkDownload: boolean;
   };
 
   const searchParams = useSearchParams();
@@ -242,7 +243,7 @@ export default function DataroomViewer({
             new Date(folder.updatedAt);
 
           const allDocumentsCanDownload =
-            folderDocuments.length > 0 &&
+            folderDocuments.length === 0 || // Allow download for empty folders
             folderDocuments.every((doc) => {
               const accessControl = accessControls.find(
                 (access) => access.itemId === doc.dataroomDocumentId,
@@ -329,6 +330,7 @@ export default function DataroomViewer({
         viewId={viewId}
         dataroom={dataroom}
         allowDownload={allDocumentsCanDownload}
+        allowBulkDownload={allowBulkDownload}
         isPreview={isPreview}
         dataroomId={dataroom?.id}
         viewerId={viewerId}

@@ -172,7 +172,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           max,
           new Date(doc.document.versions[0].updatedAt).getTime(),
         );
-      }, 0);
+      }, new Date(link.dataroom.createdAt).getTime());
 
       return {
         props: {
