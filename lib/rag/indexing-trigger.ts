@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { RAGQueueManager } from "./queue-manager";
 import { RAGError } from './errors';
 import { ParsingStatus } from "@prisma/client";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 
 export async function triggerDataroomIndexing(
@@ -14,6 +15,15 @@ export async function triggerDataroomIndexing(
     if (!dataroomId || !teamId || !userId) {
         throw RAGError.create('validation', 'Missing required parameters: dataroomId, teamId, and userId are required', { field: 'parameters' });
     }
+    try {
+        const features = await getFeatureFlags({ teamId });
+        if (!features.ragIndexing) {
+            throw RAGError.create('feature_disabled', 'RAG indexing is not available for this team', { field: 'feature_access' });
+        }
+    } catch (error) {
+        throw RAGError.create('feature_check_failed', 'Failed to verify feature access', { field: 'feature_verification' });
+    }
+
     const [unindexedCount] = await Promise.all([
         prisma.dataroomDocument.count({
             where: {
