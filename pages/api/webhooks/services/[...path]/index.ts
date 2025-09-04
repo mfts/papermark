@@ -23,6 +23,7 @@ import {
 } from "@/lib/utils/get-content-type";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
 import { webhookFileUrlSchema } from "@/lib/zod/url-validation";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -527,6 +528,12 @@ async function handleDocumentCreate(
         documentId: document.id,
       },
     });
+
+    try {
+      await triggerDataroomIndexing(dataroomId, teamId, "system");
+    } catch (error) {
+      console.error("Failed to trigger RAG indexing for webhook document:", error);
+    }
   }
 
   return res.status(200).json({

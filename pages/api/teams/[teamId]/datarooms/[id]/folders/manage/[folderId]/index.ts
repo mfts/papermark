@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { vectorManager } from "@/lib/rag/vector-manager";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(
@@ -73,7 +73,7 @@ export default async function handle(
       }
 
       // Delete the folder and its contents recursively
-      await deleteFolderAndContents(folderId);
+      await deleteFolderAndContents(folderId, dataroomId);
 
       return res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
@@ -86,7 +86,7 @@ export default async function handle(
   }
 }
 
-async function deleteFolderAndContents(folderId: string) {
+async function deleteFolderAndContents(folderId: string, dataroomId: string) {
   const childFoldersToDelete = await prisma.dataroomFolder.findMany({
     where: {
       parentId: folderId,
@@ -96,7 +96,26 @@ async function deleteFolderAndContents(folderId: string) {
   console.log("Deleting folder and contents", childFoldersToDelete);
 
   for (const folder of childFoldersToDelete) {
-    await deleteFolderAndContents(folder.id);
+    await deleteFolderAndContents(folder.id, dataroomId);
+  }
+
+  const documentsToDelete = await prisma.dataroomDocument.findMany({
+    where: {
+      folderId: folderId,
+    },
+    include: {
+      document: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+  const documentIds = documentsToDelete.map(doc => doc.documentId);
+
+  if (documentIds.length > 0) {
+    await vectorManager.deleteMultipleDocumentVectors(dataroomId, documentIds);
   }
 
   await prisma.dataroomDocument.deleteMany({

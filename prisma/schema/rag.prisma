@@ -1,0 +1,24 @@
+model DataroomRAGSettings {
+  id         String   @id @default(cuid())
+  dataroomId String   @unique
+  enabled    Boolean @default(false)
+  dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  ragIndexingStatus      ParsingStatus    @default(NOT_STARTED) // "NOT_STARTED", "IN_PROGRESS", "COMPLETED", "FAILED"
+  indexingStartedAt   DateTime?
+  indexingCompletedAt DateTime?
+  indexingProgress    Float     @default(0.0) // Progress percentage (0-100)
+  indexingError       String? // Error message if indexing failed
+
+  // Token Tracking
+  totalEmbeddingTokens  Int @default(0)
+  totalProcessingTokens Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([enabled])
+  @@index([ragIndexingStatus])
+  @@index([indexingStartedAt])
+}
+
+

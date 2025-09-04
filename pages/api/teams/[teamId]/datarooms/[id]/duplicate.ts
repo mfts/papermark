@@ -13,6 +13,7 @@ import { getServerSession } from "next-auth/next";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
 
 interface DataroomWithContents extends Dataroom {
   documents: DataroomDocument[];
@@ -236,6 +237,12 @@ export default async function handle(
           .filter((folder) => !folder.parentId)
           .map((folder) => duplicateFolders(newDataroom.id, folder)),
       );
+
+
+      // rag indexing
+      if (dataroomContents.documents.length > 0) {
+        await triggerDataroomIndexing(newDataroom.id, teamId, userId);
+      }
 
       res.status(201).json(newDataroom);
     } catch (error) {

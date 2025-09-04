@@ -1,22 +1,29 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { Brand, DataroomBrand, LinkAudienceType } from "@prisma/client";
+import { Brand, DataroomBrand, LinkAudienceType, ParsingStatus } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
+import { waitUntil } from "@vercel/functions";
 
 import {
   fetchDataroomLinkData,
   fetchDocumentLinkData,
 } from "@/lib/api/links/link-data";
 import prisma from "@/lib/prisma";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
 import { CustomUser } from "@/lib/types";
 import {
   decryptEncrpytedPassword,
   generateEncrpytedPassword,
 } from "@/lib/utils";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
+import { log } from "@/lib/utils";
 
 import { DomainObject } from "..";
 import { authOptions } from "../../auth/[...nextauth]";
+
+export const config = {
+  supportsResponseStreaming: true,
+};
 
 export default async function handle(
   req: NextApiRequest,
@@ -420,6 +427,20 @@ export default async function handle(
     await fetch(
       `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}&hasDomain=${updatedLink.domainId ? "true" : "false"}`,
     );
+
+    // RAG Indexing
+    if (dataroomLink && targetId && teamId) {
+      try {
+        waitUntil(
+          triggerDataroomIndexing(targetId, teamId, userId)
+        );
+      } catch (ragError) {
+        log({
+          message: `RAG indexing trigger failed for dataroom ${targetId} after link update. Error: ${ragError}`,
+          type: "error",
+        });
+      }
+    }
 
     // Decrypt the password for the updated link
     if (updatedLink.password !== null) {

@@ -1,17 +1,17 @@
 "use client";
 
-import { type Message } from "ai";
-
-import { Button } from "@/components/ui/button";
+import { type UIMessage } from "@ai-sdk/react";
 
 import { cn } from "@/lib/utils";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
+
+import { Button } from "@/components/ui/button";
 
 import Check from "../shared/icons/check";
 import Copy from "../shared/icons/copy";
 
 interface ChatMessageActionsProps extends React.ComponentProps<"div"> {
-  message: Message;
+  message: UIMessage;
 }
 
 export function ChatMessageActions({
@@ -23,7 +23,12 @@ export function ChatMessageActions({
 
   const onCopy = () => {
     if (isCopied) return;
-    copyToClipboard(message.content);
+    const textContent =
+      message.parts
+        ?.filter((part) => part.type === "text")
+        .map((part) => part.text)
+        .join(" ") || "";
+    copyToClipboard(textContent);
   };
 
   return (

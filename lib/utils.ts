@@ -2,7 +2,7 @@ import { NextRouter } from "next/router";
 
 import slugify from "@sindresorhus/slugify";
 import { upload } from "@vercel/blob/client";
-import { Message } from "ai";
+import { type UIMessage } from "@ai-sdk/react";
 import bcrypt from "bcryptjs";
 import * as chrono from "chrono-node";
 import { type ClassValue, clsx } from "clsx";
@@ -347,7 +347,7 @@ export const calculateDaysLeft = (accountCreationDate: Date): number => {
 // helper function to convert ThreadMessages (an OpenAI type for messages) to Messages (an vercel/ai type for messages)
 export const convertThreadMessagesToMessages = (
   threadMessages: ThreadMessage[],
-): Message[] => {
+): UIMessage[] => {
   // Filter out messages with metaData.intitialMessage == 'True'
   const filteredMessages = threadMessages.filter((threadMessage) => {
     if (
@@ -381,12 +381,8 @@ export const convertThreadMessagesToMessages = (
 
     return {
       id,
-      createdAt: new Date(created_at * 1000), // converting Unix timestamp to Date object
-      content: messageContent[0],
-      role: role === "assistant" ? "assistant" : "user", // Adjust according to your needs
-      // Set other properties as required by Message interface
-      ui: null, // example, set based on your UI requirements
-      // name, function_call, and other fields as needed
+      role: role === "assistant" ? "assistant" : "user",
+      parts: [{ type: "text", text: messageContent[0] || "" }],
     };
   });
 };

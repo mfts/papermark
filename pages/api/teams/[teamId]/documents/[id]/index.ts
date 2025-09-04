@@ -9,6 +9,7 @@ import { ratelimit } from "@/lib/redis";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { serializeFileSize } from "@/lib/utils";
+import { vectorManager } from "@/lib/rag/vector-manager";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 
@@ -209,6 +210,47 @@ export default async function handle(
 
       if (!documentVersions) {
         return res.status(404).end("Document not found");
+      }
+
+      const dataroomDocuments = await prisma.dataroomDocument.findMany({
+        where: {
+          documentId: docId,
+        },
+        include: {
+          dataroom: {
+            select: {
+              id: true,
+            },
+          },
+          document: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+
+      const dataroomGroups = new Map<string, { documentIds: string[], names: string[] }>();
+
+      for (const dataroomDocument of dataroomDocuments) {
+        const dataroomId = dataroomDocument.dataroom.id;
+        if (!dataroomGroups.has(dataroomId)) {
+          dataroomGroups.set(dataroomId, { documentIds: [], names: [] });
+        }
+        dataroomGroups.get(dataroomId)!.documentIds.push(dataroomDocument.documentId);
+        dataroomGroups.get(dataroomId)!.names.push(dataroomDocument.document.name);
+      }
+
+      for (const [dataroomId, { documentIds, names }] of dataroomGroups) {
+        if (documentIds.length === 1) {
+          await vectorManager.deleteDocumentVectors(
+            dataroomId,
+            documentIds[0],
+            names[0]
+          );
+        } else {
+          await vectorManager.deleteMultipleDocumentVectors(dataroomId, documentIds);
+        }
       }
 
       //if it is not notion document then only delete the document from storage

@@ -2,6 +2,13 @@
 const nextConfig = {
   reactStrictMode: true,
   pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
+  webpack(config) {
+    config.experiments = {
+      asyncWebAssembly: true,
+      layers: true,
+    };
+    return config;
+  },
   images: {
     minimumCacheTTL: 2592000, // 30 days
     remotePatterns: prepareRemotePatterns(),

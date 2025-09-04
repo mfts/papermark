@@ -8,6 +8,7 @@ import { getServerSession } from "next-auth/next";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
 
 // Define types
 interface FolderWithContents extends Folder {
@@ -207,6 +208,11 @@ export default async function handle(
         folderContents,
         folderContents.path,
       );
+
+      // rag indexing
+      if (folderContents.documents.length > 0) {
+        await triggerDataroomIndexing(dataroom.id, teamId, userId);
+      }
 
       const dataroomWithCount = await prisma.dataroom.findUnique({
         where: {

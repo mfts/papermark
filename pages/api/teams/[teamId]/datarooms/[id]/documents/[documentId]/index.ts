@@ -4,6 +4,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
+import { vectorManager } from "@/lib/rag/vector-manager";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(
@@ -114,16 +115,37 @@ export default async function handle(
         return res.status(401).end("Dataroom not found");
       }
 
-      const document = await prisma.dataroomDocument.delete({
+      const dataroomDocument = await prisma.dataroomDocument.findUnique({
+        where: {
+          id: documentId,
+          dataroomId: dataroomId,
+        },
+        include: {
+          document: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      if (!dataroomDocument) {
+        return res.status(404).end("Document not found");
+      }
+
+      await vectorManager.deleteDocumentVectors(
+        dataroomId,
+        dataroomDocument.documentId,
+        dataroomDocument.document.name
+      );
+
+      await prisma.dataroomDocument.delete({
         where: {
           id: documentId,
           dataroomId: dataroomId,
         },
       });
-
-      if (!document) {
-        return res.status(404).end("Document not found");
-      }
 
       return res.status(204).end(); // No Content
     } catch (error) {}

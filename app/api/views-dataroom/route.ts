@@ -14,6 +14,7 @@ import {
 } from "@/lib/auth/dataroom-auth";
 import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
 import { PreviewSession, verifyPreviewSession } from "@/lib/auth/preview-auth";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
@@ -917,6 +918,21 @@ export async function POST(request: NextRequest) {
           }
         }
       }
+
+      // rag indexing
+      try {
+        if (link.teamId) {
+          waitUntil(
+            triggerDataroomIndexing(dataroomId, link.teamId, "system")
+          );
+        }
+      } catch (ragError) {
+        console.error(
+          `RAG indexing trigger failed for dataroom ${dataroomId}. Error:`,
+          ragError
+        );
+      }
+
 
       const returnObject = {
         message: "View recorded",

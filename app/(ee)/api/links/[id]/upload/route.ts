@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { processDocument } from "@/lib/api/documents/process-document";
 import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
-import { DocumentData } from "@/lib/documents/create-document";
-import prisma from "@/lib/prisma";
+import { processDocument } from "@/lib/api/documents/process-document";
 import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
+import prisma from "@/lib/prisma";
+import { waitUntil } from "@vercel/functions";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
+import { DocumentData } from "@/lib/documents/create-document";
 
 export async function POST(
   request: NextRequest,
@@ -147,6 +149,19 @@ export async function POST(
         teamId: link.teamId,
       },
     });
+
+    // RAG Indexing
+    try {
+      waitUntil(
+        triggerDataroomIndexing(dataroomId, link.teamId, viewerId)
+      );
+    } catch (ragError) {
+      console.error(
+        `RAG indexing trigger failed for dataroom ${dataroomId}. Error:`,
+        ragError
+      );
+    }
+
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -6,12 +6,14 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
 import { CustomUser } from "@/lib/types";
 import {
   decryptEncrpytedPassword,
   generateEncrpytedPassword,
 } from "@/lib/utils";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
+import { log } from "@/lib/utils";
 
 import { authOptions } from "../auth/[...nextauth]";
 
@@ -250,6 +252,19 @@ export default async function handler(
           },
         }),
       );
+      // rag indexing
+      if (dataroomLink && targetId && teamId) {
+        try {
+          waitUntil(
+            triggerDataroomIndexing(targetId, teamId, userId)
+          );
+        } catch (ragError) {
+          log({
+            message: `RAG indexing trigger failed for dataroom ${targetId} after link creation. Error: ${ragError}`,
+            type: "error",
+          });
+        }
+      }
 
       // Decrypt the password for the new link
       if (linkWithView.password !== null) {

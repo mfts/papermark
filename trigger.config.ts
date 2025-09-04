@@ -17,6 +17,7 @@ export default defineConfig({
     },
   },
   build: {
+    external: ["js-tiktoken", "js-tiktoken/lite", "js-tiktoken/ranks/cl100k_base"],
     extensions: [
       prismaExtension({
         schema: "prisma/schema/schema.prisma",

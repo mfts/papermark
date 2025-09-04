@@ -7,6 +7,7 @@ import { getServerSession } from "next-auth/next";
 import { errorhandler } from "@/lib/errorHandler";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
+import { vectorManager } from "@/lib/rag/vector-manager";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(
@@ -185,6 +186,8 @@ export default async function handle(
             "You are not permitted to perform this action. Only admin and managers can delete datarooms.",
         });
       }
+
+      await vectorManager.deleteDataroomVectors(dataroomId);
 
       await prisma.dataroom.delete({
         where: {
