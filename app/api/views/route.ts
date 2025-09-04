@@ -18,6 +18,7 @@ import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { parseSheet } from "@/lib/sheet";
 import { recordLinkView } from "@/lib/tracking/record-link-view";
+import { notifyDocumentView } from "@/lib/slack/events";
 import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 import { isEmailMatched } from "@/lib/utils/email-domain";
@@ -636,6 +637,19 @@ export async function POST(request: NextRequest) {
             enableNotification: link.enableNotification,
           }),
         );
+        if (!isPreview) {
+          waitUntil(
+            notifyDocumentView({
+              teamId: link.teamId!,
+              documentId,
+              linkId,
+              viewerEmail: email ?? undefined,
+              viewerId: viewer?.id ?? undefined,
+            }).catch((error) => {
+              console.error("Error sending Slack notification:", error);
+            })
+          );
+        }
       }
 
       const returnObject = {

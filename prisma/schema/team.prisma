@@ -22,6 +22,7 @@ model Team {
   dataroomFaqItems      DataroomFaqItem[]
   uploadedDocuments DocumentUpload[]
   Tag               Tag[]
+  slackIntegration  SlackIntegration?
 
   links Link[]
   views View[]
