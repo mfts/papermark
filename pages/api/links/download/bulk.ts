@@ -342,8 +342,8 @@ export default async function handle(
               config: view.link.watermarkConfig,
               viewerData: {
                 email: view.viewerEmail,
-                date: new Date(view.viewedAt).toLocaleDateString(),
-                time: new Date(view.viewedAt).toLocaleTimeString(),
+                date: (view.viewedAt ? new Date(view.viewedAt) : new Date()).toLocaleDateString(),
+                time: (view.viewedAt ? new Date(view.viewedAt) : new Date()).toLocaleTimeString(),
                 link: view.link.name,
                 ipAddress: getIpAddress(req.headers),
               },

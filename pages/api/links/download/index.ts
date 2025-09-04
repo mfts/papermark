@@ -150,10 +150,10 @@ export default async function handle(
               originalFileName: view.document!.name,
               viewerData: {
                 email: view.viewerEmail,
-                date: new Date(view.viewedAt).toLocaleDateString(),
+                date: new Date(view.viewedAt ? view.viewedAt : new Date()).toLocaleDateString(),
                 ipAddress: getIpAddress(req.headers),
                 link: view.link.name,
-                time: new Date(view.viewedAt).toLocaleTimeString(),
+                time: new Date(view.viewedAt ? view.viewedAt : new Date()).toLocaleTimeString(),
               },
             }),
           },

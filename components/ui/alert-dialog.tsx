@@ -139,7 +139,7 @@ interface SingleAlertDialogProps {
   title: string;
   description: string;
   action: string;
-  onAction: () => void;
+  onAction?: () => Promise<void> | void;
   actionUpdate?: string;
   disabled?: boolean;
   loading?: boolean;
@@ -157,7 +157,7 @@ const CommonAlertDialog = ({
   const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
 
   const handleDisconnect = async () => {
-    onAction();
+    if (onAction) await onAction();
     setShowDisconnectDialog(false);
   };
 

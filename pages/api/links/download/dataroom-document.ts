@@ -217,10 +217,10 @@ export default async function handle(
               originalFileName: downloadDocuments[0].document!.name,
               viewerData: {
                 email: view.viewerEmail,
-                date: new Date(view.viewedAt).toLocaleDateString(),
+                date: (view.viewedAt ? new Date(view.viewedAt) : new Date()).toLocaleDateString(),
                 ipAddress: getIpAddress(req.headers),
                 link: view.link.name,
-                time: new Date(view.viewedAt).toLocaleTimeString(),
+                time: (view.viewedAt ? new Date(view.viewedAt) : new Date()).toLocaleTimeString(),
               },
             }),
           },

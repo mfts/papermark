@@ -67,6 +67,7 @@ export default function SlackIntegrationNotification({
                   href="https://www.papermark.com"
                   className="text-gray-400 no-underline hover:text-gray-400"
                   target="_blank"
+                  rel="noopener noreferrer" 
                 >
                   papermark.com
                 </a>
