@@ -221,8 +221,6 @@ export default function SlackSettings() {
           });
           const endTime = performance.now();
 
-          // Log performance for debugging
-          console.log(`Channel update API call took ${endTime - startTime}ms`);
 
           if (!response.ok) {
             const errorData = await response.json();
@@ -298,7 +296,6 @@ export default function SlackSettings() {
         );
 
         const requestBody: UpdateSlackIntegrationRequest = {
-          ...integration,
           enabled: checked,
         };
 

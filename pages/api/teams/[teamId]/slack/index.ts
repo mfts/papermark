@@ -3,7 +3,20 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import { CustomUser } from '@/lib/types';
 import prisma from '@/lib/prisma';
+import { z } from 'zod';
 
+const slackIntegrationUpdateSchema = z.object({
+    enabled: z.boolean().optional(),
+    defaultChannel: z.string().nullable().optional(),
+    enabledChannels: z.record(z.string(), z.boolean()).optional(),
+    notificationTypes: z.object({
+        document_view: z.boolean().optional(),
+        document_download: z.boolean().optional(),
+        dataroom_access: z.boolean().optional(),
+        document_comment: z.boolean().optional(),
+        document_reaction: z.boolean().optional(),
+    }).optional(),
+});
 
 export default async function handler(
     req: NextApiRequest,
@@ -83,14 +96,23 @@ async function handleUpdate(
     teamId: string
 ) {
     try {
+        const validationResult = slackIntegrationUpdateSchema.safeParse(req.body);
+
+        if (!validationResult.success) {
+            return res.status(400).json({
+                error: 'Invalid request payload',
+                details: validationResult.error.errors
+            });
+        }
+
         const {
             enabled,
             notificationTypes,
             defaultChannel,
             enabledChannels,
-        } = req.body;
+        } = validationResult.data;
 
-        if (enabledChannels && Object.keys(req.body).length === 1) {
+        if (enabledChannels && Object.keys(validationResult.data).length === 1) {
             await prisma.slackIntegration.update({
                 where: { teamId },
                 data: { enabledChannels },
@@ -102,7 +124,19 @@ async function handleUpdate(
                 updatedAt: new Date().toISOString()
             });
         }
-        const updateData: any = {};
+
+        const updateData: {
+            enabled?: boolean;
+            notificationTypes?: {
+                document_view?: boolean;
+                document_download?: boolean;
+                dataroom_access?: boolean;
+                document_comment?: boolean;
+                document_reaction?: boolean;
+            };
+            defaultChannel?: string | null;
+            enabledChannels?: Record<string, boolean>;
+        } = {};
 
         if (enabled !== undefined) updateData.enabled = enabled;
         if (notificationTypes) updateData.notificationTypes = notificationTypes;

@@ -1,21 +1,6 @@
+import { SlackMessage } from "../types/slack";
 import { SlackEventData } from "./events";
 import prisma from "@/lib/prisma";
-
-export interface SlackChannelConfig {
-    id: string;
-    name: string;
-    enabled: boolean;
-    notificationTypes: string[];
-}
-
-export interface SlackMessage {
-    channel?: string;
-    text?: string;
-    blocks?: any[];
-    thread_ts?: string;
-    unfurl_links?: boolean;
-    unfurl_media?: boolean;
-}
 
 export async function createSlackMessage(
     eventData: SlackEventData,

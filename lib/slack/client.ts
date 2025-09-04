@@ -1,4 +1,4 @@
-import { SlackOAuthResponse, SlackChannel, SlackMessage, SlackWorkspaceInfo } from './types';
+import { SlackOAuthResponse, SlackChannel, SlackMessage, SlackWorkspaceInfo } from '@/lib/types/slack';
 import { decryptSlackToken } from '@/lib/utils';
 
 export class SlackClient {
@@ -40,6 +40,8 @@ export class SlackClient {
      * Exchange authorization code for access token
      */
     async exchangeCodeForToken(code: string, redirectUri: string): Promise<SlackOAuthResponse> {
+        const ac = new AbortController();
+        const t = setTimeout(() => ac.abort(), 10000);
         const response = await fetch(`${this.baseUrl}/oauth.v2.access`, {
             method: 'POST',
             headers: {
@@ -51,7 +53,11 @@ export class SlackClient {
                 code: code,
                 redirect_uri: redirectUri,
             }),
-        });
+            signal: ac.signal,
+        }).catch((e) => {
+            throw new Error(`Slack OAuth network error: ${e}`);
+        }).finally(() => clearTimeout(t));
+
 
         if (!response.ok) {
             throw new Error(`Slack OAuth failed: ${response.statusText}`);
@@ -74,7 +80,7 @@ export class SlackClient {
         const response = await fetch(`${this.baseUrl}/team.info`, {
             headers: {
                 'Authorization': `Bearer ${decryptedToken}`,
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
             },
         });
 
@@ -91,7 +97,7 @@ export class SlackClient {
         return {
             id: data.team.id,
             name: data.team.name,
-            url: data.team.url,
+            url: `https://${data.team.domain}.slack.com`, // not in use
             domain: data.team.domain,
         };
     }
@@ -124,41 +130,38 @@ export class SlackClient {
         };
     }
 
-    /**
-     * Get list of channels
-     */
     async getChannels(accessToken: string): Promise<SlackChannel[]> {
-        try {
-            const decryptedToken = this.decryptToken(accessToken);
-            const response = await fetch(`${this.baseUrl}/conversations.list?types=public_channel,private_channel`, {
+        const decryptedToken = this.decryptToken(accessToken);
+        const channels: SlackChannel[] = [];
+        let cursor: string | undefined = undefined;
+        do {
+            const url = new URL(`${this.baseUrl}/conversations.list`);
+            url.searchParams.set('types', 'public_channel,private_channel');
+            url.searchParams.set('exclude_archived', 'true');
+            if (cursor) url.searchParams.set('cursor', cursor);
+            const resp = await fetch(url.toString(), {
                 headers: {
                     'Authorization': `Bearer ${decryptedToken}`,
                     'Content-Type': 'application/json',
                 },
             });
-
-            if (!response.ok) {
-                throw new Error(`Failed to get channels: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-
-            if (!data.ok) {
-                throw new Error(`Slack API error: ${data.error}`);
-            }
-
-            return data.channels.map((channel: any) => ({
-                id: channel.id,
-                name: channel.name,
-                is_private: channel.is_private,
-                is_archived: channel.is_archived,
-                is_member: channel.is_member,
-            }));
-        } catch (error) {
-            console.error('SlackClient.getChannels error:', error);
-            throw error;
-        }
+            if (!resp.ok) throw new Error(`Failed to get channels: ${resp.status} ${resp.statusText}`);
+            const data = await resp.json();
+            if (!data.ok) throw new Error(`Slack API error: ${data.error}`);
+            channels.push(
+                ...data.channels.map((channel: any) => ({
+                    id: channel.id,
+                    name: channel.name,
+                    is_private: channel.is_private,
+                    is_archived: channel.is_archived,
+                    is_member: channel.is_member,
+                }))
+            );
+            cursor = data.response_metadata?.next_cursor || undefined;
+        } while (cursor);
+        return channels;
     }
+
 
     /**
      * Send message to Slack channel
