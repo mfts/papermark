@@ -67,56 +67,7 @@ model User {
   publishedFaqItems DataroomFaqItem[]
 }
 
-model Team {
-  id           String        @id @default(cuid())
-  name         String
-  users        UserTeam[]
-  documents    Document[]
-  folders      Folder[]
-  domains      Domain[]
-  invitations  Invitation[]
-  sentEmails   SentEmail[]
-  brand        Brand?
-  datarooms    Dataroom[]
-  agreements   Agreement[]
-  viewerGroups ViewerGroup[]
-  viewers      Viewer[]
 
-  permissionGroups PermissionGroup[]
-
-  links Link[]
-  views View[]
-
-  plan           String    @default("free")
-  stripeId       String?   @unique // Stripe customer ID
-  subscriptionId String?   @unique // Stripe subscription ID
-  startsAt       DateTime? // Stripe subscription start date
-  endsAt         DateTime? // Stripe subscription end date
-
-  linkPresets LinkPreset[] // Link presets for the team
-
-  limits Json? // Plan limits // {datarooms: 1, users: 1, domains: 1, customDomainOnPro: boolean, customDomainInDataroom: boolean}
-
-  incomingWebhooks   IncomingWebhook[]
-  restrictedTokens   RestrictedToken[]
-  webhooks           Webhook[]
-  slackNotifications SlackNotification[]
-
-  conversations Conversation[]
-
-  uploadedDocuments DocumentUpload[]
-  slackIntegration  SlackIntegration?
-
-  // team settings
-  enableExcelAdvancedMode Boolean @default(false) // Enable Excel advanced mode for all documents in the team
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Tag       Tag[]
-
-  ignoredDomains  String[] // Domains that are ignored for the team
-  globalBlockList String[]
-}
 model Brand {
   id          String  @id @default(cuid())
   logo        String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
