@@ -588,45 +588,11 @@ model SlackIntegration {
   defaultChannel    String? // Default channel for notifications
   enabledChannels   Json // { "channel_id": { "name": "channel-name", "enabled": true } }
   enabled           Boolean @default(true)
-  notificationTypes Json // { "document_view": true, "dataroom_access": true, "document_download": true, "document_reaction": true }
-  frequency         String  @default("instant") // "instant", "daily", "weekly"
-  timezone          String  @default("UTC")
-  dailyTime         String? @default("10:00")
-  weeklyDay         String?
+  notificationTypes Json // { "document_view": true, "dataroom_access": true, "document_download": true }
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  notifications SlackNotification[]
 
   @@unique([teamId])
   @@index([teamId])
-}
-
-model SlackNotification {
-  id                 String           @id @default(cuid())
-  teamId             String
-  team               Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  slackIntegrationId String
-  slackIntegration   SlackIntegration @relation(fields: [slackIntegrationId], references: [id], onDelete: Cascade)
-
-  // Event Details
-  eventType String // "document_view", "dataroom_access", "document_download", "document_reaction"
-  eventData Json // Complete event data for processing
-
-  // Status
-  status       String    @default("PENDING") // "PENDING", "PROCESSED", "FAILED"
-  scheduledFor DateTime // When to process this notification
-  processedAt  DateTime?
-  errorMessage String?
-  retryCount   Int       @default(0)
-  maxRetries   Int       @default(3)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([teamId])
-  @@index([slackIntegrationId])
-  @@index([status, scheduledFor])
-  @@index([createdAt])
 }
