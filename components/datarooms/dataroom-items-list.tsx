@@ -33,10 +33,12 @@ import {
   DataroomFolderDocument,
   DataroomFolderWithCount,
   useDataroom,
+  useDataroomFoldersTree,
 } from "@/lib/swr/use-dataroom";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import useDataroomPermissionGroups from "@/lib/swr/use-dataroom-permission-groups";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
+import { calculateHierarchicalIndexes } from "@/lib/utils/hierarchical-index";
 
 import { useRemoveDataroomItemsModal } from "@/components/datarooms/actions/remove-document-modal";
 import DataroomDocumentCard from "@/components/datarooms/dataroom-document-card";
@@ -83,6 +85,26 @@ export function DataroomItemsList({
   const { dataroom } = useDataroom();
   const { isMobile } = useMediaQuery();
   const { applyPermissions } = useDataroomPermissions();
+  
+  // Get all folders for hierarchical indexing
+  const { folders: allFolders } = useDataroomFoldersTree({ dataroomId });
+  
+  // Calculate hierarchical indexes for all items
+  const hierarchicalIndexes = useMemo(() => {
+    if (!allFolders || !mixedItems.length) return new Map();
+    
+    const indexableItems = mixedItems.map(item => ({
+      id: item.id,
+      name: item.itemType === "folder" ? item.name : item.document.name,
+      orderIndex: item.orderIndex,
+      itemType: item.itemType,
+      parentId: item.itemType === "folder" ? item.parentId : undefined,
+      folderId: item.itemType === "document" ? item.folderId : undefined,
+      path: item.path,
+    }));
+    
+    return calculateHierarchicalIndexes(indexableItems, allFolders);
+  }, [mixedItems, allFolders]);
 
   const [uploads, setUploads] = useState<UploadState[]>([]);
   const [rejectedFiles, setRejectedFiles] = useState<RejectedFile[]>([]);
@@ -360,6 +382,7 @@ export function DataroomItemsList({
 
   const renderItem = (item: FolderOrDocument) => {
     const itemId = `${item.itemType}-${item.id}`;
+    const hierarchicalIndex = hierarchicalIndexes.get(item.id) || "";
 
     if (isMobile) {
       return (
@@ -372,6 +395,7 @@ export function DataroomItemsList({
               isDataroom={!!dataroomId}
               dataroomId={dataroomId}
               onDelete={handleDeleteFolder}
+              hierarchicalIndex={hierarchicalIndex}
             />
           ) : (
             <DataroomDocumentCard
@@ -379,6 +403,7 @@ export function DataroomItemsList({
               document={item as DataroomFolderDocument}
               teamInfo={teamInfo}
               dataroomId={dataroomId}
+              hierarchicalIndex={hierarchicalIndex}
             />
           )}
         </Fragment>
@@ -412,6 +437,7 @@ export function DataroomItemsList({
                 isSelected={selectedFolders.includes(item.id)}
                 isDragging={isDragging && selectedFolders.includes(item.id)}
                 onDelete={handleDeleteFolder}
+                hierarchicalIndex={hierarchicalIndex}
               />
             </DraggableItem>
           </DroppableFolder>
@@ -431,6 +457,7 @@ export function DataroomItemsList({
               teamInfo={teamInfo}
               dataroomId={dataroomId}
               isDragging={isDragging && selectedDocuments.includes(item.id)}
+              hierarchicalIndex={hierarchicalIndex}
             />
           </DraggableItem>
         )}

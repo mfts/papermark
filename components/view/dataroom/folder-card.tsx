@@ -23,6 +23,7 @@ type FolderCardProps = {
   linkId: string;
   viewId?: string;
   allowDownload: boolean;
+  hierarchicalIndex?: string;
 };
 export default function FolderCard({
   folder,
@@ -32,6 +33,7 @@ export default function FolderCard({
   linkId,
   viewId,
   allowDownload,
+  hierarchicalIndex,
 }: FolderCardProps) {
   const [open, setOpen] = useState(false);
   const downloadDocument = async () => {
@@ -95,6 +97,11 @@ export default function FolderCard({
 
         <div className="flex-col">
           <div className="flex items-center">
+            {hierarchicalIndex && (
+              <span className="mr-2 rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                {hierarchicalIndex}
+              </span>
+            )}
             <h2 className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg">
               <div
                 onClick={() => setFolderId(folder.id)}

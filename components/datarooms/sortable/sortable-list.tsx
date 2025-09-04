@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 
 import { TeamContextType } from "@/context/team-context";
 import {
@@ -25,7 +25,9 @@ import { mutate } from "swr";
 import {
   DataroomFolderDocument,
   DataroomFolderWithCount,
+  useDataroomFoldersTree,
 } from "@/lib/swr/use-dataroom";
+import { calculateHierarchicalIndexes } from "@/lib/utils/hierarchical-index";
 
 import DataroomDocumentCard from "@/components/datarooms/dataroom-document-card";
 import { useDeleteFolderModal } from "@/components/documents/actions/delete-folder-modal";
@@ -57,6 +59,26 @@ export function DataroomSortableList({
 
   const { setDeleteModalOpen, setFolderToDelete, DeleteFolderModal } =
     useDeleteFolderModal(teamInfo, true, dataroomId);
+
+  // Get all folders for hierarchical indexing
+  const { folders: allFolders } = useDataroomFoldersTree({ dataroomId });
+  
+  // Calculate hierarchical indexes for all items
+  const hierarchicalIndexes = useMemo(() => {
+    if (!allFolders || !items.length) return new Map();
+    
+    const indexableItems = items.map(item => ({
+      id: item.id,
+      name: item.itemType === "folder" ? item.name : item.document.name,
+      orderIndex: item.orderIndex,
+      itemType: item.itemType,
+      parentId: item.itemType === "folder" ? item.parentId : undefined,
+      folderId: item.itemType === "document" ? item.folderId : undefined,
+      path: item.path,
+    }));
+    
+    return calculateHierarchicalIndexes(indexableItems, allFolders);
+  }, [items, allFolders]);
 
   const handleDeleteFolder = useCallback(
     (folderId: string) => {
@@ -167,6 +189,7 @@ export function DataroomSortableList({
 
   const renderItem = (item: FolderOrDocument) => {
     const itemId = `${item.itemType}-${item.id}`;
+    const hierarchicalIndex = hierarchicalIndexes.get(item.id) || "";
 
     return (
       <SortableItem key={itemId} id={itemId} category={item.itemType}>
@@ -177,12 +200,14 @@ export function DataroomSortableList({
             isDataroom
             dataroomId={dataroomId}
             onDelete={handleDeleteFolder}
+            hierarchicalIndex={hierarchicalIndex}
           />
         ) : (
           <DataroomDocumentCard
             document={item as DataroomFolderDocument}
             teamInfo={teamInfo}
             dataroomId={dataroomId}
+            hierarchicalIndex={hierarchicalIndex}
           />
         )}
       </SortableItem>

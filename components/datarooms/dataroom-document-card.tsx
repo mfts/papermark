@@ -45,6 +45,7 @@ type DocumentsCardProps = {
   isDragging?: boolean;
   isSelected?: boolean;
   isHovered?: boolean;
+  hierarchicalIndex?: string;
 };
 export default function DataroomDocumentCard({
   document: dataroomDocument,
@@ -53,6 +54,7 @@ export default function DataroomDocumentCard({
   isDragging,
   isSelected,
   isHovered,
+  hierarchicalIndex,
 }: DocumentsCardProps) {
   const [groupPermissionOpen, setGroupPermissionOpen] =
     useState<boolean>(false);
@@ -205,6 +207,11 @@ export default function DataroomDocumentCard({
 
             <div className="flex-col">
               <div className="flex items-center">
+                {hierarchicalIndex && (
+                  <span className="mr-2 rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
+                    {hierarchicalIndex}
+                  </span>
+                )}
                 <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
                   {dataroomDocument.document.name}
                 </h2>

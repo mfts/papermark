@@ -46,6 +46,7 @@ type FolderCardProps = {
   isHovered?: boolean;
   isSelected?: boolean;
   onDelete?: (folderId: string) => void;
+  hierarchicalIndex?: string;
 };
 
 export default function FolderCard({
@@ -58,6 +59,7 @@ export default function FolderCard({
   isSelected,
   isHovered,
   onDelete,
+  hierarchicalIndex,
 }: FolderCardProps) {
   const router = useRouter();
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
@@ -160,6 +162,11 @@ export default function FolderCard({
 
           <div className="flex-col">
             <div className="flex items-center">
+              {hierarchicalIndex && (
+                <span className="mr-2 rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                  {hierarchicalIndex}
+                </span>
+              )}
               <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
                 {folder.name}
               </h2>
