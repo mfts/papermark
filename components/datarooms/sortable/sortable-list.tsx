@@ -155,10 +155,10 @@ export function DataroomSortableList({
       mutate(`${baseKey}/folders`);
       mutate(`${baseKey}/folders?include_documents=true`);
       setIsReordering(false);
-      toast.success("Index saved successfully");
+      toast.success("Folder order saved successfully");
     } catch (error) {
       console.error("Failed to save new order:", error);
-      toast.error("Failed to save index");
+      toast.error("Failed to save order");
       // Optionally, show an error message to the user
     } finally {
       setIsReordering(false);
@@ -247,7 +247,7 @@ export function DataroomSortableList({
           className="gap-x-1"
         >
           <CheckIcon className="size-4" />
-          Save index
+          Save order
         </Button>
       </Portal>
       <DeleteFolderModal />

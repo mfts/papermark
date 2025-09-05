@@ -9,6 +9,10 @@ import { toast } from "sonner";
 import { timeAgo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
+import {
+  HIERARCHICAL_DISPLAY_STYLE,
+  useHierarchicalDisplayName,
+} from "@/lib/utils/hierarchical-display";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -53,6 +57,12 @@ export default function DocumentCard({
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
   const router = useRouter();
+
+  // Get hierarchical display name
+  const displayName = useHierarchicalDisplayName(
+    document.name,
+    document.hierarchicalIndex,
+  );
   const { previewToken, domain, slug } = router.query as {
     previewToken?: string;
     domain?: string;
@@ -183,13 +193,16 @@ export default function DocumentCard({
 
         <div className="flex-col">
           <div className="flex items-center">
-            <h2 className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg">
+            <h2
+              className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg"
+              style={HIERARCHICAL_DISPLAY_STYLE}
+            >
               <button
                 onClick={handleDocumentClick}
                 className="w-full truncate"
                 disabled={isProcessing}
               >
-                <span>{document.name}</span>
+                <span>{displayName}</span>
                 {isProcessing && (
                   <span className="ml-2 text-xs text-muted-foreground">
                     (Processing...)

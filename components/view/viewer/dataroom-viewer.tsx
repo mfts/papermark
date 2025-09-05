@@ -13,6 +13,10 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { PanelLeftIcon, XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import {
+  HIERARCHICAL_DISPLAY_STYLE,
+  useHierarchicalDisplayName,
+} from "@/lib/utils/hierarchical-display";
 import { sortByIndexThenName } from "@/lib/utils/sort-items-by-index-name";
 
 import { ViewFolderTree } from "@/components/datarooms/folders";
@@ -39,6 +43,39 @@ import { DocumentUploadModal } from "../dataroom/document-upload-modal";
 import FolderCard from "../dataroom/folder-card";
 import IndexFileDialog from "../dataroom/index-file-dialog";
 import DataroomNav from "../dataroom/nav-dataroom";
+
+const ViewerBreadcrumbItem = ({
+  folder,
+  setFolderId,
+  isLast,
+}: {
+  folder: any;
+  setFolderId: (id: string | null) => void;
+  isLast: boolean;
+}) => {
+  const displayName = useHierarchicalDisplayName(
+    folder.name,
+    folder.hierarchicalIndex,
+  );
+
+  if (isLast) {
+    return (
+      <BreadcrumbPage className="capitalize" style={HIERARCHICAL_DISPLAY_STYLE}>
+        {displayName}
+      </BreadcrumbPage>
+    );
+  }
+
+  return (
+    <BreadcrumbLink
+      onClick={() => setFolderId(folder.id)}
+      className="cursor-pointer capitalize"
+      style={HIERARCHICAL_DISPLAY_STYLE}
+    >
+      {displayName}
+    </BreadcrumbLink>
+  );
+};
 
 type FolderOrDocument =
   | (DataroomFolder & { allowDownload: boolean })
@@ -410,18 +447,11 @@ export default function DataroomViewer({
                         <React.Fragment key={folder.id}>
                           <BreadcrumbSeparator />
                           <BreadcrumbItem>
-                            {index === breadcrumbFolders.length - 1 ? (
-                              <BreadcrumbPage className="capitalize">
-                                {folder.name}
-                              </BreadcrumbPage>
-                            ) : (
-                              <BreadcrumbLink
-                                onClick={() => setFolderId(folder.id)}
-                                className="cursor-pointer capitalize"
-                              >
-                                {folder.name}
-                              </BreadcrumbLink>
-                            )}
+                            <ViewerBreadcrumbItem
+                              folder={folder}
+                              setFolderId={setFolderId}
+                              isLast={index === breadcrumbFolders.length - 1}
+                            />
                           </BreadcrumbItem>
                         </React.Fragment>
                       ))}

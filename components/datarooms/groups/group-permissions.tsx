@@ -23,8 +23,13 @@ import {
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 
+import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { useDataroomFoldersTree } from "@/lib/swr/use-dataroom";
 import { cn } from "@/lib/utils";
+import {
+  HIERARCHICAL_DISPLAY_STYLE,
+  getHierarchicalDisplayName,
+} from "@/lib/utils/hierarchical-display";
 
 import CloudDownloadOff from "@/components/shared/icons/cloud-download-off";
 import { Button } from "@/components/ui/button";
@@ -38,10 +43,35 @@ import {
 } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
+const PermissionItemName = ({ item }: { item: FileOrFolder }) => {
+  const { isFeatureEnabled } = useFeatureFlags();
+  const isDataroomIndexEnabled = isFeatureEnabled("dataroomIndex");
+
+  const displayName = getHierarchicalDisplayName(
+    item.name,
+    item.hierarchicalIndex,
+    isDataroomIndexEnabled,
+  );
+
+  return (
+    <div className="flex items-center text-foreground">
+      {item.itemType === ItemType.DATAROOM_FOLDER ? (
+        <Folder className="mr-2 h-5 w-5" />
+      ) : (
+        <File className="mr-2 h-5 w-5" />
+      )}
+      <span className="truncate" style={HIERARCHICAL_DISPLAY_STYLE}>
+        {displayName}
+      </span>
+    </div>
+  );
+};
+
 // Update the FileOrFolder type to include permissions
 type FileOrFolder = {
   id: string;
   name: string;
+  hierarchicalIndex?: string | null;
   subItems?: FileOrFolder[];
   permissions: {
     view: boolean;
@@ -85,16 +115,7 @@ const createColumns = (extra: ColumnExtra): ColumnDef<FileOrFolder>[] => [
   {
     accessorKey: "name",
     header: "Name",
-    cell: ({ row }) => (
-      <div className="flex items-center text-foreground">
-        {row.original.itemType === ItemType.DATAROOM_FOLDER ? (
-          <Folder className="mr-2 h-5 w-5" />
-        ) : (
-          <File className="mr-2 h-5 w-5" />
-        )}
-        <span className="truncate">{row.original.name}</span>
-      </div>
-    ),
+    cell: ({ row }) => <PermissionItemName item={row.original} />,
   },
   {
     id: "actions",
@@ -189,6 +210,7 @@ const buildTree = (
         id: doc.id,
         documentId: doc.document.id,
         name: doc.document.name,
+        hierarchicalIndex: doc.hierarchicalIndex,
         permissions: getPermissions(doc.id),
         itemType: ItemType.DATAROOM_DOCUMENT,
       }));
@@ -230,6 +252,7 @@ const buildTree = (
       result.push({
         id: folder.id,
         name: folder.name,
+        hierarchicalIndex: folder.hierarchicalIndex,
         subItems: allSubItems,
         permissions: folderPermissions,
         itemType: ItemType.DATAROOM_FOLDER,
@@ -248,6 +271,7 @@ const buildTree = (
         id: doc.id,
         documentId: doc.document.id,
         name: doc.document.name,
+        hierarchicalIndex: doc.hierarchicalIndex,
         permissions: getPermissions(doc.id),
         itemType: ItemType.DATAROOM_DOCUMENT,
       });

@@ -122,6 +122,7 @@ export async function fetchDataroomLinkData({
               folderId: true,
               updatedAt: true,
               orderIndex: true,
+              hierarchicalIndex: true,
               document: {
                 select: {
                   id: true,
@@ -156,6 +157,17 @@ export async function fetchDataroomLinkData({
               groupPermissions.length > 0 || effectiveGroupId
                 ? { id: { in: allRequiredFolderIds } }
                 : undefined,
+            select: {
+              id: true,
+              name: true,
+              path: true,
+              parentId: true,
+              dataroomId: true,
+              orderIndex: true,
+              hierarchicalIndex: true,
+              createdAt: true,
+              updatedAt: true,
+            },
             orderBy: [{ orderIndex: "asc" }, { name: "asc" }],
           },
         },
@@ -289,6 +301,7 @@ export async function fetchDataroomDocumentLinkData({
               id: true,
               updatedAt: true,
               orderIndex: true,
+              hierarchicalIndex: true,
               document: {
                 select: {
                   id: true,

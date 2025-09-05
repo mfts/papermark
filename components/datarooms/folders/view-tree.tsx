@@ -4,17 +4,40 @@ import { memo, useMemo } from "react";
 
 import { DataroomFolder } from "@prisma/client";
 import { HomeIcon } from "lucide-react";
+
 import { cn } from "@/lib/utils";
+import {
+  HIERARCHICAL_DISPLAY_STYLE,
+  useHierarchicalDisplayName,
+} from "@/lib/utils/hierarchical-display";
 
 import { FileTree } from "@/components/ui/nextra-filetree";
 
 import { buildNestedFolderStructureWithDocs } from "./utils";
+
+const ViewerDocumentFileItem = memo(
+  ({ document }: { document: DataroomDocumentWithVersion }) => {
+    const documentDisplayName = useHierarchicalDisplayName(
+      document.name,
+      document.hierarchicalIndex,
+    );
+
+    return (
+      <FileTree.File
+        name={documentDisplayName}
+        // onToggle={() => router.push(`/documents/${document.id}`)}
+      />
+    );
+  },
+);
+ViewerDocumentFileItem.displayName = "ViewerDocumentFileItem";
 
 type DataroomDocumentWithVersion = {
   dataroomDocumentId: string;
   folderId: string | null;
   id: string;
   name: string;
+  hierarchicalIndex: string | null;
   versions: {
     id: string;
     versionNumber: number;
@@ -29,6 +52,7 @@ type DataroomFolderWithDocuments = DataroomFolder & {
     folderId: string | null;
     id: string;
     name: string;
+    hierarchicalIndex: string | null;
   }[];
 };
 
@@ -67,17 +91,25 @@ const FolderComponent = memo(
   }) => {
     const router = useRouter();
 
+    // Get hierarchical display name for the folder
+    const folderDisplayName = useHierarchicalDisplayName(
+      folder.name,
+      folder.hierarchicalIndex,
+    );
+
     // Memoize the rendering of the current folder's documents
     const documents = useMemo(
       () =>
         folder.documents.map((doc) => (
-          <FileTree.File
+          <ViewerDocumentFileItem
             key={doc.id}
-            name={doc.name}
-            // onToggle={() => router.push(`/documents/${doc.id}`)}
+            document={{
+              ...doc,
+              versions: [], // Not needed for display
+            }}
           />
         )),
-      [folder.documents, router.query.name],
+      [folder.documents],
     );
 
     // Recursively render child folders if they exist
@@ -109,7 +141,7 @@ const FolderComponent = memo(
         }}
       >
         <FileTree.Folder
-          name={folder.name}
+          name={folderDisplayName}
           key={folder.id}
           active={isActive}
           childActive={isChildActive}
