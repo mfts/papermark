@@ -21,4 +21,35 @@ model DataroomRAGSettings {
   @@index([indexingStartedAt])
 }
 
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
+  content    String @db.Text
+  chunkIndex Int // Order of chunk in document
+  chunkHash  String // Hash for deduplication
+
+  dataroomId  String
+  teamId      String
+  contentType String?
+  pageRanges  String? // e.g., "1-3", "5", "10-12"
+  tokenCount  Int? // Number of tokens in chunk
+
+  sectionHeader   String? // Section header for this chunk
+  headerHierarchy String? // JSON string of header hierarchy array
+  isSmallChunk    Boolean? // Whether this is a small chunk
+
+  vectorId String? // ID (Qdrant)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
+  @@index([dataroomId])
+  @@index([teamId])
+  @@index([chunkHash])
+  @@index([vectorId])
+  @@index([sectionHeader])
+}

@@ -6,6 +6,7 @@ import { logger } from "@trigger.dev/sdk/v3";
 import { EnhancedDocumentChunker } from "./enhanced-chunking-strategy";
 import { makeApiCall, calculateTimeout, calculatePollInterval } from "./utils/api-utils";
 import { getErrorMessage, RAGError } from "./errors";
+import { saveMarkdownToDB, saveChunksToDB } from "./markdown-storage";
 import pMap from 'p-map';
 
 // Types for document processing
@@ -26,7 +27,9 @@ export interface DocumentChunk {
         dataroomId: string;
         teamId: string;
         contentType: string;
-        pageNumbers?: number[];
+        pageRanges?: string[];
+        tokenCount?: number;
+        sectionHeader?: string;
     };
     chunkHash: string;
 }
@@ -376,9 +379,6 @@ export class DoclingProcessor {
         }
     }
 
-    /**
-     * Get the base URL for the Docling API
-     */
     public getBaseUrl(): string {
         return this.config.baseUrl;
     }
@@ -417,6 +417,7 @@ export class DocumentProcessor {
             const md = await this.docling.processDocument(url, contentType, documentCount);
             metrics.doclingTime = Date.now() - doclingStart;
             metrics.contentLength = md.length;
+            await saveMarkdownToDB(id, md, teamId);
 
             const chunkingStart = Date.now();
             const enhancedChunks = await this.enhancedChunker.createEnhancedChunks(
@@ -428,9 +429,8 @@ export class DocumentProcessor {
                 contentType,
             );
 
+            logger.log('enhancedChunks', { enhancedChunks: enhancedChunks.slice(0, 3) })
 
-
-            // Convert EnhancedChunk to DocumentChunk with simplified metadata
             const chunks = enhancedChunks.map(chunk => ({
                 id: chunk.id,
                 content: chunk.content,
@@ -442,9 +442,15 @@ export class DocumentProcessor {
                     teamId: chunk.metadata.teamId,
                     contentType: chunk.metadata.contentType,
                     pageRanges: chunk.metadata.pageRanges,
+                    tokenCount: chunk.metadata.tokenCount,
+                    sectionHeader: chunk.metadata.sectionHeader,
+                    headerHierarchy: chunk.metadata.headerHierarchy,
+                    isSmallChunk: chunk.metadata.isSmallChunk,
                 },
                 chunkHash: chunk.chunkHash,
             }));
+
+            logger.log('chunks', { chunks: chunks.slice(0, 3) })
 
             logger.info("Chunks created successfully", {
                 documentId: id,
@@ -452,6 +458,21 @@ export class DocumentProcessor {
                 avgChunkSize: Math.round(metrics.contentLength / enhancedChunks.length),
                 sampleChunkIds: enhancedChunks.slice(0, 3).map(chunk => chunk.id)
             });
+
+            await saveChunksToDB(id, enhancedChunks.map(chunk => ({
+                id: chunk.id,
+                content: chunk.content,
+                chunkIndex: chunk.metadata.chunkIndex,
+                chunkHash: chunk.chunkHash,
+                dataroomId: chunk.metadata.dataroomId,
+                teamId: chunk.metadata.teamId,
+                contentType: chunk.metadata.contentType,
+                pageRanges: chunk.metadata.pageRanges?.join(', '),
+                tokenCount: chunk.metadata.tokenCount,
+                sectionHeader: chunk.metadata.sectionHeader,
+                headerHierarchy: chunk.metadata.headerHierarchy ? JSON.stringify(chunk.metadata.headerHierarchy) : undefined,
+                isSmallChunk: chunk.metadata.isSmallChunk
+            })));
 
             metrics.chunkingTime = Date.now() - chunkingStart;
             metrics.chunkCount = chunks.length;
@@ -521,7 +542,6 @@ export class DocumentProcessor {
                 estimatedTime: Math.ceil(docs.length / maxConcurrency) * 30 // Rough estimate
             });
 
-            // Use pMap for efficient parallel processing with proper error handling
             const results = await pMap(
                 docs,
                 async (doc, index) => {

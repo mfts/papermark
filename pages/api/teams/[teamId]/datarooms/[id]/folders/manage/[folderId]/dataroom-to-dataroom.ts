@@ -8,6 +8,7 @@ import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 interface FolderWithContents {
   id: string;
@@ -143,12 +144,12 @@ export default async function handle(
           message: "Upgrade your plan to use datarooms.",
         });
       }
-
       try {
+        const features = await getFeatureFlags({ teamId: teamId! });
         const folderContents = await fetchFolderContents(folderId);
         await createDataroomStructure(dataroomId, folderContents);
 
-        if (folderContents.documents.length > 0) {
+        if (features.ragIndexing && folderContents.documents.length > 0) {
           await triggerDataroomIndexing(dataroomId, teamId, userId);
         }
 

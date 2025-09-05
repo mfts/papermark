@@ -287,13 +287,3 @@ class VectorManager {
 
 // Export singleton instance
 export const vectorManager = VectorManager.getInstance();
-
-// Export convenience functions for backward compatibility
-export const deleteDocumentVectors = (dataroomId: string, documentId: string, documentName?: string) =>
-    vectorManager.deleteDocumentVectors(dataroomId, documentId, documentName);
-
-export const deleteDataroomVectors = (dataroomId: string) =>
-    vectorManager.deleteDataroomVectors(dataroomId);
-
-export const deleteMultipleDocumentVectors = (dataroomId: string, documentIds: string[]) =>
-    vectorManager.deleteMultipleDocumentVectors(dataroomId, documentIds);

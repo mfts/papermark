@@ -2,7 +2,7 @@ import { logger, task } from "@trigger.dev/sdk/v3";
 import prisma from "@/lib/prisma";
 import { randomUUID } from "crypto";
 import { EmbeddingGenerator } from "@/lib/rag/embedding-generator";
-import { DocumentProcessor } from "@/lib/rag/document-processor";
+import { DocumentProcessingResult, DocumentProcessor } from "@/lib/rag/document-processor";
 import { vectorManager } from "@/lib/rag/vector-manager";
 import { ParsingStatus } from "@prisma/client";
 import { RAGQueueManager } from "../rag/queue-manager";
@@ -93,6 +93,7 @@ export const ragIndexingTask = task({
             let totalDocumentsSkipped = 0;
             let totalChunksProcessed = 0;
             let totalVectorsStored = 0;
+            let totalEmbeddingTokens = 0;
 
             while (true) {
                 // Check if there are any requests in the queue
@@ -139,6 +140,7 @@ export const ragIndexingTask = task({
                     totalDocumentsSkipped += result.documentsSkipped;
                     totalChunksProcessed += result.chunksProcessed;
                     totalVectorsStored += result.vectorsStored;
+                    totalEmbeddingTokens += result.embeddingTokens;
 
                     // Update document processor instances for reuse
                     documentProcessor = result.documentProcessor;
@@ -151,7 +153,8 @@ export const ragIndexingTask = task({
                             documentsProcessed: result.documentsProcessed,
                             documentsSkipped: result.documentsSkipped,
                             chunksProcessed: result.chunksProcessed,
-                            vectorsStored: result.vectorsStored
+                            vectorsStored: result.vectorsStored,
+                            embeddingTokens: result.embeddingTokens
                         }
                     });
 
@@ -172,7 +175,8 @@ export const ragIndexingTask = task({
                 totalDocumentsProcessed,
                 totalDocumentsSkipped,
                 totalChunksProcessed,
-                totalVectorsStored
+                totalVectorsStored,
+                totalEmbeddingTokens
             });
 
             return {
@@ -182,7 +186,7 @@ export const ragIndexingTask = task({
                 chunksProcessed: totalChunksProcessed,
                 vectorsStored: totalVectorsStored,
                 processingId,
-                embeddingTokens: 0,
+                embeddingTokens: totalEmbeddingTokens,
             };
 
         } catch (error) {
@@ -360,7 +364,7 @@ async function processRAGIndexingRequest(
     );
 
     // Update document status and collect chunks
-    const allChunks: Array<{ chunkId: string; content: string; metadata: any }> = [];
+    const allChunks: Array<{ chunkId: string; content: string; metadata: DocumentProcessingResult['chunks'][number]['metadata'] }> = [];
 
     for (const result of processingResults) {
         const documentId = result.chunks?.[0]?.metadata?.documentId;
@@ -653,9 +657,33 @@ async function updateDocumentIndexingStatus(
 }
 
 function isDocumentFormatSupported(contentType: string, documentProcessor: DocumentProcessor): boolean {
-    const supportedFormats = documentProcessor.getSupportedFormats();
-    const format = contentType?.toLowerCase() || "";
-    return supportedFormats.some((supported: string) => format.includes(supported));
+    const supported = documentProcessor.getSupportedFormats().map(s => s.toLowerCase());
+    const format = (contentType || "").toLowerCase();
+
+    return supported.some((s) =>
+        format.includes(s) ||
+        // Markdown variations
+        (s === "md" && (format.includes("markdown") || format.includes("text/markdown"))) ||
+        // Word document variations
+        (s === "docx" && (format.includes("word") || format.includes("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))) ||
+        (s === "doc" && (format.includes("msword") || format.includes("application/msword"))) ||
+        // PowerPoint variations
+        (s === "pptx" && (format.includes("powerpoint") || format.includes("application/vnd.openxmlformats-officedocument.presentationml.presentation"))) ||
+        (s === "ppt" && (format.includes("powerpoint") || format.includes("application/vnd.ms-powerpoint"))) ||
+        // Excel variations
+        (s === "xlsx" && (format.includes("excel") || format.includes("spreadsheet") || format.includes("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))) ||
+        (s === "xls" && (format.includes("excel") || format.includes("spreadsheet") || format.includes("application/vnd.ms-excel"))) ||
+        // PDF variations
+        (s === "pdf" && (format.includes("pdf") || format.includes("application/pdf"))) ||
+        // Text variations
+        (s === "txt" && (format.includes("text") || format.includes("text/plain"))) ||
+        // HTML variations
+        (s === "html" && (format.includes("html") || format.includes("text/html"))) ||
+        (s === "rtf" && (format.includes("rtf") || format.includes("application/rtf") || format.includes("text/rtf"))) ||
+        (s === "csv" && (format.includes("csv") || format.includes("text/csv") || format.includes("comma-separated"))) ||
+        (s === "json" && (format.includes("json") || format.includes("application/json"))) ||
+        (s === "xml" && (format.includes("xml") || format.includes("text/xml") || format.includes("application/xml")))
+    );
 }
 
 async function getDocumentsForProcessing(documentIds: string[], dataroomId: string) {
@@ -729,7 +757,7 @@ async function getDocumentsForProcessing(documentIds: string[], dataroomId: stri
         })
     );
 
-    return documentsWithUrls;
+    return documentsWithUrls.filter(Boolean)
 }
 
 async function markDocumentsAsIndexed(documentIds: string[], dataroomId: string) {

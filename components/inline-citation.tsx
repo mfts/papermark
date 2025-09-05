@@ -159,18 +159,23 @@ export const InlineCitationCarouselIndex = ({
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    if (!api) {
-      return;
-    }
+    if (!api) return;
 
-    setCount(api.scrollSnapList().length);
-    setCurrent(api.selectedScrollSnap() + 1);
-
-    api.on('select', () => {
+    const update = () => {
+      setCount(api.scrollSnapList().length);
       setCurrent(api.selectedScrollSnap() + 1);
-    });
-  }, [api]);
+    };
 
+    update();
+    api.on('select', update);
+    api.on?.('reInit', update);
+
+    return () => {
+      api.off?.('select', update);
+      api.off?.('reInit', update);
+    };
+  }, [api]);
+  
   return (
     <div
       className={cn(

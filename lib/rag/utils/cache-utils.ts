@@ -11,5 +11,5 @@ export function generateBatchCacheKey(operation: string, query: string, batchInd
 }
 
 export function generateDocumentNamesCacheKey(documentIds: string[]): string {
-    return documentIds.sort().join(',');
+    return [...documentIds].sort().join(',');
 }

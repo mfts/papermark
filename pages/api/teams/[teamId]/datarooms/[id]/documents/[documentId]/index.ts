@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { vectorManager } from "@/lib/rag/vector-manager";
 import { CustomUser } from "@/lib/types";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 export default async function handle(
   req: NextApiRequest,
@@ -134,11 +135,14 @@ export default async function handle(
         return res.status(404).end("Document not found");
       }
 
-      await vectorManager.deleteDocumentVectors(
-        dataroomId,
-        dataroomDocument.documentId,
-        dataroomDocument.document.name
-      );
+      const featureFlags = await getFeatureFlags({ teamId: team.id });
+      if (featureFlags.ragIndexing) {
+        await vectorManager.deleteDocumentVectors(
+          dataroomId,
+          dataroomDocument.documentId,
+          dataroomDocument.document.name
+        );
+      }
 
       await prisma.dataroomDocument.delete({
         where: {

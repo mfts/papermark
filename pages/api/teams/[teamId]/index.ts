@@ -15,6 +15,7 @@ import { unsubscribe } from "@/lib/unsend";
 import { vectorManager } from "@/lib/rag/vector-manager";
 
 import { authOptions } from "../../auth/[...nextauth]";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 export default async function handle(
   req: NextApiRequest,
@@ -203,8 +204,11 @@ export default async function handle(
         },
       });
 
-      for (const dataroom of datarooms) {
-        await vectorManager.deleteDataroomVectors(dataroom.id);
+      const featureFlags = await getFeatureFlags({ teamId: teamId });
+      if (featureFlags.ragIndexing) {
+        for (const dataroom of datarooms) {
+          await vectorManager.deleteDataroomVectors(dataroom.id);
+        }
       }
 
       // if user doesn't have other teams, delete the user

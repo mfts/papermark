@@ -99,24 +99,24 @@ async function deleteFolderAndContents(folderId: string, dataroomId: string) {
     await deleteFolderAndContents(folder.id, dataroomId);
   }
 
-  const documentsToDelete = await prisma.dataroomDocument.findMany({
-    where: {
-      folderId: folderId,
-    },
-    include: {
-      document: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-  });
-  const documentIds = documentsToDelete.map(doc => doc.documentId);
+  // const documentsToDelete = await prisma.dataroomDocument.findMany({
+  //   where: {
+  //     folderId: folderId,
+  //   },
+  //   include: {
+  //     document: {
+  //       select: {
+  //         id: true,
+  //         name: true,
+  //       },
+  //     },
+  //   },
+  // });
+  // const documentIds = documentsToDelete.map(doc => doc.documentId);
 
-  if (documentIds.length > 0) {
-    await vectorManager.deleteMultipleDocumentVectors(dataroomId, documentIds);
-  }
+  // if (documentIds.length > 0) {
+  //   await vectorManager.deleteMultipleDocumentVectors(dataroomId, documentIds);
+  // }
 
   await prisma.dataroomDocument.deleteMany({
     where: {

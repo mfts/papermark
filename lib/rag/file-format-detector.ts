@@ -13,20 +13,18 @@ export enum InputFormat {
 // Config type
 export interface ProcessingConfig {
     requiresOcr: boolean;
-    maxChunkSize: number;
-    chunkOverlap: number;
 }
 
 // Central config map
 const FormatConfigs: Record<InputFormat, ProcessingConfig> = {
-    [InputFormat.PDF]: { requiresOcr: true, maxChunkSize: 1000, chunkOverlap: 200 },
-    [InputFormat.DOCX]: { requiresOcr: false, maxChunkSize: 1000, chunkOverlap: 200 },
-    [InputFormat.PPTX]: { requiresOcr: false, maxChunkSize: 800, chunkOverlap: 150 },
-    [InputFormat.HTML]: { requiresOcr: false, maxChunkSize: 1000, chunkOverlap: 200 },
-    [InputFormat.MD]: { requiresOcr: false, maxChunkSize: 1000, chunkOverlap: 200 },
-    [InputFormat.ASCIIDOC]: { requiresOcr: false, maxChunkSize: 1000, chunkOverlap: 200 },
-    [InputFormat.CSV]: { requiresOcr: false, maxChunkSize: 500, chunkOverlap: 100 },
-    [InputFormat.IMAGE]: { requiresOcr: true, maxChunkSize: 800, chunkOverlap: 150 },
+    [InputFormat.PDF]: { requiresOcr: true },
+    [InputFormat.DOCX]: { requiresOcr: false },
+    [InputFormat.PPTX]: { requiresOcr: false },
+    [InputFormat.HTML]: { requiresOcr: false },
+    [InputFormat.MD]: { requiresOcr: false },
+    [InputFormat.ASCIIDOC]: { requiresOcr: false },
+    [InputFormat.CSV]: { requiresOcr: false },
+    [InputFormat.IMAGE]: { requiresOcr: true },
 };
 
 // Utility to fetch config safely

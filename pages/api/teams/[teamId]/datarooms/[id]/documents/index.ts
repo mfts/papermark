@@ -201,19 +201,22 @@ export default async function handle(
         );
       }
 
-      // RAG Indexing
-      try {
-        if (document) {
-          waitUntil(
-            triggerDataroomIndexing(dataroomId, teamId, userId)
+      const features = await getFeatureFlags({ teamId: teamId! });
+      if (features.ragIndexing) {
+        const indexingPromise = triggerDataroomIndexing(
+          dataroomId, teamId, userId
+        );
+        try {
+          waitUntil(indexingPromise);
+        } catch {
+          void indexingPromise.catch((e) =>
+            console.error(
+              `RAG indexing trigger (fallback) failed for dataroom ${dataroomId}.`,
+              e
+            )
           );
         }
-      } catch (ragError) {
-        log({
-          message: `RAG indexing trigger failed for dataroom ${dataroomId}. Error: ${ragError}`,
-          type: "error",
-        });
-      }
+      } 
 
       return res.status(201).json(document);
     } catch (error) {

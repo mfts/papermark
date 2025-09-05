@@ -9,6 +9,7 @@ import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 // Define types
 interface FolderWithContents extends Folder {
@@ -209,10 +210,16 @@ export default async function handle(
         folderContents.path,
       );
 
-      // rag indexing
-      if (folderContents.documents.length > 0) {
-        await triggerDataroomIndexing(dataroom.id, teamId, userId);
-      }
+      const features = await getFeatureFlags({ teamId: teamId! });
+      if (features.ragIndexing && folderContents.documents.length > 0) {
+        try {
+          await triggerDataroomIndexing(dataroom.id, teamId, userId);
+        } catch {
+          console.error(
+            `RAG indexing trigger (fallback) failed for dataroom ${dataroom.id}.`,
+          )
+        }
+      } 
 
       const dataroomWithCount = await prisma.dataroom.findUnique({
         where: {

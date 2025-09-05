@@ -80,50 +80,72 @@ export class EmbeddingGenerator {
                     newCount: 0,
                 };
             }
-            const cachedEmbeds: Array<{ chunkId: string; embedding: number[] }> = [];
-            const newChunks: EmbeddingBatch[] = [];
 
+            const groups = new Map<string, { content: string; chunkIds: string[] }>();
             for (const chunk of validChunks) {
-                const e = await this.getCachedEmbedding(chunk.content);
+                const key = this.generateContentHash(chunk.content);
+                const g = groups.get(key);
+                if (g) g.chunkIds.push(chunk.chunkId);
+                else groups.set(key, { content: chunk.content, chunkIds: [chunk.chunkId] });
+            }
+
+            const cachedEmbeds: Array<{ chunkId: string; embedding: number[] }> = [];
+            const newGroups: Array<{ content: string; chunkIds: string[] }> = [];
+
+            for (const [, g] of groups) {
+                const e = await this.getCachedEmbedding(g.content);
                 if (e) {
-                    cachedEmbeds.push({ chunkId: chunk.chunkId, embedding: e });
-                    cachedCount++;
+                    for (const id of g.chunkIds) {
+                        cachedEmbeds.push({ chunkId: id, embedding: e });
+                        cachedCount++;
+                    }
                 } else {
-                    newChunks.push(chunk);
+                    newGroups.push(g);
                 }
             }
 
             results.push(...cachedEmbeds);
-            if (newChunks.length > 0) {
-                const batches: EmbeddingBatch[][] = [];
-                for (let i = 0; i < newChunks.length; i += this.batchSize) {
-                    batches.push(newChunks.slice(i, i + this.batchSize));
+            if (newGroups.length > 0) {
+                const batches: Array<Array<{ content: string; chunkIds: string[] }>> = [];
+                for (let i = 0; i < newGroups.length; i += this.batchSize) {
+                    batches.push(newGroups.slice(i, i + this.batchSize));
                 }
 
                 const limit = pLimit(this.concurrency);
 
                 const settled = await Promise.allSettled(
-                    batches.map((batch) =>
+                    batches.map((batchGroups) =>
                         limit(async () => {
                             await this.enforceRateLimit();
-                            const batchResult = await this.processBatch(batch);
+                            const requestBatch: EmbeddingBatch[] = batchGroups.map((g) => ({
+                                chunkId: g.chunkIds[0],
+                                content: g.content,
+                                metadata: undefined as any,
+                            }));
+                            const batchResult = await this.processBatch(requestBatch);
                             this.updateRateLimitTracking();
                             batchResult.results.forEach((r, idx) => {
-                                const ch = batch[idx];
-                                if (ch) this.cacheEmbedding(ch.content, r.embedding);
+                                const g = batchGroups[idx];
+                                if (g) this.cacheEmbedding(g.content, r.embedding);
                             });
 
-                            return { batchResult, batch };
+                            return { batchResult, batchGroups };
                         })
                     )
                 );
 
                 for (const s of settled) {
                     if (s.status === "fulfilled") {
-                        const { batchResult, batch } = s.value;
-                        results.push(...batchResult.results);
+                        const { batchResult, batchGroups } = s.value;
+                        for (let i = 0; i < batchGroups.length; i++) {
+                            const r = batchResult.results[i];
+                            const g = batchGroups[i];
+                            for (const id of g.chunkIds) {
+                                results.push({ chunkId: id, embedding: r.embedding });
+                            }
+                        }
                         totalTokens += batchResult.totalTokens;
-                        newCount += batch.length;
+                        newCount += batchGroups.reduce((acc, g) => acc + g.chunkIds.length, 0);
                     } else {
                         throw RAGError.create(
                             'embedding',
@@ -171,7 +193,6 @@ export class EmbeddingGenerator {
 
     private preprocessChunks(chunks: EmbeddingBatch[]): EmbeddingBatch[] {
         const valid: EmbeddingBatch[] = [];
-        const seen = new Set<string>();
 
         for (const chunk of chunks) {
             const content = chunk.content.trim();
@@ -180,13 +201,9 @@ export class EmbeddingGenerator {
             // cheap signal checks
             if (content.length < 10) continue;
 
-            // dedupe on content text
-            if (seen.has(content)) continue;
-
             const tokens = calculateTokenCount(content);
             if (tokens < 5) continue;
 
-            seen.add(content);
             valid.push({ ...chunk, content });
         }
 

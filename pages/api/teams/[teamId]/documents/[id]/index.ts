@@ -12,6 +12,7 @@ import { serializeFileSize } from "@/lib/utils";
 import { vectorManager } from "@/lib/rag/vector-manager";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 export default async function handle(
   req: NextApiRequest,
@@ -241,15 +242,18 @@ export default async function handle(
         dataroomGroups.get(dataroomId)!.names.push(dataroomDocument.document.name);
       }
 
-      for (const [dataroomId, { documentIds, names }] of dataroomGroups) {
-        if (documentIds.length === 1) {
-          await vectorManager.deleteDocumentVectors(
-            dataroomId,
-            documentIds[0],
-            names[0]
-          );
-        } else {
-          await vectorManager.deleteMultipleDocumentVectors(dataroomId, documentIds);
+      const featureFlags = await getFeatureFlags({ teamId: teamId! });
+      if (featureFlags.ragIndexing) { 
+        for (const [dataroomId, { documentIds, names }] of dataroomGroups) {
+          if (documentIds.length === 1) {
+            await vectorManager.deleteDocumentVectors(
+              dataroomId,
+              documentIds[0],
+              names[0]
+            );
+          } else {
+            await vectorManager.deleteMultipleDocumentVectors(dataroomId, documentIds);
+          }
         }
       }
 

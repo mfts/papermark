@@ -186,8 +186,10 @@ export default async function handle(
             "You are not permitted to perform this action. Only admin and managers can delete datarooms.",
         });
       }
-
-      await vectorManager.deleteDataroomVectors(dataroomId);
+      const featureFlags = await getFeatureFlags({ teamId: teamId });
+      if (featureFlags.ragIndexing) {
+        await vectorManager.deleteDataroomVectors(dataroomId);
+      }
 
       await prisma.dataroom.delete({
         where: {

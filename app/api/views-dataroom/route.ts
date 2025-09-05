@@ -29,6 +29,7 @@ import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { validateEmail } from "@/lib/utils/validate-email";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 export async function POST(request: NextRequest) {
   try {
@@ -919,21 +920,25 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // rag indexing
-      try {
-        if (link.teamId) {
-          waitUntil(
-            triggerDataroomIndexing(dataroomId, link.teamId, "system")
+
+      const features = await getFeatureFlags({ teamId: link.teamId! });
+      if (features.ragIndexing) {
+        const indexingPromise = triggerDataroomIndexing(
+          dataroomId,
+          link.teamId!,
+          "system"
+        );
+        try {
+          waitUntil(indexingPromise);
+        } catch {
+          void indexingPromise.catch((e) =>
+            console.error(
+              `RAG indexing trigger (fallback) failed for dataroom ${dataroomId}.`,
+              e
+            )
           );
         }
-      } catch (ragError) {
-        console.error(
-          `RAG indexing trigger failed for dataroom ${dataroomId}. Error:`,
-          ragError
-        );
-      }
-
-
+      } 
       const returnObject = {
         message: "View recorded",
         viewId: !isPreview && newView ? newView.id : undefined,

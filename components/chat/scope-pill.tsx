@@ -37,7 +37,7 @@ export function ScopePill({ item, onRemove, className }: ScopePillProps) {
         <div className="h-3 w-3 group-hover:hidden">{getIcon()}</div>
         <button
           type="button"
-          className="hidden h-3 w-3 hover:bg-transparent group-hover:flex"
+          className="hidden h-3 w-3 hover:bg-transparent group-hover:flex group-focus-within:flex focus-visible:flex focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
           onClick={() => onRemove(item.id)}
           aria-label={`Remove ${item.name}`}
         >

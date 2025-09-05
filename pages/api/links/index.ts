@@ -16,6 +16,7 @@ import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
 import { log } from "@/lib/utils";
 
 import { authOptions } from "../auth/[...nextauth]";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -252,19 +253,24 @@ export default async function handler(
           },
         }),
       );
-      // rag indexing
-      if (dataroomLink && targetId && teamId) {
+
+
+      const features = await getFeatureFlags({ teamId: teamId! });
+      if (features.ragIndexing) {
+        const indexingPromise = triggerDataroomIndexing(
+          targetId, teamId, userId
+        );
         try {
-          waitUntil(
-            triggerDataroomIndexing(targetId, teamId, userId)
+          waitUntil(indexingPromise);
+        } catch {
+          void indexingPromise.catch((e) =>
+            console.error(
+              `RAG indexing trigger (fallback) failed for dataroom ${targetId}.`,
+              e
+            )
           );
-        } catch (ragError) {
-          log({
-            message: `RAG indexing trigger failed for dataroom ${targetId} after link creation. Error: ${ragError}`,
-            type: "error",
-          });
         }
-      }
+      } 
 
       // Decrypt the password for the new link
       if (linkWithView.password !== null) {

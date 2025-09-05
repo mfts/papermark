@@ -58,9 +58,7 @@ export class EnhancedDocumentChunker {
         });
     }
 
-    /**
-     * Get cached token count to avoid repeated tokenization
-     */
+
     private getCachedTokenCount(text: string): number {
         const hash = generateLightweightHash(text);
         const cached = this.tokenCountCache.getSync(hash);
@@ -73,62 +71,56 @@ export class EnhancedDocumentChunker {
         return count;
     }
 
-    /**
-     * Preserve markdown elements that shouldn't be split
-     */
     private preserveMarkdownElements(text: string): string {
         let preservedText = text;
 
         // 1. Preserve code blocks (```...```)
         preservedText = preservedText.replace(/```[\s\S]*?```/g, (match) => {
-            return `\n<PRESERVED_CODE_BLOCK>\n${match}\n</PRESERVED_CODE_BLOCK>\n`;
+            return `\n[[PRESERVED_CODE_BLOCK]]\n${match}\n[[/PRESERVED_CODE_BLOCK]]\n`;
         });
 
         // 2. Preserve inline code (`...`)
         preservedText = preservedText.replace(/`([^`]+)`/g, (match) => {
-            return `<PRESERVED_INLINE_CODE>${match}</PRESERVED_INLINE_CODE>`;
+            return `[[PRESERVED_INLINE_CODE]]${match}[[/PRESERVED_INLINE_CODE]]`;
         });
 
         // 3. Preserve tables (|...|...|)
         preservedText = preservedText.replace(/(\|.*\|[\r\n]+)+/g, (match) => {
-            return `\n<PRESERVED_TABLE>\n${match}\n</PRESERVED_TABLE>\n`;
+            return `\n[[PRESERVED_TABLE]]\n${match}\n[[/PRESERVED_TABLE]]\n`;
         });
 
         // 4. Preserve lists (- * +)
         preservedText = preservedText.replace(/(^[\s]*[-*+]\s+.*[\r\n]+)+/gm, (match) => {
-            return `\n<PRESERVED_LIST>\n${match}\n</PRESERVED_LIST>\n`;
+            return `\n[[PRESERVED_LIST]]\n${match}\n[[/PRESERVED_LIST]]\n`;
         });
 
         // 5. Preserve numbered lists (1. 2. 3.)
         preservedText = preservedText.replace(/(^[\s]*\d+\.\s+.*[\r\n]+)+/gm, (match) => {
-            return `\n<PRESERVED_NUMBERED_LIST>\n${match}\n</PRESERVED_NUMBERED_LIST>\n`;
+            return `\n[[PRESERVED_NUMBERED_LIST]]\n${match}\n[[/PRESERVED_NUMBERED_LIST]]\n`;
         });
 
         // 6. Preserve blockquotes (> ...)
         preservedText = preservedText.replace(/(^[\s]*>.*[\r\n]+)+/gm, (match) => {
-            return `\n<PRESERVED_BLOCKQUOTE>\n${match}\n</PRESERVED_BLOCKQUOTE>\n`;
+            return `\n[[PRESERVED_BLOCKQUOTE]]\n${match}\n[[/PRESERVED_BLOCKQUOTE]]\n`;
         });
 
         // 7. Preserve horizontal rules (---, ***, ___)
         preservedText = preservedText.replace(/^[\s]*([-*_]{3,})[\s]*$/gm, (match) => {
-            return `\n<PRESERVED_HR>\n${match}\n</PRESERVED_HR>\n`;
+            return `\n[[PRESERVED_HR]]\n${match}\n[[/PRESERVED_HR]]\n`;
         });
 
         return preservedText;
     }
 
-    /**
-     * Restore preserved markdown elements
-     */
     private restoreMarkdownElements(text: string): string {
         return text
-            .replace(/<PRESERVED_CODE_BLOCK>\n([\s\S]*?)\n<\/PRESERVED_CODE_BLOCK>/g, '$1')
-            .replace(/<PRESERVED_INLINE_CODE>([^<]+)<\/PRESERVED_INLINE_CODE>/g, '$1')
-            .replace(/<PRESERVED_TABLE>\n([\s\S]*?)\n<\/PRESERVED_TABLE>/g, '$1')
-            .replace(/<PRESERVED_LIST>\n([\s\S]*?)\n<\/PRESERVED_LIST>/g, '$1')
-            .replace(/<PRESERVED_NUMBERED_LIST>\n([\s\S]*?)\n<\/PRESERVED_NUMBERED_LIST>/g, '$1')
-            .replace(/<PRESERVED_BLOCKQUOTE>\n([\s\S]*?)\n<\/PRESERVED_BLOCKQUOTE>/g, '$1')
-            .replace(/<PRESERVED_HR>\n([\s\S]*?)\n<\/PRESERVED_HR>/g, '$1');
+            .replace(/\[\[PRESERVED_CODE_BLOCK\]\]\n([\s\S]*?)\n\[\[\/PRESERVED_CODE_BLOCK\]\]/g, '$1')
+            .replace(/\[\[PRESERVED_INLINE_CODE\]\]([^[]+)\[\[\/PRESERVED_INLINE_CODE\]\]/g, '$1')
+            .replace(/\[\[PRESERVED_TABLE\]\]\n([\s\S]*?)\n\[\[\/PRESERVED_TABLE\]\]/g, '$1')
+            .replace(/\[\[PRESERVED_LIST\]\]\n([\s\S]*?)\n\[\[\/PRESERVED_LIST\]\]/g, '$1')
+            .replace(/\[\[PRESERVED_NUMBERED_LIST\]\]\n([\s\S]*?)\n\[\[\/PRESERVED_NUMBERED_LIST\]\]/g, '$1')
+            .replace(/\[\[PRESERVED_BLOCKQUOTE\]\]\n([\s\S]*?)\n\[\[\/PRESERVED_BLOCKQUOTE\]\]/g, '$1')
+            .replace(/\[\[PRESERVED_HR\]\]\n([\s\S]*?)\n\[\[\/PRESERVED_HR\]\]/g, '$1');
     }
 
     /**
@@ -198,25 +190,19 @@ export class EnhancedDocumentChunker {
         return (text.match(/[{}[\]()<>@#$%^&*+=|\\~`]/g) || []).length;
     }
 
-    /**
-     * Adjust chunking strategy based on content complexity
-     */
     private adjustChunkingStrategy(complexity: { complexity: 'low' | 'medium' | 'high'; factors: any }): void {
         switch (complexity.complexity) {
             case 'high':
-                // Smaller chunks for complex content
                 this.config.chunkSizeTokens = Math.min(this.config.chunkSizeTokens, 600);
                 this.config.chunkOverlapTokens = Math.min(this.config.chunkOverlapTokens, 100);
                 break;
             case 'medium':
-                // Standard chunks
                 this.config.chunkSizeTokens = 800;
                 this.config.chunkOverlapTokens = 150;
                 break;
             case 'low':
-                // Larger chunks for simple content
-                this.config.chunkSizeTokens = Math.min(this.config.chunkSizeTokens, 1200);
-                this.config.chunkOverlapTokens = Math.min(this.config.chunkOverlapTokens, 200);
+                this.config.chunkSizeTokens = Math.max(this.config.chunkSizeTokens, 1200);
+                this.config.chunkOverlapTokens = Math.max(this.config.chunkOverlapTokens, 200);
                 break;
         }
 
@@ -242,23 +228,17 @@ export class EnhancedDocumentChunker {
         }
 
         try {
-            // Clear cache for new document
             this.tokenCountCache.clear();
 
-            // NEW: Preserve markdown elements before processing
             const preservedText = this.preserveMarkdownElements(text);
             const cleanedText = cleanTextForChunking(preservedText);
-
-            // NEW: Analyze content complexity
             const complexityAnalysis = this.analyzeContentComplexity(text);
 
-            // NEW: Adjust chunking strategy based on complexity
             this.adjustChunkingStrategy(complexityAnalysis);
 
             this.originalPages = text.split(/---PAGE_BREAK---/);
             this.totalPages = this.originalPages.length;
 
-            // Rename to be honest about what it does
             const headerSegments = this.createHeaderBasedSegments(cleanedText);
             const allChunks: EnhancedChunk[] = [];
             let globalChunkIndex = 0;
@@ -280,12 +260,10 @@ export class EnhancedDocumentChunker {
             const processedChunks = this.postProcessChunks(allChunks);
             const finalChunks = this.filterAndRenumberChunks(processedChunks);
 
-            // NEW: Restore markdown elements in final chunks
             finalChunks.forEach(chunk => {
                 chunk.content = this.restoreMarkdownElements(chunk.content);
             });
 
-            // Log enhanced chunking results
             console.log("Enhanced markdown-aware chunking completed", {
                 documentId,
                 chunkCount: finalChunks.length,
@@ -341,7 +319,7 @@ export class EnhancedDocumentChunker {
                 const headerText = headerMatch[2].trim();
 
                 if (level <= currentLevel) {
-                    currentHeaderHierarchy.length = level - 1;
+                    currentHeaderHierarchy = currentHeaderHierarchy.slice(0, level - 1);
                 }
                 currentHeaderHierarchy[level - 1] = headerText;
 
@@ -448,6 +426,11 @@ export class EnhancedDocumentChunker {
                 const mergedContent = currentChunk.content;
                 const pageInfo = this.extractPageNumbersWithContext(mergedContent, this.originalPages, this.totalPages);
                 currentChunk.metadata.pageRanges = pageInfo.pageRanges;
+                currentChunk.chunkHash = generateChunkHash(
+                    currentChunk.content,
+                    currentChunk.metadata.documentId,
+                    currentChunk.metadata.chunkIndex
+                );
             } else {
                 if (currentChunk) {
                     processedChunks.push(currentChunk);
@@ -492,7 +475,7 @@ export class EnhancedDocumentChunker {
                 sectionHeader,
                 headerHierarchy: headerHierarchy.length > 0 ? headerHierarchy : undefined,
                 isSmallChunk,
-                // NEW: Enhanced metadata
+
                 // contentComplexity: complexityAnalysis?.complexity || 'medium',
                 // complexityFactors: complexityAnalysis?.factors || {},
                 // hasCodeBlocks: content.includes('```'),
@@ -575,7 +558,7 @@ export class EnhancedDocumentChunker {
             )
             .map((chunk, index) => {
                 chunk.metadata.chunkIndex = index;
-                chunk.id = `${chunk.metadata.documentId}_chunk_${index}`;
+                chunk.chunkHash = generateChunkHash(chunk.content, chunk.metadata.documentId, index);
                 return chunk;
             });
     }
