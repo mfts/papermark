@@ -95,8 +95,8 @@ export default function RebuildIndexButton({
             Rebuild Hierarchical Index
           </DialogTitle>
           <DialogDescription>
-            Recalculate the hierarchical numbering based on the dataroom items'
-            current order.
+            Recalculate the hierarchical numbering based on the dataroom
+            items&apos; current order.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
