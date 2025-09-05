@@ -14,6 +14,7 @@ import {
 } from "@/lib/auth/dataroom-auth";
 import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
 import { PreviewSession, verifyPreviewSession } from "@/lib/auth/preview-auth";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
@@ -28,6 +29,7 @@ import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { validateEmail } from "@/lib/utils/validate-email";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 export async function POST(request: NextRequest) {
   try {
@@ -918,6 +920,25 @@ export async function POST(request: NextRequest) {
         }
       }
 
+
+      const features = await getFeatureFlags({ teamId: link.teamId! });
+      if (features.ragIndexing) {
+        const indexingPromise = triggerDataroomIndexing(
+          dataroomId,
+          link.teamId!,
+          "system"
+        );
+        try {
+          waitUntil(indexingPromise);
+        } catch {
+          void indexingPromise.catch((e) =>
+            console.error(
+              `RAG indexing trigger (fallback) failed for dataroom ${dataroomId}.`,
+              e
+            )
+          );
+        }
+      } 
       const returnObject = {
         message: "View recorded",
         viewId: !isPreview && newView ? newView.id : undefined,

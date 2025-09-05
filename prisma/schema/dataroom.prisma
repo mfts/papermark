@@ -37,6 +37,7 @@ model Dataroom {
   // bulk download setting
   allowBulkDownload Boolean @default(true) // Allow bulk download of entire dataroom
 
+  ragSettings    DataroomRAGSettings?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

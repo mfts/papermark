@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { processDocument } from "@/lib/api/documents/process-document";
 import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
-import { DocumentData } from "@/lib/documents/create-document";
-import prisma from "@/lib/prisma";
+import { processDocument } from "@/lib/api/documents/process-document";
 import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
+import prisma from "@/lib/prisma";
+import { waitUntil } from "@vercel/functions";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
+import { DocumentData } from "@/lib/documents/create-document";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 export async function POST(
   request: NextRequest,
@@ -147,6 +150,33 @@ export async function POST(
         teamId: link.teamId,
       },
     });
+
+    try {
+      const features = await getFeatureFlags({ teamId: link.teamId });
+      if (features.ragIndexing) {
+        const indexingPromise = triggerDataroomIndexing(
+          dataroomId,
+          link.teamId,
+          viewerId
+        );
+        try {
+          waitUntil(indexingPromise);
+        } catch {
+          void indexingPromise.catch((e) =>
+            console.error(
+              `RAG indexing trigger (fallback) failed for dataroom ${dataroomId}.`,
+              e
+            )
+          );
+        }
+      }
+    } catch (ragError) {
+      console.error(
+        `RAG indexing trigger setup failed for dataroom ${dataroomId}. Error:`,
+        ragError
+      );
+    }
+
 
     return NextResponse.json({ success: true });
   } catch (error) {

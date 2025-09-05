@@ -6,14 +6,17 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
 import { CustomUser } from "@/lib/types";
 import {
   decryptEncrpytedPassword,
   generateEncrpytedPassword,
 } from "@/lib/utils";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
+import { log } from "@/lib/utils";
 
 import { authOptions } from "../auth/[...nextauth]";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -250,6 +253,24 @@ export default async function handler(
           },
         }),
       );
+
+
+      const features = await getFeatureFlags({ teamId: teamId! });
+      if (features.ragIndexing) {
+        const indexingPromise = triggerDataroomIndexing(
+          targetId, teamId, userId
+        );
+        try {
+          waitUntil(indexingPromise);
+        } catch {
+          void indexingPromise.catch((e) =>
+            console.error(
+              `RAG indexing trigger (fallback) failed for dataroom ${targetId}.`,
+              e
+            )
+          );
+        }
+      } 
 
       // Decrypt the password for the new link
       if (linkWithView.password !== null) {

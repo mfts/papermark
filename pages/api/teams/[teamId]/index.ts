@@ -12,8 +12,10 @@ import prisma from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import { CustomUser } from "@/lib/types";
 import { unsubscribe } from "@/lib/unsend";
+import { vectorManager } from "@/lib/rag/vector-manager";
 
 import { authOptions } from "../../auth/[...nextauth]";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 export default async function handle(
   req: NextApiRequest,
@@ -192,6 +194,22 @@ export default async function handle(
 
       // delete all files from storage
       await deleteFiles({ teamId, data: hasBlobDocuments ? files : undefined });
+
+      const datarooms = await prisma.dataroom.findMany({
+        where: {
+          teamId: teamId,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const featureFlags = await getFeatureFlags({ teamId: teamId });
+      if (featureFlags.ragIndexing) {
+        for (const dataroom of datarooms) {
+          await vectorManager.deleteDataroomVectors(dataroom.id);
+        }
+      }
 
       // if user doesn't have other teams, delete the user
       const userTeams = await prisma.team.findMany({

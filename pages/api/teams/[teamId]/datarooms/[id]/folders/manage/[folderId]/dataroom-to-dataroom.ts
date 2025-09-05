@@ -7,6 +7,8 @@ import { getServerSession } from "next-auth/next";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 interface FolderWithContents {
   id: string;
@@ -142,19 +144,23 @@ export default async function handle(
           message: "Upgrade your plan to use datarooms.",
         });
       }
-
       try {
+        const features = await getFeatureFlags({ teamId: teamId! });
         const folderContents = await fetchFolderContents(folderId);
         await createDataroomStructure(dataroomId, folderContents);
+
+        if (features.ragIndexing && folderContents.documents.length > 0) {
+          await triggerDataroomIndexing(dataroomId, teamId, userId);
+        }
+
+        return res.status(200).json({
+          message: "Folder added to dataroom!",
+        });
       } catch (error) {
         return res.status(500).json({
           message: "Document already exists in dataroom!",
         });
       }
-
-      return res.status(200).json({
-        message: "Folder added to dataroom!",
-      });
     } catch (error) {
       errorhandler(error, res);
     }

@@ -7,6 +7,8 @@ import { getServerSession } from "next-auth/next";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 interface FolderWithContents {
   id: string;
@@ -138,6 +140,11 @@ export default async function handle(
       try {
         const folderContents = await fetchFolderContents(folderId);
         await createDataroomStructure(dataroomId, folderContents);
+
+        const features = await getFeatureFlags({ teamId: teamId! });
+        if (features.ragIndexing && folderContents.documents.length > 0) {
+          await triggerDataroomIndexing(dataroomId, teamId, userId);
+        }
 
         // const folderWithDocuments = await prisma.folder.findUnique({
         //   where: {

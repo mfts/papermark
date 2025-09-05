@@ -1,4 +1,4 @@
-import { type Message } from "ai";
+import { type UIMessage } from "@ai-sdk/react";
 
 import { cn } from "@/lib/utils";
 
@@ -18,7 +18,7 @@ const mapMessageRole = {
 };
 
 export interface ChatMessageProps {
-  message: Message;
+  message: UIMessage;
 }
 
 export function ChatMessage({ message, ...props }: ChatMessageProps) {
@@ -48,7 +48,12 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
             {mapMessageRole[message.role].name}
           </div>
           <div className="prose break-words font-light dark:prose-invert prose-p:leading-relaxed prose-pre:p-0">
-            <p className="mb-2 last:mb-0">{message.content}</p>
+            <p className="mb-2 last:mb-0">
+              {message.parts
+                ?.filter((part) => part.type === "text")
+                .map((part) => part.text)
+                .join(" ")}
+            </p>
           </div>
         </div>
         <ChatMessageActions className="group-hover:flex" message={message} />

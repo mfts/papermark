@@ -13,6 +13,8 @@ import { getServerSession } from "next-auth/next";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
+import { getFeatureFlags } from "@/lib/featureFlags";
 
 interface DataroomWithContents extends Dataroom {
   documents: DataroomDocument[];
@@ -236,6 +238,18 @@ export default async function handle(
           .filter((folder) => !folder.parentId)
           .map((folder) => duplicateFolders(newDataroom.id, folder)),
       );
+
+
+      const features = await getFeatureFlags({ teamId: teamId! });
+      if (features.ragIndexing && dataroomContents.documents.length > 0) {
+        try {
+          await triggerDataroomIndexing(dataroom.id, teamId, userId);
+        } catch {
+          console.error(
+            `RAG indexing trigger (fallback) failed for dataroom ${dataroom.id}.`,
+          )
+        }
+      } 
 
       res.status(201).json(newDataroom);
     } catch (error) {

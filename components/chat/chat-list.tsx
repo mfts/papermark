@@ -1,4 +1,4 @@
-import { type Message } from "ai";
+import { type UIMessage } from "@ai-sdk/react";
 
 import { Separator } from "@/components/ui/separator";
 
@@ -7,8 +7,8 @@ import PapermarkSparkle from "../shared/icons/papermark-sparkle";
 import { ChatMessage } from "./chat-message";
 
 export interface ChatList {
-  messages: Message[];
-  status: "in_progress" | "awaiting_message";
+  messages: UIMessage[];
+  status: string;
 }
 
 export function ChatList({ messages, status }: ChatList) {
@@ -26,7 +26,7 @@ export function ChatList({ messages, status }: ChatList) {
           )}
         </div>
       ))}
-      {status === "in_progress" && (
+      {status === "streaming" && (
         <>
           <Separator className="my-4 bg-background" />
           <div

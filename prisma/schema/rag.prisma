@@ -1,0 +1,55 @@
+model DataroomRAGSettings {
+  id         String   @id @default(cuid())
+  dataroomId String   @unique
+  enabled    Boolean @default(false)
+  dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  ragIndexingStatus      ParsingStatus    @default(NOT_STARTED) // "NOT_STARTED", "IN_PROGRESS", "COMPLETED", "FAILED"
+  indexingStartedAt   DateTime?
+  indexingCompletedAt DateTime?
+  indexingProgress    Float     @default(0.0) // Progress percentage (0-100)
+  indexingError       String? // Error message if indexing failed
+
+  // Token Tracking
+  totalEmbeddingTokens  Int @default(0)
+  totalProcessingTokens Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([enabled])
+  @@index([ragIndexingStatus])
+  @@index([indexingStartedAt])
+}
+
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  content    String @db.Text
+  chunkIndex Int // Order of chunk in document
+  chunkHash  String // Hash for deduplication
+
+  dataroomId  String
+  teamId      String
+  contentType String?
+  pageRanges  String? // e.g., "1-3", "5", "10-12"
+  tokenCount  Int? // Number of tokens in chunk
+
+  sectionHeader   String? // Section header for this chunk
+  headerHierarchy String? // JSON string of header hierarchy array
+  isSmallChunk    Boolean? // Whether this is a small chunk
+
+  vectorId String? // ID (Qdrant)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
+  @@index([dataroomId])
+  @@index([teamId])
+  @@index([chunkHash])
+  @@index([vectorId])
+  @@index([sectionHeader])
+}

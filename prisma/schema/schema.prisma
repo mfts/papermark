@@ -62,7 +62,7 @@ model User {
   // conversation
   participatedConversations ConversationParticipant[]
   messages                  Message[]
-  
+
   // FAQ system
   publishedFaqItems DataroomFaqItem[]
 }
@@ -85,6 +85,13 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+enum ParsingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
 }
 
 model Document {
@@ -121,9 +128,23 @@ model Document {
   uploadedDocument DocumentUpload[]
   isExternalUpload Boolean          @default(false) // Indicates if the document is an external upload
 
+  ragIndexError         String? // Error message if indexing failed
+  ragIndexingStatus     ParsingStatus @default(NOT_STARTED) // "NOT_STARTED", "IN_PROGRESS", "COMPLETED", "FAILED"
+  ragIndexingStartedAt  DateTime?
+  ragIndexingFinishedAt DateTime?
+  ragIndexingProgress   Float         @default(0.0) // Progress percentage (0-100)
+  embeddingTokenCount   Int           @default(0)
+
+  markdownContent     String?   @db.Text
+  markdownProcessedAt DateTime?
+
+  chunks DocumentChunk[]
+
   @@index([ownerId])
   @@index([teamId])
   @@index([folderId])
+  @@index([ragIndexingStatus])
+  @@index([ragIndexingStartedAt])
 }
 
 model DocumentVersion {

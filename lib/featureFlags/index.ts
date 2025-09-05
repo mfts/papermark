@@ -8,7 +8,8 @@ export type BetaFeatures =
   | "conversations"
   | "dataroomUpload"
   | "inDocumentLinks"
-  | "usStorage";
+  | "usStorage"
+  | "ragIndexing";
 
 type BetaFeaturesRecord = Record<BetaFeatures, string[]>;
 
@@ -22,6 +23,7 @@ export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
     dataroomUpload: false,
     inDocumentLinks: false,
     usStorage: false,
+    ragIndexing: false,
   };
 
   // Return all features as true if edge config is not available

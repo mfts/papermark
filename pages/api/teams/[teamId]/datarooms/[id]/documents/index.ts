@@ -9,6 +9,7 @@ import { errorhandler } from "@/lib/errorHandler";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { sendDataroomChangeNotificationTask } from "@/lib/trigger/dataroom-change-notification";
+import { triggerDataroomIndexing } from "@/lib/rag/indexing-trigger";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
@@ -199,6 +200,23 @@ export default async function handle(
           ),
         );
       }
+
+      const features = await getFeatureFlags({ teamId: teamId! });
+      if (features.ragIndexing) {
+        const indexingPromise = triggerDataroomIndexing(
+          dataroomId, teamId, userId
+        );
+        try {
+          waitUntil(indexingPromise);
+        } catch {
+          void indexingPromise.catch((e) =>
+            console.error(
+              `RAG indexing trigger (fallback) failed for dataroom ${dataroomId}.`,
+              e
+            )
+          );
+        }
+      } 
 
       return res.status(201).json(document);
     } catch (error) {
