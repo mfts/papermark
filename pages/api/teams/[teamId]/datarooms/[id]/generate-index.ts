@@ -211,8 +211,6 @@ export default async function handle(
       teamId: link.dataroom.teamId,
     });
 
-    console.log("dataroomIndex", dataroomIndex);
-
     // Generate the index file using the appropriate generator
     const { data, filename, mimeType } = await generateDataroomIndex(
       linkWithDataroom,
