@@ -32,6 +32,7 @@ type DRDocument = {
   downloadOnly: boolean;
   versions: DocumentVersion[];
   canDownload: boolean;
+  hierarchicalIndex: string | null;
 };
 
 type DocumentsCardProps = {

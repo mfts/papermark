@@ -100,6 +100,7 @@ type DataroomDocument = {
   versions: DocumentVersion[];
   canDownload: boolean;
   canView: boolean;
+  hierarchicalIndex: string | null;
 };
 
 const getParentFolders = (
