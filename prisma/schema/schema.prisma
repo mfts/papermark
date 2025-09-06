@@ -42,6 +42,7 @@ model User {
   name           String?
   email          String?    @unique
   emailVerified  DateTime?
+  password       String?    // For email/password authentication
   image          String?
   createdAt      DateTime   @default(now())
   accounts       Account[]
@@ -58,6 +59,7 @@ model User {
   endsAt         DateTime? // Stripe subscription end date
 
   restrictedTokens RestrictedToken[]
+  passwordResetTokens PasswordResetToken[]
 
   // conversation
   participatedConversations ConversationParticipant[]
@@ -85,6 +87,19 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  userId     String
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([token])
+  @@index([userId])
 }
 
 model Document {
