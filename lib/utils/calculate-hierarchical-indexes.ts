@@ -123,30 +123,28 @@ export async function calculateAndUpdateHierarchicalIndexes(
     return await prisma.$transaction(
       async (tx) => {
         // Consistent snapshot of folders and documents
-        const [folders, documents] = await Promise.all([
-          tx.dataroomFolder.findMany({
-            where: { dataroomId },
-            select: {
-              id: true,
-              name: true,
-              parentId: true,
-              orderIndex: true,
-            },
-          }),
-          tx.dataroomDocument.findMany({
-            where: { dataroomId },
-            select: {
-              id: true,
-              folderId: true,
-              orderIndex: true,
-              document: {
-                select: {
-                  name: true,
-                },
+        const folders = await tx.dataroomFolder.findMany({
+          where: { dataroomId },
+          select: {
+            id: true,
+            name: true,
+            parentId: true,
+            orderIndex: true,
+          },
+        });
+        const documents = await tx.dataroomDocument.findMany({
+          where: { dataroomId },
+          select: {
+            id: true,
+            folderId: true,
+            orderIndex: true,
+            document: {
+              select: {
+                name: true,
               },
             },
-          }),
-        ]);
+          },
+        });
 
         // Convert to unified format
         const allItems: DataroomItem[] = [
@@ -187,25 +185,21 @@ export async function calculateAndUpdateHierarchicalIndexes(
         const BATCH = 200;
         for (let i = 0; i < folderUpdates.length; i += BATCH) {
           const chunk = folderUpdates.slice(i, i + BATCH);
-          await Promise.all(
-            chunk.map((f) =>
-              tx.dataroomFolder.update({
-                where: { id: f.id },
-                data: { hierarchicalIndex: f.hierarchicalIndex },
-              }),
-            ),
-          );
+          for (const f of chunk) {
+            await tx.dataroomFolder.update({
+              where: { id: f.id },
+              data: { hierarchicalIndex: f.hierarchicalIndex },
+            });
+          }
         }
         for (let i = 0; i < documentUpdates.length; i += BATCH) {
           const chunk = documentUpdates.slice(i, i + BATCH);
-          await Promise.all(
-            chunk.map((d) =>
-              tx.dataroomDocument.update({
-                where: { id: d.id },
-                data: { hierarchicalIndex: d.hierarchicalIndex },
-              }),
-            ),
-          );
+          for (const d of chunk) {
+            await tx.dataroomDocument.update({
+              where: { id: d.id },
+              data: { hierarchicalIndex: d.hierarchicalIndex },
+            });
+          }
         }
 
         return {
@@ -213,7 +207,7 @@ export async function calculateAndUpdateHierarchicalIndexes(
           documentsUpdated: documentUpdates.length,
         };
       },
-      { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
   } catch (error) {
     console.error(
