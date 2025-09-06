@@ -137,6 +137,8 @@ model Document {
 
   markdownContent     String?   @db.Text
   markdownProcessedAt DateTime?
+  doclingTimeMs       Int?     
+  chunkingTimeMs      Int?    
 
   chunks DocumentChunk[]
 

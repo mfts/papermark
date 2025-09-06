@@ -4,7 +4,9 @@ import prisma from "@/lib/prisma";
 export async function saveMarkdownToDB(
     documentId: string,
     markdownContent: string,
-    teamId: string
+    teamId: string,
+    doclingTimeMs: number,
+    chunkingTimeMs: number
 ): Promise<void> {
     try {
         await prisma.document.update({
@@ -14,11 +16,11 @@ export async function saveMarkdownToDB(
             },
             data: {
                 markdownContent: markdownContent,
-                markdownProcessedAt: new Date()
+                markdownProcessedAt: new Date(),
+                doclingTimeMs: doclingTimeMs || null,
+                chunkingTimeMs: chunkingTimeMs || null
             }
         });
-
-        console.log(`✅ Markdown saved for document ${documentId} (${markdownContent.length} chars)`);
     } catch (error) {
         console.error(`❌ Failed to save markdown for document ${documentId}:`, error);
     }

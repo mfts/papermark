@@ -417,7 +417,6 @@ export class DocumentProcessor {
             const md = await this.docling.processDocument(url, contentType, documentCount);
             metrics.doclingTime = Date.now() - doclingStart;
             metrics.contentLength = md.length;
-            await saveMarkdownToDB(id, md, teamId);
 
             const chunkingStart = Date.now();
             const enhancedChunks = await this.enhancedChunker.createEnhancedChunks(
@@ -449,6 +448,7 @@ export class DocumentProcessor {
                 },
                 chunkHash: chunk.chunkHash,
             }));
+            metrics.chunkingTime = Date.now() - chunkingStart;
 
             logger.log('chunks', { chunks: chunks.slice(0, 3) })
 
@@ -458,6 +458,7 @@ export class DocumentProcessor {
                 avgChunkSize: Math.round(metrics.contentLength / enhancedChunks.length),
                 sampleChunkIds: enhancedChunks.slice(0, 3).map(chunk => chunk.id)
             });
+            await saveMarkdownToDB(id, md, teamId, metrics.doclingTime, metrics.chunkingTime);
 
             await saveChunksToDB(id, enhancedChunks.map(chunk => ({
                 id: chunk.id,
@@ -474,7 +475,6 @@ export class DocumentProcessor {
                 isSmallChunk: chunk.metadata.isSmallChunk
             })));
 
-            metrics.chunkingTime = Date.now() - chunkingStart;
             metrics.chunkCount = chunks.length;
 
             metrics.totalTime = Date.now() - start;
