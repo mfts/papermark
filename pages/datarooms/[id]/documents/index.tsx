@@ -11,6 +11,7 @@ import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomItemsList } from "@/components/datarooms/dataroom-items-list";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import { SidebarFolderTree } from "@/components/datarooms/folders";
+import RebuildIndexButton from "@/components/datarooms/rebuild-index-button";
 import { DataroomSortableList } from "@/components/datarooms/sortable/sortable-list";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { LoadingDocuments } from "@/components/documents/loading-document";
@@ -48,6 +49,10 @@ export default function Documents() {
               teamId={teamInfo?.currentTeam?.id!}
               dataroomId={dataroom?.id!}
             />
+            <RebuildIndexButton
+              teamId={teamInfo?.currentTeam?.id!}
+              dataroomId={dataroom?.id!}
+            />
             <DownloadDataroomButton
               teamId={teamInfo?.currentTeam?.id!}
               dataroomId={dataroom?.id!}
@@ -81,7 +86,7 @@ export default function Documents() {
               {!isReordering ? (
                 <ResponsiveButton
                   icon={<ArrowUpDownIcon className="h-4 w-4" />}
-                  text="Edit index"
+                  text="Reorder"
                   size="sm"
                   variant="outline"
                   onClick={() => setIsReordering(!isReordering)}

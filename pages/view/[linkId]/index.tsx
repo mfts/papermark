@@ -171,6 +171,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           dataroomDocumentId: document.id,
           folderId: document.folderId,
           orderIndex: document.orderIndex,
+          hierarchicalIndex: document.hierarchicalIndex,
           versions: [
             {
               ...versionWithoutTypeAndFile,

@@ -9,6 +9,10 @@ import {
   useDataroomFoldersTree,
 } from "@/lib/swr/use-dataroom";
 import { cn } from "@/lib/utils";
+import {
+  HIERARCHICAL_DISPLAY_STYLE,
+  useHierarchicalDisplayName,
+} from "@/lib/utils/hierarchical-display";
 import { sortByIndexThenName } from "@/lib/utils/sort-items-by-index-name";
 
 import { FileTree } from "@/components/ui/nextra-filetree";
@@ -19,6 +23,31 @@ type MixedItem =
   | (DataroomFolderWithDocuments & { itemType: "folder" })
   | (DataroomFolderWithDocuments["documents"][0] & { itemType: "document" });
 
+const DocumentFileItem = memo(
+  ({
+    document,
+    router,
+  }: {
+    document: DataroomFolderWithDocuments["documents"][0] & {
+      itemType: "document";
+    };
+    router: any;
+  }) => {
+    const documentDisplayName = useHierarchicalDisplayName(
+      document.document.name,
+      document.hierarchicalIndex,
+    );
+
+    return (
+      <FileTree.File
+        name={documentDisplayName}
+        onToggle={() => router.push(`/documents/${document.document.id}`)}
+      />
+    );
+  },
+);
+DocumentFileItem.displayName = "DocumentFileItem";
+
 const FolderComponent = memo(
   ({
     dataroomId,
@@ -28,6 +57,12 @@ const FolderComponent = memo(
     folder: DataroomFolderWithDocuments;
   }) => {
     const router = useRouter();
+
+    // Get hierarchical display names
+    const folderDisplayName = useHierarchicalDisplayName(
+      folder.name,
+      folder.hierarchicalIndex,
+    );
 
     const mixedItems = useMemo(() => {
       const allItems: MixedItem[] = [
@@ -57,11 +92,7 @@ const FolderComponent = memo(
             );
           } else {
             return (
-              <FileTree.File
-                key={item.id}
-                name={item.document.name}
-                onToggle={() => router.push(`/documents/${item.document.id}`)}
-              />
+              <DocumentFileItem key={item.id} document={item} router={router} />
             );
           }
         }),
@@ -87,7 +118,7 @@ const FolderComponent = memo(
 
     return (
       <FileTree.Folder
-        name={folder.name}
+        name={folderDisplayName}
         key={folder.id}
         active={isActive}
         childActive={isChildActive}

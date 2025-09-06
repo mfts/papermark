@@ -92,6 +92,7 @@ export default async function handle(
           createdAt: true,
           updatedAt: true,
           orderIndex: true,
+          hierarchicalIndex: true,
           document: {
             select: {
               id: true,
