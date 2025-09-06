@@ -458,22 +458,25 @@ export class DocumentProcessor {
                 avgChunkSize: Math.round(metrics.contentLength / enhancedChunks.length),
                 sampleChunkIds: enhancedChunks.slice(0, 3).map(chunk => chunk.id)
             });
-            await saveMarkdownToDB(id, md, teamId, metrics.doclingTime, metrics.chunkingTime);
-
-            await saveChunksToDB(id, enhancedChunks.map(chunk => ({
-                id: chunk.id,
-                content: chunk.content,
-                chunkIndex: chunk.metadata.chunkIndex,
-                chunkHash: chunk.chunkHash,
-                dataroomId: chunk.metadata.dataroomId,
-                teamId: chunk.metadata.teamId,
-                contentType: chunk.metadata.contentType,
-                pageRanges: chunk.metadata.pageRanges?.join(', '),
-                tokenCount: chunk.metadata.tokenCount,
-                sectionHeader: chunk.metadata.sectionHeader,
-                headerHierarchy: chunk.metadata.headerHierarchy ? JSON.stringify(chunk.metadata.headerHierarchy) : undefined,
-                isSmallChunk: chunk.metadata.isSmallChunk
-            })));
+            const dbSaveStart = Date.now();
+            await Promise.all([
+                saveMarkdownToDB(id, md, teamId, metrics.doclingTime, metrics.chunkingTime),
+                saveChunksToDB(id, enhancedChunks.map(chunk => ({
+                    id: chunk.id,
+                    content: chunk.content,
+                    chunkIndex: chunk.metadata.chunkIndex,
+                    chunkHash: chunk.chunkHash,
+                    dataroomId: chunk.metadata.dataroomId,
+                    teamId: chunk.metadata.teamId,
+                    contentType: chunk.metadata.contentType,
+                    pageRanges: chunk.metadata.pageRanges?.join(', '),
+                    tokenCount: chunk.metadata.tokenCount,
+                    sectionHeader: chunk.metadata.sectionHeader,
+                    headerHierarchy: chunk.metadata.headerHierarchy ? JSON.stringify(chunk.metadata.headerHierarchy) : undefined,
+                    isSmallChunk: chunk.metadata.isSmallChunk
+                })))
+            ]);
+            const dbSaveTime = Date.now() - dbSaveStart;
 
             metrics.chunkCount = chunks.length;
 
@@ -485,6 +488,7 @@ export class DocumentProcessor {
                 totalTime: metrics.totalTime,
                 doclingTime: metrics.doclingTime,
                 chunkingTime: metrics.chunkingTime,
+                dbSaveTime: dbSaveTime,
                 avgChunkSize: Math.round(metrics.contentLength / metrics.chunkCount)
             });
 

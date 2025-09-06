@@ -9,12 +9,11 @@ import { RAGQueueManager } from "../rag/queue-manager";
 import { getErrorMessage } from "@/lib/rag/errors";
 import pLimit from 'p-limit';
 
-// Constants for configuration
-const DOCUMENT_PROCESSING_CONCURRENCY = 3;
-const VECTOR_UPSERT_CONCURRENCY = 3;
-const PRESIGNED_URL_CONCURRENCY = 10;
+const DOCUMENT_PROCESSING_CONCURRENCY = 5;
+const VECTOR_UPSERT_CONCURRENCY = 5;
+const PRESIGNED_URL_CONCURRENCY = 15;
 const DATABASE_BATCH_SIZE = 50;
-const DATABASE_BATCH_CONCURRENCY = 5;
+const DATABASE_BATCH_CONCURRENCY = 8;       
 
 // Types for the indexing pipeline
 export interface RAGIndexingPayload {
@@ -96,26 +95,14 @@ export const ragIndexingTask = task({
             let totalEmbeddingTokens = 0;
 
             while (true) {
-                // Check if there are any requests in the queue
-                const hasPending = await RAGQueueManager.hasPendingRequests(payload.dataroomId);
-
-                if (!hasPending) {
-                    logger.info("Queue is empty, worker finished", {
-                        dataroomId: payload.dataroomId,
-                        processingId,
-                        totalDocumentsProcessed,
-                        totalDocumentsSkipped
-                    });
-                    break;
-                }
-
-                // Get the next request from the queue
                 const nextRequest = await RAGQueueManager.getNextFromQueue(payload.dataroomId);
 
                 if (!nextRequest) {
                     logger.info("No more requests in queue, worker finished", {
                         dataroomId: payload.dataroomId,
-                        processingId
+                        processingId,
+                        totalDocumentsProcessed,
+                        totalDocumentsSkipped
                     });
                     break;
                 }
@@ -303,13 +290,6 @@ async function processRAGIndexingRequest(
         };
     }
 
-    // Update dataroom indexing status
-    await updateDataroomIndexingStatus(request.dataroomId, {
-        status: "IN_PROGRESS",
-        startedAt: new Date(),
-        progress: 5.0,
-    });
-
     // Check if any documents need processing
     if (ragStatus.unindexedDocumentIds.length === 0) {
         logger.info("No documents need processing", {
@@ -363,22 +343,14 @@ async function processRAGIndexingRequest(
         DOCUMENT_PROCESSING_CONCURRENCY
     );
 
-    // Update document status and collect chunks
     const allChunks: Array<{ chunkId: string; content: string; metadata: DocumentProcessingResult['chunks'][number]['metadata'] }> = [];
+
+    const statusUpdates: Array<{ documentId: string; status: ParsingStatus; error?: string }> = [];
 
     for (const result of processingResults) {
         const documentId = result.chunks?.[0]?.metadata?.documentId;
 
         if (result.success && result.chunks) {
-            // Update document status to completed
-            if (documentId) {
-                await updateDocumentIndexingStatus(documentId, {
-                    status: ParsingStatus.COMPLETED,
-                    finishedAt: new Date(),
-                    progress: 100.0,
-                });
-            }
-
             for (const chunk of result.chunks) {
                 allChunks.push({
                     chunkId: chunk.id,
@@ -386,17 +358,43 @@ async function processRAGIndexingRequest(
                     metadata: chunk.metadata,
                 });
             }
-        } else {
-            // Update document status to failed
             if (documentId) {
-                await updateDocumentIndexingStatus(documentId, {
+                statusUpdates.push({
+                    documentId,
+                    status: ParsingStatus.COMPLETED
+                });
+            }
+        } else {
+            if (documentId) {
+                statusUpdates.push({
+                    documentId,
                     status: ParsingStatus.FAILED,
-                    error: result.error || 'Document processing failed',
-                    progress: 0.0,
+                    error: result.error || 'Document processing failed'
                 });
             }
         }
     }
+
+    const statusUpdateLimit = pLimit(DATABASE_BATCH_CONCURRENCY);
+    await Promise.all(
+        statusUpdates.map(update =>
+            statusUpdateLimit(async () => {
+                if (update.status === ParsingStatus.COMPLETED) {
+                    await updateDocumentIndexingStatus(update.documentId, {
+                        status: ParsingStatus.COMPLETED,
+                        finishedAt: new Date(),
+                        progress: 100.0,
+                    });
+                } else {
+                    await updateDocumentIndexingStatus(update.documentId, {
+                        status: ParsingStatus.FAILED,
+                        error: update.error || 'Document processing failed',
+                        progress: 0.0,
+                    });
+                }
+            })
+        )
+    );
 
     let embeddingTokens = 0;
 
@@ -444,11 +442,6 @@ async function processRAGIndexingRequest(
     }
 
     embeddingTokens = embeddingResult.totalTokens;
-
-    // Update dataroom token totals
-    await updateDataroomIndexingStatus(request.dataroomId, {
-        embeddingTokens: embeddingTokens,
-    });
 
     logger.info("Embeddings generated", {
         dataroomId: request.dataroomId,
@@ -514,11 +507,11 @@ async function processRAGIndexingRequest(
         await markDocumentsAsIndexed(successfulDocumentIds, request.dataroomId);
     }
 
-    // Update final status
     await updateDataroomIndexingStatus(request.dataroomId, {
         status: "COMPLETED",
         completedAt: new Date(),
         progress: 100.0,
+        embeddingTokens: embeddingTokens,
     });
 
     logger.info("Request processing completed", {
