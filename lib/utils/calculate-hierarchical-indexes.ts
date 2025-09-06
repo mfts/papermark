@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 import prisma from "@/lib/prisma";
 
 interface DataroomItem {
@@ -118,94 +120,107 @@ export async function calculateAndUpdateHierarchicalIndexes(
   dataroomId: string,
 ): Promise<{ foldersUpdated: number; documentsUpdated: number }> {
   try {
-    // Fetch all folders and documents for the dataroom
-    const [folders, documents] = await Promise.all([
-      prisma.dataroomFolder.findMany({
-        where: { dataroomId },
-        select: {
-          id: true,
-          name: true,
-          parentId: true,
-          orderIndex: true,
-        },
-      }),
-      prisma.dataroomDocument.findMany({
-        where: { dataroomId },
-        select: {
-          id: true,
-          folderId: true,
-          orderIndex: true,
-          document: {
+    return await prisma.$transaction(
+      async (tx) => {
+        // Consistent snapshot of folders and documents
+        const [folders, documents] = await Promise.all([
+          tx.dataroomFolder.findMany({
+            where: { dataroomId },
             select: {
+              id: true,
               name: true,
+              parentId: true,
+              orderIndex: true,
             },
-          },
-        },
-      }),
-    ]);
+          }),
+          tx.dataroomDocument.findMany({
+            where: { dataroomId },
+            select: {
+              id: true,
+              folderId: true,
+              orderIndex: true,
+              document: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          }),
+        ]);
 
-    // Convert to unified format
-    const allItems: DataroomItem[] = [
-      ...folders.map((folder) => ({
-        id: folder.id,
-        name: folder.name,
-        orderIndex: folder.orderIndex,
-        parentId: folder.parentId,
-        type: "folder" as const,
-      })),
-      ...documents.map((doc) => ({
-        id: doc.id,
-        name: doc.document.name,
-        orderIndex: doc.orderIndex,
-        folderId: doc.folderId,
-        type: "document" as const,
-      })),
-    ];
+        // Convert to unified format
+        const allItems: DataroomItem[] = [
+          ...folders.map((folder) => ({
+            id: folder.id,
+            name: folder.name,
+            orderIndex: folder.orderIndex,
+            parentId: folder.parentId,
+            type: "folder" as const,
+          })),
+          ...documents.map((doc) => ({
+            id: doc.id,
+            name: doc.document.name,
+            orderIndex: doc.orderIndex,
+            folderId: doc.folderId,
+            type: "document" as const,
+          })),
+        ];
 
-    // Build hierarchy starting from root items (no parent)
-    const hierarchy = buildHierarchy(allItems, null);
+        // Build hierarchy starting from root items (no parent)
+        const hierarchy = buildHierarchy(allItems, null);
 
-    // Assign hierarchical indexes
-    assignHierarchicalIndexes(hierarchy);
+        // Assign hierarchical indexes
+        assignHierarchicalIndexes(hierarchy);
 
-    // Flatten back to get all items with their indexes
-    const flattenedItems = flattenHierarchy(hierarchy);
+        // Flatten back to get all items with their indexes
+        const flattenedItems = flattenHierarchy(hierarchy);
 
-    // Separate folders and documents for batch updates
-    const folderUpdates = flattenedItems.filter(
-      (item) => item.type === "folder",
+        // Separate folders and documents for batch updates
+        const folderUpdates = flattenedItems.filter(
+          (item) => item.type === "folder",
+        );
+        const documentUpdates = flattenedItems.filter(
+          (item) => item.type === "document",
+        );
+
+        // Batched updates to reduce open query fan-out
+        const BATCH = 200;
+        for (let i = 0; i < folderUpdates.length; i += BATCH) {
+          const chunk = folderUpdates.slice(i, i + BATCH);
+          await Promise.all(
+            chunk.map((f) =>
+              tx.dataroomFolder.update({
+                where: { id: f.id },
+                data: { hierarchicalIndex: f.hierarchicalIndex },
+              }),
+            ),
+          );
+        }
+        for (let i = 0; i < documentUpdates.length; i += BATCH) {
+          const chunk = documentUpdates.slice(i, i + BATCH);
+          await Promise.all(
+            chunk.map((d) =>
+              tx.dataroomDocument.update({
+                where: { id: d.id },
+                data: { hierarchicalIndex: d.hierarchicalIndex },
+              }),
+            ),
+          );
+        }
+
+        return {
+          foldersUpdated: folderUpdates.length,
+          documentsUpdated: documentUpdates.length,
+        };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted },
     );
-    const documentUpdates = flattenedItems.filter(
-      (item) => item.type === "document",
-    );
-
-    // Use Prisma transaction to batch update all hierarchicalIndex fields
-    await prisma.$transaction(async (tx) => {
-      // Update folders
-      const folderPromises = folderUpdates.map((folder) =>
-        tx.dataroomFolder.update({
-          where: { id: folder.id },
-          data: { hierarchicalIndex: folder.hierarchicalIndex },
-        }),
-      );
-
-      // Update documents
-      const documentPromises = documentUpdates.map((document) =>
-        tx.dataroomDocument.update({
-          where: { id: document.id },
-          data: { hierarchicalIndex: document.hierarchicalIndex },
-        }),
-      );
-
-      await Promise.all([...folderPromises, ...documentPromises]);
-    });
-
-    return {
-      foldersUpdated: folderUpdates.length,
-      documentsUpdated: documentUpdates.length,
-    };
   } catch (error) {
-    console.error("Error calculating hierarchical indexes:", error);
+    console.error(
+      "Error calculating hierarchical indexes for",
+      dataroomId,
+      error,
+    );
     throw new Error("Failed to calculate and update hierarchical indexes");
   }
 }
