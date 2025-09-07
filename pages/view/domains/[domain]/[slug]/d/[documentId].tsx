@@ -199,6 +199,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
       .regex(/^[a-zA-Z0-9_-]+$/, "Invalid path parameter")
       .parse(slugParam);
     const documentId = z.string().cuid().parse(documentIdParam);
+
     const res = await fetch(
       `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
         domain,
@@ -252,7 +253,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
           linkType: "DATAROOM_LINK",
           link: {
             ...linkData,
-            teamId: teamId,
+            teamId: teamId || null,
             dataroomDocument: {
               ...linkData.dataroomDocument,
               document: {
