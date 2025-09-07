@@ -9,6 +9,7 @@ import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
 
 import { useAnalytics } from "@/lib/analytics";
+import { useDisablePrint } from "@/lib/hooks/use-disable-print";
 import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
 
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -19,7 +20,6 @@ import AccessForm, {
 
 import EmailVerificationMessage from "./access-form/email-verification-form";
 import ViewData, { TViewDocumentData } from "./view-data";
-import { useDisablePrint } from "@/lib/hooks/use-disable-print";
 
 type RowData = { [key: string]: any };
 type SheetData = {

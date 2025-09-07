@@ -102,7 +102,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             linkType: "DOCUMENT_LINK",
             link: {
               ...link,
-              teamId: teamId,
+              teamId: teamId || null,
               document: {
                 ...linkDocument,
                 versions: [versionWithoutTypeAndFile],
@@ -181,7 +181,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             linkType: "DATAROOM_LINK",
             link: {
               ...link,
-              teamId: teamId,
+              teamId: teamId || null,
               dataroom: {
                 ...link.dataroom,
                 documents,

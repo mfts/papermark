@@ -1,4 +1,4 @@
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/router";
 
 import { useMemo } from "react";
 import React from "react";
@@ -157,8 +157,8 @@ export default function DataroomViewer({
     allowBulkDownload: boolean;
   };
 
-  const searchParams = useSearchParams();
-  const searchQuery = searchParams?.get("search")?.toLowerCase() || "";
+  const router = useRouter();
+  const searchQuery = (router.query.search as string)?.toLowerCase() || "";
 
   const breadcrumbFolders = useMemo(
     () => getParentFolders(folderId, folders),
