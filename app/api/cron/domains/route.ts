@@ -37,9 +37,8 @@ export async function POST(req: Request) {
     const domains = await prisma.domain.findMany({
       where: {
         slug: {
-          // exclude domains that belong to us
           not: {
-            contains: "papermark.io",
+            in: ["papermark.io", "papermark.com"],
           },
         },
       },
