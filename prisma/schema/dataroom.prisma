@@ -52,6 +52,7 @@ model DataroomDocument {
   folderId   String?
   folder     DataroomFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
   orderIndex Int?
+  hierarchicalIndex String?        // Computed field like "1.2.3" for hierarchical display
 
   conversations Conversation[]
 
@@ -79,6 +80,7 @@ model DataroomFolder {
   dataroomId   String
   dataroom     Dataroom           @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
   orderIndex   Int?
+  hierarchicalIndex String?        // Computed field like "1.2" for hierarchical display
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

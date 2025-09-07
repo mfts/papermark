@@ -5,6 +5,10 @@ import { Download, FolderIcon, MoreVerticalIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { timeAgo } from "@/lib/utils";
+import {
+  HIERARCHICAL_DISPLAY_STYLE,
+  useHierarchicalDisplayName,
+} from "@/lib/utils/hierarchical-display";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +38,12 @@ export default function FolderCard({
   allowDownload,
 }: FolderCardProps) {
   const [open, setOpen] = useState(false);
+
+  // Get hierarchical display name
+  const displayName = useHierarchicalDisplayName(
+    folder.name,
+    folder.hierarchicalIndex,
+  );
   const downloadDocument = async () => {
     if (!allowDownload) {
       toast.error("Downloading folders is not allowed.");
@@ -95,12 +105,15 @@ export default function FolderCard({
 
         <div className="flex-col">
           <div className="flex items-center">
-            <h2 className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg">
+            <h2
+              className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg"
+              style={HIERARCHICAL_DISPLAY_STYLE}
+            >
               <div
                 onClick={() => setFolderId(folder.id)}
                 className="w-full truncate"
               >
-                <span>{folder.name}</span>
+                <span>{displayName}</span>
                 <span className="absolute inset-0" />
               </div>
             </h2>
