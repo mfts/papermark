@@ -171,7 +171,7 @@ export const processDocument = async ({
     );
   }
 
-  if (type === "video" && contentType !== "video/mp4") {
+  if (type === "video" && contentType !== "video/mp4" && contentType?.startsWith("video/")) {
     await processVideo.trigger(
       {
         videoUrl: key,
