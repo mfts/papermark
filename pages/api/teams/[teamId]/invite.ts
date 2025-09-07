@@ -11,6 +11,7 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 import { generateJWT } from "@/lib/utils/generate-jwt";
+import { checkDisposableEmail } from "@/lib/utils/disposable-email-validator";
 
 import { authOptions } from "../../auth/[...nextauth]";
 
@@ -31,6 +32,12 @@ export default async function handle(
 
     if (!email) {
       return res.status(400).json("Email is missing in request body");
+    }
+
+    // Check if email uses a disposable domain
+    const disposableEmailCheck = checkDisposableEmail(email);
+    if (disposableEmailCheck.isDisposable) {
+      return res.status(400).json(disposableEmailCheck.error || "Disposable email addresses are not allowed.");
     }
 
     try {

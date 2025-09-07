@@ -13,6 +13,7 @@ import prisma from "@/lib/prisma";
 import { ratelimit, redis } from "@/lib/redis";
 import { CustomUser } from "@/lib/types";
 import { trim } from "@/lib/utils";
+import { checkDisposableEmail } from "@/lib/utils/disposable-email-validator";
 
 import { authOptions } from "../auth/[...nextauth]";
 
@@ -40,6 +41,12 @@ export default async function handle(
 
     try {
       if (email && email !== sessionUser.email) {
+        // Check if email uses a disposable domain
+        const disposableEmailCheck = checkDisposableEmail(email);
+        if (disposableEmailCheck.isDisposable) {
+          throw new Error(disposableEmailCheck.error || "Disposable email addresses are not allowed.");
+        }
+
         const userWithEmail = await prisma.user.findUnique({
           where: {
             email,
