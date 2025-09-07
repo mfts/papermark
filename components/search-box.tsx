@@ -137,12 +137,15 @@ export function SearchBoxPersisted({
       currentQuery[urlParam] = debouncedValue;
     }
 
+    // For custom domains, preserve the clean URL structure
+    const isCustomDomain = !!(router.query.domain && router.query.slug);
+
     router.push(
       {
         pathname: router.pathname,
         query: currentQuery,
       },
-      undefined,
+      isCustomDomain ? `/${router.query.slug}` : undefined, // Preserve custom domain URL
       { shallow: true },
     );
   }, [debouncedValue]);
