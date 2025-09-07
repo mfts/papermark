@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-The latest version of Papermark are currently being supported with security updates.
+The latest version of Papermark is currently being supported with security updates.
 
 ## Reporting a Vulnerability
 
