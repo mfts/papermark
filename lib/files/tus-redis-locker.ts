@@ -32,7 +32,7 @@ export class RedisLocker implements Locker {
   redisClient: Redis;
 
   constructor(options: RedisLockerOptions) {
-    this.timeout = options.acquireLockTimeout ?? 1000 * 30; // default: 30 seconds
+    this.timeout = options.acquireLockTimeout ?? 60_000;
     this.redisClient = options.redisClient;
   }
 
@@ -45,7 +45,7 @@ class RedisLock implements Lock {
   constructor(
     private id: string,
     private locker: RedisLocker,
-    private timeout: number = 1000 * 30, // default: 30 seconds
+    private timeout: number = 60_000,
   ) {}
 
   async lock(
