@@ -28,6 +28,7 @@ import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { validateEmail } from "@/lib/utils/validate-email";
+import { notifyDataroomAccess, notifyDocumentView } from "@/lib/slack/events";
 
 export async function POST(request: NextRequest) {
   try {
@@ -603,28 +604,28 @@ export async function POST(request: NextRequest) {
       ...(link.enableAgreement &&
         link.agreementId &&
         hasConfirmedAgreement && {
-          agreementResponse: {
-            create: {
-              agreementId: link.agreementId,
-            },
+        agreementResponse: {
+          create: {
+            agreementId: link.agreementId,
           },
-        }),
+        },
+      }),
       ...(link.audienceType === LinkAudienceType.GROUP &&
         link.groupId && {
-          groupId: link.groupId,
-        }),
+        groupId: link.groupId,
+      }),
       ...(customFields &&
         link.customFields.length > 0 && {
-          customFieldResponse: {
-            create: {
-              data: link.customFields.map((field) => ({
-                identifier: field.identifier,
-                label: field.label,
-                response: customFields[field.identifier] || "",
-              })),
-            },
+        customFieldResponse: {
+          create: {
+            data: link.customFields.map((field) => ({
+              identifier: field.identifier,
+              label: field.label,
+              response: customFields[field.identifier] || "",
+            })),
           },
-        }),
+        },
+      }),
     };
 
     // ** DATAROOM_VIEW **
@@ -657,6 +658,24 @@ export async function POST(request: NextRequest) {
               enableNotification: link.enableNotification,
             }),
           );
+
+          if (link.teamId) {
+            waitUntil(
+              (async () => {
+                try {
+                  await notifyDataroomAccess({
+                    teamId: link.teamId!,
+                    dataroomId,
+                    linkId,
+                    viewerEmail: verifiedEmail ?? email,
+                    viewerId: viewer?.id,
+                  });
+                } catch (error) {
+                  console.error("Error sending Slack notification:", error);
+                }
+              })()
+            );
+          }
         }
 
         const dataroomViewId =
@@ -768,6 +787,24 @@ export async function POST(request: NextRequest) {
           select: { id: true },
         });
         console.timeEnd("create-view");
+        if (link.teamId) {
+          waitUntil(
+            (async () => {
+              try {
+                await notifyDocumentView({
+                  teamId: link.teamId!,
+                  documentId,
+                  dataroomId,
+                  linkId,
+                  viewerEmail: verifiedEmail ?? email,
+                  viewerId: viewer?.id,
+                });
+              } catch (error) {
+                console.error("Error sending Slack notification:", error);
+              }
+            })()
+          );
+        }
       }
 
       // if document version has pages, then return pages
