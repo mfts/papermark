@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
-  useHierarchicalDisplayName,
+  getHierarchicalDisplayName,
 } from "@/lib/utils/hierarchical-display";
 
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ type DocumentsCardProps = {
   isPreview: boolean;
   allowDownload: boolean;
   isProcessing?: boolean;
+  dataroomIndexEnabled?: boolean;
 };
 
 export default function DocumentCard({
@@ -51,6 +52,7 @@ export default function DocumentCard({
   isPreview,
   allowDownload,
   isProcessing = false,
+  dataroomIndexEnabled,
 }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
   const canDownload = document.canDownload && allowDownload;
@@ -60,9 +62,10 @@ export default function DocumentCard({
   const router = useRouter();
 
   // Get hierarchical display name
-  const displayName = useHierarchicalDisplayName(
+  const displayName = getHierarchicalDisplayName(
     document.name,
     document.hierarchicalIndex,
+    dataroomIndexEnabled || false,
   );
   const { previewToken, domain, slug } = router.query as {
     previewToken?: string;

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { timeAgo } from "@/lib/utils";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
-  useHierarchicalDisplayName,
+  getHierarchicalDisplayName,
 } from "@/lib/utils/hierarchical-display";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ type FolderCardProps = {
   linkId: string;
   viewId?: string;
   allowDownload: boolean;
+  dataroomIndexEnabled?: boolean;
 };
 export default function FolderCard({
   folder,
@@ -36,13 +37,15 @@ export default function FolderCard({
   linkId,
   viewId,
   allowDownload,
+  dataroomIndexEnabled,
 }: FolderCardProps) {
   const [open, setOpen] = useState(false);
 
   // Get hierarchical display name
-  const displayName = useHierarchicalDisplayName(
+  const displayName = getHierarchicalDisplayName(
     folder.name,
     folder.hierarchicalIndex,
+    dataroomIndexEnabled || false,
   );
   const downloadDocument = async () => {
     if (!allowDownload) {

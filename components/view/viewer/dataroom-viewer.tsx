@@ -15,7 +15,7 @@ import { PanelLeftIcon, XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
-  useHierarchicalDisplayName,
+  getHierarchicalDisplayName,
 } from "@/lib/utils/hierarchical-display";
 import { sortByIndexThenName } from "@/lib/utils/sort-items-by-index-name";
 
@@ -48,14 +48,17 @@ const ViewerBreadcrumbItem = ({
   folder,
   setFolderId,
   isLast,
+  dataroomIndexEnabled,
 }: {
   folder: any;
   setFolderId: (id: string | null) => void;
   isLast: boolean;
+  dataroomIndexEnabled?: boolean;
 }) => {
-  const displayName = useHierarchicalDisplayName(
+  const displayName = getHierarchicalDisplayName(
     folder.name,
     folder.hierarchicalIndex,
+    dataroomIndexEnabled || false,
   );
 
   if (isLast) {
@@ -135,6 +138,7 @@ export default function DataroomViewer({
   enableIndexFile,
   isEmbedded,
   viewerEmail,
+  dataroomIndexEnabled,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
@@ -150,6 +154,7 @@ export default function DataroomViewer({
   enableIndexFile?: boolean;
   isEmbedded?: boolean;
   viewerEmail?: string;
+  dataroomIndexEnabled?: boolean;
 }) {
   const { documents, folders, allowBulkDownload } = dataroom as {
     documents: DataroomDocument[];
@@ -342,6 +347,7 @@ export default function DataroomViewer({
           isPreview={!!isPreview}
           allowDownload={allowDownload && item.canDownload}
           isProcessing={isProcessing}
+          dataroomIndexEnabled={dataroomIndexEnabled}
         />
       );
     }
@@ -356,6 +362,7 @@ export default function DataroomViewer({
         linkId={linkId}
         viewId={viewId}
         allowDownload={item.allowDownload}
+        dataroomIndexEnabled={dataroomIndexEnabled}
       />
     );
   };
@@ -388,6 +395,7 @@ export default function DataroomViewer({
                 documents={documents}
                 setFolderId={setFolderId}
                 folderId={folderId}
+                dataroomIndexEnabled={dataroomIndexEnabled}
               />
               <ScrollBar orientation="horizontal" />
               <ScrollBar orientation="vertical" />
@@ -421,6 +429,7 @@ export default function DataroomViewer({
                             documents={documents}
                             setFolderId={setFolderId}
                             folderId={folderId}
+                            dataroomIndexEnabled={dataroomIndexEnabled}
                           />
                         </div>
                         <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
@@ -452,6 +461,7 @@ export default function DataroomViewer({
                               folder={folder}
                               setFolderId={setFolderId}
                               isLast={index === breadcrumbFolders.length - 1}
+                              dataroomIndexEnabled={dataroomIndexEnabled}
                             />
                           </BreadcrumbItem>
                         </React.Fragment>

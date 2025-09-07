@@ -8,7 +8,7 @@ import { HomeIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
-  useHierarchicalDisplayName,
+  getHierarchicalDisplayName,
 } from "@/lib/utils/hierarchical-display";
 
 import { FileTree } from "@/components/ui/nextra-filetree";
@@ -16,10 +16,17 @@ import { FileTree } from "@/components/ui/nextra-filetree";
 import { buildNestedFolderStructureWithDocs } from "./utils";
 
 const ViewerDocumentFileItem = memo(
-  ({ document }: { document: DataroomDocumentWithVersion }) => {
-    const documentDisplayName = useHierarchicalDisplayName(
+  ({
+    document,
+    dataroomIndexEnabled,
+  }: {
+    document: DataroomDocumentWithVersion;
+    dataroomIndexEnabled?: boolean;
+  }) => {
+    const documentDisplayName = getHierarchicalDisplayName(
       document.name,
       document.hierarchicalIndex,
+      dataroomIndexEnabled || false,
     );
 
     return (
@@ -83,18 +90,21 @@ const FolderComponent = memo(
     folderId,
     setFolderId,
     folderPath,
+    dataroomIndexEnabled,
   }: {
     folder: DataroomFolderWithDocuments;
     folderId: string | null;
     setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
     folderPath: Set<string> | null;
+    dataroomIndexEnabled?: boolean;
   }) => {
     const router = useRouter();
 
     // Get hierarchical display name for the folder
-    const folderDisplayName = useHierarchicalDisplayName(
+    const folderDisplayName = getHierarchicalDisplayName(
       folder.name,
       folder.hierarchicalIndex,
+      dataroomIndexEnabled || false,
     );
 
     // Memoize the rendering of the current folder's documents
@@ -107,9 +117,10 @@ const FolderComponent = memo(
               ...doc,
               versions: [], // Not needed for display
             }}
+            dataroomIndexEnabled={dataroomIndexEnabled}
           />
         )),
-      [folder.documents],
+      [folder.documents, dataroomIndexEnabled],
     );
 
     // Recursively render child folders if they exist
@@ -122,9 +133,16 @@ const FolderComponent = memo(
             folderId={folderId}
             setFolderId={setFolderId}
             folderPath={folderPath}
+            dataroomIndexEnabled={dataroomIndexEnabled}
           />
         )),
-      [folder.childFolders, folderId, setFolderId],
+      [
+        folder.childFolders,
+        folderId,
+        setFolderId,
+        folderPath,
+        dataroomIndexEnabled,
+      ],
     );
 
     const isActive = folder.id === folderId;
@@ -197,11 +215,13 @@ const SidebarFolders = ({
   documents,
   folderId,
   setFolderId,
+  dataroomIndexEnabled,
 }: {
   folders: DataroomFolder[];
   documents: DataroomDocumentWithVersion[];
   folderId: string | null;
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
+  dataroomIndexEnabled?: boolean;
 }) => {
   const nestedFolders = useMemo(() => {
     if (folders) {
@@ -235,6 +255,7 @@ const SidebarFolders = ({
           folderId={folderId}
           setFolderId={setFolderId}
           folderPath={folderPath}
+          dataroomIndexEnabled={dataroomIndexEnabled}
         />
       ))}
     </FileTree>
@@ -246,11 +267,13 @@ export function ViewFolderTree({
   documents,
   setFolderId,
   folderId,
+  dataroomIndexEnabled,
 }: {
   folders: DataroomFolder[];
   documents: DataroomDocumentWithVersion[];
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
   folderId: string | null;
+  dataroomIndexEnabled?: boolean;
 }) {
   if (!folders) return null;
 
@@ -260,6 +283,7 @@ export function ViewFolderTree({
       documents={documents}
       setFolderId={setFolderId}
       folderId={folderId}
+      dataroomIndexEnabled={dataroomIndexEnabled}
     />
   );
 }
