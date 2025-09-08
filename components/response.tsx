@@ -15,7 +15,7 @@ export const Response = memo(
   ({ className, children, ...props }: ResponseProps) => (
     <div
       className={cn(
-        "prose prose-sm size-full max-w-none dark:prose-invert [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+        "prose-sm size-full max-w-none dark:prose-invert [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
         className,
       )}
       {...props}

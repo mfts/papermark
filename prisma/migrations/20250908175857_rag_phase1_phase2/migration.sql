@@ -2,14 +2,20 @@
 CREATE TYPE "ParsingStatus" AS ENUM ('NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'FAILED');
 
 -- AlterTable
-ALTER TABLE "Document" ADD COLUMN     "embeddingTokenCount" INTEGER NOT NULL DEFAULT 0,
+ALTER TABLE "Document" ADD COLUMN     "chunkingTimeMs" INTEGER,
+ADD COLUMN     "doclingTimeMs" INTEGER,
+ADD COLUMN     "documentSummary" TEXT,
+ADD COLUMN     "embeddingTokenCount" INTEGER NOT NULL DEFAULT 0,
 ADD COLUMN     "markdownContent" TEXT,
 ADD COLUMN     "markdownProcessedAt" TIMESTAMP(3),
 ADD COLUMN     "ragIndexError" TEXT,
 ADD COLUMN     "ragIndexingFinishedAt" TIMESTAMP(3),
 ADD COLUMN     "ragIndexingProgress" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
 ADD COLUMN     "ragIndexingStartedAt" TIMESTAMP(3),
-ADD COLUMN     "ragIndexingStatus" "ParsingStatus" NOT NULL DEFAULT 'NOT_STARTED';
+ADD COLUMN     "ragIndexingStatus" "ParsingStatus" NOT NULL DEFAULT 'NOT_STARTED',
+ADD COLUMN     "summaryModel" TEXT,
+ADD COLUMN     "summaryProcessedAt" TIMESTAMP(3),
+ADD COLUMN     "summaryTimeMs" INTEGER;
 
 -- CreateTable
 CREATE TABLE "DataroomRAGSettings" (
@@ -51,6 +57,60 @@ CREATE TABLE "DocumentChunk" (
     CONSTRAINT "DocumentChunk_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "RAGChatSession" (
+    "id" TEXT NOT NULL,
+    "dataroomId" TEXT NOT NULL,
+    "linkId" TEXT NOT NULL,
+    "viewerId" TEXT NOT NULL,
+    "title" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "RAGChatSession_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "RAGChatMessage" (
+    "id" TEXT NOT NULL,
+    "sessionId" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "RAGChatMessage_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "RAGChatMessageMetadata" (
+    "id" TEXT NOT NULL,
+    "messageId" TEXT NOT NULL,
+    "queryType" TEXT,
+    "intent" TEXT,
+    "complexityLevel" TEXT,
+    "searchStrategy" TEXT,
+    "strategyConfidence" DOUBLE PRECISION,
+    "queryAnalysisTime" INTEGER,
+    "searchTime" INTEGER,
+    "responseTime" INTEGER,
+    "totalTime" INTEGER,
+    "inputTokens" INTEGER,
+    "outputTokens" INTEGER,
+    "totalTokens" INTEGER,
+    "chunkIds" TEXT[],
+    "documentIds" TEXT[],
+    "pageRanges" TEXT[],
+    "compressionStrategy" TEXT,
+    "originalContextSize" INTEGER,
+    "compressedContextSize" INTEGER,
+    "errorType" TEXT,
+    "errorMessage" TEXT,
+    "isRetryable" BOOLEAN,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "RAGChatMessageMetadata_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "DataroomRAGSettings_dataroomId_key" ON "DataroomRAGSettings"("dataroomId");
 
@@ -85,6 +145,33 @@ CREATE INDEX "DocumentChunk_sectionHeader_idx" ON "DocumentChunk"("sectionHeader
 CREATE UNIQUE INDEX "DocumentChunk_documentId_chunkIndex_key" ON "DocumentChunk"("documentId", "chunkIndex");
 
 -- CreateIndex
+CREATE INDEX "RAGChatSession_dataroomId_linkId_viewerId_createdAt_idx" ON "RAGChatSession"("dataroomId", "linkId", "viewerId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "RAGChatSession_linkId_viewerId_idx" ON "RAGChatSession"("linkId", "viewerId");
+
+-- CreateIndex
+CREATE INDEX "RAGChatSession_dataroomId_idx" ON "RAGChatSession"("dataroomId");
+
+-- CreateIndex
+CREATE INDEX "RAGChatMessage_sessionId_createdAt_idx" ON "RAGChatMessage"("sessionId", "createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "RAGChatMessageMetadata_messageId_key" ON "RAGChatMessageMetadata"("messageId");
+
+-- CreateIndex
+CREATE INDEX "RAGChatMessageMetadata_messageId_idx" ON "RAGChatMessageMetadata"("messageId");
+
+-- CreateIndex
+CREATE INDEX "RAGChatMessageMetadata_searchStrategy_idx" ON "RAGChatMessageMetadata"("searchStrategy");
+
+-- CreateIndex
+CREATE INDEX "RAGChatMessageMetadata_queryType_idx" ON "RAGChatMessageMetadata"("queryType");
+
+-- CreateIndex
+CREATE INDEX "RAGChatMessageMetadata_createdAt_idx" ON "RAGChatMessageMetadata"("createdAt");
+
+-- CreateIndex
 CREATE INDEX "Document_ragIndexingStatus_idx" ON "Document"("ragIndexingStatus");
 
 -- CreateIndex
@@ -95,3 +182,9 @@ ALTER TABLE "DataroomRAGSettings" ADD CONSTRAINT "DataroomRAGSettings_dataroomId
 
 -- AddForeignKey
 ALTER TABLE "DocumentChunk" ADD CONSTRAINT "DocumentChunk_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "Document"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RAGChatMessage" ADD CONSTRAINT "RAGChatMessage_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "RAGChatSession"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RAGChatMessageMetadata" ADD CONSTRAINT "RAGChatMessageMetadata_messageId_fkey" FOREIGN KEY ("messageId") REFERENCES "RAGChatMessage"("id") ON DELETE CASCADE ON UPDATE CASCADE;

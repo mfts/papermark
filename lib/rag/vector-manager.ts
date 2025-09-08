@@ -1,8 +1,11 @@
 import { QdrantVectorStore, QdrantPoint } from './qdrant-client';
 import { log } from '@/lib/utils';
+import { RAGError } from './errors';
 
-// Constants
-const DEFAULT_VECTOR_SIZE = 1536;
+const VECTOR_MANAGER_CONFIG = {
+    DEFAULT_RETRY_COUNT: 2,
+    OPERATION_TIMEOUT_MS: 20000
+} as const;
 
 class VectorManager {
     private static instance: VectorManager;
@@ -50,63 +53,71 @@ class VectorManager {
         dataroomId: string,
         documentId: string,
         documentName?: string,
-        retryCount: number = 2
+        retryCount: number = VECTOR_MANAGER_CONFIG.DEFAULT_RETRY_COUNT
     ): Promise<boolean> {
-        const startTime = Date.now();
+        return RAGError.withErrorHandling(
+            async () => {
+                // Input validation
+                this.validateDeleteInputs(dataroomId, documentId);
 
-        try {
-            const collectionName = this.generateCollectionName(dataroomId);
+                const startTime = Date.now();
+                const collectionName = this.generateCollectionName(dataroomId);
 
-            // Check if collection exists
-            const collectionExists = await this.qdrantClient.collectionExists(collectionName);
-            if (!collectionExists) {
-                log({
-                    message: `Collection ${collectionName} does not exist for dataroom ${dataroomId}`,
-                    type: "info",
-                });
-                return true;
-            }
+                // Check if collection exists
+                const collectionExists = await this.qdrantClient.collectionExists(collectionName);
+                if (!collectionExists) {
+                    log({
+                        message: `Collection ${collectionName} does not exist for dataroom ${dataroomId}`,
+                        type: "info",
+                    });
+                    return true;
+                }
 
-            const collectionInfo = await this.qdrantClient.getCollectionInfo(collectionName);
-            if (!collectionInfo || collectionInfo.pointsCount === 0) {
-                log({
-                    message: `No vectors found for document ${documentName || documentId} in dataroom ${dataroomId}`,
-                    type: "info",
-                });
-                return true;
-            }
+                const collectionInfo = await this.qdrantClient.getCollectionInfo(collectionName);
+                if (!collectionInfo || collectionInfo.pointsCount === 0) {
+                    log({
+                        message: `No vectors found for document ${documentName || documentId} in dataroom ${dataroomId}`,
+                        type: "info",
+                    });
+                    return true;
+                }
 
-            const deleteResult = await this.qdrantClient.deletePointsByFilter(collectionName, {
-                documentId: documentId
-            });
+                // Execute deletion with timeout protection
+                const deleteResult = await Promise.race([
+                    this.qdrantClient.deletePointsByFilter(collectionName, {
+                        documentId: documentId
+                    }),
+                    new Promise<never>((_, reject) =>
+                        setTimeout(() => reject(new Error(`Delete operation timeout after ${VECTOR_MANAGER_CONFIG.OPERATION_TIMEOUT_MS}ms`)),
+                            VECTOR_MANAGER_CONFIG.OPERATION_TIMEOUT_MS)
+                    )
+                ]);
 
-            if (deleteResult.success) {
-                const duration = Date.now() - startTime;
-                log({
-                    message: `Successfully deleted vectors for document ${documentName || documentId} in dataroom ${dataroomId} (${duration}ms)`,
-                    type: "info",
-                });
-                return true;
-            } else {
-                throw new Error('Filter-based deletion failed');
-            }
-        } catch (error) {
-            const duration = Date.now() - startTime;
+                if (deleteResult.success) {
+                    const duration = Date.now() - startTime;
+                    log({
+                        message: `Successfully deleted vectors for document ${documentName || documentId} in dataroom ${dataroomId} (${duration}ms)`,
+                        type: "info",
+                    });
+                    return true;
+                } else {
+                    throw new Error('Filter-based deletion failed');
+                }
+            },
+            'vectorDeletion',
+            { service: 'VectorManager', operation: 'deleteDocumentVectors', dataroomId, documentId }
+        );
+    }
 
-            if (retryCount > 0) {
-                log({
-                    message: `Retrying vector deletion for document ${documentName || documentId} in dataroom ${dataroomId}. Attempts remaining: ${retryCount}`,
-                    type: "error",
-                });
-                await new Promise(resolve => setTimeout(resolve, (3 - retryCount) * 1000));
-                return this.deleteDocumentVectors(dataroomId, documentId, documentName, retryCount - 1);
-            }
-
-            log({
-                message: `Error deleting vectors for document ${documentName || documentId} in dataroom ${dataroomId} after all retries (${duration}ms). Error: ${error}`,
-                type: "error",
-            });
-            return false;
+    /**
+     * Validate delete operation inputs
+     */
+    private validateDeleteInputs(dataroomId: string, documentId: string): void {
+        if (!dataroomId || dataroomId.trim().length === 0) {
+            throw RAGError.create('validation', 'Dataroom ID cannot be empty', { field: 'dataroomId' });
+        }
+        if (!documentId || documentId.trim().length === 0) {
+            throw RAGError.create('validation', 'Document ID cannot be empty', { field: 'documentId' });
         }
     }
 
@@ -251,7 +262,7 @@ class VectorManager {
     /**
      * Create a collection for a dataroom
      */
-    public async createCollection(dataroomId: string, vectorSize: number = DEFAULT_VECTOR_SIZE): Promise<boolean> {
+    public async createCollection(dataroomId: string, vectorSize: number = 1536): Promise<boolean> {
         const collectionName = this.generateCollectionName(dataroomId);
         return await this.qdrantClient.createCollection(collectionName, vectorSize);
     }
@@ -271,10 +282,15 @@ class VectorManager {
         dataroomId: string,
         vector: number[],
         limit: number = 10,
-        scoreThreshold: number = 0.7
+        scoreThreshold: number = 0.7,
+        metadataFilter?: {
+            documentIds?: string[];
+            pageRanges?: string[];
+            dataroomId?: string;
+        }
     ) {
         const collectionName = this.generateCollectionName(dataroomId);
-        return await this.qdrantClient.searchSimilar(collectionName, vector, limit, scoreThreshold);
+        return await this.qdrantClient.searchSimilar(collectionName, vector, limit, scoreThreshold, metadataFilter);
     }
 
     /**

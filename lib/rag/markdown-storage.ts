@@ -71,8 +71,6 @@ export async function saveChunksToDB(
                 vectorId: chunk?.vectorId || null
             }))
         });
-
-        console.log(`✅ Saved ${chunks.length} chunks for document ${documentId}`);
     } catch (error) {
         console.error(`❌ Failed to save chunks for document ${documentId}:`, error);
     }

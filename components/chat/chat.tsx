@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import {
-  type Message,
-  experimental_useAssistant as useAssistant,
-} from "ai/react";
+import { type UIMessage as Message, useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { nanoid } from "nanoid";
 
 import { BasePlan } from "@/lib/swr/use-billing";
@@ -37,21 +35,22 @@ export function Chat({
   const {
     status,
     messages: hookMessages,
-    input: hookInput,
-    submitMessage,
-    handleInputChange,
+    sendMessage,
     error,
-  } = useAssistant({
-    api: "/api/assistants/chat",
-    threadId: threadId,
-    body: {
-      isPublic: isPublic,
-      userId: userId,
-      plan: plan,
-    },
+  } = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/assistants/chat",
+      body: {
+        threadId: threadId,
+        isPublic: isPublic,
+        userId: userId,
+        plan: plan,
+      },
+    }),
   });
 
   const [combinedMessages, setCombinedMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState<string>("");
 
   useEffect(() => {
     if (error instanceof Error) {
@@ -67,13 +66,13 @@ export function Chat({
 
       const message: Message = {
         role: "system",
-        content: content,
+        parts: [{ type: "text", text: content }],
         id: nanoid(),
       };
 
       setCombinedMessages((prev) => [...prev, message]);
     }
-  }, [error]);
+  }, [error, isPublic, userId, plan]);
 
   useEffect(() => {
     // Concatenate existing messages with messages from the hook
@@ -82,14 +81,18 @@ export function Chat({
     setCombinedMessages([...reversedMessages, ...hookMessages]);
   }, [initialMessages, hookMessages]);
 
-  let isLoading;
-  if (status === "in_progress") {
-    isLoading = true;
-  } else if (status === "awaiting_message") {
-    isLoading = true;
-  }
+  const isLoading = status === "streaming";
 
-  const [_, setInput] = useState<string>(hookInput);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim()) {
+      await sendMessage({
+        role: "user",
+        parts: [{ type: "text", text: input }],
+      });
+      setInput("");
+    }
+  };
 
   return (
     <>
@@ -109,7 +112,7 @@ export function Chat({
         ) : (
           <EmptyScreen
             firstPage={firstPage}
-            handleInputChange={handleInputChange}
+            handleInputChange={(e) => setInput(e.target.value)}
             setInput={setInput}
           />
         )}
@@ -118,10 +121,10 @@ export function Chat({
         status={status}
         error={error}
         messages={combinedMessages}
-        input={hookInput}
+        input={input}
         setInput={setInput}
-        submitMessage={submitMessage}
-        handleInputChange={handleInputChange}
+        submitMessage={handleSubmit}
+        handleInputChange={(e) => setInput(e.target.value)}
       />
     </>
   );

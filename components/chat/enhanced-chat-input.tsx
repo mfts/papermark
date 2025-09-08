@@ -8,12 +8,13 @@ import React, {
   useState,
 } from "react";
 
-import { ArrowUpIcon, Loader2Icon, Square } from "lucide-react";
+import { ArrowUpIcon, Square } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 import { Textarea } from "@/components/ui/textarea";
 
+import { Loader } from "../loader";
 import { DroppableChatInput } from "./droppable-chat-input";
 import { FileSelectorPopover } from "./file-selector-popover";
 import { type ScopeItem } from "./scope-pill";
@@ -236,8 +237,10 @@ export function EnhancedChatInput({
   const handleStop = useCallback(() => {
     if (onStop) {
       onStop();
+      setInput("");
+      adjustHeight(true);
     }
-  }, [onStop]);
+  }, [onStop, adjustHeight]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -254,7 +257,7 @@ export function EnhancedChatInput({
     if (!disabled && !isLoading && !isSubmitting) {
       textareaRef.current?.focus();
     }
-  }, [disabled, isLoading, isSubmitting]);
+  }, [disabled, isLoading, isSubmitting, textareaRef]);
 
   const isSubmitDisabled =
     !input.trim() || isSubmitting || disabled || isLoading;
@@ -303,14 +306,23 @@ export function EnhancedChatInput({
             </div>
           </div>
           <div className="flex min-h-12 items-center rounded-b-xl bg-black/5 px-3 py-1.5 dark:bg-white/5">
-            <FileSelectorPopover
-              documents={documents}
-              selectedDocuments={selectedDocumentIds}
-              onDocumentsChange={handleDocumentsChange}
-              folders={folders}
-            />
+            {isLoading || isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <Loader className="h-4 w-4 animate-spin text-primary" />
+                <span className="text-sm text-muted-foreground">
+                  {isSubmitting ? "Sending..." : "Generating..."}
+                </span>
+              </div>
+            ) : (
+              <FileSelectorPopover
+                documents={documents}
+                selectedDocuments={selectedDocumentIds}
+                onDocumentsChange={handleDocumentsChange}
+                folders={folders}
+              />
+            )}
             <div className="flex flex-1 overflow-hidden">
-              {localScopeItems.length > 0 && (
+              {localScopeItems.length > 0 && !(isLoading || isSubmitting) && (
                 <div className="flex items-center overflow-x-auto px-2">
                   <ScopePillsContainer
                     items={localScopeItems}
@@ -320,26 +332,32 @@ export function EnhancedChatInput({
                 </div>
               )}
             </div>
-            <button
-              type="button"
-              onClick={isLoading ? handleStop : handleSubmit}
-              disabled={isSubmitDisabled && !isLoading}
-              className={cn(
-                "shrink-0 rounded-full p-1 transition-colors focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-2",
-                isSubmitDisabled && !isLoading
-                  ? "cursor-not-allowed bg-muted text-muted-foreground opacity-60"
-                  : isLoading
-                    ? "animate-pulse bg-red-500/10 text-red-500 hover:bg-red-500/20 dark:bg-red-500/15 dark:hover:bg-red-500/25"
+            {isLoading || isSubmitting ? (
+              <button
+                type="button"
+                onClick={handleStop}
+                className="flex items-center gap-2 rounded-full bg-red-500/10 px-3 py-1.5 text-sm text-red-500 transition-colors hover:bg-red-500/20 focus:outline-none focus:ring-1 focus:ring-red-500 focus:ring-offset-2 dark:bg-red-500/15 dark:hover:bg-red-500/25"
+                title="Stop generating response"
+              >
+                <Square className="h-3 w-3" />
+                <span>Stop</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitDisabled}
+                className={cn(
+                  "shrink-0 rounded-full p-1 transition-colors focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-2",
+                  isSubmitDisabled
+                    ? "cursor-not-allowed bg-muted text-muted-foreground opacity-60"
                     : "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/15 dark:hover:bg-primary/25",
-              )}
-              title={isLoading ? "Stop generating response" : "Send message"}
-            >
-              {isLoading ? (
-                <Square className="h-4 w-4" />
-              ) : (
+                )}
+                title="Send message"
+              >
                 <ArrowUpIcon className="h-4 w-4" />
-              )}
-            </button>
+              </button>
+            )}
           </div>
         </div>
       </DroppableChatInput>

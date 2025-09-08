@@ -140,6 +140,11 @@ model Document {
   doclingTimeMs       Int?     
   chunkingTimeMs      Int?    
 
+  documentSummary     String?   @db.Text
+  summaryProcessedAt  DateTime?
+  summaryTimeMs       Int?
+  summaryModel        String?
+
   chunks DocumentChunk[]
 
   @@index([ownerId])
@@ -348,6 +353,85 @@ model Chat {
   @@unique([userId, documentId])
   @@unique([threadId, documentId])
   @@index([threadId])
+}
+
+model RAGChatSession {
+  id          String   @id @default(cuid())
+  dataroomId  String   // Required dataroom context
+  linkId      String   // Required link context
+  viewerId    String   // Required viewer context
+  title       String?  // Auto-generated or user-set title
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  messages    RAGChatMessage[]
+  
+  @@index([dataroomId, linkId, viewerId, createdAt])
+  @@index([linkId, viewerId])
+  @@index([dataroomId])
+}
+
+model RAGChatMessage {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     RAGChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role        String   // "user" or "assistant"
+  content     String   @db.Text
+  createdAt   DateTime @default(now())
+  
+  // Metadata
+  metadata    RAGChatMessageMetadata?
+  
+  @@index([sessionId, createdAt])
+}
+
+model RAGChatMessageMetadata {
+  id                String   @id @default(cuid())
+  messageId         String   @unique
+  message           RAGChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  // Query Analysis
+  queryType         String?  // "document_question", "chitchat", "abusive"
+  intent            String?  // "extraction", "summarization", "comparison", etc.
+  complexityLevel   String?  // "low", "medium", "high"
+  
+  // Search Strategy
+  searchStrategy    String?  // "FastVectorSearch", "StandardVectorSearch", "ExpandedSearch", "NoSearch"
+  strategyConfidence Float?  // Confidence score for strategy selection
+  
+  // Performance Metrics
+  queryAnalysisTime    Int?  // Time in ms for query analysis
+  searchTime          Int?  // Time in ms for document search
+  responseTime        Int?  // Time in ms for response generation
+  totalTime           Int?  // Total time in ms
+  
+  // Token Usage
+  inputTokens         Int?  // Input tokens used
+  outputTokens        Int?  // Output tokens generated
+  totalTokens         Int?  // Total tokens used
+  
+  // Search Results
+  chunkIds            String[] // Array of chunk IDs retrieved
+  documentIds         String[] // Array of document IDs searched
+  pageRanges          String[] // Array of page ranges searched
+  
+  // Context Compression
+  compressionStrategy String?  // "RankedCompression", "RAPTORCompression", "HybridCompression"
+  originalContextSize Int?     // Original context size before compression
+  compressedContextSize Int?   // Context size after compression
+  
+  // Error Information
+  errorType           String?  // Type of error if any
+  errorMessage        String?  // Error message if any
+  isRetryable         Boolean? // Whether the error was retryable
+  
+  createdAt           DateTime @default(now())
+  
+  @@index([messageId])
+  @@index([searchStrategy])
+  @@index([queryType])
+  @@index([createdAt])
 }
 
 model Folder {

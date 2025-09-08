@@ -1,8 +1,17 @@
 import { useSearchParams } from "next/navigation";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import React from "react";
 
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import {
   DataroomBrand,
   DataroomFolder,
@@ -10,11 +19,14 @@ import {
   ViewerGroupAccessControls,
 } from "@prisma/client";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { PanelLeftIcon, XIcon } from "lucide-react";
+import { MessageCircleDashedIcon, PanelLeftIcon, X, XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { sortByIndexThenName } from "@/lib/utils/sort-items-by-index-name";
 
+import { DraggableCard } from "@/components/chat/draggable-card";
+import { DraggablePill } from "@/components/chat/draggable-pill";
+import { RAGChatInterface } from "@/components/chat/rag-chat-interface";
 import { ViewFolderTree } from "@/components/datarooms/folders";
 import { SearchBoxPersisted } from "@/components/search-box";
 import {
@@ -25,6 +37,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -32,7 +50,13 @@ import {
   SheetPortal,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
+import { ChatToggleButton } from "../../chat/chat-toggle-button";
 import { DEFAULT_DATAROOM_VIEW_TYPE } from "../dataroom/dataroom-view";
 import DocumentCard from "../dataroom/document-card";
 import { DocumentUploadModal } from "../dataroom/document-upload-modal";
@@ -121,6 +145,80 @@ export default function DataroomViewer({
 
   const searchParams = useSearchParams();
   const searchQuery = searchParams?.get("search")?.toLowerCase() || "";
+  const [showChat, setShowChat] = useState<boolean>(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+  );
+
+  const [activeDragItem, setActiveDragItem] = useState<{
+    type: "document" | "folder";
+    name: string;
+  } | null>(null);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const dragData = active.data.current;
+
+    if (
+      dragData &&
+      (dragData.type === "document" || dragData.type === "folder")
+    ) {
+      setActiveDragItem({
+        type: dragData.type,
+        name: dragData.name,
+      });
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && over.id === "chat-input-drop-zone") {
+      const dragData = active.data.current;
+
+      if (
+        dragData &&
+        (dragData.type === "document" || dragData.type === "folder")
+      ) {
+        const dropEvent = new CustomEvent("document-drop", {
+          detail: {
+            id: dragData.id,
+            type: dragData.type,
+            name: dragData.name,
+          },
+        });
+        window.dispatchEvent(dropEvent);
+      }
+    }
+
+    // Hide the drag preview immediately
+    setActiveDragItem(null);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Command/Ctrl + L → Open Chat
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "l") {
+        e.preventDefault();
+        setShowChat(true);
+        return;
+      }
+
+      // Escape → Close chat
+      if (e.key === "Escape" && showChat) {
+        e.preventDefault();
+        setShowChat(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showChat]);
 
   const breadcrumbFolders = useMemo(
     () => getParentFolders(folderId, folders),
@@ -207,9 +305,8 @@ export default function DataroomViewer({
     return effectiveUpdatedAt;
   }, [folders, documents]);
 
-  // create a mixedItems array with folders and documents of the current folder and memoize it
+
   const mixedItems = useMemo(() => {
-    // If there's a search query, filter documents by name across all folders
     if (searchQuery) {
       return (documents || [])
         .filter((doc) => doc.name.toLowerCase().includes(searchQuery))
@@ -296,34 +393,45 @@ export default function DataroomViewer({
         !item.versions[0].hasPages;
 
       return (
-        <DocumentCard
+        <DraggableCard
           key={item.id}
-          document={item}
-          linkId={linkId}
-          viewId={viewId}
-          isPreview={!!isPreview}
-          allowDownload={allowDownload && item.canDownload}
-          isProcessing={isProcessing}
-        />
+          id={item.id}
+          type="document"
+          name={item.name}
+        >
+          <DocumentCard
+            document={item}
+            linkId={linkId}
+            viewId={viewId}
+            isPreview={!!isPreview}
+            allowDownload={allowDownload && item.canDownload}
+            isProcessing={isProcessing}
+          />
+        </DraggableCard>
       );
     }
 
     return (
-      <FolderCard
-        key={item.id}
-        folder={item}
-        dataroomId={dataroom?.id}
-        setFolderId={setFolderId}
-        isPreview={!!isPreview}
-        linkId={linkId}
-        viewId={viewId}
-        allowDownload={item.allowDownload}
-      />
+      <DraggableCard key={item.id} id={item.id} type="folder" name={item.name}>
+        <FolderCard
+          folder={item}
+          dataroomId={dataroom?.id}
+          setFolderId={setFolderId}
+          isPreview={!!isPreview}
+          linkId={linkId}
+          viewId={viewId}
+          allowDownload={item.allowDownload}
+        />
+      </DraggableCard>
     );
   };
 
   return (
-    <>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <DataroomNav
         brand={brand}
         linkId={linkId}
@@ -337,155 +445,408 @@ export default function DataroomViewer({
         conversationsEnabled={viewData.conversationsEnabled}
         isTeamMember={viewData.isTeamMember}
       />
-      <div
-        style={{ height: "calc(100vh - 64px)" }}
-        className="relative flex items-center bg-white dark:bg-black"
-      >
-        <div className="relative mx-auto flex h-full w-full items-start justify-center">
-          {/* Tree view */}
-          <div className="hidden h-full w-1/4 space-y-8 overflow-auto px-3 pb-4 pt-4 md:flex md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
-            <ScrollArea showScrollbar className="w-full">
-              <ViewFolderTree
-                folders={folders}
-                documents={documents}
-                setFolderId={setFolderId}
-                folderId={folderId}
-              />
-              <ScrollBar orientation="horizontal" />
+
+      {!showChat ? (
+        <div
+          style={{ height: "calc(100vh - 64px)" }}
+          className="relative flex items-center bg-white dark:bg-black"
+        >
+          <div className="relative mx-auto flex h-full w-full items-start justify-center">
+            {/* Tree view */}
+            <div className="hidden h-full w-1/4 space-y-8 overflow-auto px-3 pb-4 pt-4 md:flex md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
+              <ScrollArea showScrollbar className="w-full">
+                <ViewFolderTree
+                  folders={folders}
+                  documents={documents}
+                  setFolderId={setFolderId}
+                  folderId={folderId}
+                />
+                <ScrollBar orientation="horizontal" />
+                <ScrollBar orientation="vertical" />
+              </ScrollArea>
+            </div>
+
+            {/* Detail view */}
+            <ScrollArea
+              showScrollbar
+              className="h-full flex-grow overflow-auto"
+            >
+              <div className="h-full px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
+                <div className="flex items-center gap-x-2">
+                  {/* sidebar for mobile */}
+                  <div className="flex md:hidden">
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <button className="text-muted-foreground lg:hidden">
+                          <PanelLeftIcon
+                            className="h-5 w-5"
+                            aria-hidden="true"
+                          />
+                        </button>
+                      </SheetTrigger>
+                      <SheetPortal>
+                        <SheetOverlay className="fixed top-[35dvh] z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+                        <SheetPrimitive.Content
+                          className={cn(
+                            "fixed top-[35dvh] z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
+                            "left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-lg",
+                            "m-0 w-[280px] p-0 sm:w-[300px] lg:hidden",
+                          )}
+                        >
+                          <div className="mt-8 h-full space-y-8 overflow-auto px-2 py-3">
+                            <ViewFolderTree
+                              folders={folders}
+                              documents={documents}
+                              setFolderId={setFolderId}
+                              folderId={folderId}
+                            />
+                          </div>
+                          <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+                            <XIcon className="h-4 w-4" />
+                            <span className="sr-only">Close</span>
+                          </SheetPrimitive.Close>
+                        </SheetPrimitive.Content>
+                      </SheetPortal>
+                    </Sheet>
+                  </div>
+
+                  <div className="flex flex-1 items-center justify-between gap-x-2">
+                    <Breadcrumb>
+                      <BreadcrumbList>
+                        <BreadcrumbItem key={"root"}>
+                          <BreadcrumbLink
+                            onClick={() => setFolderId(null)}
+                            className="cursor-pointer"
+                          >
+                            Home
+                          </BreadcrumbLink>
+                        </BreadcrumbItem>
+
+                        {breadcrumbFolders.map((folder, index) => (
+                          <React.Fragment key={folder.id}>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                              {index === breadcrumbFolders.length - 1 ? (
+                                <BreadcrumbPage className="capitalize">
+                                  {folder.name}
+                                </BreadcrumbPage>
+                              ) : (
+                                <BreadcrumbLink
+                                  onClick={() => setFolderId(folder.id)}
+                                  className="cursor-pointer capitalize"
+                                >
+                                  {folder.name}
+                                </BreadcrumbLink>
+                              )}
+                            </BreadcrumbItem>
+                          </React.Fragment>
+                        ))}
+                      </BreadcrumbList>
+                    </Breadcrumb>
+
+                    <div className="flex items-center gap-x-2">
+                      <SearchBoxPersisted inputClassName="h-9" />
+
+                      {/* Chat Toggle Button */}
+                      {dataroom?.id && viewerId && linkId && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <ChatToggleButton
+                              isOpen={showChat}
+                              onToggle={() => setShowChat(!showChat)}
+                              className="h-9 w-9 bg-gray-900 text-white hover:bg-gray-900/80"
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p>AI Assistant </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+
+                      {enableIndexFile && viewId && viewerId && (
+                        <IndexFileDialog
+                          linkId={linkId}
+                          viewId={viewId}
+                          dataroomId={dataroom?.id}
+                          viewerId={viewerId}
+                          viewerEmail={viewerEmail}
+                        />
+                      )}
+
+                      {viewData?.enableVisitorUpload && viewerId && (
+                        <DocumentUploadModal
+                          linkId={linkId}
+                          dataroomId={dataroom?.id}
+                          viewerId={viewerId}
+                          folderId={folderId ?? undefined}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Search results banner */}
+                {searchQuery && (
+                  <div className="mt-4 rounded-md border border-muted/50 bg-muted px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-medium text-muted-foreground">
+                        Search results for &quot;{searchQuery}&quot;
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        ({mixedItems.length} result
+                        {mixedItems.length !== 1 ? "s" : ""} across all folders)
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
+                  {mixedItems.length === 0 ? (
+                    <li className="py-6 text-center text-muted-foreground">
+                      {searchQuery
+                        ? "No documents match your search."
+                        : "No items available."}
+                    </li>
+                  ) : (
+                    mixedItems.map((item) => (
+                      <li key={item.id}>{renderItem(item)}</li>
+                    ))
+                  )}
+                </ul>
+              </div>
               <ScrollBar orientation="vertical" />
+              <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </div>
-
-          {/* Detail view */}
-          <ScrollArea showScrollbar className="h-full flex-grow overflow-auto">
-            <div className="h-full px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
-              <div className="flex items-center gap-x-2">
-                {/* sidebar for mobile */}
-                <div className="flex md:hidden">
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <button className="text-muted-foreground lg:hidden">
-                        <PanelLeftIcon className="h-5 w-5" aria-hidden="true" />
-                      </button>
-                    </SheetTrigger>
-                    <SheetPortal>
-                      <SheetOverlay className="fixed top-[35dvh] z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-                      <SheetPrimitive.Content
-                        className={cn(
-                          "fixed top-[35dvh] z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
-                          "left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-lg",
-                          "m-0 w-[280px] p-0 sm:w-[300px] lg:hidden",
-                        )}
-                      >
-                        <div className="mt-8 h-full space-y-8 overflow-auto px-2 py-3">
-                          <ViewFolderTree
-                            folders={folders}
-                            documents={documents}
-                            setFolderId={setFolderId}
-                            folderId={folderId}
-                          />
-                        </div>
-                        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-                          <XIcon className="h-4 w-4" />
-                          <span className="sr-only">Close</span>
-                        </SheetPrimitive.Close>
-                      </SheetPrimitive.Content>
-                    </SheetPortal>
-                  </Sheet>
-                </div>
-
-                <div className="flex flex-1 items-center justify-between gap-x-2">
-                  <Breadcrumb>
-                    <BreadcrumbList>
-                      <BreadcrumbItem key={"root"}>
-                        <BreadcrumbLink
-                          onClick={() => setFolderId(null)}
-                          className="cursor-pointer"
-                        >
-                          Home
-                        </BreadcrumbLink>
-                      </BreadcrumbItem>
-
-                      {breadcrumbFolders.map((folder, index) => (
-                        <React.Fragment key={folder.id}>
-                          <BreadcrumbSeparator />
-                          <BreadcrumbItem>
-                            {index === breadcrumbFolders.length - 1 ? (
-                              <BreadcrumbPage className="capitalize">
-                                {folder.name}
-                              </BreadcrumbPage>
-                            ) : (
-                              <BreadcrumbLink
-                                onClick={() => setFolderId(folder.id)}
-                                className="cursor-pointer capitalize"
-                              >
-                                {folder.name}
-                              </BreadcrumbLink>
-                            )}
-                          </BreadcrumbItem>
-                        </React.Fragment>
-                      ))}
-                    </BreadcrumbList>
-                  </Breadcrumb>
-
-                  <div className="flex items-center gap-x-2">
-                    <SearchBoxPersisted inputClassName="h-9" />
-                    {enableIndexFile && viewId && viewerId && (
-                      <IndexFileDialog
-                        linkId={linkId}
-                        viewId={viewId}
-                        dataroomId={dataroom?.id}
-                        viewerId={viewerId}
-                        viewerEmail={viewerEmail}
-                      />
-                    )}
-
-                    {viewData?.enableVisitorUpload && viewerId && (
-                      <DocumentUploadModal
-                        linkId={linkId}
-                        dataroomId={dataroom?.id}
-                        viewerId={viewerId}
-                        folderId={folderId ?? undefined}
-                      />
-                    )}
-                  </div>
-                </div>
+        </div>
+      ) : (
+        <ResizablePanelGroup
+          direction="horizontal"
+          style={{ height: "calc(100vh - 64px)" }}
+          className="bg-white dark:bg-black"
+        >
+          {/* Dataroom Content Panel */}
+          <ResizablePanel defaultSize={65} minSize={40}>
+            <div className="relative mx-auto flex h-full w-full items-start justify-center">
+              {/* Tree view */}
+              <div className="hidden h-full w-1/4 space-y-8 overflow-auto px-3 pb-4 pt-4 md:flex md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
+                <ScrollArea showScrollbar className="w-full">
+                  <ViewFolderTree
+                    folders={folders}
+                    documents={documents}
+                    setFolderId={setFolderId}
+                    folderId={folderId}
+                  />
+                  <ScrollBar orientation="horizontal" />
+                  <ScrollBar orientation="vertical" />
+                </ScrollArea>
               </div>
 
-              {/* Search results banner */}
-              {searchQuery && (
-                <div className="mt-4 rounded-md border border-muted/50 bg-muted px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm font-medium text-muted-foreground">
-                      Search results for &quot;{searchQuery}&quot;
+              {/* Detail view */}
+              <ScrollArea
+                showScrollbar
+                className="h-full flex-grow overflow-auto"
+              >
+                <div className="h-full px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
+                  <div className="flex items-center gap-x-2">
+                    {/* sidebar for mobile */}
+                    <div className="flex md:hidden">
+                      <Sheet>
+                        <SheetTrigger asChild>
+                          <button className="text-muted-foreground lg:hidden">
+                            <PanelLeftIcon
+                              className="h-5 w-5"
+                              aria-hidden="true"
+                            />
+                          </button>
+                        </SheetTrigger>
+                        <SheetPortal>
+                          <SheetOverlay className="fixed top-[35dvh] z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+                          <SheetPrimitive.Content
+                            className={cn(
+                              "fixed top-[35dvh] z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
+                              "left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-lg",
+                              "m-0 w-[280px] p-0 sm:w-[300px] lg:hidden",
+                            )}
+                          >
+                            <div className="mt-8 h-full space-y-8 overflow-auto px-2 py-3">
+                              <ViewFolderTree
+                                folders={folders}
+                                documents={documents}
+                                setFolderId={setFolderId}
+                                folderId={folderId}
+                              />
+                            </div>
+                            <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+                              <XIcon className="h-4 w-4" />
+                              <span className="sr-only">Close</span>
+                            </SheetPrimitive.Close>
+                          </SheetPrimitive.Content>
+                        </SheetPortal>
+                      </Sheet>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      ({mixedItems.length} result
-                      {mixedItems.length !== 1 ? "s" : ""} across all folders)
+
+                    <div className="flex flex-1 items-center justify-between gap-x-2">
+                      <Breadcrumb>
+                        <BreadcrumbList>
+                          <BreadcrumbItem key={"root"}>
+                            <BreadcrumbLink
+                              onClick={() => setFolderId(null)}
+                              className="cursor-pointer"
+                            >
+                              Home
+                            </BreadcrumbLink>
+                          </BreadcrumbItem>
+
+                          {breadcrumbFolders.map((folder, index) => (
+                            <React.Fragment key={folder.id}>
+                              <BreadcrumbSeparator />
+                              <BreadcrumbItem>
+                                {index === breadcrumbFolders.length - 1 ? (
+                                  <BreadcrumbPage className="capitalize">
+                                    {folder.name}
+                                  </BreadcrumbPage>
+                                ) : (
+                                  <BreadcrumbLink
+                                    onClick={() => setFolderId(folder.id)}
+                                    className="cursor-pointer capitalize"
+                                  >
+                                    {folder.name}
+                                  </BreadcrumbLink>
+                                )}
+                              </BreadcrumbItem>
+                            </React.Fragment>
+                          ))}
+                        </BreadcrumbList>
+                      </Breadcrumb>
+
+                      <div className="flex items-center gap-x-2">
+                        <SearchBoxPersisted inputClassName="h-9" />
+
+                        {/* Chat Toggle Button */}
+                        {dataroom?.id && viewerId && linkId && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <ChatToggleButton
+                                isOpen={showChat}
+                                onToggle={() => setShowChat(!showChat)}
+                                className="h-9 w-9 bg-gray-900 text-white hover:bg-gray-900/80"
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">
+                              <p>AI Assistant </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        {enableIndexFile && viewId && viewerId && (
+                          <IndexFileDialog
+                            linkId={linkId}
+                            viewId={viewId}
+                            dataroomId={dataroom?.id}
+                            viewerId={viewerId}
+                            viewerEmail={viewerEmail}
+                          />
+                        )}
+
+                        {viewData?.enableVisitorUpload && viewerId && (
+                          <DocumentUploadModal
+                            linkId={linkId}
+                            dataroomId={dataroom?.id}
+                            viewerId={viewerId}
+                            folderId={folderId ?? undefined}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
 
-              <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
-                {mixedItems.length === 0 ? (
-                  <li className="py-6 text-center text-muted-foreground">
-                    {searchQuery
-                      ? "No documents match your search."
-                      : "No items available."}
-                  </li>
-                ) : (
-                  mixedItems.map((item) => (
-                    <li key={item.id}>{renderItem(item)}</li>
-                  ))
-                )}
-              </ul>
+                  {/* Search results banner */}
+                  {searchQuery && (
+                    <div className="mt-4 rounded-md border border-muted/50 bg-muted px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-medium text-muted-foreground">
+                          Search results for &quot;{searchQuery}&quot;
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          ({mixedItems.length} result
+                          {mixedItems.length !== 1 ? "s" : ""} across all
+                          folders)
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
+                    {mixedItems.length === 0 ? (
+                      <li className="py-6 text-center text-muted-foreground">
+                        {searchQuery
+                          ? "No documents match your search."
+                          : "No items available."}
+                      </li>
+                    ) : (
+                      mixedItems.map((item) => (
+                        <li key={item.id}>{renderItem(item)}</li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+                <ScrollBar orientation="vertical" />
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
             </div>
-            <ScrollBar orientation="vertical" />
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </div>
-      </div>
-    </>
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={35} minSize={25} maxSize={60}>
+            <div className="flex h-full flex-col border-l bg-background">
+              {/* Chat Header */}
+              <div className="flex items-center justify-between border-b bg-muted/50 px-4 py-2">
+                <div className="flex items-center gap-2">
+                  <MessageCircleDashedIcon className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    Document Assistant
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowChat(false)}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <RAGChatInterface
+                  dataroomId={dataroom?.id}
+                  viewerId={viewerId ?? ""}
+                  linkId={linkId}
+                  documents={documents.map((doc) => ({
+                    id: doc.id,
+                    name: doc.name,
+                    folderId: doc.folderId,
+                  }))}
+                  folders={folders.map((folder) => ({
+                    id: folder.id,
+                    name: folder.name,
+                    parentId: folder.parentId,
+                  }))}
+                />
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      )}
+      <DragOverlay dropAnimation={null}>
+        {activeDragItem && (
+          <DraggablePill
+            id="drag-preview"
+            type={activeDragItem.type}
+            name={activeDragItem.name}
+            className="shadow-lg"
+          />
+        )}
+      </DragOverlay>
+    </DndContext>
   );
 }
