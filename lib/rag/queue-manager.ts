@@ -171,22 +171,6 @@ export class RAGQueueManager {
         }
     }
 
-
-    static async hasPendingRequests(dataroomId: string): Promise<boolean> {
-        this.validateInput(dataroomId);
-
-        try {
-            const count = await this.getQueueLength(dataroomId);
-            return count > 0;
-        } catch (error) {
-            logger.error("Failed to check pending requests", {
-                dataroomId,
-                error: getErrorMessage(error)
-            });
-            return false;
-        }
-    }
-
     static async getQueueLength(dataroomId: string): Promise<number> {
         this.validateInput(dataroomId);
 

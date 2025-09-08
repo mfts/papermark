@@ -9,11 +9,9 @@ import { RAGQueueManager } from "../rag/queue-manager";
 import { getErrorMessage } from "@/lib/rag/errors";
 import pLimit from 'p-limit';
 
-const DOCUMENT_PROCESSING_CONCURRENCY = 5;
-const VECTOR_UPSERT_CONCURRENCY = 5;
-const PRESIGNED_URL_CONCURRENCY = 15;
-const DATABASE_BATCH_SIZE = 50;
-const DATABASE_BATCH_CONCURRENCY = 8;       
+const DOCUMENT_PROCESSING_CONCURRENCY = 8;
+const VECTOR_UPSERT_CONCURRENCY = 15;
+const PRESIGNED_URL_CONCURRENCY = 25;   
 
 // Types for the indexing pipeline
 export interface RAGIndexingPayload {
@@ -326,12 +324,14 @@ async function processRAGIndexingRequest(
         supportedDocuments: supportedDocuments.length,
     });
 
-    // Update document status to in progress for supported documents
-    for (const doc of supportedDocuments) {
-        await updateDocumentIndexingStatus(doc.id, {
-            status: ParsingStatus.IN_PROGRESS,
-            startedAt: new Date(),
-            progress: 0.0,
+    if (supportedDocuments.length > 0) {
+        await prisma.document.updateMany({
+            where: { id: { in: supportedDocuments.map(d => d.id) } },
+            data: {
+                ragIndexingStatus: ParsingStatus.IN_PROGRESS,
+                ragIndexingStartedAt: new Date(),
+                ragIndexingProgress: 0.0,
+            },
         });
     }
 
@@ -344,7 +344,7 @@ async function processRAGIndexingRequest(
     );
 
     const allChunks: Array<{ chunkId: string; content: string; metadata: DocumentProcessingResult['chunks'][number]['metadata'] }> = [];
-
+    const successfulDocumentIds: string[] = [];
     const statusUpdates: Array<{ documentId: string; status: ParsingStatus; error?: string }> = [];
 
     for (const result of processingResults) {
@@ -359,6 +359,7 @@ async function processRAGIndexingRequest(
                 });
             }
             if (documentId) {
+                successfulDocumentIds.push(documentId);
                 statusUpdates.push({
                     documentId,
                     status: ParsingStatus.COMPLETED
@@ -375,26 +376,22 @@ async function processRAGIndexingRequest(
         }
     }
 
-    const statusUpdateLimit = pLimit(DATABASE_BATCH_CONCURRENCY);
-    await Promise.all(
-        statusUpdates.map(update =>
-            statusUpdateLimit(async () => {
-                if (update.status === ParsingStatus.COMPLETED) {
-                    await updateDocumentIndexingStatus(update.documentId, {
-                        status: ParsingStatus.COMPLETED,
-                        finishedAt: new Date(),
-                        progress: 100.0,
-                    });
-                } else {
-                    await updateDocumentIndexingStatus(update.documentId, {
-                        status: ParsingStatus.FAILED,
-                        error: update.error || 'Document processing failed',
-                        progress: 0.0,
-                    });
-                }
-            })
-        )
-    );
+
+    if (statusUpdates.length > 0) {
+        await prisma.$transaction(
+            statusUpdates.map(update =>
+                prisma.document.update({
+                    where: { id: update.documentId },
+                    data: {
+                        ragIndexingStatus: update.status,
+                        ragIndexingFinishedAt: new Date(),
+                        ragIndexingProgress: update.status === ParsingStatus.COMPLETED ? 100.0 : 0.0,
+                        ragIndexError: update.error || null,
+                    },
+                })
+            )
+        );
+    }
 
     let embeddingTokens = 0;
 
@@ -498,20 +495,19 @@ async function processRAGIndexingRequest(
 
     const vectorsStored = qdrantPoints.length;
 
-    const successfulDocumentIds = processingResults
-        .filter(r => r.success)
-        .map(r => r.chunks?.[0]?.metadata?.documentId)
-        .filter(Boolean);
+    const documentTokenCounts = await calculateDocumentTokenCounts(allChunks, embeddingResult.embeddings);
+
+    const totalDocumentTokens = Array.from(documentTokenCounts.values()).reduce((sum, count) => sum + count, 0);
 
     if (successfulDocumentIds.length > 0) {
-        await markDocumentsAsIndexed(successfulDocumentIds, request.dataroomId);
+        await markDocumentsAsIndexed(successfulDocumentIds, request.dataroomId, documentTokenCounts);
     }
 
     await updateDataroomIndexingStatus(request.dataroomId, {
         status: "COMPLETED",
         completedAt: new Date(),
         progress: 100.0,
-        embeddingTokens: embeddingTokens,
+        embeddingTokens: totalDocumentTokens,
     });
 
     logger.info("Request processing completed", {
@@ -528,7 +524,7 @@ async function processRAGIndexingRequest(
         documentsSkipped: processingResults.filter(r => !r.success).length,
         chunksProcessed: allChunks.length,
         vectorsStored,
-        embeddingTokens,
+        embeddingTokens: totalDocumentTokens,
         documentProcessor,
         embeddingGenerator
     };
@@ -623,31 +619,6 @@ async function updateDataroomIndexingStatus(
     });
 }
 
-async function updateDocumentIndexingStatus(
-    documentId: string,
-    updates: {
-        status?: ParsingStatus;
-        startedAt?: Date;
-        finishedAt?: Date;
-        progress?: number;
-        error?: string;
-        embeddingTokens?: number;
-    }
-): Promise<void> {
-    await prisma.document.update({
-        where: { id: documentId },
-        data: {
-            ragIndexingStatus: updates.status,
-            ragIndexingStartedAt: updates.startedAt,
-            ragIndexingFinishedAt: updates.finishedAt,
-            ragIndexingProgress: updates.progress,
-            ragIndexError: updates.error,
-            ...(updates.embeddingTokens !== undefined && {
-                embeddingTokenCount: updates.embeddingTokens
-            }),
-        },
-    });
-}
 
 function isDocumentFormatSupported(contentType: string, documentProcessor: DocumentProcessor): boolean {
     const supported = documentProcessor.getSupportedFormats().map(s => s.toLowerCase());
@@ -699,11 +670,10 @@ async function getDocumentsForProcessing(documentIds: string[], dataroomId: stri
     const limit = pLimit(PRESIGNED_URL_CONCURRENCY);
 
     const documentsWithUrls = await Promise.all(
-        documents.map(async (doc) => {
-            return limit(async () => {
+        documents.map(doc =>
+            limit(async () => {
                 try {
-                    // Get presigned URL for the document file
-                    const presignedResponse = await fetch(
+                    const response = await fetch(
                         `${process.env.NEXTAUTH_URL}/api/file/s3/get-presigned-get-url`,
                         {
                             method: "POST",
@@ -711,34 +681,22 @@ async function getDocumentsForProcessing(documentIds: string[], dataroomId: stri
                                 "Content-Type": "application/json",
                                 Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
                             },
-                            body: JSON.stringify({
-                                key: doc.document.file,
-                            }),
+                            body: JSON.stringify({ key: doc.document.file }),
                         }
                     );
 
-                    if (!presignedResponse.ok) {
-                        throw new Error(`Failed to get presigned URL for ${doc.document.file}`);
-                    }
-
-                    const { url } = await presignedResponse.json();
-
-
-
+                    const { url } = await response.json();
                     return {
-                        url: url,
+                        url,
                         id: doc.document.id,
                         contentType: doc.document.type || "document",
                         name: doc.document.name,
                     };
                 } catch (error) {
-                    logger.error("Failed to get presigned URL for document", {
+                    logger.error("Failed to get presigned URL", {
                         documentId: doc.document.id,
-                        file: doc.document.file,
                         error: getErrorMessage(error),
                     });
-
-                    // Return with original file path as fallback
                     return {
                         url: doc.document.file,
                         id: doc.document.id,
@@ -746,82 +704,54 @@ async function getDocumentsForProcessing(documentIds: string[], dataroomId: stri
                         name: doc.document.name,
                     };
                 }
-            });
-        })
+            })
+        )
     );
 
     return documentsWithUrls.filter(Boolean)
 }
 
-async function markDocumentsAsIndexed(documentIds: string[], dataroomId: string) {
-    if (documentIds.length === 0) {
-        return;
+async function calculateDocumentTokenCounts(
+    allChunks: Array<{ chunkId: string; content: string; metadata: any }>,
+    embeddings: Array<{ chunkId: string; embedding: number[]; tokens?: number }>
+): Promise<Map<string, number>> {
+    const documentTokenCounts = new Map<string, number>();
+
+    const chunkTokenMap = new Map(embeddings.map(e => [e.chunkId, e.tokens || 0]));
+
+    for (const chunk of allChunks) {
+        const documentId = chunk.metadata.documentId;
+        const tokens = chunkTokenMap.get(chunk.chunkId) || chunk.metadata.tokenCount || 0;
+        documentTokenCounts.set(documentId, (documentTokenCounts.get(documentId) || 0) + tokens);
     }
 
-    const limit = pLimit(DATABASE_BATCH_CONCURRENCY);
+    return documentTokenCounts;
+}
 
-    // Process documents in batches
-    const batches: string[][] = [];
-    for (let i = 0; i < documentIds.length; i += DATABASE_BATCH_SIZE) {
-        batches.push(documentIds.slice(i, i + DATABASE_BATCH_SIZE));
-    }
+async function markDocumentsAsIndexed(documentIds: string[], dataroomId: string, documentTokenCounts: Map<string, number>) {
+    if (documentIds.length === 0) return;
 
-    const settled = await Promise.allSettled(
-        batches.map((batch, index) =>
-            limit(async () => {
-                const batchNumber = index + 1;
-                const totalBatches = batches.length;
+    const updates = documentIds.map(documentId => ({
+        id: documentId,
+        tokenCount: documentTokenCounts.get(documentId) || 0
+    }));
 
-                logger.info(`Updating document status batch ${batchNumber}/${totalBatches}`, {
-                    dataroomId,
-                    batchSize: batch.length,
-                    batchNumber,
-                    totalBatches,
-                });
-
-                await prisma.document.updateMany({
-                    where: {
-                        id: { in: batch },
-                        datarooms: {
-                            some: {
-                                dataroomId,
-                            },
-                        },
-                    },
-                    data: {
-                        ragIndexingStatus: ParsingStatus.COMPLETED,
-                        ragIndexingProgress: 100.0,
-                    },
-                });
-
-                logger.info(`Successfully updated document status batch ${batchNumber}/${totalBatches}`, {
-                    dataroomId,
-                    batchSize: batch.length,
-                    batchNumber,
-                    totalBatches,
-                });
-
-                return { batchNumber, batchSize: batch.length };
+    // Use transaction for atomicity
+    await prisma.$transaction(
+        updates.map(({ id, tokenCount }) =>
+            prisma.document.update({
+                where: { id },
+                data: {
+                    ragIndexingStatus: ParsingStatus.COMPLETED,
+                    ragIndexingProgress: 100.0,
+                    embeddingTokenCount: tokenCount,
+                },
             })
         )
     );
 
-    // Check for any failed batches
-    const failedBatches = settled.filter(s => s.status === 'rejected');
-    if (failedBatches.length > 0) {
-        const errors = failedBatches.map(s => s.reason);
-        logger.error('Some document status update batches failed', {
-            dataroomId,
-            failedCount: failedBatches.length,
-            totalBatches: batches.length,
-            errors: errors.map(e => e instanceof Error ? e.message : String(e)),
-        });
-        throw new Error(`Failed to update status for ${failedBatches.length} out of ${batches.length} batches`);
-    }
-
-    logger.info('Successfully completed all document status updates', {
+    logger.info('Successfully updated document statuses', {
         dataroomId,
         totalDocuments: documentIds.length,
-        totalBatches: batches.length,
     });
 } 

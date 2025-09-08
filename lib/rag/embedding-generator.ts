@@ -12,6 +12,7 @@ export interface EmbeddingResult {
     embeddings: Array<{
         chunkId: string;
         embedding: number[];
+        tokens?: number;
     }>;
     error?: string;
     processingTime: number;
@@ -63,7 +64,7 @@ export class EmbeddingGenerator {
 
     async generateEmbeddings(chunks: EmbeddingBatch[]): Promise<EmbeddingResult> {
         const startTime = Date.now();
-        const results: Array<{ chunkId: string; embedding: number[] }> = [];
+        const results: Array<{ chunkId: string; embedding: number[]; tokens?: number }> = [];
         let totalTokens = 0;
         let cachedCount = 0;
         let newCount = 0;
@@ -89,14 +90,14 @@ export class EmbeddingGenerator {
                 else groups.set(key, { content: chunk.content, chunkIds: [chunk.chunkId] });
             }
 
-            const cachedEmbeds: Array<{ chunkId: string; embedding: number[] }> = [];
+            const cachedEmbeds: Array<{ chunkId: string; embedding: number[]; tokens?: number }> = [];
             const newGroups: Array<{ content: string; chunkIds: string[] }> = [];
 
             for (const [, g] of groups) {
                 const e = await this.getCachedEmbedding(g.content);
                 if (e) {
                     for (const id of g.chunkIds) {
-                        cachedEmbeds.push({ chunkId: id, embedding: e });
+                        cachedEmbeds.push({ chunkId: id, embedding: e, tokens: undefined });
                         cachedCount++;
                     }
                 } else {
@@ -141,7 +142,11 @@ export class EmbeddingGenerator {
                             const r = batchResult.results[i];
                             const g = batchGroups[i];
                             for (const id of g.chunkIds) {
-                                results.push({ chunkId: id, embedding: r.embedding });
+                                results.push({
+                                    chunkId: id,
+                                    embedding: r.embedding,
+                                    tokens: r.tokens
+                                });
                             }
                         }
                         totalTokens += batchResult.totalTokens;
@@ -228,7 +233,7 @@ export class EmbeddingGenerator {
     }
 
     private async processBatch(chunks: EmbeddingBatch[]): Promise<{
-        results: Array<{ chunkId: string; embedding: number[] }>;
+        results: Array<{ chunkId: string; embedding: number[]; tokens?: number }>;
         totalTokens: number;
     }> {
         const inputs = chunks.map((c) => c.content);
@@ -251,14 +256,19 @@ export class EmbeddingGenerator {
 
             const totalTokens = response.usage?.total_tokens ?? 0;
 
+
             const results = response.data.map((item, idx) => {
                 const chunk = chunks[idx];
                 if (!chunk) {
                     throw RAGError.create('validation', `No chunk found for index ${idx}`, { field: 'chunk' });
                 }
+
+                const chunkTokens = this.calculateChunkTokens(chunk.content, totalTokens, inputs);
+
                 return {
                     chunkId: chunk.chunkId,
                     embedding: item.embedding,
+                    tokens: chunkTokens,
                 };
             });
 
@@ -271,6 +281,16 @@ export class EmbeddingGenerator {
                 new Error(`Embedding batch failed (${chunks.length} items): ${err instanceof Error ? err.message : String(err)}`)
             );
         }
+    }
+
+    private calculateChunkTokens(chunkContent: string, totalTokens: number, allInputs: string[]): number {
+        if (totalTokens === 0 || allInputs.length === 0) return 0;
+        let totalChars = 0;
+        for (const input of allInputs) {
+            totalChars += input.length;
+        }
+        if (totalChars === 0) return 0;
+        return Math.round((chunkContent.length / totalChars) * totalTokens);
     }
 
     private async enforceRateLimit(): Promise<void> {
