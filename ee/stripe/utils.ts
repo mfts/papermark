@@ -181,11 +181,12 @@ export const PLANS = [
     name: "Data Rooms",
     slug: "datarooms",
     minQuantity: 3,
+    baseUsers: 3, // Users included in base price
     price: {
       monthly: {
-        amount: 149,
-        unitPrice: 4967,
-        priceIds: {
+        amount: 149, // Base price for 3 users
+        unitPrice: 4900, // Additional user price (€49/month)
+        basePriceIds: { // Base price product IDs
           test: {
             old: "price_1Q3bHPFJyGSZ96lhpQD0lMdU",
             new: "price_1Q8aYLBYvhH6u7U7RUqHnsBh",
@@ -195,11 +196,31 @@ export const PLANS = [
             new: "price_1Q8egzBYvhH6u7U7IQUGzwoZ",
           },
         },
+        priceIds: { // Keep for backward compatibility
+          test: {
+            old: "price_1Q3bHPFJyGSZ96lhpQD0lMdU",
+            new: "price_1Q8aYLBYvhH6u7U7RUqHnsBh",
+          },
+          production: {
+            old: "price_1Q3gbbFJyGSZ96lhvmEwjZtm",
+            new: "price_1Q8egzBYvhH6u7U7IQUGzwoZ",
+          },
+        },
+        additionalUserPriceIds: { // Additional user price product IDs (to be created)
+          test: {
+            old: "price_datarooms_additional_user_monthly_test_old",
+            new: "price_datarooms_additional_user_monthly_test_new",
+          },
+          production: {
+            old: "price_datarooms_additional_user_monthly_prod_old",
+            new: "price_datarooms_additional_user_monthly_prod_new",
+          },
+        },
       },
       yearly: {
-        amount: 99,
-        unitPrice: 3300,
-        priceIds: {
+        amount: 99, // Base price for 3 users
+        unitPrice: 3300, // Additional user price (€33/month, €396/year)
+        basePriceIds: { // Base price product IDs
           test: {
             old: "price_1Q3bJUFJyGSZ96lhLiEJlXlt",
             new: "price_1Q8aXWBYvhH6u7U7unPGTnfy",
@@ -209,6 +230,26 @@ export const PLANS = [
             new: "price_1Q8egzBYvhH6u7U7M2uoROMa",
           },
         },
+        priceIds: { // Keep for backward compatibility
+          test: {
+            old: "price_1Q3bJUFJyGSZ96lhLiEJlXlt",
+            new: "price_1Q8aXWBYvhH6u7U7unPGTnfy",
+          },
+          production: {
+            old: "price_1Q3gbbFJyGSZ96lhnk1CtnIZ",
+            new: "price_1Q8egzBYvhH6u7U7M2uoROMa",
+          },
+        },
+        additionalUserPriceIds: { // Additional user price product IDs (to be created)
+          test: {
+            old: "price_datarooms_additional_user_yearly_test_old",
+            new: "price_datarooms_additional_user_yearly_test_new",
+          },
+          production: {
+            old: "price_datarooms_additional_user_yearly_prod_old",
+            new: "price_datarooms_additional_user_yearly_prod_new",
+          },
+        },
       },
     },
   },
@@ -216,11 +257,12 @@ export const PLANS = [
     name: "Data Rooms Plus",
     slug: "datarooms-plus",
     minQuantity: 5,
+    baseUsers: 5, // Users included in base price
     price: {
       monthly: {
-        amount: 349,
-        unitPrice: 6980,
-        priceIds: {
+        amount: 349, // Base price for 5 users
+        unitPrice: 6900, // Additional user price (€69/month)
+        basePriceIds: { // Base price product IDs
           test: {
             old: "price_1QojZuFJyGSZ96lhNwiD1y2r",
             new: "price_1Qw63uBYvhH6u7U7dHVZ0kWZ",
@@ -230,11 +272,31 @@ export const PLANS = [
             new: "price_1QwMkABYvhH6u7U74ccUfWkq",
           },
         },
+        priceIds: { // Keep for backward compatibility
+          test: {
+            old: "price_1QojZuFJyGSZ96lhNwiD1y2r",
+            new: "price_1Qw63uBYvhH6u7U7dHVZ0kWZ",
+          },
+          production: {
+            old: "price_1QwMmmFJyGSZ96lhhaDXmzkY",
+            new: "price_1QwMkABYvhH6u7U74ccUfWkq",
+          },
+        },
+        additionalUserPriceIds: { // Additional user price product IDs (to be created)
+          test: {
+            old: "price_datarooms_plus_additional_user_monthly_test_old",
+            new: "price_datarooms_plus_additional_user_monthly_test_new",
+          },
+          production: {
+            old: "price_datarooms_plus_additional_user_monthly_prod_old",
+            new: "price_datarooms_plus_additional_user_monthly_prod_new",
+          },
+        },
       },
       yearly: {
-        amount: 249,
-        unitPrice: 4980,
-        priceIds: {
+        amount: 249, // Base price for 5 users
+        unitPrice: 4900, // Additional user price (€49/month, €588/year)
+        basePriceIds: { // Base price product IDs
           test: {
             old: "price_1QojaPFJyGSZ96lhods9TOxh",
             new: "price_1Qw63ABYvhH6u7U7MXK3UOJF",
@@ -242,6 +304,26 @@ export const PLANS = [
           production: {
             old: "price_1QwMmeFJyGSZ96lh934mFNPA",
             new: "price_1QwMjABYvhH6u7U7ccxGJXKN",
+          },
+        },
+        priceIds: { // Keep for backward compatibility
+          test: {
+            old: "price_1QojaPFJyGSZ96lhods9TOxh",
+            new: "price_1Qw63ABYvhH6u7U7MXK3UOJF",
+          },
+          production: {
+            old: "price_1QwMmeFJyGSZ96lh934mFNPA",
+            new: "price_1QwMjABYvhH6u7U7ccxGJXKN",
+          },
+        },
+        additionalUserPriceIds: { // Additional user price product IDs (to be created)
+          test: {
+            old: "price_datarooms_plus_additional_user_yearly_test_old",
+            new: "price_datarooms_plus_additional_user_yearly_test_new",
+          },
+          production: {
+            old: "price_datarooms_plus_additional_user_yearly_prod_old",
+            new: "price_datarooms_plus_additional_user_yearly_prod_new",
           },
         },
       },

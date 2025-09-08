@@ -12,6 +12,7 @@ import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 
 import { getPlanFromPriceId } from "../utils";
+import { calculateTotalUsersFromSubscription, getPlanFromSubscriptionItems } from "../pricing-utils";
 
 export async function checkoutSessionCompleted(
   event: Stripe.Event,
@@ -34,20 +35,20 @@ export async function checkoutSessionCompleted(
   const subscription = await stripe.subscriptions.retrieve(
     checkoutSession.subscription as string,
   );
-  const priceId = subscription.items.data[0].price.id;
+  const subscriptionItems = subscription.items.data;
   const subscriptionId = subscription.id;
   const subscriptionStart = new Date(subscription.current_period_start * 1000);
   const subscriptionEnd = new Date(subscription.current_period_end * 1000);
-  const quantity = subscription.items.data[0].quantity;
 
   console.log("subscription", subscription);
-  console.log("subscription items", subscription.items.data);
+  console.log("subscription items", subscriptionItems);
 
-  const plan = getPlanFromPriceId(priceId, isOldAccount);
+  // Get the plan from subscription items (handles both legacy and hybrid pricing)
+  const plan = getPlanFromSubscriptionItems(subscriptionItems, isOldAccount);
 
   if (!plan) {
     await log({
-      message: `Invalid price ID in checkout.session.completed event: ${priceId}, isOldAccount: ${isOldAccount}. Skipping webhook processing to prevent unintended plan changes.`,
+      message: `No valid plan found in checkout.session.completed event for subscription items: ${subscriptionItems.map(item => item.price.id).join(', ')}, isOldAccount: ${isOldAccount}. Skipping webhook processing to prevent unintended plan changes.`,
       type: "error",
     });
     return;
@@ -71,9 +72,11 @@ export async function checkoutSessionCompleted(
     planLimits = structuredClone(DATAROOMS_PLUS_PLAN_LIMITS);
   }
 
-  // Update the user limit in planLimits based on the subscription quantity
-  planLimits.users =
-    typeof quantity === "number" && quantity > 1 ? quantity : planLimits.users;
+  // Calculate total users (handles both legacy and hybrid pricing)
+  const totalUsers = calculateTotalUsersFromSubscription(subscriptionItems, plan.slug);
+  
+  // Update the user limit in planLimits based on the calculated total users
+  planLimits.users = Math.max(totalUsers, planLimits.users);
 
   // Update the user with the subscription information and stripeId
   const team = await prisma.team.update({
