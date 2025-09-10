@@ -12,7 +12,7 @@ const DataroomTrialWelcomeEmail = ({ name }: WelcomeEmailProps) => {
       <Head />
       <Tailwind>
         <Body className="font-sans text-sm">
-          <Text>Hi {name},</Text>
+          <Text>Hi{name && ` ${name}`},</Text>
           <Text>
             I am Marc, founder of Papermark. Thanks for creating a trial. Do you
             need any help with Data Rooms setup?
