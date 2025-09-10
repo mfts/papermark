@@ -43,7 +43,7 @@ export class UnifiedQueryAnalysisService extends BaseLLMService {
         query: string,
         viewerId: string,
         dataroomId: string,
-        signal?: AbortSignal
+        signal?: AbortSignal,
     ): Promise<UnifiedQueryAnalysisResult> {
         return RAGError.withErrorHandling(
             async () => {
@@ -56,7 +56,6 @@ export class UnifiedQueryAnalysisService extends BaseLLMService {
                     query,
                 });
 
-                console.log('🧠 UNIFIED_QUERY_ANALYSIS: Starting analysis with integrated query rewriting');
                 const response = await this.generateObject(
                     template.schema!,
                     prompt,
@@ -66,9 +65,6 @@ export class UnifiedQueryAnalysisService extends BaseLLMService {
                     }
                 );
                 const result = response.content as UnifiedQueryAnalysisResult;
-
-
-
                 return result;
             },
             'queryAnalysis',

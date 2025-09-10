@@ -16,7 +16,8 @@ export class ResponseGenerationService {
         sources: Source[],
         abortSignal?: AbortSignal,
         chatSessionId?: string,
-        metadataTracker?: ChatMetadataTracker
+        metadataTracker?: ChatMetadataTracker,
+        pageNumbers?: number[]
     ) {
         return RAGError.withErrorHandling(
             async () => {
@@ -31,10 +32,6 @@ export class ResponseGenerationService {
                 if (!context?.trim()) {
                     return await this.createFallbackResponse(query);
                 }
-                if (chatSessionId && metadataTracker) {
-                    textGenerationService.setChatContext(chatSessionId, metadataTracker);
-                }
-
                 return await textGenerationService.generateRAGResponse(
                     context,
                     messages,
@@ -42,7 +39,8 @@ export class ResponseGenerationService {
                     sources,
                     abortSignal,
                     chatSessionId,
-                    metadataTracker
+                    metadataTracker,
+                    pageNumbers
                 );
             },
             'responseGeneration',

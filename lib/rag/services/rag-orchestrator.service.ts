@@ -7,7 +7,6 @@ import { ResponseGenerationService, responseGenerationService } from './response
 import { SourceBuildingService, sourceBuildingService } from './source-building.service';
 import { rerankerService } from './reranker.service';
 import { contextCompressionService } from './context-compression.service';
-import { QueryAnalysisService, queryAnalysisService } from './query-analysis.service';
 import { DocumentSearchService, documentSearchService } from './document-search.service';
 import { DocumentGradingService, documentGradingService } from './document-grading.service';
 import { UnifiedQueryAnalysisResult } from './unified-query-analysis.service';
@@ -25,6 +24,7 @@ let SEARCH_CONFIGS: {
     FAST: { topK: number; similarityThreshold: number; timeoutMs: number };
     STANDARD: { topK: number; similarityThreshold: number; timeoutMs: number };
     EXPANDED: { topK: number; similarityThreshold: number; timeoutMs: number };
+    PAGE_QUERY: { topK: number; similarityThreshold: number; timeoutMs: number };
 };
 
 function initializeSearchConfigs() {
@@ -44,6 +44,11 @@ function initializeSearchConfigs() {
             topK: ragConfig.search.expandedTopK,
             similarityThreshold: ragConfig.search.expandedSimilarityThreshold,
             timeoutMs: 55000 // 55 seconds for expanded search
+        },
+        PAGE_QUERY: {
+            topK: ragConfig.search.pageQueryTopK,
+            similarityThreshold: ragConfig.search.pageQuerySimilarityThreshold,
+            timeoutMs: ragConfig.search.pageQueryTimeoutMs
         }
     };
 }
@@ -51,7 +56,7 @@ function initializeSearchConfigs() {
 // Initialize on module load
 initializeSearchConfigs();
 
-export type SearchStrategy = 'FastVectorSearch' | 'StandardVectorSearch' | 'ExpandedSearch';
+export type SearchStrategy = 'FastVectorSearch' | 'StandardVectorSearch' | 'ExpandedSearch' | 'PageQueryStrategy';
 
 interface ComplexityAnalysis {
     complexityScore: number;
@@ -82,7 +87,6 @@ interface PipelineContext {
 }
 
 export class RAGOrchestratorService {
-    private queryAnalysisService: QueryAnalysisService;
     private documentSearchService: DocumentSearchService;
     private documentGradingService: DocumentGradingService;
     private responseGenerationService: ResponseGenerationService;
@@ -90,13 +94,11 @@ export class RAGOrchestratorService {
     private isDisposed = false;
 
     constructor(
-        customQueryAnalysisService?: QueryAnalysisService,
         customDocumentSearchService?: DocumentSearchService,
         customDocumentGradingService?: DocumentGradingService,
         customResponseGenerationService?: ResponseGenerationService,
         customSourceBuildingService?: SourceBuildingService
     ) {
-        this.queryAnalysisService = customQueryAnalysisService || queryAnalysisService;
         this.documentSearchService = customDocumentSearchService || documentSearchService;
         this.documentGradingService = customDocumentGradingService || documentGradingService;
         this.responseGenerationService = customResponseGenerationService || responseGenerationService;
@@ -151,6 +153,27 @@ export class RAGOrchestratorService {
                 try {
                     const timeoutSignal = AbortSignal.timeout(timeoutMs);
                     const pipelineSignal = abortSignal || timeoutSignal;
+
+                    if (queryExtraction?.pageNumbers && queryExtraction.pageNumbers.length > 0) {
+                        const pageValidation = this.validatePagesAgainstDocuments(queryExtraction.pageNumbers, indexedDocuments);
+
+                        if (!pageValidation.isValid && pageValidation.errorMessage) {
+                            const fallbackResponse = await this.responseGenerationService.createFallbackResponse(
+                                pageValidation.errorMessage
+                            );
+
+                            if (metadataTracker) {
+                                metadataTracker.setError({
+                                    type: 'InvalidPageRequest',
+                                    message: pageValidation.errorMessage,
+                                    isRetryable: false
+                                });
+                                metadataTracker.endTotal();
+                            }
+
+                            return fallbackResponse;
+                        }
+                    }
 
                     const context: PipelineContext = {
                         query,
@@ -228,6 +251,8 @@ export class RAGOrchestratorService {
                 return await this.executeStandardPipeline(context);
             case 'ExpandedSearch':
                 return await this.executeExpandedPipeline(context);
+            case 'PageQueryStrategy':
+                return await this.executePageQueryPipeline(context);
             default:
                 return await this.executeStandardPipeline(context);
         }
@@ -311,6 +336,61 @@ export class RAGOrchestratorService {
         }
     }
 
+    private async executePageQueryPipeline(context: PipelineContext) {
+        this.logPipelineStatus('PAGE_QUERY_PIPELINE', 'Starting fast page-specific pipeline...');
+
+        try {
+            const searchQueries = [context.query];
+
+            const searchResults = await this.performVectorSearch(searchQueries, context, 'PageQueryStrategy');
+
+            if (searchResults.length === 0) {
+                this.logPipelineStatus('⚠️ NO_PAGE_RESULTS', 'No results found for requested page, generating fallback response...');
+                return await this.responseGenerationService.createFallbackResponse(
+                    `I couldn't find any content on the requested page. The page might not exist or may not have been indexed yet.`
+                );
+            }
+
+            const sources = await this.sourceBuildingService.buildSources(
+                searchResults.map(result => ({
+                    documentId: result.documentId,
+                    chunkId: result.chunkId,
+                    relevanceScore: result.similarity || 0.9,
+                    confidence: 0.9,
+                    reasoning: 'Direct page match',
+                    isRelevant: true,
+                    suggestedWeight: 1.0,
+                    originalContent: result.content,
+                    metadata: result.metadata
+                })),
+                searchResults,
+                context.indexedDocuments
+            );
+
+            const contextText = searchResults.map(r => r.content).join('\n\n');
+            const validPages = context.queryExtraction?.pageNumbers || [];
+            this.logPipelineStatus('🔍 PAGE_DEBUG', `Context length: ${contextText.length}, Sources: ${sources.length}, Valid pages: ${validPages.join(', ')}`);
+
+            const response = await this.responseGenerationService.generateAnswer(
+                contextText,
+                context.messages,
+                context.query,
+                sources,
+                context.signal,
+                context.chatSessionId,
+                context.metadataTracker,
+                validPages
+            );
+
+            this.logPipelineStatus('✅ PAGE_RESPONSE_COMPLETE', `Generated page response with ${sources.length} sources`);
+            return response;
+
+        } catch (error) {
+            console.error('❌ PageQueryStrategy failed:', error);
+            this.logPipelineStatus('❌ PAGE_PIPELINE_FAILED', `${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw error;
+        }
+    }
 
     private async executeSharedProcessingPipeline(
         context: PipelineContext,
@@ -344,7 +424,8 @@ export class RAGOrchestratorService {
                     sources,
                     context.signal,
                     context.chatSessionId,
-                    context.metadataTracker
+                    context.metadataTracker,
+                    context.queryExtraction?.pageNumbers
                 );
 
                 this.logPipelineStatus('✅ FAST_RESPONSE_COMPLETE', `Generated fast response with ${sources.length} sources`);
@@ -409,7 +490,8 @@ export class RAGOrchestratorService {
                     sources,
                     context.signal,
                     context.chatSessionId,
-                    context.metadataTracker
+                    context.metadataTracker,
+                    context.queryExtraction?.pageNumbers
                 );
 
                 this.logPipelineStatus('✅ RESPONSE_GENERATION_COMPLETE', `${strategyName}: Generated response with ${sources.length} sources`);
@@ -479,11 +561,15 @@ export class RAGOrchestratorService {
         const allResults: SearchResult[] = [];
         const metadataFilter = this.buildMetadataFilter(context);
 
-        const useMetadataFilter = false;
+        const hasPageNumbers = context.queryExtraction?.pageNumbers && context.queryExtraction.pageNumbers.length > 0;
+        const useMetadataFilter = hasPageNumbers && metadataFilter;
+
         if (metadataFilter && useMetadataFilter) {
             this.logPipelineStatus('🎯 METADATA_FILTER', `Using metadata filter: ${JSON.stringify(metadataFilter)}`);
+        } else if (hasPageNumbers) {
+            this.logPipelineStatus('📄 PAGE_QUERY_DETECTED', `Page numbers detected: ${context.queryExtraction?.pageNumbers?.join(', ')} - NO METADATA FILTER APPLIED`);
         } else {
-            this.logPipelineStatus('⚠️ METADATA_FILTER_DISABLED', 'Metadata filtering temporarily disabled for debugging');
+            this.logPipelineStatus('⚠️ NO_PAGE_FILTER', 'No page-specific filtering applied');
         }
 
         try {
@@ -545,6 +631,7 @@ export class RAGOrchestratorService {
             case 'FastVectorSearch': return SEARCH_CONFIGS.FAST;
             case 'StandardVectorSearch': return SEARCH_CONFIGS.STANDARD;
             case 'ExpandedSearch': return SEARCH_CONFIGS.EXPANDED;
+            case 'PageQueryStrategy': return SEARCH_CONFIGS.PAGE_QUERY;
             default: return SEARCH_CONFIGS.STANDARD;
         }
     }
@@ -554,6 +641,7 @@ export class RAGOrchestratorService {
             case 'FastVectorSearch': return '⚡';
             case 'StandardVectorSearch': return '🔄';
             case 'ExpandedSearch': return '🚀';
+            case 'PageQueryStrategy': return '📄';
             default: return '🔄';
         }
     }
@@ -569,9 +657,7 @@ export class RAGOrchestratorService {
         });
     }
 
-    /**
-     * Build metadata filter from query extraction for cleaner vector search
-     */
+
     private buildMetadataFilter(context: PipelineContext): {
         documentIds?: string[];
         pageRanges?: string[];
@@ -579,20 +665,19 @@ export class RAGOrchestratorService {
     } | null {
         const filter: any = {};
 
-        // Add dataroom ID
         filter.dataroomId = context.dataroomId;
 
-        // Add document IDs if available
         if (context.indexedDocuments && context.indexedDocuments.length > 0) {
             filter.documentIds = context.indexedDocuments.map(doc => doc.documentId);
         }
 
-        // Add page ranges if available from query extraction
-        if (context.queryExtraction?.pageNumbers && context.queryExtraction.pageNumbers.length > 0) {
-            filter.pageRanges = context.queryExtraction.pageNumbers.map(page => page.toString());
+        const pageNumbers = context.queryExtraction?.pageNumbers;
+        if (pageNumbers && pageNumbers.length > 0) {
+            filter.pageRanges = pageNumbers.map(pageNum => pageNum.toString());
+
+            this.logPipelineStatus('📄 PAGE_FILTER', `Applied page filtering: ${filter.pageRanges.join(', ')}`);
         }
 
-        // Only return filter if we have meaningful conditions
         return Object.keys(filter).length > 1 ? filter : null;
     }
 
@@ -641,6 +726,51 @@ export class RAGOrchestratorService {
         };
     }
 
+    private validatePagesAgainstDocuments(
+        requestedPages: number[],
+        indexedDocuments: AccessibleDocument[]
+    ): { isValid: boolean; errorMessage?: string } {
+        if (!requestedPages || requestedPages.length === 0) {
+            return { isValid: true };
+        }
+
+        if (!indexedDocuments || indexedDocuments.length === 0) {
+            return {
+                isValid: false,
+                errorMessage: 'No documents available to validate pages against'
+            };
+        }
+
+        const maxPagesInDocuments = Math.max(...indexedDocuments.map(doc => doc.numPages || 0));
+
+        if (maxPagesInDocuments === 0) {
+            return {
+                isValid: false,
+                errorMessage: 'Documents have no page information available'
+            };
+        }
+
+        const invalidPages = requestedPages.filter(page => page < 1 || page > maxPagesInDocuments);
+
+        if (invalidPages.length === 0) {
+            return { isValid: true };
+        }
+
+        const invalidPageList = invalidPages.join(', ');
+        const documentNames = indexedDocuments.map(doc => doc.documentName || 'Unknown Document').join(', ');
+
+        if (invalidPages.length === 1) {
+            return {
+                isValid: false,
+                errorMessage: `Page ${invalidPageList} doesn't exist in your documents. The available documents (${documentNames}) have ${maxPagesInDocuments} page${maxPagesInDocuments === 1 ? '' : 's'} (pages 1-${maxPagesInDocuments}). Try asking about content within that range.`
+            };
+        } else {
+            return {
+                isValid: false,
+                errorMessage: `Pages ${invalidPageList} don't exist in your documents. The available documents (${documentNames}) have ${maxPagesInDocuments} page${maxPagesInDocuments === 1 ? '' : 's'} (pages 1-${maxPagesInDocuments}). Try asking about content within that range.`
+            };
+        }
+    }
 
     dispose(): void {
         if (this.isDisposed) return;
