@@ -1,10 +1,10 @@
 import { logger, task } from "@trigger.dev/sdk/v3";
 
 import { sendDataroomInfoEmail } from "@/lib/emails/send-dataroom-info";
+import { sendDataroomTrial24hReminderEmail } from "@/lib/emails/send-dataroom-trial-24h";
+import { sendDataroomTrialEndEmail } from "@/lib/emails/send-dataroom-trial-end";
+import { sendUpgradeOneMonthCheckinEmail } from "@/lib/emails/send-upgrade-month-checkin";
 import prisma from "@/lib/prisma";
-
-import { sendDataroomTrial24hReminderEmail } from "../emails/send-dataroom-trial-24h";
-import { sendDataroomTrialEndEmail } from "../emails/send-dataroom-trial-end";
 
 export const sendDataroomTrialInfoEmailTask = task({
   id: "send-dataroom-trial-info-email",
@@ -108,5 +108,43 @@ export const sendDataroomTrialExpiredEmailTask = task({
       plan: team.plan,
     });
     return;
+  },
+});
+
+export const sendUpgradeOneMonthCheckinEmailTask = task({
+  id: "send-upgrade-one-month-checkin-email",
+  retry: { maxAttempts: 3 },
+  run: async (payload: { to: string; name: string; teamId: string }) => {
+    try {
+      const team = await prisma.team.findUnique({
+        where: { id: payload.teamId },
+        select: {
+          plan: true,
+        },
+      });
+
+      if (!team) {
+        logger.error("Team not found", { teamId: payload.teamId });
+        return;
+      }
+
+      if (
+        !["pro", "business", "datarooms", "datarooms-plus"].includes(team.plan)
+      ) {
+        logger.info("Team not on paid plan - no further action", {
+          teamId: payload.teamId,
+          plan: team.plan,
+        });
+        return;
+      }
+
+      await sendUpgradeOneMonthCheckinEmail({
+        user: { email: payload.to, name: payload.name },
+      });
+      logger.info("Email sent", { to: payload.to });
+    } catch (error) {
+      logger.error("Error sending upgrade one month checkin email", { error });
+      return;
+    }
   },
 });

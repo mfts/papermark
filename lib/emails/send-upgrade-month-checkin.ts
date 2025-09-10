@@ -1,27 +1,26 @@
-import UpgradeCheckinEmail from "@/components/emails/upgrade-checkin";
-
 import { sendEmail } from "@/lib/resend";
+
+import UpgradeOneMonthCheckinEmail from "@/components/emails/upgrade-one-month-checkin";
 
 import { CreateUserEmailProps } from "../types";
 
-export const sendUpgradeCheckinEmail = async (params: CreateUserEmailProps & { planName?: string }) => {
+export const sendUpgradeOneMonthCheckinEmail = async (
+  params: CreateUserEmailProps,
+) => {
   const { name, email } = params.user;
-  const { planName = "Pro" } = params;
-  
-  // Schedule the email to be sent 1.5 months from now (45 days)
-  const oneAndHalfMonthsFromNow = new Date(Date.now() + 1000 * 60 * 60 * 24 * 45).toISOString();
-  
+
   // Get the first name from the full name
   const firstName = name ? name.split(" ")[0] : null;
-  
-  const emailTemplate = UpgradeCheckinEmail({ name: firstName, planName });
+
+  const emailTemplate = UpgradeOneMonthCheckinEmail({
+    name: firstName,
+  });
   try {
     await sendEmail({
       to: email as string,
-      subject: "Check-in from Marc",
+      subject: "Check-in from Papermark",
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
-      scheduledAt: oneAndHalfMonthsFromNow,
     });
   } catch (e) {
     console.error(e);

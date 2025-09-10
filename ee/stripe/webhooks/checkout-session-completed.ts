@@ -121,4 +121,16 @@ export async function checkoutSessionCompleted(
     }),
   );
 
+  waitUntil(
+    sendUpgradeOneMonthCheckinEmailTask.trigger(
+      {
+        to: team.users[0].user.email as string,
+        name: team.users[0].user.name as string,
+        teamId,
+      },
+      {
+        delay: "40d",
+      },
+    ),
+  );
 }
