@@ -72,12 +72,14 @@ export class VectorSearchService {
                     return [];
                 }
 
+                const finalMetadataFilter = metadataFilter;
+
                 const searchResults = await vectorManager.searchSimilar(
                     dataroomId,
                     queryEmbedding.embedding,
                     topK,
                     similarityThreshold,
-                    metadataFilter
+                    finalMetadataFilter
                 );
                 if (searchResults.length === 0) {
                     return [];
@@ -136,16 +138,17 @@ export class VectorSearchService {
             return searchResults.map((result) => {
                 const payload = result.payload;
 
+
                 return {
                     chunkId: result.id,
                     documentId: payload.documentId,
                     content: payload.content,
                     similarity: result.score,
                     metadata: {
-                        pageRanges: payload.pageRanges || ['1'],
-                        sectionHeader: payload.sectionHeader || '',
-                        chunkIndex: payload.chunkIndex || 0,
-                        documentName: payload.documentName || ''
+                        pageRanges: payload.metadata?.pageRanges || ['1'],
+                        sectionHeader: payload.metadata?.sectionHeader || '',
+                        chunkIndex: payload.metadata?.chunkIndex || 0,
+                        documentName: payload.metadata?.documentName || ''
                     }
                 };
             });

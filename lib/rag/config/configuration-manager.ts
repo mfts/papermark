@@ -33,6 +33,9 @@ export interface RAGConfig {
         standardSimilarityThreshold: number;
         expandedTopK: number;
         expandedSimilarityThreshold: number;
+        pageQueryTopK: number;
+        pageQuerySimilarityThreshold: number;
+        pageQueryTimeoutMs: number;
     };
 
     reranker: {
@@ -109,6 +112,9 @@ export class ConfigurationManager {
                 standardSimilarityThreshold: this.getEnvNumber('RAG_SEARCH_STANDARD_SIMILARITY_THRESHOLD', 0.4),
                 expandedTopK: this.getEnvNumber('RAG_SEARCH_EXPANDED_TOP_K', 4),
                 expandedSimilarityThreshold: this.getEnvNumber('RAG_SEARCH_EXPANDED_SIMILARITY_THRESHOLD', 0.3),
+                pageQueryTopK: this.getEnvNumber('RAG_SEARCH_PAGE_QUERY_TOP_K', 5),
+                pageQuerySimilarityThreshold: this.getEnvNumber('RAG_SEARCH_PAGE_QUERY_SIMILARITY_THRESHOLD', 0.2),
+                pageQueryTimeoutMs: this.getEnvNumber('RAG_SEARCH_PAGE_QUERY_TIMEOUT_MS', 10000),
             },
 
             reranker: {

@@ -23,27 +23,3 @@ export const QUERY_PATTERNS = {
     ]
 } as const;
 
-export const COMPLEXITY_REGEX_PATTERNS = {
-    comparative: /\b(compare|difference|similar|versus|vs|contrast)\b/i,
-    logical: /\b(and|or|but|however|although|nevertheless|furthermore)\b/i,
-    conditional: /\b(if|when|unless|provided|subject to|in case)\b/i,
-    structural: /\b(section|chapter|paragraph|article|clause|subsection)\b/i,
-    question: /\b(how|what|why|when|where|which|explain|describe)\b/i,
-    process: /\b(step|process|procedure|method|workflow|pipeline)\b/i,
-    temporal: /\b(before|after|within|during|until|since|while)\b/i,
-    technical: /\b(install|setup|configure|compile|build|deploy|implement)\b/i,
-    problem: /\b(error|problem|issue|troubleshoot|debug|fix|resolve)\b/i,
-    instructional: /\b(example|sample|tutorial|guide|instruction|manual)\b/i,
-    analytical: /\b(analyze|evaluate|assess|examine|investigate|review)\b/i,
-    quantitative: /\b(calculate|compute|measure|quantify|estimate|determine)\b/i
-} as const;
-
-export const XSS_PATTERNS = {
-    scriptTags: /<script[^>]*>[\s\S]*?<\/script>/gi,
-    eventHandlers: /on\w+\s*=\s*["'][^"']*["']/gi,
-    eventHandlersAlt: /on\w+\s*=\s*[^>\s]+/gi,
-    protocols: /javascript:|vbscript:|data:|file:/gi,
-    dangerousElements: /<(iframe|object|embed|form|input|textarea|select|button)[^>]*>/gi,
-    htmlComments: /<!--[\s\S]*?-->/g,
-    nullBytes: /\0/g
-} as const;

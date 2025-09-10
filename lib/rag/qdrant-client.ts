@@ -67,13 +67,49 @@ export class QdrantVectorStore {
                     distance: distanceToUse as any,
                 },
             });
+            await this.createMetadataIndexes(collectionName);
 
             return true;
         } catch (error) {
-            // Collection might already exist
             if (error instanceof Error && error.message.includes("already exists")) {
+                try {
+                    await this.createMetadataIndexes(collectionName);
+                } catch (indexError) {
+                    console.warn(`Failed to create indexes for existing collection ${collectionName}:`, indexError);
+                }
                 return true;
             }
+            throw error;
+        }
+    }
+
+    public async createMetadataIndexes(collectionName: string): Promise<void> {
+        try {
+            const indexFields = [
+                { field_name: "documentId", field_schema: "keyword" as const },
+                { field_name: "pageRanges", field_schema: "keyword" as const },
+                { field_name: "dataroomId", field_schema: "keyword" as const },
+                { field_name: "teamId", field_schema: "keyword" as const },
+                { field_name: "contentType", field_schema: "keyword" as const },
+                { field_name: "sectionHeader", field_schema: "keyword" as const },
+                { field_name: "chunkIndex", field_schema: "integer" as const },
+                { field_name: "tokenCount", field_schema: "integer" as const },
+                { field_name: "isSmallChunk", field_schema: "bool" as const }
+            ];
+            for (const indexField of indexFields) {
+                try {
+                    await this.client.createPayloadIndex(collectionName, indexField);
+                    console.log(`✅ Created index for field: ${indexField.field_name}`);
+                } catch (fieldError) {
+                    if (fieldError instanceof Error && fieldError.message.includes("already exists")) {
+                        console.log(`ℹ️ Index already exists for field: ${indexField.field_name}`);
+                    } else {
+                        console.warn(`⚠️ Failed to create index for field ${indexField.field_name}:`, fieldError);
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn(`⚠️ Failed to create metadata indexes for collection ${collectionName}:`, error);
             throw error;
         }
     }
@@ -337,11 +373,6 @@ export class QdrantVectorStore {
                         must: filterConditions,
                     };
                 }
-                console.log(
-                    "🔍 Qdrant Search Request:",
-                    JSON.stringify(searchRequest, null, 2),
-                );
-
                 let results;
                 try {
                     results = await Promise.race([
@@ -371,10 +402,6 @@ export class QdrantVectorStore {
                             score_threshold: scoreThreshold,
                             with_payload: true,
                         };
-                        console.log(
-                            "🔍 Qdrant Fallback Search Request:",
-                            JSON.stringify(fallbackRequest, null, 2),
-                        );
 
                         try {
                             results = await Promise.race([
@@ -403,15 +430,28 @@ export class QdrantVectorStore {
                     }
                 }
 
-                return results.map((result) => ({
-                    id: String(result.id),
-                    score: result.score,
-                    payload: {
-                        documentId: String(result.payload?.documentId || ""),
-                        content: String(result.payload?.content || ""),
-                        metadata: result.payload?.metadata || {},
-                    },
-                }));
+                return results.map((result) => {
+                    return {
+                        id: String(result.id),
+                        score: result.score,
+                        payload: {
+                            documentId: String(result.payload?.documentId || ""),
+                            content: String(result.payload?.content || ""),
+                            metadata: {
+                                pageRanges: result.payload?.pageRanges || [],
+                                chunkIndex: result.payload?.chunkIndex || 0,
+                                sectionHeader: result.payload?.sectionHeader || '',
+                                documentName: result.payload?.documentName || '',
+                                tokenCount: result.payload?.tokenCount || 0,
+                                contentType: result.payload?.contentType || '',
+                                dataroomId: result.payload?.dataroomId || '',
+                                teamId: result.payload?.teamId || '',
+                                chunkId: result.payload?.chunkId || '',
+                                createdAt: result.payload?.createdAt || ''
+                            },
+                        },
+                    };
+                });
             },
             "qdrantSearch",
             {
@@ -468,6 +508,15 @@ export class QdrantVectorStore {
         dataroomId?: string;
     }): any[] {
         const filterConditions: any[] = [];
+
+        if (metadataFilter?.dataroomId) {
+            filterConditions.push({
+                key: "dataroomId",
+                match: {
+                    value: metadataFilter.dataroomId,
+                },
+            });
+        }
 
         if (metadataFilter?.documentIds && metadataFilter.documentIds.length > 0) {
             filterConditions.push({

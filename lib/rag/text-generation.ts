@@ -8,18 +8,7 @@ import { chatStorageService } from './services/chat-storage.service';
 import { ChatMetadataTracker } from './services/chat-metadata-tracker.service';
 
 export class TextGenerationService {
-    private chatSessionId?: string;
-    private metadataTracker?: ChatMetadataTracker;
-
     constructor(private config: ReturnType<typeof configurationManager.getRAGConfig>) { }
-
-    /**
-     * Set chat session context for message storage
-     */
-    setChatContext(sessionId: string, metadataTracker: ChatMetadataTracker) {
-        this.chatSessionId = sessionId;
-        this.metadataTracker = metadataTracker;
-    }
 
     /**
      * Generate RAG response with context and citations
@@ -31,10 +20,11 @@ export class TextGenerationService {
         sources: Source[],
         abortSignal?: AbortSignal,
         chatSessionId?: string,
-        metadataTracker?: ChatMetadataTracker
+        metadataTracker?: ChatMetadataTracker,
+        pageNumbers?: number[]
     ): Promise<Response> {
         try {
-            const systemContent = await this.buildRAGSystemPrompt(context, sources);
+            const systemContent = await this.buildRAGSystemPrompt(context, sources, pageNumbers);
 
             const streamOptions: any = {
                 model: openai('gpt-4o-mini'),
@@ -82,8 +72,7 @@ export class TextGenerationService {
     ) {
         // Use centralized prompt system
         const prompt = await promptManager.renderTemplate(PROMPT_IDS.RAG_FALLBACK_RESPONSE, {
-            query,
-            documentTypes: 'various document types'
+            query
         });
 
         const optimization = await promptManager.getTemplateOptimization(PROMPT_IDS.RAG_FALLBACK_RESPONSE);
@@ -155,43 +144,23 @@ export class TextGenerationService {
     }
 
 
-    private async buildRAGSystemPrompt(context: string, sources: Source[]): Promise<string> {
+    private async buildRAGSystemPrompt(context: string, sources: Source[], pageNumbers?: number[]): Promise<string> {
         const citationLines = sources.map(s =>
             `• ${s.documentName}${s.pageNumber ? ` (p.${s.pageNumber})` : ''}${s.locationInfo ? ` - ${s.locationInfo}` : ''}`
         ).join('\n');
+        let pageInstructions = '';
+        if (pageNumbers && pageNumbers.length > 0) {
+            const pageList = pageNumbers.length === 1 ? `page ${pageNumbers[0]}` : `pages ${pageNumbers.join(', ')}`;
+            pageInstructions = `\n\nPAGE-SPECIFIC REQUEST: The user asked about ${pageList}. The context below contains information from the requested page(s). Use this information to answer their question. The sources list shows which page(s) the information comes from. Always mention which specific page(s) you used in your answer.`;
+        }
 
         return await promptManager.renderTemplate(PROMPT_IDS.RAG_RESPONSE_SYSTEM, {
             context,
-            sources: citationLines
+            sources: citationLines + pageInstructions
         });
     }
 
 
-    private async storeAssistantMessage(text: string, totalUsage: any) {
-        if (!this.chatSessionId || !this.metadataTracker) {
-            return;
-        }
-
-        try {
-            if (totalUsage) {
-                this.metadataTracker.setTokenUsage({
-                    inputTokens: totalUsage.promptTokens,
-                    outputTokens: totalUsage.completionTokens,
-                    totalTokens: totalUsage.totalTokens,
-                });
-            }
-
-            await chatStorageService.addMessage({
-                sessionId: this.chatSessionId,
-                role: 'assistant',
-                content: text,
-                metadata: this.metadataTracker.getMetadata(),
-            });
-
-        } catch (error) {
-            console.error('Failed to store assistant message:', error);
-        }
-    }
 
 
     private async storeAssistantMessageWithContext(

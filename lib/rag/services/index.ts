@@ -1,4 +1,3 @@
-export { QueryAnalysisService } from './query-analysis.service';
 export { DocumentSearchService } from './document-search.service';
 export { DocumentGradingService } from './document-grading.service';
 export { ResponseGenerationService } from './response-generation.service';

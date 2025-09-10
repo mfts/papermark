@@ -133,11 +133,6 @@ export class VectorSearchCache extends LRUCache<string, any[]> {
   }
 }
 
-export class DocumentNameCache extends LRUCache<string, Record<string, string>> {
-  constructor() {
-    super(500, 10 * 60 * 1000); // 500 entries, 10 minutes TTL
-  }
-}
 
 export class GradingResultCache extends LRUCache<string, unknown[]> {
   constructor() {
@@ -193,8 +188,3 @@ export class PromptTemplateCache extends LRUCache<string, unknown> {
   }
 }
 
-export class LLMResponseCache extends LRUCache<string, unknown> {
-  constructor() {
-    super(100, 30 * 60 * 1000); // 100 entries, 30 minutes TTL
-  }
-}
