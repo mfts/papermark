@@ -8,6 +8,7 @@ import { stripeInstance } from "@/ee/stripe";
 import { waitUntil } from "@vercel/functions";
 import Stripe from "stripe";
 
+import { sendUpgradePersonalEmail } from "@/lib/emails/send-upgrade-personal-welcome";
 import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
 import prisma from "@/lib/prisma";
 import { sendUpgradeOneMonthCheckinEmailTask } from "@/lib/trigger/send-scheduled-email";
@@ -118,6 +119,17 @@ export async function checkoutSessionCompleted(
         name: team.users[0].user.name as string,
       },
       planType: plan.slug,
+    }),
+  );
+
+  // send personal welcome email
+  waitUntil(
+    sendUpgradePersonalEmail({
+      user: {
+        email: team.users[0].user.email as string,
+        name: team.users[0].user.name as string,
+      },
+      planSlug: plan.slug,
     }),
   );
 

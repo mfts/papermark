@@ -1,36 +1,42 @@
 import React from "react";
 
-import { Body, Head, Html, Preview, Tailwind, Text } from "@react-email/components";
+import {
+  Body,
+  Head,
+  Html,
+  Preview,
+  Tailwind,
+  Text,
+} from "@react-email/components";
 
-interface UpgradeCongratsEmailProps {
+interface UpgradePersonalEmailProps {
   name: string | null | undefined;
   planName?: string;
 }
 
-const UpgradeCongratsEmail = ({ name, planName = "Pro" }: UpgradeCongratsEmailProps) => {
+const UpgradePersonalEmail = ({
+  name,
+  planName = "Pro",
+}: UpgradePersonalEmailProps) => {
   return (
     <Html>
       <Head />
-      <Preview>Welcome to {planName}, {name}!</Preview>
+      <Preview>Welcome to {planName}</Preview>
       <Tailwind>
         <Body className="font-sans text-sm">
-          <Text>Hi {name},</Text>
+          <Text>Hi{name && ` ${name}`},</Text>
           <Text>
-            I'm Iuliia, co-founder of Papermark. Thanks for upgrading! I'm thrilled 
-            to have you on our {planName} plan.
+            I'm Iuliia, co-founder of Papermark. Thanks for upgrading! I'm
+            thrilled to have you on our {planName} plan.
           </Text>
           <Text>
-            You now have access to advanced features. Any questions so far?? 
+            You now have access to advanced features. Any questions so far??
           </Text>
-        
-          <Text>
-           
-            Iuliia
-          </Text>
+          <Text>Iuliia</Text>
         </Body>
       </Tailwind>
     </Html>
   );
 };
 
-export default UpgradeCongratsEmail;
+export default UpgradePersonalEmail;
