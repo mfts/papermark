@@ -15,7 +15,7 @@ export interface SearchQualityMetrics {
     avgSimilarity: number;
     totalResults: number;
 }
-export type SearchStrategyType = 'FastVectorSearch' | 'StandardVectorSearch' | 'ExpandedSearch';
+export type SearchStrategyType = 'FastVectorSearch' | 'StandardVectorSearch' | 'ExpandedSearch' | 'PageQueryStrategy';
 
 export interface SearchStrategy {
     search_strategy: SearchStrategyType;
@@ -102,6 +102,13 @@ export function selectOptimalSearchStrategy(
     }
 ): SearchStrategy {
     try {
+        if (queryContext?.mentionedPageNumbers && queryContext.mentionedPageNumbers.length > 0) {
+            return {
+                search_strategy: 'PageQueryStrategy',
+                confidence: 0.95
+            };
+        }
+
         if (!analysisResult) {
             if (queryLength <= 15 && complexityScore <= 0.4 && documentCount >= 5) {
                 return { search_strategy: 'FastVectorSearch', confidence: 0.8 };
