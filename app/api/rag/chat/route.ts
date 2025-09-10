@@ -76,9 +76,6 @@ export async function POST(req: NextRequest) {
 
             console.error('Query analysis failed:', error);
 
-            if (chatSessionId && metadataTracker) {
-                textGenerationService.setChatContext(chatSessionId, metadataTracker);
-            }
 
             const fallbackResponse = await textGenerationService.generateSimpleResponse(
                 "I'm having trouble understanding your query. Please try rephrasing it.",
@@ -130,9 +127,6 @@ export async function POST(req: NextRequest) {
 
         if (accessError || !indexedDocuments || indexedDocuments.length === 0) {
             // Set chat context for fallback response storage
-            if (chatSessionId && metadataTracker) {
-                textGenerationService.setChatContext(chatSessionId, metadataTracker);
-            }
 
             const fallbackResponse = await textGenerationService.generateFallbackResponse(
                 accessError || "No documents are available for search. Please ensure documents are properly indexed.",
@@ -205,7 +199,6 @@ export async function POST(req: NextRequest) {
             if (!result) {
                 // Set chat context for fallback response storage
                 if (chatSessionId && metadataTracker) {
-                    textGenerationService.setChatContext(chatSessionId, metadataTracker);
                 }
 
                 const fallbackResponse = await textGenerationService.generateFallbackResponse(
@@ -224,9 +217,6 @@ export async function POST(req: NextRequest) {
             }
 
             // Set chat context for fallback response storage
-            if (chatSessionId && metadataTracker) {
-                textGenerationService.setChatContext(chatSessionId, metadataTracker);
-            }
 
             const fallbackResponse = await textGenerationService.generateFallbackResponse(
                 "I encountered an issue processing your query. Please try again.",
@@ -247,7 +237,6 @@ export async function POST(req: NextRequest) {
 
         // Set chat context for fallback response storage if available
         if (chatSessionId && metadataTracker) {
-            textGenerationService.setChatContext(chatSessionId, metadataTracker);
         }
 
         const fallbackResponse = await textGenerationService.generateFallbackResponse(
