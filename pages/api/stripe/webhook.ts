@@ -10,7 +10,9 @@ import type Stripe from "stripe";
 import { log } from "@/lib/utils";
 
 // Stripe requires the raw body to construct the event.
+// add supportsResponseStreaming to enable waitUntil
 export const config = {
+  supportsResponseStreaming: true,
   api: {
     bodyParser: false,
   },
