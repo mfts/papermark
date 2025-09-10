@@ -8,6 +8,7 @@ export interface AccessibleDocument {
     documentName: string;
     isIndexed: boolean;
     type: string;
+    numPages?: number;
 }
 
 // Lazy cache initialization to avoid constructor issues
@@ -89,6 +90,7 @@ export async function getAccessibleDocumentsForRAG(
                             name: true,
                             type: true,
                             ragIndexingStatus: true,
+                            numPages: true,
                         }
                     },
                 },
@@ -116,6 +118,7 @@ export async function getAccessibleDocumentsForRAG(
             documentName: doc.document.name,
             isIndexed: doc.document.ragIndexingStatus === ParsingStatus.COMPLETED,
             type: doc.document.type || 'pdf',
+            numPages: doc.document.numPages || undefined,
         }));
 
         await getDataroomDocumentsCache().set(cacheKey, result);
