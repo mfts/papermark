@@ -118,7 +118,7 @@ export default function CustomDomainSetup({
                   >
                     custom domain documentation
                   </Link>{" "}
-                  or reply to this email - we're here to help!
+                  or reply to this email - we&apos;re here to help!
                 </>
               ) : (
                 <>

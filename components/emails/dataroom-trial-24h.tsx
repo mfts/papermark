@@ -38,8 +38,8 @@ const DataroomTrial24hReminderEmail = ({ name }: TrialEndReminderEmail) => {
               Hey{name && ` ${name}`}!
             </Text>
             <Text className="text-sm leading-6 text-black">
-              Your Papermark Data Room plan trial expires in 24 hours. Don't
-              lose access to these features -{" "}
+              Your Papermark Data Room plan trial expires in 24 hours.
+              Don&apos;t lose access to these features -{" "}
               <Link href={`https://app.papermark.com/settings/billing`}>
                 upgrade today
               </Link>

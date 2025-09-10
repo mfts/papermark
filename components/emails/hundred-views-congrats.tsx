@@ -21,7 +21,7 @@ const HundredViewsCongratsEmail = ({
         <Body className="font-sans text-sm">
           <Text>Hi{name && ` ${name}`},</Text>
           <Text>
-            I'm Marc, founder of Papermark. Congrats on 100 views on your
+            I&apos;m Marc, founder of Papermark. Congrats on 100 views on your
             documents.
           </Text>
           <Text>Would you help others discover us too?</Text>

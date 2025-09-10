@@ -35,8 +35,8 @@ const SlackIntegrationEmail = ({ name }: SlackIntegrationEmailProps) => {
             </Text>
             <Text className="text-sm">Hi{name && ` ${name}`}!</Text>
             <Text className="text-sm">
-              We offer direct integration to Slack, and it's free for all users
-              for 30 days.
+              We offer direct integration to Slack, and it&apos;s free for all
+              users for 30 days.
             </Text>
             <Text className="text-sm">
               With our Slack integration, you can get real-time notifications
@@ -55,7 +55,7 @@ const SlackIntegrationEmail = ({ name }: SlackIntegrationEmailProps) => {
 
             <Text className="text-sm">
               If you have any questions or need help setting it up, just respond
-              to this email. I'm always happy to help!
+              to this email. I&apos;m always happy to help!
             </Text>
             <Text className="text-sm text-gray-400">Marc from Papermark</Text>
             <Hr />

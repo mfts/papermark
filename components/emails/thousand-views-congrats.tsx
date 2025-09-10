@@ -1,12 +1,22 @@
 import React from "react";
 
-import { Body, Head, Html, Link, Preview, Tailwind, Text } from "@react-email/components";
+import {
+  Body,
+  Head,
+  Html,
+  Link,
+  Preview,
+  Tailwind,
+  Text,
+} from "@react-email/components";
 
 interface ThousandViewsCongratsEmailProps {
   name: string | null | undefined;
 }
 
-const ThousandViewsCongratsEmail = ({ name }: ThousandViewsCongratsEmailProps) => {
+const ThousandViewsCongratsEmail = ({
+  name,
+}: ThousandViewsCongratsEmailProps) => {
   return (
     <Html>
       <Head />
@@ -15,12 +25,11 @@ const ThousandViewsCongratsEmail = ({ name }: ThousandViewsCongratsEmailProps) =
         <Body className="font-sans text-sm">
           <Text>Hi {name},</Text>
           <Text>
-            I'm Marc, founder of Papermark. Congrats on 1000 views on your documents.
+            I&apos;m Marc, founder of Papermark. Congrats on 1000 views on your
+            documents.
           </Text>
-          <Text>
-            How is your experience so far?
-          </Text>
-        
+          <Text>How is your experience so far?</Text>
+
           <Text>
             Thanks so much,
             <br />
