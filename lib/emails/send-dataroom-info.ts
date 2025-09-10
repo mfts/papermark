@@ -1,17 +1,28 @@
-import Onboarding5Email from "@/components/emails/onboarding-5";
-
 import { sendEmail } from "@/lib/resend";
+
+import DataRoomsInformationEmail from "@/components/emails/data-rooms-information";
 
 import { CreateUserEmailProps } from "../types";
 
-export const sendDataroomInfoEmail = async (params: CreateUserEmailProps) => {
+const USECASE_SUBJECTS = {
+  "mergers-and-acquisitions": "Virtual Data Rooms for Mergers and Acquisitions",
+  "startup-fundraising": "Virtual Data Rooms for Startup Fundraising",
+  "fund-management": "Virtual Data Rooms for Fund Management & Fundraising",
+  sales: "Virtual Data Rooms for Sales",
+  "project-management": "Virtual Data Rooms for Project Management",
+  operations: "Virtual Data Rooms for Operations",
+  other: "Virtual Data Rooms",
+};
+
+export const sendDataroomInfoEmail = async (
+  params: CreateUserEmailProps,
+  useCase: string,
+) => {
   const { email } = params.user;
 
-  let emailTemplate;
-  let subject;
+  const emailTemplate = DataRoomsInformationEmail();
 
-  emailTemplate = Onboarding5Email();
-  subject = "Virtual Data Rooms";
+  const subject = USECASE_SUBJECTS[useCase as keyof typeof USECASE_SUBJECTS];
 
   try {
     await sendEmail({

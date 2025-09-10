@@ -11,10 +11,12 @@ import {
   Text,
 } from "@react-email/components";
 
+import { Footer } from "./shared/footer";
+
 export default function ExportReady({
   resourceName = "Export",
-  downloadUrl,
-  email,
+  downloadUrl = "https://app.papermark.com/datarooms/123",
+  email = "email@example.com",
 }: {
   resourceName?: string;
   downloadUrl: string;
@@ -48,37 +50,27 @@ export default function ExportReady({
             <Text className="text-sm leading-6 text-black">
               Export details:
             </Text>
-            <Text className="break-all text-sm leading-6 text-black">
-              <ul>
-                <li className="text-sm leading-6 text-black">
-                  Export type: {resourceName}
-                </li>
-              </ul>
-            </Text>
+            <ul className="break-all text-sm leading-6 text-black">
+              <li className="text-sm leading-6 text-black">
+                Export type: {resourceName}
+              </li>
+            </ul>
             <Text className="text-sm leading-6 text-black">
               Best,
               <br />
               The Papermark Team
             </Text>
-            <Hr />
-            <Section className="mt-8 text-gray-400">
-              <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
-                  target="_blank"
-                >
-                  Papermark, Inc.
-                </a>
-              </Text>
-              <Text className="text-xs">
-                This email was intended for{" "}
-                <span className="text-black">{email}</span>. If you were not
-                expecting this email, you can ignore this email. If you have any
-                feedback or questions about this email, simply reply to it.
-              </Text>
-            </Section>
+            <Footer
+              footerText={
+                <>
+                  This email was intended for{" "}
+                  <span className="text-black">{email}</span>. If you were not
+                  expecting this email, you can ignore this email. If you have
+                  any feedback or questions about this email, simply reply to
+                  it.
+                </>
+              }
+            />
           </Container>
         </Body>
       </Tailwind>

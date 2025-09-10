@@ -13,10 +13,12 @@ import {
   Text,
 } from "@react-email/components";
 
+import { Footer } from "./shared/footer";
+
 export default function DataroomViewerInvitation({
-  dataroomName,
-  senderEmail,
-  url,
+  dataroomName = "Example Data Room",
+  senderEmail = "sender@example.com",
+  url = "https://app.papermark.com/datarooms/123",
 }: {
   dataroomName: string;
   senderEmail: string;
@@ -58,23 +60,10 @@ export default function DataroomViewerInvitation({
               {`${url}`}
             </Text>
             <Text className="text-sm text-gray-400">Papermark</Text>
-            <Hr />
-            <Section className="mt-8 text-gray-400">
-              <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
-                  target="_blank"
-                >
-                  papermark.com
-                </a>
-              </Text>
-              <Text className="text-xs">
-                If you have any feedback or questions about this email, simply
-                reply to it.
-              </Text>
-            </Section>
+            <Footer
+              footerText="If you have any feedback or questions about this email, simply
+                reply to it."
+            />
           </Container>
         </Body>
       </Tailwind>

@@ -13,11 +13,13 @@ import {
   Text,
 } from "@react-email/components";
 
+import { Footer } from "./shared/footer";
+
 export default function TeamInvitation({
   senderName,
   senderEmail,
   teamName,
-  url,
+  url = "https://app.papermark.com",
 }: {
   senderName: string;
   senderEmail: string;
@@ -59,23 +61,7 @@ export default function TeamInvitation({
             <Text className="max-w-sm flex-wrap break-words font-medium text-purple-600 no-underline">
               {url.replace(/^https?:\/\//, "")}
             </Text>
-            <Hr />
-            <Section className="mt-8 text-gray-400">
-              <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
-                  target="_blank"
-                >
-                  papermark.com
-                </a>
-              </Text>
-              <Text className="text-xs">
-                If you have any feedback or questions about this email, simply
-                reply to it.
-              </Text>
-            </Section>
+            <Footer />
           </Container>
         </Body>
       </Tailwind>

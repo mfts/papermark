@@ -13,8 +13,12 @@ import {
   Text,
 } from "@react-email/components";
 
-const Onboarding4Email = () => {
-  const previewText = `The document sharing infrastructure for the modern web`;
+interface SlackIntegrationEmailProps {
+  name: string | null | undefined;
+}
+
+const SlackIntegrationEmail = ({ name }: SlackIntegrationEmailProps) => {
+  const previewText = `See who viewed your documents in slack in 2 clicks`;
 
   return (
     <Html>
@@ -27,46 +31,33 @@ const Onboarding4Email = () => {
               <span className="font-bold tracking-tighter">Papermark</span>
             </Text>
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
-              Custom domains and branding
+              Connect Slack in 2 clicks
+            </Text>
+            <Text className="text-sm">Hi{name && ` ${name}`}!</Text>
+            <Text className="text-sm">
+              We offer direct integration to Slack, and it&apos;s free for all
+              users for 30 days.
             </Text>
             <Text className="text-sm">
-              Look professional with custom branding!
+              With our Slack integration, you can get real-time notifications
+              about document and data roomviews directly in your Slack channels
+              !
             </Text>
-            <Text className="text-sm">With Papermark you can:</Text>
-            <ul className="list-inside list-disc text-sm">
-              <li>
-                Share documnets with your <strong>custom domain💫</strong>{" "}
-              </li>
-
-              <li>Remove &quot;powered by Papermark&quot;</li>
-              <li>Add logo and custom colors</li>
-              <li>Share data room with custom domain</li>
-              <li>Add banner and custom brand to data rooms</li>
-            </ul>
-            <Text className="text-sm">
-              (Customization for data rooms is seaprate and available in each
-              data room you create)
-            </Text>
-            {/* <Text className="text-sm">You can also use Bulk upload</Text> */}
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.com/documents?utm_source=onboarding&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
+                href={`${process.env.NEXT_PUBLIC_BASE_URL}/settings/integrations`}
                 style={{ padding: "12px 20px" }}
               >
-                Add your domain and branding
+                See who viewed your documents in Slack
               </Button>
             </Section>
+
             <Text className="text-sm">
-              If you are looking for full white-labelling just{" "}
-              <a
-                href="https://cal.com/marcseitz/papermark"
-                className="text-blue-500 underline"
-              >
-                book a call
-              </a>{" "}
-              with us.
+              If you have any questions or need help setting it up, just respond
+              to this email. I&apos;m always happy to help!
             </Text>
+            <Text className="text-sm text-gray-400">Marc from Papermark</Text>
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">
@@ -80,11 +71,8 @@ const Onboarding4Email = () => {
                 </a>
               </Text>
               <Text className="text-xs">
-                If you have any feedback or questions about this email, simply
-                reply to it. I&apos;d love to hear from you!{" "}
+                Feel free to always reach out to me or our support team.
               </Text>
-
-              <Text className="text-xs">Stop this onboarding sequence</Text>
             </Section>
           </Container>
         </Body>
@@ -93,4 +81,4 @@ const Onboarding4Email = () => {
   );
 };
 
-export default Onboarding4Email;
+export default SlackIntegrationEmail;

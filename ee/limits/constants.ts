@@ -43,6 +43,9 @@ export const BUSINESS_PLAN_LIMITS = {
   customDomainOnPro: true,
   customDomainInDataroom: false,
   advancedLinkControlsOnPro: false,
+  fileSizeLimits: {
+    maxFiles: 500,
+  },
 };
 
 export const DATAROOMS_PLAN_LIMITS = {
@@ -54,6 +57,9 @@ export const DATAROOMS_PLAN_LIMITS = {
   customDomainOnPro: true,
   customDomainInDataroom: true,
   advancedLinkControlsOnPro: false,
+  fileSizeLimits: {
+    maxFiles: 1000,
+  },
 };
 
 export const DATAROOMS_PLUS_PLAN_LIMITS = {
@@ -66,6 +72,10 @@ export const DATAROOMS_PLUS_PLAN_LIMITS = {
   customDomainInDataroom: true,
   conversationsInDataroom: true,
   advancedLinkControlsOnPro: false,
+  fileSizeLimits: {
+    maxFiles: 5000,
+    maxPages: 1000,
+  },
 };
 
 export const PAUSED_PLAN_LIMITS = {

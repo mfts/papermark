@@ -36,21 +36,21 @@ const Onboarding1Email = () => {
               With Papermark you can upload different kind of documents and turn
               them into shareable links:
             </Text>
+            <ul className="list-inside list-disc text-sm">
+              <li>PDFs</li>
+              <li>Microsoft Office files</li>
+              <li>Excel, CSV files</li>
+              <li>Notion via link</li>
+            </ul>
             <Text className="text-sm">
-              <ul className="list-inside list-disc text-sm">
-                <li>PDFs</li>
-                <li>Excel, CSV files</li>
-                <li>Notion via link</li>
-              </ul>
-              <Text className="text-sm">
-                (All Notion changes are instantly reflected in shared documents)
-              </Text>
+              (All Notion changes are instantly reflected in shared documents)
             </Text>
             <Text className="text-sm">
-              You can also use <strong>Bulk upload 💫</strong> Just drop many
-              documents at once
+              You can also use{" "}
+              <span className="font-semibold">Bulk upload 💫</span> Just drop
+              multiple documents at once
             </Text>
-            <Section className="mb-[32px] mt-[32px] text-center">
+            <Section className="my-8 text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
                 href={`https://app.papermark.com/documents?utm_source=onboarding&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
@@ -63,16 +63,10 @@ const Onboarding1Email = () => {
               After sharing start tracking document activity on each page
             </Text>
             <Hr />
-            <Section className="mt-8 text-gray-400">
+            <Section className="text-gray-400">
               <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
-                  target="_blank"
-                >
-                  papermark.com
-                </a>
+                © {new Date().getFullYear()} Papermark, Inc. All rights
+                reserved.
               </Text>
               <Text className="text-xs">
                 If you have any feedback or questions about this email, simply
