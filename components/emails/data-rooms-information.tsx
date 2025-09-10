@@ -14,7 +14,7 @@ import {
 
 import { Footer } from "./shared/footer";
 
-const Onboarding3Email = () => {
+const DataRoomsInformationEmail = () => {
   const previewText = `The document sharing infrastructure for the modern web`;
 
   return (
@@ -84,4 +84,4 @@ const Onboarding3Email = () => {
   );
 };
 
-export default Onboarding3Email;
+export default DataRoomsInformationEmail;

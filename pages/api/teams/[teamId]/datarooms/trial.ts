@@ -113,7 +113,7 @@ export default async function handle(
       waitUntil(sendDataroomTrialWelcome({ fullName, to: email! }));
       waitUntil(
         sendDataroomTrialInfoEmailTask.trigger(
-          { to: email! },
+          { to: email!, useCase },
           { delay: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000) },
         ),
       );

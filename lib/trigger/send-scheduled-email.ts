@@ -8,8 +8,13 @@ import { sendDataroomTrialEndEmail } from "../emails/send-dataroom-trial-end";
 export const sendDataroomTrialInfoEmailTask = task({
   id: "send-dataroom-trial-info-email",
   retry: { maxAttempts: 3 },
-  run: async (payload: { to: string }) => {
-    await sendDataroomInfoEmail({ user: { email: payload.to, name: "Marc" } });
+  run: async (payload: { to: string; useCase: string }) => {
+    await sendDataroomInfoEmail(
+      {
+        user: { email: payload.to, name: "Marc" },
+      },
+      payload.useCase,
+    );
     logger.info("Email sent", { to: payload.to });
   },
 });
