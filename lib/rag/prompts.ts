@@ -102,125 +102,7 @@ EXAMPLE OUTPUT FORMAT:
             }
         });
 
-        this.registerTemplate({
-            id: 'document-grading-batch',
-            version: '2.0',
-            description: 'Batch grade multiple documents for efficiency',
-            prompt: `Rate relevance of each document to the query.
 
-Query: "{{query}}"
-
-Documents:
-{{documents}}
-
-Rate each document 0-1 for relevance. Format: [1]: 0.8, [2]: 0.3, etc.
-
-Be generous - include if content helps answer query, even partially.
-
-IMPORTANT: Return ONLY the actual ratings data, NOT a JSON schema. The response should contain the real values, not schema definitions.
-
-EXAMPLE OUTPUT FORMAT:
-{
-  "ratings": [
-    {
-      "index": 1,
-      "relevanceScore": 0.8,
-      "isRelevant": true,
-      "reasoning": "Contains specific financial data requested"
-    },
-    {
-      "index": 2,
-      "relevanceScore": 0.3,
-      "isRelevant": false,
-      "reasoning": "Only general background information"
-    }
-  ]
-}`,
-            variables: ['query', 'documents'],
-            schema: z.object({
-                ratings: z.array(z.object({
-                    index: z.number(),
-                    relevanceScore: z.number().min(0).max(1),
-                    isRelevant: z.boolean(),
-                    reasoning: z.string()
-                }))
-            }),
-            optimization: {
-                maxTokens: 300,
-                model: 'gpt-5-nano'
-            }
-        });
-
-        // ============================================================================
-        // QUERY ROUTING PROMPTS (Optimized for accurate strategy selection)
-        // ============================================================================
-
-        this.registerTemplate({
-            id: 'query-routing-logical',
-            version: '3.0',
-            description: 'Universal query routing that works for any domain and query type',
-            prompt: `Analyze the query and determine the best search strategy for ANY domain.
-
-Query: "{{query}}"
-
-UNIVERSAL QUERY ANALYSIS:
-Analyze the query to determine:
-1. Query Type: What kind of information is being requested?
-2. Complexity: How complex is the query?
-3. Search Strategy: What search approach will work best?
-
-QUERY TYPES (Universal):
-- factual: Looking for specific facts, data, or information
-- analytical: Requires analysis, comparison, or interpretation
-- procedural: Asking about processes, steps, or procedures
-- definitional: Seeking definitions, explanations, or clarifications
-- comparative: Comparing different items, concepts, or options
-- temporal: Time-based questions (when, how long, etc.)
-- numerical: Questions about numbers, amounts, statistics
-- conversational: Greetings, casual conversation, general chat
-- legal: Legal terms, regulations, contracts (if legal domain detected)
-- technical: Technical specifications, requirements (if technical domain detected)
-- medical: Medical terms, diagnoses, treatments (if medical domain detected)
-- business: Business data, strategies, metrics (if business domain detected)
-- academic: Academic concepts, research, methodology (if academic domain detected)
-
-SEARCH STRATEGIES:
-- semantic: Best for conceptual questions, definitions, explanations
-- keyword: Best for specific terms, names, exact matches
-- hybrid: Best for complex questions requiring both semantic and keyword search
-- structured: Best for data-heavy questions, specifications, requirements
-- general: Best for conversational queries, greetings, general questions
-
-COMPLEXITY LEVELS:
-- low: Simple questions, greetings, basic facts
-- medium: Questions requiring some analysis or multiple pieces of information
-- high: Complex questions requiring deep analysis, multiple sources, or specialized knowledge
-
-ADAPTIVE DOMAIN DETECTION:
-- Automatically detect if query relates to specific domains
-- Adjust strategy based on detected domain
-- For legal queries: Use structured search for precise references
-- For technical queries: Use hybrid search for specifications
-- For medical queries: Use semantic search for concepts
-- For business queries: Use keyword search for data/metrics
-- For academic queries: Use semantic search for concepts
-- For general queries: Use appropriate strategy based on complexity
-
-Provide the best routing decision for this query.`,
-            variables: ['query'],
-            schema: z.object({
-                queryType: z.enum(['factual', 'analytical', 'procedural', 'definitional', 'comparative', 'temporal', 'numerical', 'conversational', 'legal', 'technical', 'medical', 'business', 'academic']),
-                complexity: z.enum(['low', 'medium', 'high']),
-                searchStrategy: z.enum(['semantic', 'keyword', 'hybrid', 'structured', 'general']),
-                reasoning: z.string(),
-                detectedDomain: z.string().optional(),
-                confidence: z.number().min(0).max(1)
-            }),
-            optimization: {
-                maxTokens: 200,
-                model: 'gpt-4o-mini'
-            }
-        });
 
         this.registerTemplate({
             id: 'rag-response-system',
@@ -542,44 +424,6 @@ Generate compressed content that maximizes information density while preserving 
             }
         });
 
-        this.registerTemplate({
-            id: 'clarifying-queries',
-            version: '1.0',
-            description: 'Generate clarifying queries for recursive retrieval when initial search results are insufficient',
-            prompt: `You are an expert search query generator.
-
-Based on the original query and the context from previous search results, generate 2-3 clarifying queries that would help find more relevant information.
-
-ORIGINAL QUERY: "{{originalQuery}}"
-
-PREVIOUS SEARCH CONTEXT:
-{{resultContext}}
-
-SEARCH HISTORY:
-{{searchHistory}}
-
-GUIDELINES:
-- Focus on specific aspects mentioned in the original query
-- Use different terminology or synonyms
-- Break down complex queries into simpler parts
-- Consider alternative phrasings
-- Generate {{maxQueries}} queries maximum
-
-Return ONLY valid JSON with this structure:
-{
-  "clarifyingQueries": ["query1", "query2", "query3"]
-}
-
-Generate clarifying queries:`,
-            variables: ['originalQuery', 'resultContext', 'searchHistory', 'maxQueries'],
-            schema: z.object({
-                clarifyingQueries: z.array(z.string()).min(1).max(3)
-            }),
-            optimization: {
-                maxTokens: 150,
-                model: 'gpt-4o-mini'
-            }
-        });
 
         this.registerTemplate({
             id: 'unified-query-analysis',
@@ -587,10 +431,15 @@ Generate clarifying queries:`,
             description: 'Enhanced unified query analysis with integrated query rewriting based on complexity score',
             prompt: `Analyze the following user query for:
 
-1. Sanitization: Return a sanitized version, check for basic toxicity or scripting/XSS. Assign a sanitizationLevel: "safe", "suspicious", or "blocked".
+1. Sanitization: Return a sanitized version with typo correction, check for basic toxicity or scripting/XSS. Fix common misspellings like "pahe" → "page", "summery" → "summary", "documet" → "document". Assign a sanitizationLevel: "safe", "suspicious", or "blocked".
 2. Query Classification: Detect if query is abusive, chitchat, or a legitimate document question. Generate a personalized response based on the user's actual query content.
 3. Complexity Analysis: Assess how complex the query is (low, medium, high) and word count.
-4. Query Extraction: Extract page numbers, document names, and main keywords (3–8, lowercase, unique).
+4. Query Extraction: Extract page numbers, document names, and main keywords (3–8, lowercase, unique). Handle typos in page references. For page extraction, look for:
+   - Explicit page references: "page 5", "p. 3", "pg. 10", "on page 7"
+   - Page ranges: "pages 1-3", "page 5 to 8", "from page 2 to page 4"
+   - Section references: "section 2", "chapter 3" (estimate as pages)
+   - Relative references: "first page", "last page", "beginning", "end"
+   - Numbers that could be pages: standalone numbers in reasonable range (1-1000)
 5. Query Rewriting: Generate 3-5 rewritten queries for medium+ complexity, plus Hyde hypothetical answer for high complexity.
 
 Return ONLY valid JSON with this structure:
@@ -760,11 +609,19 @@ QUERY EXTRACTION GUIDELINES:
 - pageNumbers: Extract any page numbers mentioned in the query.
 - keywords: Extract 3–8 main meaningful words for keyword-based search (lowercase, unique)
 
+SANITIZATION GUIDELINES:
+- Fix common typos: "pahe" → "page", "summery" → "summary", "documet" → "document", "contnet" → "content"
+- Correct page references: "pahe 1" → "page 1", "pge 5" → "page 5"
+- Normalize spacing and punctuation
+- Preserve the original intent while making the query searchable
+- If query is too garbled to understand, mark as "suspicious" but still attempt sanitization
+
 IMPORTANT: 
 1. You MUST return ONLY valid JSON. Do not include any other text, explanations, or markdown formatting. The response must be parseable JSON.
 2. The 'response' field should be personalized based on the user's actual query. Do not use generic responses.
 3. For chitchat, acknowledge what they said and respond naturally before redirecting to documents.
 4. For abusive queries, be empathetic but firm in redirecting to document assistance.
+5. Always attempt to fix typos in the sanitizedQuery field to make it searchable.
 
 Query: "{{query}}"`,
             variables: ['query'],
@@ -857,24 +714,15 @@ Query: "{{query}}"`,
     }
 }
 
-// Export singleton instance
 export const promptManager = PromptManager.getInstance();
 
-// Export commonly used prompt IDs for easy access
 export const PROMPT_IDS = {
     DOCUMENT_GRADING_SINGLE: 'document-grading-single',
-    DOCUMENT_GRADING_BATCH: 'document-grading-batch',
-    QUERY_ROUTING_LOGICAL: 'query-routing-logical',
     RAG_RESPONSE_SYSTEM: 'rag-response-system',
     RAG_FALLBACK_RESPONSE: 'rag-fallback-response',
-    // RAPTOR Compression Prompts
     RAPTOR_DOCUMENT_SUMMARY: 'raptor-document-summary',
     RAPTOR_HIERARCHICAL_SUMMARY: 'raptor-hierarchical-summary',
     RAPTOR_TREE_STRUCTURE: 'raptor-tree-structure',
     RAPTOR_MULTI_LEVEL_COMPRESSION: 'raptor-multi-level-compression',
-    // Clarifying Queries
-    CLARIFYING_QUERIES: 'clarifying-queries',
-    // Unified Query Analysis
     UNIFIED_QUERY_ANALYSIS: 'unified-query-analysis',
-
 } as const;
