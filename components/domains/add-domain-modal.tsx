@@ -1,6 +1,4 @@
-import { useRef, useState } from "react";
-
-import { useSession } from "next-auth/react";
+import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -8,7 +6,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { useAnalytics } from "@/lib/analytics";
-import { sendCustomDomainSetupEmail } from "@/lib/emails/send-custom-domain-setup";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 
@@ -43,11 +40,9 @@ export function AddDomainModal({
 }) {
   const [domain, setDomain] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const emailSentRef = useRef<boolean>(false);
 
-  const { data: session } = useSession();
   const teamInfo = useTeam();
-  const { isFree, isPro, isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
+  const { isFree, isPro, isBusiness } = usePlan();
   const { limits } = useLimits();
   const analytics = useAnalytics();
   const addDomainSchema = z.object({
@@ -108,27 +103,6 @@ export function AddDomainModal({
     !onAddition && window.open("/settings/domains", "_blank");
   };
 
-  // Send first-time custom domain email when modal opens
-  const sendFirstTimeEmail = async () => {
-    if (emailSentRef.current || !session?.user?.email) return;
-    
-    const hasCustomDomainAccess = linkType === "DATAROOM_LINK" 
-      ? (isDatarooms || isDataroomsPlus || limits?.customDomainInDataroom)
-      : (isBusiness || isDatarooms || isDataroomsPlus || limits?.customDomainOnPro);
-    
-    try {
-      await sendCustomDomainSetupEmail(
-        session.user.email,
-        session.user.name || undefined,
-        teamInfo?.currentTeam?.plan || "free",
-        hasCustomDomainAccess
-      );
-      emailSentRef.current = true;
-    } catch (error) {
-      console.error("Failed to send custom domain email:", error);
-    }
-  };
-
   // If the team is
   // - on a free plan
   // - on pro plan and has custom domain on pro plan disabled
@@ -152,7 +126,6 @@ export function AddDomainModal({
           }
           highlightItem={["custom-domain"]}
           trigger="add_domain_overview"
-          onClick={sendFirstTimeEmail}
         />
       );
     } else {
@@ -164,12 +137,7 @@ export function AddDomainModal({
               : PlanEnum.Business
           }
           open={open}
-          setOpen={(isOpen) => {
-            if (isOpen) {
-              sendFirstTimeEmail();
-            }
-            setOpen(isOpen);
-          }}
+          setOpen={setOpen}
           trigger={"add_domain_link_sheet"}
           highlightItem={["custom-domain"]}
         />
@@ -178,15 +146,7 @@ export function AddDomainModal({
   }
 
   return (
-    <Dialog 
-      open={open} 
-      onOpenChange={(isOpen) => {
-        if (isOpen) {
-          sendFirstTimeEmail();
-        }
-        setOpen(isOpen);
-      }}
-    >
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-start">
