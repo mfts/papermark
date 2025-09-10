@@ -65,6 +65,9 @@ model Link {
   enableConversation Boolean        @default(false) // Controls if conversations are allowed on this link
   conversations      Conversation[]
 
+  // FAQ system
+  dataroomFaqItems DataroomFaqItem[]
+
   // upload
   enableUpload      Boolean? @default(false) // Optional give user a option to enable the upload document function
   isFileRequestOnly Boolean? @default(false) // Optional give user a option to enable the file request only

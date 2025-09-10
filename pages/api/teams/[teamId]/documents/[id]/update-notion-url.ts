@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { notionUrlUpdateSchema } from "@/lib/zod/url-validation";
 
 export default async function handle(
   req: NextApiRequest,
@@ -24,22 +25,14 @@ export default async function handle(
     teamId: string;
     id: string;
   };
-  const { notionUrl } = req.body as { notionUrl: string };
+  const { notionUrl: url } = req.body as { notionUrl: string };
 
-  // Basic URL validation
-  if (!notionUrl || typeof notionUrl !== "string") {
-    return res.status(400).json({ message: "Valid Notion URL is required" });
+  const validationResult = await notionUrlUpdateSchema.safeParseAsync(url);
+  if (!validationResult.success) {
+    return res.status(400).json({ message: validationResult.error.message });
   }
 
-  // Validate that it's a Notion URL
-  try {
-    const url = new URL(notionUrl);
-    if (!url.hostname.includes("notion.")) {
-      return res.status(400).json({ message: "Invalid Notion URL" });
-    }
-  } catch (error) {
-    return res.status(400).json({ message: "Invalid URL format" });
-  }
+  const notionUrl = validationResult.data;
 
   try {
     // Check if user has access to the team
@@ -83,7 +76,7 @@ export default async function handle(
     // Preserve any existing query parameters from the old URL (like dark mode)
     const oldUrl = new URL(documentVersion.file);
     const newUrl = new URL(notionUrl);
-    
+
     // Copy over the mode parameter if it exists
     const mode = oldUrl.searchParams.get("mode");
     if (mode) {
@@ -101,7 +94,7 @@ export default async function handle(
       },
     });
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       message: "Notion URL updated successfully",
       newUrl: newUrl.toString(),
     });

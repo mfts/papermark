@@ -20,6 +20,10 @@ import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
 import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
+import {
+  HIERARCHICAL_DISPLAY_STYLE,
+  useHierarchicalDisplayName,
+} from "@/lib/utils/hierarchical-display";
 
 import BarChart from "@/components/shared/icons/bar-chart";
 import { Button } from "@/components/ui/button";
@@ -60,6 +64,12 @@ export default function DataroomDocumentCard({
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
   const router = useRouter();
+
+  // Get hierarchical display name
+  const displayName = useHierarchicalDisplayName(
+    dataroomDocument.document.name,
+    dataroomDocument.hierarchicalIndex,
+  );
 
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -205,8 +215,11 @@ export default function DataroomDocumentCard({
 
             <div className="flex-col">
               <div className="flex items-center">
-                <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
-                  {dataroomDocument.document.name}
+                <h2
+                  className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md"
+                  style={HIERARCHICAL_DISPLAY_STYLE}
+                >
+                  {displayName}
                 </h2>
               </div>
               <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">

@@ -11,6 +11,7 @@ import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 import z from "zod";
 
+import { getFeatureFlags } from "@/lib/featureFlags";
 import notion from "@/lib/notion";
 import { addSignedUrls } from "@/lib/notion/utils";
 import {
@@ -57,6 +58,7 @@ export interface ViewPageProps {
   useAdvancedExcelViewer: boolean;
   useCustomAccessForm: boolean;
   logoOnAccessForm: boolean;
+  dataroomIndexEnabled?: boolean;
 }
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
@@ -154,7 +156,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
             teamId === "clup33by90000oewh4rfvp2eg",
         },
-        revalidate: brand || recordMap ? 10 : false,
+        revalidate: brand || recordMap ? 10 : 60,
       };
     }
 
@@ -171,6 +173,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           dataroomDocumentId: document.id,
           folderId: document.folderId,
           orderIndex: document.orderIndex,
+          hierarchicalIndex: document.hierarchicalIndex,
           versions: [
             {
               ...versionWithoutTypeAndFile,
@@ -185,12 +188,16 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 
       const { teamId } = link.dataroom;
 
+      // Check if dataroomIndex feature flag is enabled
+      const featureFlags = await getFeatureFlags({ teamId });
+      const dataroomIndexEnabled = featureFlags.dataroomIndex;
+
       const lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
         return Math.max(
           max,
           new Date(doc.document.versions[0].updatedAt).getTime(),
         );
-      }, 0);
+      }, new Date(link.dataroom.createdAt).getTime());
 
       return {
         props: {
@@ -226,6 +233,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           logoOnAccessForm:
             teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
             teamId === "clup33by90000oewh4rfvp2eg",
+          dataroomIndexEnabled,
         },
         revalidate: 10,
       };
@@ -252,6 +260,7 @@ export default function ViewPage({
   useAdvancedExcelViewer,
   useCustomAccessForm,
   logoOnAccessForm,
+  dataroomIndexEnabled,
   error,
   notionError,
 }: ViewPageProps & { error?: boolean; notionError?: boolean }) {
@@ -467,6 +476,7 @@ export default function ViewPage({
           token={storedToken}
           previewToken={previewToken}
           preview={!!preview}
+          dataroomIndexEnabled={dataroomIndexEnabled}
         />
       </>
     );

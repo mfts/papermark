@@ -213,6 +213,7 @@ export type DataroomFolderWithDocuments = DataroomFolder & {
     orderIndex: number | null;
     id: string;
     folderId: string;
+    hierarchicalIndex: string | null;
     document: {
       id: string;
       name: string;

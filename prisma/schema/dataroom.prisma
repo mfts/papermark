@@ -19,6 +19,9 @@ model Dataroom {
   conversationsEnabled Boolean        @default(false)
   conversations        Conversation[]
 
+  // FAQ system
+  faqItems DataroomFaqItem[]
+
   // upload external documents
   uploadedDocuments DocumentUpload[]
 
@@ -49,8 +52,12 @@ model DataroomDocument {
   folderId   String?
   folder     DataroomFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
   orderIndex Int?
+  hierarchicalIndex String?        // Computed field like "1.2.3" for hierarchical display
 
   conversations Conversation[]
+
+  // FAQ system
+  dataroomFAQs DataroomFaqItem[]
 
   uploadedDocuments DocumentUpload[]
 
@@ -73,6 +80,7 @@ model DataroomFolder {
   dataroomId   String
   dataroom     Dataroom           @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
   orderIndex   Int?
+  hierarchicalIndex String?        // Computed field like "1.2" for hierarchical display
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

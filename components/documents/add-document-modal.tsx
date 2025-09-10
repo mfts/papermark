@@ -9,6 +9,7 @@ import { DefaultPermissionStrategy } from "@prisma/client";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { z } from "zod";
 
 import { useAnalytics } from "@/lib/analytics";
 import {
@@ -18,6 +19,7 @@ import {
 } from "@/lib/documents/create-document";
 import { putFile } from "@/lib/files/put-file";
 import { useDataroomPermissions } from "@/lib/hooks/use-dataroom-permissions";
+import { getNotionPageIdFromSlug } from "@/lib/notion/utils";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import useLimits from "@/lib/swr/use-limits";
@@ -387,17 +389,36 @@ export function AddDocumentModal({
       return;
     }
 
-    const validateNotionPageURL = parsePageId(notionLink);
-    // Check if it's a valid URL or not by Regx
-    const isValidURL =
-      /^(https?:\/\/)?([a-zA-Z0-9-]+\.){1,}[a-zA-Z]{2,}([a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]+)?$/;
-
     // Check if the field is empty or not
     if (!notionLink) {
       toast.error("Please enter a Notion link to proceed.");
       return; // prevent form from submitting
     }
-    if (validateNotionPageURL === null || !isValidURL.test(notionLink)) {
+
+    // Validate URL format with Zod
+    const urlSchema = z.string().url();
+    const urlValidation = urlSchema.safeParse(notionLink);
+
+    if (!urlValidation.success) {
+      toast.error("Please enter a valid URL format.");
+      return;
+    }
+
+    // Try to validate the Notion page URL
+    let validateNotionPageId = parsePageId(notionLink);
+
+    // If parsePageId fails, try to get page ID from slug
+    if (validateNotionPageId === null) {
+      try {
+        const pageId = await getNotionPageIdFromSlug(notionLink);
+        validateNotionPageId = pageId || undefined;
+      } catch (slugError) {
+        toast.error("Please enter a valid Notion link to proceed.");
+        return;
+      }
+    }
+
+    if (!validateNotionPageId) {
       toast.error("Please enter a valid Notion link to proceed.");
       return;
     }

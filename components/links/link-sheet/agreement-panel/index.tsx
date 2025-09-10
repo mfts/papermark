@@ -31,6 +31,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import LinkItem from "../link-item";
 
@@ -50,7 +52,7 @@ export default function AgreementSheet({
   isOnlyView = false,
   onClose,
 }: {
-  defaultData?: { name: string; link: string; requireName: boolean } | null;
+  defaultData?: { name: string; link: string; requireName: boolean; contentType?: string; textContent?: string } | null;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   isOnlyView?: boolean;
@@ -58,7 +60,13 @@ export default function AgreementSheet({
 }) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const [data, setData] = useState({ name: "", link: "", requireName: true });
+  const [data, setData] = useState({ 
+    name: "", 
+    link: "", 
+    textContent: "",
+    contentType: "LINK",
+    requireName: true 
+  });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
 
@@ -71,6 +79,8 @@ export default function AgreementSheet({
       setData({
         name: defaultData?.name || "",
         link: defaultData?.link || "",
+        textContent: defaultData?.textContent || "",
+        contentType: defaultData?.contentType || "LINK",
         requireName: defaultData?.requireName || true,
       });
     }
@@ -78,7 +88,13 @@ export default function AgreementSheet({
 
   const handleClose = (open: boolean) => {
     setIsOpen(open);
-    setData({ name: "", link: "", requireName: true });
+    setData({ 
+      name: "", 
+      link: "", 
+      textContent: "",
+      contentType: "LINK",
+      requireName: true 
+    });
     setCurrentFile(null);
     setIsLoading(false);
     if (onClose) {
@@ -184,13 +200,22 @@ export default function AgreementSheet({
       return;
     }
 
-    // Validate URL before submitting
-    try {
-      agreementUrlSchema.parse(data.link);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const firstError = error.errors[0];
-        toast.error(firstError?.message || "Please enter a valid URL");
+    // Validate based on content type
+    if (data.contentType === "LINK") {
+      // Validate URL
+      try {
+        agreementUrlSchema.parse(data.link);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const firstError = error.errors[0];
+          toast.error(firstError?.message || "Please enter a valid URL");
+          return;
+        }
+      }
+    } else if (data.contentType === "TEXT") {
+      // Validate text content
+      if (!data.textContent.trim()) {
+        toast.error("Please enter agreement text content");
         return;
       }
     }
@@ -198,14 +223,19 @@ export default function AgreementSheet({
     setIsLoading(true);
 
     try {
+      const submitData = {
+        name: data.name,
+        contentType: data.contentType,
+        content: data.contentType === "LINK" ? data.link : data.textContent,
+        requireName: data.requireName,
+      };
+
       const response = await fetch(`/api/teams/${teamId}/agreements`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...data,
-        }),
+        body: JSON.stringify(submitData),
       });
 
       if (!response.ok) {
@@ -220,7 +250,13 @@ export default function AgreementSheet({
     } finally {
       setIsLoading(false);
       setIsOpen(false);
-      setData({ name: "", link: "", requireName: true });
+      setData({ 
+        name: "", 
+        link: "", 
+        textContent: "",
+        contentType: "LINK",
+        requireName: true 
+      });
     }
   };
 
@@ -281,56 +317,102 @@ export default function AgreementSheet({
               </div>
 
               <div className="space-y-4">
+                {/* Content Type Selection */}
                 <div className="w-full space-y-2">
-                  <Label htmlFor="link">Link to an agreement</Label>
-                  <Input
-                    className={`flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset placeholder:text-muted-foreground focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 ${
-                      !isUrlValid
-                        ? "ring-red-500 focus:ring-red-500"
-                        : "ring-input focus:ring-gray-400"
-                    }`}
-                    id="link"
-                    type="text" // Changed from "url" to avoid browser validation conflicts
-                    name="link"
-                    required
-                    autoComplete="off"
-                    data-1p-ignore
-                    placeholder="https://www.papermark.com/nda"
-                    value={data.link || ""}
-                    onChange={(e) => {
-                      const newValue = e.target.value;
-                      setData({
-                        ...data,
-                        link: newValue,
-                      });
-                      // Validate on change with debouncing
-                      validateUrl(newValue);
-                    }}
-                    onBlur={(e) => {
-                      // Validate on blur for immediate feedback
-                      validateUrl(e.target.value);
-                    }}
+                  <Label>Agreement Content Type</Label>
+                  <RadioGroup 
+                    value={data.contentType} 
+                    onValueChange={(value) => setData({...data, contentType: value})}
                     disabled={isOnlyView}
-                  />
-                  {/* Display validation error */}
-                  {urlError && (
-                    <p className="mt-1 text-sm text-red-500">{urlError}</p>
-                  )}
+                    className="flex flex-col space-y-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="LINK" id="link-type" />
+                      <Label htmlFor="link-type">Link to agreement document</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="TEXT" id="text-type" />
+                      <Label htmlFor="text-type">Text content</Label>
+                    </div>
+                  </RadioGroup>
                 </div>
 
-                {!isOnlyView ? (
-                  <div className="space-y-12">
-                    <div className="space-y-2 pb-6">
-                      <Label>Or upload an agreement</Label>
-                      <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <DocumentUpload
-                          currentFile={currentFile}
-                          setCurrentFile={setCurrentFile}
-                        />
+                {/* Link Content */}
+                {data.contentType === "LINK" && (
+                  <div className="w-full space-y-2">
+                    <Label htmlFor="link">Link to an agreement</Label>
+                    <Input
+                      className={`flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset placeholder:text-muted-foreground focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 ${
+                        !isUrlValid
+                          ? "ring-red-500 focus:ring-red-500"
+                          : "ring-input focus:ring-gray-400"
+                      }`}
+                      id="link"
+                      type="text"
+                      name="link"
+                      required={data.contentType === "LINK"}
+                      autoComplete="off"
+                      data-1p-ignore
+                      placeholder="https://www.papermark.com/nda"
+                      value={data.link || ""}
+                      onChange={(e) => {
+                        const newValue = e.target.value;
+                        setData({
+                          ...data,
+                          link: newValue,
+                        });
+                        validateUrl(newValue);
+                      }}
+                      onBlur={(e) => {
+                        validateUrl(e.target.value);
+                      }}
+                      disabled={isOnlyView}
+                    />
+                    {urlError && (
+                      <p className="mt-1 text-sm text-red-500">{urlError}</p>
+                    )}
+
+                    {!isOnlyView && (
+                      <div className="space-y-12">
+                        <div className="space-y-2 pb-6">
+                          <Label>Or upload an agreement</Label>
+                          <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                            <DocumentUpload
+                              currentFile={currentFile}
+                              setCurrentFile={setCurrentFile}
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
-                ) : null}
+                )}
+
+                {/* Text Content */}
+                {data.contentType === "TEXT" && (
+                  <div className="w-full space-y-2">
+                    <Label htmlFor="textContent">Agreement Text</Label>
+                    <Textarea
+                      className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                      id="textContent"
+                      name="textContent"
+                      required={data.contentType === "TEXT"}
+                      placeholder="By accessing this document, you agree to maintain confidentiality of all information contained herein and not to share, copy, or distribute any content without prior written consent..."
+                      value={data.textContent || ""}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          textContent: e.target.value,
+                        })
+                      }
+                      disabled={isOnlyView}
+                      rows={6}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This text will be displayed to users as a compliance agreement before they can access the content.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
             <SheetFooter
@@ -345,7 +427,10 @@ export default function AgreementSheet({
                   <Button
                     type="submit"
                     loading={isLoading}
-                    disabled={!isUrlValid && data.link.trim() !== ""}
+                    disabled={
+                      (data.contentType === "LINK" && !isUrlValid && data.link.trim() !== "") ||
+                      (data.contentType === "TEXT" && !data.textContent.trim())
+                    }
                   >
                     Create Agreement
                   </Button>

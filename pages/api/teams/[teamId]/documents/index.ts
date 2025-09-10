@@ -12,6 +12,7 @@ import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { log, serializeFileSize } from "@/lib/utils";
 import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
+import { documentUploadSchema } from "@/lib/zod/url-validation";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -240,7 +241,22 @@ export default async function handle(
       userId = (session.user as CustomUser).id;
     }
 
-    // Assuming data is an object with `name` and `description` properties
+    // Validate request body using Zod schema for security
+    const validationResult = await documentUploadSchema.safeParseAsync(
+      req.body,
+    );
+
+    if (!validationResult.success) {
+      log({
+        message: `Document upload validation failed for teamId: ${teamId}. Errors: ${JSON.stringify(validationResult.error.errors)}`,
+        type: "error",
+      });
+      return res.status(400).json({
+        error: "Invalid document upload data",
+        details: validationResult.error.errors,
+      });
+    }
+
     const {
       name,
       url: fileUrl,
@@ -251,17 +267,7 @@ export default async function handle(
       contentType,
       createLink,
       fileSize,
-    } = req.body as {
-      name: string;
-      url: string;
-      storageType: DocumentStorageType;
-      numPages?: number;
-      type: string;
-      folderPathName?: string;
-      contentType: string;
-      createLink?: boolean;
-      fileSize?: number;
-    };
+    } = validationResult.data;
 
     try {
       const { team } = await getTeamWithUsersAndDocument({
@@ -276,7 +282,7 @@ export default async function handle(
           storageType,
           numPages,
           supportedFileType: fileType,
-          contentType,
+          contentType: contentType || null,
           fileSize,
           enableExcelAdvancedMode:
             fileType === "sheet" &&

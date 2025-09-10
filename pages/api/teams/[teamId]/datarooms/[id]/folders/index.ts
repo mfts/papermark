@@ -259,7 +259,16 @@ export default async function handle(
             parentId: null,
           },
           orderBy: [{ orderIndex: "asc" }, { name: "asc" }],
-          include: {
+          select: {
+            id: true,
+            name: true,
+            path: true,
+            parentId: true,
+            dataroomId: true,
+            orderIndex: true,
+            hierarchicalIndex: true,
+            createdAt: true,
+            updatedAt: true,
             _count: {
               select: { documents: true, childFolders: true },
             },
@@ -281,6 +290,7 @@ export default async function handle(
               select: {
                 id: true,
                 folderId: true,
+                hierarchicalIndex: true,
                 document: {
                   select: {
                     id: true,
@@ -291,11 +301,21 @@ export default async function handle(
               },
             },
             folders: {
-              include: {
+              select: {
+                id: true,
+                name: true,
+                path: true,
+                parentId: true,
+                dataroomId: true,
+                orderIndex: true,
+                hierarchicalIndex: true,
+                createdAt: true,
+                updatedAt: true,
                 documents: {
                   select: {
                     id: true,
                     folderId: true,
+                    hierarchicalIndex: true,
                     document: {
                       select: {
                         id: true,
@@ -333,12 +353,22 @@ export default async function handle(
             name: "asc",
           },
         ],
-        include: {
+        select: {
+          id: true,
+          name: true,
+          path: true,
+          parentId: true,
+          dataroomId: true,
+          orderIndex: true,
+          hierarchicalIndex: true,
+          createdAt: true,
+          updatedAt: true,
           documents: {
             select: {
               orderIndex: true,
               id: true,
               folderId: true,
+              hierarchicalIndex: true,
               document: {
                 select: {
                   id: true,
