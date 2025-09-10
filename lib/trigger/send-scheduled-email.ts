@@ -3,6 +3,7 @@ import { logger, task } from "@trigger.dev/sdk/v3";
 import { sendDataroomInfoEmail } from "@/lib/emails/send-dataroom-info";
 import prisma from "@/lib/prisma";
 
+import { sendDataroomTrial24hReminderEmail } from "../emails/send-dataroom-trial-24h";
 import { sendDataroomTrialEndEmail } from "../emails/send-dataroom-trial-end";
 
 export const sendDataroomTrialInfoEmailTask = task({
@@ -15,6 +16,18 @@ export const sendDataroomTrialInfoEmailTask = task({
       },
       payload.useCase,
     );
+    logger.info("Email sent", { to: payload.to });
+  },
+});
+
+export const sendDataroomTrial24hReminderEmailTask = task({
+  id: "send-dataroom-trial-24h-reminder-email",
+  retry: { maxAttempts: 3 },
+  run: async (payload: { to: string; name: string }) => {
+    await sendDataroomTrial24hReminderEmail({
+      email: payload.to,
+      name: payload.name,
+    });
     logger.info("Email sent", { to: payload.to });
   },
 });

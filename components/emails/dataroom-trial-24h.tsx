@@ -20,7 +20,7 @@ interface TrialEndReminderEmail {
   name: string | null | undefined;
 }
 
-const TrialEndReminderEmail = ({ name }: TrialEndReminderEmail) => {
+const DataroomTrial24hReminderEmail = ({ name }: TrialEndReminderEmail) => {
   return (
     <Html>
       <Head />
@@ -89,4 +89,4 @@ const TrialEndReminderEmail = ({ name }: TrialEndReminderEmail) => {
   );
 };
 
-export default TrialEndReminderEmail;
+export default DataroomTrial24hReminderEmail;
