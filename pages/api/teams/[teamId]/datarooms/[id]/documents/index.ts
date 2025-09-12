@@ -64,7 +64,14 @@ export default async function handle(
             },
           },
         ],
-        include: {
+        select: {
+          id: true,
+          dataroomId: true,
+          folderId: true,
+          orderIndex: true,
+          hierarchicalIndex: true,
+          createdAt: true,
+          updatedAt: true,
           document: {
             select: {
               id: true,
@@ -159,7 +166,9 @@ export default async function handle(
                 orderBy: { createdAt: "desc" },
                 take: 1,
               },
-              _count: { select: { viewerGroups: true, permissionGroups: true } },
+              _count: {
+                select: { viewerGroups: true, permissionGroups: true },
+              },
             },
           },
         },

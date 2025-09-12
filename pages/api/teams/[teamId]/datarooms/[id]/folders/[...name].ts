@@ -79,7 +79,16 @@ export default async function handle(
         orderBy: {
           name: "asc",
         },
-        include: {
+        select: {
+          id: true,
+          name: true,
+          path: true,
+          parentId: true,
+          dataroomId: true,
+          orderIndex: true,
+          hierarchicalIndex: true,
+          createdAt: true,
+          updatedAt: true,
           _count: {
             select: { documents: true, childFolders: true },
           },

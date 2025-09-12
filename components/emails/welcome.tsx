@@ -14,6 +14,8 @@ import {
   Text,
 } from "@react-email/components";
 
+import { Footer } from "./shared/footer";
+
 interface WelcomeEmailProps {
   name: string | null | undefined;
 }
@@ -36,25 +38,23 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
               Thanks for signing up{name && `, ${name}`}!
             </Text>
             <Text className="text-sm">
-              My name is Marc, and I&apos;m the creator of Papermark – the
-              open-source DocSend alternative! I&apos;m excited to have you on
-              board!
+              My name is Marc, and I&apos;m the founder of Papermark – the
+              secure way to share documents and data rooms. I&apos;m excited to
+              have you on board!
             </Text>
             <Text className="text-sm">
               Here are a few things you can do to get started:
             </Text>
-            <Text className="text-sm">
-              <ul className="list-inside list-disc text-sm">
-                <li>Upload a document</li>
-                <li>Create a virtual data room</li>
-                <li>
-                  Share a link{" "}
-                  <span className="italic">(with your custom domain)✨</span>
-                </li>
-                <li>Watch the views come in real-time</li>
-              </ul>
-            </Text>
-            <Section className="mb-[32px] mt-[32px] text-center">
+            <ul className="list-inside list-disc text-sm">
+              <li>Turn your documents into shareable links</li>
+              <li>Create secure virtual data rooms</li>
+              <li>
+                Share your documents{" "}
+                <span className="italic">(with custom domain)✨</span>
+              </li>
+              <li>Watch the page-by-page insights in real-time</li>
+            </ul>
+            <Section className="my-8 text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
                 href={`${process.env.NEXT_PUBLIC_BASE_URL}/welcome`}
@@ -63,62 +63,49 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
                 Get Started
               </Button>
             </Section>
-            <Section>
-              <Text className="text-sm">
-                If you would like to keep up to date, you can:
-              </Text>
-              <Text className="text-sm">
-                <ul className="list-inside list-disc text-sm">
-                  <li>
-                    Star the repo on{" "}
-                    <Link
-                      href="https://github.com/mfts/papermark"
-                      target="_blank"
-                    >
-                      GitHub
-                    </Link>
-                  </li>
-                  <li>
-                    Follow the journey on{" "}
-                    <Link href="https://x.com/papermarkio" target="_blank">
-                      Twitter
-                    </Link>
-                  </li>
-                  <li>
-                    Have a call to talk enterprise{" "}
-                    <Link
-                      href="https://cal.com/marcseitz/papermark"
-                      target="_blank"
-                    >
-                      Book
-                    </Link>
-                  </li>
-                </ul>
-              </Text>
-            </Section>
+
             <Section className="mt-4">
               <Text className="text-sm">
                 If you have any questions or feedback just respond to this
-                email. I&apos;m always happy to help!
+                email.{" "}
+                <Link
+                  href="https://cal.link/papermark"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Book a call
+                </Link>{" "}
+                to discuss your enterprise needs. I&apos;m always happy to help!
               </Text>
+
               <Text className="text-sm text-gray-400">Marc from Papermark</Text>
             </Section>
-            <Hr />
-            <Section className="mt-8 text-gray-400">
-              <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
-                  target="_blank"
-                >
-                  papermark.com
-                </a>
-              </Text>
-              <Text className="text-xs">
-                You will shortly receive the intro to Papermark. Stay tuned.
-              </Text>
-            </Section>
+            <Footer />
+            <Text className="flex gap-x-1 text-xs">
+              <Link
+                href="https://www.papermark.com/customers"
+                target="_blank"
+                className="text-xs text-gray-400"
+              >
+                Customer stories
+              </Link>
+              <Link
+                href="https://x.com/papermarkio"
+                target="_blank"
+                className="text-xs text-gray-400"
+                rel="noopener noreferrer"
+              >
+                · X/Twitter
+              </Link>
+              <Link
+                href="https://www.linkedin.com/company/papermarkio"
+                target="_blank"
+                className="text-xs text-gray-400"
+                rel="noopener noreferrer"
+              >
+                · LinkedIn
+              </Link>
+            </Text>
           </Container>
         </Body>
       </Tailwind>

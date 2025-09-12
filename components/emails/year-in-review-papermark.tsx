@@ -266,7 +266,7 @@ export default function PapermarkYearInReviewEmail({
                 © {new Date().getFullYear()}{" "}
                 <a
                   href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
+                  className="text-gray-400 no-underline"
                   target="_blank"
                 >
                   papermark.com
@@ -279,7 +279,7 @@ export default function PapermarkYearInReviewEmail({
                 from future Year in Review emails,{" "}
                 <a
                   href={unsubscribeUrl}
-                  className="text-gray-400 underline underline-offset-2 hover:text-gray-400"
+                  className="text-gray-400 underline underline-offset-2"
                 >
                   click here
                 </a>

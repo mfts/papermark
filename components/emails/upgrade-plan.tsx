@@ -14,6 +14,8 @@ import {
   Text,
 } from "@react-email/components";
 
+import { Footer } from "./shared/footer";
+
 interface UpgradePlanEmailProps {
   name: string | null | undefined;
   planType: string;
@@ -21,10 +23,18 @@ interface UpgradePlanEmailProps {
 
 const UpgradePlanEmail = ({
   name,
-  planType = "pro",
+  planType = "datarooms-plus",
 }: UpgradePlanEmailProps) => {
   const previewText = `The document sharing infrastructure for the modern web`;
 
+  const PLAN_TYPE_MAP = {
+    pro: "Pro",
+    business: "Business",
+    datarooms: "Data Rooms",
+    "datarooms-plus": "Data Rooms Plus",
+  };
+
+  const planTypeText = PLAN_TYPE_MAP[planType as keyof typeof PLAN_TYPE_MAP];
   const features: any = {
     pro: [
       "Custom branding",
@@ -52,8 +62,7 @@ const UpgradePlanEmail = ({
     ],
   };
 
-  const planTypeText = planType.toLowerCase();
-  const planFeatures = features[planTypeText];
+  const planFeatures = features[planType];
 
   return (
     <Html>
@@ -66,30 +75,18 @@ const UpgradePlanEmail = ({
               <span className="font-bold tracking-tighter">Papermark</span>
             </Text>
             <Text className="font-seminbold mx-0 mb-8 mt-4 p-0 text-center text-xl">
-              Thanks for upgrading to Papermark {planType}!
+              Thanks for upgrading to Papermark {planTypeText}!
             </Text>
             <Text className="text-sm leading-6 text-black">
               Hey{name && ` ${name}`}!
             </Text>
             <Text className="text-sm">
-              My name is Marc, and I&apos;m the founder of Papermark. I wanted
-              to personally reach out to thank you for upgrading to Papermark{" "}
-              {planType}!
+              Marc is here. I wanted to personally reach out to thank you for
+              upgrading to Papermark {planTypeText}!
             </Text>
+
             <Text className="text-sm leading-6 text-black">
-              As you might already know, we are a bootstrapped and{" "}
-              <Link
-                href="https://github.com/mfts/papermark"
-                target="_blank"
-                className="font-medium text-emerald-500 no-underline"
-              >
-                open-source
-              </Link>{" "}
-              business. Your support means the world to us and helps us continue
-              to build and improve Papermark.
-            </Text>
-            <Text className="text-sm leading-6 text-black">
-              On the {planType} plan, you now have access to:
+              On the {planTypeText} plan, you now have access to:
             </Text>
             {planFeatures?.map(
               (feature: string, index: number) => (
@@ -108,9 +105,7 @@ const UpgradePlanEmail = ({
                 style={{ padding: "12px 20px" }}
               >
                 Share your{" "}
-                {planTypeText.includes("datarooms")
-                  ? "data rooms"
-                  : "documents"}
+                {planType.includes("datarooms") ? "data rooms" : "documents"}
               </Button>
             </Section>
             <Section>
@@ -120,23 +115,7 @@ const UpgradePlanEmail = ({
               </Text>
               <Text className="text-sm text-gray-400">Marc from Papermark</Text>
             </Section>
-            <Hr />
-            <Section className="mt-8 text-gray-400">
-              <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
-                  target="_blank"
-                >
-                  papermark.com
-                </a>
-              </Text>
-              <Text className="text-xs">
-                If you have any feedback or questions about this email, simply
-                reply to it. I&apos;d love to hear from you!
-              </Text>
-            </Section>
+            <Footer />
           </Container>
         </Body>
       </Tailwind>

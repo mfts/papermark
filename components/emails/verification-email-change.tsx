@@ -3,7 +3,6 @@ import {
   Container,
   Head,
   Heading,
-  Hr,
   Html,
   Link,
   Preview,
@@ -12,6 +11,8 @@ import {
   Text,
 } from "@react-email/components";
 
+import { Footer } from "./shared/footer";
+
 interface ConfirmEmailChangeProps {
   email: string;
   newEmail: string;
@@ -19,8 +20,8 @@ interface ConfirmEmailChangeProps {
 }
 
 export function ConfirmEmailChange({
-  email,
-  newEmail,
+  email = "email@example.com",
+  newEmail = "new@example.com",
   confirmUrl = "https://www.papermark.com",
 }: ConfirmEmailChangeProps) {
   return (
@@ -60,25 +61,17 @@ export function ConfirmEmailChange({
             <Text className="max-w-sm flex-wrap break-words font-medium text-purple-600 no-underline">
               {confirmUrl.replace(/^https?:\/\//, "")}
             </Text>
-            <Hr />
-            <Section className="mt-8 text-gray-400">
-              <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
-                  target="_blank"
-                >
-                  papermark.com
-                </a>
-              </Text>
-              <Text className="text-xs">
-                This email was intended for{" "}
-                <span className="text-black">{email}</span>. If you were not
-                expecting this email, you can ignore this email. If you have any
-                feedback or questions about this email, simply reply to it.
-              </Text>
-            </Section>
+            <Footer
+              footerText={
+                <>
+                  This email was intended for{" "}
+                  <span className="text-black">{email}</span>. If you were not
+                  expecting this email, you can ignore this email. If you have
+                  any feedback or questions about this email, simply reply to
+                  it.
+                </>
+              }
+            />
           </Container>
         </Body>
       </Tailwind>

@@ -11,6 +11,7 @@ import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 import z from "zod";
 
+import { getFeatureFlags } from "@/lib/featureFlags";
 import notion from "@/lib/notion";
 import {
   CustomUser,
@@ -102,7 +103,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             linkType: "DOCUMENT_LINK",
             link: {
               ...link,
-              teamId: teamId,
+              teamId: teamId || null,
               document: {
                 ...linkDocument,
                 versions: [versionWithoutTypeAndFile],
@@ -153,6 +154,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           dataroomDocumentId: document.id,
           folderId: document.folderId,
           orderIndex: document.orderIndex,
+          hierarchicalIndex: document.hierarchicalIndex,
           versions: [
             {
               ...versionWithoutTypeAndFile,
@@ -167,6 +169,10 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 
       const { teamId } = link.dataroom;
 
+      // Check if dataroomIndex feature flag is enabled
+      const featureFlags = await getFeatureFlags({ teamId });
+      const dataroomIndexEnabled = featureFlags.dataroomIndex;
+
       const lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
         return Math.max(
           max,
@@ -180,7 +186,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             linkType: "DATAROOM_LINK",
             link: {
               ...link,
-              teamId: teamId,
+              teamId: teamId || null,
               dataroom: {
                 ...link.dataroom,
                 documents,
@@ -208,6 +214,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           logoOnAccessForm:
             teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
             teamId === "clup33by90000oewh4rfvp2eg",
+          dataroomIndexEnabled,
         },
         revalidate: 10,
       };
@@ -233,6 +240,7 @@ export default function ViewPage({
   useAdvancedExcelViewer,
   useCustomAccessForm,
   logoOnAccessForm,
+  dataroomIndexEnabled,
   error,
 }: {
   linkData: DocumentLinkData | DataroomLinkData;
@@ -253,6 +261,7 @@ export default function ViewPage({
   useAdvancedExcelViewer: boolean;
   useCustomAccessForm: boolean;
   logoOnAccessForm: boolean;
+  dataroomIndexEnabled?: boolean;
   error?: boolean;
 }) {
   const router = useRouter();
@@ -309,9 +318,7 @@ export default function ViewPage({
             favicon={meta.metaFavicon}
             enableBranding={meta.enableCustomMetatag ?? false}
             title={
-              meta.metaTitle ??
-              `${link?.document?.name} | Powered by Papermark` ??
-              "Document powered by Papermark"
+              meta.metaTitle ?? `${link?.document?.name} | Powered by Papermark`
             }
             description={meta.metaDescription ?? null}
             imageUrl={meta.metaImage ?? null}
@@ -354,9 +361,7 @@ export default function ViewPage({
           favicon={meta.metaFavicon}
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
-            meta.metaTitle ??
-            `${link?.document?.name} | Powered by Papermark` ??
-            "Document powered by Papermark"
+            meta.metaTitle ?? `${link?.document?.name} | Powered by Papermark`
           }
           description={meta.metaDescription ?? null}
           imageUrl={meta.metaImage ?? null}
@@ -391,9 +396,7 @@ export default function ViewPage({
             favicon={meta.metaFavicon}
             enableBranding={meta.enableCustomMetatag ?? false}
             title={
-              meta.metaTitle ??
-              `${link?.dataroom?.name} | Powered by Papermark` ??
-              "Dataroom powered by Papermark"
+              meta.metaTitle ?? `${link?.dataroom?.name} | Powered by Papermark`
             }
             description={meta.metaDescription ?? null}
             imageUrl={meta.metaImage ?? null}
@@ -437,9 +440,7 @@ export default function ViewPage({
           favicon={meta.metaFavicon}
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
-            meta.metaTitle ??
-            `${link?.dataroom?.name} | Powered by Papermark` ??
-            "Dataroom powered by Papermark"
+            meta.metaTitle ?? `${link?.dataroom?.name} | Powered by Papermark`
           }
           description={meta.metaDescription ?? null}
           imageUrl={meta.metaImage ?? null}
@@ -458,6 +459,7 @@ export default function ViewPage({
           previewToken={previewToken}
           preview={!!preview}
           logoOnAccessForm={logoOnAccessForm}
+          dataroomIndexEnabled={dataroomIndexEnabled}
         />
       </>
     );

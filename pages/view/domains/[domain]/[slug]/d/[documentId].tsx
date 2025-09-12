@@ -105,8 +105,7 @@ export default function DataroomDocumentViewPage({
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
             meta.metaTitle ??
-            `${link?.dataroomDocument?.document?.name} | Powered by Papermark` ??
-            "Document powered by Papermark"
+            `${link?.dataroomDocument?.document?.name} | Powered by Papermark`
           }
           description={meta.metaDescription ?? null}
           imageUrl={meta.metaImage ?? null}
@@ -151,8 +150,7 @@ export default function DataroomDocumentViewPage({
         enableBranding={meta.enableCustomMetatag ?? false}
         title={
           meta.metaTitle ??
-          `${link?.dataroomDocument?.document?.name} | Powered by Papermark` ??
-          "Dataroom powered by Papermark"
+          `${link?.dataroomDocument?.document?.name} | Powered by Papermark`
         }
         description={meta.metaDescription ?? null}
         imageUrl={meta.metaImage ?? null}
@@ -199,6 +197,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
       .regex(/^[a-zA-Z0-9_-]+$/, "Invalid path parameter")
       .parse(slugParam);
     const documentId = z.string().cuid().parse(documentIdParam);
+
     const res = await fetch(
       `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
         domain,
@@ -252,7 +251,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
           linkType: "DATAROOM_LINK",
           link: {
             ...linkData,
-            teamId: teamId,
+            teamId: teamId || null,
             dataroomDocument: {
               ...linkData.dataroomDocument,
               document: {

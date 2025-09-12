@@ -20,6 +20,10 @@ import { mutate } from "swr";
 import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { timeAgo } from "@/lib/utils";
+import {
+  HIERARCHICAL_DISPLAY_STYLE,
+  useHierarchicalDisplayName,
+} from "@/lib/utils/hierarchical-display";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -66,6 +70,14 @@ export default function FolderCard({
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
+  // Get hierarchical display name for dataroom folders
+  const displayName = useHierarchicalDisplayName(
+    folder.name,
+    isDataroom && "hierarchicalIndex" in folder
+      ? folder.hierarchicalIndex
+      : undefined,
+  );
+
   const folderPath =
     isDataroom && dataroomId
       ? `/datarooms/${dataroomId}/documents${folder.path}`
@@ -83,8 +95,6 @@ export default function FolderCard({
       });
     }
   }, [openFolder, addDataroomOpen]);
-
-
 
   const handleCreateDataroom = (e: any, folderId: string) => {
     e.stopPropagation();
@@ -160,8 +170,11 @@ export default function FolderCard({
 
           <div className="flex-col">
             <div className="flex items-center">
-              <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
-                {folder.name}
+              <h2
+                className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md"
+                style={HIERARCHICAL_DISPLAY_STYLE}
+              >
+                {displayName}
               </h2>
             </div>
             <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
