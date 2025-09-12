@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { stripeInstance } from "@/ee/stripe";
 import { getPlanFromPriceId, isOldAccount } from "@/ee/stripe/utils";
+import { createHybridLineItems, isHybridPricingPlan } from "@/ee/stripe/pricing-utils";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
@@ -29,9 +30,10 @@ export default async function handle(
       return;
     }
 
-    const { teamId, priceId } = req.query as {
+    const { teamId, priceId, users } = req.query as {
       teamId: string;
       priceId: string;
+      users?: string;
     };
 
     const { id: userId, email: userEmail } = session.user as CustomUser;
@@ -62,20 +64,37 @@ export default async function handle(
     }
 
     const minimumQuantity = plan.minQuantity;
+    const requestedUsers = users ? parseInt(users, 10) : minimumQuantity;
 
     let stripeSession;
+    let lineItems;
 
-    const lineItem = {
-      price: priceId,
-      quantity: oldAccount ? 1 : minimumQuantity,
-      ...(!oldAccount && {
-        adjustable_quantity: {
-          enabled: true,
-          minimum: minimumQuantity,
-          maximum: 99,
-        },
-      }),
-    };
+    // Determine if we should use hybrid pricing
+    const isHybrid = isHybridPricingPlan(plan.slug) && !oldAccount;
+    
+    if (isHybrid) {
+      // Use hybrid pricing with base price + additional users
+      const period = priceId.includes("yearly") || priceId.includes("annual") ? "yearly" : "monthly";
+      lineItems = createHybridLineItems(plan.slug, requestedUsers, period, oldAccount);
+      
+      if (!lineItems || lineItems.length === 0) {
+        res.status(500).json({ error: "Failed to create hybrid pricing line items" });
+        return;
+      }
+    } else {
+      // Use legacy per-user pricing
+      lineItems = [{
+        price: priceId,
+        quantity: oldAccount ? 1 : Math.max(requestedUsers, minimumQuantity),
+        ...(!oldAccount && {
+          adjustable_quantity: {
+            enabled: true,
+            minimum: minimumQuantity,
+            maximum: 99,
+          },
+        }),
+      }];
+    }
 
     const dubDiscount = await getDubDiscountForExternalUserId(userId);
 
@@ -88,7 +107,7 @@ export default async function handle(
         billing_address_collection: "required",
         success_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
         cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
-        line_items: [lineItem],
+        line_items: lineItems,
         automatic_tax: {
           enabled: true,
         },
@@ -106,7 +125,7 @@ export default async function handle(
         billing_address_collection: "required",
         success_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
         cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
-        line_items: [lineItem],
+        line_items: lineItems,
         automatic_tax: {
           enabled: true,
         },
