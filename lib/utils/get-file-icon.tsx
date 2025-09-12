@@ -56,6 +56,8 @@ export function fileIcon({
     case "video/ogg":
     case "video/x-msvideo":
     case "video":
+    case "audio/mp4":
+    case "audio/mpeg":
       return <VideoIcon className={className} isLight={isLight} />;
     case "application/vnd.google-earth.kml+xml":
     case "application/vnd.google-earth.kmz":
