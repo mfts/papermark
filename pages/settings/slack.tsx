@@ -6,6 +6,7 @@ import { useTeam } from "@/context/team-context";
 import { CircleHelpIcon, Hash, Settings, XCircleIcon } from "lucide-react";
 import { toast } from "sonner";
 
+import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import {
   SlackChannelConfig,
   SlackIntegration,
@@ -37,6 +38,7 @@ export default function SlackSettings() {
   const router = useRouter();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
+  const { isFeatureEnabled } = useFeatureFlags();
   const [connecting, setConnecting] = useState(false);
   const [isChannelPopoverOpen, setIsChannelPopoverOpen] = useState(false);
   const [pendingChannelUpdate, setPendingChannelUpdate] = useState(false);
@@ -115,6 +117,14 @@ export default function SlackSettings() {
   //     if (timeoutId) clearTimeout(timeoutId);
   //   };
   // }, [router.query, mutateIntegration]);
+
+  // Redirect if Slack feature is not enabled
+  useEffect(() => {
+    if (!isFeatureEnabled("slack")) {
+      router.push("/settings/general");
+      toast.error("This feature is not available for your team");
+    }
+  }, [isFeatureEnabled, router]);
 
   const handleConnect = async () => {
     if (!teamId) return;

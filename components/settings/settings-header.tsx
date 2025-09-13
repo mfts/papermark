@@ -10,6 +10,7 @@ export function SettingsHeader() {
   const { data: features } = useSWR<{
     tokens: boolean;
     incomingWebhooks: boolean;
+    slack: boolean;
   }>(
     teamInfo?.currentTeam?.id
       ? `/api/feature-flags?teamId=${teamInfo.currentTeam.id}`
@@ -71,6 +72,7 @@ export function SettingsHeader() {
             label: "Slack",
             href: `/settings/slack`,
             segment: "slack",
+            disabled: !features?.slack,
           },
           {
             label: "Tokens",
