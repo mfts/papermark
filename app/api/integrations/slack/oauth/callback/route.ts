@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { Team } from "@prisma/client";
-import { getSession } from "next-auth/react";
+import { getServerSession } from "next-auth";
 import z from "zod";
 
 import { installIntegration } from "@/lib/integrations/install";
@@ -27,7 +28,7 @@ export const GET = async (req: Request) => {
   let workspace: Pick<Team, "id" | "plan"> | null = null;
 
   try {
-    const session = await getSession();
+    const session = await getServerSession(authOptions);
     if (!session) {
       throw new Error("Unauthorized");
     }
