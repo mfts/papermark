@@ -28,7 +28,7 @@ export type SlackIntegration = Omit<
   "credentials" | "configuration"
 > & {
   credentials: SlackCredential;
-  configuration: SlackConfiguration;
+  configuration: SlackConfiguration | null;
 };
 
 export interface SlackMessage {

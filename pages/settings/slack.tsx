@@ -507,7 +507,8 @@ export default function SlackSettings() {
                               loading={false}
                               options={channelOptions}
                               value={Object.keys(
-                                integration.configuration.enabledChannels || {},
+                                integration.configuration?.enabledChannels ||
+                                  {},
                               )}
                               setIsPopoverOpen={setIsChannelPopoverOpen}
                               isPopoverOpen={isChannelPopoverOpen}

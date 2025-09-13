@@ -105,7 +105,7 @@ export class SlackEventManager {
     eventData: SlackEventData,
     integration: SlackIntegration,
   ): Promise<any[]> {
-    const enabledChannels = integration.configuration.enabledChannels || {};
+    const enabledChannels = integration.configuration?.enabledChannels || {};
     return Object.values(enabledChannels)
       .filter((channel: any) => channel.enabled)
       .filter(
