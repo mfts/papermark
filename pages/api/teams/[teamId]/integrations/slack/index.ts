@@ -57,6 +57,8 @@ async function handleGet(
 ) {
   const env = getSlackEnv();
 
+  console.log("env", env);
+
   try {
     const integration = await prisma.installedIntegration.findUnique({
       where: {
@@ -74,6 +76,8 @@ async function handleGet(
         updatedAt: true,
       },
     });
+
+    console.log("integration", integration);
 
     if (!integration) {
       return res.status(404).json({ error: "Slack integration not found" });
