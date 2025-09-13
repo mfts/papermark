@@ -223,6 +223,8 @@ const SettingsBreadcrumb = () => {
         return "API Tokens";
       case "/settings/webhooks":
         return "Webhooks";
+      case "/settings/slack":
+        return "Slack";
       case "/settings/incoming-webhooks":
         return "Incoming Webhooks";
       case "/settings/branding":

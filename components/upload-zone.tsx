@@ -101,8 +101,6 @@ export default function UploadZone({
     ? limits?.documents - limits?.usage?.documents
     : 0;
 
-  const uploadProgress = useRef<number[]>([]);
-
   const fileSizeLimits = useMemo(
     () =>
       getFileSizeLimits({
@@ -231,18 +229,19 @@ export default function UploadZone({
               Math.round((bytesUploaded / bytesTotal) * 100),
               99,
             );
-            setUploads((prevUploads) =>
-              prevUploads.map((upload) =>
+            setUploads((prevUploads) => {
+              const updatedUploads = prevUploads.map((upload) =>
                 upload.uploadId === newUploads[index].uploadId
                   ? { ...upload, progress }
                   : upload,
-              ),
-            );
+              );
+              const currentUpload = updatedUploads.find(
+                (upload) => upload.uploadId === newUploads[index].uploadId,
+              );
 
-            const _progress = uploadProgress.current.reduce(
-              (acc, progress) => acc + progress,
-              0,
-            );
+              onUploadProgress(index, progress, currentUpload?.documentId);
+              return updatedUploads;
+            });
           },
           onError: (error) => {
             setUploads((prev) =>
