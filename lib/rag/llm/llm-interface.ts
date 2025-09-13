@@ -161,9 +161,9 @@ export class OpenAIProvider implements LLMProvider {
             return {
                 content: result.object as T,
                 usage: {
-                    promptTokens: 0,
-                    completionTokens: 0,
-                    totalTokens: 0
+                    promptTokens: (result.usage as any)?.promptTokens || 0,
+                    completionTokens: (result.usage as any)?.completionTokens || 0,
+                    totalTokens: (result.usage as any)?.totalTokens || 0
                 },
                 model: this.model,
                 processingTime

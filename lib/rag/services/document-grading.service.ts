@@ -2,16 +2,13 @@ import pMap from 'p-map';
 import {
     SearchResult,
     GradedDocument,
-    Source,
     RAG_CONSTANTS
 } from '../types/rag-types';
 import { PROMPT_IDS } from '../prompts';
 import { configurationManager } from '../config';
 import { RAGError } from '../errors';
-import { GradingResultCache } from '../utils/lruCache';
 import { QUERY_PATTERNS } from '../constants/patterns';
 import { generateLLMResponse } from '../utils/llm-utils';
-import { generateGradingCacheKey, generateBatchCacheKey } from '../utils/cache-utils';
 
 interface GradingResult {
     relevantDocuments: GradedDocument[];
@@ -26,7 +23,6 @@ interface QueryComplexity {
 }
 
 export class DocumentGradingService {
-    private gradeCache = new GradingResultCache();
     private ragConfig = configurationManager.getRAGConfig();
     private isDisposed = false;
 
@@ -49,7 +45,6 @@ export class DocumentGradingService {
                 if (this.isConversationalQuery(query)) {
                     return this.handleConversationalQuery(query, searchResults);
                 }
-
                 return this.processRegularQuery(query, searchResults, complexityAnalysis);
             },
             'grading',
@@ -64,7 +59,6 @@ export class DocumentGradingService {
         const gradedDocs = highConfidenceDocs.map(doc => this.createGradedDocument(doc, {
             relevanceScore: RAG_CONSTANTS.HIGH_CONFIDENCE,
             confidence: RAG_CONSTANTS.HIGH_CONFIDENCE,
-            reasoning: 'Conversational query - high relevance',
             isRelevant: true,
             suggestedWeight: RAG_CONSTANTS.HIGH_CONFIDENCE
         }));
@@ -136,14 +130,13 @@ export class DocumentGradingService {
 
 
     private selectDocumentsToGrade(searchResults: SearchResult[], complexity: QueryComplexity): SearchResult[] {
-        const maxDocs = this.ragConfig.grading.maxDocumentsToGrade;
 
         if (complexity.level === 'high') {
-            return searchResults.slice(0, Math.min(maxDocs * 2, searchResults.length));
+            return searchResults.slice(0, Math.min(15, searchResults.length));
         } else if (complexity.level === 'medium') {
-            return searchResults.slice(0, Math.min(maxDocs, searchResults.length));
+            return searchResults.slice(0, Math.min(10, searchResults.length));
         } else {
-            return searchResults.slice(0, Math.min(maxDocs / 2, searchResults.length));
+            return searchResults.slice(0, Math.min(8, searchResults.length));
         }
     }
 
@@ -161,7 +154,6 @@ export class DocumentGradingService {
             chunkId: doc.chunkId,
             relevanceScore: grading.relevanceScore || 0,
             confidence: grading.confidence || 0,
-            reasoning: grading.reasoning || '',
             isRelevant: grading.isRelevant || false,
             suggestedWeight: grading.suggestedWeight || 0,
             originalContent: doc.content,
@@ -177,9 +169,6 @@ export class DocumentGradingService {
             .join('\n\n');
     }
 
-    private getCacheKey(query: string, document: SearchResult): string {
-        return generateGradingCacheKey(query, document.chunkId, document.content);
-    }
 
     private async batchGradeDocuments(query: string, documents: SearchResult[]): Promise<GradedDocument[]> {
         const batchSize = RAG_CONSTANTS.DEFAULT_BATCH_SIZE;
@@ -188,28 +177,14 @@ export class DocumentGradingService {
         for (let i = 0; i < documents.length; i += batchSize) {
             const batch = documents.slice(i, i + batchSize);
 
-            const cacheKey = generateBatchCacheKey('grading', query, i / batchSize);
-            const cached = await this.gradeCache.get(cacheKey);
-            if (cached) {
-                results.push(...(cached as GradedDocument[]));
-                continue;
-            }
-
             const batchResults = await pMap(
                 batch,
                 async (document) => {
-                    const docCacheKey = this.getCacheKey(query, document);
-                    const cached = await this.gradeCache.get(docCacheKey);
-                    if (cached) return cached as unknown as GradedDocument;
-
-                    const graded = await this.gradeSingleDocument(query, document);
-                    await this.gradeCache.set(docCacheKey, graded as any);
-                    return graded;
+                    return await this.gradeSingleDocument(query, document);
                 },
                 { concurrency: 3 }
             );
 
-            await this.gradeCache.set(cacheKey, batchResults);
             results.push(...batchResults);
         }
 
@@ -220,7 +195,6 @@ export class DocumentGradingService {
         const grade = await generateLLMResponse<{
             relevanceScore: number;
             confidence: number;
-            reasoning: string;
             isRelevant: boolean;
             suggestedWeight: number;
         }>(
@@ -235,11 +209,11 @@ export class DocumentGradingService {
         return this.createGradedDocument(document, {
             relevanceScore: grade.relevanceScore,
             confidence: grade.confidence,
-            reasoning: grade.reasoning,
             isRelevant: grade.isRelevant,
             suggestedWeight: grade.suggestedWeight
         });
     }
+
 
     dispose(): void {
         if (this.isDisposed) return;

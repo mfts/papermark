@@ -13,11 +13,13 @@ export enum RAGErrorCode {
     TIMEOUT_ERROR = 'TIMEOUT_ERROR',
     DATABASE_CONNECTION_FAILED = 'DATABASE_CONNECTION_FAILED',
     PERMISSION_DENIED = 'PERMISSION_DENIED',
-    RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
 
     // Configuration Errors
     INVALID_CONFIGURATION = 'INVALID_CONFIGURATION',
     MISSING_REQUIRED_CONFIG = 'MISSING_REQUIRED_CONFIG',
+
+    // Token Management Errors
+    TOKEN_LIMIT_EXCEEDED = 'TOKEN_LIMIT_EXCEEDED',
 
     // Unknown Error
     UNKNOWN_ERROR = 'UNKNOWN_ERROR'
@@ -172,11 +174,6 @@ export class RAGError extends Error {
                 defaultMessage: 'Document access denied',
                 isRetryable: false
             },
-            'rateLimit': {
-                code: RAGErrorCode.RATE_LIMIT_EXCEEDED,
-                defaultMessage: 'Rate limit exceeded',
-                isRetryable: true
-            },
 
             // Configuration
             'validation': {
@@ -207,6 +204,11 @@ export class RAGError extends Error {
             'missingConfiguration': {
                 code: RAGErrorCode.MISSING_REQUIRED_CONFIG,
                 defaultMessage: 'Missing required configuration',
+                isRetryable: false
+            },
+            'tokenLimitExceeded': {
+                code: RAGErrorCode.TOKEN_LIMIT_EXCEEDED,
+                defaultMessage: 'Token limit exceeded for this chat session',
                 isRetryable: false
             }
         };

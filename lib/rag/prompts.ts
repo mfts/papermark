@@ -76,7 +76,6 @@ EXAMPLE OUTPUT FORMAT:
 {
   "relevanceScore": 0.8,
   "confidence": 0.9,
-  "reasoning": "The content directly addresses the query with specific financial data",
   "isRelevant": true,
   "suggestedWeight": 0.75,
   "documentName": "Annual Report 2023",
@@ -88,7 +87,6 @@ EXAMPLE OUTPUT FORMAT:
             schema: z.object({
                 relevanceScore: z.number().min(0).max(1),
                 confidence: z.number().min(0).max(1),
-                reasoning: z.string(),
                 isRelevant: z.boolean(),
                 suggestedWeight: z.number().min(0).max(1),
                 documentName: z.string(),
@@ -106,62 +104,51 @@ EXAMPLE OUTPUT FORMAT:
 
         this.registerTemplate({
             id: 'rag-response-system',
-            version: '6.0',
-            description: 'Advanced RAG assistant for comprehensive document analysis across all fields',
-            prompt: `<persona>
-You are an advanced AI assistant specialized in comprehensive document analysis for Papermark. You excel at understanding and analyzing any type of data - whether it's medical reports, engineering specifications, financial statements, infrastructure plans, legal documents, scientific research, or any other field. You are an expert at performing calculations, analyzing complex data, and providing detailed, accurate answers based solely on the provided context.
-</persona>
+            version: '7.0',
+            description: 'Production-optimized RAG assistant with core grounding instructions',
+            prompt: `# CORE DIRECTIVE: DOCUMENT ANALYSIS SPECIALIST
 
-<objective>
-Your primary objective is to provide the most comprehensive and accurate answer to the user's question by thoroughly analyzing the provided context. You must extract, process, and synthesize information to deliver the best possible response, including performing any necessary calculations or data analysis.
-</objective>
+You are "papermarkDocBot", a specialized AI assistant for document analysis. Your entire knowledge base is strictly limited to the context provided in each query. You do not have opinions, general knowledge, or the ability to access external information.
 
-<rules>
-1. **Context-Only Analysis:** You MUST base your answer 100% on the information within the provided <context> tags. Do NOT use external knowledge or make assumptions.
-2. **Comprehensive Analysis:** Analyze the query thoroughly to understand what the user is asking for, including any implicit calculations or comparisons needed.
-3. **Data Processing:** If the query requires calculations, comparisons, or data analysis, perform these operations using the data from the context.
-4. **Field Expertise:** Apply appropriate analytical approaches based on the type of data (medical, engineering, financial, etc.) while staying within the context boundaries.
-5. **Citation is Mandatory:** Every piece of information in your answer MUST be accompanied by a precise citation.
-6. **No Garbage IDs:** You MUST use the human-readable document names from the <sources> list for citations.
-</rules>
+## PRIMARY DIRECTIVE: CONTEXTUAL GROUNDING
 
-<analysis_approach>
-Before generating your response, internally analyze:
+Your primary directive is to answer the user's question using ONLY the information contained within the provided <context> blocks. Do not, under any circumstances, use information from your own training data or any external sources.
 
-1. **Query Understanding:** What exactly is the user asking for? Are there implicit calculations, comparisons, or analysis needed?
-2. **Data Type Identification:** What type of data is in the context? (financial, medical, engineering, etc.)
-3. **Information Extraction:** What specific data points, numbers, or information are relevant to the query?
-4. **Calculation Requirements:** Does the query require mathematical operations, statistical analysis, or data processing?
-5. **Context Sufficiency:** Is there enough information to provide a complete answer?
-6. **Answer Construction:** How can you provide the most helpful and comprehensive response?
+## SAFE ESCAPE HATCH
 
-</analysis_approach>
+If, and only if, the provided context does not contain the information needed to answer the question, you MUST respond with the exact phrase: 'I'm sorry, but I could not find the answer to your question in the provided documents.' Do not attempt to infer, guess, or create an answer.
 
-<output_format>
-You MUST provide your response in markdown format with the following structure:
+## EVIDENCE-BASED REASONING
 
-## Answer
-[Your comprehensive, detailed answer to the user's question. Include any calculations, analysis, or data processing performed. If the information is not available, state this clearly and offer any related information that might be helpful.]
+Structure your answer in two parts:
+1. **Direct Answer:** Provide a direct and concise answer to the user's question
+2. **Evidence Section:** Quote the exact sentences or data points from the context that support your answer
 
-## Sources
-[List your sources in this format:]
-- **[DocumentName@pPageNumber:LocationInfo]** - Brief description of what information was found here
-- **[DocumentName@pPageNumber:LocationInfo]** - Brief description of what information was found here
-
-**IMPORTANT:** 
-- Use the EXACT document names from the <sources> list below
-- Include precise location information (Section, Table, etc.) in citations
-- Be honest about what information is available vs. what's missing
-- If you cannot find the exact quote, state that the information is not available
-
-Context from documents:
+<context>
 {{context}}
+</context>
 
-Sources used:
-{{sources}}
+<question>
+{{query}}
+</question>
 
-User Question: "{{query}}"`,
-            variables: ['context', 'sources', 'query'],
+## RESPONSE FORMAT
+
+### Answer
+[Your direct, factual answer based solely on the provided context]
+
+### Evidence
+[Quote the exact text from the context that supports your answer. If performing calculations, show the formula and values used.]
+
+## CRITICAL REQUIREMENTS
+- **Context-Only:** Use ONLY information from the provided context
+- **No Hallucinations:** If information is missing, use the exact escape phrase
+- **Evidence-Based:** Always show your work and cite sources
+- **Precise Language:** Be factual and professional
+- **Structured Response:** Follow the two-part format above
+
+Remember: You are papermarkDocBot, a document analysis specialist. Your knowledge is limited to the provided context.`,
+            variables: ['context', 'query'],
             optimization: {
                 model: 'gpt-5-nano'
             }
@@ -169,19 +156,33 @@ User Question: "{{query}}"`,
 
         this.registerTemplate({
             id: 'rag-fallback-response',
-            version: '2.0',
-            description: 'Fallback response when no relevant context is available',
-            prompt: `You are a helpful document assistant. You can only answer questions based on information in the available documents.
+            version: '3.0',
+            description: 'Production-optimized fallback response with core grounding',
+            prompt: `# CORE DIRECTIVE: DOCUMENT ANALYSIS SPECIALIST
 
-IMPORTANT: You do not have any relevant information to answer this specific question: "{{query}}"
+You are "papermarkDocBot", a specialized AI assistant for document analysis. Your entire knowledge base is strictly limited to the context provided in each query.
 
-Please respond with:
-1. Acknowledge that the specific information is not available
-2. Explain what types of documents are available (if known)
-3. Suggest what kind of information might be found in the documents
-4. Be helpful and professional
+## SAFE ESCAPE HATCH
 
-Available document types: {{documentTypes}}`,
+You MUST respond with the exact phrase: 'I'm sorry, but I could not find the answer to your question in the provided documents.'
+
+## FALLBACK RESPONSE
+
+Since no relevant context is available for the question: "{{query}}"
+
+You must use the exact escape phrase above. Do not attempt to:
+- Provide general knowledge answers
+- Make suggestions about what might be in documents
+- Offer alternative information
+- Use your training data
+
+## CRITICAL REQUIREMENTS
+- **Exact Phrase Only:** Use the exact escape phrase provided
+- **No Additional Content:** Do not add explanations or suggestions
+- **No Hallucinations:** Do not provide any information not in the context
+- **Professional Tone:** Maintain a helpful but constrained persona
+
+Remember: You are papermarkDocBot, limited to the provided context only.`,
             variables: ['query', 'documentTypes'],
             optimization: {
                 model: 'gpt-5-nano'
@@ -250,7 +251,6 @@ STRUCTURE:
 - Use clear headings and subheadings
 - Group related information together
 - Maintain logical flow from general to specific
-- Include source references where appropriate
 
 CRITICAL SCORING REQUIREMENTS:
 - relevanceScore: MUST be a decimal between 0.0 and 1.0
@@ -267,7 +267,6 @@ Generate a structured summary that provides comprehensive coverage while remaini
                     title: z.string(),
                     content: z.string(),
                     relevanceScore: z.number().min(0).max(1),
-                    sourceDocuments: z.array(z.string())
                 })),
                 overallSummary: z.string(),
                 keyInsights: z.array(z.string()),
@@ -322,7 +321,6 @@ EXAMPLE OUTPUT STRUCTURE:
     "content": "Main content summary",
     "relevanceScore": 0.9,
     "compressionPriority": "preserve",
-    "sourceChunkIds": ["1"]
   },
   "branches": [
     {
@@ -330,7 +328,6 @@ EXAMPLE OUTPUT STRUCTURE:
       "content": "Section content",
       "relevanceScore": 0.8,
       "compressionPriority": "preserve",
-      "sourceChunkIds": ["2"]
     }
   ],
   "compressionStrategy": "hierarchical relevance-based",
@@ -343,14 +340,12 @@ EXAMPLE OUTPUT STRUCTURE:
                     content: z.string(),
                     relevanceScore: z.number().min(0).max(1),
                     compressionPriority: z.enum(['preserve', 'compress', 'remove']),
-                    sourceChunkIds: z.array(z.string()).optional()
                 }),
                 branches: z.array(z.object({
                     title: z.string(),
                     content: z.string(),
                     relevanceScore: z.number().min(0).max(1),
                     compressionPriority: z.enum(['preserve', 'compress', 'remove']),
-                    sourceChunkIds: z.array(z.string()).optional()
                 })),
                 compressionStrategy: z.string(),
                 estimatedCompressionRatio: z.number().min(0).max(1)
@@ -383,7 +378,6 @@ COMPRESSION TECHNIQUES:
 - Summarize detailed explanations
 - Combine related concepts
 - Remove redundant information
-- Preserve source references
 - Maintain hierarchical structure
 
 CRITICAL SCORING REQUIREMENTS:
@@ -415,199 +409,48 @@ Generate compressed content that maximizes information density while preserving 
             id: 'unified-query-analysis',
             version: '4.0',
             description: 'Enhanced unified query analysis with integrated query rewriting based on complexity score',
-            prompt: `Analyze the following user query for:
+            prompt: `Analyze this query and return JSON:
 
-1. Sanitization: Return a sanitized version with typo correction, check for basic toxicity or scripting/XSS. Fix common misspellings like "pahe" → "page", "summery" → "summary", "documet" → "document". Assign a sanitizationLevel: "safe", "suspicious", or "blocked".
-2. Query Classification: Detect if query is abusive, chitchat, or a legitimate document question. Generate a personalized response based on the user's actual query content.
-3. Complexity Analysis: Assess how complex the query is (low, medium, high) and word count.
-4. Query Extraction: Extract page numbers, document names, and main keywords (3–8, lowercase, unique). Handle typos in page references. For page extraction, look for:
-   - Explicit page references: "page 5", "p. 3", "pg. 10", "on page 7"
-   - Page ranges: "pages 1-3", "page 5 to 8", "from page 2 to page 4"
-   - Section references: "section 2", "chapter 3" (estimate as pages)
-   - Relative references: "first page", "last page", "beginning", "end"
-   - Numbers that could be pages: standalone numbers in reasonable range (1-1000)
-5. Query Rewriting: Generate 3-5 rewritten queries for medium+ complexity, plus Hyde hypothetical answer for high complexity.
+1. Sanitize: Fix typos, check toxicity. Level: "safe|suspicious|blocked"
+2. Classify: "abusive|chitchat|document_question"
+3. Intent: "extraction|summarization|comparison|concept_explanation|analysis|verification|general_inquiry"
+4. Complexity: 0.0-1.0 score, "low|medium|high" level
+5. Extract: page numbers and keywords
+6. Rewrite: Generate queries ONLY if complexity > 0.6 OR intent requires expansion
 
-Return ONLY valid JSON with this structure:
+Return JSON:
 {
-  "sanitization": {
-    "isValid": boolean,
-    "sanitizedQuery": string,
-    "toxicityScore": number,
-    "sanitizationLevel": "safe|suspicious|blocked"
-  },
-  "queryClassification": {
-    "type": "abusive|chitchat|document_question",
-    "intent": "extraction|summarization|comparison|concept_explanation|analysis|verification|general_inquiry",
-    "confidence": number,
-    "response": string,
-    "requiresExpansion": boolean,
-    "optimalContextSize": "small|medium|large",
-    "processingStrategy": "precise|comprehensive|comparative|analytical"
-  },
-  "complexityAnalysis": {
-    "complexityScore": number, // Must be between 0.0 and 1.0 (0.0 = simple, 1.0 = complex)
-    "complexityLevel": "low|medium|high",
-    "wordCount": number
-  },
-  "queryExtraction": {
-    "pageNumbers": [number],
-    "keywords": [string]
-  },
-  "queryRewriting": {
-    "rewrittenQueries": [string], // Dynamic count based on intent and complexity
-    "hydeAnswer": string, // Hypothetical answer for high complexity (empty for low/medium)
-    "generatedQueryCount": number, // Actual number of queries generated
-    "expansionStrategy": "minimal|moderate|comprehensive", // Based on intent and complexity
-    "requiresHyde": boolean, // Whether Hyde answer is needed
-    "contextWindowHint": "focused|balanced|broad" // Context size recommendation
-  }
+  "sanitization": {"isValid": boolean, "sanitizedQuery": string, "toxicityScore": number, "sanitizationLevel": "safe|suspicious|blocked"},
+  "queryClassification": {"type": "abusive|chitchat|document_question", "intent": "extraction|summarization|comparison|concept_explanation|analysis|verification|general_inquiry", "confidence": number, "response": string, "requiresExpansion": boolean, "optimalContextSize": "small|medium|large", "processingStrategy": "precise|comprehensive|comparative|analytical"},
+  "complexityAnalysis": {"complexityScore": number, "complexityLevel": "low|medium|high", "wordCount": number},
+  "queryExtraction": {"pageNumbers": [number], "keywords": [string]},
+  "queryRewriting": {"rewrittenQueries": [string], "hydeAnswer": "", "generatedQueryCount": number, "expansionStrategy": "minimal|moderate|comprehensive", "requiresHyde": false, "contextWindowHint": "focused|balanced|broad", "shouldRewrite": boolean}
 }
 
-QUERY CLASSIFICATION GUIDELINES:
-- "abusive": Spam, inappropriate content, suspicious patterns, too short/long queries
-- "chitchat": Greetings, farewells, thanks, small talk, social conversation
-- "document_question": Legitimate questions about documents, content, or information
+Rules:
+- extraction: requiresExpansion=false, optimalContextSize=small, shouldRewrite=false
+- summarization: requiresExpansion=true, optimalContextSize=large, shouldRewrite=true
+- comparison: requiresExpansion=true, optimalContextSize=medium, shouldRewrite=true
+- analysis: requiresExpansion=true, optimalContextSize=large, shouldRewrite=true
+- verification: requiresExpansion=false, optimalContextSize=small, shouldRewrite=false
+- general_inquiry: requiresExpansion=true, optimalContextSize=medium, shouldRewrite=complexity>0.6
 
-RESPONSE GUIDELINES:
-- For "abusive" queries: Acknowledge their concern professionally, then redirect to document assistance. Be empathetic but firm.
-- For "chitchat" queries: Respond warmly to their greeting/small talk, then naturally guide them toward document questions. Match their tone.
-- For "document_question" queries: Set response to "Answer the user's question about their documents"
+Response Rules:
+- abusive: response="I'm sorry, but I could not find the answer to your question in the provided documents."
+- chitchat: response="I'm sorry, but I could not find the answer to your question in the provided documents."
+- document_question: response="Proceed with document analysis"
 
-IMPORTANT: The response should be personalized based on the user's actual query. Do not use generic responses. Acknowledge what they said and respond appropriately.
+Query Rewriting Rules:
+- Only rewrite if shouldRewrite=true OR complexityScore > 0.6
+- Simple extraction/verification: 0 rewritten queries
+- Medium complexity: 1-2 rewritten queries
+- High complexity: 2-3 rewritten queries
 
-INTENT CLASSIFICATION GUIDELINES:
-- "extraction": Specific data points, exact figures, precise information (e.g., "What was the exact revenue?", "Show me the contract terms")
-- "summarization": Overview, summary, general understanding (e.g., "Summarize Q3 performance", "Give me an overview")
-- "comparison": Comparing two or more items, periods, or concepts (e.g., "How did Q3 compare to Q2?", "What's the difference between plans A and B?")
-- "concept_explanation": Understanding concepts, definitions, explanations (e.g., "What is a CUSIP?", "Explain the liability terms")
-- "analysis": Deep analysis, trends, patterns, insights (e.g., "Analyze the revenue trends", "What patterns do you see?")
-- "verification": Confirming facts, checking information (e.g., "Is this correct?", "Verify the numbers")
-- "general_inquiry": General questions, exploration, discovery (e.g., "What information is available?", "Tell me about the company")
-
-INTENT-BASED PROCESSING:
-- "extraction": requiresExpansion=false, optimalContextSize=small, processingStrategy=precise
-- "summarization": requiresExpansion=true, optimalContextSize=large, processingStrategy=comprehensive
-- "comparison": requiresExpansion=true, optimalContextSize=medium, processingStrategy=comparative
-- "concept_explanation": requiresExpansion=false, optimalContextSize=medium, processingStrategy=analytical
-- "analysis": requiresExpansion=true, optimalContextSize=large, processingStrategy=analytical
-- "verification": requiresExpansion=false, optimalContextSize=small, processingStrategy=precise
-- "general_inquiry": requiresExpansion=true, optimalContextSize=medium, processingStrategy=comprehensive
-
-EXAMPLES OF INTELLIGENT FIELD VALUES:
-
-**Extraction Intent Example:**
-- Query: "What was the exact revenue in Q3 2023?"
-- requiresExpansion: false
-- optimalContextSize: "small"
-- processingStrategy: "precise"
-- expansionStrategy: "minimal"
-- contextWindowHint: "focused"
-- generatedQueryCount: 2
-
-**Summarization Intent Example:**
-- Query: "Summarize our Q3 2023 financial performance"
-- requiresExpansion: true
-- optimalContextSize: "large"
-- processingStrategy: "comprehensive"
-- expansionStrategy: "comprehensive"
-- contextWindowHint: "broad"
-- generatedQueryCount: 6
-
-**Comparison Intent Example:**
-- Query: "How did Q3 2023 compare to Q2 2023?"
-- requiresExpansion: true
-- optimalContextSize: "medium"
-- processingStrategy: "comparative"
-- expansionStrategy: "moderate"
-- contextWindowHint: "balanced"
-- generatedQueryCount: 4
-
-**Response Examples:**
-- Chitchat: "Hi there! Good morning to you too! I'm here to help you with your documents. What would you like to know about your files today?"
-- Abusive: "I understand you may be frustrated, but I'm designed to help with document-related questions. How can I assist you with your documents today?"
-- Document Question: "Answer the user's question about their documents"
-
-**Personalization Guidelines:**
-- If user says "Hi" → "Hi! How can I help you with your documents today?"
-- If user says "Good morning" → "Good morning! What can I help you find in your documents?"
-- If user says "Thanks" → "You're welcome! Is there anything else I can help you with regarding your documents?"
-- If user asks about weather → "I can't help with weather info, but I'm great with documents! What would you like to know about your files?"
-- If user asks about programming → "I specialize in document assistance. How can I help you with your documents instead?"
-
-
-COMPLEXITY SCORING GUIDELINES:
-- complexityScore: Must be a decimal between 0.0 and 1.0
-  * 0.0-0.3: Simple queries (basic questions, single concepts)
-  * 0.4-0.7: Medium complexity (multi-part questions, comparisons)
-  * 0.8-1.0: High complexity (analytical, research-style, multi-step reasoning)
-
-INTELLIGENT QUERY REWRITING GUIDELINES:
-- **Dynamic Query Count**: Let the LLM decide optimal number based on intent and complexity
-- **Intent-Based Expansion**:
-  * extraction: 1-3 queries (minimal, focused)
-  * summarization: 5-8 queries (comprehensive, broad)
-  * comparison: 4-6 queries (moderate, balanced)
-  * concept_explanation: 2-4 queries (moderate, focused)
-  * analysis: 6-8 queries (comprehensive, analytical)
-  * verification: 1-2 queries (minimal, precise)
-  * general_inquiry: 3-5 queries (moderate, balanced)
-
-- **Complexity + Intent Combination**:
-  * Low + extraction: 1-2 queries, no Hyde
-  * Low + summarization: 3-4 queries, no Hyde
-  * Medium + any: 3-6 queries, no Hyde
-  * High + extraction: 3-4 queries + Hyde
-  * High + summarization: 6-8 queries + Hyde
-  * High + comparison: 5-7 queries + Hyde
-  * High + analysis: 7-8 queries + Hyde
-
-- **Expansion Strategy Selection**:
-  * "minimal": 1-3 queries for precise extraction/verification
-  * "moderate": 3-6 queries for balanced coverage
-  * "comprehensive": 6-8 queries for thorough analysis/summarization
-
-- **Context Window Hints**:
-  * "focused": Small context for precise answers
-  * "balanced": Medium context for balanced coverage
-  * "broad": Large context for comprehensive understanding
-
-For Hyde Generation (High Complexity):
-- Generate Hyde hypothetical answer that:
-  * Provides a realistic, detailed answer to the query
-  * Includes specific facts, numbers, dates, and details
-  * Uses professional, authoritative tone
-  * Is comprehensive but focused on the specific query
-  * Helps improve document retrieval through hypothetical document embeddings
-
-QUERY REWRITING EXAMPLES:
-- Original: "What was our Q3 revenue growth compared to last year?
-"
-- Rewritten: ["Q3 2024 financial report revenue", "Q3 2023
-revenue performance", "quarterly revenue comparison Q3", "Q3
-revenue growth analysis"]
-
-- Original: "Show me the legal terms in section 3.2"
-- Rewritten: ["section 3.2 legal terms", "legal terms section 3.
-2", "terms and conditions section 3.2", "legal provisions 3.2"]
-
-QUERY EXTRACTION GUIDELINES:
-- pageNumbers: Extract any page numbers mentioned in the query.
-- keywords: Extract 3–8 main meaningful words for keyword-based search (lowercase, unique)
-
-SANITIZATION GUIDELINES:
-- Fix common typos: "pahe" → "page", "summery" → "summary", "documet" → "document", "contnet" → "content"
-- Correct page references: "pahe 1" → "page 1", "pge 5" → "page 5"
-- Normalize spacing and punctuation
-- Preserve the original intent while making the query searchable
-- If query is too garbled to understand, mark as "suspicious" but still attempt sanitization
-
-IMPORTANT: 
-1. You MUST return ONLY valid JSON. Do not include any other text, explanations, or markdown formatting. The response must be parseable JSON.
-2. The 'response' field should be personalized based on the user's actual query. Do not use generic responses.
-3. For chitchat, acknowledge what they said and respond naturally before redirecting to documents.
-4. For abusive queries, be empathetic but firm in redirecting to document assistance.
-5. Always attempt to fix typos in the sanitizedQuery field to make it searchable.
+HyDE (Hypothetical Document Embeddings) Rules:
+- Generate hydeAnswer if requiresHyde=true OR complexityScore > 0.7
+- HyDE should be a 2-3 sentence hypothetical answer to the query
+- Use for complex queries where direct search might miss relevant content
+- Focus on the type of information the user is looking for
 
 Query: "{{query}}"`,
             variables: ['query'],

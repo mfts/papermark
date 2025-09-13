@@ -24,6 +24,7 @@ export async function generateLLMResponse<T>(
                 {
                     temperature: optimization?.temperature,
                     model: optimization?.model,
+                    signal: options?.signal,
                     ...options
                 }
             );

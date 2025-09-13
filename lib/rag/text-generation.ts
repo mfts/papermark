@@ -1,13 +1,31 @@
-
 import { openai } from '@ai-sdk/openai';
 import { streamText, UIMessage, convertToModelMessages } from 'ai';
-import { Source } from './types/rag-types';
 import { promptManager, PROMPT_IDS } from './prompts';
 import { configurationManager } from './config';
 import { chatStorageService } from './services/chat-storage.service';
 import { ChatMetadataTracker } from './services/chat-metadata-tracker.service';
+import { RAGError } from './errors';
+
+interface StreamOptions {
+    model: string;
+    system: string;
+    messages: any[];
+    temperature?: number;
+    maxTokens?: number;
+    abortSignal?: AbortSignal;
+    chatSessionId?: string;
+    metadataTracker?: ChatMetadataTracker;
+}
+
+interface TokenUsage {
+    promptTokens?: number;
+    completionTokens?: number;
+    totalTokens?: number;
+}
 
 export class TextGenerationService {
+    private readonly defaultModel = 'gpt-4o-mini';
+
     constructor(private config: ReturnType<typeof configurationManager.getRAGConfig>) { }
 
     /**
@@ -17,164 +35,140 @@ export class TextGenerationService {
         context: string,
         messages: UIMessage[],
         query: string,
-        sources: Source[],
         abortSignal?: AbortSignal,
         chatSessionId?: string,
         metadataTracker?: ChatMetadataTracker,
         pageNumbers?: number[]
     ): Promise<Response> {
-        try {
-            const systemContent = await this.buildRAGSystemPrompt(context, sources, pageNumbers);
+        return RAGError.withErrorHandling(
+            async () => {
+                this.validateInputs(context, messages, query);
 
-            const streamOptions: any = {
-                model: openai('gpt-4o-mini'),
-                messages: [
-                    { role: 'system', content: systemContent },
-                    ...convertToModelMessages(messages),
-                    { role: 'user', content: query }
-                ],
-                temperature: this.config.generation.temperature,
-                maxTokens: this.config.generation.maxTokens,
-                abortSignal: abortSignal, // Pass abort signal to streaming
-                onError: (error: any) => {
-                    console.error('❌ Stream error in generateRAGResponse:', error);
-                },
-                onAbort: ({ steps }: { steps: any[] }) => {
-                    console.log(`🛑 RAG response stream aborted after ${steps.length} steps`);
-                },
-                onFinish: async ({ text, totalUsage }: { text: string; totalUsage: any }) => {
-                    if (chatSessionId && metadataTracker) {
-                        try {
-                            await this.storeAssistantMessageWithContext(text, totalUsage, chatSessionId, metadataTracker);
-                        } catch (error) {
-                            console.error('❌ Failed to store assistant message:', error);
-                        }
-                    }
-                }
-            };
+                const systemContent = await this.buildRAGSystemPrompt(context, pageNumbers);
 
-            const stream = streamText(streamOptions);
+                const stream = streamText(
+                    this.createStreamOptions({
+                        model: this.getModel(),
+                        system: systemContent,
+                        messages: [...convertToModelMessages(messages), { role: 'user', content: query }],
+                        temperature: this.config.generation.temperature,
+                        maxTokens: this.config.generation.maxTokens,
+                        abortSignal,
+                        chatSessionId,
+                        metadataTracker,
+                    })
+                );
 
-            const response = stream.toUIMessageStreamResponse();
-            return response;
-
-        } catch (error) {
-            console.error('❌ Error in generateRAGResponse:', error);
-            throw error;
-        }
+                return stream.toUIMessageStreamResponse();
+            },
+            'textGeneration',
+            { service: 'TextGeneration', operation: 'generateRAGResponse', query }
+        );
     }
-
 
     async generateFallbackResponse(
         query: string,
         chatSessionId?: string,
         metadataTracker?: ChatMetadataTracker
-    ) {
-        // Use centralized prompt system
-        const prompt = await promptManager.renderTemplate(PROMPT_IDS.RAG_FALLBACK_RESPONSE, {
-            query
-        });
-
-        const optimization = await promptManager.getTemplateOptimization(PROMPT_IDS.RAG_FALLBACK_RESPONSE);
-
-        const streamOptions: any = {
-            model: openai('gpt-4o-mini'),
-            system: prompt,
-            messages: [{ role: 'user', content: `Question: ${query}` }],
-            onError: (error: any) => {
-                console.error('❌ Stream error in generateFallbackResponse:', error);
-            },
-            onAbort: ({ steps }: { steps: any[] }) => {
-                console.log(`🛑 Fallback response stream aborted after ${steps.length} steps`);
-            },
-            onFinish: async ({ text, totalUsage }: { text: string; totalUsage: any }) => {
-                // Store assistant message if session ID is provided
-                if (chatSessionId && metadataTracker) {
-                    try {
-                        await this.storeAssistantMessageWithContext(text, totalUsage, chatSessionId, metadataTracker);
-                    } catch (error) {
-                        console.error('Failed to store fallback assistant message:', error);
-                    }
-                }
-            }
-        };
-
-        const stream = streamText(streamOptions);
-        return stream.toUIMessageStreamResponse();
-    }
-
-
-    async generateSimpleResponse(
-        systemPrompt: string,
-        messages: UIMessage[],
-        signal?: AbortSignal,
-        chatSessionId?: string,
-        metadataTracker?: ChatMetadataTracker
     ): Promise<Response> {
-        const streamOptions: any = {
-            model: openai('gpt-4o-mini'),
-            system: systemPrompt,
-            messages: convertToModelMessages(messages),
-            temperature: this.config.generation.temperature,
-            onError: (error: any) => {
-                console.error('❌ Stream error in generateSimpleResponse:', error);
+        return RAGError.withErrorHandling(
+            async () => {
+                if (!query?.trim()) {
+                    throw RAGError.create('validation', 'Query is required for fallback response', { field: 'query' });
+                }
+
+                const prompt = await promptManager.renderTemplate(PROMPT_IDS.RAG_FALLBACK_RESPONSE, { query });
+
+                const stream = streamText(
+                    this.createStreamOptions({
+                        model: this.getModel(),
+                        system: prompt,
+                        messages: [{ role: 'user', content: `Question: ${query}` }],
+                        chatSessionId,
+                        metadataTracker,
+                    })
+                );
+
+                return stream.toUIMessageStreamResponse();
+            },
+            'textGeneration',
+            { service: 'TextGeneration', operation: 'generateFallbackResponse', query }
+        );
+    }
+
+
+    private getModel(): string {
+        return this.config.llm.model || this.defaultModel;
+    }
+
+    private validateInputs(context: string, messages: UIMessage[], query: string): void {
+        if (!query?.trim()) {
+            throw RAGError.create('validation', 'Query is required', { field: 'query' });
+        }
+        if (!messages?.length) {
+            throw RAGError.create('validation', 'Messages are required', { field: 'messages' });
+        }
+        if (!context?.trim()) {
+            throw RAGError.create('validation', 'Context is required', { field: 'context' });
+        }
+    }
+
+    private createStreamOptions({
+        model,
+        system,
+        messages,
+        temperature,
+        maxTokens,
+        abortSignal,
+        chatSessionId,
+        metadataTracker,
+    }: StreamOptions) {
+        return {
+            model: openai(model),
+            system,
+            messages,
+            temperature,
+            maxTokens,
+            abortSignal,
+            onError: (error: unknown) => {
+                console.error('[TextGenerationService] ❌ Stream error:', error);
             },
             onAbort: ({ steps }: { steps: any[] }) => {
-                console.log(`🛑 Simple response stream aborted after ${steps.length} steps`);
+                console.log(`[TextGenerationService] 🛑 Stream aborted after ${steps.length} steps`);
             },
-            onFinish: async ({ text, totalUsage }: { text: string; totalUsage: any }) => {
-                // Store assistant message if session ID is provided
+            onFinish: async ({ text, totalUsage }: { text: string; totalUsage: TokenUsage }) => {
                 if (chatSessionId && metadataTracker) {
-                    try {
-                        await this.storeAssistantMessageWithContext(text, totalUsage, chatSessionId, metadataTracker);
-                    } catch (error) {
-                        console.error('Failed to store simple assistant message:', error);
-                    }
+                    await this.storeAssistantMessageWithContext(text, totalUsage, chatSessionId, metadataTracker);
                 }
-            }
+            },
         };
-
-        if (signal) {
-            streamOptions.abortSignal = signal;
-        }
-
-        const stream = streamText(streamOptions);
-        const response = stream.toUIMessageStreamResponse();
-        return response;
     }
 
-
-    private async buildRAGSystemPrompt(context: string, sources: Source[], pageNumbers?: number[]): Promise<string> {
-        const citationLines = sources.map(s =>
-            `• ${s.documentName}${s.pageNumber ? ` (p.${s.pageNumber})` : ''}${s.locationInfo ? ` - ${s.locationInfo}` : ''}`
-        ).join('\n');
+    private async buildRAGSystemPrompt(context: string, pageNumbers?: number[]): Promise<string> {
         let pageInstructions = '';
-        if (pageNumbers && pageNumbers.length > 0) {
-            const pageList = pageNumbers.length === 1 ? `page ${pageNumbers[0]}` : `pages ${pageNumbers.join(', ')}`;
-            pageInstructions = `\n\nPAGE-SPECIFIC REQUEST: The user asked about ${pageList}. The context below contains information from the requested page(s). Use this information to answer their question. The sources list shows which page(s) the information comes from. Always mention which specific page(s) you used in your answer.`;
+        if (pageNumbers?.length) {
+            const pageList =
+                pageNumbers.length === 1 ? `page ${pageNumbers[0]}` : `pages ${pageNumbers.join(', ')}`;
+            pageInstructions = `\n\nPAGE-SPECIFIC REQUEST: The user asked about ${pageList}. Use the provided context accordingly.`;
         }
 
-        return await promptManager.renderTemplate(PROMPT_IDS.RAG_RESPONSE_SYSTEM, {
-            context,
-            sources: citationLines + pageInstructions
+        return promptManager.renderTemplate(PROMPT_IDS.RAG_RESPONSE_SYSTEM, {
+            context: context + pageInstructions,
         });
     }
-
-
-
 
     private async storeAssistantMessageWithContext(
         text: string,
-        totalUsage: any,
+        totalUsage: TokenUsage,
         chatSessionId: string,
         metadataTracker: ChatMetadataTracker
     ) {
         try {
             if (totalUsage) {
                 metadataTracker.setTokenUsage({
-                    inputTokens: totalUsage.promptTokens,
-                    outputTokens: totalUsage.completionTokens,
-                    totalTokens: totalUsage.totalTokens,
+                    inputTokens: totalUsage?.promptTokens,
+                    outputTokens: totalUsage?.completionTokens,
+                    totalTokens: totalUsage?.totalTokens,
                 });
             }
 
@@ -184,9 +178,7 @@ export class TextGenerationService {
                 content: text,
                 metadata: metadataTracker.getMetadata(),
             });
-
         } catch (error) {
-            console.error('Failed to store assistant message:', error);
         }
     }
 }

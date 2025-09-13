@@ -102,12 +102,15 @@ export class ChatMetadataTracker {
     }
 
     setTokenUsage(data: TokenUsage): void {
-        this.tokenUsage = { ...this.tokenUsage, ...data };
+        this.tokenUsage.inputTokens = (this.tokenUsage.inputTokens || 0) + (data.inputTokens || 0);
+        this.tokenUsage.outputTokens = (this.tokenUsage.outputTokens || 0) + (data.outputTokens || 0);
+        this.tokenUsage.totalTokens = (this.tokenUsage.totalTokens || 0) + (data.totalTokens || 0);
+
+        // Store in metadata
         this.metadata.inputTokens = this.tokenUsage.inputTokens;
         this.metadata.outputTokens = this.tokenUsage.outputTokens;
         this.metadata.totalTokens = this.tokenUsage.totalTokens;
     }
-
     /**
      * Add search results
      */

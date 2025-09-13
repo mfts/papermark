@@ -2,21 +2,18 @@ import { RAGError } from './errors';
 import { SearchResult } from './types/rag-types';
 import { generateEmbedding } from './ai-sdk-integration';
 import { vectorManager } from './vector-manager';
-import { VectorSearchCache } from './utils/lruCache';
 import { log } from '@/lib/utils';
 import { configurationManager } from './config';
 
 let DEFAULT_SEARCH_CONFIG = {
     topK: 10,
-    similarityThreshold: 0.3,
+    similarityThreshold: 0.70,
     embeddingTimeoutMs: 20000
 };
 
 export class VectorSearchService {
-    private vectorSearchCache: VectorSearchCache;
 
     constructor() {
-        this.vectorSearchCache = new VectorSearchCache();
         const ragConfig = configurationManager.getRAGConfig();
         DEFAULT_SEARCH_CONFIG.topK = ragConfig.vectorSearch.defaultTopK;
         DEFAULT_SEARCH_CONFIG.similarityThreshold = ragConfig.vectorSearch.defaultSimilarityThreshold;
@@ -49,20 +46,6 @@ export class VectorSearchService {
                     metadataFilter
                 } = options;
 
-                const cacheKey = this.generateVectorSearchKey(
-                    query,
-                    dataroomId,
-                    documentIds,
-                    { topK, similarityThreshold, includeMetadata, metadataFilter }
-                );
-
-                const cachedResults = await this.vectorSearchCache.get(cacheKey);
-                if (cachedResults) {
-                    console.log(`🎯 Cache hit for vector search: ${cacheKey}`);
-                    return cachedResults;
-                }
-
-                console.log(`🔍 Cache miss for vector search: ${cacheKey}`);
                 const queryEmbedding = await this.generateEmbeddingWithTimeout(query, signal);
                 if (!queryEmbedding) {
                     log({
@@ -88,8 +71,6 @@ export class VectorSearchService {
                 const enrichedResults = includeMetadata
                     ? await this.enrichWithMetadata(searchResults)
                     : this.mapToSearchResults(searchResults);
-
-                await this.vectorSearchCache.set(cacheKey, enrichedResults);
 
                 return enrichedResults;
             },
@@ -177,11 +158,6 @@ export class VectorSearchService {
         }));
     }
 
-    private generateVectorSearchKey(query: string, dataroomId: string, documentIds: string[], options: any): string {
-        const optionsHash = JSON.stringify(options);
-        const docIdsHash = documentIds.sort().join(',');
-        return `vector_search:${dataroomId}:${query}:${docIdsHash}:${optionsHash}`;
-    }
 
 
     async healthCheck(): Promise<boolean> {

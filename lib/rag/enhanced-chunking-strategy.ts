@@ -264,12 +264,6 @@ export class EnhancedDocumentChunker {
                 chunk.content = this.restoreMarkdownElements(chunk.content);
             });
 
-            console.log("Enhanced markdown-aware chunking completed", {
-                documentId,
-                chunkCount: finalChunks.length,
-                complexity: complexityAnalysis.complexity,
-                factors: complexityAnalysis.factors
-            });
 
             return finalChunks;
 

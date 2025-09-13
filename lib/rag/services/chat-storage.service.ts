@@ -40,13 +40,59 @@ export interface ChatMessageData {
     metadata?: ChatMessageMetadata;
 }
 
+const transformMetadata = (metadata: any) => {
+    if (!metadata) return undefined;
+
+    return {
+        id: metadata.id,
+        queryType: metadata.queryType || undefined,
+        intent: metadata.intent || undefined,
+        complexityLevel: metadata.complexityLevel || undefined,
+        searchStrategy: metadata.searchStrategy || undefined,
+        strategyConfidence: metadata.strategyConfidence || undefined,
+        queryAnalysisTime: metadata.queryAnalysisTime || undefined,
+        searchTime: metadata.searchTime || undefined,
+        responseTime: metadata.responseTime || undefined,
+        totalTime: metadata.totalTime || undefined,
+        inputTokens: metadata.inputTokens || undefined,
+        outputTokens: metadata.outputTokens || undefined,
+        totalTokens: metadata.totalTokens || undefined,
+        chunkIds: metadata.chunkIds || undefined,
+        documentIds: metadata.documentIds || undefined,
+        pageRanges: metadata.pageRanges || undefined,
+        compressionStrategy: metadata.compressionStrategy || undefined,
+        originalContextSize: metadata.originalContextSize || undefined,
+        compressedContextSize: metadata.compressedContextSize || undefined,
+        errorType: metadata.errorType || undefined,
+        errorMessage: metadata.errorMessage || undefined,
+        isRetryable: metadata.isRetryable || undefined,
+    };
+};
+
 export class ChatStorageService {
-    /**
-     * Create a new chat session
-     */
-    async createSession(data: ChatSessionData): Promise<string> {
+    async getOrCreateSession(data: ChatSessionData, sessionId?: string): Promise<string> {
         return RAGError.withErrorHandling(
             async () => {
+                if (sessionId) {
+                    const existingSession = await prisma.rAGChatSession.findUnique({
+                        where: {
+                            id: sessionId,
+                        },
+                        select: {
+                            id: true,
+                            dataroomId: true,
+                            linkId: true,
+                            viewerId: true,
+                        },
+                    });
+                    if (existingSession &&
+                        existingSession.dataroomId === data.dataroomId &&
+                        existingSession.linkId === data.linkId &&
+                        existingSession.viewerId === data.viewerId) {
+                        return existingSession.id;
+                    }
+                }
+
                 const session = await prisma.rAGChatSession.create({
                     data: {
                         dataroomId: data.dataroomId,
@@ -54,41 +100,43 @@ export class ChatStorageService {
                         viewerId: data.viewerId,
                         title: data.title || this.generateSessionTitle(),
                     },
+                    select: { id: true },
                 });
 
-                // Session created successfully
                 return session.id;
             },
             'chatStorage',
-            { operation: 'createSession', dataroomId: data.dataroomId, linkId: data.linkId, viewerId: data.viewerId }
+            { operation: 'getOrCreateSession', dataroomId: data.dataroomId, linkId: data.linkId, viewerId: data.viewerId }
         );
     }
 
-    /**
-     * Add a message to a chat session
-     */
     async addMessage(data: ChatMessageData): Promise<string> {
         return RAGError.withErrorHandling(
             async () => {
-                const message = await prisma.rAGChatMessage.create({
-                    data: {
-                        sessionId: data.sessionId,
-                        role: data.role,
-                        content: data.content,
-                        metadata: data.metadata ? {
-                            create: {
-                                ...data.metadata,
-                            }
-                        } : undefined,
-                    },
+                const result = await prisma.$transaction(async (tx) => {
+                    const message = await tx.rAGChatMessage.create({
+                        data: {
+                            sessionId: data.sessionId,
+                            role: data.role,
+                            content: data.content,
+                            metadata: data.metadata ? {
+                                create: {
+                                    ...data.metadata,
+                                }
+                            } : undefined,
+                        },
+                        select: { id: true },
+                    });
+
+                    await tx.rAGChatSession.update({
+                        where: { id: data.sessionId },
+                        data: { updatedAt: new Date() },
+                    });
+
+                    return message.id;
                 });
 
-                await prisma.rAGChatSession.update({
-                    where: { id: data.sessionId },
-                    data: { updatedAt: new Date() },
-                });
-
-                return message.id;
+                return result;
             },
             'chatStorage',
             { operation: 'addMessage', sessionId: data.sessionId, role: data.role }
@@ -96,103 +144,138 @@ export class ChatStorageService {
     }
 
 
-
-    async getMessages(
-        options: {
-            page?: number;
-            limit?: number;
-            dataroomId: string;
-            linkId: string;
-            viewerId: string;
-        }
-    ) {
-        const { page = 1, limit = 20, dataroomId, linkId, viewerId } = options;
-        const skip = (page - 1) * limit;
+    async getSessionMessages(options: {
+        sessionId: string;
+        dataroomId: string;
+        linkId: string;
+        viewerId: string;
+    }) {
+        const { sessionId, dataroomId, linkId, viewerId } = options;
 
         return RAGError.withErrorHandling(
             async () => {
-                const sessionWhere = {
-                    dataroomId,
-                    linkId,
-                    viewerId
-                };
+                const session = await prisma.rAGChatSession.findFirst({
+                    where: {
+                        id: sessionId,
+                        dataroomId,
+                        linkId,
+                        viewerId,
+                    },
+                    select: { id: true },
+                });
 
-                const [messages, total] = await Promise.all([
-                    prisma.rAGChatMessage.findMany({
-                        where: {
-                            session: sessionWhere,
-                        },
-                        orderBy: { createdAt: 'desc' },
-                        skip,
-                        take: limit,
-                        include: {
-                            session: {
-                                select: {
-                                    id: true,
-                                    title: true,
-                                },
-                            },
-                            metadata: true,
-                        },
-                    }),
-                    prisma.rAGChatMessage.count({
-                        where: {
-                            session: sessionWhere,
-                        },
-                    }),
-                ]);
+                if (!session) {
+                    throw new Error('Session not found or access denied');
+                }
 
-                // Transform messages to include session info
-                const transformedMessages = messages.map((message) => ({
-                    id: message.id,
-                    role: message.role as 'user' | 'assistant',
-                    content: message.content,
-                    createdAt: message.createdAt.toISOString(),
-                    sessionTitle: message.session.title || "Untitled Chat",
-                    sessionId: message.session.id,
-                    metadata: message.metadata ? {
-                        id: message.metadata.id,
-                        queryType: message.metadata.queryType || undefined,
-                        intent: message.metadata.intent || undefined,
-                        complexityLevel: message.metadata.complexityLevel || undefined,
-                        searchStrategy: message.metadata.searchStrategy || undefined,
-                        strategyConfidence: message.metadata.strategyConfidence || undefined,
-                        queryAnalysisTime: message.metadata.queryAnalysisTime || undefined,
-                        searchTime: message.metadata.searchTime || undefined,
-                        responseTime: message.metadata.responseTime || undefined,
-                        totalTime: message.metadata.totalTime || undefined,
-                        inputTokens: message.metadata.inputTokens || undefined,
-                        outputTokens: message.metadata.outputTokens || undefined,
-                        totalTokens: message.metadata.totalTokens || undefined,
-                        chunkIds: message.metadata.chunkIds || undefined,
-                        documentIds: message.metadata.documentIds || undefined,
-                        pageRanges: message.metadata.pageRanges || undefined,
-                        compressionStrategy: message.metadata.compressionStrategy || undefined,
-                        originalContextSize: message.metadata.originalContextSize || undefined,
-                        compressedContextSize: message.metadata.compressedContextSize || undefined,
-                        errorType: message.metadata.errorType || undefined,
-                        errorMessage: message.metadata.errorMessage || undefined,
-                        isRetryable: message.metadata.isRetryable || undefined,
-                    } : undefined,
-                }));
+                const messages = await prisma.rAGChatMessage.findMany({
+                    where: { sessionId },
+                    orderBy: { createdAt: 'asc' },
+                    include: {
+                        metadata: true,
+                    },
+                });
 
                 return {
-                    messages: transformedMessages,
+                    sessionId,
+                    messages: messages.map((message) => ({
+                        id: message.id,
+                        role: message.role as 'user' | 'assistant',
+                        content: message.content,
+                        createdAt: message.createdAt.toISOString(),
+                        metadata: transformMetadata(message.metadata),
+                    })),
+                };
+            },
+            'chatStorage',
+            { operation: 'getSessionMessages', sessionId, dataroomId, linkId, viewerId }
+        );
+    }
+
+    async getSessionsPaginated(options: {
+        dataroomId: string;
+        linkId: string;
+        viewerId: string;
+        page?: number;
+        limit?: number;
+        cursor?: string;
+    }) {
+        const { dataroomId, linkId, viewerId, page = 1, limit = 20, cursor } = options;
+
+        return RAGError.withErrorHandling(
+            async () => {
+                const baseWhere = { dataroomId, linkId, viewerId };
+                const where = {
+                    ...baseWhere,
+                    ...(cursor && {
+                        updatedAt: {
+                            lt: new Date(cursor)
+                        }
+                    })
+                };
+
+                const [sessions, total] = await Promise.all([
+                    prisma.rAGChatSession.findMany({
+                        where,
+                        orderBy: { updatedAt: 'desc' },
+                        take: limit,
+                        select: {
+                            id: true,
+                            title: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            _count: {
+                                select: {
+                                    messages: true
+                                }
+                            },
+                            messages: {
+                                orderBy: { createdAt: 'desc' },
+                                take: 1,
+                                select: {
+                                    content: true,
+                                    role: true,
+                                    createdAt: true,
+                                }
+                            }
+                        },
+                    }),
+                    prisma.rAGChatSession.count({ where: baseWhere }),
+                ]);
+
+                const transformedSessions = sessions.map((session) => ({
+                    id: session.id,
+                    title: session.title,
+                    createdAt: session.createdAt.toISOString(),
+                    updatedAt: session.updatedAt.toISOString(),
+                    messageCount: session._count.messages,
+                    lastMessage: session.messages[0] ? {
+                        content: session.messages[0].content,
+                        role: session.messages[0].role,
+                        createdAt: session.messages[0].createdAt.toISOString(),
+                    } : null,
+                }));
+
+                const nextCursor = sessions.length === limit && sessions.length > 0
+                    ? sessions[sessions.length - 1].updatedAt.toISOString()
+                    : null;
+
+                return {
+                    sessions: transformedSessions,
                     pagination: {
                         page,
                         limit,
                         total,
                         totalPages: Math.ceil(total / limit),
-                        hasNext: page * limit < total,
-                        hasPrev: page > 1,
+                        hasNext: nextCursor !== null,
+                        nextCursor,
                     },
                 };
             },
             'chatStorage',
-            { operation: 'getMessages', dataroomId, linkId, viewerId }
+            { operation: 'getSessionsPaginated', dataroomId, linkId, viewerId }
         );
     }
-
 
     private generateSessionTitle(): string {
         const now = new Date();

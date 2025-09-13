@@ -32,45 +32,45 @@ const STRATEGY_CONFIG = {
 
     weights: {
         intent: {
-            extraction: [8, 2, 0], // Strongly favors fast for direct lookups
-            verification: [7, 3, 0], // Fast for fact-checking
-            comparison: [0, 6, 4], // Needs multiple sources
-            concept_explanation: [0, 5, 5], // Balanced approach
-            analysis: [0, 3, 7], // Requires comprehensive search
-            general_inquiry: [2, 6, 2], // Standard search preferred
+            extraction: [6, 4, 0],
+            verification: [5, 5, 0],
+            comparison: [0, 8, 2],
+            concept_explanation: [0, 8, 2],
+            analysis: [0, 6, 4],
+            general_inquiry: [2, 8, 0],
         },
         complexityLevel: {
-            low: [7, 2, 1], // Simple = fast
-            medium: [2, 6, 2], // Medium = standard
-            high: [0, 3, 7], // Complex = expanded
+            low: [5, 5, 0],
+            medium: [0, 8, 2],
+            high: [0, 6, 4],
         },
         contextSize: {
-            small: [6, 3, 1], // Small context = fast search
-            medium: [2, 6, 2], // Medium context = standard
-            large: [0, 2, 8], // Large context = expanded
+            small: [4, 6, 0],
+            medium: [0, 8, 2],
+            large: [0, 6, 4],
         },
         processingStrategy: {
-            precise: [5, 4, 1], // Precise = fast/standard
-            comprehensive: [0, 3, 7], // Comprehensive = expanded
-            comparative: [0, 5, 5], // Comparative = standard/expanded
-            analytical: [0, 2, 8], // Analytical = expanded
+            precise: [3, 7, 0],
+            comprehensive: [0, 6, 4],
+            comparative: [0, 8, 2],
+            analytical: [0, 6, 4],
         },
         expansionStrategy: {
-            minimal: [6, 3, 1], // Minimal = fast
-            moderate: [2, 6, 2], // Moderate = standard
-            comprehensive: [0, 2, 8], // Comprehensive = expanded
+            minimal: [4, 6, 0],
+            moderate: [0, 8, 2],
+            comprehensive: [0, 6, 4],
         },
         contextWindow: {
-            focused: [6, 3, 1], // Focused = fast
-            balanced: [2, 6, 2], // Balanced = standard
-            broad: [0, 2, 8], // Broad = expanded
+            focused: [4, 6, 0],
+            balanced: [0, 8, 2],
+            broad: [0, 6, 4],
         },
         boosts: {
-            mentionedPageNumbers: [0, 4, 3], // Pages need more context
-            highKeywordCount: [0, 3, 4], // Many keywords = complex search
-            lowDocumentCount: [-8, 4, 0], // Few docs = avoid fast search
-            highDocumentCount: [2, 0, 0], // Many docs = fast search OK
-            generatedQueryCount: [0, 0, 2], // Multiple queries = expanded
+            mentionedPageNumbers: [0, 6, 2],
+            highKeywordCount: [0, 6, 2],
+            lowDocumentCount: [-6, 6, 0],
+            highDocumentCount: [2, 6, 0],
+            generatedQueryCount: [0, 6, 2],
         }
     },
     thresholds: {
@@ -207,8 +207,6 @@ export function selectOptimalSearchStrategy(
         };
 
     } catch (error) {
-        console.error('❌ Strategy selection failed:', error);
-        // Safe fallback
         return {
             search_strategy: 'StandardVectorSearch',
             confidence: 0.5,

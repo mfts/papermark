@@ -1,12 +1,3 @@
-export interface Source {
-    documentName: string;
-    similarity: number;
-    pageNumber?: number;
-    locationInfo?: string;
-    documentId: string;
-    chunkId: string;
-}
-
 export interface QueryProcessingResult {
     originalQuery: string;
     finalQueries: string[];
@@ -57,6 +48,10 @@ export interface ChunkMetadata {
     documentName?: string;
     tokenCount?: number;
     embeddingId?: string;
+    contentType?: string;
+    dataroomId?: string;
+    teamId?: string;
+    isSmallChunk?: boolean;
 }
 
 export interface GradedDocument {
@@ -64,7 +59,6 @@ export interface GradedDocument {
     chunkId: string;
     relevanceScore: number;
     confidence: number;
-    reasoning: string;
     isRelevant: boolean;
     suggestedWeight: number;
     originalContent: string;
@@ -88,19 +82,21 @@ export interface LLMResponse<T = unknown> {
 }
 
 export interface TokenUsage {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
+    inputTokens?: number;
+    outputTokens?: number;
+    promptTokens?: number;
+    completionTokens?: number;
+    totalTokens?: number;
 }
 
 export const RAG_CONSTANTS = {
     // Timeouts
     DEFAULT_TIMEOUT: 30000,
     SHORT_TIMEOUT: 20000,
-    LONG_TIMEOUT: 30000,
+    LONG_TIMEOUT: 60000,
 
     // Thresholds
-    DEFAULT_SIMILARITY_THRESHOLD: 0.7,
+    DEFAULT_SIMILARITY_THRESHOLD: 0.75,
     MIN_SIMILARITY_THRESHOLD: 0.5,
     MAX_SIMILARITY_THRESHOLD: 0.9,
 
@@ -116,7 +112,7 @@ export const RAG_CONSTANTS = {
 
     // Limits
     MAX_QUERY_LENGTH: 1000,
-    MAX_CONTEXT_LENGTH: 8000,
+    MAX_CONTEXT_LENGTH: 6000,
     MAX_DOCUMENTS_TO_GRADE: 10,
     MAX_SEARCH_RESULTS: 20,
 
@@ -142,7 +138,6 @@ export interface Span {
     start: number;
     end: number;
     text: string;
-    sourceChunkId: string;
     confidence: number;
 }
 
@@ -152,16 +147,9 @@ export interface SentenceSpan {
     coverage: number;
 }
 
-export interface EnhancedSource extends Source {
-    content?: string;
-    spans: Span[];
-    sentenceSpans: SentenceSpan[];
-    coverage: number;
-    startOffset: number;
-    endOffset: number;
-}
 
 export interface RerankerConfig {
+    enabled: boolean;
     model: string;
     maxTokens: number;
     temperature: number;
@@ -172,7 +160,6 @@ export interface RerankerConfig {
 export interface RerankerResult extends SearchResult {
     relevanceScore: number;
     confidence: number;
-    reasoning: string;
     rerankedRank: number;
 }
 

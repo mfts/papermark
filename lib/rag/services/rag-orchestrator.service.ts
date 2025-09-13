@@ -4,7 +4,6 @@ import { AccessibleDocument } from '../document-permissions';
 import { SearchResult } from '../types/rag-types';
 import { UIMessage } from 'ai';
 import { ResponseGenerationService, responseGenerationService } from './response-generation.service';
-import { SourceBuildingService, sourceBuildingService } from './source-building.service';
 import { rerankerService } from './reranker.service';
 import { contextCompressionService } from './context-compression.service';
 import { DocumentSearchService, documentSearchService } from './document-search.service';
@@ -14,47 +13,18 @@ import { configurationManager } from '../config';
 import { ChatMetadataTracker } from './chat-metadata-tracker.service';
 
 
-const PIPELINE_LIMITS = {
-    MAX_STANDARD_QUERIES: 15,
-    MAX_EXPANDED_QUERIES: 20,
-    MAX_FAST_QUERIES: 3
-} as const;
-
-let SEARCH_CONFIGS: {
-    FAST: { topK: number; similarityThreshold: number; timeoutMs: number };
-    STANDARD: { topK: number; similarityThreshold: number; timeoutMs: number };
-    EXPANDED: { topK: number; similarityThreshold: number; timeoutMs: number };
-    PAGE_QUERY: { topK: number; similarityThreshold: number; timeoutMs: number };
-};
-
-function initializeSearchConfigs() {
-    const ragConfig = configurationManager.getRAGConfig();
-    SEARCH_CONFIGS = {
-        FAST: {
-            topK: ragConfig.search.fastTopK,
-            similarityThreshold: ragConfig.search.fastSimilarityThreshold,
-            timeoutMs: 45000 // 45 seconds for fast search
-        },
-        STANDARD: {
-            topK: ragConfig.search.standardTopK,
-            similarityThreshold: ragConfig.search.standardSimilarityThreshold,
-            timeoutMs: 50000 // 50 seconds for standard search
-        },
-        EXPANDED: {
-            topK: ragConfig.search.expandedTopK,
-            similarityThreshold: ragConfig.search.expandedSimilarityThreshold,
-            timeoutMs: 55000 // 55 seconds for expanded search
-        },
-        PAGE_QUERY: {
-            topK: ragConfig.search.pageQueryTopK,
-            similarityThreshold: ragConfig.search.pageQuerySimilarityThreshold,
-            timeoutMs: ragConfig.search.pageQueryTimeoutMs
-        }
-    };
+interface SearchConfig {
+    topK: number;
+    similarityThreshold: number;
+    timeoutMs: number;
 }
 
-// Initialize on module load
-initializeSearchConfigs();
+interface SearchConfigs {
+    FAST: SearchConfig;
+    STANDARD: SearchConfig;
+    EXPANDED: SearchConfig;
+    PAGE_QUERY: SearchConfig;
+}
 
 export type SearchStrategy = 'FastVectorSearch' | 'StandardVectorSearch' | 'ExpandedSearch' | 'PageQueryStrategy';
 
@@ -68,7 +38,6 @@ interface ComplexityAnalysis {
 
 interface QueryExtraction {
     pageNumbers: number[];
-    keywords: string[];
 }
 
 interface PipelineContext {
@@ -90,19 +59,56 @@ export class RAGOrchestratorService {
     private documentSearchService: DocumentSearchService;
     private documentGradingService: DocumentGradingService;
     private responseGenerationService: ResponseGenerationService;
-    private sourceBuildingService: SourceBuildingService;
+    private searchConfigs: SearchConfigs;
     private isDisposed = false;
+    private readonly MAX_TOKENS_PER_CHAT = 5000;
 
     constructor(
         customDocumentSearchService?: DocumentSearchService,
         customDocumentGradingService?: DocumentGradingService,
         customResponseGenerationService?: ResponseGenerationService,
-        customSourceBuildingService?: SourceBuildingService
     ) {
         this.documentSearchService = customDocumentSearchService || documentSearchService;
         this.documentGradingService = customDocumentGradingService || documentGradingService;
         this.responseGenerationService = customResponseGenerationService || responseGenerationService;
-        this.sourceBuildingService = customSourceBuildingService || sourceBuildingService;
+        this.searchConfigs = this.initializeSearchConfigs();
+    }
+
+    private checkTokenBudget(metadataTracker?: ChatMetadataTracker): boolean {
+        if (!metadataTracker) return true;
+
+        const currentTokens = metadataTracker.getMetadata().totalTokens || 0;
+        if (currentTokens > this.MAX_TOKENS_PER_CHAT) {
+            console.warn(`Token budget exceeded: ${currentTokens}/${this.MAX_TOKENS_PER_CHAT}`);
+            return false;
+        }
+        return true;
+    }
+
+    private initializeSearchConfigs(): SearchConfigs {
+        const ragConfig = configurationManager.getRAGConfig();
+        return {
+            FAST: {
+                topK: ragConfig.search.fastTopK,
+                similarityThreshold: ragConfig.search.fastSimilarityThreshold,
+                timeoutMs: ragConfig.search.fastTopK * 3000 // Dynamic timeout based on topK
+            },
+            STANDARD: {
+                topK: ragConfig.search.standardTopK,
+                similarityThreshold: ragConfig.search.standardSimilarityThreshold,
+                timeoutMs: ragConfig.search.standardTopK * 3000
+            },
+            EXPANDED: {
+                topK: ragConfig.search.expandedTopK,
+                similarityThreshold: ragConfig.search.expandedSimilarityThreshold,
+                timeoutMs: ragConfig.search.expandedTopK * 3000
+            },
+            PAGE_QUERY: {
+                topK: ragConfig.search.pageQueryTopK,
+                similarityThreshold: ragConfig.search.pageQuerySimilarityThreshold,
+                timeoutMs: ragConfig.search.pageQueryTimeoutMs
+            }
+        };
     }
 
     /**
@@ -121,15 +127,20 @@ export class RAGOrchestratorService {
         },
         timeoutMs: number = 50000, // Default 50 seconds for RAG processing
         abortSignal?: AbortSignal,
-        // Chat storage parameters
         chatSessionId?: string,
         metadataTracker?: ChatMetadataTracker
-    ) {
+    ): Promise<Response> {
         return RAGError.withErrorHandling(
             async () => {
                 if (this.isDisposed) {
                     throw RAGError.create('serviceDisposed', undefined, { service: 'RAGOrchestratorService' });
                 }
+
+                if (!this.checkTokenBudget(metadataTracker)) {
+                    throw RAGError.create('tokenLimitExceeded', 'Token budget exceeded for this chat session', { service: 'RAGOrchestratorService' });
+                }
+
+                this.validateInputs(query, dataroomId, indexedDocuments, messages, strategy);
 
                 const correlationId = this.generateCorrelationId();
                 const startTime = Date.now();
@@ -138,7 +149,7 @@ export class RAGOrchestratorService {
                 if (metadataTracker) {
                     metadataTracker.startTotal();
                     metadataTracker.setQueryAnalysis({
-                        queryType: 'document_question', // Default, will be updated by analysis
+                        queryType: 'document_question',
                         intent,
                         complexityLevel: complexityAnalysis?.complexityLevel
                     });
@@ -158,8 +169,13 @@ export class RAGOrchestratorService {
                         const pageValidation = this.validatePagesAgainstDocuments(queryExtraction.pageNumbers, indexedDocuments);
 
                         if (!pageValidation.isValid && pageValidation.errorMessage) {
-                            const fallbackResponse = await this.responseGenerationService.createFallbackResponse(
-                                pageValidation.errorMessage
+                            const fallbackResponse = await this.responseGenerationService.generateAnswer(
+                                '', // Empty context triggers fallback
+                                messages,
+                                pageValidation.errorMessage,
+                                pipelineSignal,
+                                chatSessionId,
+                                metadataTracker
                             );
 
                             if (metadataTracker) {
@@ -197,14 +213,11 @@ export class RAGOrchestratorService {
                     // Complete metadata tracking
                     if (metadataTracker) {
                         metadataTracker.endTotal();
-                        // Note: result is a Response object, not a data object with sources
-                        // Sources are handled in the text generation service
                     }
 
                     return result;
 
                 } catch (error) {
-                    console.error(`❌ RAG Pipeline failed [${correlationId}]:`, error);
 
                     // Track error in metadata
                     if (metadataTracker) {
@@ -225,14 +238,26 @@ export class RAGOrchestratorService {
                     // Check if it's a timeout error
                     if (error instanceof Error && error.name === 'TimeoutError') {
                         this.logPipelineStatus('⏰ TIMEOUT', `Pipeline exceeded ${timeoutMs}ms limit`);
-                        return await this.responseGenerationService.createFallbackResponse(
-                            "The request took too long to process. Please try a simpler query or try again later."
+                        return await this.responseGenerationService.generateAnswer(
+                            '', // Empty context triggers fallback
+                            messages,
+                            "The request took too long to process. Please try a simpler query or try again later.",
+                            abortSignal,
+                            chatSessionId,
+                            metadataTracker
                         );
                     }
 
                     this.logPipelineStatus('❌ FAILED', `${error instanceof Error ? error.message : 'Unknown error'}`);
 
-                    return await this.responseGenerationService.createFallbackResponse(query);
+                    return await this.responseGenerationService.generateAnswer(
+                        '', // Empty context triggers fallback
+                        messages,
+                        query,
+                        abortSignal,
+                        chatSessionId,
+                        metadataTracker
+                    );
                 }
             },
             'llmCall',
@@ -272,13 +297,19 @@ export class RAGOrchestratorService {
 
             if (searchResults.length === 0) {
                 this.logPipelineStatus('⚠️ NO_RESULTS', 'No results found, generating fallback response...');
-                return await this.responseGenerationService.createFallbackResponse(context.query);
+                return await this.responseGenerationService.generateAnswer(
+                    '', // Empty context triggers fallback
+                    context.messages,
+                    context.query,
+                    context.signal,
+                    context.chatSessionId,
+                    context.metadataTracker
+                );
             }
 
             return await this.executeSharedProcessingPipeline(context, searchResults, 'FastVectorSearch');
 
         } catch (error) {
-            console.error('❌ FastVectorSearch failed:', error);
             this.logPipelineStatus('❌ FAST_PIPELINE_FAILED', `${error instanceof Error ? error.message : 'Unknown error'}`);
             throw error;
         }
@@ -298,13 +329,19 @@ export class RAGOrchestratorService {
 
             if (searchResults.length === 0) {
                 this.logPipelineStatus('⚠️ NO_RESULTS', 'No results found, generating fallback response...');
-                return await this.responseGenerationService.createFallbackResponse(context.query);
+                return await this.responseGenerationService.generateAnswer(
+                    '', // Empty context triggers fallback
+                    context.messages,
+                    context.query,
+                    context.signal,
+                    context.chatSessionId,
+                    context.metadataTracker
+                );
             }
 
             return await this.executeSharedProcessingPipeline(context, searchResults, 'StandardVectorSearch');
 
         } catch (error) {
-            console.error('❌ StandardVectorSearch failed:', error);
             this.logPipelineStatus('❌ STANDARD_PIPELINE_FAILED', `${error instanceof Error ? error.message : 'Unknown error'}`);
             throw error;
         }
@@ -324,13 +361,19 @@ export class RAGOrchestratorService {
 
             if (searchResults.length === 0) {
                 this.logPipelineStatus('⚠️ NO_RESULTS', 'No results found, generating fallback response...');
-                return await this.responseGenerationService.createFallbackResponse(context.query);
+                return await this.responseGenerationService.generateAnswer(
+                    '', // Empty context triggers fallback
+                    context.messages,
+                    context.query,
+                    context.signal,
+                    context.chatSessionId,
+                    context.metadataTracker
+                );
             }
 
             return await this.executeSharedProcessingPipeline(context, searchResults, 'ExpandedSearch');
 
         } catch (error) {
-            console.error('❌ ExpandedSearch failed:', error);
             this.logPipelineStatus('❌ EXPANDED_PIPELINE_FAILED', `${error instanceof Error ? error.message : 'Unknown error'}`);
             throw error;
         }
@@ -346,47 +389,34 @@ export class RAGOrchestratorService {
 
             if (searchResults.length === 0) {
                 this.logPipelineStatus('⚠️ NO_PAGE_RESULTS', 'No results found for requested page, generating fallback response...');
-                return await this.responseGenerationService.createFallbackResponse(
-                    `I couldn't find any content on the requested page. The page might not exist or may not have been indexed yet.`
+                return await this.responseGenerationService.generateAnswer(
+                    '', // Empty context triggers fallback
+                    context.messages,
+                    `I couldn't find any content on the requested page. The page might not exist or may not have been indexed yet.`,
+                    context.signal,
+                    context.chatSessionId,
+                    context.metadataTracker
                 );
             }
 
-            const sources = await this.sourceBuildingService.buildSources(
-                searchResults.map(result => ({
-                    documentId: result.documentId,
-                    chunkId: result.chunkId,
-                    relevanceScore: result.similarity || 0.9,
-                    confidence: 0.9,
-                    reasoning: 'Direct page match',
-                    isRelevant: true,
-                    suggestedWeight: 1.0,
-                    originalContent: result.content,
-                    metadata: result.metadata
-                })),
-                searchResults,
-                context.indexedDocuments
-            );
-
+            // Skip source building - not neede
             const contextText = searchResults.map(r => r.content).join('\n\n');
             const validPages = context.queryExtraction?.pageNumbers || [];
-            this.logPipelineStatus('🔍 PAGE_DEBUG', `Context length: ${contextText.length}, Sources: ${sources.length}, Valid pages: ${validPages.join(', ')}`);
 
             const response = await this.responseGenerationService.generateAnswer(
                 contextText,
                 context.messages,
                 context.query,
-                sources,
                 context.signal,
                 context.chatSessionId,
                 context.metadataTracker,
                 validPages
             );
 
-            this.logPipelineStatus('✅ PAGE_RESPONSE_COMPLETE', `Generated page response with ${sources.length} sources`);
+            this.logPipelineStatus('✅ PAGE_RESPONSE_COMPLETE', 'Generated page response');
             return response;
 
         } catch (error) {
-            console.error('❌ PageQueryStrategy failed:', error);
             this.logPipelineStatus('❌ PAGE_PIPELINE_FAILED', `${error instanceof Error ? error.message : 'Unknown error'}`);
             throw error;
         }
@@ -402,83 +432,92 @@ export class RAGOrchestratorService {
 
             if (isFastPath) {
                 this.logPipelineStatus('⚡ FAST_PATH_OPTIMIZATION', 'Using optimized processing for speed...');
-                const gradedDocuments = searchResults.map(result => ({
-                    documentId: result.documentId,
-                    chunkId: result.chunkId,
-                    relevanceScore: result.similarity || 0.8,
-                    confidence: 0.8,
-                    reasoning: 'Fast path optimization',
-                    isRelevant: true,
-                    suggestedWeight: 0.8,
-                    originalContent: result.content,
-                    metadata: result.metadata
-                }));
 
-                const sources = await this.sourceBuildingService.buildSources(gradedDocuments, searchResults, context.indexedDocuments);
                 const contextText = searchResults.map(r => r.content).join('\n\n');
 
                 const response = await this.responseGenerationService.generateAnswer(
                     contextText,
                     context.messages,
                     context.query,
-                    sources,
                     context.signal,
                     context.chatSessionId,
                     context.metadataTracker,
                     context.queryExtraction?.pageNumbers
                 );
 
-                this.logPipelineStatus('✅ FAST_RESPONSE_COMPLETE', `Generated fast response with ${sources.length} sources`);
+                this.logPipelineStatus('✅ FAST_RESPONSE_COMPLETE', 'Generated fast response');
                 return response;
             }
 
 
-            this.logPipelineStatus('⚙️ PHASE_3', 'Reranking and context compression...');
+            this.logPipelineStatus('⚙️ PHASE_3', 'Parallel reranking and context compression...');
 
             let rerankedResults: any[];
             let compressedContext: any;
 
             try {
-                [rerankedResults, compressedContext] = await Promise.all([
+                // PARALLEL EXECUTION: Run reranking and compression simultaneously
+                const [rerankResult, compressionResult] = await Promise.allSettled([
                     rerankerService.rerankResults(context.query, searchResults, context.signal),
                     contextCompressionService.compressContext(searchResults, context.query, context.signal, context.complexityAnalysis)
                 ]);
 
-                this.logPipelineStatus('⚙️ RERANKING_COMPRESSION_COMPLETE', `${strategyName}: Reranked ${rerankedResults.length} results`);
-            } catch (compressionError) {
-                console.warn('⚠️ Context compression failed, using uncompressed results:', compressionError);
-                this.logPipelineStatus('⚠️ COMPRESSION_FAILED', 'Using uncompressed context due to compression error');
+                // Handle reranking result
+                if (rerankResult.status === 'fulfilled') {
+                    rerankedResults = rerankResult.value;
+                    this.logPipelineStatus('✅ RERANKING_COMPLETE', `${strategyName}: Reranked ${rerankedResults.length} results`);
+                } else {
+                    rerankedResults = searchResults;
+                    this.logPipelineStatus('⚠️ RERANKING_FAILED', 'Using original search results');
+                }
 
-                // Fallback to uncompressed context
+                // Handle compression result
+                if (compressionResult.status === 'fulfilled') {
+                    compressedContext = compressionResult.value;
+                    this.logPipelineStatus('✅ COMPRESSION_COMPLETE', `${strategyName}: Context compressed`);
+                } else {
+                    compressedContext = {
+                        content: rerankedResults.map(r => r.content).join('\n\n'),
+                    };
+                    this.logPipelineStatus('⚠️ COMPRESSION_FAILED', 'Using uncompressed context');
+                }
+
+            } catch (error) {
+                // Fallback to sequential processing
                 rerankedResults = await rerankerService.rerankResults(context.query, searchResults, context.signal);
-                compressedContext = { content: searchResults.map(r => r.content).join('\n\n') };
-
-                this.logPipelineStatus('⚙️ RERANKING_COMPLETE', `${strategyName}: Reranked ${rerankedResults.length} results (compression bypassed)`);
+                compressedContext = {
+                    content: rerankedResults.map(r => r.content).join('\n\n'),
+                };
+                this.logPipelineStatus('⚠️ FALLBACK_SEQUENTIAL', 'Using sequential fallback processing');
             }
 
-            // Phase 4: Document Grading
-            this.logPipelineStatus('📋 PHASE_4', 'Grading document relevance...');
+            // Phase 4: Smart Document Selection (Skip redundant grading after reranking)
+            this.logPipelineStatus('📋 PHASE_4', 'Smart document selection...');
 
             let relevantDocuments: any[];
-            try {
-                const gradingResult = await this.documentGradingService.gradeAndFilterDocuments(
-                    context.query,
-                    rerankedResults,
-                    context.complexityAnalysis
-                );
-                relevantDocuments = gradingResult.relevantDocuments;
-                this.logPipelineStatus('📋 GRADING_COMPLETE', `${strategyName}: ${relevantDocuments.length} relevant documents`);
-            } catch (gradingError) {
-                console.warn('⚠️ Document grading failed, using all results:', gradingError);
-                this.logPipelineStatus('⚠️ GRADING_FAILED', 'Using all results due to grading error');
 
+            const hasHighQualityReranking = rerankedResults.length > 0 &&
+                rerankedResults.some((r: any) => r.relevanceScore > 0.7);
 
-                relevantDocuments = rerankedResults;
-                this.logPipelineStatus('📋 GRADING_BYPASSED', `${strategyName}: Using all ${relevantDocuments.length} results (grading bypassed)`);
+            if (hasHighQualityReranking) {
+                relevantDocuments = rerankedResults.filter((r: any) => r.relevanceScore > 0.5);
+                this.logPipelineStatus('📋 SMART_SELECTION', `${strategyName}: ${relevantDocuments.length} high-quality documents (grading skipped)`);
+            } else {
+                // Fallback to grading for low-quality results
+                try {
+                    const gradingResult = await this.documentGradingService.gradeAndFilterDocuments(
+                        context.query,
+                        rerankedResults,
+                        context.complexityAnalysis
+                    );
+                    relevantDocuments = gradingResult.relevantDocuments;
+                    this.logPipelineStatus('📋 GRADING_COMPLETE', `${strategyName}: ${relevantDocuments.length} relevant documents`);
+                } catch (gradingError) {
+                    relevantDocuments = rerankedResults;
+                    this.logPipelineStatus('📋 GRADING_BYPASSED', `${strategyName}: Using all ${relevantDocuments.length} results (grading bypassed)`);
+                }
             }
 
-            this.logPipelineStatus('🏗️ BUILDING_SOURCES', 'Building source references...');
-            const sources = await this.sourceBuildingService.buildSources(relevantDocuments, rerankedResults, context.indexedDocuments);
 
             this.logPipelineStatus('🤖 PHASE_5', 'Generating AI response...');
 
@@ -487,26 +526,30 @@ export class RAGOrchestratorService {
                     compressedContext.content,
                     context.messages,
                     context.query,
-                    sources,
                     context.signal,
                     context.chatSessionId,
                     context.metadataTracker,
                     context.queryExtraction?.pageNumbers
                 );
 
-                this.logPipelineStatus('✅ RESPONSE_GENERATION_COMPLETE', `${strategyName}: Generated response with ${sources.length} sources`);
+                this.logPipelineStatus('✅ RESPONSE_GENERATION_COMPLETE', `${strategyName}: Generated response`);
 
                 return response;
             } catch (responseError) {
-                console.error('❌ Response generation failed:', responseError);
                 this.logPipelineStatus('❌ RESPONSE_GENERATION_FAILED', `${strategyName}: ${responseError instanceof Error ? responseError.message : 'Unknown error'}`);
 
                 // Return fallback response
-                return await this.responseGenerationService.createFallbackResponse(context.query);
+                return await this.responseGenerationService.generateAnswer(
+                    '', // Empty context triggers fallback
+                    context.messages,
+                    context.query,
+                    context.signal,
+                    context.chatSessionId,
+                    context.metadataTracker
+                );
             }
 
         } catch (error) {
-            console.error(`❌ ${strategyName} shared processing failed:`, error);
             this.logPipelineStatus('❌ SHARED_PROCESSING_FAILED', `${strategyName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
             throw error;
         }
@@ -517,32 +560,42 @@ export class RAGOrchestratorService {
         const queries: string[] = [context.query];
         const maxQueries = this.getMaxQueriesForStrategy(strategy);
 
+        const shouldUseRewrittenQueries = context.queryExtraction?.queryRewriting?.shouldRewrite &&
+            context.queryExtraction?.queryRewriting?.rewrittenQueries?.length &&
+            context.queryExtraction?.queryRewriting?.rewrittenQueries;
 
-        if (context.queryExtraction?.queryRewriting?.rewrittenQueries?.length) {
+        if (shouldUseRewrittenQueries && context.queryExtraction?.queryRewriting?.rewrittenQueries) {
             const rewrittenQueries = context.queryExtraction.queryRewriting.rewrittenQueries
-                .slice(0, maxQueries - 1) // Reserve 1 slot for original query
+                .slice(0, maxQueries - 1)
                 .filter((query): query is string => query !== undefined);
             queries.push(...rewrittenQueries);
+
+            this.logPipelineStatus('🔄 QUERY_REWRITING', `Using ${rewrittenQueries.length} rewritten queries`);
+        } else {
+            this.logPipelineStatus('⚡ SINGLE_QUERY', 'Using original query only (optimized for speed)');
         }
-
-
         if (strategy === 'ExpandedSearch' &&
             context.queryExtraction?.queryRewriting?.hydeAnswer &&
             context.queryExtraction.queryRewriting.requiresHyde) {
             queries.push(context.queryExtraction.queryRewriting.hydeAnswer);
+            this.logPipelineStatus('🧠 HYDE_QUERY', 'Added HyDE answer for expanded search');
         }
 
         // Deduplicate and validate
-        return Array.from(new Set(queries.map(q => q.trim()).filter(Boolean)));
+        const finalQueries = Array.from(new Set(queries.map(q => q.trim()).filter(Boolean)));
+
+        this.logPipelineStatus('📊 FINAL_QUERIES', `Total queries: ${finalQueries.length}/${maxQueries} max`);
+        return finalQueries;
     }
 
 
     private getMaxQueriesForStrategy(strategy: SearchStrategy): number {
         switch (strategy) {
-            case 'FastVectorSearch': return PIPELINE_LIMITS.MAX_FAST_QUERIES;
-            case 'StandardVectorSearch': return PIPELINE_LIMITS.MAX_STANDARD_QUERIES;
-            case 'ExpandedSearch': return PIPELINE_LIMITS.MAX_EXPANDED_QUERIES;
-            default: return PIPELINE_LIMITS.MAX_STANDARD_QUERIES;
+            case 'FastVectorSearch': return 2;
+            case 'StandardVectorSearch': return 4;
+            case 'ExpandedSearch': return 6;
+            case 'PageQueryStrategy': return 2;
+            default: return 2;
         }
     }
 
@@ -573,6 +626,9 @@ export class RAGOrchestratorService {
         }
 
         try {
+            if (context.metadataTracker) {
+                context.metadataTracker.startSearch();
+            }
 
             const searchPromises = searchQueries.map(async (query, index) => {
                 try {
@@ -595,7 +651,6 @@ export class RAGOrchestratorService {
                     this.logPipelineStatus(`✅ QUERY_${index + 1}`, `Found ${results.length} results`);
                     return results;
                 } catch (error) {
-                    console.error(`❌ Query ${index + 1} failed:`, error);
                     return [];
                 }
             });
@@ -609,8 +664,20 @@ export class RAGOrchestratorService {
                 this.logPipelineStatus(`📊 QUERY_${index + 1}_RESULTS`, `Added ${results.length} results`);
             });
 
-            // Remove duplicates based on chunkId
             const uniqueResults = this.removeDuplicateResults(allResults);
+
+            if (context.metadataTracker) {
+                context.metadataTracker.endSearch();
+                const chunkIds = uniqueResults.map(r => r.chunkId);
+                const documentIds = [...new Set(uniqueResults.map(r => r.documentId))];
+                const pageRanges = [...new Set(uniqueResults.flatMap(r => r.metadata.pageRanges))];
+
+                context.metadataTracker.addSearchResults({
+                    chunkIds,
+                    documentIds,
+                    pageRanges: pageRanges.map(p => p.toString())
+                });
+            }
 
             this.logPipelineStatus(`${strategyEmoji} SEARCH_COMPLETE`,
                 `Combined ${allResults.length} results → ${uniqueResults.length} unique results`);
@@ -618,7 +685,6 @@ export class RAGOrchestratorService {
             return uniqueResults;
 
         } catch (error) {
-            console.error(`❌ ${strategy} search failed:`, error);
             throw error;
         }
     }
@@ -626,13 +692,13 @@ export class RAGOrchestratorService {
     /**
      * Get search configuration for strategy
      */
-    private getSearchConfig(strategy: SearchStrategy) {
+    private getSearchConfig(strategy: SearchStrategy): SearchConfig {
         switch (strategy) {
-            case 'FastVectorSearch': return SEARCH_CONFIGS.FAST;
-            case 'StandardVectorSearch': return SEARCH_CONFIGS.STANDARD;
-            case 'ExpandedSearch': return SEARCH_CONFIGS.EXPANDED;
-            case 'PageQueryStrategy': return SEARCH_CONFIGS.PAGE_QUERY;
-            default: return SEARCH_CONFIGS.STANDARD;
+            case 'FastVectorSearch': return this.searchConfigs.FAST;
+            case 'StandardVectorSearch': return this.searchConfigs.STANDARD;
+            case 'ExpandedSearch': return this.searchConfigs.EXPANDED;
+            case 'PageQueryStrategy': return this.searchConfigs.PAGE_QUERY;
+            default: return this.searchConfigs.STANDARD;
         }
     }
 
@@ -681,29 +747,6 @@ export class RAGOrchestratorService {
         return Object.keys(filter).length > 1 ? filter : null;
     }
 
-    /**
-     * Build context and sources from search results
-     */
-    private async buildContextAndSources(searchResults: SearchResult[], reasoning: string, indexedDocuments: AccessibleDocument[]) {
-        const context = searchResults.map(r => r.content).join('\n\n');
-        const sourceData = searchResults.map(r => ({
-            documentId: r.documentId,
-            chunkId: r.chunkId,
-            relevanceScore: r.similarity || 0,
-            confidence: 0.8,
-            reasoning,
-            isRelevant: true,
-            suggestedWeight: 0.8,
-            originalContent: r.content,
-            metadata: r.metadata
-        }));
-
-        const sources = await this.sourceBuildingService.buildSources(sourceData, searchResults, indexedDocuments);
-        return { context, sources };
-    }
-
-
-
     private generateCorrelationId(): string {
         return `rag_${crypto.randomUUID()}`;
     }
@@ -711,7 +754,6 @@ export class RAGOrchestratorService {
     private logPipelineStatus(stage: string, message: string, metrics?: { [key: string]: any }) {
         const timestamp = new Date().toISOString();
         const metricString = metrics ? ` | ${JSON.stringify(metrics)}` : '';
-        console.log(`[${timestamp}] ${stage}: ${message}${metricString}`);
     }
 
 
@@ -770,6 +812,106 @@ export class RAGOrchestratorService {
                 errorMessage: `Pages ${invalidPageList} don't exist in your documents. The available documents (${documentNames}) have ${maxPagesInDocuments} page${maxPagesInDocuments === 1 ? '' : 's'} (pages 1-${maxPagesInDocuments}). Try asking about content within that range.`
             };
         }
+    }
+
+    private validateInputs(
+        query: string,
+        dataroomId: string,
+        indexedDocuments: AccessibleDocument[],
+        messages: UIMessage[],
+        strategy: SearchStrategy
+    ): void {
+        // Basic validation
+        if (!query?.trim()) {
+            throw RAGError.create('validation', 'Query is required', { field: 'query' });
+        }
+        if (!dataroomId?.trim()) {
+            throw RAGError.create('validation', 'Dataroom ID is required', { field: 'dataroomId' });
+        }
+        if (!indexedDocuments?.length) {
+            throw RAGError.create('validation', 'Indexed documents are required', { field: 'indexedDocuments' });
+        }
+        if (!messages?.length) {
+            throw RAGError.create('validation', 'Messages are required', { field: 'messages' });
+        }
+        if (!this.isValidStrategy(strategy)) {
+            throw RAGError.create('validation', `Invalid search strategy: ${strategy}`, { field: 'strategy' });
+        }
+
+        // Security validation
+        this.validateSecurity(query, dataroomId, messages);
+    }
+
+    private validateSecurity(query: string, dataroomId: string, messages: UIMessage[]): void {
+        // Query length validation
+        if (query.length > 10000) {
+            throw RAGError.create('validation', 'Query too long (max 10,000 characters)', {
+                field: 'query',
+                length: query.length,
+                maxLength: 10000
+            });
+        }
+
+        // Dataroom ID format validation
+        if (!/^[a-zA-Z0-9_-]+$/.test(dataroomId)) {
+            throw RAGError.create('validation', 'Invalid dataroom ID format', {
+                field: 'dataroomId',
+                value: dataroomId
+            });
+        }
+
+        // Message content validation
+        for (const message of messages) {
+            const content = this.extractMessageContent(message);
+            if (content && content.length > 50000) {
+                throw RAGError.create('validation', 'Message content too long (max 50,000 characters)', {
+                    field: 'messages',
+                    messageIndex: messages.indexOf(message),
+                    length: content.length,
+                    maxLength: 50000
+                });
+            }
+        }
+
+        // Check for potential injection patterns
+        const suspiciousPatterns = [
+            /<script[^>]*>.*?<\/script>/gi,
+            /javascript:/gi,
+            /on\w+\s*=/gi,
+            /eval\s*\(/gi,
+            /expression\s*\(/gi
+        ];
+
+        const allContent = query + ' ' + messages.map(m => this.extractMessageContent(m)).join(' ');
+        for (const pattern of suspiciousPatterns) {
+            if (pattern.test(allContent)) {
+                throw RAGError.create('validation', 'Potentially malicious content detected', {
+                    field: 'content',
+                    pattern: pattern.toString()
+                });
+            }
+        }
+    }
+
+    private extractMessageContent(message: UIMessage): string {
+        const messageAny = message as any;
+
+        if (typeof messageAny.content === 'string') {
+            return messageAny.content;
+        }
+
+        if (messageAny.parts && Array.isArray(messageAny.parts)) {
+            return messageAny.parts
+                .filter((part: any) => part.type === 'text' && typeof part.text === 'string')
+                .map((part: any) => part.text)
+                .join(' ');
+        }
+
+        return JSON.stringify(messageAny.content || '');
+    }
+
+    private isValidStrategy(strategy: string): strategy is SearchStrategy {
+        return ['FastVectorSearch', 'StandardVectorSearch', 'ExpandedSearch', 'PageQueryStrategy'].includes(strategy);
     }
 
     dispose(): void {

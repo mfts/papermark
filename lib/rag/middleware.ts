@@ -3,18 +3,24 @@ import { UIMessage } from 'ai';
 import { getAccessibleDocumentsForRAG, AccessibleDocument } from './document-permissions';
 import { z } from 'zod';
 import { RAGError } from './errors';
+import { DocumentAccessCache } from './utils/lruCache';
 
 const RequestBodySchema = z.object({
     messages: z.array(z.any()).min(1, 'Messages array cannot be empty'),
     dataroomId: z.string().min(1, 'Dataroom ID is required'),
     viewerId: z.string().min(1, 'Viewer ID is required'),
     linkId: z.string().min(1, 'Link ID is required'),
+    sessionId: z.string().nullable().optional(),
 });
 
 const PERFORMANCE_CONSTANTS = {
     MAX_DOCUMENTS_PER_REQUEST: 100,
-    MAX_FOLDERS_PER_REQUEST: 25
+    MAX_FOLDERS_PER_REQUEST: 25,
+    MAX_QUERY_LENGTH: 10000,
+    MIN_QUERY_LENGTH: 1,
 } as const;
+
+const documentAccessCache = new DocumentAccessCache();
 
 const ScopeSchema = z.object({
     docs: z.array(z.string()).optional().default([]),
@@ -42,6 +48,7 @@ export class RAGMiddleware {
         selectedDocIds: string[];
         selectedFolderIds: string[];
         folderDocIds: string[];
+        sessionId?: string | null;
     }> {
         return RAGError.withErrorHandling(
             async () => {
@@ -49,7 +56,7 @@ export class RAGMiddleware {
 
                 // Step 1: Single comprehensive validation with Zod
                 const validatedBody = RequestBodySchema.parse(body);
-                const { messages, dataroomId, viewerId, linkId } = validatedBody;
+                const { messages, dataroomId, viewerId, linkId, sessionId } = validatedBody;
 
                 // Step 2: Fast validation of message structure and query extraction
                 const lastMessage = messages[messages.length - 1];
@@ -63,8 +70,17 @@ export class RAGMiddleware {
                 ) || [];
 
                 const query = textParts.map((part: TextMessagePart) => part.text).join(' ').trim();
-                if (!query || query.length < 1) {
+
+                if (!query || query.length < PERFORMANCE_CONSTANTS.MIN_QUERY_LENGTH) {
                     throw RAGError.create('validation', 'Query cannot be empty', { field: 'query' });
+                }
+
+                if (query.length > PERFORMANCE_CONSTANTS.MAX_QUERY_LENGTH) {
+                    throw RAGError.create('validation', `Query too long (max ${PERFORMANCE_CONSTANTS.MAX_QUERY_LENGTH} characters)`, {
+                        field: 'query',
+                        actualLength: query.length,
+                        maxLength: PERFORMANCE_CONSTANTS.MAX_QUERY_LENGTH
+                    });
                 }
 
                 // Step 4: Optimized scope parsing with validation
@@ -110,7 +126,8 @@ export class RAGMiddleware {
                     query,
                     selectedDocIds,
                     selectedFolderIds,
-                    folderDocIds
+                    folderDocIds,
+                    sessionId
                 };
             },
             'requestValidation',
@@ -125,13 +142,20 @@ export class RAGMiddleware {
     ): Promise<{ indexedDocuments: AccessibleDocument[]; accessError?: string }> {
         return RAGError.withErrorHandling(
             async () => {
-                const accessibleDocuments = await getAccessibleDocumentsForRAG(dataroomId, viewerId);
-                if (!Array.isArray(accessibleDocuments)) {
-                    throw RAGError.create('documentAccess', 'Invalid document data structure returned', {
-                        dataroomId,
-                        viewerId,
-                        actualType: typeof accessibleDocuments
-                    });
+                const cacheKey = documentAccessCache.generateKey(dataroomId, viewerId);
+                let accessibleDocuments = await documentAccessCache.get(cacheKey);
+
+                if (!accessibleDocuments) {
+                    accessibleDocuments = await getAccessibleDocumentsForRAG(dataroomId, viewerId);
+
+                    if (!Array.isArray(accessibleDocuments)) {
+                        throw RAGError.create('documentAccess', 'Invalid document data structure returned', {
+                            dataroomId,
+                            viewerId,
+                            actualType: typeof accessibleDocuments
+                        });
+                    }
+                    await documentAccessCache.set(cacheKey, accessibleDocuments);
                 }
 
                 if (accessibleDocuments.length === 0) {
@@ -193,9 +217,7 @@ export class RAGMiddleware {
             { service: 'Middleware', operation: 'getAccessibleIndexedDocuments', dataroomId, viewerId }
         );
     }
+
 }
 
 export const ragMiddleware = new RAGMiddleware();
-
-
-

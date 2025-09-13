@@ -1,42 +1,44 @@
 import { textGenerationService } from '../text-generation';
 import { RAGError } from '../errors';
-import { Source } from '../types/rag-types';
 import { UIMessage } from 'ai';
 import { ChatMetadataTracker } from './chat-metadata-tracker.service';
 
 
 export class ResponseGenerationService {
     private isDisposed = false;
+    private static instance: ResponseGenerationService | null = null;
 
+    private constructor() {
+    }
+    static getInstance(): ResponseGenerationService {
+        if (!ResponseGenerationService.instance) {
+            ResponseGenerationService.instance = new ResponseGenerationService();
+        }
+        return ResponseGenerationService.instance;
+    }
 
     async generateAnswer(
         context: string,
         messages: UIMessage[],
         query: string,
-        sources: Source[],
         abortSignal?: AbortSignal,
         chatSessionId?: string,
         metadataTracker?: ChatMetadataTracker,
         pageNumbers?: number[]
-    ) {
+    ): Promise<Response> {
         return RAGError.withErrorHandling(
             async () => {
-                if (this.isDisposed) {
-                    throw RAGError.create('serviceDisposed', undefined, { service: 'ResponseGenerationService' });
-                }
-
-                if (!query?.trim() || !messages?.length) {
-                    throw RAGError.create('validation', 'Query and messages are required', { field: 'input', query: query?.trim(), messagesCount: messages?.length });
-                }
+                this.validateServiceState();
+                this.validateInputs(query, messages);
 
                 if (!context?.trim()) {
-                    return await this.createFallbackResponse(query);
+                    return await this.createFallbackResponse(query, chatSessionId, metadataTracker);
                 }
+
                 return await textGenerationService.generateRAGResponse(
                     context,
                     messages,
                     query,
-                    sources,
                     abortSignal,
                     chatSessionId,
                     metadataTracker,
@@ -49,18 +51,39 @@ export class ResponseGenerationService {
     }
 
 
-    async createFallbackResponse(query: string) {
+    private async createFallbackResponse(
+        query: string,
+        chatSessionId?: string,
+        metadataTracker?: ChatMetadataTracker
+    ): Promise<Response> {
         return RAGError.withErrorHandling(
             async () => {
-                if (this.isDisposed) {
-                    throw RAGError.create('serviceDisposed', undefined, { service: 'ResponseGenerationService' });
-                }
+                this.validateServiceState();
 
-                return await textGenerationService.generateFallbackResponse(query);
+                return await textGenerationService.generateFallbackResponse(query, chatSessionId, metadataTracker);
             },
             'responseGeneration',
             { service: 'ResponseGeneration', operation: 'createFallbackResponse', query }
         );
+    }
+
+    private validateServiceState(): void {
+        if (this.isDisposed) {
+            throw RAGError.create('serviceDisposed', undefined, { service: 'ResponseGenerationService' });
+        }
+    }
+
+    static resetInstance(): void {
+        ResponseGenerationService.instance = null;
+    }
+
+    private validateInputs(query: string, messages: UIMessage[]): void {
+        if (!query?.trim()) {
+            throw RAGError.create('validation', 'Query is required', { field: 'query' });
+        }
+        if (!messages?.length) {
+            throw RAGError.create('validation', 'Messages are required', { field: 'messages' });
+        }
     }
     dispose(): void {
         if (this.isDisposed) return;
@@ -72,4 +95,4 @@ export class ResponseGenerationService {
     }
 }
 
-export const responseGenerationService = new ResponseGenerationService();
+export const responseGenerationService = ResponseGenerationService.getInstance();

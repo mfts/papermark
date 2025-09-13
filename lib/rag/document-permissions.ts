@@ -1,6 +1,6 @@
 import prisma from '../prisma';
 import { ParsingStatus } from '@prisma/client';
-import { LRUCache } from './utils/lruCache';
+import { LRUCache as NodeLRUCache } from 'lru-cache';
 import { RAGError } from './errors';
 
 export interface AccessibleDocument {
@@ -12,19 +12,29 @@ export interface AccessibleDocument {
 }
 
 // Lazy cache initialization to avoid constructor issues
-let dataroomDocumentsCache: LRUCache<string, AccessibleDocument[]> | null = null;
-let viewerPermissionsCache: LRUCache<string, Set<string>> | null = null;
+let dataroomDocumentsCache: NodeLRUCache<string, AccessibleDocument[]> | null = null;
+let viewerPermissionsCache: NodeLRUCache<string, Set<string>> | null = null;
 
-function getDataroomDocumentsCache(): LRUCache<string, AccessibleDocument[]> {
+function getDataroomDocumentsCache(): NodeLRUCache<string, AccessibleDocument[]> {
     if (!dataroomDocumentsCache) {
-        dataroomDocumentsCache = new LRUCache<string, AccessibleDocument[]>(200, 5 * 60 * 1000);
+        dataroomDocumentsCache = new NodeLRUCache<string, AccessibleDocument[]>({
+            max: 200,
+            ttl: 15 * 60 * 1000, // 5 minutes
+            updateAgeOnGet: true,
+            updateAgeOnHas: true,
+        });
     }
     return dataroomDocumentsCache;
 }
 
-function getViewerPermissionsCache(): LRUCache<string, Set<string>> {
+function getViewerPermissionsCache(): NodeLRUCache<string, Set<string>> {
     if (!viewerPermissionsCache) {
-        viewerPermissionsCache = new LRUCache<string, Set<string>>(100, 2 * 60 * 1000);
+        viewerPermissionsCache = new NodeLRUCache<string, Set<string>>({
+            max: 100,
+            ttl: 15 * 60 * 1000, // 2 minutes
+            updateAgeOnGet: true,
+            updateAgeOnHas: true,
+        });
     }
     return viewerPermissionsCache;
 }
@@ -35,7 +45,7 @@ export async function getAccessibleDocumentsForRAG(
 ): Promise<AccessibleDocument[]> {
     try {
         const cacheKey = `${dataroomId}:${viewerId}`;
-        const cached = await getDataroomDocumentsCache().get(cacheKey);
+        const cached = getDataroomDocumentsCache().get(cacheKey);
         if (cached) {
             console.log('get from cache');
             return cached;
@@ -121,7 +131,7 @@ export async function getAccessibleDocumentsForRAG(
             numPages: doc.document.numPages || undefined,
         }));
 
-        await getDataroomDocumentsCache().set(cacheKey, result);
+        getDataroomDocumentsCache().set(cacheKey, result);
         return result;
     } catch (error) {
         throw RAGError.create('documentAccess', 'Failed to get accessible documents', { dataroomId, viewerId });
@@ -133,9 +143,8 @@ async function getViewerPermissions(viewer: any): Promise<Set<string>> {
     console.log('getViewerPermissions', viewer)
     const viewerKey = viewer.id;
 
-    const cached = await getViewerPermissionsCache().get(viewerKey);
+    const cached = getViewerPermissionsCache().get(viewerKey);
     if (cached) {
-        // Handle both Set and Array from cache
         if (Array.isArray(cached)) {
             return new Set(cached);
         } else if (cached instanceof Set) {
@@ -160,6 +169,6 @@ async function getViewerPermissions(viewer: any): Promise<Set<string>> {
         }
     }
 
-    await getViewerPermissionsCache().set(viewerKey, accessibleDocumentIds);
+    getViewerPermissionsCache().set(viewerKey, accessibleDocumentIds);
     return accessibleDocumentIds;
 }

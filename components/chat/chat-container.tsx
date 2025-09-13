@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, UIMessage } from "ai";
@@ -36,6 +36,8 @@ export interface EnhancedChatContainerProps {
   maxHeight?: string;
   documents?: Array<{ id: string; name: string; folderId: string | null }>;
   folders?: Array<{ id: string; name: string; parentId: string | null }>;
+  sessionId?: string | null;
+  onSessionCreated?: (sessionId: string) => void;
 }
 
 export function ChatContainer({
@@ -50,10 +52,22 @@ export function ChatContainer({
   maxHeight = "600px",
   documents = [],
   folders = [],
+  sessionId,
+  onSessionCreated,
 }: EnhancedChatContainerProps) {
   const [error, setError] = useState<string | null>(null);
   const [scopeItems, setScopeItems] = useState<ScopeItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const transportConfig = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: apiEndpoint,
+        headers: { "Content-Type": "application/json" },
+        body: { dataroomId, viewerId, linkId, userId, plan, sessionId },
+      }),
+    [apiEndpoint, dataroomId, viewerId, linkId, userId, plan, sessionId],
+  );
 
   const {
     messages,
@@ -62,11 +76,7 @@ export function ChatContainer({
     error: chatError,
     stop,
   } = useChat({
-    transport: new DefaultChatTransport({
-      api: apiEndpoint,
-      headers: { "Content-Type": "application/json" },
-      body: { dataroomId, viewerId, linkId, userId, plan },
-    }),
+    transport: transportConfig,
     onError: (err) => {
       console.error("useChat error:", err);
       setIsProcessing(false); // Stop processing on error
@@ -108,16 +118,19 @@ export function ChatContainer({
   }, [chatError]);
 
   // Drag/drop document scope handler
-  useEffect(() => {
-    const handleDocumentDrop = (event: CustomEvent) => {
-      const { id, type, name } = event.detail;
-      const newScopeItem: ScopeItem = { id, type, name };
+  const handleDocumentDrop = useCallback((event: CustomEvent) => {
+    const { id, type, name } = event.detail;
+    const newScopeItem: ScopeItem = { id, type, name };
 
-      if (!scopeItems.some((item) => item.id === newScopeItem.id)) {
-        setScopeItems((prev) => [...prev, newScopeItem]);
+    setScopeItems((prev) => {
+      if (!prev.some((item) => item.id === newScopeItem.id)) {
+        return [...prev, newScopeItem];
       }
-    };
+      return prev;
+    });
+  }, []);
 
+  useEffect(() => {
     window.addEventListener(
       "document-drop",
       handleDocumentDrop as EventListener,
@@ -128,38 +141,41 @@ export function ChatContainer({
         handleDocumentDrop as EventListener,
       );
     };
-  }, [scopeItems]);
+  }, [handleDocumentDrop]);
 
-  const handleStop = () => {
+  const handleStop = useCallback(() => {
     console.log("🛑 Stop clicked");
     setIsProcessing(false);
     setError(null);
     stop();
-  };
+  }, [stop]);
 
-  const handleSubmit = async (input: string, scope?: Scope) => {
-    try {
-      setError(null);
-      setIsProcessing(true); // Start processing
-      await sendMessage({
-        role: "user",
-        parts: [{ type: "text", text: input }],
-        metadata: { scope },
-      });
-    } catch (err) {
-      console.error("Error sending message:", err);
-      setIsProcessing(false); // Stop processing on error
-      if (
-        err instanceof Error &&
-        (err.name === "AbortError" || err.message.includes("aborted"))
-      ) {
-        console.log("🛑 Aborted during send");
+  const handleSubmit = useCallback(
+    async (input: string, scope?: Scope) => {
+      try {
         setError(null);
-      } else {
-        setError("Failed to send message. Please try again.");
+        setIsProcessing(true);
+        await sendMessage({
+          role: "user",
+          parts: [{ type: "text", text: input }],
+          metadata: { scope },
+        });
+      } catch (err) {
+        console.error("Error sending message:", err);
+        setIsProcessing(false);
+        if (
+          err instanceof Error &&
+          (err.name === "AbortError" || err.message.includes("aborted"))
+        ) {
+          console.log("🛑 Aborted during send");
+          setError(null);
+        } else {
+          setError("Failed to send message. Please try again.");
+        }
       }
-    }
-  };
+    },
+    [sendMessage],
+  );
 
   // Update processing state based on status
   useEffect(() => {

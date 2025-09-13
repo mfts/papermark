@@ -81,6 +81,8 @@ model Link {
 
   customFields CustomField[]
 
+  ragChatSessions RAGChatSession[]
+
   tags TagItem[]
 
   @@unique([domainSlug, slug])

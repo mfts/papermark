@@ -7,6 +7,20 @@ const nextConfig = {
       asyncWebAssembly: true,
       layers: true,
     };
+
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      path: false,
+      crypto: false,
+    };
+
+    config.externals = config.externals || [];
+    config.externals.push({
+      '@xenova/transformers': 'commonjs @xenova/transformers',
+      'onnxruntime-node': 'commonjs onnxruntime-node',
+    });
+
     return config;
   },
   images: {

@@ -35,15 +35,20 @@ export interface UnifiedQueryAnalysisResult {
         expansionStrategy: 'minimal' | 'moderate' | 'comprehensive';
         requiresHyde: boolean;
         contextWindowHint: 'focused' | 'balanced' | 'broad';
+        shouldRewrite: boolean;
     };
 }
 
 export class UnifiedQueryAnalysisService extends BaseLLMService {
+    constructor(provider: any) {
+        super(provider);
+    }
     async analyzeQuery(
         query: string,
         viewerId: string,
         dataroomId: string,
         signal?: AbortSignal,
+        metadataTracker?: any
     ): Promise<UnifiedQueryAnalysisResult> {
         return RAGError.withErrorHandling(
             async () => {
@@ -64,6 +69,15 @@ export class UnifiedQueryAnalysisService extends BaseLLMService {
                         signal
                     }
                 );
+
+                if (metadataTracker && response.usage) {
+                    metadataTracker.setTokenUsage({
+                        inputTokens: response.usage.promptTokens,
+                        outputTokens: response.usage.completionTokens,
+                        totalTokens: response.usage.totalTokens,
+                    });
+                }
+
                 const result = response.content as UnifiedQueryAnalysisResult;
                 return result;
             },

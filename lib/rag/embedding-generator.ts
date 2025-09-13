@@ -32,17 +32,12 @@ export class EmbeddingGenerator {
     private model: string;
     private batchSize: number;
     private concurrency: number;
-    private rateLimitPerMinute: number;
-    private lastRequestTime = 0;
-    private requestCount = 0;
-    private rateLimitWindowStart = Date.now();
     private cache: EmbeddingCache;
     private cacheExpiryMs: number;
 
     constructor(
         model: string = "text-embedding-3-small",
         batchSize: number = 120,
-        rateLimitPerMinute: number = 3000,
         {
             concurrency = 5,
             cacheExpiryMs = 12 * 60 * 60 * 1000, // 12h
@@ -54,7 +49,6 @@ export class EmbeddingGenerator {
         this.openai = openai;
         this.model = model;
         this.batchSize = batchSize;
-        this.rateLimitPerMinute = rateLimitPerMinute;
         this.concurrency = concurrency;
 
         this.cacheExpiryMs = cacheExpiryMs;
@@ -117,14 +111,12 @@ export class EmbeddingGenerator {
                 const settled = await Promise.allSettled(
                     batches.map((batchGroups) =>
                         limit(async () => {
-                            await this.enforceRateLimit();
                             const requestBatch: EmbeddingBatch[] = batchGroups.map((g) => ({
                                 chunkId: g.chunkIds[0],
                                 content: g.content,
                                 metadata: undefined as any,
                             }));
                             const batchResult = await this.processBatch(requestBatch);
-                            this.updateRateLimitTracking();
                             batchResult.results.forEach((r, idx) => {
                                 const g = batchGroups[idx];
                                 if (g) this.cacheEmbedding(g.content, r.embedding);
@@ -189,8 +181,6 @@ export class EmbeddingGenerator {
                 return 1536;
             case "text-embedding-3-large":
                 return 3072;
-            case "text-embedding-ada-002":
-                return 1536;
             default:
                 return 1536;
         }
@@ -203,7 +193,6 @@ export class EmbeddingGenerator {
             const content = chunk.content.trim();
             if (!content) continue;
 
-            // cheap signal checks
             if (content.length < 10) continue;
 
             const tokens = calculateTokenCount(content);
@@ -293,36 +282,6 @@ export class EmbeddingGenerator {
         return Math.round((chunkContent.length / totalChars) * totalTokens);
     }
 
-    private async enforceRateLimit(): Promise<void> {
-        const now = Date.now();
-
-        if (now - this.rateLimitWindowStart >= 60_000) {
-            this.rateLimitWindowStart = now;
-            this.requestCount = 0;
-        }
-
-        // if at cap, wait until the next window
-        if (this.requestCount >= this.rateLimitPerMinute) {
-            const waitMs = 60_000 - (now - this.rateLimitWindowStart);
-            if (waitMs > 0) {
-                await new Promise((r) => setTimeout(r, waitMs));
-                this.rateLimitWindowStart = Date.now();
-                this.requestCount = 0;
-            }
-        }
-
-        // minimum spacing between requests within the window
-        const minInterval = 60_000 / Math.max(1, this.rateLimitPerMinute);
-        const sinceLast = now - this.lastRequestTime;
-        if (sinceLast < minInterval) {
-            await new Promise((r) => setTimeout(r, minInterval - sinceLast));
-        }
-    }
-
-    private updateRateLimitTracking(): void {
-        this.lastRequestTime = Date.now();
-        this.requestCount++;
-    }
 
     public updateCacheTTL(newTTL: number): void {
         this.cacheExpiryMs = newTTL;

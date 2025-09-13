@@ -262,7 +262,7 @@ async function processRAGIndexingRequest(
     embeddingGenerator = new EmbeddingGenerator(
       "text-embedding-3-small",
       120,
-      3000,
+      { concurrency: 3000 },
     );
   }
 

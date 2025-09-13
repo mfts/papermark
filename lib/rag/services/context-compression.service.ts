@@ -7,7 +7,6 @@ import { calculateTokenCount } from '../utils/chunk-utils';
 
 interface CompressionPolicy {
     compression_strategy: 'RankedCompression' | 'HybridCompression' | 'RAPTORCompression';
-    reason: string;
 }
 
 interface RAPTORNode {
@@ -16,7 +15,6 @@ interface RAPTORNode {
     relevanceScore: number;
     compressionAction: 'preserve' | 'compress' | 'remove';
     children?: RAPTORNode[];
-    sourceChunkIds: string[];
 }
 
 interface RAPTORTree {
@@ -57,9 +55,9 @@ interface RAPTORCompressionResult {
 
 export class ContextCompressionService {
     private config: CompressionConfig;
-    private isDisposed = false;
+    private static instance: ContextCompressionService | null = null;
 
-    constructor() {
+    private constructor() {
         const ragConfig = configurationManager.getRAGConfig();
         this.config = {
             maxTokens: ragConfig.compression.maxTokens,
@@ -69,10 +67,17 @@ export class ContextCompressionService {
         };
     }
 
+    static getInstance(): ContextCompressionService {
+        if (!ContextCompressionService.instance) {
+            ContextCompressionService.instance = new ContextCompressionService();
+        }
+        return ContextCompressionService.instance;
+    }
+
     private selectCompressionStrategy(
         query: string,
         searchResults: SearchResult[],
-        tokenBudget: number = 10000,
+        tokenBudget: number = 6000,
         complexityAnalysis?: {
             complexityScore: number;
             wordCount: number;
@@ -98,74 +103,58 @@ export class ContextCompressionService {
             isResearchStyle = query.toLowerCase().includes('research') || query.toLowerCase().includes('study');
         }
 
-        // Check if retrieved context exceeds token budget
-        const exceedsTokenBudget = estimatedTokens > tokenBudget * 0.8; // 80% threshold
+        const exceedsTokenBudget = estimatedTokens > tokenBudget * 1.1;
 
         // Check retrieval confidence (based on similarity scores)
         const avgSimilarity = searchResults.reduce((sum, r) => sum + (r.similarity || 0), 0) / searchResults.length;
         const lowConfidence = avgSimilarity < 0.6;
 
-        // Enhanced Decision Logic with content analysis
-        if (exceedsTokenBudget) {
+        if (exceedsTokenBudget && estimatedTokens > tokenBudget * 2.0) {
             return {
-                compression_strategy: 'RAPTORCompression',
-                reason: `Retrieved context (${estimatedTokens} tokens) exceeds token budget (${tokenBudget}). Using RAPTOR for document-level summarization.`
+                compression_strategy: 'RAPTORCompression'
             };
         }
 
-        if ((isMultiHop || isResearchStyle || queryLength > 30) && documentCount > 1) {
+        if ((isMultiHop || isResearchStyle) && queryLength > 50 && documentCount > 5 && complexityScore > 0.8) {
             return {
-                compression_strategy: 'RAPTORCompression',
-                reason: `Complex multi-document query: ${queryLength} words, ${documentCount} documents, multi-hop: ${isMultiHop}, research-style: ${isResearchStyle}. Using RAPTOR for comprehensive document-level summarization.`
+                compression_strategy: 'RAPTORCompression'
+            };
+        }
+        if (totalContentLength > 10000 && documentCount > 2) {
+            return {
+                compression_strategy: 'RAPTORCompression'
             };
         }
 
-
-        if (totalContentLength > 50000 && documentCount > 1) { // 50KB threshold
+        if ((isMultiHop || isResearchStyle) && queryLength > 35 && documentCount > 2) {
             return {
-                compression_strategy: 'RAPTORCompression',
-                reason: `Large multi-document content (${totalContentLength} chars, ${documentCount} documents). Using RAPTOR for efficient document-level compression.`
-            };
-        }
-
-        if (isMultiHop || isResearchStyle || queryLength > 30) {
-            return {
-                compression_strategy: 'RAPTORCompression',
-                reason: `Complex query detected: ${queryLength} words, multi-hop: ${isMultiHop}, research-style: ${isResearchStyle}. Using RAPTOR for comprehensive summarization.`
+                compression_strategy: 'RAPTORCompression'
             };
         }
 
         // Prefer hybrid for multi-document moderate complexity
         if ((queryLength >= 15 || complexityScore > 0.6) && documentCount > 1) {
             return {
-                compression_strategy: 'HybridCompression',
-                reason: `Moderately complex multi-document query: ${queryLength} words, ${documentCount} documents, complexity score: ${complexityScore.toFixed(2)}. Using hybrid approach for balanced multi-document compression.`
+                compression_strategy: 'HybridCompression'
             };
         }
 
         if (queryLength >= 15 || complexityScore > 0.6) {
             return {
-                compression_strategy: 'HybridCompression',
-                reason: `Moderately complex query: ${queryLength} words, complexity score: ${complexityScore.toFixed(2)}. Using hybrid approach for balanced compression.`
+                compression_strategy: 'HybridCompression'
             };
         }
 
         if (lowConfidence) {
             return {
-                compression_strategy: 'HybridCompression',
-                reason: `Low retrieval confidence (${avgSimilarity.toFixed(2)}). Using hybrid approach to maximize coverage.`
+                compression_strategy: 'HybridCompression'
             };
         }
 
         return {
-            compression_strategy: 'RankedCompression',
-            reason: `Simple query: ${queryLength} words, complexity score: ${complexityScore.toFixed(2)}. Using fast ranked compression.`
+            compression_strategy: 'RankedCompression'
         };
     }
-
-
-
-
 
     async compressContext(
         searchResults: SearchResult[],
@@ -176,27 +165,30 @@ export class ContextCompressionService {
             wordCount: number;
         }
     ): Promise<CompressedContext> {
-        if (this.isDisposed) {
-            throw RAGError.create('serviceDisposed', undefined, { service: 'ContextCompressionService' });
-        }
+
 
         try {
             const policy = this.selectCompressionStrategy(query, searchResults, this.config.maxTokens, complexityAnalysis);
 
-            console.log('Compression Policy Decision:', policy);
 
+            let result: CompressedContext;
             switch (policy.compression_strategy) {
                 case 'RankedCompression':
-                    return await this.rankedCompression(searchResults, query, signal);
+                    result = await this.rankedCompression(searchResults, query, signal);
+                    break;
                 case 'RAPTORCompression':
-                    return await this.raptorCompression(searchResults, query, signal);
+                    result = await this.raptorCompression(searchResults, query, signal);
+                    break;
                 case 'HybridCompression':
-                    return await this.hybridCompression(searchResults, query, signal);
+                    result = await this.hybridCompression(searchResults, query, signal);
+                    break;
                 default:
-                    return await this.rankedCompression(searchResults, query, signal);
+                    result = await this.rankedCompression(searchResults, query, signal);
             }
+
+            return result;
         } catch (error) {
-            throw RAGError.create('responseGeneration', undefined, { query }, error instanceof Error ? error : new Error(String(error)));
+            return await this.rankedCompression(searchResults, query, signal);
         }
     }
 
@@ -228,7 +220,7 @@ export class ContextCompressionService {
             spans,
             tokenCount: this.estimateTokenCount(compressedContent),
             compressionRatio: compressedContent.length / allContent.length,
-            preservedSpans: this.config.preserveSpans
+            preservedSpans: this.config.preserveSpans,
         };
     }
 
@@ -240,29 +232,29 @@ export class ContextCompressionService {
         query: string,
         signal?: AbortSignal
     ): Promise<CompressedContext> {
+        const raptorTimeout = AbortSignal.timeout(45000);
+        const combinedSignal = signal ? this.combineAbortSignals([signal, raptorTimeout]) : raptorTimeout;
         try {
             // Phase 1: Group results by document
             const documentGroups = this.groupByDocument(searchResults);
 
             // Phase 2: Generate LLM-based document summaries
-            const documentSummaries = await this.generateLLMDocumentSummaries(documentGroups, query, signal);
+            const documentSummaries = await this.generateLLMDocumentSummaries(documentGroups, query, combinedSignal);
 
             // Phase 3: Create hierarchical tree structure with error handling
             let raptorTree: RAPTORTree;
             try {
-                raptorTree = await this.createRAPTORTree(documentSummaries, query, signal);
+                raptorTree = await this.createRAPTORTree(documentSummaries, query, combinedSignal);
             } catch (treeError) {
-                console.warn('RAPTOR tree creation failed, using simplified structure:', treeError);
-                raptorTree = this.createSimplifiedRAPTORTree(documentSummaries, query);
+                throw treeError;
             }
 
             // Phase 4: Perform multi-level compression with error handling
             let compressionResult: RAPTORCompressionResult;
             try {
-                compressionResult = await this.performMultiLevelCompression(raptorTree, query, signal);
+                compressionResult = await this.performMultiLevelCompression(raptorTree, query, combinedSignal);
             } catch (compressionError) {
-                console.warn('RAPTOR compression failed, using basic compression:', compressionError);
-                compressionResult = this.createBasicCompressionResult(documentSummaries, query);
+                throw compressionError;
             }
 
             // Phase 5: Generate final hierarchical summary with error handling
@@ -270,8 +262,7 @@ export class ContextCompressionService {
             try {
                 hierarchicalSummary = await this.generateHierarchicalSummary(documentSummaries, query, signal);
             } catch (summaryError) {
-                console.warn('Hierarchical summary failed, using basic summary:', summaryError);
-                hierarchicalSummary = this.createBasicHierarchicalSummary(documentSummaries, query);
+                throw summaryError;
             }
 
             // Phase 6: Combine results with enhanced spans
@@ -283,11 +274,10 @@ export class ContextCompressionService {
                 spans: enhancedSpans,
                 tokenCount: this.estimateTokenCount(finalContent),
                 compressionRatio: compressionResult.finalCompressionRatio,
-                preservedSpans: this.config.preserveSpans
+                preservedSpans: this.config.preserveSpans,
             };
         } catch (error) {
-            console.warn('RAPTOR compression failed, falling back to basic summarization:', error);
-            return await this.fallbackRAPTORCompression(searchResults, query, signal);
+            return await this.rankedCompression(searchResults, query, signal);
         }
     }
 
@@ -299,22 +289,40 @@ export class ContextCompressionService {
         query: string,
         signal?: AbortSignal
     ): Promise<CompressedContext> {
-        const [rankedResult, raptorResult] = await Promise.all([
-            this.rankedCompression(searchResults, query, signal),
-            this.raptorCompression(searchResults, query, signal)
-        ]);
+        try {
+            const [rankedResult, raptorResult] = await Promise.allSettled([
+                this.rankedCompression(searchResults, query, signal),
+                this.raptorCompression(searchResults, query, signal)
+            ]);
 
-        // Combine both approaches
-        const combinedContent = `${rankedResult.content}\n\n${raptorResult.content}`;
-        const combinedSpans = [...rankedResult.spans, ...raptorResult.spans];
+            // Handle results with fallbacks
+            const ranked = rankedResult.status === 'fulfilled' ? rankedResult.value : null;
+            const raptor = raptorResult.status === 'fulfilled' ? raptorResult.value : null;
 
-        return {
-            content: combinedContent,
-            spans: combinedSpans,
-            tokenCount: this.estimateTokenCount(combinedContent),
-            compressionRatio: (rankedResult.compressionRatio + raptorResult.compressionRatio) / 2,
-            preservedSpans: this.config.preserveSpans
-        };
+            if (!ranked && !raptor) {
+                return await this.rankedCompression(searchResults, query, signal);
+            }
+            const finalResult = ranked || raptor!;
+            const additionalResult = ranked && raptor ? raptor : null;
+
+            if (additionalResult) {
+                // Combine both approaches
+                const combinedContent = `${finalResult.content}\n\n${additionalResult.content}`;
+                const combinedSpans = [...finalResult.spans, ...additionalResult.spans];
+
+                return {
+                    content: combinedContent,
+                    spans: combinedSpans,
+                    tokenCount: this.estimateTokenCount(combinedContent),
+                    compressionRatio: (finalResult.compressionRatio + additionalResult.compressionRatio) / 2,
+                    preservedSpans: this.config.preserveSpans,
+                };
+            }
+
+            return finalResult;
+        } catch (error) {
+            return await this.rankedCompression(searchResults, query, signal);
+        }
     }
 
     /**
@@ -325,7 +333,7 @@ export class ContextCompressionService {
             .split(/[.!?]+/)
             .map(s => s.trim())
             .filter(s => s.length > 10)
-            .slice(0, 100); // Limit to prevent excessive processing
+            .slice(0, 100);
     }
 
     /**
@@ -393,7 +401,6 @@ export class ContextCompressionService {
                     start: currentOffset + startOffset,
                     end: currentOffset + startOffset + sentence.length,
                     text: sentence,
-                    sourceChunkId: sourceResult.chunkId,
                     confidence: 0.8
                 });
             }
@@ -446,7 +453,6 @@ export class ContextCompressionService {
             start: 0,
             end: result.content.length,
             text: result.content,
-            sourceChunkId: result.chunkId,
             confidence: 0.7
         }));
     }
@@ -466,9 +472,12 @@ export class ContextCompressionService {
         query: string,
         signal?: AbortSignal
     ): Promise<Array<{ documentId: string; summary: RAPTORDocumentSummary; spans: Span[] }>> {
+        const limitedGroups = documentGroups.slice(0, 3);
+
         return await Promise.all(
-            documentGroups.map(async (group) => {
+            limitedGroups.map(async (group) => {
                 try {
+
                     const content = group.map(r => r.content).join('\n\n');
                     const metadata = group[0].metadata || {};
 
@@ -481,13 +490,13 @@ export class ContextCompressionService {
                         }
                     );
 
+
                     return {
                         documentId: group[0].documentId,
                         summary,
                         spans: this.extractSpansFromGroup(group)
                     };
                 } catch (error) {
-                    console.warn(`RAPTOR summary generation failed for document ${group[0].documentId}, using fallback:`, error);
 
                     // Fallback to basic summarization
                     const fallbackSummary = await this.generateDocumentSummary(group, query, signal);
@@ -528,6 +537,11 @@ export class ContextCompressionService {
                 {
                     query,
                     content: allContent
+                },
+                {
+                    signal,
+                    maxTokens: 2000,
+                    temperature: 0.1
                 }
             );
 
@@ -536,22 +550,15 @@ export class ContextCompressionService {
                 throw new Error('RAPTOR tree missing required fields: compressionStrategy or estimatedCompressionRatio');
             }
 
-            // Enhance tree with source tracking
-            treeStructure.rootNode.sourceChunkIds = documentSummaries.map(d => d.documentId);
-            treeStructure.branches.forEach(branch => {
-                branch.sourceChunkIds = documentSummaries.map(d => d.documentId);
-            });
 
             return treeStructure;
         } catch (error) {
-            console.warn('⚠️ RAPTOR tree creation failed, using simplified structure:', error);
             return {
                 rootNode: {
                     title: 'Document Summary',
                     content: documentSummaries.map(d => d.summary.summary).join('\n\n'),
                     relevanceScore: 0.8,
                     compressionAction: 'preserve' as const,
-                    sourceChunkIds: documentSummaries.map(d => d.documentId)
                 },
                 branches: [],
                 compressionStrategy: 'fallback-simplified',
@@ -652,7 +659,6 @@ export class ContextCompressionService {
                 start: currentOffset,
                 end: currentOffset + summaryLength,
                 text: docSummary.summary.summary,
-                sourceChunkId: docSummary.documentId,
                 confidence: docSummary.summary.confidence
             });
 
@@ -676,118 +682,22 @@ export class ContextCompressionService {
         }
     }
 
+    private combineAbortSignals(signals: AbortSignal[]): AbortSignal {
+        const controller = new AbortController();
 
-    private createSimplifiedRAPTORTree(
-        documentSummaries: Array<{ documentId: string; summary: RAPTORDocumentSummary; spans: Span[] }>,
-        query: string
-    ): RAPTORTree {
-        const allContent = documentSummaries.map(d => d.summary.summary).join('\n\n');
+        signals.forEach(signal => {
+            if (signal.aborted) {
+                controller.abort();
+            } else {
+                signal.addEventListener('abort', () => controller.abort(), { once: true });
+            }
+        });
 
-        return {
-            rootNode: {
-                title: 'Document Content',
-                content: allContent,
-                relevanceScore: 0.8,
-                compressionAction: 'preserve',
-                sourceChunkIds: documentSummaries.map(d => d.documentId)
-            },
-            branches: documentSummaries.map(doc => ({
-                title: `Document ${doc.documentId}`,
-                content: doc.summary.summary,
-                relevanceScore: doc.summary.relevanceScore,
-                compressionAction: doc.summary.relevanceScore > 0.7 ? 'preserve' : 'compress',
-                sourceChunkIds: [doc.documentId]
-            })),
-            compressionStrategy: 'simplified',
-            estimatedCompressionRatio: 0.7
-        };
-    }
-
-    private createBasicCompressionResult(
-        documentSummaries: Array<{ documentId: string; summary: RAPTORDocumentSummary; spans: Span[] }>,
-        query: string
-    ): RAPTORCompressionResult {
-        const relevantSummaries = documentSummaries
-            .filter(doc => doc.summary.relevanceScore > 0.5)
-            .map(doc => doc.summary.summary);
-
-        const compressedContent = relevantSummaries.join('\n\n');
-
-        return {
-            compressedContent,
-            preservedNodes: documentSummaries
-                .filter(doc => doc.summary.relevanceScore > 0.7)
-                .map(doc => doc.documentId),
-            compressedNodes: documentSummaries
-                .filter(doc => doc.summary.relevanceScore > 0.5 && doc.summary.relevanceScore <= 0.7)
-                .map(doc => doc.documentId),
-            removedNodes: documentSummaries
-                .filter(doc => doc.summary.relevanceScore <= 0.5)
-                .map(doc => doc.documentId),
-            finalCompressionRatio: 0.7,
-            informationRetention: 0.8
-        };
+        return controller.signal;
     }
 
 
-    private createBasicHierarchicalSummary(
-        documentSummaries: Array<{ documentId: string; summary: RAPTORDocumentSummary; spans: Span[] }>,
-        query: string
-    ): RAPTORHierarchicalSummary {
-        const relevantDocs = documentSummaries.filter(doc => doc.summary.relevanceScore > 0.5);
-        const mainTopic = relevantDocs.length > 0 ? 'Document Information' : 'No Relevant Information';
-
-        return {
-            mainTopic,
-            categories: relevantDocs.map(doc => ({
-                title: `Document ${doc.documentId}`,
-                content: doc.summary.summary,
-                relevanceScore: doc.summary.relevanceScore,
-                sourceDocuments: [doc.documentId]
-            })),
-            overallSummary: relevantDocs.map(doc => doc.summary.summary).join('\n\n'),
-            keyInsights: relevantDocs.flatMap(doc => doc.summary.keyPoints),
-            confidence: 0.6
-        };
-    }
-
-
-    private async fallbackRAPTORCompression(
-        searchResults: SearchResult[],
-        query: string,
-        signal?: AbortSignal
-    ): Promise<CompressedContext> {
-        // Use the original basic implementation as fallback
-        const documentGroups = this.groupByDocument(searchResults);
-
-        const documentSummaries = await Promise.all(
-            documentGroups.map(async (group) => {
-                const summary = await this.generateDocumentSummary(group, query, signal);
-                return {
-                    documentId: group[0].documentId,
-                    summary,
-                    spans: this.extractSpansFromGroup(group)
-                };
-            })
-        );
-
-        const combinedSummary = documentSummaries.map(d => d.summary).join('\n\n');
-        const allSpans = documentSummaries.flatMap(d => d.spans);
-
-        return {
-            content: combinedSummary,
-            spans: allSpans,
-            tokenCount: this.estimateTokenCount(combinedSummary),
-            compressionRatio: combinedSummary.length / searchResults.map(r => r.content).join('').length,
-            preservedSpans: this.config.preserveSpans
-        };
-    }
-
-
-    dispose(): void {
-        this.isDisposed = true;
-    }
 }
 
-export const contextCompressionService = new ContextCompressionService();
+export const contextCompressionService = ContextCompressionService.getInstance();
 

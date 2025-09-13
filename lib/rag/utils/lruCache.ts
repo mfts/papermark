@@ -1,73 +1,27 @@
-export interface CacheEntry<V> {
-  value: V;
-  timestamp: number;
-  ttl?: number; // Time to live in milliseconds
-}
+import { LRUCache as NodeLRUCache } from 'lru-cache';
 
-export interface CacheConfig {
-  maxSize: number;
-  defaultTTL?: number;
-}
+export class EmbeddingCache {
+  private cache: NodeLRUCache<string, { embedding: number[]; timestamp: number }>;
 
-export interface CacheStats {
-  size: number;
-  maxSize: number;
-  hitRate?: number;
-}
-
-export class LRUCache<K, V> {
-  protected cache: Map<K, CacheEntry<V>>;
-  protected readonly defaultTTL?: number;
-
-  constructor(
-    protected maxSize: number,
-    defaultTTL?: number // Default TTL in milliseconds
-  ) {
-    this.cache = new Map<K, CacheEntry<V>>();
-    this.defaultTTL = defaultTTL;
+  constructor(maxSize: number = 5000, ttl: number = 12 * 60 * 60 * 1000) {
+    this.cache = new NodeLRUCache<string, { embedding: number[]; timestamp: number }>({
+      max: maxSize,
+      ttl: ttl,
+      updateAgeOnGet: true,
+      updateAgeOnHas: true,
+    });
   }
 
-  async get(key: K): Promise<V | undefined> {
-    const entry = this.cache.get(key);
-    if (entry) {
-      if (this.isExpired(entry)) {
-        this.cache.delete(key);
-        return undefined;
-      }
-      // Move key to the end (recently used)
-      this.cache.delete(key);
-      this.cache.set(key, entry);
-      return entry.value;
-    }
-    return undefined;
+  async get(key: string): Promise<{ embedding: number[]; timestamp: number } | undefined> {
+    return this.cache.get(key);
   }
 
-  async set(key: K, value: V, ttl?: number): Promise<void> {
-    const entry: CacheEntry<V> = {
-      value,
-      timestamp: Date.now(),
-      ttl: ttl || this.defaultTTL
-    };
-
-    // In-memory storage with LRU eviction
-    if (this.cache.has(key)) {
-      this.cache.delete(key);
-    } else if (this.cache.size >= this.maxSize) {
-      const oldestKey = this.cache.keys().next().value as K | undefined;
-      if (oldestKey !== undefined) {
-        this.cache.delete(oldestKey);
-      }
-    }
-    this.cache.set(key, entry);
+  async set(key: string, value: { embedding: number[]; timestamp: number }): Promise<void> {
+    this.cache.set(key, value);
   }
 
-  has(key: K): boolean {
-    const entry = this.cache.get(key);
-    if (entry && this.isExpired(entry)) {
-      this.cache.delete(key);
-      return false;
-    }
-    return entry !== undefined;
+  has(key: string): boolean {
+    return this.cache.has(key);
   }
 
   async clear(): Promise<void> {
@@ -75,116 +29,197 @@ export class LRUCache<K, V> {
   }
 
   size(): number {
-    this.cleanupExpired();
     return this.cache.size;
   }
 
-  delete(key: K): boolean {
+  delete(key: string): boolean {
     return this.cache.delete(key);
   }
 
-  // Get all keys (useful for debugging and monitoring)
-  keys(): IterableIterator<K> {
-    this.cleanupExpired();
+  keys(): IterableIterator<string> {
     return this.cache.keys();
   }
 
-  // Get cache statistics
   getStats(): { size: number; maxSize: number; hitRate?: number } {
-    this.cleanupExpired();
     return {
       size: this.cache.size,
-      maxSize: this.maxSize
+      maxSize: 5000
     };
   }
 
-  private cleanupExpired(): void {
-    if (this.cache.size === 0) return;
-
-    const entries = Array.from(this.cache.entries());
-    let expiredCount = 0;
-
-    for (const [key, entry] of entries) {
-      if (this.isExpired(entry)) {
-        this.cache.delete(key);
-        expiredCount++;
-      }
-    }
-    if (expiredCount > 0 && process.env.NODE_ENV === 'development') {
-      console.log(`Cleaned up ${expiredCount} expired cache entries`);
-    }
-  }
-
-  // Check if entry has expired
-  protected isExpired(entry: CacheEntry<V>): boolean {
-    if (!entry.ttl) return false;
-    return Date.now() - entry.timestamp > entry.ttl;
-  }
-
-  // Dispose method for cleanup
   dispose(): void {
     this.cache.clear();
   }
 }
 
-export class VectorSearchCache extends LRUCache<string, any[]> {
+export class TokenCountCache {
+  private cache: NodeLRUCache<string, number>;
+
   constructor() {
-    super(1000, 5 * 60 * 1000);
+    this.cache = new NodeLRUCache<string, number>({
+      max: 1000,
+      ttl: 60 * 60 * 1000, // 1 hour
+      updateAgeOnGet: true,
+      updateAgeOnHas: true,
+    });
   }
-}
 
-
-export class GradingResultCache extends LRUCache<string, unknown[]> {
-  constructor() {
-    super(300, 3 * 60 * 1000); // 300 entries, 3 minutes TTL
+  async get(key: string): Promise<number | undefined> {
+    return this.cache.get(key);
   }
-}
 
-export class EmbeddingCache extends LRUCache<string, { embedding: number[]; timestamp: number }> {
-  constructor(maxSize: number = 5000, ttl: number = 12 * 60 * 60 * 1000) {
-    super(maxSize, ttl);
+  async set(key: string, value: number): Promise<void> {
+    this.cache.set(key, value);
   }
-}
 
-export class TokenCountCache extends LRUCache<string, number> {
-  constructor() {
-    super(1000, 60 * 60 * 1000); // 1000 entries, 1 hour TTL
+  has(key: string): boolean {
+    return this.cache.has(key);
+  }
+
+  async clear(): Promise<void> {
+    this.cache.clear();
+  }
+
+  size(): number {
+    return this.cache.size;
+  }
+
+  delete(key: string): boolean {
+    return this.cache.delete(key);
+  }
+
+  keys(): IterableIterator<string> {
+    return this.cache.keys();
+  }
+
+  getStats(): { size: number; maxSize: number; hitRate?: number } {
+    return {
+      size: this.cache.size,
+      maxSize: 1000
+    };
   }
 
   // Synchronous methods for performance-critical operations
   getSync(key: string): number | undefined {
-    const entry = this.cache.get(key);
-    if (entry && !this.isExpired(entry)) {
-      // Move key to the end (recently used)
-      this.cache.delete(key);
-      this.cache.set(key, entry);
-      return entry.value;
-    }
-    return undefined;
+    return this.cache.get(key);
   }
 
   setSync(key: string, value: number): void {
-    const entry: CacheEntry<number> = {
-      value,
-      timestamp: Date.now(),
-      ttl: this.defaultTTL
-    };
+    this.cache.set(key, value);
+  }
 
-    if (this.cache.has(key)) {
-      this.cache.delete(key);
-    } else if (this.cache.size >= this.maxSize) {
-      const oldestKey = this.cache.keys().next().value as string | undefined;
-      if (oldestKey !== undefined) {
-        this.cache.delete(oldestKey);
-      }
-    }
-    this.cache.set(key, entry);
+  dispose(): void {
+    this.cache.clear();
   }
 }
 
-export class PromptTemplateCache extends LRUCache<string, unknown> {
+export class PromptTemplateCache {
+  private cache: NodeLRUCache<string, any>;
+
   constructor() {
-    super(50, 24 * 60 * 60 * 1000); // 50 entries, 24 hours TTL
+    this.cache = new NodeLRUCache<string, any>({
+      max: 50,
+      ttl: 24 * 60 * 60 * 1000, // 24 hours
+      updateAgeOnGet: true,
+      updateAgeOnHas: true,
+    });
+  }
+
+  async get(key: string): Promise<any | undefined> {
+    return this.cache.get(key);
+  }
+
+  async set(key: string, value: any): Promise<void> {
+    this.cache.set(key, value);
+  }
+
+  has(key: string): boolean {
+    return this.cache.has(key);
+  }
+
+  async clear(): Promise<void> {
+    this.cache.clear();
+  }
+
+  size(): number {
+    return this.cache.size;
+  }
+
+  delete(key: string): boolean {
+    return this.cache.delete(key);
+  }
+
+  keys(): IterableIterator<string> {
+    return this.cache.keys();
+  }
+
+  getStats(): { size: number; maxSize: number; hitRate?: number } {
+    return {
+      size: this.cache.size,
+      maxSize: 50
+    };
+  }
+
+  dispose(): void {
+    this.cache.clear();
   }
 }
+
+export class DocumentAccessCache {
+  private cache: NodeLRUCache<string, any[]>;
+
+  constructor() {
+    this.cache = new NodeLRUCache<string, any[]>({
+      max: 1000,
+      ttl: 5 * 60 * 1000, // 5 minutes
+      updateAgeOnGet: true,
+      updateAgeOnHas: true,
+    });
+  }
+
+  async get(key: string): Promise<any[] | undefined> {
+    return this.cache.get(key);
+  }
+
+  async set(key: string, value: any[]): Promise<void> {
+    this.cache.set(key, value);
+  }
+
+  has(key: string): boolean {
+    return this.cache.has(key);
+  }
+
+  async clear(): Promise<void> {
+    this.cache.clear();
+  }
+
+  size(): number {
+    return this.cache.size;
+  }
+
+  delete(key: string): boolean {
+    return this.cache.delete(key);
+  }
+
+  keys(): IterableIterator<string> {
+    return this.cache.keys();
+  }
+
+  getStats(): { size: number; maxSize: number; hitRate?: number } {
+    return {
+      size: this.cache.size,
+      maxSize: 1000
+    };
+  }
+
+  generateKey(dataroomId: string, viewerId: string): string {
+    return `${dataroomId}:${viewerId}`;
+  }
+
+
+  dispose(): void {
+    this.cache.clear();
+  }
+}
+
 
