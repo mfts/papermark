@@ -3,10 +3,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { LinkType } from "@prisma/client";
 
 import { getFile } from "@/lib/files/get-file";
+import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { getFileNameWithPdfExtension } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
-import { notifyDocumentDownload } from "@/lib/slack/events";
 
 export default async function handle(
   req: NextApiRequest,
@@ -150,10 +150,14 @@ export default async function handle(
               originalFileName: view.document!.name,
               viewerData: {
                 email: view.viewerEmail,
-                date: new Date(view.viewedAt ? view.viewedAt : new Date()).toLocaleDateString(),
+                date: new Date(
+                  view.viewedAt ? view.viewedAt : new Date(),
+                ).toLocaleDateString(),
                 ipAddress: getIpAddress(req.headers),
                 link: view.link.name,
-                time: new Date(view.viewedAt ? view.viewedAt : new Date()).toLocaleTimeString(),
+                time: new Date(
+                  view.viewedAt ? view.viewedAt : new Date(),
+                ).toLocaleTimeString(),
               },
             }),
           },

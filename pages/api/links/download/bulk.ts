@@ -5,9 +5,9 @@ import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
 import { ItemType, ViewType } from "@prisma/client";
 
 import { getLambdaClientForTeam } from "@/lib/files/aws-client";
+import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { getIpAddress } from "@/lib/utils/ip";
-import { notifyDocumentDownload } from "@/lib/slack/events";
 
 export const config = {
   maxDuration: 300,
@@ -112,7 +112,9 @@ export default async function handle(
 
       // if dataroom does not allow bulk download, we should not allow the download
       if (!view.dataroom.allowBulkDownload) {
-        return res.status(403).json({ error: "Bulk download is disabled for this dataroom" });
+        return res
+          .status(403)
+          .json({ error: "Bulk download is disabled for this dataroom" });
       }
 
       // if viewedAt is longer than 23 hours ago, we should not allow the download
@@ -279,7 +281,7 @@ export default async function handle(
             // Use .file if watermark is enabled and document is PDF, otherwise use .originalFile
             const fileKey =
               view.link.enableWatermark &&
-                doc.document.versions[0].type === "pdf"
+              doc.document.versions[0].type === "pdf"
                 ? doc.document.versions[0].file
                 : (doc.document.versions[0].originalFile ??
                   doc.document.versions[0].file);
@@ -338,16 +340,22 @@ export default async function handle(
           folderStructure: folderStructure,
           watermarkConfig: view.link.enableWatermark
             ? {
-              enabled: true,
-              config: view.link.watermarkConfig,
-              viewerData: {
-                email: view.viewerEmail,
-                date: (view.viewedAt ? new Date(view.viewedAt) : new Date()).toLocaleDateString(),
-                time: (view.viewedAt ? new Date(view.viewedAt) : new Date()).toLocaleTimeString(),
-                link: view.link.name,
-                ipAddress: getIpAddress(req.headers),
-              },
-            }
+                enabled: true,
+                config: view.link.watermarkConfig,
+                viewerData: {
+                  email: view.viewerEmail,
+                  date: (view.viewedAt
+                    ? new Date(view.viewedAt)
+                    : new Date()
+                  ).toLocaleDateString(),
+                  time: (view.viewedAt
+                    ? new Date(view.viewedAt)
+                    : new Date()
+                  ).toLocaleTimeString(),
+                  link: view.link.name,
+                  ipAddress: getIpAddress(req.headers),
+                },
+              }
             : { enabled: false },
         }),
       };

@@ -6,20 +6,17 @@ import { useTeam } from "@/context/team-context";
 import { CircleHelpIcon, Hash, Settings, XCircleIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { useSlackChannels } from "@/lib/swr/use-slack-channels";
-import { useSlackIntegration } from "@/lib/swr/use-slack-integration";
 import {
   SlackChannelConfig,
   SlackIntegration,
-  SlackIntegrationResponse,
-  UpdateSlackIntegrationRequest,
-} from "@/lib/types/slack";
+} from "@/lib/integrations/slack/types";
+import { useSlackChannels } from "@/lib/swr/use-slack-channels";
+import { useSlackIntegration } from "@/lib/swr/use-slack-integration";
 
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import SlackSettingsSkeleton from "@/components/settings/slack-settings-skeleton";
 import { SlackIcon } from "@/components/shared/icons/slack-icon";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CommonAlertDialog } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,7 +48,6 @@ export default function SlackSettings() {
     loading: loadingIntegration,
     mutate: mutateIntegration,
   } = useSlackIntegration({
-    teamId,
     enabled: !!teamId,
   });
 
@@ -61,7 +57,6 @@ export default function SlackSettings() {
     error: channelsError,
     mutate: mutateChannels,
   } = useSlackChannels({
-    teamId,
     enabled: !!integration,
   });
 
@@ -91,35 +86,35 @@ export default function SlackSettings() {
     [filteredChannels, ChannelIcon],
   );
 
-  const handleIntegrationUpdate = (updatedIntegration: SlackIntegration) => {
-    mutateIntegration(updatedIntegration, false);
-  };
+  // const handleIntegrationUpdate = (updatedIntegration: SlackIntegration) => {
+  //   mutateIntegration(updatedIntegration, false);
+  // };
 
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout | null = null;
+  // useEffect(() => {
+  //   let timeoutId: NodeJS.Timeout | null = null;
 
-    if (router.query.success) {
-      toast.success("Slack integration connected successfully!");
-      mutateIntegration();
+  //   if (router.query.success) {
+  //     toast.success("Slack integration connected successfully!");
+  //     mutateIntegration();
 
-      if (router.query.warning) {
-        toast.warning(`Warning: ${router.query.warning}`);
-      }
+  //     if (router.query.warning) {
+  //       toast.warning(`Warning: ${router.query.warning}`);
+  //     }
 
-      timeoutId = setTimeout(() => {
-        router.replace("/settings/slack", undefined, { shallow: true });
-      }, 100);
-    } else if (router.query.error) {
-      toast.error(`Failed to connect Slack: ${router.query.error}`);
-      timeoutId = setTimeout(() => {
-        router.replace("/settings/slack", undefined, { shallow: true });
-      }, 100);
-    }
+  //     timeoutId = setTimeout(() => {
+  //       router.replace("/settings/slack", undefined, { shallow: true });
+  //     }, 100);
+  //   } else if (router.query.error) {
+  //     toast.error(`Failed to connect Slack: ${router.query.error}`);
+  //     timeoutId = setTimeout(() => {
+  //       router.replace("/settings/slack", undefined, { shallow: true });
+  //     }, 100);
+  //   }
 
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [router.query, mutateIntegration]);
+  //   return () => {
+  //     if (timeoutId) clearTimeout(timeoutId);
+  //   };
+  // }, [router.query, mutateIntegration]);
 
   const handleConnect = async () => {
     if (!teamId) return;
@@ -127,7 +122,7 @@ export default function SlackSettings() {
     setConnecting(true);
     try {
       const response = await fetch(
-        `/api/teams/${teamId}/slack/oauth/authorize`,
+        `/api/integrations/slack/oauth/authorize?teamId=${teamId}`,
       );
       const data = await response.json();
 
@@ -147,7 +142,7 @@ export default function SlackSettings() {
 
   const handleDisconnect = async () => {
     const disconnectPromise = async () => {
-      const response = await fetch(`/api/teams/${teamId}/slack`, {
+      const response = await fetch(`/api/teams/${teamId}/integrations/slack`, {
         method: "DELETE",
       });
 
@@ -203,7 +198,9 @@ export default function SlackSettings() {
         mutateIntegration(
           {
             ...integration,
-            enabledChannels: updatedChannels,
+            configuration: {
+              enabledChannels: updatedChannels,
+            },
           },
           false,
         );
@@ -214,13 +211,15 @@ export default function SlackSettings() {
           };
 
           const startTime = performance.now();
-          const response = await fetch(`/api/teams/${teamId}/slack/channels`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestBody),
-          });
+          const response = await fetch(
+            `/api/teams/${teamId}/integrations/slack/channels`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(requestBody),
+            },
+          );
           const endTime = performance.now();
-
 
           if (!response.ok) {
             const errorData = await response.json();
@@ -236,7 +235,9 @@ export default function SlackSettings() {
             mutateIntegration(
               {
                 ...integration,
-                enabledChannels: result.enabledChannels,
+                configuration: {
+                  enabledChannels: result.enabledChannels,
+                },
                 updatedAt: result.updatedAt,
               },
               false,
@@ -295,17 +296,16 @@ export default function SlackSettings() {
           false,
         );
 
-        const requestBody: UpdateSlackIntegrationRequest = {
-          enabled: checked,
-        };
-
-        const response = await fetch(`/api/teams/${teamId}/slack`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
+        const response = await fetch(
+          `/api/teams/${teamId}/integrations/slack`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ enabled: checked }),
           },
-          body: JSON.stringify(requestBody),
-        });
+        );
 
         if (!response.ok) {
           // Rollback on error
@@ -319,8 +319,7 @@ export default function SlackSettings() {
           throw new Error("Failed to update notification settings");
         }
 
-        const updatedIntegration: SlackIntegrationResponse =
-          await response.json();
+        const updatedIntegration: SlackIntegration = await response.json();
         mutateIntegration(updatedIntegration, false);
 
         return checked
@@ -418,7 +417,7 @@ export default function SlackSettings() {
                         General Settings
                       </CardTitle>
                       <CardDescription>
-                        Connected to {integration.workspaceName}
+                        Connected to {integration.credentials.team.name}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -498,7 +497,7 @@ export default function SlackSettings() {
                               loading={false}
                               options={channelOptions}
                               value={Object.keys(
-                                integration.enabledChannels || {},
+                                integration.configuration.enabledChannels || {},
                               )}
                               setIsPopoverOpen={setIsChannelPopoverOpen}
                               isPopoverOpen={isChannelPopoverOpen}

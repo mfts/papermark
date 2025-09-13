@@ -149,58 +149,58 @@ model ConversationView {
 
 // Published FAQ items for datarooms
 model DataroomFaqItem {
-  id                     String                @id @default(cuid())
-  title                  String?               // Optional title for the FAQ
-  editedQuestion         String                // Admin-edited version of the question
-  originalQuestion       String?               // Original question from visitor (for reference)
-  answer                 String                // The answer content
-  description            String?               // Optional context or description
-  
+  id               String  @id @default(cuid())
+  title            String? // Optional title for the FAQ
+  editedQuestion   String // Admin-edited version of the question
+  originalQuestion String? // Original question from visitor (for reference)
+  answer           String // The answer content
+  description      String? // Optional context or description
+
   // Relationships
-  dataroomId             String
-  dataroom               Dataroom              @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
-  
-  linkId                 String?               // Optional: specific link visibility
-  link                   Link?                 @relation(fields: [linkId], references: [id], onDelete: SetNull)
-  
-  dataroomDocumentId     String?               // Optional: document-specific FAQ
-  dataroomDocument       DataroomDocument?     @relation(fields: [dataroomDocumentId], references: [id], onDelete: SetNull)
-  
+  dataroomId String
+  dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+
+  linkId String? // Optional: specific link visibility
+  link   Link?   @relation(fields: [linkId], references: [id], onDelete: SetNull)
+
+  dataroomDocumentId String? // Optional: document-specific FAQ
+  dataroomDocument   DataroomDocument? @relation(fields: [dataroomDocumentId], references: [id], onDelete: SetNull)
+
   // Source conversation and messages (for reference and editing)
-  sourceConversationId   String?               // Original conversation
-  sourceConversation     Conversation?         @relation(fields: [sourceConversationId], references: [id], onDelete: SetNull)
-  
-  questionMessageId      String?               // Reference to original question message
-  questionMessage        Message?              @relation(name: "FAQQuestionMessage", fields: [questionMessageId], references: [id], onDelete: SetNull)
-  
-  answerMessageId        String?               // Reference to answer message
-  answerMessage          Message?              @relation(name: "FAQAnswerMessage", fields: [answerMessageId], references: [id], onDelete: SetNull)
-  
+  sourceConversationId String? // Original conversation
+  sourceConversation   Conversation? @relation(fields: [sourceConversationId], references: [id], onDelete: SetNull)
+
+  questionMessageId String? // Reference to original question message
+  questionMessage   Message? @relation(name: "FAQQuestionMessage", fields: [questionMessageId], references: [id], onDelete: SetNull)
+
+  answerMessageId String? // Reference to answer message
+  answerMessage   Message? @relation(name: "FAQAnswerMessage", fields: [answerMessageId], references: [id], onDelete: SetNull)
+
   // Publishing details
-  teamId                 String
-  team                   Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  
-  publishedByUserId      String
-  publishedByUser        User                  @relation(fields: [publishedByUserId], references: [id], onDelete: Cascade)
-  
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  publishedByUserId String
+  publishedByUser   User   @relation(fields: [publishedByUserId], references: [id], onDelete: Cascade)
+
   // Visibility and status
-  visibilityMode         FaqVisibility         @default(PUBLIC_DATAROOM)
-  status                 FaqStatus             @default(PUBLISHED)
-  isAnonymized           Boolean               @default(true)
-  
+  visibilityMode FaqVisibility @default(PUBLIC_DATAROOM)
+  status         FaqStatus     @default(PUBLISHED)
+  isAnonymized   Boolean       @default(true)
+
   // Analytics
-  viewCount              Int                   @default(0)
-  
+  viewCount Int @default(0)
+
   // Optional categorization
-  tags                   String[]              @default([])
-  
+  tags String[] @default([])
+
   // Metadata
-  documentPageNumber     Int?                  // Optional: specific page reference
-  documentVersionNumber  Int?                  // Optional: specific version reference
-  
-  createdAt              DateTime              @default(now())
-  updatedAt              DateTime              @updatedAt
-  
+  documentPageNumber    Int? // Optional: specific page reference
+  documentVersionNumber Int? // Optional: specific version reference
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([dataroomId])
   @@index([linkId])
   @@index([dataroomDocumentId])
@@ -214,14 +214,14 @@ model DataroomFaqItem {
 
 // Define FAQ visibility options
 enum FaqVisibility {
-  PUBLIC_DATAROOM     // Visible to all dataroom visitors
-  PUBLIC_LINK         // Visible only to specific link visitors
-  PUBLIC_DOCUMENT     // Visible only when viewing specific document
+  PUBLIC_DATAROOM // Visible to all dataroom visitors
+  PUBLIC_LINK // Visible only to specific link visitors
+  PUBLIC_DOCUMENT // Visible only when viewing specific document
 }
 
 // Define FAQ status
 enum FaqStatus {
-  DRAFT        // Not yet published
-  PUBLISHED    // Live and visible to visitors
-  ARCHIVED     // No longer visible but kept for reference
+  DRAFT // Not yet published
+  PUBLISHED // Live and visible to visitors
+  ARCHIVED // No longer visible but kept for reference
 }

@@ -6,9 +6,9 @@ import { ItemType, ViewType } from "@prisma/client";
 import slugify from "@sindresorhus/slugify";
 
 import { getLambdaClientForTeam } from "@/lib/files/aws-client";
+import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { getIpAddress } from "@/lib/utils/ip";
-import { notifyDocumentDownload } from "@/lib/slack/events";
 
 export const config = {
   maxDuration: 300,
@@ -335,8 +335,12 @@ export default async function handler(
               config: view.link.watermarkConfig,
               viewerData: {
                 email: view.viewerEmail,
-                date: new Date(view.viewedAt ? view.viewedAt : new Date()).toLocaleDateString(),
-                time: new Date(view.viewedAt ? view.viewedAt : new Date()).toLocaleTimeString(),
+                date: new Date(
+                  view.viewedAt ? view.viewedAt : new Date(),
+                ).toLocaleDateString(),
+                time: new Date(
+                  view.viewedAt ? view.viewedAt : new Date(),
+                ).toLocaleTimeString(),
                 link: view.link.name,
                 ipAddress: getIpAddress(req.headers),
               },

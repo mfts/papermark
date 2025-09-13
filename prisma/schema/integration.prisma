@@ -1,0 +1,40 @@
+model Integration {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  readme      String?
+  developer   String
+  website     String
+  logo        String?
+  screenshots Json?
+  verified    Boolean  @default(false)
+  installUrl  String?
+  category    String?
+  comingSoon  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  installedIntegrations InstalledIntegration[]
+}
+
+model InstalledIntegration {
+  id            String  @id @default(cuid())
+  credentials   Json?
+  configuration Json?
+  enabled       Boolean @default(true)
+
+  integrationId String
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  userId        String? // user who installed the integration
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  teamId        String // team where the integration was installed
+  team          Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, integrationId])
+  @@index([teamId])
+  @@index([integrationId])
+}

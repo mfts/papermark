@@ -62,11 +62,12 @@ model User {
   // conversation
   participatedConversations ConversationParticipant[]
   messages                  Message[]
-  
+
   // FAQ system
   publishedFaqItems DataroomFaqItem[]
-}
 
+  installedIntegrations InstalledIntegration[]
+}
 
 model Brand {
   id          String  @id @default(cuid())
@@ -272,9 +273,9 @@ model FeedbackResponse {
 }
 
 model Agreement {
-  id      String @id @default(cuid())
-  name    String // Easily identifiable name for the agreement
-  content String // This will store the agreement content (URL or text)
+  id          String @id @default(cuid())
+  name        String // Easily identifiable name for the agreement
+  content     String // This will store the agreement content (URL or text)
   contentType String @default("LINK") // "LINK" or "TEXT" - determines how content should be displayed
 
   links     Link[]
@@ -432,26 +433,4 @@ model TagItem {
   @@index([tagId, linkId])
   @@index([tagId, documentId])
   @@index([tagId, dataroomId])
-}
-
-model SlackIntegration {
-  id                String  @id @default(cuid())
-  teamId            String
-  team              Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  workspaceId       String // Slack workspace ID
-  workspaceName     String // Slack workspace name
-  workspaceUrl      String // Slack workspace URL
-  accessToken       String // Bot token for sending messages
-  botUserId         String // Bot user ID
-  botUsername       String // Bot username
-  defaultChannel    String? // Default channel for notifications
-  enabledChannels   Json // { "channel_id": { "name": "channel-name", "enabled": true } }
-  enabled           Boolean @default(true)
-  notificationTypes Json // { "document_view": true, "dataroom_access": true, "document_download": true }
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([teamId])
-  @@index([teamId])
 }

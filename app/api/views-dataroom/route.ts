@@ -17,6 +17,10 @@ import { PreviewSession, verifyPreviewSession } from "@/lib/auth/preview-auth";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
+import {
+  notifyDataroomAccess,
+  notifyDocumentView,
+} from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { parseSheet } from "@/lib/sheet";
@@ -28,7 +32,6 @@ import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { validateEmail } from "@/lib/utils/validate-email";
-import { notifyDataroomAccess, notifyDocumentView } from "@/lib/slack/events";
 
 export async function POST(request: NextRequest) {
   try {
@@ -604,28 +607,28 @@ export async function POST(request: NextRequest) {
       ...(link.enableAgreement &&
         link.agreementId &&
         hasConfirmedAgreement && {
-        agreementResponse: {
-          create: {
-            agreementId: link.agreementId,
+          agreementResponse: {
+            create: {
+              agreementId: link.agreementId,
+            },
           },
-        },
-      }),
+        }),
       ...(link.audienceType === LinkAudienceType.GROUP &&
         link.groupId && {
-        groupId: link.groupId,
-      }),
+          groupId: link.groupId,
+        }),
       ...(customFields &&
         link.customFields.length > 0 && {
-        customFieldResponse: {
-          create: {
-            data: link.customFields.map((field) => ({
-              identifier: field.identifier,
-              label: field.label,
-              response: customFields[field.identifier] || "",
-            })),
+          customFieldResponse: {
+            create: {
+              data: link.customFields.map((field) => ({
+                identifier: field.identifier,
+                label: field.label,
+                response: customFields[field.identifier] || "",
+              })),
+            },
           },
-        },
-      }),
+        }),
     };
 
     // ** DATAROOM_VIEW **
@@ -673,7 +676,7 @@ export async function POST(request: NextRequest) {
                 } catch (error) {
                   console.error("Error sending Slack notification:", error);
                 }
-              })()
+              })(),
             );
           }
         }
@@ -803,7 +806,7 @@ export async function POST(request: NextRequest) {
               } catch (error) {
                 console.error("Error sending Slack notification:", error);
               }
-            })()
+            })(),
           );
         }
       }

@@ -3,10 +3,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { ItemType, ViewType } from "@prisma/client";
 
 import { getFile } from "@/lib/files/get-file";
+import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { getFileNameWithPdfExtension } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
-import { notifyDocumentDownload } from "@/lib/slack/events";
 
 export const config = {
   maxDuration: 180,
@@ -217,10 +217,16 @@ export default async function handle(
               originalFileName: downloadDocuments[0].document!.name,
               viewerData: {
                 email: view.viewerEmail,
-                date: (view.viewedAt ? new Date(view.viewedAt) : new Date()).toLocaleDateString(),
+                date: (view.viewedAt
+                  ? new Date(view.viewedAt)
+                  : new Date()
+                ).toLocaleDateString(),
                 ipAddress: getIpAddress(req.headers),
                 link: view.link.name,
-                time: (view.viewedAt ? new Date(view.viewedAt) : new Date()).toLocaleTimeString(),
+                time: (view.viewedAt
+                  ? new Date(view.viewedAt)
+                  : new Date()
+                ).toLocaleTimeString(),
               },
             }),
           },
