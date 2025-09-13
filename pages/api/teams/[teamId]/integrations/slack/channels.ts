@@ -2,8 +2,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
+import { z } from "zod";
 
-import { slackClient } from "@/lib/integrations/slack/client";
+import { getSlackClient } from "@/lib/integrations/slack/client";
 import { getSlackEnv } from "@/lib/integrations/slack/env";
 import { SlackCredential } from "@/lib/integrations/slack/types";
 import prisma from "@/lib/prisma";
@@ -55,6 +56,7 @@ export default async function handler(
       }
 
       try {
+        const slackClient = getSlackClient();
         const channels = await slackClient.getChannels(
           (integration.credentials as SlackCredential).accessToken,
         );
@@ -90,7 +92,10 @@ export default async function handler(
               "Invalid Slack access token. Please reconnect your Slack integration.",
           });
         }
-        return res.status(200).json({ channels: [] });
+        console.error("Unexpected Slack error:", slackError);
+        return res
+          .status(502)
+          .json({ error: "Failed to fetch Slack channels" });
       }
     } catch (error) {
       console.error("Error fetching Slack channels:", error);
@@ -100,11 +105,24 @@ export default async function handler(
 
   if (req.method === "PUT") {
     try {
-      const { enabledChannels } = req.body;
-
-      if (!enabledChannels) {
-        return res.status(400).json({ error: "enabledChannels is required" });
+      const updateChannelsSchema = z.object({
+        enabledChannels: z.record(
+          z.string(),
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            enabled: z.boolean(),
+            notificationTypes: z.array(z.string()),
+          }),
+        ),
+      });
+      const parsed = updateChannelsSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res
+          .status(400)
+          .json({ error: "Invalid enabledChannels format" });
       }
+      const { enabledChannels } = parsed.data;
 
       await prisma.installedIntegration.update({
         where: {

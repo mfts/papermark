@@ -80,7 +80,7 @@ export const installIntegration = async ({
           test: process.env.NODE_ENV === "development",
           subject: `The "${integration.name}" integration has been added to your team`,
           react: IntegrationInstalled({
-            email: email!,
+            email: email,
             team: {
               name: team.name,
             },

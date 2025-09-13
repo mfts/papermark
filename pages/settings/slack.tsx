@@ -38,7 +38,7 @@ export default function SlackSettings() {
   const router = useRouter();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const { isFeatureEnabled } = useFeatureFlags();
+  const { features, isLoading } = useFeatureFlags();
   const [connecting, setConnecting] = useState(false);
   const [isChannelPopoverOpen, setIsChannelPopoverOpen] = useState(false);
   const [pendingChannelUpdate, setPendingChannelUpdate] = useState(false);
@@ -120,11 +120,12 @@ export default function SlackSettings() {
 
   // Redirect if Slack feature is not enabled
   useEffect(() => {
-    if (!isFeatureEnabled("slack")) {
-      router.push("/settings/general");
+    if (isLoading) return;
+    if (features && !features.slack) {
+      router.replace("/settings/general");
       toast.error("This feature is not available for your team");
     }
-  }, [isFeatureEnabled, router]);
+  }, [features?.slack, isLoading, router]);
 
   const handleConnect = async () => {
     if (!teamId) return;

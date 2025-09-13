@@ -10,6 +10,10 @@ export type SlackCredential = {
   team: { id: string; name: string };
 };
 
+export type SlackCredentialPublic = {
+  team: { id: string; name: string };
+};
+
 export type SlackConfiguration = {
   enabledChannels: Record<string, SlackChannelConfig>;
 };
@@ -27,7 +31,7 @@ export type SlackIntegration = Omit<
   InstalledIntegration,
   "credentials" | "configuration"
 > & {
-  credentials: SlackCredential;
+  credentials: SlackCredentialPublic;
   configuration: SlackConfiguration | null;
 };
 
@@ -42,7 +46,7 @@ export interface SlackMessage {
 
 export interface SlackEventData {
   teamId: string;
-  eventType: string;
+  eventType: SlackNotificationType;
   documentId?: string;
   dataroomId?: string;
   viewId?: string;

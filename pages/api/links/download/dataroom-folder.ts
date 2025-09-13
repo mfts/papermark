@@ -297,23 +297,21 @@ export default async function handler(
     }
 
     if (view.link.teamId) {
-      try {
-        await notifyDocumentDownload({
-          teamId: view.link.teamId,
-          documentId: undefined,
-          dataroomId,
-          linkId,
-          viewerEmail: view.viewerEmail ?? undefined,
-          viewerId: undefined,
-          metadata: {
-            folderName: rootFolder.name,
-            documentCount: allDocuments.length,
-            isFolderDownload: true,
-          },
-        });
-      } catch (error) {
+      void notifyDocumentDownload({
+        teamId: view.link.teamId,
+        documentId: undefined,
+        dataroomId,
+        linkId,
+        viewerEmail: view.viewerEmail ?? undefined,
+        viewerId: undefined,
+        metadata: {
+          folderName: rootFolder.name,
+          documentCount: allDocuments.length,
+          isFolderDownload: true,
+        },
+      }).catch((error) => {
         console.error("Error sending Slack notification:", error);
-      }
+      });
     }
 
     // Get team-specific storage configuration

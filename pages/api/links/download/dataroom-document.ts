@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { ItemType, ViewType } from "@prisma/client";
+import { waitUntil } from "@vercel/functions";
 
 import { getFile } from "@/lib/files/get-file";
 import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
@@ -168,18 +169,16 @@ export default async function handle(
       });
 
       if (view.link.teamId) {
-        try {
-          await notifyDocumentDownload({
+        waitUntil(
+          notifyDocumentDownload({
             teamId: view.link.teamId,
             documentId,
             dataroomId: view.dataroom.id,
             linkId,
             viewerEmail: view.viewerEmail ?? undefined,
             viewerId: view.viewerId ?? undefined,
-          });
-        } catch (error) {
-          console.error("Error sending Slack notification:", error);
-        }
+          }),
+        );
       } else {
         console.log("No teamId found, skipping Slack notification");
       }

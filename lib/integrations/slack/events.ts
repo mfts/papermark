@@ -25,6 +25,8 @@ export class SlackEventManager {
         },
         select: {
           enabled: true,
+          credentials: true,
+          configuration: true,
         },
       });
 

@@ -143,6 +143,9 @@ export class SlackClient {
 
   async getChannels(accessToken: string): Promise<SlackChannel[]> {
     const decryptedToken = decryptSlackToken(accessToken);
+    if (!decryptedToken) {
+      throw new Error("Missing Slack access token");
+    }
 
     const channels: SlackChannel[] = [];
     let cursor: string | undefined = undefined;
@@ -154,12 +157,21 @@ export class SlackClient {
       if (cursor) url.searchParams.set("cursor", cursor);
 
       const requestUrl = url.toString();
+      const ac = new AbortController();
+      const to = setTimeout(() => ac.abort(), 10000);
       const resp = await fetch(requestUrl, {
         headers: {
           Authorization: `Bearer ${decryptedToken}`,
           "Content-Type": "application/json",
         },
-      });
+        signal: ac.signal,
+      }).finally(() => clearTimeout(to));
+      // Basic 429 handling
+      if (resp.status === 429) {
+        const retry = Number(resp.headers.get("retry-after") || 1);
+        await new Promise((r) => setTimeout(r, retry * 1000));
+        continue;
+      }
       if (!resp.ok)
         throw new Error(
           `Failed to get channels: ${resp.status} ${resp.statusText}`,
@@ -189,6 +201,9 @@ export class SlackClient {
     message: SlackMessage,
   ): Promise<{ ok: boolean; ts?: string; error?: string }> {
     const decryptedToken = decryptSlackToken(accessToken);
+    if (!decryptedToken) {
+      throw new Error("Missing Slack access token");
+    }
 
     const requestUrl = `${this.baseUrl}/chat.postMessage`;
     const response = await fetch(requestUrl, {
@@ -220,5 +235,9 @@ export class SlackClient {
   }
 }
 
-// Export singleton instance
-export const slackClient = new SlackClient();
+// Lazily instantiate
+let _slackClient: SlackClient | null = null;
+export function getSlackClient(): SlackClient {
+  if (!_slackClient) _slackClient = new SlackClient();
+  return _slackClient;
+}

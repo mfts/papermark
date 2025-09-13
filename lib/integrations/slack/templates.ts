@@ -2,6 +2,20 @@ import prisma from "@/lib/prisma";
 
 import { SlackEventData, SlackMessage } from "./types";
 
+/**
+ * Helper function to safely reference a link with fallback handling
+ * @param link - The link object that may have undefined or null properties
+ * @returns Safe link reference string
+ */
+function linkRef(
+  link: { name?: string | null; id?: string } | null | undefined,
+): string {
+  if (link?.name) {
+    return `"${link.name}"`;
+  }
+  return `"Link ${link?.id?.slice(0, 5) ?? "unknown"}"`;
+}
+
 export async function createSlackMessage(
   eventData: SlackEventData,
 ): Promise<SlackMessage | null> {
@@ -45,10 +59,8 @@ async function createDocumentViewMessage(
   let accessContext = "";
   if (eventData.dataroomId && dataroom) {
     accessContext = `in dataroom "${dataroom.name}"`;
-  } else if (link?.name) {
-    accessContext = `via shared link "${link.name}"`;
   } else {
-    accessContext = `via shared link "Link ${link?.id.slice(0, 5)}"`;
+    accessContext = `via shared link ${linkRef(link)}`;
   }
 
   return {
@@ -99,9 +111,7 @@ async function createDocumentViewMessage(
             type: "mrkdwn",
             text: eventData.dataroomId
               ? `Viewed document in dataroom "${dataroom?.name || "Unknown"}"`
-              : link?.name
-                ? `Viewed document via shared link "${link.name}"`
-                : `Viewed document via shared link "Link ${link?.id.slice(0, 5)}"`,
+              : `Viewed document via shared link ${linkRef(link)}`,
           },
         ],
       },
@@ -142,9 +152,7 @@ async function createDataroomAccessMessage(
     ? `<mailto:${eventData.viewerEmail}|${viewerDisplay}>`
     : viewerDisplay;
 
-  const accessContext = link?.name
-    ? `via shared link "${link.name}"`
-    : `via shared link "Link ${link?.id.slice(0, 5)}"`;
+  const accessContext = `via shared link ${linkRef(link)}`;
 
   return {
     text: `Your dataroom has been viewed: ${dataroom?.name || "Unknown dataroom"} by ${viewerDisplay} ${accessContext}`,
@@ -199,9 +207,7 @@ async function createDataroomAccessMessage(
         elements: [
           {
             type: "mrkdwn",
-            text: link?.name
-              ? `Dataroom accessed via shared link "${link.name}"`
-              : `Dataroom accessed via shared link "Link ${link?.id.slice(0, 5)}"`,
+            text: `Dataroom accessed via shared link ${linkRef(link)}`,
           },
         ],
       },
@@ -261,10 +267,8 @@ async function createDocumentDownloadMessage(
     downloadContext = `"${folderName}" (${documentCount} documents)`;
   } else if (dataroom) {
     downloadContext = `from dataroom "${dataroom.name}"`;
-  } else if (link?.name) {
-    downloadContext = `via shared link "${link.name}"`;
   } else {
-    downloadContext = `via shared link "Link ${link?.id.slice(0, 5)}"`;
+    downloadContext = `via shared link ${linkRef(link)}`;
   }
 
   return {
@@ -319,9 +323,7 @@ async function createDocumentDownloadMessage(
               ? `Bulk dataroom download`
               : isFolderDownload
                 ? `Folder download`
-                : link?.name
-                  ? `Document download via shared link "${link.name}"`
-                  : `Document download via shared link "Link ${link?.id.slice(0, 5)}"`,
+                : `Document download via shared link ${linkRef(link)}`,
           },
         ],
       },

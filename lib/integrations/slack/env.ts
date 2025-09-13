@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 export const envSchema = z.object({
   SLACK_APP_INSTALL_URL: z.string(),

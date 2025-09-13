@@ -25,12 +25,12 @@ const oAuthCallbackSchema = z.object({
 export const GET = async (req: Request) => {
   const env = getSlackEnv();
 
-  let workspace: Pick<Team, "id" | "plan"> | null = null;
+  let team: Pick<Team, "id" | "plan"> | null = null;
 
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      throw new Error("Unauthorized");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userId = (session.user as CustomUser).id;
@@ -38,15 +38,22 @@ export const GET = async (req: Request) => {
     const { code, state } = oAuthCallbackSchema.parse(getSearchParams(req.url));
 
     // Find workspace that initiated the Stripe app install
-    const teamId = await redis.get<string>(`slack:install:state:${state}`);
+    const stateKey = `slack:install:state:${state}`;
+    const teamId = await redis.get<string>(stateKey);
 
     if (!teamId) {
-      throw new Error("Unknown state");
+      return NextResponse.json({ error: "Invalid state" }, { status: 400 });
     }
+    await redis.del(stateKey);
 
-    workspace = await prisma.team.findUniqueOrThrow({
+    team = await prisma.team.findUniqueOrThrow({
       where: {
         id: teamId,
+        users: {
+          some: {
+            userId,
+          },
+        },
       },
       select: {
         id: true,
@@ -54,23 +61,35 @@ export const GET = async (req: Request) => {
       },
     });
 
-    const formData = new FormData();
-    formData.append("code", code);
-    formData.append("client_id", env.SLACK_CLIENT_ID);
-    formData.append("client_secret", env.SLACK_CLIENT_SECRET);
-    formData.append(
-      "redirect_uri",
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/integrations/slack/oauth/callback`,
-    );
+    if (!team) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
 
+    const body = new URLSearchParams({
+      code,
+      client_id: env.SLACK_CLIENT_ID,
+      client_secret: env.SLACK_CLIENT_SECRET,
+      redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL}/api/integrations/slack/oauth/callback`,
+    });
+    const ac = new AbortController();
+    const to = setTimeout(() => ac.abort(), 10000);
     const response = await fetch("https://slack.com/api/oauth.v2.access", {
       method: "POST",
-      body: formData,
-    });
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      body: body.toString(),
+      signal: ac.signal,
+    }).finally(() => clearTimeout(to));
 
     const data = await response.json();
-
-    console.log("data", data);
+    if (!data?.ok) {
+      return NextResponse.json(
+        { error: `Slack OAuth error: ${data?.error || "unknown"}` },
+        { status: 400 },
+      );
+    }
 
     const credentials: SlackCredential = {
       appId: data.app_id,

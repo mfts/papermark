@@ -5,12 +5,25 @@ import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
 import { getSlackEnv } from "@/lib/integrations/slack/env";
+import {
+  SlackCredential,
+  SlackCredentialPublic,
+} from "@/lib/integrations/slack/types";
+import { uninstallSlackIntegration } from "@/lib/integrations/slack/uninstall";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
+const channelConfigSchema = z.object({
+  enabled: z.boolean(),
+  notificationTypes: z
+    .array(z.enum(["document_view", "document_download", "dataroom_access"]))
+    .default([]),
+  name: z.string().optional(),
+  id: z.string().optional(),
+});
 const slackIntegrationUpdateSchema = z.object({
   enabled: z.boolean().optional(),
-  enabledChannels: z.record(z.string(), z.boolean()).optional(),
+  enabledChannels: z.record(z.string(), channelConfigSchema).optional(),
 });
 
 export default async function handler(
@@ -60,7 +73,7 @@ async function handleGet(
   console.log("env", env);
 
   try {
-    const integration = await prisma.installedIntegration.findUnique({
+    const integrationFullData = await prisma.installedIntegration.findUnique({
       where: {
         teamId_integrationId: {
           teamId,
@@ -77,11 +90,16 @@ async function handleGet(
       },
     });
 
-    console.log("integration", integration);
-
-    if (!integration) {
+    if (!integrationFullData) {
       return res.status(404).json({ error: "Slack integration not found" });
     }
+
+    const integration = {
+      ...integrationFullData,
+      credentials: {
+        team: (integrationFullData.credentials as SlackCredential)?.team,
+      },
+    };
 
     return res.status(200).json(integration);
   } catch (error) {
@@ -126,20 +144,15 @@ async function handleUpdate(
       });
     }
 
-    const updateData: {
-      enabled?: boolean;
-      enabledChannels?: Record<string, boolean>;
-    } = {};
-
+    const updateData: any = {};
     if (enabled !== undefined) updateData.enabled = enabled;
-
-    if (enabledChannels) updateData.enabledChannels = enabledChannels;
+    if (enabledChannels) updateData.configuration = { enabledChannels };
 
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ error: "No fields to update" });
     }
 
-    const updatedIntegration = await prisma.installedIntegration.update({
+    const updatedIntegrationData = await prisma.installedIntegration.update({
       where: {
         teamId_integrationId: {
           teamId,
@@ -156,6 +169,13 @@ async function handleUpdate(
         updatedAt: true,
       },
     });
+
+    const updatedIntegration = {
+      ...updatedIntegrationData,
+      credentials: {
+        team: (updatedIntegrationData.credentials as SlackCredential)?.team,
+      },
+    };
 
     return res.status(200).json(updatedIntegration);
   } catch (error) {
@@ -184,6 +204,10 @@ async function handleDelete(
       return res.status(404).json({ error: "Slack integration not found" });
     }
 
+    // Uninstall the Slack integration from the Slack workspace
+    await uninstallSlackIntegration({ installation: integration });
+
+    // Delete the Slack integration from the database
     await prisma.installedIntegration.delete({
       where: {
         teamId_integrationId: {
