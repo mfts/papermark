@@ -35,6 +35,14 @@ export type SlackIntegration = Omit<
   configuration: SlackConfiguration | null;
 };
 
+export type SlackIntegrationServer = Omit<
+  InstalledIntegration,
+  "credentials" | "configuration"
+> & {
+  credentials: SlackCredential;
+  configuration: SlackConfiguration | null;
+};
+
 export interface SlackMessage {
   channel?: string;
   text?: string;

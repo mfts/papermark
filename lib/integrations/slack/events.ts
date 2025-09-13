@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { SlackClient } from "./client";
 import { getSlackEnv } from "./env";
 import { createSlackMessage } from "./templates";
-import { SlackEventData, SlackIntegration } from "./types";
+import { SlackEventData, SlackIntegrationServer } from "./types";
 
 export class SlackEventManager {
   private client: SlackClient;
@@ -36,7 +36,7 @@ export class SlackEventManager {
 
       await this.sendSlackNotification(
         eventData,
-        integration as unknown as SlackIntegration,
+        integration as SlackIntegrationServer,
       );
     } catch (error) {
       console.error("Error processing Slack event:", error);
@@ -48,7 +48,7 @@ export class SlackEventManager {
    */
   private async sendSlackNotification(
     eventData: SlackEventData,
-    integration: SlackIntegration,
+    integration: SlackIntegrationServer,
   ): Promise<void> {
     try {
       const channels = await this.getNotificationChannels(
@@ -105,7 +105,7 @@ export class SlackEventManager {
 
   private async getNotificationChannels(
     eventData: SlackEventData,
-    integration: SlackIntegration,
+    integration: SlackIntegrationServer,
   ): Promise<any[]> {
     const enabledChannels = integration.configuration?.enabledChannels || {};
     return Object.values(enabledChannels)
