@@ -91,5 +91,5 @@ export const GET = async (req: Request) => {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 
-  redirect(`/settings/integrations/slack`);
+  redirect(`/settings/slack`);
 };
