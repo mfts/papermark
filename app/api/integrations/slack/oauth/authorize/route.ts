@@ -21,7 +21,6 @@ export async function GET(req: Request) {
     }
 
     const { teamId } = oAuthAuthorizeSchema.parse(getSearchParams(req.url));
-    console.log("teamId", teamId);
     const userId = (session.user as CustomUser).id;
 
     const userTeam = await prisma.userTeam.findUnique({
@@ -38,7 +37,6 @@ export async function GET(req: Request) {
     }
 
     const oauthUrl = await getSlackInstallationUrl(teamId);
-    console.log("oauthUrl", oauthUrl);
 
     return NextResponse.json({
       oauthUrl,
