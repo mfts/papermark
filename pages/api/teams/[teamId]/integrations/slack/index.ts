@@ -70,8 +70,6 @@ async function handleGet(
 ) {
   const env = getSlackEnv();
 
-  console.log("env", env);
-
   try {
     const integrationFullData = await prisma.installedIntegration.findUnique({
       where: {
