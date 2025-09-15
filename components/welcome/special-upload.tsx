@@ -9,15 +9,6 @@ import { motion } from "motion/react";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 
-import DocumentUpload from "@/components/document-upload";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-
 import { useAnalytics } from "@/lib/analytics";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
@@ -28,6 +19,15 @@ import {
   uploadImage,
 } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
+
+import DocumentUpload from "@/components/document-upload";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 
 import Skeleton from "../Skeleton";
 import { DEFAULT_LINK_PROPS, DEFAULT_LINK_TYPE } from "../links/link-sheet";
