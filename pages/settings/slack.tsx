@@ -6,6 +6,7 @@ import { useTeam } from "@/context/team-context";
 import { CircleHelpIcon, Hash, Settings, XCircleIcon } from "lucide-react";
 import { toast } from "sonner";
 
+import { useAnalytics } from "@/lib/analytics";
 import {
   SlackChannelConfig,
   SlackIntegration,
@@ -40,6 +41,7 @@ export default function SlackSettings() {
   const [connecting, setConnecting] = useState(false);
   const [isChannelPopoverOpen, setIsChannelPopoverOpen] = useState(false);
   const [pendingChannelUpdate, setPendingChannelUpdate] = useState(false);
+  const analytics = useAnalytics();
 
   // Use SWR hook for integration data
   const {
@@ -93,6 +95,12 @@ export default function SlackSettings() {
       toast.success("Slack integration connected successfully!");
       mutateIntegration();
 
+      // Track successful connection on client side
+      analytics.capture("Slack Connected", {
+        source: "settings_page",
+        team_id: teamId,
+      });
+
       if (router.query.warning) {
         toast.warning(`Warning: ${router.query.warning}`);
       }
@@ -102,6 +110,14 @@ export default function SlackSettings() {
       }, 100);
     } else if (router.query.error) {
       toast.error(`Failed to connect Slack: ${router.query.error}`);
+
+      // Track failed connection on client side
+      analytics.capture("Slack Connection Failed", {
+        source: "settings_page",
+        team_id: teamId,
+        error: router.query.error,
+      });
+
       timeoutId = setTimeout(() => {
         router.replace("/settings/slack", undefined, { shallow: true });
       }, 100);
@@ -110,12 +126,17 @@ export default function SlackSettings() {
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [router.query, mutateIntegration]);
+  }, [router.query, mutateIntegration, analytics, teamId]);
 
   const handleConnect = async () => {
     if (!teamId) return;
 
     setConnecting(true);
+    analytics.capture("Slack Connect Button Clicked", {
+      source: "settings_page",
+      team_id: teamId,
+    });
+
     try {
       const response = await fetch(
         `/api/integrations/slack/oauth/authorize?teamId=${teamId}`,

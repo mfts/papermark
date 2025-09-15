@@ -1,11 +1,14 @@
+import { useRouter } from "next/router";
+
 import { Dispatch, SetStateAction } from "react";
 
-import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import { usePlausible } from "next-plausible";
 
-import X from "@/components/shared/icons/x";
+import { useAnalytics } from "@/lib/analytics";
+
 import { SlackIcon } from "@/components/shared/icons/slack-icon";
+import X from "@/components/shared/icons/x";
 import { Button } from "@/components/ui/button";
 
 export default function SlackBanner({
@@ -15,6 +18,7 @@ export default function SlackBanner({
 }) {
   const router = useRouter();
   const plausible = usePlausible();
+  const analytics = useAnalytics();
 
   const handleHideBanner = () => {
     setShowSlackBanner(false);
@@ -26,6 +30,10 @@ export default function SlackBanner({
 
   const handleConnectSlack = () => {
     plausible("clickedSlackBanner");
+    analytics.capture("Slack Connect Button Clicked", {
+      source: "slack_banner",
+      location: "sidebar",
+    });
     router.push("/settings/slack");
   };
 
@@ -43,12 +51,11 @@ export default function SlackBanner({
         <SlackIcon className="h-5 w-5" />
         <span className="text-sm font-bold">Connect Slack</span>
       </div>
-      <p className="my-4 text-sm">
-        Get notified in Slack when documents are viewed, downloaded, or accessed.
-      </p>
+      <p className="my-4 text-sm">Get visit notifications in Slack channel.</p>
       <div className="flex">
         <Button
           type="button"
+          variant="outline"
           className="grow"
           onClick={handleConnectSlack}
         >

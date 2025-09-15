@@ -11,7 +11,6 @@ import { PlanEnum } from "@/ee/stripe/constants";
 import Cookies from "js-cookie";
 import {
   BrushIcon,
-  CircleUserRound,
   CogIcon,
   ContactIcon,
   FolderIcon,
@@ -39,8 +38,8 @@ import {
 
 import ProAnnualBanner from "../billing/pro-annual-banner";
 import ProBanner from "../billing/pro-banner";
-import SlackBanner from "../billing/slack-banner";
 import { Progress } from "../ui/progress";
+import SlackBanner from "./banners/slack-banner";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
