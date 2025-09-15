@@ -59,6 +59,7 @@ export interface ViewPageProps {
   useCustomAccessForm: boolean;
   logoOnAccessForm: boolean;
   dataroomIndexEnabled?: boolean;
+  annotationsEnabled?: boolean;
 }
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
@@ -115,6 +116,10 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         link.document;
       const teamPlan = team?.plan || "free";
 
+      // Check feature flags for document links
+      const featureFlags = await getFeatureFlags({ teamId });
+      const annotationsEnabled = featureFlags.annotations;
+
       return {
         props: {
           linkData: {
@@ -155,6 +160,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           logoOnAccessForm:
             teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
             teamId === "clup33by90000oewh4rfvp2eg",
+          annotationsEnabled,
         },
         revalidate: brand || recordMap ? 10 : 60,
       };
@@ -188,9 +194,10 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 
       const { teamId } = link.dataroom;
 
-      // Check if dataroomIndex feature flag is enabled
+      // Check feature flags
       const featureFlags = await getFeatureFlags({ teamId });
       const dataroomIndexEnabled = featureFlags.dataroomIndex;
+      const annotationsEnabled = featureFlags.annotations;
 
       const lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
         return Math.max(
@@ -234,6 +241,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
             teamId === "clup33by90000oewh4rfvp2eg",
           dataroomIndexEnabled,
+          annotationsEnabled,
         },
         revalidate: 10,
       };
@@ -261,6 +269,7 @@ export default function ViewPage({
   useCustomAccessForm,
   logoOnAccessForm,
   dataroomIndexEnabled,
+  annotationsEnabled,
   error,
   notionError,
 }: ViewPageProps & { error?: boolean; notionError?: boolean }) {
@@ -391,6 +400,7 @@ export default function ViewPage({
           logoOnAccessForm={logoOnAccessForm}
           token={storedToken}
           verifiedEmail={verifiedEmail}
+          annotationsEnabled={annotationsEnabled}
         />
       </>
     );

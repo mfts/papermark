@@ -1,0 +1,133 @@
+import { NextApiRequest, NextApiResponse } from "next";
+
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { getServerSession } from "next-auth/next";
+import { z } from "zod";
+
+import { errorhandler } from "@/lib/errorHandler";
+import prisma from "@/lib/prisma";
+import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
+import { CustomUser } from "@/lib/types";
+import { log } from "@/lib/utils";
+
+const createAnnotationSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(100, "Title must be less than 100 characters"),
+  content: z.record(z.any()), // Rich text content as JSON
+  pages: z
+    .array(z.number().min(1))
+    .min(1, "At least one page must be selected"),
+  isVisible: z.boolean().default(true),
+});
+
+const updateAnnotationSchema = createAnnotationSchema.partial();
+
+export default async function handle(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
+  if (req.method === "GET") {
+    // GET /api/teams/:teamId/documents/:id/annotations
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauthorized");
+    }
+
+    const { teamId, id: docId } = req.query as { teamId: string; id: string };
+    const userId = (session.user as CustomUser).id;
+
+    try {
+      const { document } = await getTeamWithUsersAndDocument({
+        teamId,
+        userId,
+        docId,
+        options: {
+          include: {
+            annotations: {
+              include: {
+                images: true,
+                createdBy: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
+          },
+        },
+      });
+
+      return res.status(200).json(document?.annotations || []);
+    } catch (error) {
+      log({
+        message: `Failed to get annotations for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        type: "error",
+      });
+      errorhandler(error, res);
+    }
+  } else if (req.method === "POST") {
+    // POST /api/teams/:teamId/documents/:id/annotations
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauthorized");
+    }
+
+    const { teamId, id: docId } = req.query as { teamId: string; id: string };
+    const userId = (session.user as CustomUser).id;
+
+    try {
+      const validatedData = createAnnotationSchema.parse(req.body);
+
+      // Verify user has access to document
+      await getTeamWithUsersAndDocument({
+        teamId,
+        userId,
+        docId,
+      });
+
+      const annotation = await prisma.documentAnnotation.create({
+        data: {
+          ...validatedData,
+          documentId: docId,
+          teamId,
+          createdById: userId,
+        },
+        include: {
+          images: true,
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      return res.status(201).json(annotation);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "Invalid input",
+          details: error.errors,
+        });
+      }
+
+      log({
+        message: `Failed to create annotation for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        type: "error",
+      });
+      errorhandler(error, res);
+    }
+  } else {
+    res.setHeader("Allow", ["GET", "POST"]);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+}

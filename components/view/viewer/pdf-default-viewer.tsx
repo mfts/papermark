@@ -1,21 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
-
-
 import { useTeam } from "@/context/team-context";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
 
-
-
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 
-
-
 import Nav from "@/components/view/nav";
-
-
 
 import { AwayPoster } from "./away-poster";
 
@@ -319,9 +311,7 @@ export default function PDFViewer(props: any) {
         </div>
         <AwayPoster
           isVisible={isInactive}
-          inactivityThreshold={
-            getTrackingOptions().inactivityThreshold 
-          }
+          inactivityThreshold={getTrackingOptions().inactivityThreshold}
           onDismiss={updateActivity}
         />
       </div>
