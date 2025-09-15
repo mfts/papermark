@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
 import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
+import prisma, { Prisma } from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
@@ -81,6 +81,7 @@ export default async function handle(
       const annotation = await prisma.documentAnnotation.create({
         data: {
           ...validatedData,
+          content: validatedData.content ?? Prisma.JsonNull, // Convert undefined to Prisma.JsonNull
           documentId: docId,
           teamId,
           createdById: userId,
