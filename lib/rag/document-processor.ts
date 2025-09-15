@@ -162,7 +162,7 @@ export class DoclingProcessor {
       sources: [{ kind: "http", url: documentUrl }],
       options: {
         to_formats: ["md"],
-        image_export_mode: "embedded",
+        image_export_mode: "placeholder",
         do_ocr: config.requiresOcr,
         force_ocr: config.requiresOcr,
         ocr_engine: "tesserocr", // tesserocr
@@ -178,7 +178,7 @@ export class DoclingProcessor {
         do_code_enrichment: false,
         do_formula_enrichment: false,
         do_picture_classification: false,
-        do_picture_description: false,
+        do_picture_description: true,
         picture_description_area_threshold: 0.05,
       },
     };
@@ -218,6 +218,8 @@ export class DoclingProcessor {
     documentCount: number = 1,
   ): Promise<DoclingJobStatus> {
     const startTime = Date.now();
+    let consecutiveFailures = 0;
+    const maxConsecutiveFailures = 3;
 
     // Use utility functions for timeout and polling calculations
     const calculatedTimeout = calculateTimeout(documentCount);
@@ -229,6 +231,7 @@ export class DoclingProcessor {
       calculatedTimeout: Math.round(calculatedTimeout / 1000),
       pollInterval: Math.round(pollInterval / 1000),
       maxAttempts,
+      maxConsecutiveFailures,
     });
 
     for (let i = 0; i < maxAttempts; i++) {
@@ -266,12 +269,33 @@ export class DoclingProcessor {
         );
 
         if (!response.success) {
-          throw RAGError.create(
-            "documentProcessing",
-            `Polling failed: ${response.error}`,
-            { taskId },
-          );
+          consecutiveFailures++;
+          logger.warn("Polling API call failed", {
+            taskId,
+            attempt: i + 1,
+            consecutiveFailures,
+            maxConsecutiveFailures,
+            error: response.error,
+          });
+
+          if (consecutiveFailures >= maxConsecutiveFailures) {
+            logger.error("Max consecutive failures reached, aborting polling", {
+              taskId,
+              consecutiveFailures,
+              maxConsecutiveFailures,
+            });
+
+            throw RAGError.create(
+              "documentProcessing",
+              `Polling failed ${consecutiveFailures} consecutive times: ${response.error}`,
+              { taskId, consecutiveFailures },
+            );
+          }
+
+          await new Promise((r) => setTimeout(r, 5000));
+          continue;
         }
+        consecutiveFailures = 0;
 
         const status = response.data!;
         logger.debug("Polling status received", {
@@ -337,14 +361,22 @@ export class DoclingProcessor {
 
         await new Promise((r) => setTimeout(r, delay));
       } catch (error) {
+        consecutiveFailures++;
         logger.warn("Polling attempt failed", {
           taskId,
           attempt: i + 1,
+          consecutiveFailures,
+          maxConsecutiveFailures,
           error: error instanceof Error ? error.message : String(error),
         });
 
-        // If it's the last attempt, throw the error
-        if (i === maxAttempts - 1) {
+        if (consecutiveFailures >= maxConsecutiveFailures || i === maxAttempts - 1) {
+          logger.error("Polling failed, aborting", {
+            taskId,
+            consecutiveFailures,
+            maxConsecutiveFailures,
+            isLastAttempt: i === maxAttempts - 1,
+          });
           throw error;
         }
 

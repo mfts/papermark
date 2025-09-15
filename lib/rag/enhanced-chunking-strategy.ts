@@ -52,7 +52,6 @@ export class EnhancedDocumentChunker {
             maxChunkTokens: 1200,
             ...config
         };
-
     }
 
     private getCachedTokenCount(text: string): number {

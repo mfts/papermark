@@ -6,6 +6,7 @@ import * as crypto from "crypto";
 import { EmbeddingCache } from "./utils/lruCache";
 import { getErrorMessage } from "./errors";
 import { RAGError } from "./errors";
+import { logger } from "@trigger.dev/sdk/v3";
 
 export interface EmbeddingResult {
     success: boolean;
@@ -188,6 +189,7 @@ export class EmbeddingGenerator {
 
     private preprocessChunks(chunks: EmbeddingBatch[]): EmbeddingBatch[] {
         const valid: EmbeddingBatch[] = [];
+        const MAX_TOKENS_PER_CHUNK = 8000;
 
         for (const chunk of chunks) {
             const content = chunk.content.trim();
@@ -198,7 +200,18 @@ export class EmbeddingGenerator {
             const tokens = calculateTokenCount(content);
             if (tokens < 5) continue;
 
-            valid.push({ ...chunk, content });
+            if (tokens > MAX_TOKENS_PER_CHUNK) {
+                logger.warn(`Chunk ${chunk.chunkId} exceeds token limit: ${tokens} > ${MAX_TOKENS_PER_CHUNK}, truncating`, {
+                    chunkId: chunk.chunkId,
+                    originalTokens: tokens,
+                    contentLength: content.length
+                });
+
+                const truncatedContent = this.truncateToTokenLimit(content, MAX_TOKENS_PER_CHUNK);
+                valid.push({ ...chunk, content: truncatedContent });
+            } else {
+                valid.push({ ...chunk, content });
+            }
         }
 
         return valid;
@@ -206,6 +219,33 @@ export class EmbeddingGenerator {
 
     private generateContentHash(content: string): string {
         return crypto.createHash("sha256").update(content).digest("hex");
+    }
+
+    private truncateToTokenLimit(content: string, maxTokens: number): string {
+        let left = 0;
+        let right = content.length;
+        let bestLength = 0;
+
+        while (left <= right) {
+            const mid = Math.floor((left + right) / 2);
+            const truncated = content.substring(0, mid);
+            const tokens = calculateTokenCount(truncated);
+
+            if (tokens <= maxTokens) {
+                bestLength = mid;
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+
+        let truncated = content.substring(0, bestLength);
+        const lastSpaceIndex = truncated.lastIndexOf(' ');
+        if (lastSpaceIndex > bestLength * 0.8) {
+            truncated = truncated.substring(0, lastSpaceIndex);
+        }
+
+        return truncated.trim();
     }
 
     private async getCachedEmbedding(content: string): Promise<number[] | null> {
