@@ -13,6 +13,8 @@ import {
   Text,
 } from "@react-email/components";
 
+import { Footer } from "./shared/footer";
+
 export default function DomainDeleted({
   domain = "papermark.com",
 }: {
@@ -53,23 +55,7 @@ export default function DomainDeleted({
               If you did not want to keep using this domain on Papermark anyway,
               you can simply ignore this email.
             </Text>
-            <Hr />
-            <Section className="mt-8 text-gray-400">
-              <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
-                  target="_blank"
-                >
-                  papermark.com
-                </a>
-              </Text>
-              <Text className="text-xs">
-                If you have any feedback or questions about this email, simply
-                reply to it. I&apos;d love to hear from you!
-              </Text>
-            </Section>
+            <Footer />
           </Container>
         </Body>
       </Tailwind>

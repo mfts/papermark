@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { useState } from "react";
 
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 
 import { cn } from "@/lib/utils";
 
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 const AlertDialog = AlertDialogPrimitive.Root;
 
@@ -134,7 +135,63 @@ const AlertDialogCancel = React.forwardRef<
 ));
 AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName;
 
+interface SingleAlertDialogProps {
+  title: string;
+  description: string;
+  action: string;
+  onAction?: () => Promise<void> | void;
+  actionUpdate?: string;
+  disabled?: boolean;
+  loading?: boolean;
+}
+
+const CommonAlertDialog = ({
+  title,
+  description,
+  action,
+  onAction,
+  actionUpdate,
+  disabled = false,
+  loading = false,
+}: SingleAlertDialogProps) => {
+  const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
+
+  const handleDisconnect = async () => {
+    if (onAction) await onAction();
+    setShowDisconnectDialog(false);
+  };
+
+  return (
+    <AlertDialog
+      open={showDisconnectDialog}
+      onOpenChange={setShowDisconnectDialog}
+    >
+      <AlertDialogTrigger asChild>
+        <Button variant="destructive" size="sm" disabled={disabled || loading}>
+          {loading ? `${actionUpdate}...` : action}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle> {title} </AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDisconnect}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {action}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};
+
 export {
+  CommonAlertDialog,
   AlertDialog,
   AlertDialogPortal,
   AlertDialogOverlay,

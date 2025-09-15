@@ -62,9 +62,11 @@ model User {
   // conversation
   participatedConversations ConversationParticipant[]
   messages                  Message[]
-  
+
   // FAQ system
   publishedFaqItems DataroomFaqItem[]
+
+  installedIntegrations InstalledIntegration[]
 }
 
 model Brand {
@@ -271,9 +273,9 @@ model FeedbackResponse {
 }
 
 model Agreement {
-  id      String @id @default(cuid())
-  name    String // Easily identifiable name for the agreement
-  content String // This will store the agreement content (URL or text)
+  id          String @id @default(cuid())
+  name        String // Easily identifiable name for the agreement
+  content     String // This will store the agreement content (URL or text)
   contentType String @default("LINK") // "LINK" or "TEXT" - determines how content should be displayed
 
   links     Link[]

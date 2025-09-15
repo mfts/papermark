@@ -8,6 +8,7 @@ import { sendDataroomTrialWelcome } from "@/lib/emails/send-dataroom-trial";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import {
+  sendDataroomTrial24hReminderEmailTask,
   sendDataroomTrialExpiredEmailTask,
   sendDataroomTrialInfoEmailTask,
 } from "@/lib/trigger/send-scheduled-email";
@@ -113,14 +114,20 @@ export default async function handle(
       waitUntil(sendDataroomTrialWelcome({ fullName, to: email! }));
       waitUntil(
         sendDataroomTrialInfoEmailTask.trigger(
-          { to: email! },
-          { delay: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000) },
+          { to: email!, useCase },
+          { delay: "1d" },
+        ),
+      );
+      waitUntil(
+        sendDataroomTrial24hReminderEmailTask.trigger(
+          { to: email!, name: fullName.split(" ")[0] },
+          { delay: "6d" },
         ),
       );
       waitUntil(
         sendDataroomTrialExpiredEmailTask.trigger(
           { to: email!, name: fullName.split(" ")[0], teamId },
-          { delay: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+          { delay: "7d" },
         ),
       );
 

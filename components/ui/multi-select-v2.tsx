@@ -118,6 +118,7 @@ interface MultiSelectProps<
   isPopoverOpen: boolean;
   setIsPopoverOpen: React.Dispatch<React.SetStateAction<boolean>>;
   loading?: boolean;
+  triggerIcon?: React.ReactNode;
 }
 
 export type ComboboxOption<
@@ -155,6 +156,7 @@ export const MultiSelect = React.forwardRef<
       setIsPopoverOpen,
       isPopoverOpen,
       loading,
+      triggerIcon,
       ...props
     },
     ref,
@@ -229,7 +231,9 @@ export const MultiSelect = React.forwardRef<
               className,
             )}
           >
-            <TagIcon className="!size-4 shrink-0 text-muted-foreground" />
+            {triggerIcon || (
+              <TagIcon className="!size-4 shrink-0 text-muted-foreground" />
+            )}
             {loading ? (
               <div className="mx-auto flex w-full items-center justify-between">
                 <LoadingSpinner className="size-4 shrink-0" />
@@ -252,7 +256,7 @@ export const MultiSelect = React.forwardRef<
                       className="my-auto block whitespace-nowrap rounded-md border px-2 py-0.5 text-sm text-foreground dark:border-gray-500"
                       style={{ animationDuration: `${animation}s` }}
                     >
-                      {`+ ${value.length - maxCount} more`}
+                      +{value.length - maxCount} more
                     </span>
                   )}
                 </div>

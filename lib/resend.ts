@@ -1,6 +1,6 @@
 import { JSXElementConstructor, ReactElement } from "react";
 
-import { render } from "@react-email/components";
+import { render, toPlainText } from "@react-email/render";
 import { Resend } from "resend";
 
 import { log, nanoid } from "@/lib/utils";
@@ -41,7 +41,8 @@ export const sendEmail = async ({
     throw new Error("Resend not initialized");
   }
 
-  const plainText = await render(react, { plainText: true });
+  const html = await render(react);
+  const plainText = toPlainText(html);
 
   const fromAddress =
     from ??

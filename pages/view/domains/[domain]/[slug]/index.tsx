@@ -318,9 +318,7 @@ export default function ViewPage({
             favicon={meta.metaFavicon}
             enableBranding={meta.enableCustomMetatag ?? false}
             title={
-              meta.metaTitle ??
-              `${link?.document?.name} | Powered by Papermark` ??
-              "Document powered by Papermark"
+              meta.metaTitle ?? `${link?.document?.name} | Powered by Papermark`
             }
             description={meta.metaDescription ?? null}
             imageUrl={meta.metaImage ?? null}
@@ -363,9 +361,7 @@ export default function ViewPage({
           favicon={meta.metaFavicon}
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
-            meta.metaTitle ??
-            `${link?.document?.name} | Powered by Papermark` ??
-            "Document powered by Papermark"
+            meta.metaTitle ?? `${link?.document?.name} | Powered by Papermark`
           }
           description={meta.metaDescription ?? null}
           imageUrl={meta.metaImage ?? null}
@@ -400,9 +396,7 @@ export default function ViewPage({
             favicon={meta.metaFavicon}
             enableBranding={meta.enableCustomMetatag ?? false}
             title={
-              meta.metaTitle ??
-              `${link?.dataroom?.name} | Powered by Papermark` ??
-              "Dataroom powered by Papermark"
+              meta.metaTitle ?? `${link?.dataroom?.name} | Powered by Papermark`
             }
             description={meta.metaDescription ?? null}
             imageUrl={meta.metaImage ?? null}
@@ -446,9 +440,7 @@ export default function ViewPage({
           favicon={meta.metaFavicon}
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
-            meta.metaTitle ??
-            `${link?.dataroom?.name} | Powered by Papermark` ??
-            "Dataroom powered by Papermark"
+            meta.metaTitle ?? `${link?.dataroom?.name} | Powered by Papermark`
           }
           description={meta.metaDescription ?? null}
           imageUrl={meta.metaImage ?? null}

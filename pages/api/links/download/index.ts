@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { LinkType } from "@prisma/client";
 
 import { getFile } from "@/lib/files/get-file";
+import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { getFileNameWithPdfExtension } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
@@ -38,6 +39,7 @@ export default async function handle(
           },
           document: {
             select: {
+              id: true,
               teamId: true,
               downloadOnly: true,
               name: true,
@@ -99,6 +101,21 @@ export default async function handle(
         data: { downloadedAt: new Date() },
       });
 
+      if (view.document?.teamId) {
+        try {
+          await notifyDocumentDownload({
+            teamId: view.document.teamId,
+            documentId: view.document.id,
+            dataroomId: undefined,
+            linkId,
+            viewerEmail: view.viewerEmail ?? undefined,
+            viewerId: undefined,
+          });
+        } catch (error) {
+          console.error("Error sending Slack notification:", error);
+        }
+      }
+
       // get the file to be downloaded, if watermark is enabled and document is not pdf, then get the pdf file, otherwise return the original file
       // if watermark is enabled and document version is pdf, then get the file
       // if watermark is not enabled, then get the original file
@@ -133,10 +150,14 @@ export default async function handle(
               originalFileName: view.document!.name,
               viewerData: {
                 email: view.viewerEmail,
-                date: new Date(view.viewedAt).toLocaleDateString(),
+                date: new Date(
+                  view.viewedAt ? view.viewedAt : new Date(),
+                ).toLocaleDateString(),
                 ipAddress: getIpAddress(req.headers),
                 link: view.link.name,
-                time: new Date(view.viewedAt).toLocaleTimeString(),
+                time: new Date(
+                  view.viewedAt ? view.viewedAt : new Date(),
+                ).toLocaleTimeString(),
               },
             }),
           },

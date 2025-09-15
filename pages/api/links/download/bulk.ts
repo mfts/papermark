@@ -5,6 +5,7 @@ import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
 import { ItemType, ViewType } from "@prisma/client";
 
 import { getLambdaClientForTeam } from "@/lib/files/aws-client";
+import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { getIpAddress } from "@/lib/utils/ip";
 
@@ -46,6 +47,7 @@ export default async function handle(
           groupId: true,
           dataroom: {
             select: {
+              id: true,
               teamId: true,
               allowBulkDownload: true,
               folders: {
@@ -110,7 +112,9 @@ export default async function handle(
 
       // if dataroom does not allow bulk download, we should not allow the download
       if (!view.dataroom.allowBulkDownload) {
-        return res.status(403).json({ error: "Bulk download is disabled for this dataroom" });
+        return res
+          .status(403)
+          .json({ error: "Bulk download is disabled for this dataroom" });
       }
 
       // if viewedAt is longer than 23 hours ago, we should not allow the download
@@ -301,6 +305,25 @@ export default async function handle(
         return res.status(404).json({ error: "No files to download" });
       }
 
+      if (view.dataroom?.teamId) {
+        try {
+          await notifyDocumentDownload({
+            teamId: view.dataroom.teamId,
+            documentId: undefined, // Bulk download, no specific document
+            dataroomId: view.dataroom.id,
+            linkId,
+            viewerEmail: view.viewerEmail ?? undefined,
+            viewerId: undefined,
+            metadata: {
+              documentCount: downloadDocuments.length,
+              isBulkDownload: true,
+            },
+          });
+        } catch (error) {
+          console.error("Error sending Slack notification:", error);
+        }
+      }
+
       // Get team-specific storage configuration
       const teamId = view.dataroom!.teamId;
       const [client, storageConfig] = await Promise.all([
@@ -321,8 +344,14 @@ export default async function handle(
                 config: view.link.watermarkConfig,
                 viewerData: {
                   email: view.viewerEmail,
-                  date: new Date(view.viewedAt).toLocaleDateString(),
-                  time: new Date(view.viewedAt).toLocaleTimeString(),
+                  date: (view.viewedAt
+                    ? new Date(view.viewedAt)
+                    : new Date()
+                  ).toLocaleDateString(),
+                  time: (view.viewedAt
+                    ? new Date(view.viewedAt)
+                    : new Date()
+                  ).toLocaleTimeString(),
                   link: view.link.name,
                   ipAddress: getIpAddress(req.headers),
                 },

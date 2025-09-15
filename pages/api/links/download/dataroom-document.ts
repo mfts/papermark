@@ -1,8 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { ItemType, ViewType } from "@prisma/client";
+import { waitUntil } from "@vercel/functions";
 
 import { getFile } from "@/lib/files/get-file";
+import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { getFileNameWithPdfExtension } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
@@ -45,6 +47,7 @@ export default async function handle(
               watermarkConfig: true,
               name: true,
               permissionGroupId: true,
+              teamId: true,
             },
           },
           groupId: true,
@@ -165,6 +168,21 @@ export default async function handle(
         },
       });
 
+      if (view.link.teamId) {
+        waitUntil(
+          notifyDocumentDownload({
+            teamId: view.link.teamId,
+            documentId,
+            dataroomId: view.dataroom.id,
+            linkId,
+            viewerEmail: view.viewerEmail ?? undefined,
+            viewerId: view.viewerId ?? undefined,
+          }),
+        );
+      } else {
+        console.log("No teamId found, skipping Slack notification");
+      }
+
       const file =
         view.link.enableWatermark &&
         downloadDocuments[0].document!.versions[0].type === "pdf"
@@ -198,10 +216,16 @@ export default async function handle(
               originalFileName: downloadDocuments[0].document!.name,
               viewerData: {
                 email: view.viewerEmail,
-                date: new Date(view.viewedAt).toLocaleDateString(),
+                date: (view.viewedAt
+                  ? new Date(view.viewedAt)
+                  : new Date()
+                ).toLocaleDateString(),
                 ipAddress: getIpAddress(req.headers),
                 link: view.link.name,
-                time: new Date(view.viewedAt).toLocaleTimeString(),
+                time: (view.viewedAt
+                  ? new Date(view.viewedAt)
+                  : new Date()
+                ).toLocaleTimeString(),
               },
             }),
           },
