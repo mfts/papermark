@@ -35,6 +35,8 @@ export function getSupportedContentType(contentType: string): string | null {
     case "video/webm":
     case "video/ogg":
     case "audio/mp4":
+    case "audio/x-m4a":
+    case "audio/m4a":
     case "audio/mpeg":
       return "video";
     case "application/vnd.google-earth.kml+xml":
@@ -101,6 +103,8 @@ export function getExtensionFromContentType(
     case "video/ogg":
       return "ogg";
     case "audio/mp4":
+    case "audio/x-m4a":
+    case "audio/m4a":
       return "m4a";
     case "audio/mpeg":
       return "mp3";
