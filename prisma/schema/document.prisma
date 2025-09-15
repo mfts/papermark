@@ -27,6 +27,7 @@ model Document {
 
   datarooms DataroomDocument[] // Datarooms associated with this document
   tags      TagItem[]
+  annotations DocumentAnnotation[] // Annotations for this document
 
   // upload external documents
   uploadedDocument DocumentUpload[]

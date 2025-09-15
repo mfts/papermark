@@ -4,12 +4,15 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
+import useSWR from "swr";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import { useDocument, useDocumentLinks } from "@/lib/swr/use-document";
 import useLimits from "@/lib/swr/use-limits";
+import { fetcher } from "@/lib/utils";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { AnnotationSheet } from "@/components/documents/annotations/annotation-sheet";
 import DocumentHeader from "@/components/documents/document-header";
 import { DocumentPreviewButton } from "@/components/documents/document-preview-button";
 import NotionAccessibilityIndicator from "@/components/documents/notion-accessibility-indicator";
@@ -34,6 +37,14 @@ export default function DocumentPage() {
   const { isTrial } = usePlan();
 
   const { canAddLinks } = useLimits();
+
+  // Get feature flags
+  const { data: featureFlags } = useSWR<{ annotations: boolean }>(
+    teamInfo?.currentTeam?.id
+      ? `/api/feature-flags?teamId=${teamInfo.currentTeam.id}`
+      : null,
+    fetcher,
+  );
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
 
@@ -82,6 +93,15 @@ export default function DocumentPage() {
                   primaryVersion={primaryVersion}
                   onUrlUpdate={mutateDocument}
                 />,
+                <>
+                  {featureFlags?.annotations && (
+                    <AnnotationSheet
+                      documentId={prismaDocument.id}
+                      teamId={teamInfo?.currentTeam?.id!}
+                      numPages={primaryVersion.numPages || 1}
+                    />
+                  )}
+                </>,
                 <DocumentPreviewButton
                   key={"preview"}
                   documentId={prismaDocument.id}
