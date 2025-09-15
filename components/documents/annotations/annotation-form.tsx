@@ -32,7 +32,7 @@ const formSchema = z.object({
     .max(100, "Title must be less than 100 characters"),
   content: z.any().optional(),
   pages: z.array(z.number()).min(1, "At least one page must be selected"),
-  isVisible: z.boolean().default(true),
+  isVisible: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -63,7 +63,8 @@ export function AnnotationForm({
       title: annotation?.title || "",
       content: annotation?.content || null,
       pages: annotation?.pages || [],
-      isVisible: annotation?.isVisible ?? true,
+      isVisible:
+        annotation?.isVisible !== undefined ? annotation.isVisible : true,
     },
   });
 

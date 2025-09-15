@@ -64,6 +64,7 @@ export default async function handle(
         },
       });
 
+      // @ts-ignore
       return res.status(200).json(document?.annotations || []);
     } catch (error) {
       log({

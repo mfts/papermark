@@ -70,9 +70,9 @@ export function RichTextEditor({
               .then((url) => {
                 const { state } = view;
                 const { selection } = state;
-                const position = selection.$cursor
-                  ? selection.$cursor.pos
-                  : selection.$to.pos;
+                const position = selection.empty
+                  ? selection.from
+                  : selection.to;
 
                 const node = state.schema.nodes.image.create({ src: url });
                 const transaction = state.tr.insert(position, node);
@@ -101,9 +101,9 @@ export function RichTextEditor({
                   .then((url) => {
                     const { state } = view;
                     const { selection } = state;
-                    const position = selection.$cursor
-                      ? selection.$cursor.pos
-                      : selection.$to.pos;
+                    const position = selection.empty
+                      ? selection.from
+                      : selection.to;
 
                     const node = state.schema.nodes.image.create({ src: url });
                     const transaction = state.tr.insert(position, node);
