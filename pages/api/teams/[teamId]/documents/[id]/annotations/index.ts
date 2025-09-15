@@ -15,9 +15,9 @@ const createAnnotationSchema = z.object({
     .string()
     .min(1, "Title is required")
     .max(100, "Title must be less than 100 characters"),
-  content: z.record(z.any()), // Rich text content as JSON
+  content: z.record(z.any()).nullable().optional(), // Rich text content as JSON - allow null/omitted
   pages: z
-    .array(z.number().min(1))
+    .array(z.number().int().min(1))
     .min(1, "At least one page must be selected"),
   isVisible: z.boolean().default(true),
 });
@@ -39,33 +39,18 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const { document } = await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
-        docId,
-        options: {
-          include: {
-            annotations: {
-              include: {
-                images: true,
-                createdBy: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                  },
-                },
-              },
-              orderBy: {
-                createdAt: "desc",
-              },
-            },
-          },
+      // Validate access; avoid heavy includes
+      await getTeamWithUsersAndDocument({ teamId, userId, docId });
+      const annotations = await prisma.documentAnnotation.findMany({
+        where: { documentId: docId, teamId },
+        include: {
+          images: true,
+          createdBy: { select: { id: true, name: true, email: true } },
         },
+        orderBy: { createdAt: "desc" },
       });
 
-      // @ts-ignore
-      return res.status(200).json(document?.annotations || []);
+      return res.status(200).json(annotations);
     } catch (error) {
       log({
         message: `Failed to get annotations for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,

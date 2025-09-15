@@ -69,7 +69,7 @@ export default async function handle(
     if (req.method === "GET") {
       // GET /api/teams/:teamId/documents/:id/annotations/:annotationId
       const fullAnnotation = await prisma.documentAnnotation.findUnique({
-        where: { id: annotationId },
+        where: { id: annotationId, documentId: docId, teamId },
         include: {
           images: true,
           createdBy: {
@@ -88,7 +88,7 @@ export default async function handle(
       const validatedData = updateAnnotationSchema.parse(req.body);
 
       const updatedAnnotation = await prisma.documentAnnotation.update({
-        where: { id: annotationId },
+        where: { id: annotationId, documentId: docId, teamId },
         data: validatedData,
         include: {
           images: true,
@@ -106,7 +106,7 @@ export default async function handle(
     } else if (req.method === "DELETE") {
       // DELETE /api/teams/:teamId/documents/:id/annotations/:annotationId
       await prisma.documentAnnotation.delete({
-        where: { id: annotationId },
+        where: { id: annotationId, documentId: docId, teamId },
       });
 
       return res.status(204).end();

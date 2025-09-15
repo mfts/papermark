@@ -54,7 +54,7 @@ export function AnnotationForm({
 }: AnnotationFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [editorContent, setEditorContent] = useState(
-    annotation?.content || null,
+    annotation?.content || { type: "doc", content: [] },
   );
 
   const form = useForm<FormValues>({

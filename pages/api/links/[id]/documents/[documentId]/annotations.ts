@@ -27,11 +27,28 @@ export default async function handle(
   try {
     const view = await prisma.view.findUnique({
       where: { id: viewId, linkId: linkId },
-      select: { id: true, link: true },
+      select: {
+        id: true,
+        viewedAt: true,
+        link: {
+          select: {
+            id: true,
+            linkType: true,
+            teamId: true,
+            documentId: true,
+            dataroomId: true,
+          },
+        },
+      },
     });
 
     if (!view) {
       return res.status(404).json({ error: "View not found" });
+    }
+
+    // Check TTL - deny access for views older than 23 hours
+    if (view.viewedAt < new Date(Date.now() - 23 * 60 * 60 * 1000)) {
+      return res.status(403).json({ error: "Access denied" });
     }
 
     // Check if annotations feature is enabled for this team
