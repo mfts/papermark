@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { View } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
@@ -10,8 +11,6 @@ import {
   getTotalDocumentDuration,
 } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
-
-import { authOptions } from "../../../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
@@ -37,45 +36,68 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
+      const teamHasUser = await prisma.team.findUnique({
+        where: { id: teamId, users: { some: { userId } } },
+      });
+
+      if (!teamHasUser) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      // First check if document exists and get basic info
       const document = await prisma.document.findUnique({
         where: {
           id: docId,
           teamId,
         },
-        include: {
-          views: true,
-          team: {
-            select: {
-              plan: true,
-            },
-          },
-        },
-      });
-
-      const users = await prisma.user.findMany({
-        where: {
-          teams: {
-            some: {
-              teamId: teamId,
-            },
-          },
-        },
         select: {
-          email: true,
+          id: true,
+          teamId: true,
+          _count: {
+            select: {
+              views: { where: { isArchived: false } },
+            },
+          },
         },
       });
 
-      const views = document?.views;
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
 
-      // if there are no views, return an empty array
-      if (!views) {
+      // Early return for documents with no views - avoid expensive queries
+      if (document._count.views === 0) {
         return res.status(200).json({
           views: [],
           duration: { data: [] },
           total_duration: 0,
           groupedReactions: [],
+          totalViews: 0,
         });
       }
+
+      // Only fetch views and users if we have views
+      const [views, users] = await Promise.all([
+        prisma.view.findMany({
+          where: {
+            documentId: docId,
+          },
+        }),
+        excludeTeamMembers
+          ? prisma.user.findMany({
+              where: {
+                teams: {
+                  some: {
+                    teamId: teamId,
+                  },
+                },
+              },
+              select: {
+                email: true,
+              },
+            })
+          : Promise.resolve([]),
+      ]);
 
       const activeViews = views.filter((view) => !view.isArchived);
       const archivedViews = views.filter((view) => view.isArchived);

@@ -62,7 +62,11 @@ export function useDocumentLinks() {
     id: string;
   };
 
-  const { data: links, error } = useSWR<LinkWithViews[]>(
+  const {
+    data: links,
+    error,
+    mutate,
+  } = useSWR<LinkWithViews[]>(
     teamInfo?.currentTeam?.id &&
       id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
@@ -78,6 +82,7 @@ export function useDocumentLinks() {
     links,
     loading: !error && !links,
     error,
+    mutate,
   };
 }
 

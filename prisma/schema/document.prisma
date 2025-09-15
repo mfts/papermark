@@ -36,6 +36,8 @@ model Document {
   @@index([ownerId])
   @@index([teamId])
   @@index([folderId])
+  @@index([teamId, folderId]) // Performance optimization for document filtering by team and folder
+  @@index([teamId, name]) // Performance optimization for document search by name
 }
 
 model DocumentVersion {
@@ -61,6 +63,8 @@ model DocumentVersion {
 
   @@unique([versionNumber, documentId])
   @@index([documentId])
+  @@index([documentId, isPrimary]) // Performance optimization for primary version queries
+  @@index([documentId, createdAt(sort: Desc)]) // Partial index for primary versions
 }
 
 model DocumentPage {

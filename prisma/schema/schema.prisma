@@ -152,6 +152,9 @@ model View {
   @@index([teamId])
   @@index([viewedAt(sort: Desc)]) // Performance optimization for date aggregations
   @@index([viewerId, documentId]) // Performance optimization for joins with filtering
+  @@index([viewerEmail]) // Performance optimization for viewer email filtering
+  @@index([documentId, isArchived]) // Performance optimization for active views filtering
+  @@index([documentId, viewedAt(sort: Desc)]) // Performance optimization for latest views queries
 }
 
 enum ViewType {
@@ -195,6 +198,7 @@ model Reaction {
   createdAt  DateTime @default(now())
 
   @@index([viewId])
+  @@index([viewId, type]) // Performance optimization for reaction grouping
 }
 
 model Invitation {
