@@ -46,15 +46,33 @@ function calculateAnalytics(
 
   try {
     // Filter for valid events and ensure valid time ranges > 1 second
-    const validEvents = events.filter(
-      (event) =>
+    const validEvents = events.filter((event) => {
+      // Check if event has required properties
+      if (!event || typeof event.event_type !== "string" || !event.view_id) {
+        console.warn("Invalid event structure:", event);
+        return false;
+      }
+
+      // Check if event has valid time properties
+      if (
+        typeof event.start_time !== "number" ||
+        typeof event.end_time !== "number"
+      ) {
+        console.warn("Invalid time properties:", event);
+        return false;
+      }
+
+      return (
         (event.event_type === "played" ||
           event.event_type === "muted" ||
           event.event_type === "unmuted" ||
           event.event_type === "rate_changed") &&
         event.end_time > event.start_time &&
-        event.end_time - event.start_time >= 1,
-    );
+        event.end_time - event.start_time >= 1 &&
+        event.start_time >= 0 &&
+        event.end_time <= videoLength + 10
+      ); // Allow some buffer
+    });
 
     // Get all unique view_ids from any event type
     const uniqueViewIds = new Set(events.map((e) => e.view_id));
@@ -81,8 +99,16 @@ function calculateAnalytics(
     // Fill in the actual playback periods
     validEvents.forEach((event) => {
       // For each second in the duration, track the view
-      for (let t = event.start_time; t < event.end_time; t++) {
-        const stats = viewDistributionMap.get(t)!;
+      for (
+        let t = Math.floor(event.start_time);
+        t < Math.ceil(event.end_time);
+        t++
+      ) {
+        const stats = viewDistributionMap.get(t);
+        if (!stats) {
+          console.warn(`No stats found for time ${t}, skipping`);
+          continue;
+        }
         stats.uniqueViewers.add(event.view_id);
 
         // Increment the count for this view_id at this second
@@ -119,9 +145,14 @@ function calculateAnalytics(
         unique_views: uniqueViewIds.size,
         total_views: uniqueViewIds.size,
         total_watch_time: totalWatchTime,
-        avg_view_duration: totalWatchTime / uniqueViewIds.size,
-        first_viewed_at: sortedEvents[0].timestamp,
-        last_viewed_at: sortedEvents[sortedEvents.length - 1].timestamp,
+        avg_view_duration:
+          uniqueViewIds.size > 0 ? totalWatchTime / uniqueViewIds.size : 0,
+        first_viewed_at:
+          sortedEvents.length > 0 ? sortedEvents[0].timestamp : "",
+        last_viewed_at:
+          sortedEvents.length > 0
+            ? sortedEvents[sortedEvents.length - 1].timestamp
+            : "",
         view_distribution: distributionArray,
       },
     };
@@ -198,6 +229,14 @@ export default async function handle(
         return res
           .status(500)
           .json({ message: "Invalid response from analytics service" });
+      }
+
+      // Validate that response.data is an array
+      if (!Array.isArray(response.data)) {
+        console.error("Response data is not an array:", response.data);
+        return res
+          .status(500)
+          .json({ message: "Invalid data format from analytics service" });
       }
 
       const analytics = calculateAnalytics(response.data, videoLength);

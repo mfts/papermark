@@ -92,6 +92,10 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "video/x-msvideo", // .avi
   "video/webm", // .webm
   "video/ogg", // .ogg
+  "audio/mp4", // .m4a
+  "audio/x-m4a", // .m4a (older MIME type)
+  "audio/m4a", // .m4a (alternative MIME type)
+  "audio/mpeg", // .mp3
   "application/vnd.google-earth.kml+xml", // .kml
   "application/vnd.google-earth.kmz", // .kmz
   "application/vnd.ms-outlook", // .msg
@@ -138,6 +142,10 @@ export const FULL_PLAN_ACCEPTED_FILE_TYPES = {
   "video/x-msvideo": [], // ".avi"
   "video/webm": [], // ".webm"
   "video/ogg": [], // ".ogg"
+  "audio/mp4": [], // ".m4a"
+  "audio/x-m4a": [], // ".m4a"
+  "audio/m4a": [], // ".m4a"
+  "audio/mpeg": [], // ".mp3"
   "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
   "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
   "application/vnd.ms-outlook": [".msg"], // ".msg"

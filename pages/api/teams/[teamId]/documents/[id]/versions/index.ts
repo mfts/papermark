@@ -133,7 +133,11 @@ export default async function handle(
         );
       }
 
-      if (type === "video" && contentType !== "video/mp4") {
+      if (
+        type === "video" &&
+        contentType !== "video/mp4" &&
+        contentType?.startsWith("video/")
+      ) {
         await processVideo.trigger(
           {
             videoUrl: url,
