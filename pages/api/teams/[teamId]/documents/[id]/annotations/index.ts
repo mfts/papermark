@@ -1,11 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
 import { errorhandler } from "@/lib/errorHandler";
-import prisma, { Prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
