@@ -33,7 +33,19 @@ export function calculateTokenCount(text: string, tokenizer?: any): number {
         }
     }
 
-    return Math.ceil(text.length / 4);
+    const chars = text.length;
+    const tableLines = text.split('\n').filter(line => line.includes('|') && /\d/.test(line));
+    const numberCount = (text.match(/\d/g) || []).length;
+    const isFinancialTable = tableLines.length > 2 && numberCount > chars * 0.1;
+
+    if (isFinancialTable) {
+        return Math.ceil(chars / 3.2);
+    }
+    const specialCharCount = (text.match(/[^\w\s]/g) || []).length;
+    if (specialCharCount > chars * 0.3) {
+        return Math.ceil(chars / 3.5);
+    }
+    return Math.ceil(chars / 4);
 }
 
 export function generateLightweightHash(text: string): string {
@@ -91,4 +103,75 @@ export function generateChunkHash(content: string, documentId: string, index: nu
     return createHash('sha256')
         .update(`${content}_${documentId}_${index}`)
         .digest('hex');
+}
+
+export function hasMeaningfulContent(content: string): boolean {
+    const lines = content.split('\n');
+    let meaningfulLines = 0;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+
+        if (trimmed.length === 0) continue;
+
+        if (trimmed.match(/^#+\s*$/)) continue;
+
+        if (trimmed.match(/^---+$/)) continue;
+
+        if (trimmed.match(/^---PAGE_BREAK---$/)) continue;
+
+        if (trimmed.length > 10) {
+            meaningfulLines++;
+        }
+    }
+
+    return meaningfulLines >= 2;
+}
+
+export function detectContextualHeaders(text: string, position: number, parentSection?: string): string {
+    const lines = text.split('\n');
+    const currentLine = lines[position];
+
+    if (!currentLine) return 'Unknown Section';
+
+    const headerMatch = currentLine.match(/^(#{1,6})\s+(.+)$/);
+    if (!headerMatch) return 'Unknown Section';
+
+    const headerText = headerMatch[2].trim();
+
+    if (headerText.toUpperCase().includes('LIMITED') || headerText.toUpperCase().includes('INC')) {
+        return `${headerText} - Financial Statements`;
+    }
+
+    if (headerText.toUpperCase().includes('BENEFIT') && headerText.toUpperCase().includes('ILLUSTRATION')) {
+        return 'Benefit Illustration - Policy Details';
+    }
+
+    if (headerText.toUpperCase().includes('CONSOLIDATED') && headerText.toUpperCase().includes('STATEMENT')) {
+        return `Consolidated Financial Statements - ${headerText}`;
+    }
+
+    return headerText;
+}
+
+export function findActualContentStart(contentText: string, startLine: number, allLines: string[]): number {
+    const lines = contentText.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.length > 10 && !line.match(/^#+\s*$/)) {
+            return startLine + i;
+        }
+    }
+    return startLine;
+}
+
+export function findActualContentEnd(contentText: string, startLine: number, allLines: string[]): number {
+    const lines = contentText.split('\n');
+    for (let i = lines.length - 1; i >= 0; i--) {
+        const line = lines[i].trim();
+        if (line.length > 10 && !line.match(/^#+\s*$/)) {
+            return startLine + i;
+        }
+    }
+    return startLine + lines.length - 1;
 }

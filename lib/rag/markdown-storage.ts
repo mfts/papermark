@@ -39,6 +39,8 @@ export interface ChunkData {
     sectionHeader?: string;
     headerHierarchy?: string; // JSON string of array
     isSmallChunk?: boolean;
+    startLine?: number;
+    endLine?: number;
     vectorId?: string;
 }
 
@@ -68,6 +70,8 @@ export async function saveChunksToDB(
                 sectionHeader: chunk.sectionHeader,
                 headerHierarchy: chunk.headerHierarchy,
                 isSmallChunk: chunk.isSmallChunk,
+                startLine: chunk.startLine,
+                endLine: chunk.endLine,
                 vectorId: chunk?.vectorId || null
             }))
         });

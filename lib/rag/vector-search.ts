@@ -129,7 +129,15 @@ export class VectorSearchService {
                         pageRanges: payload.metadata?.pageRanges || ['1'],
                         sectionHeader: payload.metadata?.sectionHeader || '',
                         chunkIndex: payload.metadata?.chunkIndex || 0,
-                        documentName: payload.metadata?.documentName || ''
+                        documentName: payload.metadata?.documentName || '',
+                        headerHierarchy: payload.metadata?.headerHierarchy || [],
+                        isSmallChunk: payload.metadata?.isSmallChunk || false,
+                        startLine: payload.metadata?.startLine || 0,
+                        endLine: payload.metadata?.endLine || 0,
+                        tokenCount: payload.metadata?.tokenCount || 0,
+                        contentType: payload.metadata?.contentType || '',
+                        dataroomId: payload.metadata?.dataroomId || '',
+                        teamId: payload.metadata?.teamId || ''
                     }
                 };
             });

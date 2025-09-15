@@ -10,8 +10,6 @@ import {
   calculateTimeout,
   makeApiCall,
 } from "./utils/api-utils";
-
-// Types for document processing
 export interface DocumentProcessingResult {
   success: boolean;
   chunks: DocumentChunk[];
@@ -32,6 +30,10 @@ export interface DocumentChunk {
     pageRanges?: string[];
     tokenCount?: number;
     sectionHeader?: string;
+    headerHierarchy?: string[];
+    isSmallChunk?: boolean;
+    startLine?: number;
+    endLine?: number;
   };
   chunkHash: string;
 }
@@ -56,7 +58,6 @@ export interface DoclingConfig {
   supportedFormats: string[];
 }
 
-// Docling API integration
 export class DoclingProcessor {
   private config: DoclingConfig;
 
@@ -164,7 +165,7 @@ export class DoclingProcessor {
         image_export_mode: "embedded",
         do_ocr: config.requiresOcr,
         force_ocr: config.requiresOcr,
-        ocr_engine: "easyocr", // tesserocr
+        ocr_engine: "tesserocr", // tesserocr
         pdf_backend: "dlparse_v4",
         table_mode: "accurate",
         pipeline: "standard",
@@ -533,6 +534,8 @@ export class DocumentProcessor {
           sectionHeader: chunk.metadata.sectionHeader,
           headerHierarchy: chunk.metadata.headerHierarchy,
           isSmallChunk: chunk.metadata.isSmallChunk,
+          startLine: chunk.metadata.startLine,
+          endLine: chunk.metadata.endLine,
         },
         chunkHash: chunk.chunkHash,
       }));
@@ -572,6 +575,8 @@ export class DocumentProcessor {
               ? JSON.stringify(chunk.metadata.headerHierarchy)
               : undefined,
             isSmallChunk: chunk.metadata.isSmallChunk,
+            startLine: chunk.metadata.startLine,
+            endLine: chunk.metadata.endLine,
           })),
         ),
       ]);

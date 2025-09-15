@@ -50,6 +50,10 @@ CREATE TABLE "DocumentChunk" (
     "sectionHeader" TEXT,
     "headerHierarchy" TEXT,
     "isSmallChunk" BOOLEAN,
+    "semanticType" TEXT,
+    "level" INTEGER,
+    "startLine" INTEGER,
+    "endLine" INTEGER,
     "vectorId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -64,6 +68,7 @@ CREATE TABLE "RAGChatSession" (
     "linkId" TEXT NOT NULL,
     "viewerId" TEXT NOT NULL,
     "title" TEXT,
+    "previewMessage" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -142,6 +147,12 @@ CREATE INDEX "DocumentChunk_vectorId_idx" ON "DocumentChunk"("vectorId");
 CREATE INDEX "DocumentChunk_sectionHeader_idx" ON "DocumentChunk"("sectionHeader");
 
 -- CreateIndex
+CREATE INDEX "DocumentChunk_semanticType_idx" ON "DocumentChunk"("semanticType");
+
+-- CreateIndex
+CREATE INDEX "DocumentChunk_level_idx" ON "DocumentChunk"("level");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "DocumentChunk_documentId_chunkIndex_key" ON "DocumentChunk"("documentId", "chunkIndex");
 
 -- CreateIndex
@@ -182,6 +193,12 @@ ALTER TABLE "DataroomRAGSettings" ADD CONSTRAINT "DataroomRAGSettings_dataroomId
 
 -- AddForeignKey
 ALTER TABLE "DocumentChunk" ADD CONSTRAINT "DocumentChunk_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "Document"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RAGChatSession" ADD CONSTRAINT "RAGChatSession_linkId_fkey" FOREIGN KEY ("linkId") REFERENCES "Link"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RAGChatSession" ADD CONSTRAINT "RAGChatSession_viewerId_fkey" FOREIGN KEY ("viewerId") REFERENCES "Viewer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "RAGChatMessage" ADD CONSTRAINT "RAGChatMessage_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "RAGChatSession"("id") ON DELETE CASCADE ON UPDATE CASCADE;

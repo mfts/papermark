@@ -52,6 +52,9 @@ export interface ChunkMetadata {
     dataroomId?: string;
     teamId?: string;
     isSmallChunk?: boolean;
+    headerHierarchy?: string[];
+    startLine?: number;
+    endLine?: number;
 }
 
 export interface GradedDocument {

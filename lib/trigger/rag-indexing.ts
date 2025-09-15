@@ -511,6 +511,10 @@ async function processRAGIndexingRequest(
         teamId: request.teamId,
         content: chunk.content,
         tokenCount: chunk.metadata.tokenCount,
+        headerHierarchy: chunk.metadata.headerHierarchy,
+        isSmallChunk: chunk.metadata.isSmallChunk,
+        startLine: chunk.metadata.startLine,
+        endLine: chunk.metadata.endLine,
         createdAt: new Date().toISOString(),
       },
     };

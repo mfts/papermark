@@ -40,6 +40,9 @@ model DocumentChunk {
   headerHierarchy String? // JSON string of header hierarchy array
   isSmallChunk    Boolean? // Whether this is a small chunk
 
+  startLine    Int?    // Line number where chunk starts in original document
+  endLine      Int?    // Line number where chunk ends in original document
+
   vectorId String? // ID (Qdrant)
 
   createdAt DateTime @default(now())

@@ -94,7 +94,9 @@ export class QdrantVectorStore {
                 { field_name: "sectionHeader", field_schema: "keyword" as const },
                 { field_name: "chunkIndex", field_schema: "integer" as const },
                 { field_name: "tokenCount", field_schema: "integer" as const },
-                { field_name: "isSmallChunk", field_schema: "bool" as const }
+                { field_name: "isSmallChunk", field_schema: "bool" as const },
+                { field_name: "startLine", field_schema: "integer" as const },
+                { field_name: "endLine", field_schema: "integer" as const }
             ];
             for (const indexField of indexFields) {
                 try {
@@ -447,7 +449,11 @@ export class QdrantVectorStore {
                                 dataroomId: result.payload?.dataroomId || '',
                                 teamId: result.payload?.teamId || '',
                                 chunkId: result.payload?.chunkId || '',
-                                createdAt: result.payload?.createdAt || ''
+                                createdAt: result.payload?.createdAt || '',
+                                headerHierarchy: result.payload?.headerHierarchy || [],
+                                isSmallChunk: result.payload?.isSmallChunk || false,
+                                startLine: result.payload?.startLine || 0,
+                                endLine: result.payload?.endLine || 0
                             },
                         },
                     };
