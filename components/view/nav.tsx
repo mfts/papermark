@@ -43,6 +43,7 @@ import {
   BreadcrumbSeparator,
 } from "../ui/breadcrumb";
 import { Button } from "../ui/button";
+import { AnnotationToggle } from "./annotations/annotation-toggle";
 import { ConversationSidebar } from "./conversations/sidebar";
 import ReportForm from "./report-form";
 
@@ -60,6 +61,10 @@ export type TNavData = {
   conversationsEnabled?: boolean;
   assistantEnabled?: boolean;
   isTeamMember?: boolean;
+  annotationsEnabled?: boolean;
+  hasAnnotations?: boolean;
+  annotationsFeatureEnabled?: boolean;
+  onToggleAnnotations?: (enabled: boolean) => void;
 };
 
 export default function Nav({
@@ -99,6 +104,10 @@ export default function Nav({
     conversationsEnabled,
     assistantEnabled,
     isTeamMember,
+    annotationsEnabled,
+    hasAnnotations,
+    annotationsFeatureEnabled,
+    onToggleAnnotations,
   } = navData;
 
   const [showConversations, setShowConversations] = useState(false);
@@ -297,6 +306,14 @@ export default function Nav({
               >
                 View FAQ
               </Button>
+            )}
+            {/* Annotations toggle button */}
+            {onToggleAnnotations && annotationsFeatureEnabled && (
+              <AnnotationToggle
+                enabled={annotationsEnabled || false}
+                onToggle={onToggleAnnotations}
+                hasAnnotations={hasAnnotations}
+              />
             )}
             {embeddedLinks && embeddedLinks.length > 0 ? (
               <DropdownMenu>

@@ -5,13 +5,22 @@ import React from "react";
 
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
+import useSWR from "swr";
 
+import { useViewerAnnotations } from "@/lib/swr/use-annotations";
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 import { WatermarkConfig } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, fetcher } from "@/lib/utils";
+
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 import { ScreenProtector } from "../ScreenProtection";
+import { AnnotationPanel } from "../annotations/annotation-panel";
 import Nav, { TNavData } from "../nav";
 import { PoweredBy } from "../powered-by";
 import Question from "../question";
@@ -93,6 +102,11 @@ export default function PagesHorizontalViewer({
 
   const [submittedFeedback, setSubmittedFeedback] = useState<boolean>(false);
   const [accountCreated, setAccountCreated] = useState<boolean>(false);
+  const [annotationsEnabled, setAnnotationsEnabled] = useState(false);
+
+  // Fetch annotations for this link
+  const { annotations } = useViewerAnnotations(linkId, documentId, viewId);
+  const hasAnnotations = annotations && annotations.length > 0;
   const [scale, setScale] = useState<number>(1);
 
   const initialViewedPages = Array.from({ length: numPages }, (_, index) => ({
@@ -563,6 +577,17 @@ export default function PagesHorizontalViewer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [containerRef.current, pageNumber, imageDimensions]);
 
+  const handleToggleAnnotations = (enabled: boolean) => {
+    setAnnotationsEnabled(enabled);
+  };
+
+  const navDataWithAnnotations = {
+    ...navData,
+    annotationsEnabled,
+    hasAnnotations,
+    onToggleAnnotations: handleToggleAnnotations,
+  };
+
   return (
     <>
       <Nav
@@ -572,267 +597,304 @@ export default function PagesHorizontalViewer({
         hasWatermark={!!watermarkConfig}
         handleZoomIn={handleZoomIn}
         handleZoomOut={handleZoomOut}
-        navData={navData}
+        navData={navDataWithAnnotations}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
-        className={cn("relative flex items-center overflow-hidden")}
+        className="relative overflow-hidden"
       >
-        <div
-          className={cn(
-            "relative h-full w-full",
-            !isWindowFocused &&
-              screenshotProtectionEnabled &&
-              "blur-xl transition-all duration-300",
-          )}
-          ref={containerRef}
-        >
-          <div className={cn("h-full w-full", scale > 1 && "overflow-auto")}>
-            <div
-              className="flex min-h-full w-full items-center justify-center"
-              style={{
-                transform: `scale(${scale})`,
-                transition: "transform 0.2s ease-out",
-                transformOrigin: scale <= 1 ? "center center" : "left top",
-                minWidth: scale > 1 ? `${100 * scale}%` : "100%",
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              {pageNumber <= numPagesWithAccountCreation &&
-              pages &&
-              loadedImages[pageNumber - 1]
-                ? pages.map((page, index) => (
-                    <div
-                      key={index}
-                      className={cn(
-                        "viewer-container relative mx-auto w-full",
-                        pageNumber - 1 === index
-                          ? "flex justify-center"
-                          : "hidden",
-                      )}
-                    >
-                      <img
-                        className={cn(
-                          "viewer-image-mobile !pointer-events-auto max-h-[calc(100dvh-64px)] object-contain",
-                        )}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                        ref={(ref) => {
-                          imageRefs.current[index] = ref;
-                          if (ref) {
-                            ref.onload = () =>
-                              setImageDimensions((prev) => ({
-                                ...prev,
-                                [index]: {
-                                  width: ref.clientWidth,
-                                  height: ref.clientHeight,
-                                },
-                              }));
-                          }
-                        }}
-                        useMap={`#page-map-${index + 1}`}
-                        src={
-                          loadedImages[index]
-                            ? page.file
-                            : "https://www.papermark.com/_static/blank.gif"
-                        }
-                        alt={`Page ${index + 1}`}
-                      />
-
-                      {/* Add Watermark Component */}
-                      {watermarkConfig ? (
-                        <SVGWatermark
-                          config={watermarkConfig}
-                          viewerData={{
-                            email: viewerEmail,
-                            date: new Date().toLocaleDateString(),
-                            time: new Date().toLocaleTimeString(),
-                            link: linkName,
-                            ipAddress: ipAddress,
-                          }}
-                          documentDimensions={
-                            imageDimensions[index] || {
-                              width: 0,
-                              height: 0,
-                            }
-                          }
-                          pageIndex={index}
-                        />
-                      ) : null}
-
-                      {page.pageLinks ? (
-                        <map name={`page-map-${index + 1}`}>
-                          {page.pageLinks
-                            .filter((link) => !link.href.endsWith(".gif"))
-                            .map((link, index) => (
-                              <area
-                                key={index}
-                                shape="rect"
-                                coords={scaleCoordinates(
-                                  link.coords,
-                                  getScaleFactor({
-                                    naturalHeight: page.metadata.height,
-                                    scaleFactor: page.metadata.scaleFactor,
-                                  }),
-                                )}
-                                href={link.href}
-                                onClick={(e) => handleLinkClick(link.href, e)}
-                                target={
-                                  link.href.startsWith("#") ? "_self" : "_blank"
+        <ResizablePanelGroup direction="horizontal">
+          {/* Document Content */}
+          <ResizablePanel
+            defaultSize={annotationsEnabled && hasAnnotations ? 75 : 100}
+          >
+            <div className="flex h-full w-full items-center">
+              <div
+                className={cn(
+                  "relative h-full w-full",
+                  !isWindowFocused &&
+                    screenshotProtectionEnabled &&
+                    "blur-xl transition-all duration-300",
+                )}
+                ref={containerRef}
+              >
+                <div
+                  className={cn("h-full w-full", scale > 1 && "overflow-auto")}
+                >
+                  <div
+                    className="flex min-h-full w-full items-center justify-center"
+                    style={{
+                      transform: `scale(${scale})`,
+                      transition: "transform 0.2s ease-out",
+                      transformOrigin:
+                        scale <= 1 ? "center center" : "left top",
+                      minWidth: scale > 1 ? `${100 * scale}%` : "100%",
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
+                    {pageNumber <= numPagesWithAccountCreation &&
+                    pages &&
+                    loadedImages[pageNumber - 1]
+                      ? pages.map((page, index) => (
+                          <div
+                            key={index}
+                            className={cn(
+                              "viewer-container relative mx-auto w-full",
+                              pageNumber - 1 === index
+                                ? "flex justify-center"
+                                : "hidden",
+                            )}
+                          >
+                            <img
+                              className={cn(
+                                "viewer-image-mobile !pointer-events-auto max-h-[calc(100dvh-64px)] object-contain",
+                              )}
+                              onContextMenu={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }}
+                              ref={(ref) => {
+                                imageRefs.current[index] = ref;
+                                if (ref) {
+                                  ref.onload = () =>
+                                    setImageDimensions((prev) => ({
+                                      ...prev,
+                                      [index]: {
+                                        width: ref.clientWidth,
+                                        height: ref.clientHeight,
+                                      },
+                                    }));
                                 }
-                                rel={
-                                  link.href.startsWith("#")
-                                    ? undefined
-                                    : "noopener noreferrer"
+                              }}
+                              useMap={`#page-map-${index + 1}`}
+                              src={
+                                loadedImages[index]
+                                  ? page.file
+                                  : "https://www.papermark.com/_static/blank.gif"
+                              }
+                              alt={`Page ${index + 1}`}
+                            />
+
+                            {/* Add Watermark Component */}
+                            {watermarkConfig ? (
+                              <SVGWatermark
+                                config={watermarkConfig}
+                                viewerData={{
+                                  email: viewerEmail,
+                                  date: new Date().toLocaleDateString(),
+                                  time: new Date().toLocaleTimeString(),
+                                  link: linkName,
+                                  ipAddress: ipAddress,
+                                }}
+                                documentDimensions={
+                                  imageDimensions[index] || {
+                                    width: 0,
+                                    height: 0,
+                                  }
                                 }
+                                pageIndex={index}
                               />
-                            ))}
-                        </map>
-                      ) : null}
+                            ) : null}
 
-                      {/** Automatically Render Overlays **/}
-                      {page.pageLinks
-                        ? page.pageLinks
-                            .filter((link) => link.href.endsWith(".gif"))
-                            .map((link, linkIndex) => {
-                              const [x1, y1, x2, y2] = scaleCoordinates(
-                                link.coords,
-                                getScaleFactor({
-                                  naturalHeight: page.metadata.height,
-                                  scaleFactor: page.metadata.scaleFactor,
-                                }),
-                              )
-                                .split(",")
-                                .map(Number);
+                            {page.pageLinks ? (
+                              <map name={`page-map-${index + 1}`}>
+                                {page.pageLinks
+                                  .filter((link) => !link.href.endsWith(".gif"))
+                                  .map((link, index) => (
+                                    <area
+                                      key={index}
+                                      shape="rect"
+                                      coords={scaleCoordinates(
+                                        link.coords,
+                                        getScaleFactor({
+                                          naturalHeight: page.metadata.height,
+                                          scaleFactor:
+                                            page.metadata.scaleFactor,
+                                        }),
+                                      )}
+                                      href={link.href}
+                                      onClick={(e) =>
+                                        handleLinkClick(link.href, e)
+                                      }
+                                      target={
+                                        link.href.startsWith("#")
+                                          ? "_self"
+                                          : "_blank"
+                                      }
+                                      rel={
+                                        link.href.startsWith("#")
+                                          ? undefined
+                                          : "noopener noreferrer"
+                                      }
+                                    />
+                                  ))}
+                              </map>
+                            ) : null}
 
-                              const overlayWidth = x2 - x1;
-                              const overlayHeight = y2 - y1;
+                            {/** Automatically Render Overlays **/}
+                            {page.pageLinks
+                              ? page.pageLinks
+                                  .filter((link) => link.href.endsWith(".gif"))
+                                  .map((link, linkIndex) => {
+                                    const [x1, y1, x2, y2] = scaleCoordinates(
+                                      link.coords,
+                                      getScaleFactor({
+                                        naturalHeight: page.metadata.height,
+                                        scaleFactor: page.metadata.scaleFactor,
+                                      }),
+                                    )
+                                      .split(",")
+                                      .map(Number);
 
-                              return (
-                                <img
-                                  key={`overlay-${index}-${linkIndex}`}
-                                  src={link.href} // Assuming the href points to a GIF or overlay image
-                                  alt={`Overlay ${index + 1}`}
-                                  style={{
-                                    position: "absolute",
-                                    top: y1,
-                                    left: x1,
-                                    width: `${overlayWidth}px`,
-                                    height: `${overlayHeight}px`,
-                                    pointerEvents: "none", // To ensure the overlay doesn't interfere with interaction
-                                  }}
-                                />
-                              );
-                            })
-                        : null}
-                    </div>
-                  ))
-                : null}
+                                    const overlayWidth = x2 - x1;
+                                    const overlayHeight = y2 - y1;
 
-              {enableQuestion &&
-              feedback &&
-              pageNumber === numPagesWithFeedback ? (
-                <div
-                  className={cn("relative block h-dvh w-full")}
-                  style={{ height: "calc(100dvh - 64px)" }}
-                >
-                  <Question
-                    accentColor={brand?.accentColor}
-                    feedback={feedback}
-                    viewId={viewId}
-                    submittedFeedback={submittedFeedback}
-                    setSubmittedFeedback={setSubmittedFeedback}
-                    isPreview={isPreview}
-                  />
+                                    return (
+                                      <img
+                                        key={`overlay-${index}-${linkIndex}`}
+                                        src={link.href} // Assuming the href points to a GIF or overlay image
+                                        alt={`Overlay ${index + 1}`}
+                                        style={{
+                                          position: "absolute",
+                                          top: y1,
+                                          left: x1,
+                                          width: `${overlayWidth}px`,
+                                          height: `${overlayHeight}px`,
+                                          pointerEvents: "none", // To ensure the overlay doesn't interfere with interaction
+                                        }}
+                                      />
+                                    );
+                                  })
+                              : null}
+                          </div>
+                        ))
+                      : null}
+
+                    {enableQuestion &&
+                    feedback &&
+                    pageNumber === numPagesWithFeedback ? (
+                      <div
+                        className={cn("relative block h-dvh w-full")}
+                        style={{ height: "calc(100dvh - 64px)" }}
+                      >
+                        <Question
+                          accentColor={brand?.accentColor}
+                          feedback={feedback}
+                          viewId={viewId}
+                          submittedFeedback={submittedFeedback}
+                          setSubmittedFeedback={setSubmittedFeedback}
+                          isPreview={isPreview}
+                        />
+                      </div>
+                    ) : null}
+
+                    {showStatsSlideWithAccountCreation &&
+                    pageNumber === numPagesWithAccountCreation ? (
+                      <div
+                        className={cn("relative block h-dvh w-full")}
+                        style={{ height: "calc(100dvh - 64px)" }}
+                      >
+                        <ViewDurationSummary
+                          linkId={linkId}
+                          viewedPages={viewedPages}
+                          viewerEmail={viewerEmail}
+                          accountCreated={accountCreated}
+                          setAccountCreated={setAccountCreated}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
+              </div>
+
+              {/* Navigation arrows with hover zones */}
+              {pageNumber > 1 && (
+                <div
+                  className={cn(
+                    "group absolute left-0 top-0 z-[1] flex h-full items-center",
+                    isMobile ? "w-1/6" : "w-32",
+                    isMobile ? "justify-start pl-1" : "justify-start pl-4",
+                  )}
+                  onClick={isMobile ? goToPreviousPage : undefined}
+                >
+                  <button
+                    onClick={!isMobile ? goToPreviousPage : undefined}
+                    className={cn(
+                      "rounded-full bg-gray-950/50 p-1 transition-opacity duration-200 hover:bg-gray-950/75",
+                      "opacity-50 group-hover:opacity-100",
+                    )}
+                  >
+                    <ChevronLeftIcon
+                      className={cn("size-10 text-white", isMobile && "size-8")}
+                    />
+                  </button>
+                </div>
+              )}
+
+              {pageNumber < numPagesWithAccountCreation && (
+                <div
+                  className={cn(
+                    "group absolute right-0 top-0 z-[1] flex h-full items-center",
+                    isMobile ? "w-1/6" : "w-32",
+                    isMobile ? "justify-end pr-1" : "justify-end pr-4",
+                  )}
+                  onClick={isMobile ? goToNextPage : undefined}
+                >
+                  <button
+                    onClick={!isMobile ? goToNextPage : undefined}
+                    className={cn(
+                      "rounded-full bg-gray-950/50 p-1 transition-opacity duration-200 hover:bg-gray-950/75",
+                      "opacity-50 group-hover:opacity-100",
+                    )}
+                  >
+                    <ChevronRightIcon
+                      className={cn("size-10 text-white", isMobile && "size-8")}
+                    />
+                  </button>
+                </div>
+              )}
+
+              {feedbackEnabled && pageNumber <= numPages ? (
+                <Toolbar
+                  viewId={viewId}
+                  pageNumber={pageNumber}
+                  isPreview={isPreview}
+                />
               ) : null}
 
-              {showStatsSlideWithAccountCreation &&
-              pageNumber === numPagesWithAccountCreation ? (
-                <div
-                  className={cn("relative block h-dvh w-full")}
-                  style={{ height: "calc(100dvh - 64px)" }}
-                >
-                  <ViewDurationSummary
-                    linkId={linkId}
-                    viewedPages={viewedPages}
-                    viewerEmail={viewerEmail}
-                    accountCreated={accountCreated}
-                    setAccountCreated={setAccountCreated}
-                  />
-                </div>
-              ) : null}
+              {screenshotProtectionEnabled ? <ScreenProtector /> : null}
+              {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
+              <AwayPoster
+                isVisible={isInactive}
+                inactivityThreshold={getTrackingOptions().inactivityThreshold}
+                onDismiss={updateActivity}
+              />
             </div>
-          </div>
-        </div>
+            {/* </div> */}
+          </ResizablePanel>
 
-        {/* Navigation arrows with hover zones */}
-        {pageNumber > 1 && (
-          <div
-            className={cn(
-              "group absolute left-0 top-0 z-[1] flex h-full items-center",
-              isMobile ? "w-1/6" : "w-32",
-              isMobile ? "justify-start pl-1" : "justify-start pl-4",
+          {/* Annotation Panel - Right Side */}
+          {navData.annotationsFeatureEnabled &&
+            annotationsEnabled &&
+            hasAnnotations && (
+              <>
+                <ResizableHandle className="w-1 bg-transparent transition-colors hover:bg-white/20" />
+                <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
+                  <AnnotationPanel
+                    brand={brand}
+                    linkId={linkId}
+                    documentId={documentId}
+                    viewId={viewId}
+                    currentPage={pageNumber}
+                    isVisible={true}
+                  />
+                </ResizablePanel>
+              </>
             )}
-            onClick={isMobile ? goToPreviousPage : undefined}
-          >
-            <button
-              onClick={!isMobile ? goToPreviousPage : undefined}
-              className={cn(
-                "rounded-full bg-gray-950/50 p-1 transition-opacity duration-200 hover:bg-gray-950/75",
-                "opacity-50 group-hover:opacity-100",
-              )}
-            >
-              <ChevronLeftIcon
-                className={cn("size-10 text-white", isMobile && "size-8")}
-              />
-            </button>
-          </div>
-        )}
-
-        {pageNumber < numPagesWithAccountCreation && (
-          <div
-            className={cn(
-              "group absolute right-0 top-0 z-[1] flex h-full items-center",
-              isMobile ? "w-1/6" : "w-32",
-              isMobile ? "justify-end pr-1" : "justify-end pr-4",
-            )}
-            onClick={isMobile ? goToNextPage : undefined}
-          >
-            <button
-              onClick={!isMobile ? goToNextPage : undefined}
-              className={cn(
-                "rounded-full bg-gray-950/50 p-1 transition-opacity duration-200 hover:bg-gray-950/75",
-                "opacity-50 group-hover:opacity-100",
-              )}
-            >
-              <ChevronRightIcon
-                className={cn("size-10 text-white", isMobile && "size-8")}
-              />
-            </button>
-          </div>
-        )}
-
-        {feedbackEnabled && pageNumber <= numPages ? (
-          <Toolbar
-            viewId={viewId}
-            pageNumber={pageNumber}
-            isPreview={isPreview}
-          />
-        ) : null}
-
-        {screenshotProtectionEnabled ? <ScreenProtector /> : null}
-        {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
-        <AwayPoster
-          isVisible={isInactive}
-          inactivityThreshold={getTrackingOptions().inactivityThreshold}
-          onDismiss={updateActivity}
-        />
+        </ResizablePanelGroup>
       </div>
     </>
   );

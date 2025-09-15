@@ -65,6 +65,7 @@ export default function DocumentView({
   useCustomAccessForm,
   logoOnAccessForm,
   isEmbedded,
+  annotationsEnabled,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -86,6 +87,7 @@ export default function DocumentView({
   useCustomAccessForm?: boolean;
   isEmbedded?: boolean;
   logoOnAccessForm?: boolean;
+  annotationsEnabled?: boolean;
 }) {
   useDisablePrint();
   const {
@@ -299,6 +301,7 @@ export default function DocumentView({
           showAccountCreationSlide={showAccountCreationSlide}
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
+          annotationsEnabled={annotationsEnabled}
         />
       ) : (
         <div className="flex h-screen items-center justify-center">

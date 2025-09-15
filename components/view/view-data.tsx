@@ -58,6 +58,7 @@ export default function ViewData({
   viewerEmail,
   dataroomId,
   canDownload,
+  annotationsEnabled,
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE | DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE;
   link: LinkWithDocument | LinkWithDataroomDocument;
@@ -74,6 +75,7 @@ export default function ViewData({
   viewerEmail?: string;
   dataroomId?: string;
   canDownload?: boolean;
+  annotationsEnabled?: boolean;
 }) {
   const { isMobile } = useMediaQuery();
 
@@ -97,6 +99,7 @@ export default function ViewData({
       document.downloadOnly ||
       isDownloadAllowed(canDownload, link.allowDownload ?? false),
     isTeamMember: viewData.isTeamMember,
+    annotationsFeatureEnabled: annotationsEnabled,
   };
 
   // Calculate allowDownload once for all components
