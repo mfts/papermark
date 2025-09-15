@@ -36,6 +36,14 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
+      const teamHasUser = await prisma.team.findUnique({
+        where: { id: teamId, users: { some: { userId } } },
+      });
+
+      if (!teamHasUser) {
+        return res.status(401).end("Unauthorized");
+      }
+
       // First check if document exists and get basic info
       const document = await prisma.document.findUnique({
         where: {
@@ -45,11 +53,6 @@ export default async function handle(
         select: {
           id: true,
           teamId: true,
-          team: {
-            select: {
-              plan: true,
-            },
-          },
           _count: {
             select: {
               views: { where: { isArchived: false } },

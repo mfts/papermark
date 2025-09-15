@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { getFeatureFlags } from "@/lib/featureFlags";
@@ -9,33 +10,7 @@ import prisma from "@/lib/prisma";
 import { usePlan } from "@/lib/swr/use-billing";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
-
-// Helper function to serialize BigInt values to strings
-function serializeBigInt(obj: any): any {
-  if (obj === null || obj === undefined) {
-    return obj;
-  }
-
-  if (typeof obj === "bigint") {
-    return obj.toString();
-  }
-
-  if (Array.isArray(obj)) {
-    return obj.map(serializeBigInt);
-  }
-
-  if (typeof obj === "object") {
-    const serialized: any = {};
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        serialized[key] = serializeBigInt(obj[key]);
-      }
-    }
-    return serialized;
-  }
-
-  return obj;
-}
+import { serializeFileSize } from "@/lib/utils";
 
 export default async function handle(
   req: NextApiRequest,
@@ -161,7 +136,7 @@ export default async function handle(
         where: {
           versionId: primaryVersion.id,
           pageLinks: {
-            not: "null" as any,
+            not: Prisma.JsonNull,
           },
         },
       });
@@ -171,17 +146,17 @@ export default async function handle(
     // Basic response for instant loading
     const response = {
       document: {
-        ...serializeBigInt(document),
-        primaryVersion: serializeBigInt(primaryVersion),
+        ...serializeFileSize(document),
+        primaryVersion: serializeFileSize(primaryVersion),
         hasPageLinks,
         isEmpty: !hasLinks && !hasViews, // Flag for empty state optimization
       },
       limits: {
-        canAddLinks: limits?.links
-          ? document._count.links < limits.links
+        canAddLinks: limits?.links ? limits?.usage?.links < limits.links : true,
+        canAddDocuments: limits?.documents
+          ? limits?.usage?.documents < limits.documents
           : true,
-        canAddDocuments: limits?.documents ? true : true, // Simplified for this context
-        canAddUsers: limits?.users ? true : true,
+        canAddUsers: limits?.users ? limits?.usage?.users < limits.users : true,
       },
       featureFlags: {
         annotations: featureFlags.annotations,

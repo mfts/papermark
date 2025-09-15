@@ -81,6 +81,7 @@ export default function DocumentPage() {
   // Always fetch links to show empty states properly
   const { links, error: linksError, mutate: mutateLinks } = useDocumentLinks();
   const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
 
@@ -131,7 +132,7 @@ export default function DocumentPage() {
     );
   }
 
-  if (!prismaDocument || !primaryVersion) {
+  if (!prismaDocument || !primaryVersion || !teamId) {
     return (
       <AppLayout>
         <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
@@ -150,7 +151,7 @@ export default function DocumentPage() {
         <DocumentHeader
           primaryVersion={primaryVersion}
           prismaDocument={prismaDocument}
-          teamId={teamInfo?.currentTeam?.id!}
+          teamId={teamId}
           actions={[
             <NotionAccessibilityIndicator
               key={"notion-status"}
@@ -162,7 +163,7 @@ export default function DocumentPage() {
               {featureFlags?.annotations && (
                 <AnnotationSheet
                   documentId={prismaDocument.id}
-                  teamId={teamInfo?.currentTeam?.id!}
+                  teamId={teamId}
                   numPages={primaryVersion.numPages || 1}
                 />
               )}
@@ -212,7 +213,7 @@ export default function DocumentPage() {
                 <VideoAnalytics
                   documentId={prismaDocument.id}
                   primaryVersion={primaryVersion}
-                  teamId={teamInfo?.currentTeam?.id!}
+                  teamId={teamId}
                 />
               ))}
 

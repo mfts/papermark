@@ -22,11 +22,18 @@ export default async function handle(
     }
 
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
-
     const userId = (session.user as CustomUser).id;
 
     try {
-      // First check if document has any links to avoid expensive query
+      // First, ensure the requester belongs to the team
+      const teamHasUser = await prisma.team.findFirst({
+        where: { id: teamId, users: { some: { userId } } },
+        select: { id: true },
+      });
+      if (!teamHasUser) {
+        return res.status(401).end("Unauthorized");
+      }
+      // Then check if document has any links to avoid expensive query
       const document = await prisma.document.findUnique({
         where: {
           id: docId,
@@ -52,58 +59,36 @@ export default async function handle(
         return res.status(200).json([]);
       }
 
-      // Only fetch full link data if we have links
-      const { document: documentWithLinks } = await getTeamWithUsersAndDocument(
-        {
-          teamId,
-          userId,
-          docId,
-          checkOwner: true,
-          options: {
-            select: {
-              ownerId: true,
-              id: true,
-              links: {
-                where: { isArchived: false },
-                orderBy: {
-                  createdAt: "desc",
+      // Only fetch full link data if we have links (target only this document)
+      const docWithLinks = await prisma.document.findUnique({
+        where: { id: docId, teamId },
+        select: {
+          id: true,
+          ownerId: true,
+          links: {
+            where: { isArchived: false },
+            orderBy: { createdAt: "desc" },
+            include: {
+              views: { orderBy: { viewedAt: "desc" } },
+              feedback: { select: { id: true, data: true } },
+              customFields: {
+                select: {
+                  orderIndex: true,
+                  label: true,
+                  identifier: true,
+                  placeholder: true,
+                  type: true,
+                  required: true,
                 },
-                include: {
-                  views: {
-                    orderBy: {
-                      viewedAt: "desc",
-                    },
-                  },
-                  feedback: {
-                    select: {
-                      id: true,
-                      data: true,
-                    },
-                  },
-                  customFields: {
-                    select: {
-                      orderIndex: true,
-                      label: true,
-                      identifier: true,
-                      placeholder: true,
-                      type: true,
-                      required: true,
-                    },
-                    orderBy: {
-                      orderIndex: "asc",
-                    },
-                  },
-                  _count: {
-                    select: { views: true },
-                  },
-                },
+                orderBy: { orderIndex: "asc" },
               },
+              _count: { select: { views: true } },
             },
           },
         },
-      );
+      });
 
-      let links = documentWithLinks!.links;
+      let links = docWithLinks!.links;
 
       // Decrypt the password for each link
       if (links && links.length > 0) {
