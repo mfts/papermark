@@ -162,10 +162,10 @@ export class DoclingProcessor {
       sources: [{ kind: "http", url: documentUrl }],
       options: {
         to_formats: ["md"],
-        image_export_mode: "referenced",
+        image_export_mode: "placeholder",
         do_ocr: config.requiresOcr,
         force_ocr: config.requiresOcr,
-        ocr_engine: "tesserocr", // tesserocr
+        ocr_engine: "easyocr",
         pdf_backend: "dlparse_v4",
         table_mode: "accurate",
         pipeline: "standard",
@@ -173,20 +173,21 @@ export class DoclingProcessor {
         abort_on_error: false,
         do_table_structure: true,
         include_images: true,
-        images_scale: 2.0,
+        images_scale: 3.0,
         md_page_break_placeholder: "---PAGE_BREAK---",
         do_code_enrichment: false,
         do_formula_enrichment: false,
-        do_picture_classification: false,
+        do_picture_classification: true,
         do_picture_description: true,
-        picture_description_area_threshold: 0.05,
+        picture_description_area_threshold: 0.01,
         // picture_description_local: {
         //   repo_id: "HuggingFaceTB/SmolVLM-256M-Instruct",
         //   generation_config: {
         //     max_new_tokens: 600,
         //     do_sample: false,
+        //     repetition_penalty: 1.1
         //   },
-        //   prompt: "Analyze this image comprehensively and provide a detailed description. For tables: extract all headers, row/column data, numerical values, and table structure. For charts/graphs: identify chart type, axes labels, data points, trends, and key insights. For text: transcribe all visible text including headers, labels, and body content. For forms: identify all fields, labels, and input areas. For diagrams: describe the structure, components, and relationships. Be extremely thorough and preserve all numerical data, dates, and specific details exactly as shown. Focus on data accuracy and completeness."
+        //   prompt: "You are an expert document analyst. Analyze this image with extreme precision and provide a comprehensive, structured description. CRITICAL REQUIREMENTS: 1) For TABLES: Extract ALL headers, row/column data, numerical values, percentages, dates, and table structure. Preserve exact formatting and data types. 2) For CHARTS/GRAPHS: Identify chart type, axes labels, data points, trends, key insights, and numerical values. 3) For TEXT: Transcribe ALL visible text including headers, labels, body content, captions, and annotations. 4) For FORMS: Identify all fields, labels, input areas, and validation rules. 5) For DIAGRAMS: Describe structure, components, relationships, and flow. OUTPUT FORMAT: Use structured markdown with clear sections. Be extremely thorough and preserve ALL numerical data, dates, and specific details exactly as shown. Focus on data accuracy, completeness, and structural understanding. Do not summarize or generalize - extract everything visible."
         // }
       },
     };
