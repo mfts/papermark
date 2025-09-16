@@ -8,6 +8,7 @@ import { getStripe } from "@/ee/stripe/client";
 import { Feature, PlanEnum, getPlanFeatures } from "@/ee/stripe/constants";
 import { PLANS } from "@/ee/stripe/utils";
 import { CheckIcon, Users2Icon, XIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
@@ -198,6 +199,14 @@ export default function UpgradePage() {
                         },
                       )
                         .then(async (res) => {
+                          if (res.status === 429) {
+                            toast.error(
+                              "Rate limit exceeded. Please try again later.",
+                            );
+                            setSelectedPlan(null);
+                            return;
+                          }
+
                           const url = await res.json();
                           router.push(url);
                         })
@@ -226,6 +235,14 @@ export default function UpgradePage() {
                         },
                       )
                         .then(async (res) => {
+                          if (res.status === 429) {
+                            toast.error(
+                              "Rate limit exceeded. Please try again later.",
+                            );
+                            setSelectedPlan(null);
+                            return;
+                          }
+
                           const data = await res.json();
                           const { id: sessionId } = data;
                           const stripe = await getStripe(isOldAccount);

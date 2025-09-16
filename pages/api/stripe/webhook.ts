@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { processPaymentFailure } from "@/ee/features/security";
 import { stripeInstance } from "@/ee/stripe";
 import { checkoutSessionCompleted } from "@/ee/stripe/webhooks/checkout-session-completed";
 import { customerSubscriptionDeleted } from "@/ee/stripe/webhooks/customer-subscription-deleted";
@@ -30,6 +31,7 @@ const relevantEvents = new Set([
   "checkout.session.completed",
   "customer.subscription.updated",
   "customer.subscription.deleted",
+  "payment_intent.payment_failed",
 ]);
 
 export default async function webhookHandler(
@@ -65,6 +67,9 @@ export default async function webhookHandler(
           break;
         case "customer.subscription.deleted":
           await customerSubscriptionDeleted(event, res);
+          break;
+        case "payment_intent.payment_failed":
+          await processPaymentFailure(event);
           break;
       }
     } catch (error) {
