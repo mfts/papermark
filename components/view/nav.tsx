@@ -246,7 +246,7 @@ export default function Nav({
               )}
             </div>
             {isDataroom ? (
-              <Breadcrumb>
+              <Breadcrumb className="ml-6">
                 <BreadcrumbList>
                   <BreadcrumbItem>
                     <BreadcrumbLink
