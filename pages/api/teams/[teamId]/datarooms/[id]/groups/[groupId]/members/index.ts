@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { checkDisposableEmail } from "@/lib/utils/disposable-email-validator";
 
 export default async function handle(
   req: NextApiRequest,
@@ -62,6 +63,16 @@ export default async function handle(
 
       if (!group) {
         return res.status(404).end("Group not found");
+      }
+
+      // Check for disposable email addresses
+      for (const email of emails) {
+        const disposableEmailCheck = checkDisposableEmail(email);
+        if (disposableEmailCheck.isDisposable) {
+          return res.status(400).json({
+            error: `${email}: ${disposableEmailCheck.error || "Disposable email addresses are not allowed."}`,
+          });
+        }
       }
 
       // First, create or connect viewers

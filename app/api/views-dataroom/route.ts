@@ -32,6 +32,7 @@ import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { validateEmail } from "@/lib/utils/validate-email";
+import { checkDisposableEmail } from "@/lib/utils/disposable-email-validator";
 
 export async function POST(request: NextRequest) {
   try {
@@ -242,6 +243,15 @@ export async function POST(request: NextRequest) {
         if (!validateEmail(email)) {
           return NextResponse.json(
             { message: "Invalid email address." },
+            { status: 400 },
+          );
+        }
+
+        // Check if email uses a disposable domain
+        const disposableEmailCheck = checkDisposableEmail(email);
+        if (disposableEmailCheck.isDisposable) {
+          return NextResponse.json(
+            { message: disposableEmailCheck.error || "Disposable email addresses are not allowed." },
             { status: 400 },
           );
         }
