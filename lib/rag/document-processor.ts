@@ -162,7 +162,7 @@ export class DoclingProcessor {
       sources: [{ kind: "http", url: documentUrl }],
       options: {
         to_formats: ["md"],
-        image_export_mode: "placeholder",
+        image_export_mode: "referenced",
         do_ocr: config.requiresOcr,
         force_ocr: config.requiresOcr,
         ocr_engine: "tesserocr", // tesserocr
@@ -180,6 +180,14 @@ export class DoclingProcessor {
         do_picture_classification: false,
         do_picture_description: true,
         picture_description_area_threshold: 0.05,
+        // picture_description_local: {
+        //   repo_id: "HuggingFaceTB/SmolVLM-256M-Instruct",
+        //   generation_config: {
+        //     max_new_tokens: 600,
+        //     do_sample: false,
+        //   },
+        //   prompt: "Analyze this image comprehensively and provide a detailed description. For tables: extract all headers, row/column data, numerical values, and table structure. For charts/graphs: identify chart type, axes labels, data points, trends, and key insights. For text: transcribe all visible text including headers, labels, and body content. For forms: identify all fields, labels, and input areas. For diagrams: describe the structure, components, and relationships. Be extremely thorough and preserve all numerical data, dates, and specific details exactly as shown. Focus on data accuracy and completeness."
+        // }
       },
     };
     const response = await makeApiCall<{
