@@ -7,7 +7,6 @@ import { z } from "zod";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
@@ -41,7 +40,30 @@ export default async function handle(
 
     try {
       // Validate access; avoid heavy includes
-      await getTeamWithUsersAndDocument({ teamId, userId, docId });
+      const teamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId,
+            teamId,
+          },
+        },
+      });
+
+      if (!teamAccess) {
+        return res.status(401).end("Unauthorized");
+      }
+      const document = await prisma.document.findUnique({
+        where: {
+          id: docId,
+          teamId,
+        },
+        select: { id: true },
+      });
+
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
       const annotations = await prisma.documentAnnotation.findMany({
         where: { documentId: docId, teamId },
         include: {
@@ -72,12 +94,30 @@ export default async function handle(
     try {
       const validatedData = createAnnotationSchema.parse(req.body);
 
-      // Verify user has access to document
-      await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
-        docId,
+      const teamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId,
+            teamId,
+          },
+        },
       });
+
+      if (!teamAccess) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      const document = await prisma.document.findUnique({
+        where: {
+          id: docId,
+          teamId,
+        },
+        select: { id: true },
+      });
+
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
 
       const annotation = await prisma.documentAnnotation.create({
         data: {

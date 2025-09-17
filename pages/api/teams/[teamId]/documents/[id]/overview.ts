@@ -7,8 +7,6 @@ import { getServerSession } from "next-auth/next";
 
 import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
-import { usePlan } from "@/lib/swr/use-billing";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { serializeFileSize } from "@/lib/utils";
 
@@ -35,19 +33,19 @@ export default async function handle(
 
   try {
     // First verify user has access to the team
-    const team = await prisma.team.findUnique({
+    const teamAccess = await prisma.team.findUnique({
       where: {
         id: teamId,
         users: {
           some: {
-            userId: userId,
+            userId,
           },
         },
       },
       select: { plan: true },
     });
 
-    if (!team) {
+    if (!teamAccess) {
       return res.status(401).end("Unauthorized");
     }
 

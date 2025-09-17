@@ -1,14 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { DocumentStorageType, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { hashToken } from "@/lib/api/auth/token";
 import { processDocument } from "@/lib/api/documents/process-document";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { log, serializeFileSize } from "@/lib/utils";
 import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
@@ -270,10 +269,21 @@ export default async function handle(
     } = validationResult.data;
 
     try {
-      const { team } = await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: {
+              userId,
+            },
+          },
+        },
+        select: { plan: true, enableExcelAdvancedMode: true },
       });
+
+      if (!team) {
+        return res.status(404).end("Team not found");
+      }
 
       const document = await processDocument({
         documentData: {
