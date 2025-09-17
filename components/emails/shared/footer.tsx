@@ -2,7 +2,7 @@ import { Hr, Section, Text } from "@react-email/components";
 
 export const Footer = ({
   withAddress = false,
-  footerText = "If you have any feedback or questions about this email, simply reply to it. I&apos;d love to hear from you!",
+  footerText = "If you have any feedback or questions about this email, simply reply to it. I'd love to hear from you!",
 }: {
   withAddress?: boolean;
   footerText?: string | React.ReactNode;
