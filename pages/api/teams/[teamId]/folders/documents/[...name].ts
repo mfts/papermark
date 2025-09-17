@@ -74,12 +74,6 @@ export default async function handle(
         orderBy: {
           createdAt: "desc",
         },
-        include: {
-          links: {
-            take: 1,
-            select: { id: true },
-          },
-        },
       });
 
       // Then, get counts efficiently with separate GROUP BY queries
