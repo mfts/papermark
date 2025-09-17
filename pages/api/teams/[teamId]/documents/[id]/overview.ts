@@ -33,7 +33,7 @@ export default async function handle(
 
   try {
     // First verify user has access to the team
-    const teamAccess = await prisma.team.findUnique({
+    const team = await prisma.team.findUnique({
       where: {
         id: teamId,
         users: {
@@ -45,7 +45,7 @@ export default async function handle(
       select: { plan: true },
     });
 
-    if (!teamAccess) {
+    if (!team) {
       return res.status(401).end("Unauthorized");
     }
 
@@ -129,7 +129,7 @@ export default async function handle(
 
     // Check for page links only if needed
     let hasPageLinks = false;
-    if (primaryVersion) {
+    if (primaryVersion && team.plan.includes("free")) {
       const pageLinksCount = await prisma.documentPage.count({
         where: {
           versionId: primaryVersion.id,
