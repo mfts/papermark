@@ -1,13 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { ItemType } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
-import { ItemType } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -28,24 +28,20 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: (session.user as CustomUser).id,
-            },
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
           },
-        },
-        select: {
-          id: true,
         },
       });
 
-      if (!team) {
-        return res.status(403).end("Unauthorized to access this team");
+      if (!teamAccess) {
+        return res.status(401).end("Unauthorized");
       }
 
+      // First, verify dataroom exists and get basic info
       const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: dataroomId,
@@ -55,12 +51,24 @@ export default async function handle(
           id: true,
           teamId: true,
           name: true,
-          viewerGroups: {
-            orderBy: {
-              createdAt: "desc",
-            },
-            include: {
-              ...(documentId ? {
+        },
+      });
+
+      if (!dataroom) {
+        return res.status(404).end("Dataroom not found");
+      }
+
+      // Then, get viewer groups with optimized separate queries
+      const viewerGroups = await prisma.viewerGroup.findMany({
+        where: {
+          dataroomId: dataroomId,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          ...(documentId
+            ? {
                 accessControls: {
                   where: {
                     itemId: documentId,
@@ -74,23 +82,48 @@ export default async function handle(
                   },
                 },
               }
-                : {}),
-              _count: {
-                select: {
-                  members: true,
-                  views: true,
-                },
-              },
-            },
-          },
+            : {}),
         },
       });
 
-      if (!dataroom || !dataroom.viewerGroups) {
-        return res.status(404).end("Dataroom not found");
-      }
+      // Get counts separately with efficient GROUP BY queries
+      const groupIds = viewerGroups.map((g) => g.id);
 
-      return res.status(200).json(dataroom.viewerGroups);
+      const [memberCounts, viewCounts] = await Promise.all([
+        prisma.viewerGroupMembership.groupBy({
+          by: ["groupId"],
+          where: {
+            groupId: { in: groupIds },
+          },
+          _count: { id: true },
+        }),
+        prisma.view.groupBy({
+          by: ["groupId"],
+          where: {
+            groupId: { in: groupIds },
+          },
+          _count: { id: true },
+        }),
+      ]);
+
+      // Create lookup maps for counts
+      const memberCountMap = new Map(
+        memberCounts.map((mc) => [mc.groupId, mc._count.id]),
+      );
+      const viewCountMap = new Map(
+        viewCounts.map((vc) => [vc.groupId, vc._count.id]),
+      );
+
+      // Combine viewer groups with their counts
+      const viewerGroupsWithCounts = viewerGroups.map((group) => ({
+        ...group,
+        _count: {
+          members: memberCountMap.get(group.id) || 0,
+          views: viewCountMap.get(group.id) || 0,
+        },
+      }));
+
+      return res.status(200).json(viewerGroupsWithCounts);
     } catch (error) {
       log({
         message: `Failed to get groups for dataroom: _${dataroomId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
@@ -116,18 +149,16 @@ export default async function handle(
 
     try {
       // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
           },
         },
       });
 
-      if (!team) {
+      if (!teamAccess) {
         return res.status(401).end("Unauthorized");
       }
 
