@@ -288,6 +288,7 @@ export default function DataroomDocumentView({
         setCode={setCode}
         isInvalidCode={isInvalidCode}
         setIsInvalidCode={setIsInvalidCode}
+        brand={brand}
       />
     );
   }

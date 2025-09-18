@@ -231,6 +231,7 @@ export default function DataroomView({
         setCode={setCode}
         isInvalidCode={isInvalidCode}
         setIsInvalidCode={setIsInvalidCode}
+        brand={brand}
       />
     );
   }
