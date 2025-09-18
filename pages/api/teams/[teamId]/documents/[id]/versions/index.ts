@@ -52,16 +52,21 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const teamAccess = await prisma.userTeam.findUnique({
+      const team = await prisma.team.findUnique({
         where: {
-          userId_teamId: {
-            userId,
-            teamId,
+          id: teamId,
+          users: {
+            some: {
+              userId,
+            },
           },
+        },
+        select: {
+          plan: true,
         },
       });
 
-      if (!teamAccess) {
+      if (!team) {
         return res.status(401).end("Unauthorized");
       }
 
