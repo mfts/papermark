@@ -10,3 +10,5 @@ CREATE INDEX "Link_permissionGroupId_idx" ON "Link"("permissionGroupId" ASC);
 -- CreateIndex
 CREATE INDEX "ViewerGroup_dataroomId_createdAt_idx" ON "ViewerGroup"("dataroomId" ASC, "createdAt" ASC);
 
+-- CreateIndex
+CREATE INDEX "View_groupId_idx" ON "View"("groupId" ASC);
