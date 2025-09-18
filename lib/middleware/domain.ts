@@ -47,7 +47,7 @@ export default async function DomainMiddleware(req: NextRequest) {
     headers: {
       "X-Robots-Tag": "noindex",
       "X-Powered-By":
-        "Papermark.io - Document sharing infrastructure for the modern web",
+        "Papermark.com - Document sharing infrastructure for the modern web",
     },
   });
 }
