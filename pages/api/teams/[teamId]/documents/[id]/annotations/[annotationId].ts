@@ -6,7 +6,6 @@ import { z } from "zod";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
@@ -46,12 +45,31 @@ export default async function handle(
   const userId = (session.user as CustomUser).id;
 
   try {
-    // Verify user has access to document
-    await getTeamWithUsersAndDocument({
-      teamId,
-      userId,
-      docId,
+    const teamAccess = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId,
+          teamId,
+        },
+      },
     });
+
+    if (!teamAccess) {
+      return res.status(401).end("Unauthorized");
+    }
+
+    // Verify user has access to document
+    const document = await prisma.document.findUnique({
+      where: {
+        id: docId,
+        teamId,
+      },
+      select: { id: true },
+    });
+
+    if (!document) {
+      return res.status(404).json({ error: "Document not found" });
+    }
 
     // Verify annotation exists and belongs to document
     const annotation = await prisma.documentAnnotation.findFirst({

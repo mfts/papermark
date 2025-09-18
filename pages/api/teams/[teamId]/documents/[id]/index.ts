@@ -6,7 +6,6 @@ import { TeamError, errorhandler } from "@/lib/errorHandler";
 import { deleteFile } from "@/lib/files/delete-file-server";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { serializeFileSize } from "@/lib/utils";
 
@@ -42,38 +41,53 @@ export default async function handle(
         return res.status(429).json({ error: "Too many requests" });
       }
 
-      const { document } = await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
-        docId,
-        options: {
-          include: {
-            // Get the latest primary version of the document
-            versions: {
-              where: { isPrimary: true },
-              orderBy: { createdAt: "desc" },
-              take: 1,
+      // First verify user has access to the team (lightweight query)
+      const teamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
+          },
+        },
+        select: { teamId: true },
+      });
+
+      if (!teamAccess) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      // Then fetch the specific document with its relationships (targeted query)
+      const document = await prisma.document.findUnique({
+        where: {
+          id: docId,
+          teamId,
+        },
+        include: {
+          // Get the latest primary version of the document
+          versions: {
+            where: { isPrimary: true },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+          folder: {
+            select: {
+              name: true,
+              path: true,
             },
-            folder: {
-              select: {
-                name: true,
-                path: true,
-              },
-            },
-            datarooms: {
-              select: {
-                dataroom: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
+          },
+          datarooms: {
+            select: {
+              dataroom: {
+                select: {
+                  id: true,
+                  name: true,
                 },
-                folder: {
-                  select: {
-                    id: true,
-                    name: true,
-                    path: true,
-                  },
+              },
+              folder: {
+                select: {
+                  id: true,
+                  name: true,
+                  path: true,
                 },
               },
             },

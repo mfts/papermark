@@ -1,11 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { DocumentStorageType } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
@@ -61,10 +59,21 @@ export default async function handle(
     } = validationResult.data;
 
     try {
-      const { team } = await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: {
+              userId,
+            },
+          },
+        },
+        select: { plan: true },
       });
+
+      if (!team) {
+        return res.status(401).end("Unauthorized");
+      }
 
       const folder = await prisma.folder.findUnique({
         where: {

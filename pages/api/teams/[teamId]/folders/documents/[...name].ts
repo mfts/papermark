@@ -35,18 +35,16 @@ export default async function handle(
 
     try {
       // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
           },
         },
       });
 
-      if (!team) {
+      if (!teamAccess) {
         return res.status(401).end("Unauthorized");
       }
 
@@ -67,6 +65,7 @@ export default async function handle(
         return res.status(404).end("Folder not found");
       }
 
+      // First, get documents without expensive counts
       const documents = await prisma.document.findMany({
         where: {
           teamId: teamId,
@@ -75,23 +74,69 @@ export default async function handle(
         orderBy: {
           createdAt: "desc",
         },
-        include: {
-          _count: {
-            select: {
-              links: true,
-              views: true,
-              versions: true,
-              datarooms: true,
-            },
-          },
-          links: {
-            take: 1,
-            select: { id: true },
-          },
-        },
       });
 
-      return res.status(200).json(documents);
+      // Then, get counts efficiently with separate GROUP BY queries
+      const documentIds = documents.map((d) => d.id);
+
+      const [linkCounts, viewCounts, versionCounts, dataroomCounts] =
+        await Promise.all([
+          prisma.link.groupBy({
+            by: ["documentId"],
+            where: {
+              documentId: { in: documentIds },
+            },
+            _count: { id: true },
+          }),
+          prisma.view.groupBy({
+            by: ["documentId"],
+            where: {
+              documentId: { in: documentIds },
+            },
+            _count: { id: true },
+          }),
+          prisma.documentVersion.groupBy({
+            by: ["documentId"],
+            where: {
+              documentId: { in: documentIds },
+            },
+            _count: { id: true },
+          }),
+          prisma.dataroomDocument.groupBy({
+            by: ["documentId"],
+            where: {
+              documentId: { in: documentIds },
+            },
+            _count: { id: true },
+          }),
+        ]);
+
+      // Create lookup maps for counts
+      const linkCountMap = new Map(
+        linkCounts.map((lc) => [lc.documentId, lc._count.id]),
+      );
+      const viewCountMap = new Map(
+        viewCounts.map((vc) => [vc.documentId, vc._count.id]),
+      );
+      const versionCountMap = new Map(
+        versionCounts.map((vsc) => [vsc.documentId, vsc._count.id]),
+      );
+      const dataroomCountMap = new Map(
+        dataroomCounts.map((dc) => [dc.documentId, dc._count.id]),
+      );
+
+      // Combine documents with their counts
+      const documentsWithCounts = documents.map((document) => ({
+        ...document,
+        _count: {
+          links: linkCountMap.get(document.id) || 0,
+          views: viewCountMap.get(document.id) || 0,
+          versions: versionCountMap.get(document.id) || 0,
+          datarooms: dataroomCountMap.get(document.id) || 0,
+        },
+      }));
+
+      return res.status(200).json(documentsWithCounts);
     } catch (error) {
       console.error("Request error", error);
       return res.status(500).json({ error: "Error fetching folders" });

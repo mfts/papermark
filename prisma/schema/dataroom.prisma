@@ -67,6 +67,7 @@ model DataroomDocument {
   @@unique([dataroomId, documentId])
   @@index([folderId])
   @@index([dataroomId, folderId, orderIndex])
+  @@index([documentId])
 }
 
 model DataroomFolder {
@@ -126,6 +127,7 @@ model ViewerGroup {
 
   @@index([dataroomId])
   @@index([teamId])
+  @@index([dataroomId, createdAt])
 }
 
 model ViewerGroupMembership {

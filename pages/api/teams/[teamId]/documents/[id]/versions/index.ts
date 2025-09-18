@@ -1,12 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { DocumentStorageType } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
 import { processVideo } from "@/lib/trigger/optimize-video-files";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
@@ -54,23 +52,43 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const { team, document } = await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
-        docId: documentId,
-        checkOwner: true,
-        options: {
-          select: {
-            id: true,
-            advancedExcelEnabled: true,
-            versions: {
-              orderBy: { createdAt: "desc" },
-              take: 1,
-              select: { versionNumber: true },
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: {
+              userId,
             },
           },
         },
+        select: {
+          plan: true,
+        },
       });
+
+      if (!team) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      const document = await prisma.document.findUnique({
+        where: {
+          id: documentId,
+          teamId,
+        },
+        select: {
+          id: true,
+          advancedExcelEnabled: true,
+          versions: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { versionNumber: true },
+          },
+        },
+      });
+
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
 
       // create a new document version
       const currentVersionNumber = document?.versions

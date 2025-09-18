@@ -7,8 +7,6 @@ import { getServerSession } from "next-auth/next";
 
 import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
-import { usePlan } from "@/lib/swr/use-billing";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { serializeFileSize } from "@/lib/utils";
 
@@ -40,7 +38,7 @@ export default async function handle(
         id: teamId,
         users: {
           some: {
-            userId: userId,
+            userId,
           },
         },
       },
@@ -131,7 +129,7 @@ export default async function handle(
 
     // Check for page links only if needed
     let hasPageLinks = false;
-    if (primaryVersion) {
+    if (primaryVersion && team.plan.includes("free")) {
       const pageLinksCount = await prisma.documentPage.count({
         where: {
           versionId: primaryVersion.id,

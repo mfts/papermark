@@ -1,14 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { DocumentStorageType, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { hashToken } from "@/lib/api/auth/token";
 import { processDocument } from "@/lib/api/documents/process-document";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { log, serializeFileSize } from "@/lib/utils";
 import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
@@ -39,19 +38,17 @@ export default async function handle(
     const limit = usePagination ? Number(req.query.limit) || 10 : undefined;
 
     try {
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
           },
         },
       });
 
-      if (!team) {
-        return res.status(404).end("Team not found");
+      if (!teamAccess) {
+        return res.status(401).end("Unauthorized");
       }
 
       let orderBy: Prisma.DocumentOrderByWithRelationInput;
@@ -94,6 +91,7 @@ export default async function handle(
           })
         : undefined;
 
+      // First, get documents without expensive counts
       const documents = await prisma.document.findMany({
         where: {
           teamId: teamId,
@@ -126,22 +124,74 @@ export default async function handle(
               take: 1,
             },
           }),
-          _count: {
-            select: {
-              links: true,
-              views: true,
-              versions: true,
-              datarooms: true,
-            },
-          },
         },
       });
 
-      let documentsWithFolderList = documents;
+      // Then, get counts efficiently with separate GROUP BY queries
+      const documentIds = documents.map((d) => d.id);
+
+      const [linkCounts, viewCounts, versionCounts, dataroomCounts] =
+        await Promise.all([
+          prisma.link.groupBy({
+            by: ["documentId"],
+            where: {
+              documentId: { in: documentIds },
+            },
+            _count: { id: true },
+          }),
+          prisma.view.groupBy({
+            by: ["documentId"],
+            where: {
+              documentId: { in: documentIds },
+            },
+            _count: { id: true },
+          }),
+          prisma.documentVersion.groupBy({
+            by: ["documentId"],
+            where: {
+              documentId: { in: documentIds },
+            },
+            _count: { id: true },
+          }),
+          prisma.dataroomDocument.groupBy({
+            by: ["documentId"],
+            where: {
+              documentId: { in: documentIds },
+            },
+            _count: { id: true },
+          }),
+        ]);
+
+      // Create lookup maps for counts
+      const linkCountMap = new Map(
+        linkCounts.map((lc) => [lc.documentId, lc._count.id]),
+      );
+      const viewCountMap = new Map(
+        viewCounts.map((vc) => [vc.documentId, vc._count.id]),
+      );
+      const versionCountMap = new Map(
+        versionCounts.map((vsc) => [vsc.documentId, vsc._count.id]),
+      );
+      const dataroomCountMap = new Map(
+        dataroomCounts.map((dc) => [dc.documentId, dc._count.id]),
+      );
+
+      // Combine documents with their counts
+      const documentsWithCounts = documents.map((document) => ({
+        ...document,
+        _count: {
+          links: linkCountMap.get(document.id) || 0,
+          views: viewCountMap.get(document.id) || 0,
+          versions: versionCountMap.get(document.id) || 0,
+          datarooms: dataroomCountMap.get(document.id) || 0,
+        },
+      }));
+
+      let documentsWithFolderList = documentsWithCounts;
 
       if (query || sort) {
         documentsWithFolderList = await Promise.all(
-          documents.map(async (doc) => {
+          documentsWithCounts.map(async (doc) => {
             const folderNames = [];
             const pathSegments = doc.folder?.path?.split("/") || [];
 
@@ -270,10 +320,21 @@ export default async function handle(
     } = validationResult.data;
 
     try {
-      const { team } = await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: {
+              userId,
+            },
+          },
+        },
+        select: { plan: true, enableExcelAdvancedMode: true },
       });
+
+      if (!team) {
+        return res.status(404).end("Team not found");
+      }
 
       const document = await processDocument({
         documentData: {

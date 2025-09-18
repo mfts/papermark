@@ -27,18 +27,16 @@ export default async function handle(
     };
 
     // Ensure the user is an admin of the team
-    const team = await prisma.team.findUnique({
-      where: { id: teamId },
-      include: {
-        users: {
-          where: {
-            userId: userId,
-          },
+    const teamAccess = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId: userId,
+          teamId: teamId,
         },
       },
     });
 
-    if (!team || team.users.length === 0) {
+    if (!teamAccess) {
       return res.status(403).end("Forbidden");
     }
 

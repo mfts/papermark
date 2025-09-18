@@ -149,6 +149,7 @@ model View {
   @@index([dataroomId])
   @@index([dataroomViewId])
   @@index([viewerId])
+  @@index([groupId]) // Performance optimization for groupBy queries on groupId
   @@index([teamId])
   @@index([viewedAt(sort: Desc)]) // Performance optimization for date aggregations
   @@index([viewerId, documentId]) // Performance optimization for joins with filtering

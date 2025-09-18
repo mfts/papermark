@@ -65,6 +65,7 @@ model DocumentVersion {
   @@index([documentId])
   @@index([documentId, isPrimary]) // Performance optimization for primary version queries
   @@index([documentId, createdAt(sort: Desc)]) // Partial index for primary versions
+  @@index([documentId, isPrimary, createdAt]) // Optimize primary version lookups with ordering
 }
 
 model DocumentPage {
