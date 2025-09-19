@@ -27,6 +27,8 @@ type SearchBoxProps = {
   debounceTimeoutMs?: number;
   inputClassName?: string;
   placeholder?: string;
+  id?: string;
+  name?: string;
 };
 
 const SearchBox = forwardRef(
@@ -40,6 +42,8 @@ const SearchBox = forwardRef(
       debounceTimeoutMs = 500,
       inputClassName,
       placeholder = "Search...",
+      id = "search-input",
+      name = "search",
     }: SearchBoxProps,
     forwardedRef,
   ) => {
@@ -82,6 +86,8 @@ const SearchBox = forwardRef(
         </div>
         <input
           ref={inputRef}
+          id={id}
+          name={name}
           type="text"
           className={cn(
             "peer w-full rounded-md border border-border bg-white px-10 text-foreground outline-none placeholder:text-muted-foreground dark:bg-gray-800 sm:text-sm",
@@ -115,6 +121,8 @@ SearchBox.displayName = "SearchBox";
 
 export function SearchBoxPersisted({
   urlParam = "search",
+  id = `search-${urlParam}`,
+  name = urlParam,
   ...props
 }: { urlParam?: string } & Partial<SearchBoxProps>) {
   const router = useRouter();
@@ -158,6 +166,8 @@ export function SearchBoxPersisted({
 
   return (
     <SearchBox
+      id={id}
+      name={name}
       value={value}
       onChange={setValue}
       onChangeDebounced={setDebouncedValue}

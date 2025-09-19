@@ -91,6 +91,9 @@ export class RAGMiddleware {
                 const scope = ScopeSchema.parse(metadata.scope || {});
                 const { docs: selectedDocIds, folders: selectedFolderIds, folderDocs: folderDocIds } = scope;
 
+                const metadataSessionId = metadata.sessionId;
+                const finalSessionId = sessionId || metadataSessionId;
+
                 const totalRequestedDocs = selectedDocIds.length + folderDocIds.length;
 
                 const invalidDocIds = [...selectedDocIds, ...folderDocIds].filter(id =>
@@ -127,7 +130,7 @@ export class RAGMiddleware {
                     selectedDocIds,
                     selectedFolderIds,
                     folderDocIds,
-                    sessionId
+                    sessionId: finalSessionId
                 };
             },
             'requestValidation',
