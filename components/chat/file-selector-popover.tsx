@@ -101,10 +101,13 @@ export function FileSelectorPopover({
         <div className="border-b">
           <div className="relative">
             <input
+              id="file-search-input"
+              name="file-search-input"
               type="text"
+              aria-label="Search files"
               placeholder="Search files..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
               className="h-7 w-full border-none bg-transparent text-xs outline-none placeholder:text-muted-foreground/60 focus:border-none focus:ring-0"
             />
           </div>

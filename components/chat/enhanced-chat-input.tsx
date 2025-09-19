@@ -284,6 +284,9 @@ export function EnhancedChatInput({
           >
             <div className="relative">
               <Textarea
+                id="enhanced-chat-input"
+                name="enhanced-chat-input"
+                aria-label="Enhanced chat message input"
                 value={input}
                 placeholder={
                   isLoading

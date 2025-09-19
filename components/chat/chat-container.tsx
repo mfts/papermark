@@ -158,9 +158,9 @@ export const ChatContainer = memo(function ChatContainer({
       new DefaultChatTransport({
         api: apiEndpoint,
         headers: { "Content-Type": "application/json" },
-        body: { dataroomId, viewerId, linkId, userId, plan, sessionId },
+        body: { dataroomId, viewerId, linkId, userId, plan },
       }),
-    [apiEndpoint, dataroomId, viewerId, linkId, userId, plan, sessionId],
+    [apiEndpoint, dataroomId, viewerId, linkId, userId, plan],
   );
 
   const {
@@ -288,7 +288,7 @@ export const ChatContainer = memo(function ChatContainer({
         await sendMessage({
           role: "user",
           parts: [{ type: "text", text: input }],
-          metadata: { scope },
+          metadata: { scope, sessionId },
         });
       } catch (err) {
         console.error("Error sending message:", err);
@@ -296,7 +296,7 @@ export const ChatContainer = memo(function ChatContainer({
         handleAbortError(err, setError);
       }
     },
-    [sendMessage],
+    [sendMessage, sessionId],
   );
 
   return (
