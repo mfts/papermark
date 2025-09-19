@@ -24,9 +24,11 @@ interface TokenUsage {
 }
 
 export class TextGenerationService {
-    private readonly defaultModel = 'gpt-4o-mini';
+    private readonly defaultModel: string;
 
-    constructor(private config: ReturnType<typeof configurationManager.getRAGConfig>) { }
+    constructor(private config: ReturnType<typeof configurationManager.getRAGConfig>) {
+        this.defaultModel = this.config.llm.model;
+    }
 
     /**
      * Generate RAG response with context and citations

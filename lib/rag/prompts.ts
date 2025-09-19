@@ -1,6 +1,16 @@
 import { z } from 'zod';
 import { PromptTemplateCache } from './utils/lruCache';
 import { RAGError } from './errors/rag-errors';
+import { configurationManager } from './config/configuration-manager';
+
+function getModelConfig() {
+    const config = configurationManager.getRAGConfig();
+    return {
+        fast: config.llm.fastModel,
+        standard: config.llm.standardModel,
+        default: config.llm.model
+    };
+}
 
 export interface PromptTemplate {
     id: string;
@@ -96,7 +106,7 @@ EXAMPLE OUTPUT FORMAT:
             }),
             optimization: {
                 maxTokens: 150,
-                model: 'gpt-5-nano'
+                model: getModelConfig().fast
             }
         });
 
@@ -150,7 +160,7 @@ Structure your answer in two parts:
 Remember: You are papermarkDocBot, a document analysis specialist. Your knowledge is limited to the provided context.`,
             variables: ['context', 'query'],
             optimization: {
-                model: 'gpt-5-nano'
+                model: getModelConfig().fast
             }
         });
 
@@ -185,7 +195,7 @@ You must use the exact escape phrase above. Do not attempt to:
 Remember: You are papermarkDocBot, limited to the provided context only.`,
             variables: ['query', 'documentTypes'],
             optimization: {
-                model: 'gpt-5-nano'
+                model: getModelConfig().fast
             }
         });
 
@@ -227,7 +237,7 @@ Generate a summary that captures the essential information needed to answer the 
             }),
             optimization: {
                 maxTokens: 500,
-                model: 'gpt-4o-mini'
+                model: getModelConfig().standard
             }
         });
 
@@ -274,7 +284,7 @@ Generate a structured summary that provides comprehensive coverage while remaini
             }),
             optimization: {
                 maxTokens: 600,
-                model: 'gpt-4o-mini'
+                model: getModelConfig().standard
             }
         });
 
@@ -352,7 +362,7 @@ EXAMPLE OUTPUT STRUCTURE:
             }),
             optimization: {
                 maxTokens: 400,
-                model: 'gpt-4o-mini'
+                model: getModelConfig().standard
             }
         });
 
@@ -400,7 +410,7 @@ Generate compressed content that maximizes information density while preserving 
             }),
             optimization: {
                 maxTokens: 800,
-                model: 'gpt-4o-mini'
+                model: getModelConfig().standard
             }
         });
 
@@ -490,7 +500,7 @@ Query: "{{query}}"`,
             }),
             optimization: {
                 maxTokens: 300,
-                model: 'gpt-4o-mini'
+                model: getModelConfig().standard
             }
         });
 

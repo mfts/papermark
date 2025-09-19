@@ -10,6 +10,8 @@ export interface RAGConfig {
 
     llm: {
         model: string;
+        fastModel: string;
+        standardModel: string;
         temperature: number;
         timeout: number;
         retries: number;
@@ -76,7 +78,9 @@ export class ConfigurationManager {
             },
 
             llm: {
-                model: this.getEnvString('RAG_LLM_MODEL', 'gpt-4o-mini'),
+                model: this.getEnvString('RAG_LLM_MODEL'),
+                fastModel: this.getEnvString('RAG_LLM_FAST_MODEL'),
+                standardModel: this.getEnvString('RAG_LLM_STANDARD_MODEL'),
                 temperature: this.getEnvNumber('RAG_LLM_TEMPERATURE', 0.1),
                 timeout: this.getEnvNumber('RAG_LLM_TIMEOUT', 60000),
                 retries: this.getEnvNumber('RAG_LLM_RETRIES', 3),
@@ -135,8 +139,12 @@ export class ConfigurationManager {
         return value.toLowerCase() === 'true' || value === '1';
     }
 
-    private getEnvString(key: string, defaultValue: string): string {
-        return process.env[key] || defaultValue;
+    private getEnvString(key: string, defaultValue?: string): string {
+        const value = process.env[key];
+        if (!value && defaultValue === undefined) {
+            throw new Error(`Required environment variable ${key} is not set`);
+        }
+        return value || defaultValue!;
     }
 
     getRAGConfig(): RAGConfig {

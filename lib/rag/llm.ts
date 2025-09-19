@@ -93,8 +93,12 @@ export abstract class BaseLLMService {
 export class OpenAIProvider implements LLMProvider {
     private model: string;
 
-    constructor(model: string = 'gpt-4o-mini') {
-        this.model = model;
+    constructor(model?: string) {
+        this.model = model || this.getDefaultModel();
+    }
+
+    private getDefaultModel(): string {
+        return configurationManager.getRAGConfig().llm.model;
     }
 
     async generateObject<T>(
@@ -234,6 +238,7 @@ export function getDefaultLLMService() {
 export const llmProvider = getDefaultLLMService();
 
 import { promptManager } from './prompts';
+import { configurationManager } from './config/configuration-manager';
 
 export async function generateLLMResponse<T>(
     promptId: string,
