@@ -220,7 +220,7 @@ export function EditFAQModal({
                     handleInputChange("editedQuestion", e.target.value)
                   }
                 />
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   You can edit the question to make it clearer for visitors.
                 </p>
               </div>
