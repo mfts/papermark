@@ -8,9 +8,8 @@ import {
   type ChatSession,
   useChatSessionsInfinite,
 } from "@/lib/swr/use-chat-sessions";
-import { cn, timeAgo } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -135,9 +134,11 @@ export function RAGChatInterface({
   }, [externalViewMode, setViewMode]);
 
   const handleNewChat = () => {
-    setViewMode("chat");
-    setSelectedSessionId(null);
-    onSessionChange?.(null);
+    if (viewMode !== "chat" || selectedSessionId !== null) {
+      setViewMode("chat");
+      setSelectedSessionId(null);
+      onSessionChange?.(null);
+    }
   };
 
   const handleChatHistorySelect = (sessionId: string) => {
@@ -195,16 +196,12 @@ export function RAGChatInterface({
                   onClick={() => handleChatHistorySelect(chat.id)}
                 >
                   <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <CardTitle className="truncate text-sm font-medium">
                         {chat.title}
                       </CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs">
-                          {chat.messageCount}{" "}
-                          {chat.messageCount === 1 ? "message" : "messages"}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
+                      <div className="flex items-center">
+                        <span className="shrink-0 text-xs text-muted-foreground">
                           {timeAgo(new Date(chat.updatedAt))}
                         </span>
                       </div>
@@ -229,19 +226,25 @@ export function RAGChatInterface({
                 </div>
               )}
 
-              {isReachingEnd && chatHistory.length > 0 && (
-                <div className="flex justify-center p-4">
-                  <div className="text-sm text-muted-foreground">
-                    You&apos;ve reached the end of your chat history
+              {isReachingEnd &&
+                chatHistory.length >= 20 &&
+                hasNextPage === false && (
+                  <div className="flex justify-center p-4">
+                    <div className="text-sm text-muted-foreground">
+                      You&apos;ve reached the end of your chat history
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           )}
         </div>
       </div>
     );
   }
+
+  const selectedSession = selectedSessionId
+    ? chatHistory.find((s) => s.id === selectedSessionId)
+    : undefined;
 
   return (
     <div className="flex h-full flex-col">
@@ -257,11 +260,7 @@ export function RAGChatInterface({
           documents={documents}
           folders={folders}
           sessionId={selectedSessionId}
-          onSessionCreated={(sessionId) => {
-            setSelectedSessionId(sessionId);
-            onSessionChange?.(sessionId);
-            refreshChatHistory();
-          }}
+          sessionData={selectedSession}
         />
       </div>
     </div>

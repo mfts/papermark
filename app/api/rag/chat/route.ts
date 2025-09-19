@@ -4,8 +4,6 @@ import { ragOrchestratorService } from '@/lib/rag/services/rag-orchestrator.serv
 import { UnifiedQueryAnalysisResult, unifiedQueryAnalysisService } from '@/lib/rag/services/unified-query-analysis.service';
 import { selectOptimalSearchStrategy } from '@/lib/rag/utils/similarity-utils';
 import { textGenerationService } from '@/lib/rag/text-generation';
-import { streamText } from 'ai';
-import { openai } from '@ai-sdk/openai';
 import { chatStorageService } from '@/lib/rag/services/chat-storage.service';
 import { ChatMetadataTracker } from '@/lib/rag/services/chat-metadata-tracker.service';
 
@@ -109,20 +107,12 @@ export async function POST(req: NextRequest) {
 
         // 6. Handle chitchat/abusive queries
         if (['abusive', 'chitchat'].includes(analysisResult.queryClassification.type)) {
-            const stream = streamText({
-                model: openai('gpt-4o-mini'),
-                prompt: `You are "papermarkDocBot", a specialized AI assistant for document analysis. Your entire knowledge base is strictly limited to the context provided in each query. You do not have opinions, general knowledge, or the ability to access external information.
-
-You MUST respond with the exact phrase: "I'm sorry, but I could not find the answer to your question in the provided documents."
-
-Do not provide any additional content, explanations, or suggestions.`,
-                temperature: 0,
-                abortSignal: abortSignal,
-                onError: (error) => {
-                    console.error('streamText error in chitchat/abusive handling:', error);
-                },
-            });
-            return stream.toUIMessageStreamResponse();
+            const fallbackResponse = await textGenerationService.generateFallbackResponse(
+                "I'm sorry, but I could not find the answer to your question in the provided documents.",
+                chatSessionId,
+                metadataTracker
+            );
+            return fallbackResponse;
         }
 
         // 4. Extract query parameters

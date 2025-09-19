@@ -40,50 +40,55 @@ export interface ChatMessageData {
     metadata?: ChatMessageMetadata;
 }
 
-const transformMetadata = (metadata: any) => {
+const transformMetadata = (metadata: any): ChatMessageMetadata | undefined => {
     if (!metadata) return undefined;
-
-    return {
-        id: metadata.id,
-        queryType: metadata.queryType || undefined,
-        intent: metadata.intent || undefined,
-        complexityLevel: metadata.complexityLevel || undefined,
-        searchStrategy: metadata.searchStrategy || undefined,
-        strategyConfidence: metadata.strategyConfidence || undefined,
-        queryAnalysisTime: metadata.queryAnalysisTime || undefined,
-        searchTime: metadata.searchTime || undefined,
-        responseTime: metadata.responseTime || undefined,
-        totalTime: metadata.totalTime || undefined,
-        inputTokens: metadata.inputTokens || undefined,
-        outputTokens: metadata.outputTokens || undefined,
-        totalTokens: metadata.totalTokens || undefined,
-        chunkIds: metadata.chunkIds || undefined,
-        documentIds: metadata.documentIds || undefined,
-        pageRanges: metadata.pageRanges || undefined,
-        compressionStrategy: metadata.compressionStrategy || undefined,
-        originalContextSize: metadata.originalContextSize || undefined,
-        compressedContextSize: metadata.compressedContextSize || undefined,
-        errorType: metadata.errorType || undefined,
-        errorMessage: metadata.errorMessage || undefined,
-        isRetryable: metadata.isRetryable || undefined,
-    };
+    return metadata as ChatMessageMetadata;
 };
 
 export class ChatStorageService {
+    private readonly commonSelects = {
+        sessionId: { id: true },
+        sessionWithAccess: {
+            id: true,
+            dataroomId: true,
+            linkId: true,
+            viewerId: true
+        },
+        messageBasic: {
+            id: true,
+            role: true,
+            content: true,
+            createdAt: true,
+            metadata: true,
+        }
+    } as const;
+
+    private readonly commonOrderBy = {
+        createdAtDesc: { createdAt: 'desc' as const },
+        updatedAtDesc: { updatedAt: 'desc' as const }
+    } as const;
+
+    private formatDateToISO(date: Date): string {
+        return date.toISOString();
+    }
+    private extractCommonParams(options: {
+        dataroomId: string;
+        linkId: string;
+        viewerId: string;
+        limit?: number;
+        cursor?: string;
+    }) {
+        const { dataroomId, linkId, viewerId, limit = 20, cursor } = options;
+        return { dataroomId, linkId, viewerId, limit, cursor };
+    }
+
     async getOrCreateSession(data: ChatSessionData, sessionId?: string): Promise<string> {
         return RAGError.withErrorHandling(
             async () => {
                 if (sessionId) {
                     const existingSession = await prisma.rAGChatSession.findUnique({
-                        where: {
-                            id: sessionId,
-                        },
-                        select: {
-                            id: true,
-                            dataroomId: true,
-                            linkId: true,
-                            viewerId: true,
-                        },
+                        where: { id: sessionId },
+                        select: this.commonSelects.sessionWithAccess,
                     });
                     if (existingSession &&
                         existingSession.dataroomId === data.dataroomId &&
@@ -100,7 +105,7 @@ export class ChatStorageService {
                         viewerId: data.viewerId,
                         title: data.title || this.generateSessionTitle(),
                     },
-                    select: { id: true },
+                    select: this.commonSelects.sessionId,
                 });
 
                 return session.id;
@@ -125,7 +130,7 @@ export class ChatStorageService {
                                 }
                             } : undefined,
                         },
-                        select: { id: true },
+                        select: this.commonSelects.sessionId,
                     });
 
                     await tx.rAGChatSession.update({
@@ -149,40 +154,49 @@ export class ChatStorageService {
         dataroomId: string;
         linkId: string;
         viewerId: string;
+        limit?: number;
+        cursor?: string;
     }) {
-        const { sessionId, dataroomId, linkId, viewerId } = options;
+        const { sessionId, ...commonParams } = options;
+        const { dataroomId, linkId, viewerId, limit, cursor } = this.extractCommonParams(commonParams);
 
         return RAGError.withErrorHandling(
             async () => {
                 const session = await prisma.rAGChatSession.findFirst({
-                    where: {
-                        id: sessionId,
-                        dataroomId,
-                        linkId,
-                        viewerId,
-                    },
-                    select: { id: true },
+                    where: { id: sessionId, dataroomId, linkId, viewerId },
+                    select: this.commonSelects.sessionId,
                 });
 
                 if (!session) {
                     throw new Error('Session not found or access denied');
                 }
 
+                const whereClause: any = { sessionId };
+                if (cursor) {
+                    const cursorMessage = await prisma.rAGChatMessage.findUnique({
+                        where: { id: cursor },
+                        select: { createdAt: true },
+                    });
+
+                    if (cursorMessage) {
+                        whereClause.createdAt = { lt: cursorMessage.createdAt };
+                    }
+                }
+
                 const messages = await prisma.rAGChatMessage.findMany({
-                    where: { sessionId },
-                    orderBy: { createdAt: 'asc' },
-                    include: {
-                        metadata: true,
-                    },
+                    where: whereClause,
+                    orderBy: this.commonOrderBy.createdAtDesc,
+                    take: limit,
+                    select: this.commonSelects.messageBasic,
                 });
 
                 return {
                     sessionId,
-                    messages: messages.map((message) => ({
+                    messages: messages.reverse().map((message) => ({
                         id: message.id,
                         role: message.role as 'user' | 'assistant',
                         content: message.content,
-                        createdAt: message.createdAt.toISOString(),
+                        createdAt: this.formatDateToISO(message.createdAt),
                         metadata: transformMetadata(message.metadata),
                     })),
                 };
@@ -196,11 +210,10 @@ export class ChatStorageService {
         dataroomId: string;
         linkId: string;
         viewerId: string;
-        page?: number;
         limit?: number;
         cursor?: string;
     }) {
-        const { dataroomId, linkId, viewerId, page = 1, limit = 20, cursor } = options;
+        const { dataroomId, linkId, viewerId, limit, cursor } = this.extractCommonParams(options);
 
         return RAGError.withErrorHandling(
             async () => {
@@ -214,59 +227,46 @@ export class ChatStorageService {
                     })
                 };
 
-                const [sessions, total] = await Promise.all([
-                    prisma.rAGChatSession.findMany({
-                        where,
-                        orderBy: { updatedAt: 'desc' },
-                        take: limit,
-                        select: {
-                            id: true,
-                            title: true,
-                            createdAt: true,
-                            updatedAt: true,
-                            _count: {
-                                select: {
-                                    messages: true
-                                }
-                            },
-                            messages: {
-                                orderBy: { createdAt: 'desc' },
-                                take: 1,
-                                select: {
-                                    content: true,
-                                    role: true,
-                                    createdAt: true,
-                                }
+                const sessions = await prisma.rAGChatSession.findMany({
+                    where,
+                    orderBy: this.commonOrderBy.updatedAtDesc,
+                    take: limit,
+                    select: {
+                        id: true,
+                        title: true,
+                        createdAt: true,
+                        updatedAt: true,
+                        messages: {
+                            orderBy: this.commonOrderBy.createdAtDesc,
+                            take: 1,
+                            select: {
+                                content: true,
+                                role: true,
+                                createdAt: true,
                             }
-                        },
-                    }),
-                    prisma.rAGChatSession.count({ where: baseWhere }),
-                ]);
+                        }
+                    },
+                });
 
                 const transformedSessions = sessions.map((session) => ({
                     id: session.id,
                     title: session.title,
-                    createdAt: session.createdAt.toISOString(),
-                    updatedAt: session.updatedAt.toISOString(),
-                    messageCount: session._count.messages,
+                    createdAt: this.formatDateToISO(session.createdAt),
+                    updatedAt: this.formatDateToISO(session.updatedAt),
                     lastMessage: session.messages[0] ? {
                         content: session.messages[0].content,
                         role: session.messages[0].role,
-                        createdAt: session.messages[0].createdAt.toISOString(),
+                        createdAt: this.formatDateToISO(session.messages[0].createdAt),
                     } : null,
                 }));
 
                 const nextCursor = sessions.length === limit && sessions.length > 0
-                    ? sessions[sessions.length - 1].updatedAt.toISOString()
+                    ? this.formatDateToISO(sessions[sessions.length - 1].updatedAt)
                     : null;
 
                 return {
                     sessions: transformedSessions,
                     pagination: {
-                        page,
-                        limit,
-                        total,
-                        totalPages: Math.ceil(total / limit),
                         hasNext: nextCursor !== null,
                         nextCursor,
                     },

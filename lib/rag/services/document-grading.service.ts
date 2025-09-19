@@ -5,10 +5,10 @@ import {
     RAG_CONSTANTS
 } from '../types/rag-types';
 import { PROMPT_IDS } from '../prompts';
-import { configurationManager } from '../config';
-import { RAGError } from '../errors';
+import { configurationManager } from '../config/configuration-manager';
+import { RAGError } from '../errors/rag-errors';
 import { QUERY_PATTERNS } from '../constants/patterns';
-import { generateLLMResponse } from '../utils/llm-utils';
+import { generateLLMResponse } from '../llm';
 
 interface GradingResult {
     relevantDocuments: GradedDocument[];

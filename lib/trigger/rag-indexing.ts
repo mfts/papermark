@@ -9,7 +9,7 @@ import {
   DocumentProcessor,
 } from "@/lib/rag/document-processor";
 import { EmbeddingGenerator } from "@/lib/rag/embedding-generator";
-import { getErrorMessage } from "@/lib/rag/errors";
+import { getErrorMessage } from "@/lib/rag/errors/rag-errors";
 import { vectorManager } from "@/lib/rag/vector-manager";
 
 import { RAGQueueManager } from "../rag/queue-manager";

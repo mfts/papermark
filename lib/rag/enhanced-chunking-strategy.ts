@@ -9,7 +9,7 @@ import {
     findActualContentEnd
 } from './utils/chunk-utils';
 import { TokenCountCache } from './utils/lruCache';
-import { RAGError } from './errors';
+import { RAGError } from './errors/rag-errors';
 
 interface ChunkingConfig {
     chunkSizeTokens: number;

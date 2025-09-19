@@ -1,5 +1,5 @@
 import { textGenerationService } from '../text-generation';
-import { RAGError } from '../errors';
+import { RAGError } from '../errors/rag-errors';
 import { UIMessage } from 'ai';
 import { ChatMetadataTracker } from './chat-metadata-tracker.service';
 

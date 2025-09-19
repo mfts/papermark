@@ -50,8 +50,6 @@ CREATE TABLE "DocumentChunk" (
     "sectionHeader" TEXT,
     "headerHierarchy" TEXT,
     "isSmallChunk" BOOLEAN,
-    "semanticType" TEXT,
-    "level" INTEGER,
     "startLine" INTEGER,
     "endLine" INTEGER,
     "vectorId" TEXT,
@@ -145,12 +143,6 @@ CREATE INDEX "DocumentChunk_vectorId_idx" ON "DocumentChunk"("vectorId");
 
 -- CreateIndex
 CREATE INDEX "DocumentChunk_sectionHeader_idx" ON "DocumentChunk"("sectionHeader");
-
--- CreateIndex
-CREATE INDEX "DocumentChunk_semanticType_idx" ON "DocumentChunk"("semanticType");
-
--- CreateIndex
-CREATE INDEX "DocumentChunk_level_idx" ON "DocumentChunk"("level");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "DocumentChunk_documentId_chunkIndex_key" ON "DocumentChunk"("documentId", "chunkIndex");

@@ -2,7 +2,7 @@ import { logger } from "@trigger.dev/sdk/v3";
 import pMap from "p-map";
 
 import { EnhancedDocumentChunker } from "./enhanced-chunking-strategy";
-import { RAGError, getErrorMessage } from "./errors";
+import { RAGError, getErrorMessage } from "./errors/rag-errors";
 import { InputFormat, getProcessingConfig } from "./file-format-detector";
 import { saveChunksToDB, saveMarkdownToDB } from "./markdown-storage";
 import {

@@ -2,12 +2,10 @@ import { z } from 'zod';
 import {
     LLMResponse,
     LLMOptions,
-    TokenUsage,
     RAG_CONSTANTS
-} from '../types/rag-types';
+} from './types/rag-types';
 
-import { RAGError } from '../errors';
-
+import { RAGError } from './errors/rag-errors';
 
 export interface LLMProvider {
     generateObject<T>(
@@ -26,21 +24,7 @@ export interface LLMProvider {
         options?: LLMOptions
     ): Promise<LLMResponse<string>>;
 
-
-    getProviderInfo(): ProviderInfo;
-
-
-    isAvailable(): Promise<boolean>;
 }
-
-export interface ProviderInfo {
-    name: string;
-    version: string;
-    supportedModels: string[];
-    maxTokens: number;
-    supportsStreaming: boolean;
-}
-
 
 export abstract class BaseLLMService {
     protected provider: LLMProvider;
@@ -70,7 +54,6 @@ export abstract class BaseLLMService {
         }
     }
 
-
     async generateText(
         prompt: string,
         options?: LLMOptions
@@ -83,7 +66,6 @@ export abstract class BaseLLMService {
             throw RAGError.create('llmCall', undefined, { operation: 'LLM text generation' }, error instanceof Error ? error : new Error(String(error)));
         }
     }
-
 
     async streamText(
         prompt: string,
@@ -99,16 +81,6 @@ export abstract class BaseLLMService {
     }
 
 
-    getProviderInfo(): ProviderInfo {
-        return this.provider.getProviderInfo();
-    }
-
-
-    async isAvailable(): Promise<boolean> {
-        return await this.provider.isAvailable();
-    }
-
-
     protected mergeOptions(options?: LLMOptions): LLMOptions {
         return {
             ...this.defaultOptions,
@@ -116,17 +88,6 @@ export abstract class BaseLLMService {
         };
     }
 
-    protected validateOptions(options: LLMOptions): void {
-        if (options.temperature !== undefined && (options.temperature < 0 || options.temperature > 2)) {
-            throw RAGError.create('validation', 'Temperature must be between 0 and 2', { field: 'temperature' });
-        }
-        if (options.maxTokens !== undefined && options.maxTokens <= 0) {
-            throw RAGError.create('validation', 'Max tokens must be positive', { field: 'maxTokens' });
-        }
-        if (options.timeout !== undefined && options.timeout <= 0) {
-            throw RAGError.create('validation', 'Timeout must be positive', { field: 'timeout' });
-        }
-    }
 }
 
 export class OpenAIProvider implements LLMProvider {
@@ -240,64 +201,25 @@ export class OpenAIProvider implements LLMProvider {
         }
     }
 
-    getProviderInfo(): ProviderInfo {
-        return {
-            name: 'OpenAI',
-            version: '1.0.0',
-            supportedModels: ['gpt-4o-mini', 'gpt-5-nano', 'gpt-5-mini'],
-            maxTokens: 128000,
-            supportsStreaming: true
-        };
-    }
-
-    async isAvailable(): Promise<boolean> {
-        try {
-            // Simple availability check
-            return process.env.OPENAI_API_KEY !== undefined;
-        } catch {
-            return false;
-        }
-    }
 }
 
 export class LLMServiceFactory {
     private static providers = new Map<string, LLMProvider>();
 
-    /**
-     * Register a provider
-     */
     static registerProvider(name: string, provider: LLMProvider): void {
         this.providers.set(name, provider);
     }
 
-    /**
-     * Get a provider by name
-     */
-    static getProvider(name: string): LLMProvider {
-        const provider = this.providers.get(name);
-        if (!provider) {
-            throw RAGError.create('validation', `LLM provider '${name}' not found`, { field: 'provider' });
-        }
-        return provider;
-    }
-
-    /**
-     * Create LLM service with provider
-     */
     static createService(providerName: string, options?: LLMOptions): BaseLLMService {
-        const provider = this.getProvider(providerName);
-        return new LLMService(provider, options);
-    }
-
-    /**
-     * Get available providers
-     */
-    static getAvailableProviders(): string[] {
-        return Array.from(this.providers.keys());
+        const provider = this.providers.get(providerName);
+        if (!provider) {
+            throw RAGError.create('validation', `LLM provider '${providerName}' not found`, { field: 'provider' });
+        }
+        return new ConcreteLLMService(provider, options);
     }
 }
 
-export class LLMService extends BaseLLMService {
+class ConcreteLLMService extends BaseLLMService {
     constructor(provider: LLMProvider, options?: LLMOptions) {
         super(provider, options);
     }
@@ -307,4 +229,41 @@ LLMServiceFactory.registerProvider('openai', new OpenAIProvider());
 
 export function getDefaultLLMService() {
     return LLMServiceFactory.createService('openai');
+}
+
+export const llmProvider = getDefaultLLMService();
+
+import { promptManager } from './prompts';
+
+export async function generateLLMResponse<T>(
+    promptId: string,
+    variables: Record<string, any>,
+    options?: LLMOptions
+): Promise<T> {
+    return RAGError.withErrorHandling(
+        async () => {
+            const prompt = await promptManager.renderTemplate(promptId, variables);
+            const schema = await promptManager.getTemplateSchema(promptId);
+            const optimization = await promptManager.getTemplateOptimization(promptId);
+
+            if (!schema) {
+                throw RAGError.create('templateNotFound', undefined, { templateId: promptId });
+            }
+
+            const result = await llmProvider.generateObject(
+                schema,
+                prompt,
+                {
+                    temperature: optimization?.temperature,
+                    model: optimization?.model,
+                    signal: options?.signal,
+                    ...options
+                }
+            );
+
+            return result.content as T;
+        },
+        'llmCall',
+        { service: 'LLMUtils', operation: 'generateLLMResponse', promptId }
+    );
 }

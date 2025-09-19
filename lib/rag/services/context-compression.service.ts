@@ -1,7 +1,6 @@
 import { SearchResult, CompressionConfig, CompressedContext, Span } from '../types/rag-types';
-import { RAGError } from '../errors';
-import { generateLLMResponse } from '../utils/llm-utils';
-import { configurationManager } from '../config';
+import { generateLLMResponse } from '../llm';
+import { configurationManager } from '../config/configuration-manager';
 import { PROMPT_IDS } from '../prompts';
 import { calculateTokenCount } from '../utils/chunk-utils';
 

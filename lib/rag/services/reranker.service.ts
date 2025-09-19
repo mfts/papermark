@@ -1,6 +1,6 @@
 import { SearchResult, RerankerConfig, RerankerResult } from '../types/rag-types';
-import { RAGError } from '../errors';
-import { configurationManager } from '../config';
+import { RAGError } from '../errors/rag-errors';
+import { configurationManager } from '../config/configuration-manager';
 
 
 let pipeline: any = null;

@@ -2,46 +2,45 @@ import useSWR from "swr";
 import { useMemo, useCallback, useState, useEffect } from "react";
 import { fetcher } from "@/lib/utils";
 
-export interface ChatSession {
+export interface SessionMessage {
     id: string;
-    title: string;
-    lastMessage?: {
-        content: string;
-        role: "user" | "assistant";
-        createdAt: string;
-    };
+    role: 'user' | 'assistant';
+    content: string;
     createdAt: string;
-    updatedAt: string;
+    metadata?: any;
 }
 
-export interface ChatSessionsResponse {
-    sessions: ChatSession[];
+export interface SessionMessagesResponse {
+    sessionId: string;
+    messages: SessionMessage[];
     pagination: {
         hasNext: boolean;
-        nextCursor?: string;
+        nextCursor: string | null;
     };
 }
 
-export function useChatSessionsInfinite({
+export function useSessionMessagesInfinite({
+    sessionId,
     dataroomId,
     viewerId,
     linkId,
     enabled = true,
     limit = 20,
 }: {
+    sessionId: string | null;
     dataroomId: string;
     viewerId: string;
     linkId: string;
     enabled?: boolean;
     limit?: number;
 }) {
-    const [sessions, setSessions] = useState<ChatSession[]>([]);
+    const [messages, setMessages] = useState<SessionMessage[]>([]);
     const [hasNextPage, setHasNextPage] = useState(true);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
 
     const firstPageUrl = useMemo(() => {
-        if (!enabled || !dataroomId || !viewerId || !linkId) {
+        if (!enabled || !sessionId || !dataroomId || !viewerId || !linkId) {
             return null;
         }
         const params = new URLSearchParams({
@@ -50,26 +49,30 @@ export function useChatSessionsInfinite({
             linkId,
             limit: limit.toString(),
         });
-        return `/api/rag/sessions?${params.toString()}`;
-    }, [enabled, dataroomId, viewerId, linkId, limit]);
+        return `/api/rag/sessions/${sessionId}/messages?${params.toString()}`;
+    }, [enabled, sessionId, dataroomId, viewerId, linkId, limit]);
 
-    const { data, error, isLoading } = useSWR<ChatSessionsResponse>(
+    const { data, error, isLoading } = useSWR<SessionMessagesResponse>(
         firstPageUrl,
         fetcher,
         {
             revalidateOnFocus: false,
             dedupingInterval: 10000,
+            errorRetryCount: 3,
+            errorRetryInterval: 1000,
         }
     );
+
     useEffect(() => {
         if (data) {
-            setSessions(data.sessions);
+            setMessages(data.messages);
             setHasNextPage(data.pagination.hasNext);
             setNextCursor(data.pagination.nextCursor || null);
         }
     }, [data]);
+
     const loadMore = useCallback(async () => {
-        if (!hasNextPage || !nextCursor || !enabled) {
+        if (!hasNextPage || isLoadingMore || !nextCursor) {
             return;
         }
 
@@ -84,39 +87,30 @@ export function useChatSessionsInfinite({
                 cursor: nextCursor,
             });
 
-            const response = await fetch(`/api/rag/sessions?${params.toString()}`);
+            const response = await fetch(`/api/rag/sessions/${sessionId}/messages?${params.toString()}`);
+
             if (!response.ok) {
-                throw new Error('Failed to fetch more sessions');
+                throw new Error(`Failed to load more messages: ${response.statusText}`);
             }
 
-            const newData: ChatSessionsResponse = await response.json();
-            setSessions(prev => [...prev, ...newData.sessions]);
+            const newData: SessionMessagesResponse = await response.json();
+            setMessages(prev => [...newData.messages, ...prev]);
             setHasNextPage(newData.pagination.hasNext);
             setNextCursor(newData.pagination.nextCursor || null);
-        } catch (err) {
-            console.log('err', err);
+        } catch (error) {
+            console.error('Failed to load more messages:', error);
         } finally {
             setIsLoadingMore(false);
         }
-    }, [hasNextPage, nextCursor, enabled, dataroomId, viewerId, linkId, limit]);
-    const mutate = useCallback(() => {
-        setSessions([]);
-        setHasNextPage(true);
-        setNextCursor(null);
-    }, []);
-
-    const isEmpty = sessions.length === 0 && !isLoading;
-    const isReachingEnd = isEmpty || !hasNextPage;
+    }, [hasNextPage, isLoadingMore, nextCursor, sessionId, dataroomId, viewerId, linkId, limit]);
 
     return {
-        sessions,
-        error,
+        messages,
         isLoading,
         isLoadingMore,
-        isEmpty,
-        isReachingEnd,
+        isReachingEnd: !hasNextPage,
         hasNextPage,
+        error,
         loadMore,
-        mutate,
     };
 }

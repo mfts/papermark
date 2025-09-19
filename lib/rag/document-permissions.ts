@@ -1,7 +1,7 @@
 import prisma from '../prisma';
 import { ParsingStatus } from '@prisma/client';
 import { LRUCache as NodeLRUCache } from 'lru-cache';
-import { RAGError } from './errors';
+import { RAGError } from './errors/rag-errors';
 
 export interface AccessibleDocument {
     documentId: string;

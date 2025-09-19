@@ -2,7 +2,7 @@ import { tasks } from "@trigger.dev/sdk/v3";
 import type { ragIndexingTask, RAGIndexingPayload } from "../trigger/rag-indexing";
 import prisma from "@/lib/prisma";
 import { RAGQueueManager } from "./queue-manager";
-import { RAGError } from './errors';
+import { RAGError } from './errors/rag-errors';
 import { ParsingStatus } from "@prisma/client";
 import { getFeatureFlags } from "@/lib/featureFlags";
 

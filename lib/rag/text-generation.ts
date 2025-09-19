@@ -1,10 +1,10 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText, UIMessage, convertToModelMessages } from 'ai';
 import { promptManager, PROMPT_IDS } from './prompts';
-import { configurationManager } from './config';
+import { configurationManager } from './config/configuration-manager';
 import { chatStorageService } from './services/chat-storage.service';
 import { ChatMetadataTracker } from './services/chat-metadata-tracker.service';
-import { RAGError } from './errors';
+import { RAGError } from './errors/rag-errors';
 
 interface StreamOptions {
     model: string;
@@ -179,6 +179,9 @@ export class TextGenerationService {
                 metadata: metadataTracker.getMetadata(),
             });
         } catch (error) {
+            console.error('❌ Failed to store assistant message:', error);
+            console.error('Session ID:', chatSessionId);
+            console.error('Message content:', text);
         }
     }
 }

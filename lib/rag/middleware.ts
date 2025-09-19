@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { UIMessage } from 'ai';
 import { getAccessibleDocumentsForRAG, AccessibleDocument } from './document-permissions';
 import { z } from 'zod';
-import { RAGError } from './errors';
+import { RAGError } from './errors/rag-errors';
 import { DocumentAccessCache } from './utils/lruCache';
 
 const RequestBodySchema = z.object({

@@ -1,7 +1,7 @@
 import { redis } from "@/lib/redis";
 import { logger } from "@trigger.dev/sdk/v3";
-import { getErrorMessage } from "./errors";
-import { RAGError } from './errors';
+import { getErrorMessage } from "./errors/rag-errors";
+import { RAGError } from './errors/rag-errors';
 
 interface RAGIndexingRequest {
     dataroomId: string;

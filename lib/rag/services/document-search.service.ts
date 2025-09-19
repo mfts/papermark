@@ -1,7 +1,7 @@
 import { SearchResult } from '../types/rag-types';
 import { vectorSearchService } from '../vector-search';
-import { RAGError } from '../errors';
-import { configurationManager } from '../config';
+import { RAGError } from '../errors/rag-errors';
+import { configurationManager } from '../config/configuration-manager';
 
 interface SearchConfig {
     topK: number;

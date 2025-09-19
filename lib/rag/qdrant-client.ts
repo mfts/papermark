@@ -1,6 +1,6 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
 
-import { RAGError } from "./errors";
+import { RAGError } from "./errors/rag-errors";
 
 const QDRANT_CONFIG = {
     DEFAULT_VECTOR_SIZE: 1536,

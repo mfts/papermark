@@ -1,5 +1,5 @@
 
-import { RAGError } from '../errors';
+import { RAGError } from '../errors/rag-errors';
 import { AccessibleDocument } from '../document-permissions';
 import { SearchResult } from '../types/rag-types';
 import { UIMessage } from 'ai';
@@ -9,7 +9,7 @@ import { contextCompressionService } from './context-compression.service';
 import { DocumentSearchService, documentSearchService } from './document-search.service';
 import { DocumentGradingService, documentGradingService } from './document-grading.service';
 import { UnifiedQueryAnalysisResult } from './unified-query-analysis.service';
-import { configurationManager } from '../config';
+import { configurationManager } from '../config/configuration-manager';
 import { ChatMetadataTracker } from './chat-metadata-tracker.service';
 
 

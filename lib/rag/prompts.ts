@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { PromptTemplateCache } from './utils/lruCache';
-import { RAGError } from './errors';
+import { RAGError } from './errors/rag-errors';
 
 export interface PromptTemplate {
     id: string;

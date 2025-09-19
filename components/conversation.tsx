@@ -1,62 +1,104 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { ArrowDownIcon } from 'lucide-react';
-import type { ComponentProps } from 'react';
-import { useCallback } from 'react';
-import { StickToBottom, useStickToBottomContext } from 'use-stick-to-bottom';
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 
-export type ConversationProps = ComponentProps<typeof StickToBottom>;
+import { cn } from "@/lib/utils";
 
-export const Conversation = ({ className, ...props }: ConversationProps) => (
-  <StickToBottom
-    className={cn('relative flex-1 overflow-y-auto', className)}
-    initial="smooth"
-    resize="smooth"
-    role="log"
-    {...props}
-  />
-);
-
-export type ConversationContentProps = ComponentProps<
-  typeof StickToBottom.Content
->;
-
-export const ConversationContent = ({
-  className,
-  ...props
-}: ConversationContentProps) => (
-  <StickToBottom.Content className={cn('p-4', className)} {...props} />
-);
-
-export type ConversationScrollButtonProps = ComponentProps<typeof Button>;
-
-export const ConversationScrollButton = ({
-  className,
-  ...props
-}: ConversationScrollButtonProps) => {
-  const { isAtBottom, scrollToBottom } = useStickToBottomContext();
-
-  const handleScrollToBottom = useCallback(() => {
-    scrollToBottom();
-  }, [scrollToBottom]);
-
-  return (
-    !isAtBottom && (
-      <Button
-        className={cn(
-          'absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full',
-          className
-        )}
-        onClick={handleScrollToBottom}
-        size="icon"
-        type="button"
-        variant="outline"
-        {...props}
-      >
-        <ArrowDownIcon className="size-4" />
-      </Button>
-    )
-  );
+export type ConversationProps = {
+  className?: string;
+  children: React.ReactNode;
+  onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
 };
+
+export const Conversation = memo(
+  ({ className, children, onScroll }: ConversationProps) => {
+    const outerDiv = useRef<HTMLDivElement>(null);
+    const innerDiv = useRef<HTMLDivElement>(null);
+    const prevInnerDivHeight = useRef<number>(0);
+    const [showMessages, setShowMessages] = useState(false);
+
+    const getScrollDimensions = useCallback(() => {
+      if (!outerDiv.current || !innerDiv.current) {
+        return { outerDivHeight: 0, innerDivHeight: 0, outerDivScrollTop: 0 };
+      }
+      const outerDivHeight = outerDiv.current.clientHeight;
+      const innerDivHeight = innerDiv.current.clientHeight + 28;
+      const outerDivScrollTop = outerDiv.current.scrollTop;
+      return { outerDivHeight, innerDivHeight, outerDivScrollTop };
+    }, [outerDiv.current, innerDiv.current]);
+
+    useEffect(() => {
+      if (!outerDiv.current || !innerDiv.current) return;
+
+      const { innerDivHeight, outerDivHeight, outerDivScrollTop } =
+        getScrollDimensions();
+
+      if (
+        !prevInnerDivHeight.current ||
+        Math.ceil(outerDivScrollTop) ===
+          prevInnerDivHeight.current - outerDivHeight
+      ) {
+        outerDiv.current.scrollTo({
+          top: innerDivHeight - outerDivHeight,
+          left: 0,
+          behavior: prevInnerDivHeight.current ? "smooth" : "auto",
+        });
+        setShowMessages(true);
+      }
+
+      prevInnerDivHeight.current = innerDivHeight;
+    }, [children]);
+
+    const handleScrollEvent = useCallback(() => {
+      if (onScroll) {
+        const syntheticEvent = {
+          currentTarget: outerDiv.current,
+        } as React.UIEvent<HTMLDivElement>;
+        onScroll(syntheticEvent);
+      }
+    }, [onScroll]);
+
+    useEffect(() => {
+      const outerDivCurrent = outerDiv.current;
+      if (!outerDivCurrent) return;
+
+      outerDivCurrent.addEventListener("scroll", handleScrollEvent);
+      return () => {
+        outerDivCurrent.removeEventListener("scroll", handleScrollEvent);
+      };
+    }, [handleScrollEvent]);
+
+    return (
+      <div className={cn("relative flex-1", className)}>
+        <div ref={outerDiv} className="h-full overflow-y-auto" role="log">
+          <div
+            ref={innerDiv}
+            className={cn(
+              "relative transition-all duration-300 ease-in-out",
+              showMessages ? "opacity-100" : "opacity-0",
+            )}
+          >
+            {children}
+          </div>
+        </div>
+      </div>
+    );
+  },
+);
+
+Conversation.displayName = "Conversation";
+
+export type ConversationContentProps = {
+  className?: string;
+  children: React.ReactNode;
+};
+
+export const ConversationContent = memo(
+  ({ className, children }: ConversationContentProps) => (
+    <div className={cn("p-2", className)}>{children}</div>
+  ),
+);
+
+ConversationContent.displayName = "ConversationContent";
+
+export const ConversationScrollButton = () => null;

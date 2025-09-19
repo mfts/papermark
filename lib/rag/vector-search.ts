@@ -1,9 +1,9 @@
-import { RAGError } from './errors';
+import { RAGError } from './errors/rag-errors';
 import { SearchResult } from './types/rag-types';
 import { generateEmbedding } from './ai-sdk-integration';
 import { vectorManager } from './vector-manager';
 import { log } from '@/lib/utils';
-import { configurationManager } from './config';
+import { configurationManager } from './config/configuration-manager';
 
 let DEFAULT_SEARCH_CONFIG = {
     topK: 10,

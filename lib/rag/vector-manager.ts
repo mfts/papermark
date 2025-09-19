@@ -1,6 +1,6 @@
 import { QdrantVectorStore, QdrantPoint } from './qdrant-client';
 import { log } from '@/lib/utils';
-import { RAGError } from './errors';
+import { RAGError } from './errors/rag-errors';
 
 const VECTOR_MANAGER_CONFIG = {
     DEFAULT_RETRY_COUNT: 2,

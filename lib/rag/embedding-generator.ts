@@ -4,8 +4,8 @@ import { calculateTokenCount } from "./utils/chunk-utils";
 import pLimit from 'p-limit';
 import * as crypto from "crypto";
 import { EmbeddingCache } from "./utils/lruCache";
-import { getErrorMessage } from "./errors";
-import { RAGError } from "./errors";
+import { getErrorMessage } from "./errors/rag-errors";
+import { RAGError } from "./errors/rag-errors";
 import { logger } from "@trigger.dev/sdk/v3";
 
 export interface EmbeddingResult {

@@ -1,6 +1,6 @@
 import { embed } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { RAGError } from './errors';
+import { RAGError } from './errors/rag-errors';
 
 /**
  * Generate embedding for a single text using AI SDK v5

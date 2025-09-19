@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs";
 import * as chrono from "chrono-node";
 import { type ClassValue, clsx } from "clsx";
 import crypto from "crypto";
+import { format, isToday, isYesterday, isSameDay } from "date-fns";
 import ms from "ms";
 import { customAlphabet } from "nanoid";
 import { ThreadMessage } from "openai/resources/beta/threads/messages/messages";
@@ -831,3 +832,25 @@ export function serializeFileSize(obj: any): any {
 
   return obj;
 }
+
+export function getFormattedDate(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  if (isToday(dateObj)) {
+    return "Today";
+  }
+
+  if (isYesterday(dateObj)) {
+    return "Yesterday";
+  }
+
+  return format(dateObj, "MMM d, yyyy");
+}
+
+export function isSameChatDay(date1: Date | string, date2: Date | string): boolean {
+  const date1Obj = typeof date1 === 'string' ? new Date(date1) : date1;
+  const date2Obj = typeof date2 === 'string' ? new Date(date2) : date2;
+
+  return isSameDay(date1Obj, date2Obj);
+}
+

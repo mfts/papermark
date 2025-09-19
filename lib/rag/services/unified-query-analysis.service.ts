@@ -1,7 +1,6 @@
-import { BaseLLMService } from '../llm/llm-interface';
+import { BaseLLMService, llmProvider } from '../llm';
 import { promptManager, PROMPT_IDS } from '../prompts';
-import { RAGError } from '../errors';
-import { llmProvider } from '../llm/llm-provider';
+import { RAGError } from '../errors/rag-errors';
 
 export interface UnifiedQueryAnalysisResult {
     sanitization: {
