@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { stripeInstance } from "@/ee/stripe";
 import { isOldAccount } from "@/ee/stripe/utils";
 import { waitUntil } from "@vercel/functions";
+import { timingSafeEqual } from "crypto";
 
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
@@ -19,12 +20,36 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
     return;
   }
 
-  // Extract the API Key from the Authorization header
+  // Extract the API Key from the Authorization header with strict Bearer parsing
   const authHeader = req.headers.authorization;
-  const token = authHeader?.split(" ")[1]; // Assuming the format is "Bearer [token]"
 
-  // Check if the API Key matches
-  if (token !== process.env.INTERNAL_API_KEY) {
+  // Verify Authorization header exists and starts with "Bearer "
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
+
+  // Extract token after "Bearer " prefix
+  const token = authHeader.substring(7); // "Bearer ".length === 7
+  const envKey = process.env.INTERNAL_API_KEY;
+
+  // Verify both token and environment key are present and have equal length
+  if (!token || !envKey || token.length !== envKey.length) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
+
+  // Perform timing-safe comparison using Buffers
+  try {
+    const tokenBuffer = Buffer.from(token, "utf8");
+    const envKeyBuffer = Buffer.from(envKey, "utf8");
+
+    if (!timingSafeEqual(tokenBuffer, envKeyBuffer)) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+  } catch (error) {
+    // Handle any Buffer creation errors
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
