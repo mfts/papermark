@@ -133,6 +133,25 @@ export const convertPdfToImageRoute = task({
         );
 
         if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+
+          // If document was blocked, stop processing entirely
+          if (response.status === 400 && errorData.error?.includes("blocked")) {
+            logger.error("Document blocked", {
+              pageNumber: currentPage,
+              matchedUrl: errorData.matchedUrl,
+              matchedKeyword: errorData.matchedKeyword,
+              payload,
+            });
+
+            updateStatus({
+              progress: 0,
+              text: `Document couldn't be processed`,
+            });
+
+            throw new Error("Document processing blocked");
+          }
+
           throw new Error("Failed to convert page");
         }
 

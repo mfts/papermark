@@ -11,6 +11,7 @@ export const rateLimiters = {
     redis,
     limiter: Ratelimit.slidingWindow(3, "20 m"),
     prefix: "rl:auth",
+    enableProtection: true,
     analytics: true,
   }),
 
@@ -19,6 +20,7 @@ export const rateLimiters = {
     redis,
     limiter: Ratelimit.slidingWindow(3, "30 m"),
     prefix: "rl:billing",
+    enableProtection: true,
     analytics: true,
   }),
 };
