@@ -28,16 +28,16 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: { userId },
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
           },
         },
       });
 
-      if (!team) {
+      if (!teamAccess) {
         return res.status(401).end("Unauthorized");
       }
 
@@ -52,6 +52,7 @@ export default async function handle(
         return res.status(404).json({ error: "Dataroom not found" });
       }
 
+      // First, get permission groups without expensive nested data
       const permissionGroups = await prisma.permissionGroup.findMany({
         where: {
           dataroomId: dataroomId,
@@ -60,24 +61,66 @@ export default async function handle(
         orderBy: {
           createdAt: "desc",
         },
-        include: {
-          accessControls: true,
-          links: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          _count: {
-            select: {
-              links: true,
-              accessControls: true,
-            },
-          },
-        },
       });
 
-      return res.status(200).json(permissionGroups);
+      // Then, get nested data efficiently with separate queries
+      const groupIds = permissionGroups.map((g) => g.id);
+
+      const [accessControls, links] = await Promise.all([
+        prisma.permissionGroupAccessControls.findMany({
+          where: {
+            groupId: { in: groupIds },
+          },
+        }),
+        prisma.link.findMany({
+          where: {
+            permissionGroupId: { in: groupIds },
+          },
+          select: {
+            id: true,
+            name: true,
+            permissionGroupId: true,
+          },
+        }),
+      ]);
+
+      // Create lookup maps for nested data
+      const accessControlsMap = new Map<string, any[]>();
+      const linksMap = new Map<string, any[]>();
+
+      // Group access controls by groupId
+      accessControls.forEach((ac) => {
+        if (!accessControlsMap.has(ac.groupId)) {
+          accessControlsMap.set(ac.groupId, []);
+        }
+        accessControlsMap.get(ac.groupId)!.push(ac);
+      });
+
+      // Group links by permissionGroupId
+      links.forEach((link) => {
+        if (link.permissionGroupId && !linksMap.has(link.permissionGroupId)) {
+          linksMap.set(link.permissionGroupId, []);
+        }
+        if (link.permissionGroupId) {
+          linksMap.get(link.permissionGroupId)!.push({
+            id: link.id,
+            name: link.name,
+          });
+        }
+      });
+
+      // Combine permission groups with their nested data
+      const permissionGroupsWithData = permissionGroups.map((group) => ({
+        ...group,
+        accessControls: accessControlsMap.get(group.id) || [],
+        links: linksMap.get(group.id) || [],
+        _count: {
+          accessControls: (accessControlsMap.get(group.id) || []).length,
+          links: (linksMap.get(group.id) || []).length,
+        },
+      }));
+
+      return res.status(200).json(permissionGroupsWithData);
     } catch (error) {
       errorhandler(error, res);
     }

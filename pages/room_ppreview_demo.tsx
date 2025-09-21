@@ -73,6 +73,7 @@ export default function ViewPage() {
                 parentId: null,
                 dataroomId: "1",
                 orderIndex: 0,
+                hierarchicalIndex: null,
                 path: "/",
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -83,6 +84,7 @@ export default function ViewPage() {
                 parentId: null,
                 dataroomId: "1",
                 orderIndex: 1,
+                hierarchicalIndex: null,
                 path: "/",
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -94,6 +96,7 @@ export default function ViewPage() {
                 name: "Q4 Report.pdf",
                 dataroomDocumentId: "1",
                 folderId: null,
+                hierarchicalIndex: null,
                 versions: [
                   {
                     id: "1",
@@ -122,6 +125,7 @@ export default function ViewPage() {
                       parentId: null,
                       dataroomId: "1",
                       orderIndex: 0,
+                      hierarchicalIndex: null,
                       path: "/",
                       createdAt: new Date(),
                       updatedAt: new Date(),
@@ -142,6 +146,7 @@ export default function ViewPage() {
                       parentId: null,
                       dataroomId: "1",
                       orderIndex: 1,
+                      hierarchicalIndex: null,
                       path: "/",
                       createdAt: new Date(),
                       updatedAt: new Date(),
@@ -162,6 +167,7 @@ export default function ViewPage() {
                       dataroomDocumentId: "1",
                       downloadOnly: false,
                       canDownload: false,
+                      hierarchicalIndex: null,
                       versions: [
                         {
                           id: "1",

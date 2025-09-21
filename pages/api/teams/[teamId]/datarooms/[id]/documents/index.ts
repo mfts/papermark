@@ -6,7 +6,6 @@ import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
-import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { sendDataroomChangeNotificationTask } from "@/lib/trigger/dataroom-change-notification";
 import { CustomUser } from "@/lib/types";
@@ -65,7 +64,14 @@ export default async function handle(
             },
           },
         ],
-        include: {
+        select: {
+          id: true,
+          dataroomId: true,
+          folderId: true,
+          orderIndex: true,
+          hierarchicalIndex: true,
+          createdAt: true,
+          updatedAt: true,
           document: {
             select: {
               id: true,
@@ -160,7 +166,9 @@ export default async function handle(
                 orderBy: { createdAt: "desc" },
                 take: 1,
               },
-              _count: { select: { viewerGroups: true, permissionGroups: true } },
+              _count: {
+                select: { viewerGroups: true, permissionGroups: true },
+              },
             },
           },
         },

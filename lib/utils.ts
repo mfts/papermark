@@ -553,8 +553,14 @@ export async function generateEncrpytedPassword(
   // If the password is empty, return an empty string
   if (!password) return "";
   // If the password is already encrypted, return it
+  // Check if it's encrypted by validating the format: 32-char hex IV + ":" + hex encrypted text
   const textParts: string[] = password.split(":");
-  if (textParts.length === 2) {
+  if (
+    textParts.length === 2 &&
+    textParts[0].length === 32 &&
+    /^[a-fA-F0-9]+$/.test(textParts[0]) &&
+    /^[a-fA-F0-9]+$/.test(textParts[1])
+  ) {
     return password;
   }
   // Otherwise, encrypt the password
@@ -578,15 +584,26 @@ export function decryptEncrpytedPassword(password: string): string {
     .digest("base64")
     .substring(0, 32);
   const textParts: string[] = password.split(":");
-  if (!textParts || textParts.length !== 2) {
+  // Check if it's in the expected encrypted format: 32-char hex IV + ":" + hex encrypted text
+  if (
+    !textParts ||
+    textParts.length !== 2 ||
+    textParts[0].length !== 32 ||
+    !/^[a-fA-F0-9]+$/.test(textParts[0]) ||
+    !/^[a-fA-F0-9]+$/.test(textParts[1])
+  ) {
+    return password; // Return as-is if not in encrypted format
+  }
+  try {
+    const IV: Buffer = Buffer.from(textParts[0], "hex");
+    const encryptedText: string = textParts[1];
+    const decipher = crypto.createDecipheriv("aes-256-ctr", encryptedKey, IV);
+    let decrypted: string = decipher.update(encryptedText, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+    return decrypted;
+  } catch (error) {
     return password;
   }
-  const IV: Buffer = Buffer.from(textParts[0], "hex");
-  const encryptedText: string = textParts[1];
-  const decipher = crypto.createDecipheriv("aes-256-ctr", encryptedKey, IV);
-  let decrypted: string = decipher.update(encryptedText, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
 }
 
 type FilterMode = "email" | "domain" | "both";

@@ -1,4 +1,4 @@
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/router";
 
 import { useMemo } from "react";
 import React from "react";
@@ -13,6 +13,10 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { PanelLeftIcon, XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import {
+  HIERARCHICAL_DISPLAY_STYLE,
+  getHierarchicalDisplayName,
+} from "@/lib/utils/hierarchical-display";
 import { sortByIndexThenName } from "@/lib/utils/sort-items-by-index-name";
 
 import { ViewFolderTree } from "@/components/datarooms/folders";
@@ -40,6 +44,42 @@ import FolderCard from "../dataroom/folder-card";
 import IndexFileDialog from "../dataroom/index-file-dialog";
 import DataroomNav from "../dataroom/nav-dataroom";
 
+const ViewerBreadcrumbItem = ({
+  folder,
+  setFolderId,
+  isLast,
+  dataroomIndexEnabled,
+}: {
+  folder: any;
+  setFolderId: (id: string | null) => void;
+  isLast: boolean;
+  dataroomIndexEnabled?: boolean;
+}) => {
+  const displayName = getHierarchicalDisplayName(
+    folder.name,
+    folder.hierarchicalIndex,
+    dataroomIndexEnabled || false,
+  );
+
+  if (isLast) {
+    return (
+      <BreadcrumbPage className="capitalize" style={HIERARCHICAL_DISPLAY_STYLE}>
+        {displayName}
+      </BreadcrumbPage>
+    );
+  }
+
+  return (
+    <BreadcrumbLink
+      onClick={() => setFolderId(folder.id)}
+      className="cursor-pointer capitalize"
+      style={HIERARCHICAL_DISPLAY_STYLE}
+    >
+      {displayName}
+    </BreadcrumbLink>
+  );
+};
+
 type FolderOrDocument =
   | (DataroomFolder & { allowDownload: boolean })
   | DataroomDocument;
@@ -63,6 +103,7 @@ type DataroomDocument = {
   versions: DocumentVersion[];
   canDownload: boolean;
   canView: boolean;
+  hierarchicalIndex: string | null;
 };
 
 const getParentFolders = (
@@ -97,6 +138,7 @@ export default function DataroomViewer({
   enableIndexFile,
   isEmbedded,
   viewerEmail,
+  dataroomIndexEnabled,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
@@ -112,6 +154,7 @@ export default function DataroomViewer({
   enableIndexFile?: boolean;
   isEmbedded?: boolean;
   viewerEmail?: string;
+  dataroomIndexEnabled?: boolean;
 }) {
   const { documents, folders, allowBulkDownload } = dataroom as {
     documents: DataroomDocument[];
@@ -119,8 +162,8 @@ export default function DataroomViewer({
     allowBulkDownload: boolean;
   };
 
-  const searchParams = useSearchParams();
-  const searchQuery = searchParams?.get("search")?.toLowerCase() || "";
+  const router = useRouter();
+  const searchQuery = (router.query.search as string)?.toLowerCase() || "";
 
   const breadcrumbFolders = useMemo(
     () => getParentFolders(folderId, folders),
@@ -304,6 +347,7 @@ export default function DataroomViewer({
           isPreview={!!isPreview}
           allowDownload={allowDownload && item.canDownload}
           isProcessing={isProcessing}
+          dataroomIndexEnabled={dataroomIndexEnabled}
         />
       );
     }
@@ -318,6 +362,7 @@ export default function DataroomViewer({
         linkId={linkId}
         viewId={viewId}
         allowDownload={item.allowDownload}
+        dataroomIndexEnabled={dataroomIndexEnabled}
       />
     );
   };
@@ -350,6 +395,7 @@ export default function DataroomViewer({
                 documents={documents}
                 setFolderId={setFolderId}
                 folderId={folderId}
+                dataroomIndexEnabled={dataroomIndexEnabled}
               />
               <ScrollBar orientation="horizontal" />
               <ScrollBar orientation="vertical" />
@@ -383,6 +429,7 @@ export default function DataroomViewer({
                             documents={documents}
                             setFolderId={setFolderId}
                             folderId={folderId}
+                            dataroomIndexEnabled={dataroomIndexEnabled}
                           />
                         </div>
                         <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
@@ -410,18 +457,12 @@ export default function DataroomViewer({
                         <React.Fragment key={folder.id}>
                           <BreadcrumbSeparator />
                           <BreadcrumbItem>
-                            {index === breadcrumbFolders.length - 1 ? (
-                              <BreadcrumbPage className="capitalize">
-                                {folder.name}
-                              </BreadcrumbPage>
-                            ) : (
-                              <BreadcrumbLink
-                                onClick={() => setFolderId(folder.id)}
-                                className="cursor-pointer capitalize"
-                              >
-                                {folder.name}
-                              </BreadcrumbLink>
-                            )}
+                            <ViewerBreadcrumbItem
+                              folder={folder}
+                              setFolderId={setFolderId}
+                              isLast={index === breadcrumbFolders.length - 1}
+                              dataroomIndexEnabled={dataroomIndexEnabled}
+                            />
                           </BreadcrumbItem>
                         </React.Fragment>
                       ))}

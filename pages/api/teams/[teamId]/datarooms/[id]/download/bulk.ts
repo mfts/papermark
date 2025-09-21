@@ -10,7 +10,7 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 export const config = {
-  maxDuration: 180,
+  maxDuration: 300,
 };
 
 export default async function handler(

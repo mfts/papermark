@@ -86,6 +86,8 @@ model Link {
   @@unique([domainSlug, slug])
   @@index([documentId])
   @@index([teamId])
+  @@index([documentId, isArchived]) // Performance optimization for active links filtering
+  @@index([permissionGroupId]) // Performance optimization for permission group queries
 }
 
 model LinkPreset {

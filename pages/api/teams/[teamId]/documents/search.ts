@@ -21,21 +21,20 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
           },
         },
       });
 
-      if (!team) {
-        return res.status(404).end("Team not found");
+      if (!teamAccess) {
+        return res.status(401).end("Unauthorized");
       }
 
+      // First, get documents without expensive counts
       const documents = await prisma.document.findMany({
         where: {
           teamId: teamId,
@@ -47,14 +46,57 @@ export default async function handle(
         orderBy: {
           createdAt: "desc",
         },
-        include: {
-          _count: {
-            select: { links: true, views: true, versions: true },
-          },
-        },
       });
 
-      return res.status(200).json(documents);
+      // Then, get counts efficiently with separate GROUP BY queries
+      const documentIds = documents.map((d) => d.id);
+
+      const [linkCounts, viewCounts, versionCounts] = await Promise.all([
+        prisma.link.groupBy({
+          by: ["documentId"],
+          where: {
+            documentId: { in: documentIds },
+          },
+          _count: { id: true },
+        }),
+        prisma.view.groupBy({
+          by: ["documentId"],
+          where: {
+            documentId: { in: documentIds },
+          },
+          _count: { id: true },
+        }),
+        prisma.documentVersion.groupBy({
+          by: ["documentId"],
+          where: {
+            documentId: { in: documentIds },
+          },
+          _count: { id: true },
+        }),
+      ]);
+
+      // Create lookup maps for counts
+      const linkCountMap = new Map(
+        linkCounts.map((lc) => [lc.documentId, lc._count.id]),
+      );
+      const viewCountMap = new Map(
+        viewCounts.map((vc) => [vc.documentId, vc._count.id]),
+      );
+      const versionCountMap = new Map(
+        versionCounts.map((vsc) => [vsc.documentId, vsc._count.id]),
+      );
+
+      // Combine documents with their counts
+      const documentsWithCounts = documents.map((document) => ({
+        ...document,
+        _count: {
+          links: linkCountMap.get(document.id) || 0,
+          views: viewCountMap.get(document.id) || 0,
+          versions: versionCountMap.get(document.id) || 0,
+        },
+      }));
+
+      return res.status(200).json(documentsWithCounts);
     } catch (error) {
       errorhandler(error, res);
     }

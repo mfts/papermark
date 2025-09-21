@@ -27,12 +27,26 @@ export default async function handle(
         pageNumber,
         type,
       },
+      include: {
+        view: {
+          select: {
+            documentId: true,
+            dataroomId: true,
+            linkId: true,
+            viewerEmail: true,
+            viewerId: true,
+            teamId: true,
+          },
+        },
+      },
     });
 
     if (!reaction) {
       res.status(500).json({ message: "Internal Server Error" });
       return;
     }
+
+
 
     res.status(200).json({ message: "Reaction recorded" });
     return;

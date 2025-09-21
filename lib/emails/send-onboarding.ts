@@ -2,7 +2,7 @@ import Onboarding1Email from "@/components/emails/onboarding-1";
 import Onboarding2Email from "@/components/emails/onboarding-2";
 import Onboarding3Email from "@/components/emails/onboarding-3";
 import Onboarding4Email from "@/components/emails/onboarding-4";
-import Onboarding5Email from "@/components/emails/onboarding-5";
+import Onboarding5Email from "@/components/emails/data-rooms-information";
 
 import { sendEmail } from "@/lib/resend";
 

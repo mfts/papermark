@@ -4,7 +4,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
+import prisma from "@/lib/prisma";
 import { getViewPageDuration } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 
@@ -32,18 +32,30 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
-        docId,
-        checkOwner: true,
-        options: {
-          select: {
-            id: true,
-            ownerId: true,
+      const teamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId,
+            teamId,
           },
         },
       });
+
+      if (!teamAccess) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      const document = await prisma.document.findUnique({
+        where: {
+          id: docId,
+          teamId,
+        },
+        select: { id: true },
+      });
+
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
 
       const duration = await getViewPageDuration({
         documentId: docId,

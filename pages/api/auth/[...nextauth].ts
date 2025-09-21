@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import PasskeyProvider from "@teamhanko/passkeys-next-auth-provider";
 import NextAuth, { type NextAuthOptions } from "next-auth";
@@ -16,7 +17,9 @@ import hanko from "@/lib/hanko";
 import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { subscribe } from "@/lib/unsend";
+import { log } from "@/lib/utils";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
+import { getIpAddress } from "@/lib/utils/ip";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -125,19 +128,6 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
-    signIn: async ({ user }) => {
-      if (!user.email || (await isBlacklistedEmail(user.email))) {
-        await identifyUser(user.email ?? user.id);
-        await trackAnalytics({
-          event: "User Sign In Attempted",
-          email: user.email ?? undefined,
-          userId: user.id,
-        });
-        return false;
-      }
-      return true;
-    },
-
     jwt: async (params) => {
       const { token, user, trigger } = params;
       if (!token.email) {
@@ -206,6 +196,41 @@ export const authOptions: NextAuthOptions = {
 const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
   return {
     ...authOptions,
+    callbacks: {
+      ...authOptions.callbacks,
+      signIn: async ({ user }) => {
+        if (!user.email || (await isBlacklistedEmail(user.email))) {
+          await identifyUser(user.email ?? user.id);
+          await trackAnalytics({
+            event: "User Sign In Attempted",
+            email: user.email ?? undefined,
+            userId: user.id,
+          });
+          return false;
+        }
+
+        // Apply rate limiting for signin attempts
+        try {
+          if (req) {
+            const clientIP = getIpAddress(req.headers);
+            const rateLimitResult = await checkRateLimit(
+              rateLimiters.auth,
+              clientIP,
+            );
+
+            if (!rateLimitResult.success) {
+              log({
+                message: `Rate limit exceeded for IP ${clientIP} during signin attempt`,
+                type: "error",
+              });
+              return false; // Block the signin
+            }
+          }
+        } catch (error) {}
+
+        return true;
+      },
+    },
     events: {
       ...authOptions.events,
       signIn: async (message) => {
@@ -241,6 +266,9 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
   };
 };
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   return NextAuth(req, res, getAuthOptions(req));
 }

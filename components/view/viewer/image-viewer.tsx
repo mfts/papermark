@@ -1,11 +1,7 @@
 import { useRouter } from "next/router";
 
-
-
 import { useEffect, useRef, useState } from "react";
 import React from "react";
-
-
 
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { getTrackingOptions } from "@/lib/tracking/tracking-config";

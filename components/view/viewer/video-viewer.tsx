@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 import { ScreenProtector } from "../ScreenProtection";
 import Nav, { TNavData } from "../nav";
-import { VideoPlayer } from "./video-player";
+import { MediaPlayer } from "./video-player";
 
 export default function VideoViewer({
   file,
@@ -109,9 +109,9 @@ export default function VideoViewer({
         )}
       >
         <div className="relative flex h-full w-full items-center justify-center">
-          <VideoPlayer
+          <MediaPlayer
             ref={videoRef}
-            videoSrc={file}
+            mediaSrc={file}
             onError={handleVideoError}
             preventDownload={!allowDownload}
           />

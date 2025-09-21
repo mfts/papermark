@@ -9,6 +9,7 @@ import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
 
 import { useAnalytics } from "@/lib/analytics";
+import { useDisablePrint } from "@/lib/hooks/use-disable-print";
 import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
 
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -19,7 +20,6 @@ import AccessForm, {
 
 import EmailVerificationMessage from "./access-form/email-verification-form";
 import ViewData, { TViewDocumentData } from "./view-data";
-import { useDisablePrint } from "@/lib/hooks/use-disable-print";
 
 type RowData = { [key: string]: any };
 type SheetData = {
@@ -65,6 +65,7 @@ export default function DocumentView({
   useCustomAccessForm,
   logoOnAccessForm,
   isEmbedded,
+  annotationsEnabled,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -86,6 +87,7 @@ export default function DocumentView({
   useCustomAccessForm?: boolean;
   isEmbedded?: boolean;
   logoOnAccessForm?: boolean;
+  annotationsEnabled?: boolean;
 }) {
   useDisablePrint();
   const {
@@ -261,6 +263,7 @@ export default function DocumentView({
         requireAgreement={enableAgreement!}
         agreementName={link.agreement?.name}
         agreementContent={link.agreement?.content}
+        agreementContentType={link.agreement?.contentType}
         requireName={link.agreement?.requireName}
         isLoading={isLoading}
         brand={brand}
@@ -298,6 +301,7 @@ export default function DocumentView({
           showAccountCreationSlide={showAccountCreationSlide}
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
+          annotationsEnabled={annotationsEnabled}
         />
       ) : (
         <div className="flex h-screen items-center justify-center">

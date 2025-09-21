@@ -1,0 +1,147 @@
+model Document {
+  id                   String              @id @default(cuid())
+  name                 String
+  description          String?
+  file                 String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  originalFile         String? // This should be a reference to the original file like pptx, xlsx, etc. (S3, Google Cloud Storage, etc.)
+  type                 String? // This should be a reference to the file type (pdf, sheet, etc.)
+  contentType          String? // This should be the actual contentType of the file like application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, etc.
+  storageType          DocumentStorageType @default(VERCEL_BLOB)
+  numPages             Int? // This should be a reference to the number of pages in the document
+  owner                User?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  teamId               String
+  team                 Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  ownerId              String? // This field holds the foreign key.
+  assistantEnabled     Boolean             @default(false) // This indicates if assistant is enabled for this document
+  advancedExcelEnabled Boolean             @default(false) // This indicates if advanced Excel is enabled for this document
+  downloadOnly         Boolean             @default(false) // Indicates if the document is download only
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  links                Link[]
+  views                View[]
+  versions             DocumentVersion[]
+  chats                Chat[]
+
+  folderId String? // Optional Folder ID for documents in folders
+  folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  datarooms DataroomDocument[] // Datarooms associated with this document
+  tags      TagItem[]
+  annotations DocumentAnnotation[] // Annotations for this document
+
+  // upload external documents
+  uploadedDocument DocumentUpload[]
+  isExternalUpload Boolean          @default(false) // Indicates if the document is an external upload
+
+  @@index([ownerId])
+  @@index([teamId])
+  @@index([folderId])
+  @@index([teamId, folderId]) // Performance optimization for document filtering by team and folder
+  @@index([teamId, name]) // Performance optimization for document search by name
+}
+
+model DocumentVersion {
+  id            String              @id @default(cuid())
+  versionNumber Int // e.g., 1, 2, 3 for version control
+  document      Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId    String
+  file          String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  originalFile  String? // This should be a reference to the original file like pptx, xlsx, etc. (S3, Google Cloud Storage, etc.)
+  type          String? // This should be a reference to the file type (pdf, docx, etc.)
+  contentType   String? // This should be the actual contentType of the file like application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, etc.
+  fileSize      BigInt? // This should be the size of the file in bytes
+  storageType   DocumentStorageType @default(VERCEL_BLOB)
+  numPages      Int? // This should be a reference to the number of pages in the document
+  isPrimary     Boolean             @default(false) // Indicates if this is the primary version
+  isVertical    Boolean             @default(false) // Indicates if the document is vertical (portrait) or not (landscape)
+  fileId        String? // This is the file ID of the OpenAI File API
+  pages         DocumentPage[]
+  hasPages      Boolean             @default(false) // Indicates if the document has pages
+  length        Int? // This is the length of the video in seconds
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([versionNumber, documentId])
+  @@index([documentId])
+  @@index([documentId, isPrimary]) // Performance optimization for primary version queries
+  @@index([documentId, createdAt(sort: Desc)]) // Partial index for primary versions
+  @@index([documentId, isPrimary, createdAt]) // Optimize primary version lookups with ordering
+}
+
+model DocumentPage {
+  id            String              @id @default(cuid())
+  version       DocumentVersion     @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  versionId     String
+  pageNumber    Int // e.g., 1, 2, 3 for 
+  embeddedLinks String[]
+  pageLinks     Json? // This will store the page links data: [{href: "https://example.com", coords: "0,0,100,100"}]
+  metadata      Json? // This will store the page metadata: {originalWidth: 100, origianlHeight: 100, scaledWidth: 50, scaledHeight: 50, scaleFactor: 2}
+  file          String // This should be a reference to where the file / page is stored (S3, Google Cloud Storage, etc.)
+  storageType   DocumentStorageType @default(VERCEL_BLOB)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([pageNumber, versionId])
+  @@index([versionId])
+}
+
+enum DocumentStorageType {
+  S3_PATH
+  VERCEL_BLOB
+}
+
+model Folder {
+  id           String     @id @default(cuid())
+  name         String
+  path         String // the materialized path to the folder; starts always with "/"
+  parentId     String?
+  documents    Document[]
+  childFolders Folder[]   @relation("SubFolders")
+  parentFolder Folder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: SetNull)
+  teamId       String
+  team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, path])
+  @@index([parentId])
+}
+
+model DocumentUpload {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  teamId     String
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  viewerId   String?
+  viewer     Viewer?  @relation(fields: [viewerId], references: [id], onDelete: SetNull)
+  viewId     String?
+  view       View?    @relation(fields: [viewId], references: [id], onDelete: SetNull)
+  linkId     String
+  link       Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  // Optional dataroom relations
+  dataroomId         String?
+  dataroom           Dataroom?         @relation(fields: [dataroomId], references: [id], onDelete: SetNull)
+  dataroomDocumentId String?
+  dataroomDocument   DataroomDocument? @relation(fields: [dataroomDocumentId], references: [id], onDelete: SetNull)
+
+  // Additional metadata
+  originalFilename String?
+  fileSize         BigInt?
+  numPages         Int?
+  mimeType         String?
+  uploadedAt       DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([documentId])
+  @@index([viewerId])
+  @@index([viewId])
+  @@index([linkId])
+  @@index([teamId])
+  @@index([dataroomId])
+  @@index([dataroomDocumentId])
+}

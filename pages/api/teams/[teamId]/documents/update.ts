@@ -1,14 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
-import { getExtension, log } from "@/lib/utils";
-
-import { authOptions } from "../../../auth/[...nextauth]";
+import { log } from "@/lib/utils";
 
 export default async function handle(
   req: NextApiRequest,
@@ -30,11 +28,30 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
-        docId: documentId,
+      const teamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId,
+            teamId,
+          },
+        },
       });
+
+      if (!teamAccess) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      const document = await prisma.document.findUnique({
+        where: {
+          id: documentId,
+          teamId,
+        },
+        select: { id: true },
+      });
+
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
 
       // Save data to the database
       await prisma.document.update({

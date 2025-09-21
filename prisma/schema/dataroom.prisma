@@ -44,14 +44,15 @@ model Dataroom {
 }
 
 model DataroomDocument {
-  id         String          @id @default(cuid())
-  dataroomId String
-  dataroom   Dataroom        @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
-  documentId String
-  document   Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  folderId   String?
-  folder     DataroomFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
-  orderIndex Int?
+  id                String          @id @default(cuid())
+  dataroomId        String
+  dataroom          Dataroom        @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  documentId        String
+  document          Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  folderId          String?
+  folder            DataroomFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  orderIndex        Int?
+  hierarchicalIndex String? // Computed field like "1.2.3" for hierarchical display
 
   conversations Conversation[]
 
@@ -66,19 +67,21 @@ model DataroomDocument {
   @@unique([dataroomId, documentId])
   @@index([folderId])
   @@index([dataroomId, folderId, orderIndex])
+  @@index([documentId])
 }
 
 model DataroomFolder {
-  id           String             @id @default(cuid())
-  name         String
-  path         String // the materialized path to the folder; starts always with "/"
-  parentId     String?
-  documents    DataroomDocument[]
-  childFolders DataroomFolder[]   @relation("SubFolders")
-  parentFolder DataroomFolder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: SetNull)
-  dataroomId   String
-  dataroom     Dataroom           @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
-  orderIndex   Int?
+  id                String             @id @default(cuid())
+  name              String
+  path              String // the materialized path to the folder; starts always with "/"
+  parentId          String?
+  documents         DataroomDocument[]
+  childFolders      DataroomFolder[]   @relation("SubFolders")
+  parentFolder      DataroomFolder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: SetNull)
+  dataroomId        String
+  dataroom          Dataroom           @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  orderIndex        Int?
+  hierarchicalIndex String? // Computed field like "1.2" for hierarchical display
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -124,6 +127,7 @@ model ViewerGroup {
 
   @@index([dataroomId])
   @@index([teamId])
+  @@index([dataroomId, createdAt])
 }
 
 model ViewerGroupMembership {

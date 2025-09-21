@@ -5,13 +5,14 @@ import {
   Button,
   Container,
   Head,
-  Hr,
   Html,
   Preview,
   Section,
   Tailwind,
   Text,
 } from "@react-email/components";
+
+import { Footer } from "./shared/footer";
 
 export default function ViewedDataroom({
   dataroomId = "123",
@@ -67,30 +68,19 @@ export default function ViewedDataroom({
                 See my dataroom insights
               </Button>
             </Section>
-            <Text className="text-sm leading-6 text-black">
-              Stay informed, stay ahead with Papermark.
-            </Text>
-            <Hr />
-            <Section className="mt-8 text-gray-400">
-              <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline hover:text-gray-400"
-                  target="_blank"
-                >
-                  papermark.com
-                </a>
-              </Text>
-              <Text className="text-xs">
-                If you have any feedback or questions about this email, simply
-                reply to it. I&apos;d love to hear from you!
-              </Text>
-              <Text className="text-xs">
-                To stop email notifications for this link, edit the link and
-                uncheck &quot;Receive email notification&quot;.
-              </Text>
-            </Section>
+
+            <Footer
+              footerText={
+                <>
+                  If you have any feedback or questions about this email, simply
+                  reply to it. I&apos;d love to hear from you!
+                  <br />
+                  <br />
+                  To stop email notifications for this link, edit the link and
+                  uncheck &quot;Receive email notification&quot;.
+                </>
+              }
+            />
           </Container>
         </Body>
       </Tailwind>
