@@ -5,7 +5,12 @@ import { useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { CancellationModal } from "@/ee/features/billing/cancellation/components";
 import { PlanEnum } from "@/ee/stripe/constants";
-import { CreditCardIcon, MoreVertical, ReceiptTextIcon } from "lucide-react";
+import {
+  CirclePauseIcon,
+  CreditCardIcon,
+  MoreVertical,
+  ReceiptTextIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -45,6 +50,7 @@ export default function UpgradePlanContainer() {
     isCustomer,
     startsAt,
     endsAt,
+    pauseStartsAt,
     discount,
     mutate: mutatePlan,
   } = usePlan({ withDiscount: true });
@@ -310,13 +316,15 @@ export default function UpgradePlanContainer() {
                 </span>
               </CardDescription>
             )}
-            {isPaused && endsAt && (
+            {isPaused && pauseStartsAt && (
               <CardDescription>
                 <span className="font-medium text-foreground">
-                  Subscription will pause on:{" "}
+                  Subscription{" "}
+                  {pauseStartsAt > new Date() ? "will pause on" : "paused on"}
+                  :{" "}
                 </span>
                 <span className="text-foreground">
-                  {new Date(endsAt).toLocaleDateString("en-US", {
+                  {new Date(pauseStartsAt).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
                     year: "numeric",

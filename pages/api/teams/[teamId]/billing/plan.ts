@@ -71,7 +71,8 @@ export default async function handle(
         withDiscount &&
         team?.subscriptionId &&
         team.plan &&
-        team.plan !== "free"
+        team.plan !== "free" &&
+        team.pauseStartsAt === null
       ) {
         try {
           const subscriptionData = await getSubscriptionItem(

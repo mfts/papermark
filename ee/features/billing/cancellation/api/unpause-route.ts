@@ -67,10 +67,41 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
       const isOldAccount = team.plan.includes("+old");
       const stripe = stripeInstance(isOldAccount);
 
-      // Unpause the subscription in Stripe
-      await stripe.subscriptions.update(team.subscriptionId, {
-        pause_collection: "",
-      });
+      // First, check the subscription to determine if it was paused with old method or new method
+      const subscription = await stripe.subscriptions.retrieve(
+        team.subscriptionId,
+      );
+
+      const now = new Date();
+      const originalPauseStart = team.pauseStartsAt;
+
+      // Determine if we're still in the original billing cycle or have moved to the next one
+      const isInOriginalBillingCycle = now <= originalPauseStart;
+
+      // Check if this subscription was paused using the old pause_collection method
+      const isOldPauseMethod = subscription.pause_collection !== null;
+
+      if (isOldPauseMethod) {
+        // Handle old pause_collection method
+        await stripe.subscriptions.update(team.subscriptionId, {
+          pause_collection: "", // Remove pause_collection (unpause)
+        });
+      } else {
+        // Handle new coupon-based method
+        if (isInOriginalBillingCycle) {
+          // Scenario 1: Still within the original billing cycle where user paused
+          // Just remove the coupon, no billing cycle reset needed
+          await stripe.subscriptions.deleteDiscount(team.subscriptionId);
+        } else {
+          // Scenario 2: We're already in the next billing cycle (or beyond)
+          // Remove coupon and reset billing cycle to charge immediately
+          await stripe.subscriptions.deleteDiscount(team.subscriptionId);
+          await stripe.subscriptions.update(team.subscriptionId, {
+            proration_behavior: "create_prorations", // Create prorations for immediate billing
+            billing_cycle_anchor: "now", // Reset billing cycle to start immediately
+          });
+        }
+      }
 
       await prisma.team.update({
         where: { id: teamId },
@@ -81,20 +112,23 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
         },
       });
 
-      // Get all delayed and queued runs for this dataroom
+      // Get all delayed and queued runs for this team (both notification and automatic unpause)
       const allRuns = await runs.list({
-        taskIdentifier: ["send-pause-resume-notification"],
+        taskIdentifier: [
+          "send-pause-resume-notification",
+          "automatic-unpause-subscription",
+        ],
         tag: [`team_${teamId}`],
         status: ["DELAYED", "QUEUED"],
         period: "90d",
       });
 
-      // Cancel any existing unsent notification runs for this dataroom
+      // Cancel any existing unsent notification and automatic unpause runs
       waitUntil(
         Promise.all([
           allRuns.data.map((run) => runs.cancel(run.id)),
           log({
-            message: `Team ${teamId} (${team.plan}) unpaused their subscription. Next billing date: ${team.endsAt}`,
+            message: `Team ${teamId} (${team.plan}) manually unpaused their subscription using ${isOldPauseMethod ? "pause_collection method" : "coupon method"}${!isOldPauseMethod ? (isInOriginalBillingCycle ? " within original billing cycle" : " with billing cycle reset") : ""}.`,
             type: "info",
           }),
         ]),
