@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { DocumentPage } from "@prisma/client";
+import { get } from "@vercel/edge-config";
+import { waitUntil } from "@vercel/functions";
 import * as mupdf from "mupdf";
 
 import { putFileServer } from "@/lib/files/put-file-server";
@@ -141,6 +143,43 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     const embeddedLinks = links.map((link) => {
       return { href: link.getURI(), coords: link.getBounds().join(",") };
     });
+
+    // Check embedded links for blocked keywords
+    if (embeddedLinks.length > 0) {
+      try {
+        const keywords = await get("keywords");
+        if (Array.isArray(keywords) && keywords.length > 0) {
+          for (const link of embeddedLinks) {
+            if (link.href) {
+              const matchedKeyword = keywords.find(
+                (keyword) =>
+                  typeof keyword === "string" && link.href.includes(keyword),
+              );
+
+              if (matchedKeyword) {
+                waitUntil(
+                  log({
+                    message: `Document processing blocked: ${matchedKeyword} \n\n \`Metadata: {teamId: ${teamId}, documentVersionId: ${documentVersionId}, pageNumber: ${pageNumber}}\``,
+                    type: "error",
+                    mention: true,
+                  }),
+                );
+                res.status(400).json({
+                  error: "Document processing blocked",
+                  matchedUrl: link.href,
+                  matchedKeyword: matchedKeyword,
+                  pageNumber: pageNumber,
+                });
+                return;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        // Log error but continue processing if check fails
+        console.log("Failed to check keywords:", error);
+      }
+    }
 
     // Will be updated if we use a reduced scale factor
     let actualScaleFactor = scaleFactor;
