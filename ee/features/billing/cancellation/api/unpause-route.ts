@@ -128,7 +128,7 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
         Promise.all([
           allRuns.data.map((run) => runs.cancel(run.id)),
           log({
-            message: `Team ${teamId} (${team.plan}) manually unpaused their subscription using ${isOldPauseMethod ? "pause_collection method" : "coupon method"}${!isOldPauseMethod && hasDiscountCoupon ? (isInOriginalBillingCycle ? " within original billing cycle" : " with billing cycle reset") : ""}.`,
+            message: `Team ${teamId} (${team.plan}) manually unpaused their subscription using ${isOldPauseMethod ? "pause_collection method" : "coupon method"}${!isOldPauseMethod ? (isInOriginalBillingCycle ? " within original billing cycle" : " with billing cycle reset") : ""}.`,
             type: "info",
           }),
         ]),
