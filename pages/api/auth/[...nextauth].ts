@@ -212,7 +212,7 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
         // Apply rate limiting for signin attempts
         try {
           if (req) {
-            const clientIP = getIpAddress(req.headers);
+            const clientIP = req ? getIpAddress(req.headers) : "unknown";
             const rateLimitResult = await checkRateLimit(
               rateLimiters.auth,
               clientIP,
@@ -226,7 +226,12 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
               return false; // Block the signin
             }
           }
-        } catch (error) {}
+        } catch (error) {
+          log({
+            message: `Rate limit check error: ${String(error)}`,
+            type: "error",
+          });
+        }
 
         return true;
       },
