@@ -1,11 +1,9 @@
 import type { ComponentProps, HTMLAttributes } from "react";
-
 import type { UIMessage } from "ai";
 
 import { cn } from "@/lib/utils";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
   from: UIMessage["role"];
 };
@@ -18,6 +16,7 @@ export const Message = ({ className, from, ...props }: MessageProps) => (
       "[&>div]:max-w-[80%]",
       className,
     )}
+    data-message-role={from}
     {...props}
   />
 );

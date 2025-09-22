@@ -34,6 +34,15 @@ const querySchema = z.object({
     cursor: z.string().optional(),
 });
 
+export const SessionIdSchema = z.string().min(1);
+
+export function handleSessionNotFoundError(sessionId: string): NextResponse {
+    return NextResponse.json(
+        { error: `Session not found: ${sessionId}` },
+        { status: 404 }
+    );
+}
+
 export function extractAndValidateQueryParams(req: Request) {
     const url = new URL(req.url);
     const params = Object.fromEntries(url.searchParams.entries());
