@@ -1,5 +1,5 @@
 import { logger } from "@trigger.dev/sdk/v3";
-import pMap from "p-map";
+import pLimit from "p-limit";
 
 import { EnhancedDocumentChunker } from "./enhanced-chunking-strategy";
 import { RAGError, getErrorMessage } from "./errors/rag-errors";
@@ -690,70 +690,72 @@ export class DocumentProcessor {
         });
       }
 
-      logger.info("Starting batch document processing", {
-        dataroomId,
-        teamId,
-        documentCount: docs.length,
-        maxConcurrency,
-        estimatedTime: Math.ceil(docs.length / maxConcurrency) * 30, // Rough estimate
-      });
+      const limit = pLimit(maxConcurrency);
+      const settled = await Promise.allSettled(
+        docs.map((doc, index) =>
+          limit(async () => {
+            const docStartTime = Date.now();
 
-      const results = await pMap(
-        docs,
-        async (doc, index) => {
-          const docStartTime = Date.now();
+            try {
+              logger.debug("Processing individual document", {
+                index: index + 1,
+                total: docs.length,
+                documentId: doc.id,
+                url: doc.url,
+              });
 
-          try {
-            logger.debug("Processing individual document", {
-              index: index + 1,
-              total: docs.length,
-              documentId: doc.id,
-              url: doc.url,
-            });
+              const result = await this.processDocument(
+                doc.name || "Unknown Document",
+                doc.url,
+                doc.id,
+                dataroomId,
+                teamId,
+                doc.contentType,
+                docs.length,
+              );
 
-            const result = await this.processDocument(
-              doc.name || "Unknown Document",
-              doc.url,
-              doc.id,
-              dataroomId,
-              teamId,
-              doc.contentType,
-              docs.length,
-            );
+              const docProcessingTime = Date.now() - docStartTime;
+              logger.debug("Individual document processed successfully", {
+                index: index + 1,
+                documentId: doc.id,
+                processingTime: docProcessingTime,
+                chunkCount: result.chunks?.length || 0,
+              });
 
-            const docProcessingTime = Date.now() - docStartTime;
-            logger.debug("Individual document processed successfully", {
-              index: index + 1,
-              documentId: doc.id,
-              processingTime: docProcessingTime,
-              chunkCount: result.chunks?.length || 0,
-            });
+              return result;
+            } catch (error) {
+              const docProcessingTime = Date.now() - docStartTime;
+              logger.error("Individual document processing failed", {
+                index: index + 1,
+                documentId: doc.id,
+                url: doc.url,
+                processingTime: docProcessingTime,
+                error: error instanceof Error ? error.message : String(error),
+              });
 
-            return result;
-          } catch (error) {
-            const docProcessingTime = Date.now() - docStartTime;
-            logger.error("Individual document processing failed", {
-              index: index + 1,
-              documentId: doc.id,
-              url: doc.url,
-              processingTime: docProcessingTime,
-              error: error instanceof Error ? error.message : String(error),
-            });
-
-            // Return error result instead of throwing to continue processing other docs
-            return {
-              success: false,
-              chunks: [],
-              error: error instanceof Error ? error.message : String(error),
-              processingTime: docProcessingTime,
-            };
-          }
-        },
-        {
-          concurrency: maxConcurrency,
-          stopOnError: false,
-        },
+              return {
+                success: false,
+                chunks: [],
+                error: error instanceof Error ? error.message : String(error),
+                processingTime: docProcessingTime,
+              };
+            }
+          })
+        )
       );
+
+      const results = settled.map((settledResult) => {
+        if (settledResult.status === 'fulfilled') {
+          return settledResult.value;
+        } else {
+          return {
+            success: false,
+            chunks: [],
+            error: settledResult.reason instanceof Error ? settledResult.reason.message : String(settledResult.reason),
+            processingTime: 0,
+          };
+        }
+      });
 
       const totalProcessingTime = Date.now() - startTime;
       const successfulResults = results.filter((r) => r.success);

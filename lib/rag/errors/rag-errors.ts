@@ -1,22 +1,13 @@
 export enum RAGErrorCode {
     // Core RAG Errors
-    QUERY_SANITIZATION_FAILED = 'QUERY_SANITIZATION_FAILED',
-    QUERY_ANALYSIS_FAILED = 'QUERY_ANALYSIS_FAILED',
     VECTOR_SEARCH_FAILED = 'VECTOR_SEARCH_FAILED',
-    NO_SEARCH_RESULTS = 'NO_SEARCH_RESULTS',
-    GRADING_FAILED = 'GRADING_FAILED',
-    NO_RELEVANT_DOCUMENTS = 'NO_RELEVANT_DOCUMENTS',
     RESPONSE_GENERATION_FAILED = 'RESPONSE_GENERATION_FAILED',
 
     // Infrastructure Errors
     LLM_CALL_FAILED = 'LLM_CALL_FAILED',
-    TIMEOUT_ERROR = 'TIMEOUT_ERROR',
-    DATABASE_CONNECTION_FAILED = 'DATABASE_CONNECTION_FAILED',
-    PERMISSION_DENIED = 'PERMISSION_DENIED',
 
     // Configuration Errors
     INVALID_CONFIGURATION = 'INVALID_CONFIGURATION',
-    MISSING_REQUIRED_CONFIG = 'MISSING_REQUIRED_CONFIG',
 
     // Token Management Errors
     TOKEN_LIMIT_EXCEEDED = 'TOKEN_LIMIT_EXCEEDED',
@@ -75,46 +66,13 @@ export class RAGError extends Error {
             defaultMessage: string;
             isRetryable: boolean;
         }> = {
-            // Query Analysis
-            'querySanitization': {
-                code: RAGErrorCode.QUERY_SANITIZATION_FAILED,
-                defaultMessage: 'Query sanitization failed',
-                isRetryable: true
-            },
-            'queryAnalysis': {
-                code: RAGErrorCode.QUERY_ANALYSIS_FAILED,
-                defaultMessage: 'Query analysis failed',
-                isRetryable: true
-            },
-            'queryRouting': {
-                code: RAGErrorCode.QUERY_ANALYSIS_FAILED,
-                defaultMessage: 'Query routing failed',
-                isRetryable: true
-            },
-
             // Search
             'vectorSearch': {
                 code: RAGErrorCode.VECTOR_SEARCH_FAILED,
                 defaultMessage: 'Vector search failed',
                 isRetryable: true
             },
-            'noSearchResults': {
-                code: RAGErrorCode.NO_SEARCH_RESULTS,
-                defaultMessage: 'No search results found',
-                isRetryable: false
-            },
-            'noRelevantDocuments': {
-                code: RAGErrorCode.NO_RELEVANT_DOCUMENTS,
-                defaultMessage: 'No relevant documents found',
-                isRetryable: false
-            },
-
             // Processing
-            'grading': {
-                code: RAGErrorCode.GRADING_FAILED,
-                defaultMessage: 'Document grading failed',
-                isRetryable: true
-            },
             'responseGeneration': {
                 code: RAGErrorCode.RESPONSE_GENERATION_FAILED,
                 defaultMessage: 'Response generation failed',
@@ -124,11 +82,6 @@ export class RAGError extends Error {
                 code: RAGErrorCode.INVALID_CONFIGURATION,
                 defaultMessage: 'Chunking failed',
                 isRetryable: false
-            },
-            'documentProcessing': {
-                code: RAGErrorCode.INVALID_CONFIGURATION,
-                defaultMessage: 'Document processing failed',
-                isRetryable: true
             },
 
             // Infrastructure
@@ -142,35 +95,15 @@ export class RAGError extends Error {
                 defaultMessage: 'Embedding generation failed',
                 isRetryable: true
             },
-            'timeout': {
-                code: RAGErrorCode.TIMEOUT_ERROR,
-                defaultMessage: 'Operation timed out',
-                isRetryable: true
-            },
-            'database': {
-                code: RAGErrorCode.DATABASE_CONNECTION_FAILED,
-                defaultMessage: 'Database operation failed',
-                isRetryable: true
-            },
             'vectorDatabase': {
-                code: RAGErrorCode.DATABASE_CONNECTION_FAILED,
+                code: RAGErrorCode.INVALID_CONFIGURATION,
                 defaultMessage: 'Vector database operation failed',
                 isRetryable: true
             },
 
             // Auth & Permissions
-            'permissionDenied': {
-                code: RAGErrorCode.PERMISSION_DENIED,
-                defaultMessage: 'Permission denied',
-                isRetryable: false
-            },
-            'authentication': {
-                code: RAGErrorCode.PERMISSION_DENIED,
-                defaultMessage: 'Authentication failed',
-                isRetryable: false
-            },
             'documentAccess': {
-                code: RAGErrorCode.PERMISSION_DENIED,
+                code: RAGErrorCode.INVALID_CONFIGURATION,
                 defaultMessage: 'Document access denied',
                 isRetryable: false
             },
@@ -179,16 +112,6 @@ export class RAGError extends Error {
             'validation': {
                 code: RAGErrorCode.INVALID_CONFIGURATION,
                 defaultMessage: 'Validation failed',
-                isRetryable: false
-            },
-            'missingConfig': {
-                code: RAGErrorCode.MISSING_REQUIRED_CONFIG,
-                defaultMessage: 'Missing required configuration',
-                isRetryable: false
-            },
-            'templateNotFound': {
-                code: RAGErrorCode.INVALID_CONFIGURATION,
-                defaultMessage: 'Template not found',
                 isRetryable: false
             },
             'serviceDisposed': {
@@ -202,7 +125,7 @@ export class RAGError extends Error {
                 isRetryable: false
             },
             'missingConfiguration': {
-                code: RAGErrorCode.MISSING_REQUIRED_CONFIG,
+                code: RAGErrorCode.INVALID_CONFIGURATION,
                 defaultMessage: 'Missing required configuration',
                 isRetryable: false
             },

@@ -1,7 +1,7 @@
 import prisma from '../prisma';
 import { ParsingStatus } from '@prisma/client';
-import { LRUCache as NodeLRUCache } from 'lru-cache';
 import { RAGError } from './errors/rag-errors';
+import { redis } from '../redis';
 
 export interface AccessibleDocument {
     documentId: string;
@@ -11,44 +11,29 @@ export interface AccessibleDocument {
     numPages?: number;
 }
 
-// Lazy cache initialization to avoid constructor issues
-let dataroomDocumentsCache: NodeLRUCache<string, AccessibleDocument[]> | null = null;
-let viewerPermissionsCache: NodeLRUCache<string, Set<string>> | null = null;
+const CACHE_TTL = {
+    DATAROOM_DOCUMENTS: 30 * 60, // 30 minutes
+    VIEWER_PERMISSIONS: 15 * 60, // 15 minutes
+} as const;
 
-function getDataroomDocumentsCache(): NodeLRUCache<string, AccessibleDocument[]> {
-    if (!dataroomDocumentsCache) {
-        dataroomDocumentsCache = new NodeLRUCache<string, AccessibleDocument[]>({
-            max: 200,
-            ttl: 15 * 60 * 1000, // 5 minutes
-            updateAgeOnGet: true,
-            updateAgeOnHas: true,
-        });
-    }
-    return dataroomDocumentsCache;
-}
-
-function getViewerPermissionsCache(): NodeLRUCache<string, Set<string>> {
-    if (!viewerPermissionsCache) {
-        viewerPermissionsCache = new NodeLRUCache<string, Set<string>>({
-            max: 100,
-            ttl: 15 * 60 * 1000, // 2 minutes
-            updateAgeOnGet: true,
-            updateAgeOnHas: true,
-        });
-    }
-    return viewerPermissionsCache;
-}
+const CACHE_KEYS = {
+    DATAROOM_DOCUMENTS: (dataroomId: string, viewerId: string) => `rag:dataroom_docs:${dataroomId}:${viewerId}`,
+    VIEWER_PERMISSIONS: (viewerId: string) => `rag:viewer_permissions:${viewerId}`,
+} as const;
 
 export async function getAccessibleDocumentsForRAG(
     dataroomId: string,
     viewerId: string,
 ): Promise<AccessibleDocument[]> {
     try {
-        const cacheKey = `${dataroomId}:${viewerId}`;
-        const cached = getDataroomDocumentsCache().get(cacheKey);
-        if (cached) {
-            console.log('get from cache');
-            return cached;
+        const cacheKey = CACHE_KEYS.DATAROOM_DOCUMENTS(dataroomId, viewerId);
+        try {
+            const cached = await redis.get<AccessibleDocument[]>(cacheKey);
+            if (cached) {
+                return cached;
+            }
+        } catch (cacheError) {
+            console.warn('Redis cache read failed, proceeding with database query:', cacheError);
         }
 
         const [viewer, dataroomDocuments] = await Promise.all([
@@ -109,7 +94,10 @@ export async function getAccessibleDocumentsForRAG(
 
         if (!viewer) {
             console.log('❌ Viewer not found');
-            return [];
+            throw RAGError.create('documentAccess', 'Viewer not found', {
+                dataroomId,
+                viewerId
+            });
         }
 
         const viewerPermissions = await getViewerPermissions(viewer);
@@ -123,52 +111,72 @@ export async function getAccessibleDocumentsForRAG(
             return hasPermission;
         });
 
-        const result: AccessibleDocument[] = accessibleDocuments.map((doc) => ({
-            documentId: doc.documentId,
-            documentName: doc.document.name,
-            isIndexed: doc.document.ragIndexingStatus === ParsingStatus.COMPLETED,
-            type: doc.document.type || 'pdf',
-            numPages: doc.document.numPages || undefined,
+        const result: AccessibleDocument[] = accessibleDocuments.map((dataroomDoc) => ({
+            documentId: dataroomDoc.documentId,
+            documentName: dataroomDoc.document.name,
+            isIndexed: dataroomDoc.document.ragIndexingStatus === ParsingStatus.COMPLETED,
+            type: dataroomDoc.document.type || 'pdf',
+            numPages: dataroomDoc.document.numPages || undefined,
         }));
+        try {
+            await redis.setex(cacheKey, CACHE_TTL.DATAROOM_DOCUMENTS, JSON.stringify(result));
+        } catch (cacheError) {
+            console.warn('Redis cache write failed:', cacheError);
+        }
 
-        getDataroomDocumentsCache().set(cacheKey, result);
         return result;
     } catch (error) {
-        throw RAGError.create('documentAccess', 'Failed to get accessible documents', { dataroomId, viewerId });
+        throw RAGError.create('documentAccess', 'Failed to get accessible documents', {
+            dataroomId,
+            viewerId,
+            error: error instanceof Error ? error.message : String(error)
+        }, error instanceof Error ? error : undefined);
     }
 }
 
 
 async function getViewerPermissions(viewer: any): Promise<Set<string>> {
-    console.log('getViewerPermissions', viewer)
-    const viewerKey = viewer.id;
+    try {
+        const viewerKey = viewer.id;
+        const cacheKey = CACHE_KEYS.VIEWER_PERMISSIONS(viewerKey);
 
-    const cached = getViewerPermissionsCache().get(viewerKey);
-    if (cached) {
-        if (Array.isArray(cached)) {
-            return new Set(cached);
-        } else if (cached instanceof Set) {
-            return cached;
-        }
-    }
-
-    const accessibleDocumentIds = new Set<string>();
-
-    for (const viewerGroup of viewer.groups) {
-        const group = viewerGroup.group;
-
-        if (group.allowAll) {
-            accessibleDocumentIds.add('*');
-            break;
+        try {
+            const cached = await redis.get<string[]>(cacheKey);
+            if (cached) {
+                return new Set(cached);
+            }
+        } catch (cacheError) {
+            console.warn('Redis cache read failed for viewer permissions, proceeding with database query:', cacheError);
         }
 
-        for (const control of group.accessControls) {
-            if (control.itemType === 'DATAROOM_DOCUMENT' && control.canView) {
-                accessibleDocumentIds.add(control.itemId);
+        const accessibleDocumentIds = new Set<string>();
+
+        for (const viewerGroup of viewer.groups) {
+            const group = viewerGroup.group;
+
+            if (group.allowAll) {
+                accessibleDocumentIds.add('*');
+                break;
+            }
+
+            for (const control of group.accessControls) {
+                if (control.itemType === 'DATAROOM_DOCUMENT' && control.canView) {
+                    accessibleDocumentIds.add(control.itemId);
+                }
             }
         }
-    }
 
-    getViewerPermissionsCache().set(viewerKey, accessibleDocumentIds);
-    return accessibleDocumentIds;
+        try {
+            await redis.setex(cacheKey, CACHE_TTL.VIEWER_PERMISSIONS, JSON.stringify(Array.from(accessibleDocumentIds)));
+        } catch (cacheError) {
+            console.warn('Redis cache write failed for viewer permissions:', cacheError);
+        }
+
+        return accessibleDocumentIds;
+    } catch (error) {
+        throw RAGError.create('documentAccess', 'Failed to get viewer permissions', {
+            viewerId: viewer.id,
+            error: error instanceof Error ? error.message : String(error)
+        }, error instanceof Error ? error : undefined);
+    }
 }

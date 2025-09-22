@@ -1,6 +1,4 @@
 import { logger } from "@trigger.dev/sdk/v3";
-import { createHash } from 'crypto';
-
 let tiktokenModule: any = null;
 let cl100k_base: any = null;
 let singletonTokenizer: any = null;
@@ -96,13 +94,6 @@ export function createPageRanges(pageNumbers: number[]): string[] {
 
     ranges.push(start === end ? start.toString() : `${start}-${end}`);
     return ranges;
-}
-
-
-export function generateChunkHash(content: string, documentId: string, index: number): string {
-    return createHash('sha256')
-        .update(`${content}_${documentId}_${index}`)
-        .digest('hex');
 }
 
 export function hasMeaningfulContent(content: string): boolean {

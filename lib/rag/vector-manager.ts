@@ -282,7 +282,7 @@ class VectorManager {
         dataroomId: string,
         vector: number[],
         limit: number = 10,
-        scoreThreshold: number = 0.7,
+        scoreThreshold: number = 0.35,
         metadataFilter?: {
             documentIds?: string[];
             pageRanges?: string[];

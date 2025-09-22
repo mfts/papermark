@@ -1,20 +1,12 @@
 export interface RAGConfig {
-    grading: {
-        relevanceThreshold: number;
-    };
-
     generation: {
         temperature: number;
-        maxTokens?: number;
     };
 
     llm: {
         model: string;
-        fastModel: string;
-        standardModel: string;
         temperature: number;
         timeout: number;
-        retries: number;
     };
 
     search: {
@@ -24,9 +16,8 @@ export interface RAGConfig {
         standardSimilarityThreshold: number;
         expandedTopK: number;
         expandedSimilarityThreshold: number;
-        pageQueryTopK: number;
-        pageQuerySimilarityThreshold: number;
-        pageQueryTimeoutMs: number;
+        maxConcurrentSearches: number;
+        searchTimeoutMs: number;
     };
 
     reranker: {
@@ -36,13 +27,6 @@ export interface RAGConfig {
         temperature: number;
         timeout: number;
         fallbackModel: string;
-    };
-
-    compression: {
-        maxTokens: number;
-        compressionRatio: number;
-        preserveSpans: boolean;
-        method: 'ranked' | 'raptor' | 'hybrid';
     };
 
     vectorSearch: {
@@ -68,34 +52,25 @@ export class ConfigurationManager {
 
     private loadConfiguration(): RAGConfig {
         return {
-            grading: {
-                relevanceThreshold: this.getEnvNumber('RAG_GRADING_RELEVANCE_THRESHOLD', 0.05),
-            },
-
             generation: {
-                temperature: this.getEnvNumber('RAG_GENERATION_TEMPERATURE', 0.1),
-                maxTokens: this.getEnvNumber('RAG_GENERATION_MAX_TOKENS', 4000),
+                temperature: this.getEnvNumber('RAG_GENERATION_TEMPERATURE', 0.3),
             },
 
             llm: {
-                model: this.getEnvString('RAG_LLM_MODEL'),
-                fastModel: this.getEnvString('RAG_LLM_FAST_MODEL'),
-                standardModel: this.getEnvString('RAG_LLM_STANDARD_MODEL'),
-                temperature: this.getEnvNumber('RAG_LLM_TEMPERATURE', 0.1),
+                model: this.getEnvString('RAG_LLM_MODEL', 'gpt-4o-mini'),
+                temperature: this.getEnvNumber('RAG_LLM_TEMPERATURE', 0.2),
                 timeout: this.getEnvNumber('RAG_LLM_TIMEOUT', 60000),
-                retries: this.getEnvNumber('RAG_LLM_RETRIES', 3),
             },
 
             search: {
                 fastTopK: this.getEnvNumber('RAG_SEARCH_FAST_TOP_K', 15),
-                fastSimilarityThreshold: this.getEnvNumber('RAG_SEARCH_FAST_SIMILARITY_THRESHOLD', 0.82),
+                fastSimilarityThreshold: this.getEnvNumber('RAG_SEARCH_FAST_SIMILARITY_THRESHOLD', 0.30),
                 standardTopK: this.getEnvNumber('RAG_SEARCH_STANDARD_TOP_K', 25),
-                standardSimilarityThreshold: this.getEnvNumber('RAG_SEARCH_STANDARD_SIMILARITY_THRESHOLD', 0.78),
+                standardSimilarityThreshold: this.getEnvNumber('RAG_SEARCH_STANDARD_SIMILARITY_THRESHOLD', 0.25),
                 expandedTopK: this.getEnvNumber('RAG_SEARCH_EXPANDED_TOP_K', 35),
-                expandedSimilarityThreshold: this.getEnvNumber('RAG_SEARCH_EXPANDED_SIMILARITY_THRESHOLD', 0.75),
-                pageQueryTopK: this.getEnvNumber('RAG_SEARCH_PAGE_QUERY_TOP_K', 25),
-                pageQuerySimilarityThreshold: this.getEnvNumber('RAG_SEARCH_PAGE_QUERY_SIMILARITY_THRESHOLD', 0.70),
-                pageQueryTimeoutMs: this.getEnvNumber('RAG_SEARCH_PAGE_QUERY_TIMEOUT_MS', 10000),
+                expandedSimilarityThreshold: this.getEnvNumber('RAG_SEARCH_EXPANDED_SIMILARITY_THRESHOLD', 0.20),
+                maxConcurrentSearches: this.getEnvNumber('RAG_SEARCH_MAX_CONCURRENT', 5),
+                searchTimeoutMs: this.getEnvNumber('RAG_SEARCH_TIMEOUT_MS', 10000),
             },
 
             reranker: {
@@ -108,16 +83,10 @@ export class ConfigurationManager {
                 fallbackModel: this.getEnvString('RAG_RERANKER_FALLBACK_MODEL', 'bge-reranker-base'),
             },
 
-            compression: {
-                maxTokens: this.getEnvNumber('RAG_COMPRESSION_MAX_TOKENS', 6000),
-                compressionRatio: this.getEnvNumber('RAG_COMPRESSION_RATIO', 0.8),
-                preserveSpans: this.getEnvBoolean('RAG_COMPRESSION_PRESERVE_SPANS', true),
-                method: this.getEnvString('RAG_COMPRESSION_METHOD', 'ranked') as 'ranked' | 'raptor' | 'hybrid',
-            },
 
             vectorSearch: {
                 defaultTopK: this.getEnvNumber('RAG_VECTOR_SEARCH_DEFAULT_TOP_K', 25),
-                defaultSimilarityThreshold: this.getEnvNumber('RAG_VECTOR_SEARCH_DEFAULT_SIMILARITY_THRESHOLD', 0.75),
+                defaultSimilarityThreshold: this.getEnvNumber('RAG_VECTOR_SEARCH_DEFAULT_SIMILARITY_THRESHOLD', 0.3),
 
                 embeddingTimeout: this.getEnvNumber('RAG_VECTOR_SEARCH_EMBEDDING_TIMEOUT', 20000),
             },

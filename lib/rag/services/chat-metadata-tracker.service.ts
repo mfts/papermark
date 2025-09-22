@@ -1,21 +1,15 @@
 import { ChatMessageMetadata } from "./chat-storage.service";
+import { TokenUsage } from "../types/rag-types";
 
 export interface PerformanceMetrics {
     queryAnalysisStart?: number;
     queryAnalysisEnd?: number;
     searchStart?: number;
     searchEnd?: number;
-    responseStart?: number;
-    responseEnd?: number;
     totalStart?: number;
     totalEnd?: number;
 }
 
-export interface TokenUsage {
-    inputTokens?: number;
-    outputTokens?: number;
-    totalTokens?: number;
-}
 
 export interface SearchResults {
     chunkIds?: string[];
@@ -56,24 +50,9 @@ export class ChatMetadataTracker {
         }
     }
 
-
-    startResponse(): void {
-        this.performanceMetrics.responseStart = Date.now();
-    }
-
-    endResponse(): void {
-        if (this.performanceMetrics.responseStart) {
-            this.performanceMetrics.responseEnd = Date.now();
-            this.metadata.responseTime =
-                this.performanceMetrics.responseEnd - this.performanceMetrics.responseStart;
-        }
-    }
-
-
     startTotal(): void {
         this.performanceMetrics.totalStart = Date.now();
     }
-
 
     endTotal(): void {
         if (this.performanceMetrics.totalStart) {
@@ -87,21 +66,28 @@ export class ChatMetadataTracker {
         queryType?: string;
         intent?: string;
         complexityLevel?: string;
+        complexityScore?: number;
     }): void {
         this.metadata.queryType = data.queryType;
         this.metadata.intent = data.intent;
         this.metadata.complexityLevel = data.complexityLevel;
+        this.metadata.complexityScore = data.complexityScore;
     }
 
     setSearchStrategy(data: {
         strategy?: string;
         confidence?: number;
+        reasoning?: string;
     }): void {
         this.metadata.searchStrategy = data.strategy;
         this.metadata.strategyConfidence = data.confidence;
+        this.metadata.strategyReasoning = data.reasoning;
     }
 
-    setTokenUsage(data: TokenUsage): void {
+    setTokenUsage(data: TokenUsage & {
+        contextTokens?: number;
+        queryTokens?: number;
+    }): void {
         this.tokenUsage.inputTokens = (this.tokenUsage.inputTokens || 0) + (data.inputTokens || 0);
         this.tokenUsage.outputTokens = (this.tokenUsage.outputTokens || 0) + (data.outputTokens || 0);
         this.tokenUsage.totalTokens = (this.tokenUsage.totalTokens || 0) + (data.totalTokens || 0);
@@ -110,25 +96,60 @@ export class ChatMetadataTracker {
         this.metadata.inputTokens = this.tokenUsage.inputTokens;
         this.metadata.outputTokens = this.tokenUsage.outputTokens;
         this.metadata.totalTokens = this.tokenUsage.totalTokens;
+        this.metadata.contextTokens = data.contextTokens;
+        this.metadata.queryTokens = data.queryTokens;
     }
     /**
      * Add search results
      */
-    addSearchResults(data: SearchResults): void {
+    addSearchResults(data: SearchResults & {
+        totalSearchResults?: number;
+        allocatedChunks?: number;
+        avgRelevanceScore?: number;
+    }): void {
         this.searchResults = { ...this.searchResults, ...data };
         this.metadata.chunkIds = this.searchResults.chunkIds;
         this.metadata.documentIds = this.searchResults.documentIds;
         this.metadata.pageRanges = this.searchResults.pageRanges;
+        this.metadata.totalSearchResults = data.totalSearchResults;
+        this.metadata.allocatedChunks = data.allocatedChunks;
+        this.metadata.avgRelevanceScore = data.avgRelevanceScore;
     }
 
     setContextCompression(data: {
         strategy?: string;
         originalSize?: number;
         compressedSize?: number;
+        efficiency?: number;
     }): void {
         this.metadata.compressionStrategy = data.strategy;
         this.metadata.originalContextSize = data.originalSize;
         this.metadata.compressedContextSize = data.compressedSize;
+        this.metadata.contextEfficiency = data.efficiency;
+    }
+
+    setReranking(data: {
+        wasReranked?: boolean;
+        threshold?: number;
+        inputCount?: number;
+        outputCount?: number;
+        rerankTime?: number;
+    }): void {
+        this.metadata.wasReranked = data.wasReranked;
+        this.metadata.rerankThreshold = data.threshold;
+        this.metadata.rerankInputCount = data.inputCount;
+        this.metadata.rerankOutputCount = data.outputCount;
+        this.metadata.rerankTime = data.rerankTime;
+    }
+
+    setGenerationConfig(data: {
+        modelUsed?: string;
+        temperature?: number;
+        toolsEnabled?: boolean;
+    }): void {
+        this.metadata.modelUsed = data.modelUsed;
+        this.metadata.temperature = data.temperature;
+        this.metadata.toolsEnabled = data.toolsEnabled;
     }
 
 
@@ -145,14 +166,6 @@ export class ChatMetadataTracker {
     getMetadata(): ChatMessageMetadata {
         return { ...this.metadata };
     }
-
-    reset(): void {
-        this.metadata = {};
-        this.performanceMetrics = {};
-        this.tokenUsage = {};
-        this.searchResults = {};
-    }
-
 
     static create(): ChatMetadataTracker {
         return new ChatMetadataTracker();

@@ -3,27 +3,30 @@ import { RAGError } from '../errors/rag-errors';
 import { AccessibleDocument } from '../document-permissions';
 import { SearchResult } from '../types/rag-types';
 import { UIMessage } from 'ai';
-import { ResponseGenerationService, responseGenerationService } from './response-generation.service';
+import { textGenerationService } from '../text-generation';
 import { rerankerService } from './reranker.service';
-import { contextCompressionService } from './context-compression.service';
 import { DocumentSearchService, documentSearchService } from './document-search.service';
-import { DocumentGradingService, documentGradingService } from './document-grading.service';
 import { UnifiedQueryAnalysisResult } from './unified-query-analysis.service';
 import { configurationManager } from '../config/configuration-manager';
 import { ChatMetadataTracker } from './chat-metadata-tracker.service';
+import pLimit from 'p-limit';
 
-
-interface SearchConfig {
+interface SearchConfigs {
+    FAST: {
     topK: number;
     similarityThreshold: number;
     timeoutMs: number;
-}
-
-interface SearchConfigs {
-    FAST: SearchConfig;
-    STANDARD: SearchConfig;
-    EXPANDED: SearchConfig;
-    PAGE_QUERY: SearchConfig;
+    };
+    STANDARD: {
+        topK: number;
+        similarityThreshold: number;
+        timeoutMs: number;
+    };
+    EXPANDED: {
+        topK: number;
+        similarityThreshold: number;
+        timeoutMs: number;
+    };
 }
 
 export type SearchStrategy = 'FastVectorSearch' | 'StandardVectorSearch' | 'ExpandedSearch' | 'PageQueryStrategy';
@@ -31,10 +34,7 @@ export type SearchStrategy = 'FastVectorSearch' | 'StandardVectorSearch' | 'Expa
 interface ComplexityAnalysis {
     complexityScore: number;
     complexityLevel: 'low' | 'medium' | 'high';
-    wordCount: number;
 }
-
-
 
 interface QueryExtraction {
     pageNumbers: number[];
@@ -57,32 +57,13 @@ interface PipelineContext {
 
 export class RAGOrchestratorService {
     private documentSearchService: DocumentSearchService;
-    private documentGradingService: DocumentGradingService;
-    private responseGenerationService: ResponseGenerationService;
     private searchConfigs: SearchConfigs;
-    private isDisposed = false;
-    private readonly MAX_TOKENS_PER_CHAT = 5000;
 
     constructor(
         customDocumentSearchService?: DocumentSearchService,
-        customDocumentGradingService?: DocumentGradingService,
-        customResponseGenerationService?: ResponseGenerationService,
     ) {
         this.documentSearchService = customDocumentSearchService || documentSearchService;
-        this.documentGradingService = customDocumentGradingService || documentGradingService;
-        this.responseGenerationService = customResponseGenerationService || responseGenerationService;
         this.searchConfigs = this.initializeSearchConfigs();
-    }
-
-    private checkTokenBudget(metadataTracker?: ChatMetadataTracker): boolean {
-        if (!metadataTracker) return true;
-
-        const currentTokens = metadataTracker.getMetadata().totalTokens || 0;
-        if (currentTokens > this.MAX_TOKENS_PER_CHAT) {
-            console.warn(`Token budget exceeded: ${currentTokens}/${this.MAX_TOKENS_PER_CHAT}`);
-            return false;
-        }
-        return true;
     }
 
     private initializeSearchConfigs(): SearchConfigs {
@@ -91,7 +72,7 @@ export class RAGOrchestratorService {
             FAST: {
                 topK: ragConfig.search.fastTopK,
                 similarityThreshold: ragConfig.search.fastSimilarityThreshold,
-                timeoutMs: ragConfig.search.fastTopK * 3000 // Dynamic timeout based on topK
+                timeoutMs: ragConfig.search.fastTopK * 3000 
             },
             STANDARD: {
                 topK: ragConfig.search.standardTopK,
@@ -102,18 +83,10 @@ export class RAGOrchestratorService {
                 topK: ragConfig.search.expandedTopK,
                 similarityThreshold: ragConfig.search.expandedSimilarityThreshold,
                 timeoutMs: ragConfig.search.expandedTopK * 3000
-            },
-            PAGE_QUERY: {
-                topK: ragConfig.search.pageQueryTopK,
-                similarityThreshold: ragConfig.search.pageQuerySimilarityThreshold,
-                timeoutMs: ragConfig.search.pageQueryTimeoutMs
             }
         };
     }
 
-    /**
-     * Main orchestration method with enhanced pipeline and real-time updates
-     */
     async processQuery(
         query: string,
         dataroomId: string,
@@ -125,25 +98,15 @@ export class RAGOrchestratorService {
         queryExtraction?: QueryExtraction & {
             queryRewriting?: UnifiedQueryAnalysisResult['queryRewriting']
         },
-        timeoutMs: number = 50000, // Default 50 seconds for RAG processing
+        timeoutMs: number = 50000, // 50 sec
         abortSignal?: AbortSignal,
         chatSessionId?: string,
         metadataTracker?: ChatMetadataTracker
     ): Promise<Response> {
         return RAGError.withErrorHandling(
             async () => {
-                if (this.isDisposed) {
-                    throw RAGError.create('serviceDisposed', undefined, { service: 'RAGOrchestratorService' });
-                }
-
-                if (!this.checkTokenBudget(metadataTracker)) {
-                    throw RAGError.create('tokenLimitExceeded', 'Token budget exceeded for this chat session', { service: 'RAGOrchestratorService' });
-                }
 
                 this.validateInputs(query, dataroomId, indexedDocuments, messages, strategy);
-
-                const correlationId = this.generateCorrelationId();
-                const startTime = Date.now();
 
                 // Initialize metadata tracking
                 if (metadataTracker) {
@@ -159,8 +122,6 @@ export class RAGOrchestratorService {
                     });
                 }
 
-                this.logPipelineStatus('🚀 STARTING', `RAG Pipeline: ${strategy} | "${query}" | ${correlationId}`);
-
                 try {
                     const timeoutSignal = AbortSignal.timeout(timeoutMs);
                     const pipelineSignal = abortSignal || timeoutSignal;
@@ -169,11 +130,8 @@ export class RAGOrchestratorService {
                         const pageValidation = this.validatePagesAgainstDocuments(queryExtraction.pageNumbers, indexedDocuments);
 
                         if (!pageValidation.isValid && pageValidation.errorMessage) {
-                            const fallbackResponse = await this.responseGenerationService.generateAnswer(
-                                '', // Empty context triggers fallback
-                                messages,
+                            const fallbackResponse = await textGenerationService.generateFallbackResponse(
                                 pageValidation.errorMessage,
-                                pipelineSignal,
                                 chatSessionId,
                                 metadataTracker
                             );
@@ -206,10 +164,6 @@ export class RAGOrchestratorService {
 
                     const result = await this.executeStrategyPipeline(strategy, context);
 
-                    const totalTime = Date.now() - startTime;
-                    const metrics = this.getPipelineMetrics(startTime, 1, strategy);
-                    this.logPipelineStatus('✅ COMPLETE', `${strategy} | ${totalTime}ms`, metrics);
-
                     // Complete metadata tracking
                     if (metadataTracker) {
                         metadataTracker.endTotal();
@@ -231,30 +185,20 @@ export class RAGOrchestratorService {
 
                     // Check if it's an abort error (user clicked stop)
                     if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('aborted') || abortSignal?.aborted)) {
-                        this.logPipelineStatus('🛑 ABORTED', `Pipeline aborted gracefully by user [${correlationId}]`);
                         throw error;
                     }
 
                     // Check if it's a timeout error
                     if (error instanceof Error && error.name === 'TimeoutError') {
-                        this.logPipelineStatus('⏰ TIMEOUT', `Pipeline exceeded ${timeoutMs}ms limit`);
-                        return await this.responseGenerationService.generateAnswer(
-                            '', // Empty context triggers fallback
-                            messages,
+                        return await textGenerationService.generateFallbackResponse(
                             "The request took too long to process. Please try a simpler query or try again later.",
-                            abortSignal,
                             chatSessionId,
                             metadataTracker
                         );
                     }
 
-                    this.logPipelineStatus('❌ FAILED', `${error instanceof Error ? error.message : 'Unknown error'}`);
-
-                    return await this.responseGenerationService.generateAnswer(
-                        '', // Empty context triggers fallback
-                        messages,
-                        query,
-                        abortSignal,
+                    return await textGenerationService.generateFallbackResponse(
+                        "An error occurred while processing your request. Please try again.",
                         chatSessionId,
                         metadataTracker
                     );
@@ -269,299 +213,207 @@ export class RAGOrchestratorService {
      * Strategy-based pipeline execution
      */
     private async executeStrategyPipeline(strategy: SearchStrategy, context: PipelineContext) {
-        switch (strategy) {
-            case 'FastVectorSearch':
-                return await this.executeFastVectorPipeline(context);
-            case 'StandardVectorSearch':
-                return await this.executeStandardPipeline(context);
-            case 'ExpandedSearch':
-                return await this.executeExpandedPipeline(context);
-            case 'PageQueryStrategy':
-                return await this.executePageQueryPipeline(context);
-            default:
-                return await this.executeStandardPipeline(context);
+        if (strategy === 'PageQueryStrategy') {
+            return await this.executePageQueryPipeline(context);
         }
-    }
-
-    /**
-     * Fast Vector Pipeline
-     */
-    private async executeFastVectorPipeline(context: PipelineContext) {
-        this.logPipelineStatus('⚡ FAST_PIPELINE', 'Starting optimized fast pipeline...');
 
         try {
-            const searchQueries = this.buildQueriesForStrategy(context, 'FastVectorSearch');
-            this.logPipelineStatus('🔍 FAST_QUERIES', `Using ${searchQueries.length} optimized queries`);
-
-            const searchResults = await this.performVectorSearch(searchQueries, context, 'FastVectorSearch');
+            const searchQueries = this.buildQueriesForStrategy(context, strategy);
+            const searchResults = await this.performVectorSearch(searchQueries, context, strategy);
 
             if (searchResults.length === 0) {
-                this.logPipelineStatus('⚠️ NO_RESULTS', 'No results found, generating fallback response...');
-                return await this.responseGenerationService.generateAnswer(
-                    '', // Empty context triggers fallback
-                    context.messages,
-                    context.query,
-                    context.signal,
+                return await textGenerationService.generateFallbackResponse(
+                    "No relevant documents found for your query.",
                     context.chatSessionId,
                     context.metadataTracker
                 );
             }
 
-            return await this.executeSharedProcessingPipeline(context, searchResults, 'FastVectorSearch');
-
+            return await this.executeSharedProcessingPipeline(context, searchResults);
         } catch (error) {
-            this.logPipelineStatus('❌ FAST_PIPELINE_FAILED', `${error instanceof Error ? error.message : 'Unknown error'}`);
-            throw error;
-        }
-    }
-
-    /**
-     * Standard Pipeline
-     */
-    private async executeStandardPipeline(context: PipelineContext) {
-        this.logPipelineStatus('🔄 STANDARD_PIPELINE', 'Starting full pipeline...');
-
-        try {
-            const searchQueries = this.buildQueriesForStrategy(context, 'StandardVectorSearch');
-            this.logPipelineStatus('🔍 STANDARD_QUERIES', `Using ${searchQueries.length} queries`);
-
-            const searchResults = await this.performVectorSearch(searchQueries, context, 'StandardVectorSearch');
-
-            if (searchResults.length === 0) {
-                this.logPipelineStatus('⚠️ NO_RESULTS', 'No results found, generating fallback response...');
-                return await this.responseGenerationService.generateAnswer(
-                    '', // Empty context triggers fallback
-                    context.messages,
-                    context.query,
-                    context.signal,
-                    context.chatSessionId,
-                    context.metadataTracker
-                );
-            }
-
-            return await this.executeSharedProcessingPipeline(context, searchResults, 'StandardVectorSearch');
-
-        } catch (error) {
-            this.logPipelineStatus('❌ STANDARD_PIPELINE_FAILED', `${error instanceof Error ? error.message : 'Unknown error'}`);
-            throw error;
-        }
-    }
-
-    /**
-     * Expanded Pipeline
-     */
-    private async executeExpandedPipeline(context: PipelineContext) {
-        this.logPipelineStatus('🚀 EXPANDED_PIPELINE', 'Starting enhanced pipeline...');
-
-        try {
-            const searchQueries = this.buildQueriesForStrategy(context, 'ExpandedSearch');
-            this.logPipelineStatus('🔍 EXPANDED_QUERIES', `Using ${searchQueries.length} queries`);
-
-            const searchResults = await this.performVectorSearch(searchQueries, context, 'ExpandedSearch');
-
-            if (searchResults.length === 0) {
-                this.logPipelineStatus('⚠️ NO_RESULTS', 'No results found, generating fallback response...');
-                return await this.responseGenerationService.generateAnswer(
-                    '', // Empty context triggers fallback
-                    context.messages,
-                    context.query,
-                    context.signal,
-                    context.chatSessionId,
-                    context.metadataTracker
-                );
-            }
-
-            return await this.executeSharedProcessingPipeline(context, searchResults, 'ExpandedSearch');
-
-        } catch (error) {
-            this.logPipelineStatus('❌ EXPANDED_PIPELINE_FAILED', `${error instanceof Error ? error.message : 'Unknown error'}`);
             throw error;
         }
     }
 
     private async executePageQueryPipeline(context: PipelineContext) {
-        this.logPipelineStatus('PAGE_QUERY_PIPELINE', 'Starting fast page-specific pipeline...');
-
         try {
-            const searchQueries = [context.query];
+            const requestedPages = context.queryExtraction?.pageNumbers || [];
 
-            const searchResults = await this.performVectorSearch(searchQueries, context, 'PageQueryStrategy');
-
-            if (searchResults.length === 0) {
-                this.logPipelineStatus('⚠️ NO_PAGE_RESULTS', 'No results found for requested page, generating fallback response...');
-                return await this.responseGenerationService.generateAnswer(
-                    '', // Empty context triggers fallback
-                    context.messages,
-                    `I couldn't find any content on the requested page. The page might not exist or may not have been indexed yet.`,
-                    context.signal,
+            if (requestedPages.length === 0) {
+                return await textGenerationService.generateFallbackResponse(
+                    "No page numbers were specified in your query.",
                     context.chatSessionId,
                     context.metadataTracker
                 );
             }
 
-            // Skip source building - not neede
-            const contextText = searchResults.map(r => r.content).join('\n\n');
-            const validPages = context.queryExtraction?.pageNumbers || [];
+            const searchResults = await this.queryChunksByPageNumbers(
+                requestedPages,
+                context.dataroomId,
+                context.indexedDocuments.map(doc => doc.documentId)
+            );
 
-            const response = await this.responseGenerationService.generateAnswer(
+
+            if (searchResults.length === 0) {
+                return await textGenerationService.generateFallbackResponse(
+                    `I couldn't find any content on page(s) ${requestedPages.join(', ')}. The page(s) might not exist or may not have been indexed yet.`,
+                    context.chatSessionId,
+                    context.metadataTracker
+                );
+            }
+
+            const contextText = this.formatContextWithCitations(searchResults);
+            if (context.metadataTracker) {
+                context.metadataTracker.addSearchResults({
+                    chunkIds: searchResults.map(c => c.chunkId),
+                    documentIds: [...new Set(searchResults.map(c => c.documentId))],
+                    totalSearchResults: searchResults.length,
+                    allocatedChunks: searchResults.length,
+                    avgRelevanceScore: 1.0
+                });
+            }
+
+            const enableTools = this.shouldEnableTools(context);
+
+            if (context.metadataTracker) {
+                const ragConfig = configurationManager.getRAGConfig();
+                context.metadataTracker.setGenerationConfig({
+                    modelUsed: ragConfig.llm.model,
+                    temperature: ragConfig.generation.temperature,
+                    toolsEnabled: enableTools
+                });
+            }
+
+            const response = await textGenerationService.generateRAGResponseWithTools(
                 contextText,
                 context.messages,
                 context.query,
+                enableTools,
                 context.signal,
                 context.chatSessionId,
                 context.metadataTracker,
-                validPages
+                requestedPages,
+                context.dataroomId,
+                context.indexedDocuments.map(doc => doc.documentId)
             );
 
-            this.logPipelineStatus('✅ PAGE_RESPONSE_COMPLETE', 'Generated page response');
             return response;
 
         } catch (error) {
-            this.logPipelineStatus('❌ PAGE_PIPELINE_FAILED', `${error instanceof Error ? error.message : 'Unknown error'}`);
             throw error;
         }
     }
 
     private async executeSharedProcessingPipeline(
         context: PipelineContext,
-        searchResults: SearchResult[],
-        strategyName: string
+        searchResults: SearchResult[]
     ) {
         try {
-            const isFastPath = strategyName === 'FastVectorSearch';
+            let processedResults = searchResults;
 
-            if (isFastPath) {
-                this.logPipelineStatus('⚡ FAST_PATH_OPTIMIZATION', 'Using optimized processing for speed...');
-
-                const contextText = searchResults.map(r => r.content).join('\n\n');
-
-                const response = await this.responseGenerationService.generateAnswer(
-                    contextText,
-                    context.messages,
-                    context.query,
-                    context.signal,
-                    context.chatSessionId,
-                    context.metadataTracker,
-                    context.queryExtraction?.pageNumbers
-                );
-
-                this.logPipelineStatus('✅ FAST_RESPONSE_COMPLETE', 'Generated fast response');
-                return response;
-            }
-
-
-            this.logPipelineStatus('⚙️ PHASE_3', 'Parallel reranking and context compression...');
-
-            let rerankedResults: any[];
-            let compressedContext: any;
-
-            try {
-                // PARALLEL EXECUTION: Run reranking and compression simultaneously
-                const [rerankResult, compressionResult] = await Promise.allSettled([
-                    rerankerService.rerankResults(context.query, searchResults, context.signal),
-                    contextCompressionService.compressContext(searchResults, context.query, context.signal, context.complexityAnalysis)
-                ]);
-
-                // Handle reranking result
-                if (rerankResult.status === 'fulfilled') {
-                    rerankedResults = rerankResult.value;
-                    this.logPipelineStatus('✅ RERANKING_COMPLETE', `${strategyName}: Reranked ${rerankedResults.length} results`);
-                } else {
-                    rerankedResults = searchResults;
-                    this.logPipelineStatus('⚠️ RERANKING_FAILED', 'Using original search results');
-                }
-
-                // Handle compression result
-                if (compressionResult.status === 'fulfilled') {
-                    compressedContext = compressionResult.value;
-                    this.logPipelineStatus('✅ COMPRESSION_COMPLETE', `${strategyName}: Context compressed`);
-                } else {
-                    compressedContext = {
-                        content: rerankedResults.map(r => r.content).join('\n\n'),
-                    };
-                    this.logPipelineStatus('⚠️ COMPRESSION_FAILED', 'Using uncompressed context');
-                }
-
-            } catch (error) {
-                // Fallback to sequential processing
-                rerankedResults = await rerankerService.rerankResults(context.query, searchResults, context.signal);
-                compressedContext = {
-                    content: rerankedResults.map(r => r.content).join('\n\n'),
-                };
-                this.logPipelineStatus('⚠️ FALLBACK_SEQUENTIAL', 'Using sequential fallback processing');
-            }
-
-            // Phase 4: Smart Document Selection (Skip redundant grading after reranking)
-            this.logPipelineStatus('📋 PHASE_4', 'Smart document selection...');
-
-            let relevantDocuments: any[];
-
-            const hasHighQualityReranking = rerankedResults.length > 0 &&
-                rerankedResults.some((r: any) => r.relevanceScore > 0.7);
-
-            if (hasHighQualityReranking) {
-                relevantDocuments = rerankedResults.filter((r: any) => r.relevanceScore > 0.5);
-                this.logPipelineStatus('📋 SMART_SELECTION', `${strategyName}: ${relevantDocuments.length} high-quality documents (grading skipped)`);
-            } else {
-                // Fallback to grading for low-quality results
+            if (searchResults.length >= 20) {
                 try {
-                    const gradingResult = await this.documentGradingService.gradeAndFilterDocuments(
-                        context.query,
-                        rerankedResults,
-                        context.complexityAnalysis
+                    const rerankStart = Date.now();
+                    const topResults = searchResults.slice(0, 30);
+
+                    processedResults = await rerankerService.rerankResults(
+                    context.query,
+                        topResults,
+                        context.signal
                     );
-                    relevantDocuments = gradingResult.relevantDocuments;
-                    this.logPipelineStatus('📋 GRADING_COMPLETE', `${strategyName}: ${relevantDocuments.length} relevant documents`);
-                } catch (gradingError) {
-                    relevantDocuments = rerankedResults;
-                    this.logPipelineStatus('📋 GRADING_BYPASSED', `${strategyName}: Using all ${relevantDocuments.length} results (grading bypassed)`);
+
+                    const rerankTime = Date.now() - rerankStart;
+                    if (context.metadataTracker) {
+                        context.metadataTracker.setReranking({
+                            wasReranked: true,
+                            threshold: 20,
+                            inputCount: topResults.length,
+                            outputCount: processedResults.length,
+                            rerankTime
+                        });
+                    }
+                } catch (error) {
+                    processedResults = searchResults;
+                    if (context.metadataTracker) {
+                        context.metadataTracker.setReranking({
+                            wasReranked: false,
+                            threshold: 20,
+                            inputCount: searchResults.length,
+                            outputCount: searchResults.length,
+                            rerankTime: 0
+                        });
+                    }
+                }
+                } else {
+                if (context.metadataTracker) {
+                    context.metadataTracker.setReranking({
+                        wasReranked: false,
+                        threshold: 20,
+                        inputCount: searchResults.length,
+                        outputCount: searchResults.length,
+                        rerankTime: 0
+                    });
                 }
             }
 
+            const allocatedChunks = this.allocateChunks(processedResults, context.intent);
 
-            this.logPipelineStatus('🤖 PHASE_5', 'Generating AI response...');
+            const contextText = this.formatContextWithCitations(allocatedChunks);
 
-            try {
-                const response = await this.responseGenerationService.generateAnswer(
-                    compressedContext.content,
+            if (context.metadataTracker) {
+                context.metadataTracker.addSearchResults({
+                    chunkIds: allocatedChunks.map(c => c.chunkId),
+                    documentIds: [...new Set(allocatedChunks.map(c => c.documentId))],
+                    totalSearchResults: searchResults.length,
+                    allocatedChunks: allocatedChunks.length,
+                    avgRelevanceScore: allocatedChunks.reduce((sum, c) => sum + c.similarity, 0) / allocatedChunks.length
+                });
+
+                context.metadataTracker.setContextCompression({
+                    strategy: 'SmartAllocation',
+                    originalSize: searchResults.length,
+                    compressedSize: allocatedChunks.length,
+                    efficiency: allocatedChunks.length / Math.ceil(contextText.length / 4)
+                });
+            }
+
+            const enableTools = this.shouldEnableTools(context);
+            if (context.metadataTracker) {
+                const ragConfig = configurationManager.getRAGConfig();
+                context.metadataTracker.setGenerationConfig({
+                    modelUsed: ragConfig.llm.model,
+                    temperature: ragConfig.generation.temperature,
+                    toolsEnabled: enableTools
+                });
+            }
+
+            return await textGenerationService.generateRAGResponseWithTools(
+                contextText,
                     context.messages,
                     context.query,
+                enableTools,
                     context.signal,
                     context.chatSessionId,
                     context.metadataTracker,
-                    context.queryExtraction?.pageNumbers
-                );
-
-                this.logPipelineStatus('✅ RESPONSE_GENERATION_COMPLETE', `${strategyName}: Generated response`);
-
-                return response;
-            } catch (responseError) {
-                this.logPipelineStatus('❌ RESPONSE_GENERATION_FAILED', `${strategyName}: ${responseError instanceof Error ? responseError.message : 'Unknown error'}`);
-
-                // Return fallback response
-                return await this.responseGenerationService.generateAnswer(
-                    '', // Empty context triggers fallback
-                    context.messages,
-                    context.query,
-                    context.signal,
-                    context.chatSessionId,
-                    context.metadataTracker
-                );
-            }
+                context.queryExtraction?.pageNumbers,
+                context.dataroomId,
+                context.indexedDocuments.map(doc => doc.documentId)
+            );
 
         } catch (error) {
-            this.logPipelineStatus('❌ SHARED_PROCESSING_FAILED', `${strategyName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-            throw error;
+            return await textGenerationService.generateFallbackResponse(
+                "An error occurred while processing your request. Please try again.",
+                context.chatSessionId,
+                context.metadataTracker
+            );
         }
     }
-
 
     private buildQueriesForStrategy(context: PipelineContext, strategy: SearchStrategy): string[] {
         const queries: string[] = [context.query];
         const maxQueries = this.getMaxQueriesForStrategy(strategy);
 
-        const shouldUseRewrittenQueries = context.queryExtraction?.queryRewriting?.shouldRewrite &&
-            context.queryExtraction?.queryRewriting?.rewrittenQueries?.length &&
+        const shouldUseRewrittenQueries = context.queryExtraction?.queryRewriting?.rewrittenQueries?.length &&
             context.queryExtraction?.queryRewriting?.rewrittenQueries;
 
         if (shouldUseRewrittenQueries && context.queryExtraction?.queryRewriting?.rewrittenQueries) {
@@ -569,25 +421,17 @@ export class RAGOrchestratorService {
                 .slice(0, maxQueries - 1)
                 .filter((query): query is string => query !== undefined);
             queries.push(...rewrittenQueries);
-
-            this.logPipelineStatus('🔄 QUERY_REWRITING', `Using ${rewrittenQueries.length} rewritten queries`);
-        } else {
-            this.logPipelineStatus('⚡ SINGLE_QUERY', 'Using original query only (optimized for speed)');
         }
         if (strategy === 'ExpandedSearch' &&
             context.queryExtraction?.queryRewriting?.hydeAnswer &&
             context.queryExtraction.queryRewriting.requiresHyde) {
             queries.push(context.queryExtraction.queryRewriting.hydeAnswer);
-            this.logPipelineStatus('🧠 HYDE_QUERY', 'Added HyDE answer for expanded search');
         }
 
-        // Deduplicate and validate
         const finalQueries = Array.from(new Set(queries.map(q => q.trim()).filter(Boolean)));
 
-        this.logPipelineStatus('📊 FINAL_QUERIES', `Total queries: ${finalQueries.length}/${maxQueries} max`);
         return finalQueries;
     }
-
 
     private getMaxQueriesForStrategy(strategy: SearchStrategy): number {
         switch (strategy) {
@@ -599,17 +443,12 @@ export class RAGOrchestratorService {
         }
     }
 
-
     private async performVectorSearch(
         searchQueries: string[],
         context: PipelineContext,
         strategy: SearchStrategy
     ): Promise<SearchResult[]> {
         const config = this.getSearchConfig(strategy);
-        const strategyEmoji = this.getStrategyEmoji(strategy);
-
-        this.logPipelineStatus(`${strategyEmoji} VECTOR_SEARCH`, `Searching with ${searchQueries.length} queries`);
-
         const docIds = context.indexedDocuments.map(doc => doc.documentId);
         const allResults: SearchResult[] = [];
         const metadataFilter = this.buildMetadataFilter(context);
@@ -617,23 +456,18 @@ export class RAGOrchestratorService {
         const hasPageNumbers = context.queryExtraction?.pageNumbers && context.queryExtraction.pageNumbers.length > 0;
         const useMetadataFilter = hasPageNumbers && metadataFilter;
 
-        if (metadataFilter && useMetadataFilter) {
-            this.logPipelineStatus('🎯 METADATA_FILTER', `Using metadata filter: ${JSON.stringify(metadataFilter)}`);
-        } else if (hasPageNumbers) {
-            this.logPipelineStatus('📄 PAGE_QUERY_DETECTED', `Page numbers detected: ${context.queryExtraction?.pageNumbers?.join(', ')} - NO METADATA FILTER APPLIED`);
-        } else {
-            this.logPipelineStatus('⚠️ NO_PAGE_FILTER', 'No page-specific filtering applied');
-        }
-
         try {
             if (context.metadataTracker) {
                 context.metadataTracker.startSearch();
             }
+            const limit = pLimit(5);
+            const searchPromises = searchQueries.map((query, index) =>
+                limit(async () => {
+                    if (context.signal?.aborted) {
+                        throw new Error('Vector search aborted before start');
+                    }
 
-            const searchPromises = searchQueries.map(async (query, index) => {
-                try {
-                    this.logPipelineStatus(`🔍 QUERY_${index + 1}`, `Searching: "${query}"`);
-
+                    try {
                     const results = await Promise.race([
                         this.documentSearchService.performVectorSearchInternal(
                             query,
@@ -643,25 +477,31 @@ export class RAGOrchestratorService {
                             { topK: config.topK, similarityThreshold: config.similarityThreshold },
                             useMetadataFilter ? metadataFilter || undefined : undefined
                         ),
-                        new Promise<SearchResult[]>((_, reject) =>
-                            setTimeout(() => reject(new Error(`Query timeout after ${config.timeoutMs}ms`)), config.timeoutMs)
-                        )
+                        new Promise<SearchResult[]>((_, reject) => {
+                            const timeoutId = setTimeout(() =>
+                                reject(new Error(`Query timeout after ${config.timeoutMs}ms`)),
+                                config.timeoutMs
+                            );
+                            if (context.signal) {
+                                context.signal.addEventListener('abort', () => {
+                                    clearTimeout(timeoutId);
+                                    reject(new Error('Vector search aborted'));
+                                });
+                            }
+                        })
                     ]);
 
-                    this.logPipelineStatus(`✅ QUERY_${index + 1}`, `Found ${results.length} results`);
                     return results;
                 } catch (error) {
                     return [];
                 }
-            });
+                })
+            );
 
-            // Wait for all searches to complete
             const queryResults = await Promise.all(searchPromises);
 
-            // Combine all results
             queryResults.forEach((results, index) => {
                 allResults.push(...results);
-                this.logPipelineStatus(`📊 QUERY_${index + 1}_RESULTS`, `Added ${results.length} results`);
             });
 
             const uniqueResults = this.removeDuplicateResults(allResults);
@@ -679,9 +519,6 @@ export class RAGOrchestratorService {
                 });
             }
 
-            this.logPipelineStatus(`${strategyEmoji} SEARCH_COMPLETE`,
-                `Combined ${allResults.length} results → ${uniqueResults.length} unique results`);
-
             return uniqueResults;
 
         } catch (error) {
@@ -689,26 +526,12 @@ export class RAGOrchestratorService {
         }
     }
 
-    /**
-     * Get search configuration for strategy
-     */
-    private getSearchConfig(strategy: SearchStrategy): SearchConfig {
+    private getSearchConfig(strategy: SearchStrategy) {
         switch (strategy) {
             case 'FastVectorSearch': return this.searchConfigs.FAST;
             case 'StandardVectorSearch': return this.searchConfigs.STANDARD;
             case 'ExpandedSearch': return this.searchConfigs.EXPANDED;
-            case 'PageQueryStrategy': return this.searchConfigs.PAGE_QUERY;
             default: return this.searchConfigs.STANDARD;
-        }
-    }
-
-    private getStrategyEmoji(strategy: SearchStrategy): string {
-        switch (strategy) {
-            case 'FastVectorSearch': return '⚡';
-            case 'StandardVectorSearch': return '🔄';
-            case 'ExpandedSearch': return '🚀';
-            case 'PageQueryStrategy': return '📄';
-            default: return '🔄';
         }
     }
 
@@ -722,7 +545,6 @@ export class RAGOrchestratorService {
             return true;
         });
     }
-
 
     private buildMetadataFilter(context: PipelineContext): {
         documentIds?: string[];
@@ -740,32 +562,135 @@ export class RAGOrchestratorService {
         const pageNumbers = context.queryExtraction?.pageNumbers;
         if (pageNumbers && pageNumbers.length > 0) {
             filter.pageRanges = pageNumbers.map(pageNum => pageNum.toString());
-
-            this.logPipelineStatus('📄 PAGE_FILTER', `Applied page filtering: ${filter.pageRanges.join(', ')}`);
         }
 
         return Object.keys(filter).length > 1 ? filter : null;
     }
 
-    private generateCorrelationId(): string {
-        return `rag_${crypto.randomUUID()}`;
+    private async queryChunksByPageNumbers(
+        pageNumbers: number[],
+        dataroomId: string,
+        documentIds: string[]
+    ): Promise<SearchResult[]> {
+        return RAGError.withErrorHandling(
+            async () => {
+                if (pageNumbers.length === 0 || documentIds.length === 0) {
+                    return [];
+                }
+                const { default: prisma } = await import('@/lib/prisma');
+                const pageConditions = pageNumbers.map(pageNum => {
+                    return {
+                        OR: [
+                            { pageRanges: pageNum.toString() },
+                            { pageRanges: { contains: `-${pageNum}-` } },
+                            { pageRanges: { startsWith: `${pageNum}-` } },
+                            { pageRanges: { endsWith: `-${pageNum}` } },
+                        ]
+                    };
+                });
+                const chunks = await prisma.documentChunk.findMany({
+                    where: {
+                        dataroomId: dataroomId,
+                        documentId: { in: documentIds },
+                        OR: pageConditions
+                    },
+                    orderBy: [
+                        { documentId: 'asc' },
+                        { chunkIndex: 'asc' }
+                    ]
+                });
+                const searchResults: SearchResult[] = chunks.map(chunk => ({
+                    chunkId: chunk.id,
+                    documentId: chunk.documentId,
+                    content: chunk.content,
+                    similarity: 1.0,
+                    metadata: {
+                        pageRanges: chunk.pageRanges ? [chunk.pageRanges] : [],
+                        sectionHeader: chunk.sectionHeader || undefined,
+                        chunkIndex: chunk.chunkIndex,
+                        documentName: '',
+                        headerHierarchy: chunk.headerHierarchy ? JSON.parse(chunk.headerHierarchy) : [],
+                        isSmallChunk: chunk.isSmallChunk || false,
+                        startLine: chunk.startLine || undefined,
+                        endLine: chunk.endLine || undefined,
+                        tokenCount: chunk.tokenCount || 0,
+                        contentType: chunk.contentType || 'pdf',
+                        dataroomId: chunk.dataroomId,
+                        teamId: chunk.teamId
+                    }
+                }));
+
+                return searchResults;
+            },
+            'databaseQuery',
+            { service: 'RAGOrchestrator', operation: 'queryChunksByPageNumbers', pageNumbers, dataroomId }
+        );
     }
 
-    private logPipelineStatus(stage: string, message: string, metrics?: { [key: string]: any }) {
-        const timestamp = new Date().toISOString();
-        const metricString = metrics ? ` | ${JSON.stringify(metrics)}` : '';
+    private allocateChunks(searchResults: SearchResult[], intent: string): SearchResult[] {
+        if (searchResults.length === 0) {
+            return [];
+        }
+        const thresholds = [0.6, 0.5, 0.4, 0.3, 0.2];
+        const maxChunks = this.getOptimalChunkCount(intent, searchResults.length);
+
+        let selectedResults: SearchResult[] = [];
+        for (const threshold of thresholds) {
+            const candidates = searchResults.filter(result => result.similarity >= threshold);
+
+            if (candidates.length >= maxChunks || threshold === thresholds[thresholds.length - 1]) {
+                selectedResults = candidates.slice(0, maxChunks);
+                break;
+            }
+        }
+        const finalResults: SearchResult[] = [];
+        const documentCount = new Map<string, number>();
+
+        for (const result of selectedResults) {
+            const docId = result.documentId;
+            const currentCount = documentCount.get(docId) || 0;
+
+            if (currentCount < 5) {
+                finalResults.push(result);
+                documentCount.set(docId, currentCount + 1);
+            }
+        }
+        return finalResults;
     }
 
-
-    private getPipelineMetrics(startTime: number, queryCount: number, strategy: string) {
-        const duration = Date.now() - startTime;
-        return {
-            duration,
-            queryCount,
-            strategy,
-            queriesPerSecond: queryCount / (duration / 1000),
-            timestamp: new Date().toISOString()
+    private getOptimalChunkCount(intent: string, availableResults: number): number {
+        const intentChunkMap: Record<string, number> = {
+            'extraction': 8,
+            'summarization': 12,
+            'comparison': 10,
+            'analysis': 8,
+            'verification': 6,
+            'concept_explanation': 10,
+            'general_inquiry': 6
         };
+
+        const baseChunks = intentChunkMap[intent] || 6;
+        return Math.min(Math.max(4, baseChunks), availableResults);
+    }
+
+    private formatContextWithCitations(searchResults: SearchResult[]): string {
+        if (searchResults.length === 0) {
+            return '';
+        }
+
+        const formattedChunks = searchResults
+            .map((result, index) => {
+                const citationId = `[${index + 1}]`;
+                const maxContentLength = 2800;
+                const content = result.content.length > maxContentLength
+                    ? result.content.substring(0, maxContentLength) + '...'
+                    : result.content;
+
+                return `${citationId} ${content}`;
+            })
+            .join('\n\n');
+
+        return formattedChunks;
     }
 
     private validatePagesAgainstDocuments(
@@ -821,7 +746,6 @@ export class RAGOrchestratorService {
         messages: UIMessage[],
         strategy: SearchStrategy
     ): void {
-        // Basic validation
         if (!query?.trim()) {
             throw RAGError.create('validation', 'Query is required', { field: 'query' });
         }
@@ -837,88 +761,21 @@ export class RAGOrchestratorService {
         if (!this.isValidStrategy(strategy)) {
             throw RAGError.create('validation', `Invalid search strategy: ${strategy}`, { field: 'strategy' });
         }
-
-        // Security validation
-        this.validateSecurity(query, dataroomId, messages);
-    }
-
-    private validateSecurity(query: string, dataroomId: string, messages: UIMessage[]): void {
-        // Query length validation
         if (query.length > 10000) {
-            throw RAGError.create('validation', 'Query too long (max 10,000 characters)', {
-                field: 'query',
-                length: query.length,
-                maxLength: 10000
-            });
+            throw RAGError.create('validation', 'Query too long (max 10,000 characters)', { field: 'query' });
         }
-
-        // Dataroom ID format validation
-        if (!/^[a-zA-Z0-9_-]+$/.test(dataroomId)) {
-            throw RAGError.create('validation', 'Invalid dataroom ID format', {
-                field: 'dataroomId',
-                value: dataroomId
-            });
-        }
-
-        // Message content validation
-        for (const message of messages) {
-            const content = this.extractMessageContent(message);
-            if (content && content.length > 50000) {
-                throw RAGError.create('validation', 'Message content too long (max 50,000 characters)', {
-                    field: 'messages',
-                    messageIndex: messages.indexOf(message),
-                    length: content.length,
-                    maxLength: 50000
-                });
-            }
-        }
-
-        // Check for potential injection patterns
-        const suspiciousPatterns = [
-            /<script[^>]*>.*?<\/script>/gi,
-            /javascript:/gi,
-            /on\w+\s*=/gi,
-            /eval\s*\(/gi,
-            /expression\s*\(/gi
-        ];
-
-        const allContent = query + ' ' + messages.map(m => this.extractMessageContent(m)).join(' ');
-        for (const pattern of suspiciousPatterns) {
-            if (pattern.test(allContent)) {
-                throw RAGError.create('validation', 'Potentially malicious content detected', {
-                    field: 'content',
-                    pattern: pattern.toString()
-                });
-            }
-        }
-    }
-
-    private extractMessageContent(message: UIMessage): string {
-        const messageAny = message as any;
-
-        if (typeof messageAny.content === 'string') {
-            return messageAny.content;
-        }
-
-        if (messageAny.parts && Array.isArray(messageAny.parts)) {
-            return messageAny.parts
-                .filter((part: any) => part.type === 'text' && typeof part.text === 'string')
-                .map((part: any) => part.text)
-                .join(' ');
-        }
-
-        return JSON.stringify(messageAny.content || '');
     }
 
     private isValidStrategy(strategy: string): strategy is SearchStrategy {
         return ['FastVectorSearch', 'StandardVectorSearch', 'ExpandedSearch', 'PageQueryStrategy'].includes(strategy);
     }
 
-    dispose(): void {
-        if (this.isDisposed) return;
-        this.isDisposed = true;
+    private shouldEnableTools(context: PipelineContext): boolean {
+        const complexityScore = context.complexityAnalysis?.complexityScore || 0;
+        const intent = context.intent;
+        return complexityScore > 0.6 || intent === 'analysis' || intent === 'comparison';
     }
+
 }
 
 export const ragOrchestratorService = new RAGOrchestratorService();
-

@@ -2,28 +2,43 @@ import prisma from "@/lib/prisma";
 import { RAGError } from "../errors/rag-errors";
 
 export interface ChatMessageMetadata {
-    id?: string;
     queryType?: string;
     intent?: string;
     complexityLevel?: string;
+    complexityScore?: number;
     searchStrategy?: string;
     strategyConfidence?: number;
+    strategyReasoning?: string;
     queryAnalysisTime?: number;
     searchTime?: number;
+    rerankTime?: number;
     responseTime?: number;
     totalTime?: number;
     inputTokens?: number;
     outputTokens?: number;
     totalTokens?: number;
+    contextTokens?: number;
+    queryTokens?: number;
     chunkIds?: string[];
     documentIds?: string[];
     pageRanges?: string[];
+    totalSearchResults?: number;
+    allocatedChunks?: number;
+    avgRelevanceScore?: number;
     compressionStrategy?: string;
     originalContextSize?: number;
     compressedContextSize?: number;
+    contextEfficiency?: number;
+    wasReranked?: boolean;
+    rerankThreshold?: number;
+    rerankInputCount?: number;
+    rerankOutputCount?: number;
     errorType?: string;
     errorMessage?: string;
     isRetryable?: boolean;
+    modelUsed?: string;
+    temperature?: number;
+    toolsEnabled?: boolean;
 }
 
 export interface ChatSessionData {
@@ -40,10 +55,6 @@ export interface ChatMessageData {
     metadata?: ChatMessageMetadata;
 }
 
-const transformMetadata = (metadata: any): ChatMessageMetadata | undefined => {
-    if (!metadata) return undefined;
-    return metadata as ChatMessageMetadata;
-};
 
 export class ChatStorageService {
     private readonly commonSelects = {
@@ -59,7 +70,7 @@ export class ChatStorageService {
             role: true,
             content: true,
             createdAt: true,
-            metadata: true,
+            metadata: true
         }
     } as const;
 
@@ -68,9 +79,6 @@ export class ChatStorageService {
         updatedAtDesc: { updatedAt: 'desc' as const }
     } as const;
 
-    private formatDateToISO(date: Date): string {
-        return date.toISOString();
-    }
     private extractCommonParams(options: {
         dataroomId: string;
         linkId: string;
@@ -196,8 +204,8 @@ export class ChatStorageService {
                         id: message.id,
                         role: message.role as 'user' | 'assistant',
                         content: message.content,
-                        createdAt: this.formatDateToISO(message.createdAt),
-                        metadata: transformMetadata(message.metadata),
+                        createdAt: message.createdAt.toISOString(),
+                        metadata: message.metadata as ChatMessageMetadata | undefined,
                     })),
                 };
             },
@@ -251,17 +259,17 @@ export class ChatStorageService {
                 const transformedSessions = sessions.map((session) => ({
                     id: session.id,
                     title: session.title,
-                    createdAt: this.formatDateToISO(session.createdAt),
-                    updatedAt: this.formatDateToISO(session.updatedAt),
+                    createdAt: session.createdAt.toISOString(),
+                    updatedAt: session.updatedAt.toISOString(),
                     lastMessage: session.messages[0] ? {
                         content: session.messages[0].content,
                         role: session.messages[0].role,
-                        createdAt: this.formatDateToISO(session.messages[0].createdAt),
+                        createdAt: session.messages[0].createdAt.toISOString(),
                     } : null,
                 }));
 
                 const nextCursor = sessions.length === limit && sessions.length > 0
-                    ? this.formatDateToISO(sessions[sessions.length - 1].updatedAt)
+                    ? sessions[sessions.length - 1].updatedAt.toISOString()
                     : null;
 
                 return {

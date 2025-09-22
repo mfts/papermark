@@ -7,7 +7,7 @@ import { configurationManager } from './config/configuration-manager';
 
 let DEFAULT_SEARCH_CONFIG = {
     topK: 10,
-    similarityThreshold: 0.70,
+    similarityThreshold: 0.3,
     embeddingTimeoutMs: 20000
 };
 
@@ -94,13 +94,25 @@ export class VectorSearchService {
 
 
     private async generateEmbeddingWithTimeout(query: string, signal?: AbortSignal) {
+        if (signal?.aborted) {
+            throw new Error('Embedding generation aborted before start');
+        }
+
         try {
             return await Promise.race([
                 generateEmbedding(query),
-                new Promise<never>((_, reject) =>
-                    setTimeout(() => reject(new Error(`Embedding generation timeout after ${DEFAULT_SEARCH_CONFIG.embeddingTimeoutMs}ms`)),
-                        DEFAULT_SEARCH_CONFIG.embeddingTimeoutMs)
-                )
+                new Promise<never>((_, reject) => {
+                    const timeoutId = setTimeout(() =>
+                        reject(new Error(`Embedding generation timeout after ${DEFAULT_SEARCH_CONFIG.embeddingTimeoutMs}ms`)),
+                        DEFAULT_SEARCH_CONFIG.embeddingTimeoutMs
+                    );
+                    if (signal) {
+                        signal.addEventListener('abort', () => {
+                            clearTimeout(timeoutId);
+                            reject(new Error('Embedding generation aborted'));
+                        });
+                    }
+                })
             ]);
         } catch (error) {
             if (signal?.aborted) {
@@ -115,8 +127,7 @@ export class VectorSearchService {
         searchResults: any[]
     ): Promise<SearchResult[]> {
         try {
-            // All metadata is already available in Qdrant payload
-            return searchResults.map((result) => {
+            const enrichedResults = searchResults.map((result) => {
                 const payload = result.payload;
 
 
@@ -141,7 +152,7 @@ export class VectorSearchService {
                     }
                 };
             });
-
+            return enrichedResults;
         } catch (error) {
             log({
                 message: `Failed to enrich with metadata, using basic results: ${error}`,
@@ -152,7 +163,7 @@ export class VectorSearchService {
     }
 
     private mapToSearchResults(searchResults: any[]): SearchResult[] {
-        return searchResults.map((result) => ({
+        const mappedResults = searchResults.map((result) => ({
             chunkId: result.id,
             documentId: result.payload.documentId,
             content: result.payload.content,
@@ -164,6 +175,7 @@ export class VectorSearchService {
                 documentName: ''
             }
         }));
+        return mappedResults;
     }
 
 

@@ -2,10 +2,9 @@ import { NextRequest } from 'next/server';
 import { ragMiddleware } from '@/lib/rag/middleware';
 import { ragOrchestratorService } from '@/lib/rag/services/rag-orchestrator.service';
 import { UnifiedQueryAnalysisResult, unifiedQueryAnalysisService } from '@/lib/rag/services/unified-query-analysis.service';
-import { selectOptimalSearchStrategy } from '@/lib/rag/utils/similarity-utils';
-import { textGenerationService } from '@/lib/rag/text-generation';
 import { chatStorageService } from '@/lib/rag/services/chat-storage.service';
 import { ChatMetadataTracker } from '@/lib/rag/services/chat-metadata-tracker.service';
+import { createUIMessageStream, createUIMessageStreamResponse } from 'ai';
 
 const API_CONFIG = {
     REQUEST_TIMEOUT_MS: 60000,
@@ -14,6 +13,26 @@ const API_CONFIG = {
 } as const;
 
 const FALLBACK_RESPONSE = "I'm sorry, but I could not find the answer to your question in the provided documents.";
+
+async function createFallbackResponse(
+    message: string = FALLBACK_RESPONSE,
+    chatSessionId?: string,
+    metadataTracker?: ChatMetadataTracker
+): Promise<Response> {
+    const response = await createFallbackResponse(message, chatSessionId, metadataTracker);
+    if (chatSessionId && response instanceof Response) {
+        response.headers.set(API_CONFIG.SESSION_HEADER_NAME, chatSessionId);
+    }
+    return response;
+}
+
+function isAborted(signal: AbortSignal): boolean {
+    return signal.aborted;
+}
+
+function createAbortResponse(message: string = 'Request aborted'): Response {
+    return new Response(message, { status: 499 });
+}
 
 export async function POST(req: NextRequest) {
     let analysisController: AbortController | undefined;
@@ -51,11 +70,10 @@ export async function POST(req: NextRequest) {
             console.error(FALLBACK_RESPONSE, error);
         }
 
-        if (abortSignal.aborted) {
+        if (isAborted(abortSignal)) {
             console.log('🛑 Request aborted before analysis');
-            return new Response(FALLBACK_RESPONSE, { status: 499 });
+            return createAbortResponse(FALLBACK_RESPONSE);
         }
-
 
         analysisController = new AbortController();
 
@@ -74,107 +92,83 @@ export async function POST(req: NextRequest) {
                         API_CONFIG.ANALYSIS_TIMEOUT_MS)
                 )
             ]);
-            console.log('analysisResult', analysisResult);
             if (metadataTracker) {
                 metadataTracker.endQueryAnalysis();
                 metadataTracker.setQueryAnalysis({
                     queryType: analysisResult.queryClassification.type,
                     intent: analysisResult.queryClassification.intent,
-                    complexityLevel: analysisResult.complexityAnalysis?.complexityLevel
+                    complexityLevel: analysisResult.complexityAnalysis?.complexityLevel,
+                    complexityScore: analysisResult.complexityAnalysis?.complexityScore
+                });
+
+                metadataTracker.setSearchStrategy({
+                    strategy: analysisResult.searchStrategy?.strategy,
+                    confidence: analysisResult.searchStrategy?.confidence,
+                    reasoning: analysisResult.searchStrategy?.reasoning
                 });
             }
         } catch (error) {
-            if (abortSignal.aborted || (error instanceof Error && (error.name === 'AbortError' || error.message.includes('aborted')))) {
+            if (isAborted(abortSignal) || (error instanceof Error && (error.name === 'AbortError' || error.message.includes('aborted')))) {
                 console.log('🛑 Query analysis aborted gracefully');
-                return new Response('Request aborted by user', { status: 499 });
+                return createAbortResponse('Request aborted by user');
             }
 
             console.error('Query analysis failed:', error);
-
-            const fallbackResponse = await textGenerationService.generateFallbackResponse(
-                "I'm sorry, but I could not find the answer to your question in the provided documents.",
-                chatSessionId,
-                metadataTracker
-            );
-            return fallbackResponse;
+            return await createFallbackResponse(FALLBACK_RESPONSE, chatSessionId, metadataTracker);
         }
 
-
-        if (abortSignal.aborted) {
+        if (isAborted(abortSignal)) {
             console.log('🛑 Request aborted before processing');
-            return new Response('Request aborted', { status: 499 });
+            return createAbortResponse();
         }
 
         // 6. Handle chitchat/abusive queries
         if (['abusive', 'chitchat'].includes(analysisResult.queryClassification.type)) {
-            const fallbackResponse = await textGenerationService.generateFallbackResponse(
-                "I'm sorry, but I could not find the answer to your question in the provided documents.",
-                chatSessionId,
-                metadataTracker
-            );
-            return fallbackResponse;
+            const contextualResponse = analysisResult.queryClassification.response ||
+                "I'm here to help you with your documents! How can I assist you with questions about your uploaded files?";
+            const stream = createUIMessageStream({
+                execute: ({ writer }) => {
+                    const messageId = crypto.randomUUID();
+                    writer.write({
+                        type: 'text-start',
+                        id: messageId
+                    });
+                    writer.write({
+                        type: 'text-delta',
+                        delta: contextualResponse,
+                        id: messageId
+                    });
+                    writer.write({
+                        type: 'text-end',
+                        id: messageId
+                    });
+                }
+            });
+
+            return createUIMessageStreamResponse({ stream });
         }
-
-        // 4. Extract query parameters
         const sanitizedQuery = analysisResult.sanitization?.sanitizedQuery || query;
-        const complexityScore = analysisResult.complexityAnalysis?.complexityScore || 0.5;
-        const queryLength = analysisResult.complexityAnalysis?.wordCount || query.split(' ').length;
         const mentionedPageNumbers = analysisResult.queryExtraction?.pageNumbers || [];
-        const keywords = analysisResult.queryExtraction?.keywords || [];
 
-
-        // 5. Document Access Control & Permission Validation
+        // Document Access Control & Permission Validation
         const { indexedDocuments, accessError } = await ragMiddleware.getAccessibleIndexedDocuments(
             dataroomId,
             viewerId,
             { selectedDocIds, selectedFolderIds, folderDocIds }
         );
 
-
         if (accessError || !indexedDocuments || indexedDocuments.length === 0) {
-
-            const fallbackResponse = await textGenerationService.generateFallbackResponse(
-                "I'm sorry, but I could not find the answer to your question in the provided documents.",
-                chatSessionId,
-                metadataTracker
-            );
-            return fallbackResponse;
+            return await createFallbackResponse(FALLBACK_RESPONSE, chatSessionId, metadataTracker);
         }
 
-        const queryContext = {
-            wordCount: analysisResult.complexityAnalysis.wordCount,
-            keywords: keywords,
-            mentionedPageNumbers
+        const optimalStrategy = {
+            strategy: analysisResult.searchStrategy?.strategy || 'StandardVectorSearch',
+            confidence: analysisResult.searchStrategy?.confidence || 0.7
         };
 
-        const analysisData = {
-            intent: analysisResult.queryClassification.intent,
-            requiresExpansion: analysisResult.queryClassification.requiresExpansion,
-            optimalContextSize: analysisResult.queryClassification.optimalContextSize,
-            processingStrategy: analysisResult.queryClassification.processingStrategy,
-            complexityLevel: analysisResult.complexityAnalysis.complexityLevel,
-            expansionStrategy: analysisResult.queryRewriting.expansionStrategy,
-            requiresHyde: analysisResult.queryRewriting.requiresHyde,
-            contextWindowHint: analysisResult.queryRewriting.contextWindowHint,
-            generatedQueryCount: analysisResult.queryRewriting.generatedQueryCount || 0
-        };
-
-        const optimalStrategy = selectOptimalSearchStrategy(
-            queryLength,
-            complexityScore,
-            indexedDocuments.length,
-            queryContext,
-            analysisData
-        );
-
-        console.log('🎯 Strategy Selection:', {
-            strategy: optimalStrategy.search_strategy,
-            confidence: optimalStrategy.confidence,
-        });
-
-        if (abortSignal.aborted) {
+        if (isAborted(abortSignal)) {
             console.log('🛑 Request aborted before RAG processing');
-            return new Response('Request aborted', { status: 499 });
+            return createAbortResponse();
         }
 
         try {
@@ -183,7 +177,7 @@ export async function POST(req: NextRequest) {
                 dataroomId,
                 indexedDocuments,
                 messages,
-                optimalStrategy.search_strategy,
+                optimalStrategy.strategy,
                 analysisResult.queryClassification.intent,
                 analysisResult.complexityAnalysis,
                 {
@@ -197,19 +191,7 @@ export async function POST(req: NextRequest) {
             );
 
             if (!result) {
-
-                if (chatSessionId && metadataTracker) {
-                }
-
-                const fallbackResponse = await textGenerationService.generateFallbackResponse(
-                    FALLBACK_RESPONSE,
-                    chatSessionId,
-                    metadataTracker
-                );
-                if (chatSessionId && fallbackResponse instanceof Response) {
-                    fallbackResponse.headers.set(API_CONFIG.SESSION_HEADER_NAME, chatSessionId);
-                }
-                return fallbackResponse;
+                return await createFallbackResponse(FALLBACK_RESPONSE, chatSessionId, metadataTracker);
             }
 
             if (chatSessionId && result instanceof Response) {
@@ -217,20 +199,12 @@ export async function POST(req: NextRequest) {
             }
             return result;
         } catch (error) {
-            if (abortSignal.aborted || (error instanceof Error && (error.name === 'AbortError' || error.message.includes('aborted')))) {
+            if (isAborted(abortSignal) || (error instanceof Error && (error.name === 'AbortError' || error.message.includes('aborted')))) {
                 console.log('🛑 RAG processing aborted gracefully');
-                return new Response('Request aborted by user', { status: 499 });
+                return createAbortResponse('Request aborted by user');
             }
 
-            const fallbackResponse = await textGenerationService.generateFallbackResponse(
-                FALLBACK_RESPONSE,
-                chatSessionId,
-                metadataTracker
-            );
-            if (chatSessionId && fallbackResponse instanceof Response) {
-                fallbackResponse.headers.set(API_CONFIG.SESSION_HEADER_NAME, chatSessionId);
-            }
-            return fallbackResponse;
+            return await createFallbackResponse(FALLBACK_RESPONSE, chatSessionId, metadataTracker);
         }
 
     } catch (error: unknown) {
@@ -251,15 +225,7 @@ export async function POST(req: NextRequest) {
             metadataTracker.endTotal();
         }
 
-        const fallbackResponse = await textGenerationService.generateFallbackResponse(
-            FALLBACK_RESPONSE,
-            chatSessionId,
-            metadataTracker
-        );
-        if (chatSessionId && fallbackResponse instanceof Response) {
-            fallbackResponse.headers.set(API_CONFIG.SESSION_HEADER_NAME, chatSessionId);
-        }
-        return fallbackResponse;
+        return await createFallbackResponse(FALLBACK_RESPONSE, chatSessionId, metadataTracker);
     } finally {
         if (analysisController) {
             analysisController.abort();

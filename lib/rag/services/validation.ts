@@ -1,85 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-export const BaseRAGQuerySchema = z.object({
-    dataroomId: z.string().min(1, 'Dataroom ID is required'),
-    viewerId: z.string().min(1, 'Viewer ID is required'),
-    linkId: z.string().min(1, 'Link ID is required'),
-    limit: z.string().nullable().optional().transform(val => val ? parseInt(val, 10) : 20),
-    cursor: z.string().nullable().optional(),
-});
-
-export const SessionIdSchema = z.string().min(1, 'Session ID is required');
-
-export const createErrorResponse = (message: string, status: number, details?: any) => {
+export function handleZodError(error: z.ZodError): NextResponse {
     return NextResponse.json(
-        {
-            error: message,
-            ...(details && { details }),
-            timestamp: new Date().toISOString(),
-        },
-        { status }
+        { error: 'Invalid query parameters', details: error.errors },
+        { status: 400 }
     );
-};
+}
 
-export const ERROR_MESSAGES = {
-    VALIDATION_ERROR: 'Invalid request parameters',
-    FETCH_FAILED: 'Failed to fetch data',
-    SESSION_NOT_FOUND: 'Session not found or access denied',
-} as const;
-
-export const handleZodError = (error: z.ZodError) => {
-    return createErrorResponse(
-        ERROR_MESSAGES.VALIDATION_ERROR,
-        400,
-        error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message
-        }))
+export function handleFetchError(error: unknown, resource: string): NextResponse {
+    console.error(`Error fetching ${resource}:`, error);
+    return NextResponse.json(
+        { error: `Failed to fetch ${resource}` },
+        { status: 500 }
     );
-};
+}
 
-export const handleSessionNotFoundError = (sessionId: string) => {
-    return createErrorResponse(
-        ERROR_MESSAGES.SESSION_NOT_FOUND,
-        404,
-        { sessionId }
-    );
-};
-
-export const handleFetchError = (error: unknown, context?: string) => {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return createErrorResponse(
-        ERROR_MESSAGES.FETCH_FAILED,
-        500,
-        {
-            error: errorMessage,
-            ...(context && { context })
-        }
-    );
-};
-
-export const validateLimit = (limit: number, maxLimit: number = 100, resourceType: string = 'items') => {
+export function validateLimit(limit: number, maxLimit: number, resource: string): NextResponse | null {
     if (limit > maxLimit) {
-        return createErrorResponse(
-            `Limit cannot exceed ${maxLimit} ${resourceType} per request`,
-            400,
-            { maxLimit, requestedLimit: limit }
+        return NextResponse.json(
+            { error: `Limit cannot exceed ${maxLimit} for ${resource}` },
+            { status: 400 }
         );
     }
     return null;
-};
+}
 
-export function extractAndValidateQueryParams(req: NextRequest) {
-    const { searchParams } = new URL(req.url);
+const querySchema = z.object({
+    dataroomId: z.string(),
+    viewerId: z.string(),
+    linkId: z.string(),
+    limit: z.coerce.number().min(1).max(100).optional(),
+    cursor: z.string().optional(),
+});
 
-    const queryParams = {
-        dataroomId: searchParams.get('dataroomId'),
-        viewerId: searchParams.get('viewerId'),
-        linkId: searchParams.get('linkId'),
-        limit: searchParams.get('limit'),
-        cursor: searchParams.get('cursor'),
-    };
-
-    return BaseRAGQuerySchema.parse(queryParams);
+export function extractAndValidateQueryParams(req: Request) {
+    const url = new URL(req.url);
+    const params = Object.fromEntries(url.searchParams.entries());
+    return querySchema.parse(params);
 }

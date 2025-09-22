@@ -1,5 +1,5 @@
 import { embed } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { openai } from '../openai';
 import { RAGError } from './errors/rag-errors';
 
 /**

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { chatStorageService } from '@/lib/rag/services/chat-storage.service';
-import { handleZodError, handleFetchError, validateLimit, extractAndValidateQueryParams } from '@/lib/rag/services/validation';
+import { extractAndValidateQueryParams, handleFetchError, handleZodError, validateLimit } from '@/lib/rag/services/validation';
 
 export async function GET(req: NextRequest) {
     try {

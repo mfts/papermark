@@ -1,17 +1,15 @@
 import { SearchResult, RerankerConfig, RerankerResult } from '../types/rag-types';
 import { RAGError } from '../errors/rag-errors';
 import { configurationManager } from '../config/configuration-manager';
-
-
-let pipeline: any = null;
+import pLimit from 'p-limit';
 
 export class RerankerService {
     private config: RerankerConfig;
-    private isDisposed = false;
     private crossEncoder: any = null;
     private modelLoaded = false;
     private modelLoadingPromise: Promise<void> | null = null;
     private static instance: RerankerService | null = null;
+    private static pipeline: any = null;
 
     private constructor() {
         const ragConfig = configurationManager.getRAGConfig();
@@ -19,7 +17,6 @@ export class RerankerService {
             enabled: ragConfig.reranker.enabled,
             model: ragConfig.reranker.model,
             maxTokens: ragConfig.reranker.maxTokens,
-            temperature: ragConfig.reranker.temperature,
             timeout: ragConfig.reranker.timeout,
             fallbackModel: ragConfig.reranker.fallbackModel
         };
@@ -31,22 +28,20 @@ export class RerankerService {
 
     static getInstance(): RerankerService {
         if (!RerankerService.instance) {
-            if (!RerankerService.instance) {
-                RerankerService.instance = new RerankerService();
-            }
+            RerankerService.instance = new RerankerService();
         }
         return RerankerService.instance;
     }
 
     private async loadTransformers(): Promise<void> {
-        if (!pipeline && typeof window === 'undefined') {
+        if (!RerankerService.pipeline && typeof window === 'undefined') {
             const maxRetries = 3;
             let lastError: Error | null = null;
 
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
                     const transformers = await import('@xenova/transformers');
-                    pipeline = transformers.pipeline;
+                    RerankerService.pipeline = transformers.pipeline;
                     return;
                 } catch (error) {
                     lastError = error instanceof Error ? error : new Error(String(error));
@@ -64,21 +59,17 @@ export class RerankerService {
         try {
             await this.loadTransformers();
 
-            if (typeof window !== 'undefined' || !pipeline) {
+            if (typeof window !== 'undefined' || !RerankerService.pipeline) {
                 this.modelLoaded = false;
                 return;
             }
 
             const modelName = this.getCrossEncoderModelName();
-            const loadingPromise = pipeline(
+            const loadingPromise = RerankerService.pipeline(
                 'text-classification',
                 modelName,
                 {
-                    quantized: true,
-                    progress_callback: (progress: any) => {
-                        if (progress.status === 'downloading') {
-                        }
-                    }
+                    quantized: true
                 }
             );
 
@@ -119,10 +110,6 @@ export class RerankerService {
         searchResults: SearchResult[],
         signal?: AbortSignal
     ): Promise<RerankerResult[]> {
-        if (this.isDisposed) {
-            throw RAGError.create('serviceDisposed', undefined, { service: 'RerankerService' });
-        }
-
         this.validateInputs(query, searchResults);
 
         if (searchResults.length === 0) {
@@ -140,26 +127,22 @@ export class RerankerService {
 
         await this.ensureModelReady();
 
-        // If model failed to load, use TF-IDF fallback
         if (!this.modelLoaded) {
             return this.fallbackToTFIDF(query, searchResults);
         }
 
-        let results: RerankerResult[];
         try {
-            results = await this.rerankWithModel(query, searchResults, this.config.model, signal);
+            return await this.rerankWithModel(query, searchResults, this.config.model, signal);
         } catch (error) {
             if (this.config.fallbackModel) {
                 try {
-                    results = await this.rerankWithModel(query, searchResults, this.config.fallbackModel, signal);
+                    return await this.rerankWithModel(query, searchResults, this.config.fallbackModel, signal);
                 } catch (fallbackError) {
-                    results = this.fallbackToTFIDF(query, searchResults);
+                    return this.fallbackToTFIDF(query, searchResults);
                 }
-            } else {
-                results = this.fallbackToTFIDF(query, searchResults);
             }
+            return this.fallbackToTFIDF(query, searchResults);
         }
-        return results;
     }
 
     private async rerankWithModel(
@@ -173,51 +156,76 @@ export class RerankerService {
         }
 
         const BATCH_SIZE = Math.min(10, searchResults.length);
+        const MAX_CONCURRENT_BATCHES = 3;
+        const limit = pLimit(MAX_CONCURRENT_BATCHES);
+
+
+        const batches: SearchResult[][] = [];
+        for (let i = 0; i < searchResults.length; i += BATCH_SIZE) {
+            batches.push(searchResults.slice(i, i + BATCH_SIZE));
+        }
+
+        const batchPromises = batches.map((batch, batchIndex) =>
+            limit(async () => {
+                if (signal?.aborted) {
+                    throw new Error('Reranking aborted during batch processing');
+                }
+
+                const startIndex = batchIndex * BATCH_SIZE;
+                const batchResults = await Promise.allSettled(
+                    batch.map(async (result, index) => {
+                        if (signal?.aborted) {
+                            throw new Error('Reranking aborted during individual scoring');
+                        }
+
+                        const originalIndex = startIndex + index;
+                        try {
+                            const score = await this.scorePair(query, result.content, model, signal);
+                            return {
+                                ...result,
+                                relevanceScore: score,
+                                confidence: Math.min(0.9, Math.max(0.1, score)),
+                                rerankedRank: originalIndex
+                            };
+                        } catch (error) {
+                            return {
+                                ...result,
+                                relevanceScore: result.similarity,
+                                confidence: 0.1,
+                                rerankedRank: originalIndex
+                            };
+                        }
+                    })
+                );
+
+                return batchResults.map((result, index) => {
+                    if (result.status === 'fulfilled') {
+                        return result.value;
+                    } else {
+                        const originalIndex = startIndex + index;
+                        const originalResult = searchResults[originalIndex];
+                        if (originalResult) {
+                            return {
+                                ...originalResult,
+                                relevanceScore: originalResult.similarity,
+                                confidence: 0.1,
+                                rerankedRank: originalIndex
+                            };
+                        }
+                        return null;
+                    }
+                }).filter(Boolean) as RerankerResult[];
+            })
+        );
+
+        const allBatchResults = await Promise.allSettled(batchPromises);
         const results: RerankerResult[] = [];
 
-        for (let i = 0; i < searchResults.length; i += BATCH_SIZE) {
-            if (signal?.aborted) {
-                throw new Error('Reranking aborted during batch processing');
+        allBatchResults.forEach((batchResult) => {
+            if (batchResult.status === 'fulfilled') {
+                results.push(...batchResult.value);
             }
-
-            const batch = searchResults.slice(i, i + BATCH_SIZE);
-
-            const batchPromises = batch.map(async (result, batchIndex) => {
-                const originalIndex = i + batchIndex;
-                try {
-                    const score = await this.scorePair(query, result.content, model, signal);
-                    return {
-                        ...result,
-                        relevanceScore: score,
-                        confidence: 0.8,
-                        rerankedRank: originalIndex
-                    };
-                } catch (error) {
-                    return {
-                        ...result,
-                        relevanceScore: result.similarity,
-                        confidence: 0.3,
-                        rerankedRank: originalIndex
-                    };
-                }
-            });
-
-            const batchResults = await Promise.allSettled(batchPromises);
-
-            batchResults.forEach((result, batchIndex) => {
-                if (result.status === 'fulfilled') {
-                    results.push(result.value);
-                } else {
-                    const originalIndex = i + batchIndex;
-                    results.push({
-                        ...searchResults[originalIndex],
-                        relevanceScore: searchResults[originalIndex].similarity,
-                        confidence: 0.1,
-                        rerankedRank: originalIndex
-                    });
-                }
-            });
-        }
+        });
 
         return results
             .sort((a, b) => b.relevanceScore - a.relevanceScore)
@@ -234,8 +242,7 @@ export class RerankerService {
             if (this.modelLoaded && this.crossEncoder) {
                 return await this.scoreWithCrossEncoder(query, document, signal);
             }
-
-            return await this.scoreWithTFIDF(query, document, model);
+            return this.calculateSimpleScore(query, document);
         } catch (error) {
             return this.calculateSimpleScore(query, document);
         }
@@ -261,32 +268,10 @@ export class RerankerService {
 
             return Math.max(0, Math.min(1, score));
         } catch (error) {
-            return await this.scoreWithTFIDF(query, document, 'default');
+            return this.calculateSimpleScore(query, document);
         }
     }
 
-    private async scoreWithTFIDF(
-        query: string,
-        document: string,
-        model: string
-    ): Promise<number> {
-        const queryTerms = this.normalizeText(query).filter(term => term.length > 2);
-        const docTerms = this.normalizeText(document).filter(term => term.length > 2);
-
-        if (queryTerms.length === 0 || docTerms.length === 0) {
-            return 0;
-        }
-
-        const exactMatchScore = this.calculateExactMatchScore(queryTerms, docTerms);
-
-        const positionScore = this.calculatePositionScore(query, document);
-
-        const finalScore = Math.max(0, Math.min(1,
-            exactMatchScore * 0.7 + positionScore * 0.3
-        ));
-
-        return finalScore;
-    }
 
     private extractRelevanceScore(result: any): number {
         if (Array.isArray(result)) {
@@ -316,39 +301,16 @@ export class RerankerService {
         if (text.length <= maxLength) {
             return text;
         }
-
-        // Truncate and add ellipsis
         return text.substring(0, maxLength - 3) + '...';
     }
 
     private normalizeText(text: string): string[] {
         return text.toLowerCase()
-            .replace(/[^\w\s]/g, ' ') // Remove punctuation
+            .replace(/[^\w\s]/g, ' ') 
             .split(/\s+/)
             .filter(term => term.length > 0);
     }
 
-    private calculateExactMatchScore(queryTerms: string[], docTerms: string[]): number {
-        const docTermSet = new Set(docTerms);
-        const exactMatches = queryTerms.filter(term => docTermSet.has(term));
-        return queryTerms.length > 0 ? exactMatches.length / queryTerms.length : 0;
-    }
-
-
-    private calculatePositionScore(query: string, document: string): number {
-        const queryLower = query.toLowerCase();
-        const docLower = document.toLowerCase();
-
-        const firstOccurrence = docLower.indexOf(queryLower);
-        if (firstOccurrence === -1) return 0;
-
-        // Score decreases as position increases
-        const maxScore = 1.0;
-        const decayFactor = 0.1;
-        const position = firstOccurrence / document.length;
-
-        return maxScore * Math.exp(-decayFactor * position);
-    }
     /**
      * Fallback to TF-IDF scoring when models fail
      */

@@ -4,8 +4,9 @@ import {
     LLMOptions,
     RAG_CONSTANTS
 } from './types/rag-types';
-
 import { RAGError } from './errors/rag-errors';
+import { configurationManager } from './config/configuration-manager';
+import { openai } from '../openai';
 
 export interface LLMProvider {
     generateObject<T>(
@@ -107,8 +108,6 @@ export class OpenAIProvider implements LLMProvider {
         options?: LLMOptions
     ): Promise<LLMResponse<T>> {
         const { generateObject } = await import('ai');
-        const { openai } = await import('@ai-sdk/openai');
-
         const model = openai(this.model);
         const startTime = Date.now();
 
@@ -152,8 +151,6 @@ export class OpenAIProvider implements LLMProvider {
         options?: LLMOptions
     ): Promise<AsyncIterable<string>> {
         const { streamText } = await import('ai');
-        const { openai } = await import('@ai-sdk/openai');
-
         const model = openai(this.model);
 
         try {
@@ -175,8 +172,6 @@ export class OpenAIProvider implements LLMProvider {
         options?: LLMOptions
     ): Promise<LLMResponse<string>> {
         const { generateText } = await import('ai');
-        const { openai } = await import('@ai-sdk/openai');
-
         const model = openai(this.model);
         const startTime = Date.now();
 
@@ -236,39 +231,3 @@ export function getDefaultLLMService() {
 }
 
 export const llmProvider = getDefaultLLMService();
-
-import { promptManager } from './prompts';
-import { configurationManager } from './config/configuration-manager';
-
-export async function generateLLMResponse<T>(
-    promptId: string,
-    variables: Record<string, any>,
-    options?: LLMOptions
-): Promise<T> {
-    return RAGError.withErrorHandling(
-        async () => {
-            const prompt = await promptManager.renderTemplate(promptId, variables);
-            const schema = await promptManager.getTemplateSchema(promptId);
-            const optimization = await promptManager.getTemplateOptimization(promptId);
-
-            if (!schema) {
-                throw RAGError.create('templateNotFound', undefined, { templateId: promptId });
-            }
-
-            const result = await llmProvider.generateObject(
-                schema,
-                prompt,
-                {
-                    temperature: optimization?.temperature,
-                    model: optimization?.model,
-                    signal: options?.signal,
-                    ...options
-                }
-            );
-
-            return result.content as T;
-        },
-        'llmCall',
-        { service: 'LLMUtils', operation: 'generateLLMResponse', promptId }
-    );
-}

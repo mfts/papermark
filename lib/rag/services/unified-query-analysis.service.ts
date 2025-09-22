@@ -4,37 +4,31 @@ import { RAGError } from '../errors/rag-errors';
 
 export interface UnifiedQueryAnalysisResult {
     sanitization: {
-        isValid: boolean;
         sanitizedQuery: string;
-        toxicityScore: number;
-        sanitizationLevel: 'safe' | 'suspicious' | 'blocked';
     };
     queryClassification: {
         type: 'abusive' | 'chitchat' | 'document_question';
         intent: 'extraction' | 'summarization' | 'comparison' | 'concept_explanation' | 'analysis' | 'verification' | 'general_inquiry';
-        confidence: number;
         response: string;
         requiresExpansion: boolean;
         optimalContextSize: 'small' | 'medium' | 'large';
-        processingStrategy: 'precise' | 'comprehensive' | 'comparative' | 'analytical';
     };
     complexityAnalysis: {
         complexityScore: number;
         complexityLevel: 'low' | 'medium' | 'high';
-        wordCount: number;
     };
     queryExtraction: {
         pageNumbers: number[];
-        keywords: string[];
     };
     queryRewriting: {
         rewrittenQueries: string[];
         hydeAnswer: string;
-        generatedQueryCount: number;
-        expansionStrategy: 'minimal' | 'moderate' | 'comprehensive';
         requiresHyde: boolean;
-        contextWindowHint: 'focused' | 'balanced' | 'broad';
-        shouldRewrite: boolean;
+    };
+    searchStrategy: {
+        strategy: 'FastVectorSearch' | 'StandardVectorSearch' | 'ExpandedSearch' | 'PageQueryStrategy';
+        confidence: number;
+        reasoning: string;
     };
 }
 
@@ -71,8 +65,8 @@ export class UnifiedQueryAnalysisService extends BaseLLMService {
 
                 if (metadataTracker && response.usage) {
                     metadataTracker.setTokenUsage({
-                        inputTokens: response.usage.promptTokens,
-                        outputTokens: response.usage.completionTokens,
+                        inputTokens: response.usage.inputTokens,
+                        outputTokens: response.usage.outputTokens,
                         totalTokens: response.usage.totalTokens,
                     });
                 }

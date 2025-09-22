@@ -1,16 +1,12 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
+import pLimit from 'p-limit';
 
 import { RAGError } from "./errors/rag-errors";
 
 const QDRANT_CONFIG = {
-    DEFAULT_VECTOR_SIZE: 1536,
-    DEFAULT_DISTANCE: "Cosine",
-    DEFAULT_SCORE_THRESHOLD: 0.7,
-    DEFAULT_LIMIT: 10,
     OPERATION_TIMEOUT_MS: 20000,
 } as const;
 
-// Types for Qdrant operations
 export interface QdrantPoint {
     id: string;
     vector: number[];
@@ -38,10 +34,8 @@ export interface QdrantSearchResult {
     };
 }
 
-// Qdrant client wrapper
 export class QdrantVectorStore {
     private client: QdrantClient;
-    private defaultDistance: string = QDRANT_CONFIG.DEFAULT_DISTANCE;
 
     constructor(url: string, apiKey?: string) {
         this.client = new QdrantClient({
@@ -55,11 +49,11 @@ export class QdrantVectorStore {
      */
     async createCollection(
         collectionName: string,
-        vectorSize: number = QDRANT_CONFIG.DEFAULT_VECTOR_SIZE,
+        vectorSize: number = 1536,
         distance?: string,
     ): Promise<boolean> {
         try {
-            const distanceToUse = distance || this.defaultDistance;
+            const distanceToUse = distance || "Cosine";
 
             await this.client.createCollection(collectionName, {
                 vectors: {
@@ -75,7 +69,7 @@ export class QdrantVectorStore {
                 try {
                     await this.createMetadataIndexes(collectionName);
                 } catch (indexError) {
-                    console.warn(`Failed to create indexes for existing collection ${collectionName}:`, indexError);
+                    console.log("Index creation failed", indexError)
                 }
                 return true;
             }
@@ -101,12 +95,9 @@ export class QdrantVectorStore {
             for (const indexField of indexFields) {
                 try {
                     await this.client.createPayloadIndex(collectionName, indexField);
-                    console.log(`✅ Created index for field: ${indexField.field_name}`);
                 } catch (fieldError) {
                     if (fieldError instanceof Error && fieldError.message.includes("already exists")) {
-                        console.log(`ℹ️ Index already exists for field: ${indexField.field_name}`);
-                    } else {
-                        console.warn(`⚠️ Failed to create index for field ${indexField.field_name}:`, fieldError);
+                        continue;
                     }
                 }
             }
@@ -161,25 +152,19 @@ export class QdrantVectorStore {
         }
     }
 
-    /**
-     * Upsert points to collection with batch processing
-     */
     async upsertPoints(
         collectionName: string,
         points: QdrantPoint[],
-        concurrency: number = 3, // Allow configurable concurrency
+        concurrency: number = 3, 
     ): Promise<boolean> {
         try {
-            const BATCH_SIZE = 100; // Qdrant recommended batch size
+            const BATCH_SIZE = 100;
             const totalPoints = points.length;
 
-            // Validate points structure
             if (totalPoints === 0) {
-                console.warn("No points to upsert", { collectionName });
                 return true;
             }
 
-            // Validate first point structure
             const firstPoint = points[0];
             if (!firstPoint.id || !firstPoint.vector || !firstPoint.payload) {
                 throw RAGError.create(
@@ -197,14 +182,6 @@ export class QdrantVectorStore {
                 );
             }
 
-            console.info("Starting batch upsert to Qdrant", {
-                collectionName,
-                totalPointCount: totalPoints,
-                batchSize: BATCH_SIZE,
-                concurrency,
-                samplePointId: points[0]?.id,
-                sampleVectorLength: points[0]?.vector?.length,
-            });
 
             // Create batches
             const batches: QdrantPoint[][] = [];
@@ -214,14 +191,17 @@ export class QdrantVectorStore {
 
             // Process batches with controlled concurrency
             const totalBatches = batches.length;
+            const MAX_CONCURRENT_BATCHES = Math.min(concurrency, 5);
+            const limit = pLimit(MAX_CONCURRENT_BATCHES);
 
             const settled = await Promise.allSettled(
-                batches.map(async (batch, index) => {
+                batches.map((batch, index) =>
+                    limit(async () => {
                     const batchNumber = index + 1;
 
                     const upsertData = batch.map((point) => {
                         const payloadSize = JSON.stringify(point.payload).length;
-                        if (payloadSize > 64000) {
+                        if (payloadSize > 64000 && process.env.NODE_ENV === 'development') {
                             console.warn("Large payload detected", {
                                 pointId: point.id,
                                 payloadSize,
@@ -236,107 +216,38 @@ export class QdrantVectorStore {
                         };
                     });
 
-                    console.info(
-                        `Upserting batch ${batchNumber}/${totalBatches} to Qdrant`,
-                        {
-                            collectionName,
-                            batchSize: batch.length,
-                            batchNumber,
-                            totalBatches,
-                        },
-                    );
 
                     await this.client.upsert(collectionName, {
                         points: upsertData,
                         wait: true,
                     });
 
-                    console.info(
-                        `Successfully upserted batch ${batchNumber}/${totalBatches}`,
-                        {
-                            collectionName,
-                            batchSize: batch.length,
-                            batchNumber,
-                            totalBatches,
-                        },
-                    );
 
                     return { batchNumber, batchSize: batch.length };
-                }),
+                    })
+                ),
             );
 
-            // Check for any failed batches
             const failedBatches = settled.filter((s) => s.status === "rejected");
             if (failedBatches.length > 0) {
-                const errors = failedBatches.map((s) => s.reason);
-                console.error("Some batches failed to upsert", {
-                    collectionName,
-                    failedCount: failedBatches.length,
-                    totalBatches,
-                    errors: errors.map((e) =>
-                        e instanceof Error ? e.message : String(e),
-                    ),
-                });
                 throw RAGError.create(
                     "vectorDatabase",
                     `Failed to upsert ${failedBatches.length} out of ${totalBatches} batches`,
-                    { operation: "batchUpsert" },
-                    new Error(
-                        `Failed to upsert ${failedBatches.length} out of ${totalBatches} batches`,
-                    ),
+                    { operation: "batchUpsert" }
                 );
             }
 
-            console.info("Successfully completed all batch upserts to Qdrant", {
-                collectionName,
-                totalPointCount: totalPoints,
-                totalBatches,
-            });
-
             return true;
         } catch (error) {
-            console.error("Error upserting points to Qdrant", {
-                error: error instanceof Error ? error.message : String(error),
-                collectionName,
-                pointCount: points.length,
-                samplePointId: points[0]?.id,
-                sampleVectorLength: points[0]?.vector?.length,
-                stack: error instanceof Error ? error.stack : undefined,
-            });
-
             return false;
         }
     }
 
-    /**
-     * Delete points from collection
-     */
-    async deletePoints(
-        collectionName: string,
-        pointIds: string[],
-    ): Promise<boolean> {
-        try {
-            await this.client.delete(collectionName, {
-                points: pointIds,
-                wait: true,
-            });
-
-            return true;
-        } catch (error) {
-            console.error("Failed to delete points", { error });
-            return false;
-        }
-    }
-
-    /**
-     * Delete entire collection
-     */
     async deleteCollection(collectionName: string): Promise<boolean> {
         try {
             await this.client.deleteCollection(collectionName);
             return true;
         } catch (error) {
-            console.error("Failed to delete collection", { error });
             return false;
         }
     }
@@ -344,8 +255,8 @@ export class QdrantVectorStore {
     async searchSimilar(
         collectionName: string,
         vector: number[],
-        limit: number = QDRANT_CONFIG.DEFAULT_LIMIT,
-        scoreThreshold: number = QDRANT_CONFIG.DEFAULT_SCORE_THRESHOLD,
+        limit: number = 10,
+        scoreThreshold: number = 0.3,
         metadataFilter?: {
             documentIds?: string[];
             pageRanges?: string[];
@@ -368,6 +279,10 @@ export class QdrantVectorStore {
                     limit,
                     score_threshold: scoreThreshold,
                     with_payload: true,
+                    params: {
+                        exact: false,
+                        hnsw_ef: 128,
+                    }
                 };
 
                 if (filterConditions.length > 0) {
@@ -379,25 +294,10 @@ export class QdrantVectorStore {
                 try {
                     results = await Promise.race([
                         this.client.search(collectionName, searchRequest),
-                        new Promise<never>((_, reject) =>
-                            setTimeout(
-                                () =>
-                                    reject(
-                                        new Error(
-                                            `Qdrant search timeout after ${QDRANT_CONFIG.OPERATION_TIMEOUT_MS}ms`,
-                                        ),
-                                    ),
-                                QDRANT_CONFIG.OPERATION_TIMEOUT_MS,
-                            ),
-                        ),
+                        this.createTimeoutPromise(),
                     ]);
                 } catch (error) {
-                    console.error("❌ Qdrant search failed:", error);
-
                     if (filterConditions.length > 0) {
-                        console.log(
-                            "⚠️ Search with metadata filter failed, trying without filter...",
-                        );
                         const fallbackRequest = {
                             vector,
                             limit,
@@ -408,21 +308,9 @@ export class QdrantVectorStore {
                         try {
                             results = await Promise.race([
                                 this.client.search(collectionName, fallbackRequest),
-                                new Promise<never>((_, reject) =>
-                                    setTimeout(
-                                        () =>
-                                            reject(
-                                                new Error(
-                                                    `Qdrant search timeout after ${QDRANT_CONFIG.OPERATION_TIMEOUT_MS}ms`,
-                                                ),
-                                            ),
-                                        QDRANT_CONFIG.OPERATION_TIMEOUT_MS,
-                                    ),
-                                ),
+                                this.createTimeoutPromise(),
                             ]);
-                            // Fallback search succeeded
                         } catch (fallbackError) {
-                            console.error("❌ Fallback search also failed:", fallbackError);
                             throw new Error(
                                 `Qdrant search failed with and without metadata filter: ${error instanceof Error ? error.message : "Unknown error"}`,
                             );
@@ -432,34 +320,17 @@ export class QdrantVectorStore {
                     }
                 }
 
-                return results.map((result) => {
-                    return {
-                        id: String(result.id),
-                        score: result.score,
-                        payload: {
-                            documentId: String(result.payload?.documentId || ""),
-                            content: String(result.payload?.content || ""),
-                            metadata: {
-                                pageRanges: result.payload?.pageRanges || [],
-                                chunkIndex: result.payload?.chunkIndex || 0,
-                                sectionHeader: result.payload?.sectionHeader || '',
-                                documentName: result.payload?.documentName || '',
-                                tokenCount: result.payload?.tokenCount || 0,
-                                contentType: result.payload?.contentType || '',
-                                dataroomId: result.payload?.dataroomId || '',
-                                teamId: result.payload?.teamId || '',
-                                chunkId: result.payload?.chunkId || '',
-                                createdAt: result.payload?.createdAt || '',
-                                headerHierarchy: result.payload?.headerHierarchy || [],
-                                isSmallChunk: result.payload?.isSmallChunk || false,
-                                startLine: result.payload?.startLine || 0,
-                                endLine: result.payload?.endLine || 0
-                            },
-                        },
-                    };
-                });
+                return results.map((result) => ({
+                    id: String(result.id),
+                    score: result.score,
+                    payload: {
+                        documentId: String(result.payload?.documentId || ""),
+                        content: String(result.payload?.content || ""),
+                        metadata: result.payload || {},
+                    },
+                }));
             },
-            "qdrantSearch",
+            "vectorSearch",
             {
                 service: "QdrantVectorStore",
                 operation: "searchSimilar",
@@ -468,9 +339,6 @@ export class QdrantVectorStore {
         );
     }
 
-    /**
-     * Validate search input parameters
-     */
     private validateSearchInputs(
         collectionName: string,
         vector: number[],
@@ -505,9 +373,15 @@ export class QdrantVectorStore {
         }
     }
 
-    /**
-     * Build filter conditions with validation
-     */
+    private createTimeoutPromise(timeoutMs: number = QDRANT_CONFIG.OPERATION_TIMEOUT_MS): Promise<never> {
+        return new Promise<never>((_, reject) =>
+            setTimeout(
+                () => reject(new Error(`Qdrant operation timeout after ${timeoutMs}ms`)),
+                timeoutMs
+            )
+        );
+    }
+
     private buildFilterConditions(metadataFilter?: {
         documentIds?: string[];
         pageRanges?: string[];
@@ -544,67 +418,6 @@ export class QdrantVectorStore {
         return filterConditions;
     }
 
-    async getFilteredPoints(
-        collectionName: string,
-        filter?: {
-            documentId?: string;
-            documentIds?: string[];
-        },
-        limit: number = 10000,
-    ): Promise<QdrantSearchResult[]> {
-        try {
-            // Build Qdrant filter condition
-            let qdrantFilter = null;
-
-            if (filter?.documentId) {
-                qdrantFilter = {
-                    must: [
-                        {
-                            key: "documentId",
-                            match: { value: filter.documentId },
-                        },
-                    ],
-                };
-            } else if (filter?.documentIds && filter.documentIds.length > 0) {
-                qdrantFilter = {
-                    must: [
-                        {
-                            key: "documentId",
-                            match: { any: filter.documentIds },
-                        },
-                    ],
-                };
-            }
-            const scrollResult = await this.client.scroll(collectionName, {
-                filter: qdrantFilter,
-                limit,
-                with_payload: true,
-                with_vector: false,
-            });
-
-            return scrollResult.points.map((point) => ({
-                id: String(point.id),
-                score: 1.0,
-                payload: {
-                    documentId: String(point.payload?.documentId || ""),
-                    content: String(point.payload?.content || ""),
-                    metadata: point.payload?.metadata || {},
-                },
-            }));
-        } catch (error) {
-            console.error("Failed to get filtered points", { error, filter });
-            return [];
-        }
-    }
-    async getAllPoints(
-        collectionName: string,
-        filter?: {
-            documentId?: string;
-            documentIds?: string[];
-        },
-    ): Promise<QdrantSearchResult[]> {
-        return this.getFilteredPoints(collectionName, filter);
-    }
     async deletePointsByFilter(
         collectionName: string,
         filter: {
@@ -636,7 +449,6 @@ export class QdrantVectorStore {
             }
 
             if (!qdrantFilter) {
-                console.error("No valid filter provided for deletion", { filter });
                 return { success: false };
             }
 
@@ -644,15 +456,9 @@ export class QdrantVectorStore {
                 filter: qdrantFilter,
             });
 
-            console.error("Deleted points by filter", {
-                collectionName,
-                filter,
-                operation_id: result.operation_id,
-            });
 
             return { success: true, deletedCount: undefined };
         } catch (error) {
-            console.error("Failed to delete points by filter", { error, filter });
             return { success: false };
         }
     }

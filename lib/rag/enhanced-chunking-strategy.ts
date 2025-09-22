@@ -54,15 +54,15 @@ export class EnhancedDocumentChunker {
         };
     }
 
-    private getCachedTokenCount(text: string): number {
+    private async getCachedTokenCount(text: string): Promise<number> {
         const hash = generateLightweightHash(text);
-        const cached = this.tokenCountCache.getSync(hash);
+        const cached = await this.tokenCountCache.get(hash);
         if (cached !== undefined) {
             return cached;
         }
 
         const count = calculateTokenCount(text);
-        this.tokenCountCache.setSync(hash, count);
+        await this.tokenCountCache.set(hash, count);
         return count;
     }
 
@@ -337,7 +337,7 @@ export class EnhancedDocumentChunker {
     }
 
 
-    private splitContentProperly(content: string, maxTokens: number, overlapTokens: number = 0, documentType: string = 'financial'): string[] {
+    private async splitContentProperly(content: string, maxTokens: number, overlapTokens: number = 0, documentType: string = 'financial'): Promise<string[]> {
         const chunks: string[] = [];
         const paragraphs = content.split(/\n\s*\n/);
         let currentChunk: string[] = [];
@@ -355,7 +355,7 @@ export class EnhancedDocumentChunker {
 
         for (let i = 0; i < paragraphs.length; i++) {
             const paragraph = paragraphs[i];
-            const paragraphTokens = this.getCachedTokenCount(paragraph);
+            const paragraphTokens = await this.getCachedTokenCount(paragraph);
 
 
             if (currentTokens + paragraphTokens > effectiveMaxTokens && currentChunk.length > 0) {
@@ -390,7 +390,7 @@ export class EnhancedDocumentChunker {
         return uniqueChunks;
     }
 
-    private mergeSmallChunks(chunks: EnhancedChunk[], minTokens: number = 100): EnhancedChunk[] {
+    private async mergeSmallChunks(chunks: EnhancedChunk[], minTokens: number = 100): Promise<EnhancedChunk[]> {
         const mergedChunks: EnhancedChunk[] = [];
         let i = 0;
 
@@ -400,7 +400,7 @@ export class EnhancedDocumentChunker {
             if (currentChunk.metadata.tokenCount < minTokens && i + 1 < chunks.length) {
                 const nextChunk = chunks[i + 1];
                 const mergedContent = currentChunk.content + '\n\n' + nextChunk.content;
-                const mergedTokens = this.getCachedTokenCount(mergedContent);
+                const mergedTokens = await this.getCachedTokenCount(mergedContent);
 
                 if (mergedTokens <= this.config.maxChunkTokens) {
                     const mergedChunk: EnhancedChunk = {
@@ -428,7 +428,7 @@ export class EnhancedDocumentChunker {
         return mergedChunks;
     }
 
-    private handleEmptyChunks(chunks: EnhancedChunk[]): EnhancedChunk[] {
+    private async handleEmptyChunks(chunks: EnhancedChunk[]): Promise<EnhancedChunk[]> {
         const processedChunks: EnhancedChunk[] = [];
         let i = 0;
 
@@ -441,7 +441,7 @@ export class EnhancedDocumentChunker {
                 if (i + 1 < chunks.length) {
                     const nextChunk = chunks[i + 1];
                     const mergedContent = currentChunk.content + '\n\n' + nextChunk.content;
-                    const mergedTokens = this.getCachedTokenCount(mergedContent);
+                    const mergedTokens = await this.getCachedTokenCount(mergedContent);
 
                     processedChunks.push({
                         ...nextChunk,
@@ -461,7 +461,7 @@ export class EnhancedDocumentChunker {
                 else if (processedChunks.length > 0) {
                     const prevChunk = processedChunks[processedChunks.length - 1];
                     const mergedContent = prevChunk.content + '\n\n' + currentChunk.content;
-                    const mergedTokens = this.getCachedTokenCount(mergedContent);
+                    const mergedTokens = await this.getCachedTokenCount(mergedContent);
 
                     processedChunks[processedChunks.length - 1] = {
                         ...prevChunk,
@@ -487,13 +487,13 @@ export class EnhancedDocumentChunker {
         return processedChunks;
     }
 
-    private postProcessChunks(chunks: EnhancedChunk[]): EnhancedChunk[] {
+    private async postProcessChunks(chunks: EnhancedChunk[]): Promise<EnhancedChunk[]> {
 
         const deduplicatedChunks = this.deduplicateChunks(chunks);
 
-        const mergedChunks = this.mergeSmallChunks(deduplicatedChunks, this.config.minChunkTokens);
+        const mergedChunks = await this.mergeSmallChunks(deduplicatedChunks, this.config.minChunkTokens);
 
-        const finalChunks = this.handleEmptyChunks(mergedChunks);
+        const finalChunks = await this.handleEmptyChunks(mergedChunks);
 
         return finalChunks;
     }
@@ -539,7 +539,7 @@ export class EnhancedDocumentChunker {
             let globalChunkIndex = 0;
 
             for (const segment of semanticSegments) {
-                const segmentTokens = this.getCachedTokenCount(segment.content);
+                const segmentTokens = await this.getCachedTokenCount(segment.content);
 
                 if (segmentTokens >= config.minChunkTokens && segmentTokens <= config.maxChunkTokens) {
                     const pageRangeResult = this.extractPageNumbersWithContext(segment.content, this.originalPages, this.totalPages, text);
@@ -565,11 +565,11 @@ export class EnhancedDocumentChunker {
                     });
                     globalChunkIndex++;
                 } else if (segmentTokens > config.maxChunkTokens) {
-                    const subChunks = this.splitContentProperly(segment.content, config.chunkSizeTokens, 0, contentType);
+                    const subChunks = await this.splitContentProperly(segment.content, config.chunkSizeTokens, 0, contentType);
 
                     for (let i = 0; i < subChunks.length; i++) {
                         const subChunkText = subChunks[i];
-                        const subChunkTokens = this.getCachedTokenCount(subChunkText);
+                        const subChunkTokens = await this.getCachedTokenCount(subChunkText);
 
                         if (subChunkTokens >= config.minChunkTokens) {
                             const pageRangeResult = this.extractPageNumbersWithContext(subChunkText, this.originalPages, this.totalPages, text);
@@ -622,7 +622,7 @@ export class EnhancedDocumentChunker {
                 }
             }
 
-            const processedChunks = this.postProcessChunks(allChunks);
+            const processedChunks = await this.postProcessChunks(allChunks);
 
             return processedChunks;
 
