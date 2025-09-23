@@ -8,7 +8,7 @@ import { createUIMessageStream, createUIMessageStreamResponse } from 'ai';
 
 const API_CONFIG = {
     REQUEST_TIMEOUT_MS: 60000,
-    ANALYSIS_TIMEOUT_MS: 15000,
+    ANALYSIS_TIMEOUT_MS: 18000,
     SESSION_HEADER_NAME: 'X-Session-ID',
 } as const;
 
@@ -19,8 +19,26 @@ async function createFallbackResponse(
     chatSessionId?: string,
     metadataTracker?: ChatMetadataTracker
 ): Promise<Response> {
-    const response = await createFallbackResponse(message, chatSessionId, metadataTracker);
-    if (chatSessionId && response instanceof Response) {
+    if (chatSessionId && metadataTracker) {
+        try {
+            await chatStorageService.addMessage({
+                sessionId: chatSessionId,
+                role: 'assistant',
+                content: message,
+                metadata: metadataTracker.getMetadata()
+            });
+        } catch (error) {
+            console.error('❌ Failed to store fallback message:', error);
+        }
+    }
+
+    const response = new Response(message, {
+        status: 200,
+        headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+        },
+    });
+    if (chatSessionId) {
         response.headers.set(API_CONFIG.SESSION_HEADER_NAME, chatSessionId);
     }
     return response;

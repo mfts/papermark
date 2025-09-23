@@ -7,6 +7,7 @@ import { textGenerationService } from '../text-generation';
 import { rerankerService } from './reranker.service';
 import { DocumentSearchService, documentSearchService } from './document-search.service';
 import { UnifiedQueryAnalysisResult } from './unified-query-analysis.service';
+import prisma from "@/lib/prisma";
 import { configurationManager } from '../config/configuration-manager';
 import { ChatMetadataTracker } from './chat-metadata-tracker.service';
 import pLimit from 'p-limit';
@@ -271,7 +272,8 @@ export class RAGOrchestratorService {
                 );
             }
 
-            const contextText = this.formatContextWithCitations(searchResults);
+            const contextText = this.formatContextWithPageInfo(searchResults, requestedPages);
+
             if (context.metadataTracker) {
                 context.metadataTracker.addSearchResults({
                     chunkIds: searchResults.map(c => c.chunkId),
@@ -300,8 +302,8 @@ export class RAGOrchestratorService {
                     searchResultsCount: searchResults.length,
                     topResults: searchResults.slice(0, 3).map((r: any) => ({
                         content: r.content.substring(0, 100) + '...',
-                        similarity: r.similarity,
-                        relevanceScore: r.relevanceScore
+                        pageRanges: r.metadata.pageRanges,
+                        similarity: r.similarity
                     }))
                 });
             }
@@ -320,8 +322,8 @@ export class RAGOrchestratorService {
             );
 
             if (process.env.NODE_ENV === 'development') {
-                console.log('✅ RAG Response Generated:', {
-                    strategy: 'RAG',
+                console.log('✅ Page Query Response Generated:', {
+                    strategy: 'PageQueryStrategy',
                     intent: context.intent,
                     chatSessionId: context.chatSessionId,
                     documentsCount: context.indexedDocuments.length
@@ -620,17 +622,21 @@ export class RAGOrchestratorService {
                 if (pageNumbers.length === 0 || documentIds.length === 0) {
                     return [];
                 }
-                const { default: prisma } = await import('@/lib/prisma');
+
                 const pageConditions = pageNumbers.map(pageNum => {
                     return {
                         OR: [
                             { pageRanges: pageNum.toString() },
+                            { pageRanges: { contains: `, ${pageNum},` } },
+                            { pageRanges: { startsWith: `${pageNum}, ` } },
+                            { pageRanges: { endsWith: `, ${pageNum}` } },
                             { pageRanges: { contains: `-${pageNum}-` } },
                             { pageRanges: { startsWith: `${pageNum}-` } },
-                            { pageRanges: { endsWith: `-${pageNum}` } },
+                            { pageRanges: { endsWith: `-${pageNum}` } }
                         ]
                     };
                 });
+
                 const chunks = await prisma.documentChunk.findMany({
                     where: {
                         dataroomId: dataroomId,
@@ -642,6 +648,23 @@ export class RAGOrchestratorService {
                         { chunkIndex: 'asc' }
                     ]
                 });
+                const chunksByPage = new Map<number, typeof chunks>();
+                pageNumbers.forEach(pageNum => {
+                    const pageChunks = chunks.filter(chunk => {
+                        if (!chunk.pageRanges) return false;
+                        const pageRanges = chunk.pageRanges.split(',').map(range => range.trim());
+                        return pageRanges.some(range => {
+                            if (range.includes('-')) {
+                                const [start, end] = range.split('-').map(n => parseInt(n.trim()));
+                                return pageNum >= start && pageNum <= end;
+                            } else {
+                                return parseInt(range) === pageNum;
+                            }
+                        });
+                    });
+                    chunksByPage.set(pageNum, pageChunks);
+                });
+
                 const searchResults: SearchResult[] = chunks.map(chunk => ({
                     chunkId: chunk.id,
                     documentId: chunk.documentId,
@@ -736,6 +759,28 @@ export class RAGOrchestratorService {
         return formattedChunks;
     }
 
+    private formatContextWithPageInfo(searchResults: SearchResult[], requestedPages: number[]): string {
+        if (searchResults.length === 0) {
+            return '';
+        }
+        let contextHeader = `PAGE QUERY: Content from page(s) ${requestedPages.join(', ')}:\n\n`;
+
+        const formattedChunks = searchResults
+            .map((result, index) => {
+                const citationId = `[${index + 1}]`;
+                const pageInfo = result.metadata.pageRanges?.[0] ? ` (Page: ${result.metadata.pageRanges[0]})` : '';
+                const maxContentLength = 2800;
+                const content = result.content.length > maxContentLength
+                    ? result.content.substring(0, maxContentLength) + '...'
+                    : result.content;
+
+                return `${citationId}${pageInfo} ${content}`;
+            })
+            .join('\n\n');
+
+        return contextHeader + formattedChunks;
+    }
+
     private validatePagesAgainstDocuments(
         requestedPages: number[],
         indexedDocuments: AccessibleDocument[]
@@ -816,7 +861,7 @@ export class RAGOrchestratorService {
     private shouldEnableTools(context: PipelineContext): boolean {
         const complexityScore = context.complexityAnalysis?.complexityScore || 0;
         const intent = context.intent;
-        return complexityScore > 0.6 || intent === 'analysis' || intent === 'comparison';
+        return complexityScore > 0.6 || intent === 'analysis' || intent === 'comparison' || intent === 'summarization';
     }
 
 }
