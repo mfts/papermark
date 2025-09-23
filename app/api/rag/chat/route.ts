@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
             console.log('🛑 Request aborted before processing');
             return createAbortResponse();
         }
-
+        console.log('analysisResult', analysisResult)
         // 6. Handle chitchat/abusive queries
         if (['abusive', 'chitchat'].includes(analysisResult.queryClassification.type)) {
             const contextualResponse = analysisResult.queryClassification.response ||

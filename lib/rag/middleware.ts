@@ -4,6 +4,7 @@ import { getAccessibleDocumentsForRAG, AccessibleDocument } from './document-per
 import { z } from 'zod';
 import { RAGError } from './errors/rag-errors';
 import { DocumentAccessCache } from './utils/lruCache';
+import { redis } from '../redis';
 
 const RequestBodySchema = z.object({
     messages: z.array(z.any()).min(1, 'Messages array cannot be empty'),
@@ -149,16 +150,39 @@ export class RAGMiddleware {
                 let accessibleDocuments = await documentAccessCache.get(cacheKey);
 
                 if (!accessibleDocuments) {
-                    accessibleDocuments = await getAccessibleDocumentsForRAG(dataroomId, viewerId);
+                    const lockKey = `rag:lock:${cacheKey}`;
+                    const lockValue = Date.now().toString();
 
-                    if (!Array.isArray(accessibleDocuments)) {
-                        throw RAGError.create('documentAccess', 'Invalid document data structure returned', {
-                            dataroomId,
-                            viewerId,
-                            actualType: typeof accessibleDocuments
-                        });
+                    try {
+                        const lockAcquired = await redis.set(lockKey, lockValue, { ex: 5, nx: true });
+
+                        if (lockAcquired) {
+                            accessibleDocuments = await documentAccessCache.get(cacheKey);
+
+                            if (!accessibleDocuments) {
+                                accessibleDocuments = await getAccessibleDocumentsForRAG(dataroomId, viewerId);
+
+                                if (!Array.isArray(accessibleDocuments)) {
+                                    throw RAGError.create('documentAccess', 'Invalid document data structure returned', {
+                                        dataroomId,
+                                        viewerId,
+                                        actualType: typeof accessibleDocuments
+                                    });
+                                }
+                                await documentAccessCache.set(cacheKey, accessibleDocuments);
+                            }
+                            await redis.del(lockKey);
+                        } else {
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            accessibleDocuments = await documentAccessCache.get(cacheKey);
+
+                            if (!accessibleDocuments) {
+                                accessibleDocuments = await getAccessibleDocumentsForRAG(dataroomId, viewerId);
+                            }
+                        }
+                    } catch (lockError) {
+                        accessibleDocuments = await getAccessibleDocumentsForRAG(dataroomId, viewerId);
                     }
-                    await documentAccessCache.set(cacheKey, accessibleDocuments);
                 }
 
                 if (accessibleDocuments.length === 0) {
