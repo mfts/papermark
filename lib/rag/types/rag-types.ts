@@ -49,15 +49,6 @@ export const RAG_CONSTANTS = {
     DEFAULT_RETRY_ATTEMPTS: 3,
 } as const;
 
-export interface RerankerConfig {
-    enabled: boolean;
-    model: string;
-    maxTokens: number;
-    temperature?: number;
-    timeout: number;
-    fallbackModel?: string;
-}
-
 export interface RerankerResult extends SearchResult {
     relevanceScore: number;
     confidence: number;

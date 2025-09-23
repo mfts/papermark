@@ -52,7 +52,7 @@ export class DocumentSearchService {
                 // Validate config parameters
                 this.validateSearchConfig(config);
 
-                return await this.vectorSearchService.searchSimilarChunks(
+                const results = await this.vectorSearchService.searchSimilarChunks(
                     query,
                     dataroomId,
                     viewableDocumentIds,
@@ -63,6 +63,22 @@ export class DocumentSearchService {
                     },
                     signal
                 );
+
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('🔍 Vector Search Results:', {
+                        query: query.substring(0, 50) + (query.length > 50 ? '...' : ''),
+                        resultsCount: results.length,
+                        topK: config.topK,
+                        similarityThreshold: config.similarityThreshold,
+                        topResults: results.slice(0, 3).map(r => ({
+                            content: r.content.substring(0, 80) + '...',
+                            similarity: r.similarity,
+                            documentId: r.documentId
+                        }))
+                    });
+                }
+
+                return results;
             },
             'vectorSearch',
             { service: 'DocumentSearch', operation: 'performVectorSearchInternal' }

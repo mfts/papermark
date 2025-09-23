@@ -215,6 +215,13 @@ export class TextGenerationService {
                     throw RAGError.create('validation', 'Query is required for fallback response', { field: 'query' });
                 }
 
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('🔄 Fallback Response:', {
+                        query: query.substring(0, 100) + (query.length > 100 ? '...' : ''),
+                        chatSessionId
+                    });
+                }
+
                 const prompt = await promptManager.renderTemplate(PROMPT_IDS.RAG_FALLBACK_RESPONSE, { query });
 
                 const stream = streamText({
@@ -222,6 +229,19 @@ export class TextGenerationService {
                         system: prompt,
                         messages: [{ role: 'user', content: `Question: ${query}` }],
                     onFinish: async ({ text, usage, finishReason }) => {
+                        if (process.env.NODE_ENV === 'development') {
+                            console.log('🔄 Fallback Response Generated:', {
+                                responseLength: text?.length || 0,
+                                finishReason,
+                                tokens: usage ? {
+                                    input: usage.inputTokens || 0,
+                                    output: usage.outputTokens || 0,
+                                    total: usage.totalTokens || 0
+                                } : null,
+                                chatSessionId
+                            });
+                        }
+
                         if (usage && metadataTracker) {
                             metadataTracker.setTokenUsage({
                                 inputTokens: usage.inputTokens || 0,
@@ -272,10 +292,31 @@ export class TextGenerationService {
     ): Promise<Response> {
         return RAGError.withErrorHandling(
             async () => {
+
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('🤖 LLM Request:', {
+                        query: query.substring(0, 100) + (query.length > 100 ? '...' : ''),
+                        contextLength: context.length,
+                        messagesCount: messages.length,
+                        enableTools,
+                        chatSessionId,
+                        pageNumbers
+                    });
+                }
+
                 this.validateInputs(context, messages, query);
 
                 const systemContent = await this.buildRAGSystemPrompt(context, pageNumbers, query);
                 const tools = enableTools ? this.getResearchTools(dataroomId, documentIds) : undefined;
+
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('📝 System Prompt Details:', {
+                        promptLength: systemContent.length,
+                        promptPreview: systemContent.substring(0, 300) + (systemContent.length > 300 ? '...' : ''),
+                        hasContext: context.length > 0,
+                        contextSnippet: context.substring(0, 150) + (context.length > 150 ? '...' : '')
+                    });
+                }
 
                 const stream = streamText({
                     model: this.getModel(),
@@ -285,6 +326,19 @@ export class TextGenerationService {
                     temperature: this.config.generation.temperature,
                     abortSignal,
                     onFinish: async ({ text, usage, finishReason }) => {
+                        if (process.env.NODE_ENV === 'development') {
+                            console.log('🤖 LLM Response:', {
+                                responseLength: text?.length || 0,
+                                finishReason,
+                                tokens: usage ? {
+                                    input: usage.inputTokens || 0,
+                                    output: usage.outputTokens || 0,
+                                    total: usage.totalTokens || 0
+                                } : null,
+                                chatSessionId
+                            });
+                        }
+
                         if (usage && metadataTracker) {
                             metadataTracker.setTokenUsage({
                                 inputTokens: usage.inputTokens || 0,

@@ -13,9 +13,9 @@ import pLimit from 'p-limit';
 
 interface SearchConfigs {
     FAST: {
-    topK: number;
-    similarityThreshold: number;
-    timeoutMs: number;
+        topK: number;
+        similarityThreshold: number;
+        timeoutMs: number;
     };
     STANDARD: {
         topK: number;
@@ -72,7 +72,7 @@ export class RAGOrchestratorService {
             FAST: {
                 topK: ragConfig.search.fastTopK,
                 similarityThreshold: ragConfig.search.fastSimilarityThreshold,
-                timeoutMs: ragConfig.search.fastTopK * 3000 
+                timeoutMs: ragConfig.search.fastTopK * 3000
             },
             STANDARD: {
                 topK: ragConfig.search.standardTopK,
@@ -105,6 +105,15 @@ export class RAGOrchestratorService {
     ): Promise<Response> {
         return RAGError.withErrorHandling(
             async () => {
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('🚀 RAG Query Processing:', {
+                        query: query.substring(0, 100) + (query.length > 100 ? '...' : ''),
+                        strategy,
+                        intent,
+                        documentsCount: indexedDocuments.length,
+                        chatSessionId
+                    });
+                }
 
                 this.validateInputs(query, dataroomId, indexedDocuments, messages, strategy);
 
@@ -284,6 +293,19 @@ export class RAGOrchestratorService {
                 });
             }
 
+            if (process.env.NODE_ENV === 'development') {
+                console.log('📄 Context Details:', {
+                    contextLength: contextText.length,
+                    contextPreview: contextText.substring(0, 200) + (contextText.length > 200 ? '...' : ''),
+                    searchResultsCount: searchResults.length,
+                    topResults: searchResults.slice(0, 3).map((r: any) => ({
+                        content: r.content.substring(0, 100) + '...',
+                        similarity: r.similarity,
+                        relevanceScore: r.relevanceScore
+                    }))
+                });
+            }
+
             const response = await textGenerationService.generateRAGResponseWithTools(
                 contextText,
                 context.messages,
@@ -296,6 +318,15 @@ export class RAGOrchestratorService {
                 context.dataroomId,
                 context.indexedDocuments.map(doc => doc.documentId)
             );
+
+            if (process.env.NODE_ENV === 'development') {
+                console.log('✅ RAG Response Generated:', {
+                    strategy: 'RAG',
+                    intent: context.intent,
+                    chatSessionId: context.chatSessionId,
+                    documentsCount: context.indexedDocuments.length
+                });
+            }
 
             return response;
 
@@ -317,9 +348,8 @@ export class RAGOrchestratorService {
                     const topResults = searchResults.slice(0, 30);
 
                     processedResults = await rerankerService.rerankResults(
-                    context.query,
+                        context.query,
                         topResults,
-                        context.signal
                     );
 
                     const rerankTime = Date.now() - rerankStart;
@@ -344,7 +374,7 @@ export class RAGOrchestratorService {
                         });
                     }
                 }
-                } else {
+            } else {
                 if (context.metadataTracker) {
                     context.metadataTracker.setReranking({
                         wasReranked: false,
@@ -359,6 +389,19 @@ export class RAGOrchestratorService {
             const allocatedChunks = this.allocateChunks(processedResults, context.intent);
 
             const contextText = this.formatContextWithCitations(allocatedChunks);
+
+            if (process.env.NODE_ENV === 'development') {
+                console.log('📄 Context Details:', {
+                    contextLength: contextText.length,
+                    contextPreview: contextText.substring(0, 200) + (contextText.length > 200 ? '...' : ''),
+                    searchResultsCount: allocatedChunks.length,
+                    topResults: allocatedChunks.slice(0, 3).map((r: any) => ({
+                        content: r.content.substring(0, 100) + '...',
+                        similarity: r.similarity,
+                        relevanceScore: r.relevanceScore
+                    }))
+                });
+            }
 
             if (context.metadataTracker) {
                 context.metadataTracker.addSearchResults({
@@ -389,12 +432,12 @@ export class RAGOrchestratorService {
 
             return await textGenerationService.generateRAGResponseWithTools(
                 contextText,
-                    context.messages,
-                    context.query,
+                context.messages,
+                context.query,
                 enableTools,
-                    context.signal,
-                    context.chatSessionId,
-                    context.metadataTracker,
+                context.signal,
+                context.chatSessionId,
+                context.metadataTracker,
                 context.queryExtraction?.pageNumbers,
                 context.dataroomId,
                 context.indexedDocuments.map(doc => doc.documentId)
@@ -468,33 +511,33 @@ export class RAGOrchestratorService {
                     }
 
                     try {
-                    const results = await Promise.race([
-                        this.documentSearchService.performVectorSearchInternal(
-                            query,
-                            context.dataroomId,
-                            docIds,
-                            context.signal,
-                            { topK: config.topK, similarityThreshold: config.similarityThreshold },
-                            useMetadataFilter ? metadataFilter || undefined : undefined
-                        ),
-                        new Promise<SearchResult[]>((_, reject) => {
-                            const timeoutId = setTimeout(() =>
-                                reject(new Error(`Query timeout after ${config.timeoutMs}ms`)),
-                                config.timeoutMs
-                            );
-                            if (context.signal) {
-                                context.signal.addEventListener('abort', () => {
-                                    clearTimeout(timeoutId);
-                                    reject(new Error('Vector search aborted'));
-                                });
-                            }
-                        })
-                    ]);
+                        const results = await Promise.race([
+                            this.documentSearchService.performVectorSearchInternal(
+                                query,
+                                context.dataroomId,
+                                docIds,
+                                context.signal,
+                                { topK: config.topK, similarityThreshold: config.similarityThreshold },
+                                useMetadataFilter ? metadataFilter || undefined : undefined
+                            ),
+                            new Promise<SearchResult[]>((_, reject) => {
+                                const timeoutId = setTimeout(() =>
+                                    reject(new Error(`Query timeout after ${config.timeoutMs}ms`)),
+                                    config.timeoutMs
+                                );
+                                if (context.signal) {
+                                    context.signal.addEventListener('abort', () => {
+                                        clearTimeout(timeoutId);
+                                        reject(new Error('Vector search aborted'));
+                                    });
+                                }
+                            })
+                        ]);
 
-                    return results;
-                } catch (error) {
-                    return [];
-                }
+                        return results;
+                    } catch (error) {
+                        return [];
+                    }
                 })
             );
 

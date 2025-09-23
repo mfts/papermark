@@ -45,6 +45,14 @@ export class UnifiedQueryAnalysisService extends BaseLLMService {
     ): Promise<UnifiedQueryAnalysisResult> {
         return RAGError.withErrorHandling(
             async () => {
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('🔍 Query Analysis Started:', {
+                        query: query.substring(0, 80) + (query.length > 80 ? '...' : ''),
+                        viewerId: viewerId.substring(0, 8) + '...',
+                        dataroomId: dataroomId.substring(0, 8) + '...'
+                    });
+                }
+
                 const template = await promptManager.getTemplate(PROMPT_IDS.UNIFIED_QUERY_ANALYSIS);
                 if (!template) {
                     throw RAGError.create('missingConfiguration', undefined, { service: 'UnifiedQueryAnalysis', config: 'promptTemplate' });
@@ -72,6 +80,17 @@ export class UnifiedQueryAnalysisService extends BaseLLMService {
                 }
 
                 const result = response.content as UnifiedQueryAnalysisResult;
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('✅ Query Analysis Completed:', {
+                        type: result.queryClassification.type,
+                        intent: result.queryClassification.intent,
+                        complexityLevel: result.complexityAnalysis.complexityLevel,
+                        strategy: result.searchStrategy.strategy,
+                        confidence: result.searchStrategy.confidence,
+                        pageNumbers: result.queryExtraction.pageNumbers.length > 0 ? result.queryExtraction.pageNumbers : 'none'
+                    });
+                }
+
                 return result;
             },
             'queryAnalysis',
