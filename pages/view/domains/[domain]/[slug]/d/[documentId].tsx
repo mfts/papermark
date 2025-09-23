@@ -288,7 +288,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
     };
   } catch (error) {
     console.error("Fetching error:", error);
-    return { notFound: true };
+    return { props: { error: true }, revalidate: 30 };
   }
 }
 
