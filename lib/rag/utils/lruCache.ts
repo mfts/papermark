@@ -4,43 +4,45 @@ export class EmbeddingCache {
   private readonly ttl: number;
   private readonly keyPrefix = 'rag:embedding_cache:';
 
-  constructor(maxSize: number = 5000, ttl: number = 12 * 60 * 60 * 1000) {
-    this.ttl = Math.floor(ttl / 1000); // Convert to seconds for Redis
+  constructor(ttl: number = 12 * 60 * 60 * 1000) {
+    this.ttl = Math.floor(ttl / 1000);
   }
 
   async get(key: string): Promise<{ embedding: number[]; timestamp: number } | undefined> {
     try {
       const cached = await redis.get<string>(`${this.keyPrefix}${key}`);
-      if (cached) {
-        return JSON.parse(cached);
+      if (!cached) {
+        return undefined;
       }
-      return undefined;
+
+      if (typeof cached !== 'string' || !cached.startsWith('{')) {
+        await this.invalidate(key);
+        return undefined;
+      }
+
+      return JSON.parse(cached);
     } catch (error) {
-      console.error('Redis embedding cache get error:', error);
+      await this.invalidate(key);
       return undefined;
     }
   }
 
   async set(key: string, value: { embedding: number[]; timestamp: number }): Promise<void> {
     try {
-      await redis.setex(`${this.keyPrefix}${key}`, this.ttl, JSON.stringify(value));
+      const serialized = JSON.stringify(value);
+      await redis.setex(`${this.keyPrefix}${key}`, this.ttl, serialized);
     } catch (error) {
-      console.error('Redis embedding cache set error:', error);
+      // cache is optional
     }
   }
 
-
-  async clear(): Promise<void> {
+  async invalidate(key: string): Promise<void> {
     try {
-      const keys = await redis.keys(`${this.keyPrefix}*`);
-      if (keys.length > 0) {
-        await redis.del(...keys);
-      }
+      await redis.del(`${this.keyPrefix}${key}`);
     } catch (error) {
-      console.error('Redis embedding cache clear error:', error);
+      console.warn('Redis embedding cache invalidate error:', error);
     }
   }
-
 }
 
 export class TokenCountCache {
@@ -50,12 +52,17 @@ export class TokenCountCache {
   async get(key: string): Promise<number | undefined> {
     try {
       const cached = await redis.get<string>(`${this.keyPrefix}${key}`);
-      if (cached) {
-        return parseInt(cached, 10);
+      if (!cached) {
+        return undefined;
       }
-      return undefined;
+      if (typeof cached !== 'string' || isNaN(Number(cached))) {
+        await this.invalidate(key);
+        return undefined;
+      }
+
+      return parseInt(cached, 10);
     } catch (error) {
-      console.error('Redis token count cache get error:', error);
+      await this.invalidate(key);
       return undefined;
     }
   }
@@ -64,104 +71,71 @@ export class TokenCountCache {
     try {
       await redis.setex(`${this.keyPrefix}${key}`, this.ttl, value.toString());
     } catch (error) {
-      console.error('Redis token count cache set error:', error);
+      // cache is optional
     }
   }
 
-
-  async clear(): Promise<void> {
+  async invalidate(key: string): Promise<void> {
     try {
-      const keys = await redis.keys(`${this.keyPrefix}*`);
-      if (keys.length > 0) {
-        await redis.del(...keys);
-      }
+      await redis.del(`${this.keyPrefix}${key}`);
     } catch (error) {
-      console.error('Redis token count cache clear error:', error);
+      //  optional
     }
   }
 
-}
-
-export class PromptTemplateCache {
-  private readonly ttl = 24 * 60 * 60; // 24 hours in seconds
-  private readonly keyPrefix = 'rag:prompt_template_cache:';
-
-  constructor() {
-  }
-
-  async get(key: string): Promise<any | undefined> {
-    try {
-      const cached = await redis.get<string>(`${this.keyPrefix}${key}`);
-      if (cached) {
-        return JSON.parse(cached);
-      }
-      return undefined;
-    } catch (error) {
-      console.error('Redis prompt template cache get error:', error);
-      return undefined;
-    }
-  }
-
-  async set(key: string, value: any): Promise<void> {
-    try {
-      await redis.setex(`${this.keyPrefix}${key}`, this.ttl, JSON.stringify(value));
-    } catch (error) {
-      console.error('Redis prompt template cache set error:', error);
-    }
-  }
-
-  async clear(): Promise<void> {
-    try {
-      const keys = await redis.keys(`${this.keyPrefix}*`);
-      if (keys.length > 0) {
-        await redis.del(...keys);
-      }
-    } catch (error) {
-      console.error('Redis prompt template cache clear error:', error);
-    }
-  }
 }
 
 export class DocumentAccessCache {
   private readonly ttl = 5 * 60; // 5 minutes in seconds
   private readonly keyPrefix = 'rag:document_access_cache:';
 
-
   async get(key: string): Promise<any[] | undefined> {
     try {
       const cached = await redis.get<string>(`${this.keyPrefix}${key}`);
-      if (cached) {
-        return JSON.parse(cached);
+      if (!cached) {
+        return undefined;
       }
-      return undefined;
+
+      if (typeof cached !== 'string' || !cached.startsWith('[')) {
+        await this.invalidate(key);
+        return undefined;
+      }
+
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      } else {
+        await this.invalidate(key);
+        return undefined;
+      }
     } catch (error) {
-      console.error('Redis document access cache get error:', error);
+      await this.invalidate(key);
       return undefined;
     }
   }
 
   async set(key: string, value: any[]): Promise<void> {
     try {
-      await redis.setex(`${this.keyPrefix}${key}`, this.ttl, JSON.stringify(value));
-    } catch (error) {
-      console.error('Redis document access cache set error:', error);
-    }
-  }
-
-  async clear(): Promise<void> {
-    try {
-      const keys = await redis.keys(`${this.keyPrefix}*`);
-      if (keys.length > 0) {
-        await redis.del(...keys);
+      if (!Array.isArray(value)) {
+        return;
       }
+
+      const serialized = JSON.stringify(value);
+      await redis.setex(`${this.keyPrefix}${key}`, this.ttl, serialized);
     } catch (error) {
-      console.error('Redis document access cache clear error:', error);
+      // cache is optional
     }
   }
 
   generateKey(dataroomId: string, viewerId: string): string {
     return `${dataroomId}:${viewerId}`;
   }
+
+  async invalidate(key: string): Promise<void> {
+    try {
+      await redis.del(`${this.keyPrefix}${key}`);
+    } catch (error) {
+      console.warn('Redis document access cache invalidate error:', error);
+    }
+  }
 }
-
-

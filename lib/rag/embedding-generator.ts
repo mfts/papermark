@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { embed } from "ai";
 import { openai } from "../openai";
 import { calculateTokenCount } from "./utils/chunk-utils";
 import pLimit from 'p-limit';
@@ -29,7 +29,6 @@ export interface EmbeddingBatch {
 }
 
 export class EmbeddingGenerator {
-    private openai: OpenAI;
     private model: string;
     private batchSize: number;
     private concurrency: number;
@@ -47,13 +46,12 @@ export class EmbeddingGenerator {
             cacheExpiryMs?: number;
         } = {}
     ) {
-        this.openai = openai;
         this.model = model;
         this.batchSize = batchSize;
         this.concurrency = concurrency;
 
         this.cacheExpiryMs = cacheExpiryMs;
-        this.cache = new EmbeddingCache(5000, this.cacheExpiryMs);
+        this.cache = new EmbeddingCache(this.cacheExpiryMs);
     }
 
 
@@ -268,25 +266,28 @@ export class EmbeddingGenerator {
         const inputs = chunks.map((c) => c.content);
 
         try {
-            const response = await this.openai.embeddings.create({
-                model: this.model,
-                input: inputs,
-                encoding_format: "float",
-            });
+            const embeddings = await Promise.all(
+                inputs.map(input =>
+                    embed({
+                        model: openai.textEmbeddingModel(this.model),
+                        value: input,
+                        maxRetries: 2,
+                    })
+                )
+            );
 
-            if (response.data.length !== inputs.length) {
+            if (embeddings.length !== inputs.length) {
                 throw RAGError.create(
                     'embedding',
-                    `OpenAI response length mismatch: expected ${inputs.length}, got ${response.data.length}`,
+                    `Embedding response length mismatch: expected ${inputs.length}, got ${embeddings.length}`,
                     { textLength: inputs.length },
-                    new Error(`OpenAI response length mismatch: expected ${inputs.length}, got ${response.data.length}`)
+                    new Error(`Embedding response length mismatch: expected ${inputs.length}, got ${embeddings.length}`)
                 );
             }
 
-            const totalTokens = response.usage?.total_tokens ?? 0;
+            const totalTokens = embeddings.reduce((sum, emb) => sum + ((emb.usage as any)?.totalTokens ?? 0), 0);
 
-
-            const results = response.data.map((item, idx) => {
+            const results = embeddings.map((embedding, idx: number) => {
                 const chunk = chunks[idx];
                 if (!chunk) {
                     throw RAGError.create('validation', `No chunk found for index ${idx}`, { field: 'chunk' });
@@ -296,7 +297,7 @@ export class EmbeddingGenerator {
 
                 return {
                     chunkId: chunk.chunkId,
-                    embedding: item.embedding,
+                    embedding: embedding.embedding,
                     tokens: chunkTokens,
                 };
             });
