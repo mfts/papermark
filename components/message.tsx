@@ -1,4 +1,5 @@
 import type { ComponentProps, HTMLAttributes } from "react";
+import { forwardRef } from "react";
 import type { UIMessage } from "ai";
 
 import { cn } from "@/lib/utils";
@@ -8,18 +9,23 @@ export type MessageProps = HTMLAttributes<HTMLDivElement> & {
   from: UIMessage["role"];
 };
 
-export const Message = ({ className, from, ...props }: MessageProps) => (
-  <div
-    className={cn(
-      "group flex w-full items-end justify-end gap-2",
-      from === "user" ? "is-user" : "is-assistant flex-row-reverse justify-end",
-      "[&>div]:max-w-[80%]",
-      className,
-    )}
-    data-message-role={from}
-    {...props}
-  />
+export const Message = forwardRef<HTMLDivElement, MessageProps>(
+  ({ className, from, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        "group flex w-full items-end justify-end gap-2",
+        from === "user" ? "is-user" : "is-assistant flex-row-reverse justify-end",
+        "[&>div]:max-w-[80%]",
+        className,
+      )}
+      data-message-role={from}
+      {...props}
+    />
+  )
 );
+
+Message.displayName = "Message";
 
 export type MessageContentProps = HTMLAttributes<HTMLDivElement>;
 

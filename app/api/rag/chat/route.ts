@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
             return createAbortResponse();
         }
         console.log('analysisResult', analysisResult)
-        // 6. Handle chitchat/abusive queries
+        // Handle chitchat/abusive queries
         if (['abusive', 'chitchat'].includes(analysisResult.queryClassification.type)) {
             const contextualResponse = analysisResult.queryClassification.response ||
                 "I'm here to help you with your documents! How can I assist you with questions about your uploaded files?";

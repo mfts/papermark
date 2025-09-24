@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useChatContext } from "@/context/chat-context";
 import { useChat } from "@ai-sdk/react";
@@ -24,6 +24,18 @@ import { ChatLoadingIndicator } from "./chat-loading-indicator";
 import { EnhancedChatInput, Scope } from "./enhanced-chat-input";
 import { type ScopeItem } from "./scope-pill";
 
+const SCROLL_DELAY_MS = 300;
+const SCROLL_THRESHOLD = 0.5;
+const PAGINATION_LIMIT = 20;
+
+const hasCreatedAt = (message: any): message is { createdAt: Date } => {
+  return message && typeof message.createdAt !== "undefined";
+};
+
+const getMessageDate = (message: any): Date => {
+  return hasCreatedAt(message) ? message.createdAt : new Date();
+};
+
 const isAbortError = (error: unknown): boolean => {
   return (
     error instanceof Error &&
@@ -44,42 +56,46 @@ const handleAbortError = (
   }
 };
 
-const MessageComponent = ({ message }: { message: UIMessage }) => {
+const MessageComponent = memo(({ message }: { message: UIMessage }) => {
   const messageKey = `${message.id}-${message.parts?.length || 0}`;
+
+  const renderMessagePart = useCallback(
+    (part: any, index: number) => {
+      if (part.type === "text") {
+        return <Response key={`${message.id}-${index}`}>{part.text}</Response>;
+      }
+
+      if (part.type === "source-url" || part.type === "source-document") {
+        return (
+          <Sources key={`${message.id}-source-${index}`}>
+            <SourcesTrigger count={1}>
+              <div className="text-xs text-muted-foreground">
+                📚 Source: {part.type.replace("source-", "")}
+              </div>
+            </SourcesTrigger>
+            <SourcesContent>
+              <div className="text-sm">
+                <div className="mb-1 font-medium">Document Source</div>
+                <div className="text-muted-foreground">
+                  {part.type === "source-url" && "External URL reference"}
+                  {part.type === "source-document" &&
+                    "Internal document reference"}
+                </div>
+              </div>
+            </SourcesContent>
+          </Sources>
+        );
+      }
+
+      return null;
+    },
+    [message.id],
+  );
 
   return (
     <Message key={messageKey} from={message.role}>
       <MessageContent>
-        {message.parts?.map((part, index) => {
-          if (part.type === "text") {
-            return (
-              <Response key={`${message.id}-${index}`}>{part.text}</Response>
-            );
-          }
-          if (part.type === "source-url" || part.type === "source-document") {
-            return (
-              <Sources key={`${message.id}-source-${index}`}>
-                <SourcesTrigger count={1}>
-                  <div className="text-xs text-muted-foreground">
-                    📚 Source: {part.type.replace("source-", "")}
-                  </div>
-                </SourcesTrigger>
-                <SourcesContent>
-                  <div className="text-sm">
-                    <div className="mb-1 font-medium">Document Source</div>
-                    <div className="text-muted-foreground">
-                      {part.type === "source-url" && "External URL reference"}
-                      {part.type === "source-document" &&
-                        "Internal document reference"}
-                    </div>
-                  </div>
-                </SourcesContent>
-              </Sources>
-            );
-          }
-
-          return null;
-        }) || (
+        {message.parts?.map(renderMessagePart) || (
           <div className="whitespace-pre-wrap leading-relaxed">
             No content available
           </div>
@@ -87,7 +103,9 @@ const MessageComponent = ({ message }: { message: UIMessage }) => {
       </MessageContent>
     </Message>
   );
-};
+});
+
+MessageComponent.displayName = "MessageComponent";
 
 export interface EnhancedChatContainerProps {
   dataroomId?: string;
@@ -128,6 +146,8 @@ export const ChatContainer = memo(function ChatContainer({
   const [error, setError] = useState<string | null>(null);
   const [scopeItems, setScopeItems] = useState<ScopeItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showResponseWrapper, setShowResponseWrapper] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const { setCurrentSession } = useChatContext();
   const {
@@ -142,7 +162,7 @@ export const ChatContainer = memo(function ChatContainer({
     viewerId: viewerId || "",
     linkId: linkId || "",
     enabled: !!sessionId,
-    limit: 20,
+    limit: PAGINATION_LIMIT,
   });
 
   useEffect(() => {
@@ -167,7 +187,6 @@ export const ChatContainer = memo(function ChatContainer({
     messages: newMessages,
     sendMessage,
     status,
-    error: chatError,
     stop,
   } = useChat({
     transport: transportConfig,
@@ -181,17 +200,38 @@ export const ChatContainer = memo(function ChatContainer({
     },
   });
 
-  const allMessages = useMemo(() => {
-    const existingUIMessages: UIMessage[] = existingMessages.map((msg) => ({
-      id: msg.id,
-      role: msg.role,
-      content: msg.content,
-      createdAt: new Date(msg.createdAt),
-      parts: [{ type: "text", text: msg.content }],
-    }));
+  const existingUIMessages = useMemo(
+    () =>
+      existingMessages.map((msg) => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        createdAt: new Date(msg.createdAt),
+        parts: [{ type: "text" as const, text: msg.content }],
+      })),
+    [existingMessages],
+  );
 
-    return [...existingUIMessages, ...newMessages];
-  }, [existingMessages, newMessages]);
+  const currentWrapperMessage = useMemo(() => {
+    if (!showResponseWrapper || newMessages.length === 0) {
+      return null;
+    }
+
+    const lastMessage = newMessages[newMessages.length - 1];
+    return lastMessage.role === "assistant" ? lastMessage : null;
+  }, [showResponseWrapper, newMessages]);
+
+  const allMessages = useMemo(() => {
+    if (!currentWrapperMessage) {
+      return [...existingUIMessages, ...newMessages];
+    }
+
+    const filteredNewMessages = newMessages.filter(
+      (msg) => msg.id !== currentWrapperMessage.id,
+    );
+
+    return [...existingUIMessages, ...filteredNewMessages];
+  }, [existingUIMessages, newMessages, currentWrapperMessage]);
 
   const messageList = useMemo(() => {
     if (allMessages.length === 0) return [];
@@ -199,11 +239,10 @@ export const ChatContainer = memo(function ChatContainer({
     const messagesWithTimeIndicators: React.ReactNode[] = [];
 
     allMessages.forEach((message, index) => {
-      const messageDate = (message as any).createdAt || new Date();
+      const messageDate = getMessageDate(message);
       const prevMessageDate =
-        index > 0
-          ? (allMessages[index - 1] as any).createdAt || new Date()
-          : null;
+        index > 0 ? getMessageDate(allMessages[index - 1]) : null;
+
       const showDateSeparator =
         index > 0 &&
         prevMessageDate &&
@@ -221,7 +260,7 @@ export const ChatContainer = memo(function ChatContainer({
       messagesWithTimeIndicators.push(
         <MessageComponent
           key={`${message.id}-${message.parts?.length || 0}`}
-          message={message}
+          message={message as UIMessage}
         />,
       );
     });
@@ -231,30 +270,34 @@ export const ChatContainer = memo(function ChatContainer({
 
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
-      const { scrollTop } = e.currentTarget;
-      if (scrollTop <= 800 && hasNextPage && !isLoadingMore) {
-        requestAnimationFrame(() => {
-          loadMore();
-        });
+      const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
+      const nearTop = scrollTop < clientHeight * SCROLL_THRESHOLD;
+      if (nearTop && hasNextPage && !isLoadingMore) {
+        loadMore();
       }
     },
     [hasNextPage, isLoadingMore, loadMore],
   );
 
-  const paginationLoadingIndicator = isLoadingMore ? (
-    <div className="flex justify-center">
-      <div className="flex items-center rounded-full border border-border/60 bg-background p-2 shadow-lg backdrop-blur-sm">
-        <Loader />
-      </div>
-    </div>
-  ) : null;
+  const paginationLoadingIndicator = useMemo(
+    () =>
+      isLoadingMore ? (
+        <div className="flex justify-center">
+          <div className="flex items-center rounded-full border border-border/60 bg-background p-2 shadow-lg backdrop-blur-sm">
+            <Loader />
+          </div>
+        </div>
+      ) : null,
+    [isLoadingMore],
+  );
 
   const handleDocumentDrop = useCallback((event: CustomEvent) => {
     const { id, type, name } = event.detail;
     const newScopeItem: ScopeItem = { id, type, name };
 
     setScopeItems((prev) => {
-      if (!prev.some((item) => item.id === newScopeItem.id)) {
+      const existingIds = new Set(prev.map((item) => item.id));
+      if (!existingIds.has(newScopeItem.id)) {
         return [...prev, newScopeItem];
       }
       return prev;
@@ -280,15 +323,41 @@ export const ChatContainer = memo(function ChatContainer({
     stop();
   }, [stop]);
 
+  const scrollToLatestUserMessage = useCallback(() => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isProcessing) {
+      const timeoutId = setTimeout(() => {
+        scrollToLatestUserMessage();
+      }, SCROLL_DELAY_MS);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isProcessing, scrollToLatestUserMessage]);
+
   const handleSubmit = useCallback(
     async (input: string, scope?: Scope) => {
       try {
         setError(null);
         setIsProcessing(true);
+        setShowResponseWrapper(true);
+
         await sendMessage({
           role: "user",
           parts: [{ type: "text", text: input }],
           metadata: { scope, sessionId },
+        });
+
+        requestAnimationFrame(() => {
+          scrollToLatestUserMessage();
         });
       } catch (err) {
         console.error("Error sending message:", err);
@@ -296,7 +365,7 @@ export const ChatContainer = memo(function ChatContainer({
         handleAbortError(err, setError);
       }
     },
-    [sendMessage, sessionId],
+    [sendMessage, sessionId, scrollToLatestUserMessage],
   );
 
   return (
@@ -319,34 +388,41 @@ export const ChatContainer = memo(function ChatContainer({
               </p>
             </div>
           ) : (
-            <Conversation className="h-full" onScroll={handleScroll}>
+            <Conversation
+              className="h-full"
+              onScroll={handleScroll}
+              ref={scrollContainerRef}
+            >
               <ConversationContent className="space-y-4">
                 {paginationLoadingIndicator}
-
                 {messageList}
-
-                {isProcessing && (
-                  <Message from="assistant">
-                    <MessageContent className="overflow-visible">
-                      <ChatLoadingIndicator isVisible={true} />
-                    </MessageContent>
-                  </Message>
-                )}
-                {status === "streaming" && (
-                  <Message from="assistant">
-                    <MessageContent>
-                      <Loader />
-                    </MessageContent>
-                  </Message>
+                {showResponseWrapper && (
+                  <div
+                    style={{
+                      minHeight: "calc(100dvh - 296px)",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "flex-start",
+                    }}
+                  >
+                    {currentWrapperMessage && (
+                      <MessageComponent message={currentWrapperMessage} />
+                    )}
+                    {isProcessing && status !== "streaming" && (
+                      <Message from="assistant">
+                        <MessageContent className="overflow-visible">
+                          <ChatLoadingIndicator isVisible={true} />
+                        </MessageContent>
+                      </Message>
+                    )}
+                  </div>
                 )}
               </ConversationContent>
             </Conversation>
           )}
         </CardContent>
       </Card>
-
       <Separator />
-
       <Card className="border-none">
         <CardContent className="p-1">
           <EnhancedChatInput

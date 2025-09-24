@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -11,11 +11,14 @@ export type ConversationProps = {
 };
 
 export const Conversation = memo(
-  ({ className, children, onScroll }: ConversationProps) => {
-    const outerDiv = useRef<HTMLDivElement>(null);
-    const innerDiv = useRef<HTMLDivElement>(null);
-    const prevInnerDivHeight = useRef<number>(0);
-    const [showMessages, setShowMessages] = useState(false);
+  forwardRef<HTMLDivElement, ConversationProps>(
+    ({ className, children, onScroll }, ref) => {
+      const outerDiv = useRef<HTMLDivElement>(null);
+      const innerDiv = useRef<HTMLDivElement>(null);
+      const prevInnerDivHeight = useRef<number>(0);
+      const [showMessages, setShowMessages] = useState(false);
+
+      useImperativeHandle(ref, () => outerDiv.current!, []);
 
     const getScrollDimensions = useCallback(() => {
       if (!outerDiv.current || !innerDiv.current) {
@@ -25,7 +28,7 @@ export const Conversation = memo(
       const innerDivHeight = innerDiv.current.clientHeight + 28;
       const outerDivScrollTop = outerDiv.current.scrollTop;
       return { outerDivHeight, innerDivHeight, outerDivScrollTop };
-    }, [outerDiv.current, innerDiv.current]);
+    }, []);
 
     useEffect(() => {
       if (!outerDiv.current || !innerDiv.current) return;
@@ -47,7 +50,7 @@ export const Conversation = memo(
       }
 
       prevInnerDivHeight.current = innerDivHeight;
-    }, [children]);
+    }, [children, getScrollDimensions]);
 
     const handleScrollEvent = useCallback(() => {
       if (onScroll) {
@@ -68,22 +71,27 @@ export const Conversation = memo(
       };
     }, [handleScrollEvent]);
 
-    return (
-      <div className={cn("relative flex-1", className)}>
-        <div ref={outerDiv} className="h-full overflow-y-auto" role="log">
-          <div
-            ref={innerDiv}
-            className={cn(
-              "relative transition-all duration-300 ease-in-out",
-              showMessages ? "opacity-100" : "opacity-0",
-            )}
+      return (
+        <div className={cn("relative flex-1", className)}>
+          <div 
+            ref={outerDiv}
+            className="h-full overflow-y-auto" 
+            role="log"
           >
-            {children}
+            <div
+              ref={innerDiv}
+              className={cn(
+                "relative transition-all duration-300 ease-in-out",
+                showMessages ? "opacity-100" : "opacity-0",
+              )}
+            >
+              {children}
+            </div>
           </div>
         </div>
-      </div>
-    );
-  },
+      );
+    }
+  ),
 );
 
 Conversation.displayName = "Conversation";
