@@ -106,7 +106,7 @@ export default async function handle(
           // Get counts without fetching full records
           _count: {
             select: {
-              links: { where: { isArchived: false } },
+              links: true,
               views: { where: { isArchived: false } },
             },
           },
