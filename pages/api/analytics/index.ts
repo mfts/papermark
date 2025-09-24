@@ -237,7 +237,6 @@ export default async function handler(
         const links = await prisma.link.findMany({
           where: {
             teamId,
-            isArchived: false,
             views: {
               some: {
                 viewedAt: intervalFilter,
