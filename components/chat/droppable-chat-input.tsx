@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface DroppableChatInputProps {
   id: string;
-  children: React.ReactElement;
+  children: (props: { isOver: boolean }) => React.ReactNode;
   className?: string;
 }
 
@@ -24,10 +24,6 @@ export function DroppableChatInput({
     },
   });
 
-  const childWithProps = React.cloneElement(children, {
-    isOver,
-  });
-
   return (
     <div
       ref={setNodeRef}
@@ -37,7 +33,7 @@ export function DroppableChatInput({
         className,
       )}
     >
-      {childWithProps}
+      {children({ isOver })}
     </div>
   );
 }

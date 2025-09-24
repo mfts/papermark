@@ -195,8 +195,19 @@ export function EnhancedChatInput({
     maxHeight: MAX_HEIGHT,
   });
 
+  const resetInputState = useCallback(() => {
+    setInput("");
+    setLocalScopeItems([]);
+    setSelectedDocumentIds([]);
+    onScopeItemsChange?.([]);
+    adjustHeight(true);
+  }, [adjustHeight, onScopeItemsChange]);
+
   const handleSubmit = useCallback(async () => {
-    if (!input.trim() || isSubmitting || disabled || isLoading) return;
+    const trimmedInput = input.trim();
+    if (!trimmedInput || isSubmitting || disabled || isLoading) return;
+    setInput("");
+    adjustHeight(true);
 
     setIsSubmitting(true);
     try {
@@ -213,9 +224,8 @@ export function EnhancedChatInput({
         folders: selectedFolderIds,
         folderDocs,
       };
-      await onSubmit(input, scope);
-      setInput("");
-      adjustHeight(true);
+
+      await onSubmit(trimmedInput, scope);
     } catch (error) {
       console.error("Error submitting message:", error);
     } finally {
@@ -237,21 +247,31 @@ export function EnhancedChatInput({
   const handleStop = useCallback(() => {
     if (onStop) {
       onStop();
-      setInput("");
-      adjustHeight(true);
+      resetInputState();
     }
-  }, [onStop, adjustHeight]);
+  }, [onStop, resetInputState]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (isLoading) {
-        handleStop();
-      } else {
-        handleSubmit();
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        if (isLoading) {
+          handleStop();
+        } else {
+          handleSubmit();
+        }
       }
-    }
-  };
+    },
+    [isLoading, handleStop, handleSubmit],
+  );
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setInput(e.target.value);
+      adjustHeight();
+    },
+    [adjustHeight],
+  );
 
   useEffect(() => {
     if (!disabled && !isLoading && !isSubmitting) {
@@ -259,8 +279,18 @@ export function EnhancedChatInput({
     }
   }, [disabled, isLoading, isSubmitting, textareaRef]);
 
-  const isSubmitDisabled =
-    !input.trim() || isSubmitting || disabled || isLoading;
+  const isSubmitDisabled = useMemo(
+    () => !input.trim() || isSubmitting || disabled || isLoading,
+    [input, isSubmitting, disabled, isLoading],
+  );
+
+  const placeholderText = useMemo(() => {
+    if (isLoading) return "Generating response...";
+    if (isSubmitting) return "Sending message...";
+    if (localScopeItems.length > 0)
+      return "Ask about the selected documents...";
+    return placeholder;
+  }, [isLoading, isSubmitting, localScopeItems.length, placeholder]);
 
   return (
     <div className={cn("w-full", className)}>
@@ -268,101 +298,92 @@ export function EnhancedChatInput({
         className="relative w-full max-w-full rounded-[22px] border border-black/5 p-1"
         id="chat-input-drop-zone"
       >
-        <div
-          className={cn(
-            "relative flex flex-col rounded-2xl border bg-neutral-800/5 transition-all duration-300",
-            isLoading
-              ? "border-blue-300/50 shadow-lg shadow-blue-500/10 dark:border-blue-600/50"
-              : isSubmitting
-                ? "border-green-300/50 shadow-lg shadow-green-500/10 dark:border-green-600/50"
-                : "border-black/5",
-          )}
-        >
+        {({ isOver }) => (
           <div
-            className="overflow-y-auto"
-            style={{ maxHeight: `${MAX_HEIGHT}px` }}
-          >
-            <div className="relative">
-              <Textarea
-                id="enhanced-chat-input"
-                name="enhanced-chat-input"
-                aria-label="Enhanced chat message input"
-                value={input}
-                placeholder={
-                  isLoading
-                    ? "Generating response..."
-                    : isSubmitting
-                      ? "Sending message..."
-                      : localScopeItems.length > 0
-                        ? "Ask about the selected documents..."
-                        : placeholder
-                }
-                className="w-full resize-none rounded-2xl rounded-b-none border-none bg-black/5 px-3 py-3 leading-[1.2] focus-visible:ring-0 dark:bg-white/5 dark:text-white"
-                ref={textareaRef}
-                disabled={disabled || isLoading || isSubmitting}
-                onKeyDown={handleKeyDown}
-                onChange={(e) => {
-                  setInput(e.target.value);
-                  adjustHeight();
-                }}
-              />
-            </div>
-          </div>
-          <div className="flex min-h-12 items-center rounded-b-xl bg-black/5 px-3 py-1.5 dark:bg-white/5">
-            {isLoading || isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <Loader className="h-4 w-4 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">
-                  {isSubmitting ? "Sending..." : "Generating..."}
-                </span>
-              </div>
-            ) : (
-              <FileSelectorPopover
-                documents={documents}
-                selectedDocuments={selectedDocumentIds}
-                onDocumentsChange={handleDocumentsChange}
-                folders={folders}
-              />
+            className={cn(
+              "relative flex flex-col rounded-2xl border bg-neutral-800/5 transition-all duration-300",
+              isLoading
+                ? "border-blue-300/50 shadow-lg shadow-blue-500/10 dark:border-blue-600/50"
+                : isSubmitting
+                  ? "border-green-300/50 shadow-lg shadow-green-500/10 dark:border-green-600/50"
+                  : "border-black/5",
             )}
-            <div className="flex flex-1 overflow-hidden">
-              {localScopeItems.length > 0 && !(isLoading || isSubmitting) && (
-                <div className="flex items-center overflow-x-auto px-2">
-                  <ScopePillsContainer
-                    items={localScopeItems}
-                    onRemove={removeScopeItem}
-                    maxVisible={3}
-                  />
+          >
+            <div
+              className="overflow-y-auto"
+              style={{ maxHeight: `${MAX_HEIGHT}px` }}
+            >
+              <div className="relative">
+                <Textarea
+                  id="enhanced-chat-input"
+                  name="enhanced-chat-input"
+                  aria-label="Enhanced chat message input"
+                  value={input}
+                  placeholder={placeholderText}
+                  className="w-full resize-none rounded-2xl rounded-b-none border-none bg-black/5 px-3 py-3 leading-[1.2] focus-visible:ring-0 dark:bg-white/5 dark:text-white"
+                  ref={textareaRef}
+                  disabled={disabled || isLoading || isSubmitting}
+                  onKeyDown={handleKeyDown}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            <div className="flex min-h-12 items-center rounded-b-xl bg-black/5 px-3 py-1.5 dark:bg-white/5">
+              {isLoading || isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <Loader className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">
+                    {isSubmitting ? "Sending..." : "Generating..."}
+                  </span>
                 </div>
+              ) : (
+                <FileSelectorPopover
+                  documents={documents}
+                  selectedDocuments={selectedDocumentIds}
+                  onDocumentsChange={handleDocumentsChange}
+                  folders={folders}
+                />
+              )}
+              <div className="flex flex-1 overflow-hidden">
+                {localScopeItems.length > 0 && !(isLoading || isSubmitting) && (
+                  <div className="flex items-center overflow-x-auto px-2">
+                    <ScopePillsContainer
+                      items={localScopeItems}
+                      onRemove={removeScopeItem}
+                      maxVisible={3}
+                    />
+                  </div>
+                )}
+              </div>
+              {isLoading || isSubmitting ? (
+                <button
+                  type="button"
+                  onClick={handleStop}
+                  className="flex items-center gap-2 rounded-full bg-red-500/10 px-3 py-1.5 text-sm text-red-500 transition-colors hover:bg-red-500/20 focus:outline-none focus:ring-1 focus:ring-red-500 focus:ring-offset-2 dark:bg-red-500/15 dark:hover:bg-red-500/25"
+                  title="Stop generating response"
+                >
+                  <Square className="h-3 w-3" />
+                  <span>Stop</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSubmitDisabled}
+                  className={cn(
+                    "shrink-0 rounded-full p-1 transition-colors focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-2",
+                    isSubmitDisabled
+                      ? "cursor-not-allowed bg-muted text-muted-foreground opacity-60"
+                      : "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/15 dark:hover:bg-primary/25",
+                  )}
+                  title="Send message"
+                >
+                  <ArrowUpIcon className="h-4 w-4" />
+                </button>
               )}
             </div>
-            {isLoading || isSubmitting ? (
-              <button
-                type="button"
-                onClick={handleStop}
-                className="flex items-center gap-2 rounded-full bg-red-500/10 px-3 py-1.5 text-sm text-red-500 transition-colors hover:bg-red-500/20 focus:outline-none focus:ring-1 focus:ring-red-500 focus:ring-offset-2 dark:bg-red-500/15 dark:hover:bg-red-500/25"
-                title="Stop generating response"
-              >
-                <Square className="h-3 w-3" />
-                <span>Stop</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={isSubmitDisabled}
-                className={cn(
-                  "shrink-0 rounded-full p-1 transition-colors focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-2",
-                  isSubmitDisabled
-                    ? "cursor-not-allowed bg-muted text-muted-foreground opacity-60"
-                    : "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/15 dark:hover:bg-primary/25",
-                )}
-                title="Send message"
-              >
-                <ArrowUpIcon className="h-4 w-4" />
-              </button>
-            )}
           </div>
-        </div>
+        )}
       </DroppableChatInput>
     </div>
   );

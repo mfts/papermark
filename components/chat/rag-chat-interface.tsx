@@ -201,7 +201,7 @@ export function RAGChatInterface({
                         {chat.title}
                       </CardTitle>
                       <div className="flex items-center">
-                        <span className="shrink-0 text-xs text-muted-foreground">
+                        <span className="min-w-max shrink-0 text-xs text-muted-foreground">
                           {timeAgo(new Date(chat.updatedAt))}
                         </span>
                       </div>
