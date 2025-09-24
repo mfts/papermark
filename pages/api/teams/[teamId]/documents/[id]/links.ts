@@ -1,13 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { decryptEncrpytedPassword, log } from "@/lib/utils";
-
-import { authOptions } from "../../../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
@@ -43,7 +42,7 @@ export default async function handle(
           ownerId: true,
           _count: {
             select: {
-              links: { where: { isArchived: false } },
+              links: true,
             },
           },
         },
@@ -65,7 +64,6 @@ export default async function handle(
           id: true,
           ownerId: true,
           links: {
-            where: { isArchived: false },
             orderBy: { createdAt: "desc" },
             include: {
               views: { orderBy: { viewedAt: "desc" } },
