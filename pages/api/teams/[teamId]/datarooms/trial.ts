@@ -120,7 +120,7 @@ export default async function handle(
       );
       waitUntil(
         sendDataroomTrial24hReminderEmailTask.trigger(
-          { to: email!, name: fullName.split(" ")[0] },
+          { to: email!, name: fullName.split(" ")[0], teamId },
           { delay: "6d" },
         ),
       );
