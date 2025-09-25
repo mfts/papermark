@@ -85,7 +85,7 @@ export const processDocument = async ({
   });
 
   // determine if the document is download only
-  const isDownloadOnly = type === "zip" || type === "map" || type === "email";
+  const isDownloadOnly = type === "zip" || type === "map" || type === "email" || type === "tsv";
 
   // Save data to the database
   const document = await prisma.document.create({

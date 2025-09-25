@@ -191,8 +191,8 @@ export default function DocumentUpload({
               {currentFile
                 ? "Replace file?"
                 : isFree && !isTrial
-                  ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg`
-                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.rtf, *txt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
+                  ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.tsv, *.ods, *.png, *.jpeg, *.jpg`
+                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.tsv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.rtf, *txt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
             </p>
           </div>
         </div>

@@ -6,6 +6,7 @@ export function getSupportedContentType(contentType: string): string | null {
     case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
     case "application/vnd.ms-excel.sheet.macroEnabled.12":
     case "text/csv":
+    case "text/tab-separated-values":
     case "application/vnd.oasis.opendocument.spreadsheet":
       return "sheet";
     case "application/msword":
@@ -63,6 +64,8 @@ export function getExtensionFromContentType(
       return "xlsm";
     case "text/csv":
       return "csv";
+    case "text/tab-separated-values":
+      return "tsv";
     case "application/vnd.oasis.opendocument.spreadsheet":
       return "ods";
     case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":

@@ -19,8 +19,8 @@ const acceptFileTypes: Record<
     errorMessage: "File type not supported (.png or .jpg only)",
   },
   csv: {
-    types: ["text/csv"],
-    errorMessage: "File type not supported (.csv only)",
+    types: ["text/csv", "text/tab-separated-values"],
+    errorMessage: "File type not supported (.csv or .tsv only)",
   },
 };
 
