@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { Prisma } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
@@ -8,8 +9,6 @@ import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
-
-import { authOptions } from "../../auth/[...nextauth]";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -29,21 +28,19 @@ export default async function handle(
 
     const { id } = req.query as { id: string };
     const { teamId } = req.body as { teamId: string };
+    const userId = (session.user as CustomUser).id;
 
     try {
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: (session.user as CustomUser).id,
-            },
+          userId_teamId: {
+            userId,
+            teamId,
           },
         },
-        select: { id: true },
       });
 
-      if (!team) {
+      if (!teamAccess) {
         return res.status(401).end("Unauthorized");
       }
 
