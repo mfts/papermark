@@ -23,12 +23,34 @@ export const sendDataroomTrialInfoEmailTask = task({
 export const sendDataroomTrial24hReminderEmailTask = task({
   id: "send-dataroom-trial-24h-reminder-email",
   retry: { maxAttempts: 3 },
-  run: async (payload: { to: string; name: string }) => {
-    await sendDataroomTrial24hReminderEmail({
-      email: payload.to,
-      name: payload.name,
+  run: async (payload: { to: string; name: string; teamId: string }) => {
+    const team = await prisma.team.findUnique({
+      where: {
+        id: payload.teamId,
+      },
+      select: {
+        plan: true,
+      },
     });
-    logger.info("Email sent", { to: payload.to });
+
+    if (!team) {
+      logger.error("Team not found", { teamId: payload.teamId });
+      return;
+    }
+
+    // Only send reminder email if team still has trial plan
+    if (team.plan.includes("drtrial")) {
+      await sendDataroomTrial24hReminderEmail({
+        email: payload.to,
+        name: payload.name,
+      });
+      logger.info("Email sent", { to: payload.to, teamId: payload.teamId });
+    } else {
+      logger.info("Team upgraded - no trial reminder needed", {
+        teamId: payload.teamId,
+        plan: team.plan,
+      });
+    }
   },
 });
 
