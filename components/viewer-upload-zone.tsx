@@ -186,7 +186,7 @@ export default function ViewerUploadZone({
                   Drop your file(s) here
                 </span>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Only *.pdf, *.xls, *.xlsx, *.csv, *.ods files
+                  Only *.pdf, *.xls, *.xlsx, *.csv, *.tsv, *.ods files
                 </p>
               </div>
             </div>
