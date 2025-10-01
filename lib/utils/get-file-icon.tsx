@@ -41,6 +41,7 @@ export function fileIcon({
     case "application/vnd.ms-excel":
     case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
     case "text/csv":
+    case "text/tab-separated-values":
     case "application/vnd.oasis.opendocument.spreadsheet":
     case "sheet":
       return <SheetIcon className={className} isLight={isLight} />;

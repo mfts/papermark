@@ -70,6 +70,7 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
   "application/vnd.ms-excel.sheet.macroEnabled.12", // .xlsm
   "text/csv", // .csv
+  "text/tab-separated-values", // .tsv
   "application/vnd.oasis.opendocument.spreadsheet", // .ods
   "application/vnd.ms-powerpoint", // .ppt
   "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
@@ -119,6 +120,7 @@ export const FULL_PLAN_ACCEPTED_FILE_TYPES = {
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
   "application/vnd.ms-excel.sheet.macroEnabled.12": [".xlsm"], // ".xlsm"
   "text/csv": [], // ".csv"
+  "text/tab-separated-values": [".tsv"], // ".tsv"
   "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
   "application/vnd.ms-powerpoint": [], // ".ppt"
   "application/vnd.openxmlformats-officedocument.presentationml.presentation":

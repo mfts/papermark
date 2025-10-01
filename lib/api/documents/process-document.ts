@@ -85,7 +85,11 @@ export const processDocument = async ({
   });
 
   // determine if the document is download only
-  const isDownloadOnly = type === "zip" || type === "map" || type === "email";
+  const isDownloadOnly =
+    type === "zip" ||
+    type === "map" ||
+    type === "email" ||
+    contentType === "text/tab-separated-values";
 
   // Save data to the database
   const document = await prisma.document.create({
@@ -171,7 +175,11 @@ export const processDocument = async ({
     );
   }
 
-  if (type === "video" && contentType !== "video/mp4" && contentType?.startsWith("video/")) {
+  if (
+    type === "video" &&
+    contentType !== "video/mp4" &&
+    contentType?.startsWith("video/")
+  ) {
     await processVideo.trigger(
       {
         videoUrl: key,
