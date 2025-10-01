@@ -583,7 +583,7 @@ export function AddDocumentModal({
                   </CardTitle>
                   <CardDescription>
                     {newVersion ? (
-                      `After you upload a new version, the existing links will remain the unchanged.`
+                      `After you upload a new version, the existing links will remain unchanged.`
                     ) : (
                       <span>
                         After you upload the document, create a shareable link.{" "}
