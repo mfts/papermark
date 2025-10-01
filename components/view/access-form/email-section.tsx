@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
+import { ArrowUpRightIcon } from "lucide-react";
 import { useDebouncedCallback } from "use-debounce";
 
 import { cn } from "@/lib/utils";
@@ -144,8 +145,19 @@ export default function EmailSection({
       )}
       <p className="text-sm text-gray-500">
         {useCustomAccessForm
-          ? "This data will be shared with the content provider."
-          : "This data will be shared with the sender."}
+          ? "This data will be shared with the content provider. "
+          : "This data will be shared with the sender. "}
+        Learn more about how we use and protect your data in our{" "}
+        <a
+          href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/privacy`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center text-gray-500 hover:text-gray-600"
+        >
+          <span>Privacy Policy</span>
+          <ArrowUpRightIcon className="h-4 w-4 text-gray-500" />
+        </a>
+        .
       </p>
     </div>
   );
