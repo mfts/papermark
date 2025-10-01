@@ -6,7 +6,6 @@ import notion from "./index";
 export const addSignedUrls: NotionAPI["addSignedUrls"] = async ({
   recordMap,
   contentBlockIds,
-  kyOptions,
 }) => {
   recordMap.signed_urls = {};
 
@@ -53,10 +52,7 @@ export const addSignedUrls: NotionAPI["addSignedUrls"] = async ({
 
   if (allFileInstances.length > 0) {
     try {
-      const { signedUrls } = await notion.getSignedFileUrls(
-        allFileInstances,
-        kyOptions,
-      );
+      const { signedUrls } = await notion.getSignedFileUrls(allFileInstances);
 
       if (signedUrls.length === allFileInstances.length) {
         for (const [i, file] of allFileInstances.entries()) {
