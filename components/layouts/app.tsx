@@ -16,7 +16,8 @@ import { BlockingModal } from "./blocking-modal";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Default to open (true) if no cookie exists, otherwise use the stored preference
   const cookieValue = Cookies.get(SIDEBAR_COOKIE_NAME);
-  const isSidebarOpen = cookieValue === undefined ? true : cookieValue === "true";
+  const isSidebarOpen =
+    cookieValue === undefined ? true : cookieValue === "true";
 
   return (
     <SidebarProvider defaultOpen={isSidebarOpen}>
