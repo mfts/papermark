@@ -735,7 +735,7 @@ export default function PagesHorizontalViewer({
                             ) : null}
 
                             {/** Automatically Render Overlays **/}
-                            {page.pageLinks
+                            {page.pageLinks && imageDimensions[index]
                               ? page.pageLinks
                                   .filter((link) => link.href.endsWith(".gif"))
                                   .map((link, linkIndex) => {
@@ -752,18 +752,27 @@ export default function PagesHorizontalViewer({
                                     const overlayWidth = x2 - x1;
                                     const overlayHeight = y2 - y1;
 
+                                    // Calculate the offset to center-align with the image
+                                    const containerWidth =
+                                      imageRefs.current[index]?.parentElement
+                                        ?.clientWidth || 0;
+                                    const imageWidth =
+                                      imageDimensions[index].width;
+                                    const leftOffset =
+                                      (containerWidth - imageWidth) / 2;
+
                                     return (
                                       <img
                                         key={`overlay-${index}-${linkIndex}`}
-                                        src={link.href} // Assuming the href points to a GIF or overlay image
+                                        src={link.href}
                                         alt={`Overlay ${index + 1}`}
                                         style={{
                                           position: "absolute",
                                           top: y1,
-                                          left: x1,
+                                          left: x1 + leftOffset,
                                           width: `${overlayWidth}px`,
                                           height: `${overlayHeight}px`,
-                                          pointerEvents: "none", // To ensure the overlay doesn't interfere with interaction
+                                          pointerEvents: "none",
                                         }}
                                       />
                                     );
