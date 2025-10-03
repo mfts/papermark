@@ -141,7 +141,7 @@ export default function AccessForm({
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
-          <form className="space-y-4" onSubmit={onSubmitHandler}>
+          <form className="space-y-4" onSubmit={onSubmitHandler} translate="no">
             {requireAgreement && agreementContent && requireName ? (
               <NameSection {...{ data, setData, brand }} />
             ) : null}

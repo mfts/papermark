@@ -62,8 +62,9 @@ export default function CustomFieldsSection({
                 placeholder={field.placeholder || "+1 123 456 7890"}
                 defaultCountry="US"
                 disabled={field.disabled}
+                translate="no"
                 className={cn(
-                  "flex w-full rounded-md border-0 bg-black text-gray-500 placeholder:text-gray-400 sm:text-sm sm:leading-6",
+                  "notranslate flex w-full rounded-md border-0 bg-black text-gray-500 placeholder:text-gray-400 sm:text-sm sm:leading-6",
                 )}
                 style={
                   {
@@ -102,8 +103,9 @@ export default function CustomFieldsSection({
                     data-1p-ignore
                     required={field.required}
                     disabled={field.disabled}
+                    translate="no"
                     className={cn(
-                      "flex w-full rounded-md border-0 bg-black py-1.5 text-gray-500 shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6",
+                      "notranslate flex w-full rounded-md border-0 bg-black py-1.5 text-gray-500 shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6",
                       isLongText && "min-h-[100px] resize-none",
                     )}
                     style={{
