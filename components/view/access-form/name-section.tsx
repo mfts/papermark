@@ -54,7 +54,8 @@ export default function NameSection({
         autoCorrect="off"
         autoComplete="off"
         autoFocus
-        className="flex w-full rounded-md border-0 bg-black py-1.5 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6"
+        translate="no"
+        className="notranslate flex w-full rounded-md border-0 bg-black py-1.5 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6"
         style={{
           backgroundColor:
             brand && brand.accentColor ? brand.accentColor : "black",
