@@ -932,7 +932,7 @@ export default function PagesVerticalViewer({
                               </map>
                             ) : null}
 
-                            {page.pageLinks
+                            {page.pageLinks && imageDimensions[index]
                               ? page.pageLinks
                                   .filter((link) => link.href.endsWith(".gif"))
                                   .map((link, linkIndex) => {
@@ -949,6 +949,9 @@ export default function PagesVerticalViewer({
                                     const overlayWidth = x2 - x1;
                                     const overlayHeight = y2 - y1;
 
+                                    // Account for the padding on the outer container (px-4 md:px-8)
+                                    const padding = isMobile ? 16 : 32; // 1rem = 16px (px-4), 2rem = 32px (px-8)
+
                                     return (
                                       <img
                                         key={`overlay-${index}-${linkIndex}`}
@@ -957,7 +960,7 @@ export default function PagesVerticalViewer({
                                         style={{
                                           position: "absolute",
                                           top: y1,
-                                          left: x1,
+                                          left: x1 + padding,
                                           width: `${overlayWidth}px`,
                                           height: `${overlayHeight}px`,
                                           pointerEvents: "none",
