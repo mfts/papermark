@@ -102,6 +102,7 @@ export const LinkOptions = ({
     ? limits?.advancedLinkControlsOnPro
     : false;
   const allowWatermarkOnBusiness = limits?.watermarkOnBusiness ?? false;
+  const allowAgreementOnBusiness = limits?.agreementOnBusiness ?? false;
 
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
@@ -217,7 +218,7 @@ export const LinkOptions = ({
               isTrial ||
               isDatarooms ||
               isDataroomsPlus ||
-              allowWatermarkOnBusiness
+              allowAgreementOnBusiness
             }
             handleUpgradeStateChange={handleUpgradeStateChange}
           />
