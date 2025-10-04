@@ -42,6 +42,7 @@ export const configSchema = z.object({
   customDomainInDataroom: z.boolean().optional(),
   advancedLinkControlsOnPro: z.boolean().nullish(),
   watermarkOnBusiness: z.boolean().nullish(),
+  agreementOnBusiness: z.boolean().nullish(),
   conversationsInDataroom: z.boolean().nullish(),
   fileSizeLimits: z
     .object({
