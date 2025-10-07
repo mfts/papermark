@@ -59,10 +59,11 @@ export default async function handle(
     return res.status(200).json(brand);
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/branding
-    const { logo, brandColor, accentColor } = req.body as {
+    const { logo, brandColor, accentColor, welcomeMessage } = req.body as {
       logo?: string;
       brandColor?: string;
       accentColor?: string;
+      welcomeMessage?: string;
     };
 
     // update team with new branding
@@ -71,6 +72,7 @@ export default async function handle(
         logo: logo,
         brandColor,
         accentColor,
+        welcomeMessage,
         teamId: teamId,
       },
     });
@@ -83,10 +85,11 @@ export default async function handle(
     return res.status(200).json(brand);
   } else if (req.method === "PUT") {
     // PUT /api/teams/:teamId/branding
-    const { logo, brandColor, accentColor } = req.body as {
+    const { logo, brandColor, accentColor, welcomeMessage } = req.body as {
       logo?: string;
       brandColor?: string;
       accentColor?: string;
+      welcomeMessage?: string;
     };
 
     const brand = await prisma.brand.update({
@@ -97,6 +100,7 @@ export default async function handle(
         logo,
         brandColor,
         accentColor,
+        welcomeMessage,
       },
     });
 
