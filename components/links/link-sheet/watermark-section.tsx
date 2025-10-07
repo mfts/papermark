@@ -55,17 +55,6 @@ export default function WatermarkSection({
     }
   }, [presets, isAllowed]);
 
-  const handleWatermarkToggle = () => {
-    const updatedWatermark = !enabled;
-
-    setData({
-      ...data,
-      enableWatermark: updatedWatermark,
-      watermarkConfig: watermarkConfig || null,
-    });
-    setEnabled(updatedWatermark);
-  };
-
   const initialconfig: WatermarkConfig = {
     text: watermarkConfig?.text ?? "",
     isTiled: watermarkConfig?.isTiled ?? false,
@@ -74,6 +63,19 @@ export default function WatermarkSection({
     fontSize: watermarkConfig?.fontSize ?? 24,
     rotation: watermarkConfig?.rotation ?? 45,
     position: watermarkConfig?.position ?? "middle-center",
+  };
+
+  const handleWatermarkToggle = () => {
+    const updatedWatermark = !enabled;
+
+    setData({
+      ...data,
+      enableWatermark: updatedWatermark,
+      watermarkConfig: updatedWatermark
+        ? watermarkConfig || initialconfig
+        : null,
+    });
+    setEnabled(updatedWatermark);
   };
 
   const handleConfigSave = (config: WatermarkConfig) => {
