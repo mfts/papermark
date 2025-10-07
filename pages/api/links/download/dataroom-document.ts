@@ -199,7 +199,8 @@ export default async function handle(
       // For PDF files with watermark, always buffer and process
       if (
         downloadDocuments[0].document!.versions[0].type === "pdf" &&
-        view.link.enableWatermark
+        view.link.enableWatermark &&
+        view.link.watermarkConfig
       ) {
         const response = await fetch(
           `${process.env.NEXTAUTH_URL}/api/mupdf/annotate-document`,

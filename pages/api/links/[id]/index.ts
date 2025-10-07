@@ -8,7 +8,7 @@ import {
   fetchDocumentLinkData,
 } from "@/lib/api/links/link-data";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import {
   decryptEncrpytedPassword,
   generateEncrpytedPassword,
@@ -272,6 +272,28 @@ export default async function handle(
       return res.status(400).json({
         error: "No agreement selected.",
       });
+    }
+
+    if (linkData.enableWatermark) {
+      if (!linkData.watermarkConfig) {
+        return res.status(400).json({
+          error:
+            "Watermark configuration is required when watermark is enabled.",
+        });
+      }
+
+      // Validate the watermark config structure
+      const validation = WatermarkConfigSchema.safeParse(
+        linkData.watermarkConfig,
+      );
+      if (!validation.success) {
+        return res.status(400).json({
+          error: "Invalid watermark configuration.",
+          details: validation.error.issues
+            .map((issue) => issue.message)
+            .join(", "),
+        });
+      }
     }
 
     const updatedLink = await prisma.$transaction(async (tx) => {

@@ -6,7 +6,7 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import {
   decryptEncrpytedPassword,
   generateEncrpytedPassword,
@@ -121,6 +121,28 @@ export default async function handler(
         return res.status(400).json({
           error: "No group selected.",
         });
+      }
+
+      if (linkData.enableWatermark) {
+        if (!linkData.watermarkConfig) {
+          return res.status(400).json({
+            error:
+              "Watermark configuration is required when watermark is enabled.",
+          });
+        }
+
+        // Validate the watermark config structure
+        const validation = WatermarkConfigSchema.safeParse(
+          linkData.watermarkConfig,
+        );
+        if (!validation.success) {
+          return res.status(400).json({
+            error: "Invalid watermark configuration.",
+            details: validation.error.issues
+              .map((issue) => issue.message)
+              .join(", "),
+          });
+        }
       }
 
       // Fetch the link and its related document from the database
