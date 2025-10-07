@@ -400,6 +400,7 @@ export async function fetchDocumentLinkData({
       logo: true,
       brandColor: true,
       accentColor: true,
+      welcomeMessage: true,
     },
   });
 
