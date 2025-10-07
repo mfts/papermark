@@ -299,17 +299,24 @@ export default function UploadZone({
         const fileUploadPathName = file?.whereToUploadPath;
         const dataroomUploadPathName = file?.dataroomUploadPath;
 
+        // When uploading to a dataroom, don't specify a folder path for main documents
+        // This ensures documents go to the root of All Documents, not into folders
+        // (since we don't create folder structures in All Documents for dataroom uploads)
+        const mainDocsFolderPath = dataroomId ? undefined : fileUploadPathName;
+
         const response = await createDocument({
           documentData,
           teamId: teamInfo?.currentTeam?.id as string,
           numPages: uploadResult.numPages,
-          folderPathName: fileUploadPathName,
+          folderPathName: mainDocsFolderPath,
         });
 
         // add the new document to the list
         mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`);
 
-        fileUploadPathName &&
+        // Only mutate folder documents if not uploading to dataroom
+        !dataroomId &&
+          fileUploadPathName &&
           mutate(
             `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${fileUploadPathName}`,
           );
@@ -525,7 +532,7 @@ export default function UploadZone({
                 isFirstLevelFolder,
               });
 
-              const { dataroomPath, mainDocsPath } = await createFolderInBoth({
+              const { dataroomPath } = await createFolderInBoth({
                 teamId: teamInfo.currentTeam.id,
                 dataroomId,
                 name: entry.name,
@@ -546,10 +553,9 @@ export default function UploadZone({
                 (subEntry) => !isSystemFile(subEntry.name),
               );
 
-              // Use the resolved paths for all children
-              const resolvedMainDocsPath = mainDocsPath.startsWith("/")
-                ? mainDocsPath.slice(1)
-                : mainDocsPath;
+              // Use the resolved dataroom path for all children
+              // Note: We don't create folders in main documents anymore to avoid pollution
+              // Documents will still be added to All Documents section individually
               const resolvedDataroomPath = dataroomPath.startsWith("/")
                 ? dataroomPath.slice(1)
                 : dataroomPath;
@@ -558,7 +564,7 @@ export default function UploadZone({
                 files.push(
                   ...(await traverseFolder(
                     subEntry,
-                    resolvedMainDocsPath,
+                    undefined, // Don't pass mainDocsPath since we're not creating folders there
                     resolvedDataroomPath,
                   )),
                 );

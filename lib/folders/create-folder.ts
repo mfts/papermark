@@ -112,23 +112,21 @@ export async function createFolderInBoth({
   parentDataroomPath?: string;
   setRejectedFiles: (files: { fileName: string; message: string }[]) => void;
   analytics: any;
-}): Promise<{ dataroomPath: string; mainDocsPath: string }> {
+}): Promise<{ dataroomPath: string; mainDocsPath?: string }> {
   try {
-    const [dataroomResponse, mainDocsResponse] = await Promise.all([
-      createFolderInDataroom({
-        teamId,
-        dataroomId,
-        name,
-        path: parentDataroomPath,
-      }),
-      createFolderInMainDocs({ teamId, name, path: parentMainDocsPath }),
-    ]);
+    // Only create folder in dataroom, not in main documents
+    // This prevents polluting the All Documents section with dataroom folder structures
+    const dataroomResponse = await createFolderInDataroom({
+      teamId,
+      dataroomId,
+      name,
+      path: parentDataroomPath,
+    });
 
     // Track analytics
-    analytics.capture("Folder Added in dataroom and in main documents", {
+    analytics.capture("Folder Added in dataroom", {
       folderName: name,
       dataroomTargetParent: parentDataroomPath,
-      mainDocsTargetParent: parentMainDocsPath,
     });
 
     // Mutate dataroom folders
@@ -137,17 +135,14 @@ export async function createFolderInBoth({
     mutate(
       `/api/teams/${teamId}/datarooms/${dataroomId}/folders/${dataroomResponse.path}`,
     );
-    // mutate main docs folders
-    mutate(`/api/teams/${teamId}/folders?root=true`);
-    mutate(`/api/teams/${teamId}/documents`);
 
     return {
       dataroomPath: dataroomResponse.path,
-      mainDocsPath: mainDocsResponse.path,
+      mainDocsPath: undefined,
     };
   } catch (error) {
     console.error(
-      "An error occurred while creating the folder in both locations: ",
+      "An error occurred while creating the folder in dataroom: ",
       error,
     );
     setRejectedFiles([

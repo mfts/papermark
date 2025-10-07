@@ -72,17 +72,19 @@ export const processDocument = async ({
     }
   }
 
-  const folder = await prisma.folder.findUnique({
-    where: {
-      teamId_path: {
-        teamId,
-        path: "/" + folderPathName,
-      },
-    },
-    select: {
-      id: true,
-    },
-  });
+  const folder = folderPathName
+    ? await prisma.folder.findUnique({
+        where: {
+          teamId_path: {
+            teamId,
+            path: "/" + folderPathName,
+          },
+        },
+        select: {
+          id: true,
+        },
+      })
+    : null;
 
   // determine if the document is download only
   const isDownloadOnly =
