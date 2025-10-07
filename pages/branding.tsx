@@ -6,12 +6,14 @@ import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { Check, CircleHelpIcon, PlusIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
+import sanitizeHtml from "sanitize-html";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { useDebounce } from "use-debounce";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import { useBrand } from "@/lib/swr/use-brand";
-import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
+import { cn, convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
@@ -26,6 +28,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 import { UpgradeButton } from "@/components/ui/upgrade-button";
 
@@ -39,10 +42,44 @@ export default function Branding() {
   const [accentColor, setAccentColor] = useState<string>("#030712");
   const [logo, setLogo] = useState<string | null>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [welcomeMessage, setWelcomeMessage] = useState<string>(
+    "Your action is requested to continue",
+  );
+  const [debouncedBrandColor] = useDebounce(brandColor, 300);
+  const [debouncedAccentColor] = useDebounce(accentColor, 300);
+  const [debouncedWelcomeMessage] = useDebounce(welcomeMessage, 500);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [welcomeMessageError, setWelcomeMessageError] = useState<string | null>(
+    null,
+  );
+
+  // Welcome message validation
+  const MAX_WELCOME_MESSAGE_LENGTH = 80; // Roughly 2 lines of text
+
+  const validateWelcomeMessage = (message: string): string | null => {
+    if (!message.trim()) {
+      return "Welcome message cannot be empty";
+    }
+
+    // Strip HTML tags and validate plain text only
+    const sanitized = sanitizeHtml(message, {
+      allowedTags: [],
+      allowedAttributes: {},
+    });
+
+    if (sanitized !== message) {
+      return "Welcome message must contain only plain text";
+    }
+
+    if (sanitized.length > MAX_WELCOME_MESSAGE_LENGTH) {
+      return `Welcome message must be ${MAX_WELCOME_MESSAGE_LENGTH} characters or less (currently ${sanitized.length})`;
+    }
+
+    return null;
+  };
 
   const onChangeLogo = useCallback(
     (e: any) => {
@@ -75,11 +112,33 @@ export default function Branding() {
       setBrandColor(brand.brandColor || "#000000");
       setAccentColor(brand.accentColor || "#FFFFFF");
       setLogo(brand.logo || null);
+      const message =
+        brand.welcomeMessage || "Your action is requested to continue";
+      setWelcomeMessage(message);
+      // Validate existing message
+      const error = validateWelcomeMessage(message);
+      setWelcomeMessageError(error);
     }
   }, [brand]);
 
+  // Handle welcome message change with validation
+  const handleWelcomeMessageChange = (value: string) => {
+    setWelcomeMessage(value);
+    const error = validateWelcomeMessage(value);
+    setWelcomeMessageError(error);
+  };
+
   const saveBranding = async (e: any) => {
     e.preventDefault();
+
+    // Validate welcome message before saving
+    const welcomeError = validateWelcomeMessage(welcomeMessage);
+    if (welcomeError) {
+      setWelcomeMessageError(welcomeError);
+      toast.error("Please fix the validation errors before saving");
+      return;
+    }
+
     setIsLoading(true);
     let blobUrl: string | null = logo && logo.startsWith("data:") ? null : logo;
     if (logo && logo.startsWith("data:")) {
@@ -89,9 +148,10 @@ export default function Branding() {
     }
 
     const data = {
+      welcomeMessage:
+        welcomeMessage.trim() || "Your action is requested to continue",
       brandColor: brandColor,
       accentColor: accentColor,
-
       logo: blobUrl,
     };
 
@@ -129,6 +189,8 @@ export default function Branding() {
       setLogo(null);
       setBrandColor("#000000");
       setAccentColor("#030712");
+      setWelcomeMessage("Your action is requested to continue");
+      setWelcomeMessageError(null);
       setIsLoading(false);
       toast.success("Branding reset successfully");
       router.reload();
@@ -408,6 +470,46 @@ export default function Branding() {
                           </div>
                         </div>
                       </div>
+                      {/* Welcome Message */}
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="welcome-message">
+                            Welcome Message
+                          </Label>
+                          <span className="text-sm text-muted-foreground">
+                            <span
+                              className={cn(
+                                welcomeMessageError && "text-red-500",
+                              )}
+                            >
+                              {welcomeMessage.length}
+                            </span>
+                            /{MAX_WELCOME_MESSAGE_LENGTH}
+                          </span>
+                        </div>
+                        <Textarea
+                          id="welcome-message"
+                          value={welcomeMessage}
+                          onChange={(e) =>
+                            handleWelcomeMessageChange(e.target.value)
+                          }
+                          placeholder="Your action is requested to continue"
+                          className={cn(
+                            "min-h-10",
+                            welcomeMessageError &&
+                              "border-red-500 focus:border-red-500 focus:ring-red-500",
+                          )}
+                        />
+                        {welcomeMessageError && (
+                          <p className="text-xs text-red-500">
+                            {welcomeMessageError}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          Keep the message concise - it should fit within two
+                          lines for the best user experience.
+                        </p>
+                      </div>
                     </div>
                   </CardContent>
                   <CardFooter className="border-t p-6">
@@ -419,7 +521,11 @@ export default function Branding() {
                         highlightItem={["custom-branding"]}
                       />
                     ) : (
-                      <Button onClick={saveBranding} loading={isLoading}>
+                      <Button
+                        onClick={saveBranding}
+                        loading={isLoading}
+                        disabled={!!welcomeMessageError}
+                      >
                         Save changes
                       </Button>
                     )}
@@ -485,10 +591,10 @@ export default function Branding() {
                             </div>
                           </div>
                           <iframe
-                            key={`document-view-${brandColor}-${accentColor}`}
+                            key={`document-view-${debouncedBrandColor}-${debouncedAccentColor}`}
                             name="document-view"
                             id="document-view"
-                            src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
+                            src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
                             style={{
                               width: "1390px",
                               height: "831px",
@@ -559,10 +665,10 @@ export default function Branding() {
                             </div>
                           </div>
                           <iframe
-                            key={`access-screen-${accentColor}`}
+                            key={`access-screen-${debouncedBrandColor}-${debouncedAccentColor}-${debouncedWelcomeMessage}`}
                             name="access-screen"
                             id="access-screen"
-                            src={`/entrance_ppreview_demo?accentColor=${encodeURIComponent(accentColor)}`}
+                            src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
                             style={{
                               width: "1390px",
                               height: "831px",

@@ -48,6 +48,8 @@ export default function DataroomBrandPage() {
   const [welcomeMessage, setWelcomeMessage] = useState<string>(
     "Your action is requested to continue",
   );
+  const [debouncedBrandColor] = useDebounce(brandColor, 300);
+  const [debouncedAccentColor] = useDebounce(accentColor, 300);
   const [debouncedWelcomeMessage] = useDebounce(welcomeMessage, 500);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -689,10 +691,10 @@ export default function DataroomBrandPage() {
                             </div>
                           </div>
                           <iframe
-                            key={`dataroom-view-${brandColor}-${accentColor}`}
+                            key={`dataroom-view-${debouncedBrandColor}-${debouncedAccentColor}`}
                             name="dataroom-view"
                             id="dataroom-view"
-                            src={`/room_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
+                            src={`/room_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
                             style={{
                               width: "1390px",
                               height: "831px",
@@ -764,10 +766,10 @@ export default function DataroomBrandPage() {
                             </div>
                           </div>
                           <iframe
-                            key={`document-view-${brandColor}-${accentColor}`}
+                            key={`document-view-${debouncedBrandColor}-${debouncedAccentColor}`}
                             name="document-view"
                             id="document-view"
-                            src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
+                            src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
                             style={{
                               width: "1390px",
                               height: "831px",
@@ -838,10 +840,10 @@ export default function DataroomBrandPage() {
                             </div>
                           </div>
                           <iframe
-                            key={`access-screen-${brandColor}-${accentColor}-${debouncedWelcomeMessage}`}
+                            key={`access-screen-${debouncedBrandColor}-${debouncedAccentColor}-${debouncedWelcomeMessage}`}
                             name="access-screen"
                             id="access-screen"
-                            src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
+                            src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
                             style={{
                               width: "1390px",
                               height: "831px",

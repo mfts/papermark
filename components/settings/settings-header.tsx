@@ -43,11 +43,6 @@ export function SettingsHeader() {
             segment: "people",
           },
           {
-            label: "Branding",
-            href: `/settings/branding`,
-            segment: "branding",
-          },
-          {
             label: "Domains",
             href: `/settings/domains`,
             segment: "domains",
