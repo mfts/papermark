@@ -7,6 +7,7 @@ import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
+import { validateContent } from "@/lib/utils/sanitize-html";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
@@ -76,33 +77,41 @@ export default function General() {
   };
 
   const handleTeamNameChange = async (updateData: any) => {
-    analytics.capture("Update Team Name", {
-      teamId,
-      name: updateData.name,
-    });
+    try {
+      // Sanitize and validate team name before sending
+      const sanitizedName = validateContent(updateData.name);
+      
+      analytics.capture("Update Team Name", {
+        teamId,
+        name: sanitizedName,
+      });
 
-    const promise = fetch(`/api/teams/${teamId}/update-name`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(updateData),
-    }).then(async (res) => {
-      if (!res.ok) {
-        const { error } = await res.json();
-        throw new Error(error.message);
-      }
-      await Promise.all([mutate(`/api/teams/${teamId}`), mutate(`/api/teams`)]);
-      return res.json();
-    });
+      const promise = fetch(`/api/teams/${teamId}/update-name`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: sanitizedName }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const { error } = await res.json();
+          throw new Error(error.message);
+        }
+        await Promise.all([mutate(`/api/teams/${teamId}`), mutate(`/api/teams`)]);
+        return res.json();
+      });
 
-    toast.promise(promise, {
-      loading: "Updating team name...",
-      success: "Successfully updated team name!",
-      error: (err) => err.message || "Failed to update team name",
-    });
+      toast.promise(promise, {
+        loading: "Updating team name...",
+        success: "Successfully updated team name!",
+        error: (err) => err.message || "Failed to update team name",
+      });
 
-    return promise;
+      return promise;
+    } catch (error) {
+      toast.error((error as Error).message || "Failed to validate team name");
+      throw error;
+    }
   };
 
   return (
