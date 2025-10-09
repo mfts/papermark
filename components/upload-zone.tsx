@@ -78,6 +78,7 @@ interface UploadZoneProps extends React.PropsWithChildren {
   setRejectedFiles: React.Dispatch<React.SetStateAction<RejectedFile[]>>;
   folderPathName?: string;
   dataroomId?: string;
+  dataroomName?: string;
 }
 
 export default function UploadZone({
@@ -90,6 +91,7 @@ export default function UploadZone({
   setUploads,
   setRejectedFiles,
   dataroomId,
+  dataroomName,
 }: UploadZoneProps) {
   const analytics = useAnalytics();
   const { plan, isFree, isTrial } = usePlan();
@@ -100,6 +102,9 @@ export default function UploadZone({
   const remainingDocuments = limits?.documents
     ? limits?.documents - limits?.usage?.documents
     : 0;
+
+  // Track if we've created the dataroom folder in "All Documents" for non-replication mode
+  const dataroomFolderPathRef = useRef<string | null>(null);
 
   const fileSizeLimits = useMemo(
     () =>
@@ -525,6 +530,64 @@ export default function UploadZone({
                 isFirstLevelFolder,
               });
 
+              // Get team's replication setting, default to true if not set
+              const replicateDataroomFolders =
+                teamInfo.currentTeam?.replicateDataroomFolders ?? true;
+
+              // If replication is disabled and we haven't created the dataroom folder yet, check or create it
+              if (
+                !replicateDataroomFolders &&
+                dataroomName &&
+                !dataroomFolderPathRef.current
+              ) {
+                try {
+                  // First check if the folder already exists
+                  const existingFoldersResponse = await fetch(
+                    `/api/teams/${teamInfo.currentTeam.id}/folders?root=true`,
+                  );
+
+                  if (existingFoldersResponse.ok) {
+                    const existingFolders =
+                      await existingFoldersResponse.json();
+                    const existingDataroomFolder = existingFolders.find(
+                      (folder: any) => folder.name === dataroomName,
+                    );
+
+                    if (existingDataroomFolder) {
+                      // Folder already exists, use it
+                      dataroomFolderPathRef.current =
+                        existingDataroomFolder.path.startsWith("/")
+                          ? existingDataroomFolder.path.slice(1)
+                          : existingDataroomFolder.path;
+                    } else {
+                      // Folder doesn't exist, create it
+                      const dataroomFolderResponse =
+                        await createFolderInMainDocs({
+                          teamId: teamInfo.currentTeam.id,
+                          name: dataroomName,
+                          path: undefined, // Create at root level
+                        });
+                      dataroomFolderPathRef.current =
+                        dataroomFolderResponse.path.startsWith("/")
+                          ? dataroomFolderResponse.path.slice(1)
+                          : dataroomFolderResponse.path;
+
+                      analytics.capture(
+                        "Dataroom Folder Created in Main Docs",
+                        {
+                          folderName: dataroomName,
+                          dataroomId,
+                        },
+                      );
+                    }
+                  }
+                } catch (error) {
+                  console.error("Error handling dataroom folder:", error);
+                  // If there's an error, try to use the dataroom name as path
+                  dataroomFolderPathRef.current = dataroomName;
+                }
+              }
+
               const { dataroomPath, mainDocsPath } = await createFolderInBoth({
                 teamId: teamInfo.currentTeam.id,
                 dataroomId,
@@ -533,6 +596,7 @@ export default function UploadZone({
                 parentDataroomPath: targetParentDataroomPath,
                 setRejectedFiles,
                 analytics,
+                replicateDataroomFolders,
               });
 
               const dirReader = (
@@ -622,7 +686,22 @@ export default function UploadZone({
             ? entry.fullPath.substring(1)
             : entry.fullPath;
 
-          file.whereToUploadPath = parentPathOfThisEntry ?? folderPathName;
+          // Determine where to upload in "All Documents"
+          const replicateDataroomFolders =
+            teamInfo.currentTeam?.replicateDataroomFolders ?? true;
+
+          if (
+            !replicateDataroomFolders &&
+            dataroomId &&
+            dataroomFolderPathRef.current
+          ) {
+            // If replication is disabled, upload all files to the dataroom folder in "All Documents"
+            file.whereToUploadPath = dataroomFolderPathRef.current;
+          } else {
+            // If replication is enabled or not in a dataroom, use the normal folder path
+            file.whereToUploadPath = parentPathOfThisEntry ?? folderPathName;
+          }
+
           file.dataroomUploadPath = dataroomParentPath;
 
           files.push(file);
@@ -673,7 +752,16 @@ export default function UploadZone({
 
       return filesToBePassedToOnDrop;
     },
-    [folderPathName, endpointTargetType, teamInfo],
+    [
+      folderPathName,
+      endpointTargetType,
+      teamInfo,
+      dataroomId,
+      dataroomName,
+      analytics,
+      setRejectedFiles,
+      acceptableDropZoneFileTypes,
+    ],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

@@ -618,6 +618,7 @@ export function DataroomItemsList({
         setUploads={setUploads}
         setRejectedFiles={setRejectedFiles}
         dataroomId={dataroomId}
+        dataroomName={dataroom?.name}
       >
         {isMobile ? (
           <div>

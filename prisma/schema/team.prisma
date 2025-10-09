@@ -43,6 +43,7 @@ model Team {
 
   // team settings
   enableExcelAdvancedMode Boolean @default(false) // Enable Excel advanced mode for all documents in the team
+  replicateDataroomFolders Boolean @default(true) // Replicate dataroom folder structure in "All Documents"
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -308,6 +308,7 @@ export interface Team {
   plan?: string;
   createdAt?: Date;
   enableExcelAdvancedMode?: boolean;
+  replicateDataroomFolders?: boolean;
 }
 
 export interface TeamDetail {
