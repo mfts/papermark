@@ -114,7 +114,7 @@ export async function createFolderInBoth({
   setRejectedFiles: (files: { fileName: string; message: string }[]) => void;
   analytics: any;
   replicateDataroomFolders?: boolean;
-}): Promise<{ dataroomPath: string; mainDocsPath: string }> {
+}): Promise<{ dataroomPath: string; mainDocsPath: string | undefined }> {
   try {
     // Always create folder in dataroom
     const dataroomResponse = await createFolderInDataroom({
@@ -125,7 +125,7 @@ export async function createFolderInBoth({
     });
 
     // Conditionally create folder in main docs based on user preference
-    let mainDocsResponse: CreateFolderResponse;
+    let mainDocsResponse: CreateFolderResponse | undefined;
     if (replicateDataroomFolders) {
       mainDocsResponse = await createFolderInMainDocs({
         teamId,
@@ -133,12 +133,8 @@ export async function createFolderInBoth({
         path: parentMainDocsPath,
       });
     } else {
-      // If not replicating, we still need to return a path for compatibility
-      // Use the dataroom path as the main docs path
-      mainDocsResponse = {
-        path: dataroomResponse.path,
-        name: dataroomResponse.name,
-      };
+      // If not replicating, return undefined to explicitly signal no replication
+      mainDocsResponse = undefined;
     }
 
     // Track analytics
@@ -162,14 +158,14 @@ export async function createFolderInBoth({
     );
 
     // Only mutate main docs folders if we created them
-    if (replicateDataroomFolders) {
+    if (replicateDataroomFolders && mainDocsResponse) {
       mutate(`/api/teams/${teamId}/folders?root=true`);
       mutate(`/api/teams/${teamId}/documents`);
     }
 
     return {
       dataroomPath: dataroomResponse.path,
-      mainDocsPath: mainDocsResponse.path,
+      mainDocsPath: mainDocsResponse?.path,
     };
   } catch (error) {
     console.error(

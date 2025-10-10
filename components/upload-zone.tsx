@@ -611,9 +611,12 @@ export default function UploadZone({
               );
 
               // Use the resolved paths for all children
-              const resolvedMainDocsPath = mainDocsPath.startsWith("/")
-                ? mainDocsPath.slice(1)
-                : mainDocsPath;
+              // Guard against undefined mainDocsPath when replication is disabled
+              const resolvedMainDocsPath = mainDocsPath
+                ? mainDocsPath.startsWith("/")
+                  ? mainDocsPath.slice(1)
+                  : mainDocsPath
+                : undefined;
               const resolvedDataroomPath = dataroomPath.startsWith("/")
                 ? dataroomPath.slice(1)
                 : dataroomPath;
