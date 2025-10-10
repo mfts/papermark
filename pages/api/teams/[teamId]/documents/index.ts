@@ -8,6 +8,7 @@ import { hashToken } from "@/lib/api/auth/token";
 import { processDocument } from "@/lib/api/documents/process-document";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { isTeamPausedById } from "@/lib/team/is-team-paused";
 import { CustomUser } from "@/lib/types";
 import { log, serializeFileSize } from "@/lib/utils";
 import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
@@ -334,6 +335,15 @@ export default async function handle(
 
       if (!team) {
         return res.status(404).end("Team not found");
+      }
+
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. New document uploads are not available.",
+        });
       }
 
       const document = await processDocument({

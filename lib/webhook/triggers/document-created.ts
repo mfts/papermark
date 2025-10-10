@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { isTeamPausedById } from "@/lib/team/is-team-paused";
 import { log } from "@/lib/utils";
 import { sendWebhooks } from "@/lib/webhook/send-webhooks";
 
@@ -22,11 +23,15 @@ export async function sendDocumentCreatedWebhook({
       select: { plan: true },
     });
 
-    if (
-      team?.plan === "free" ||
-      team?.plan === "pro"
-    ) {
+    if (team?.plan === "free" || team?.plan === "pro") {
       // team is not on paid plan, so we don't need to send webhooks
+      return;
+    }
+
+    // check if team is paused
+    const teamIsPaused = await isTeamPausedById(teamId);
+    if (teamIsPaused) {
+      // team is paused, so we don't send webhooks
       return;
     }
 

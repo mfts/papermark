@@ -11,6 +11,7 @@ import { putFileServer } from "@/lib/files/put-file-server";
 import { extractTeamId, isValidWebhookId } from "@/lib/incoming-webhooks";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
+import { isTeamPausedById } from "@/lib/team/is-team-paused";
 import {
   convertDataUrlToBuffer,
   generateEncrpytedPassword,
@@ -232,6 +233,15 @@ async function handleDocumentCreate(
 ) {
   const { fileUrl, name, contentType, dataroomId, createLink, link, folderId } =
     data;
+
+  // Check if team is paused
+  const teamIsPaused = await isTeamPausedById(teamId);
+  if (teamIsPaused) {
+    return res.status(403).json({
+      error:
+        "Team is currently paused. New document uploads are not available.",
+    });
+  }
 
   // Check if the content type is supported
   const supportedContentType = getSupportedContentType(contentType);
@@ -554,6 +564,14 @@ async function handleLinkCreate(
   res: NextApiResponse,
 ) {
   const { targetId, linkType, link } = data;
+
+  // Check if team is paused
+  const teamIsPaused = await isTeamPausedById(teamId);
+  if (teamIsPaused) {
+    return res.status(403).json({
+      error: "Team is currently paused. New link creation is not available.",
+    });
+  }
 
   // Validate target exists and belongs to the team
   if (linkType === "DOCUMENT_LINK") {

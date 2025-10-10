@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { isTeamPausedById } from "@/lib/team/is-team-paused";
 import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import {
   decryptEncrpytedPassword,
@@ -52,17 +53,27 @@ export default async function handler(
     const documentLink = linkType === "DOCUMENT_LINK";
 
     try {
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: { userId },
+          userId_teamId: {
+            userId,
+            teamId,
           },
         },
+        select: { teamId: true },
       });
 
-      if (!team) {
-        return res.status(400).json({ error: "Team not found." });
+      if (!teamAccess) {
+        return res.status(401).json({ error: "Unauthorized." });
+      }
+
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. New link creation is not available.",
+        });
       }
 
       const hashedPassword =
