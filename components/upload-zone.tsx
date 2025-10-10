@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentStorageType } from "@prisma/client";
@@ -104,7 +104,16 @@ export default function UploadZone({
     : 0;
 
   // Track if we've created the dataroom folder in "All Documents" for non-replication mode
+  // Using promise-lock pattern to prevent race conditions during concurrent folder creation
   const dataroomFolderPathRef = useRef<string | null>(null);
+  const dataroomFolderCreationPromiseRef = useRef<Promise<string> | null>(null);
+
+  // Reset the cached dataroom folder path when the replication setting changes
+  // This ensures we don't use stale cached paths if the setting is toggled
+  useEffect(() => {
+    dataroomFolderPathRef.current = null;
+    dataroomFolderCreationPromiseRef.current = null;
+  }, [teamInfo?.currentTeam?.replicateDataroomFolders]);
 
   const fileSizeLimits = useMemo(
     () =>
@@ -120,6 +129,85 @@ export default function UploadZone({
     isFree && !isTrial
       ? acceptableDropZoneMimeTypesWhenIsFreePlanAndNotTrial
       : allAcceptableDropZoneMimeTypes;
+
+  // Helper function to get or create the dataroom folder in "All Documents"
+  // Uses promise-lock pattern to prevent concurrent creation attempts
+  const getOrCreateDataroomFolder = useCallback(async (): Promise<string> => {
+    // If we already have the path cached, return it immediately
+    if (dataroomFolderPathRef.current) {
+      return dataroomFolderPathRef.current;
+    }
+
+    // If there's an ongoing creation, await it
+    if (dataroomFolderCreationPromiseRef.current) {
+      return dataroomFolderCreationPromiseRef.current;
+    }
+
+    // Start a new creation process
+    const creationPromise = (async () => {
+      try {
+        if (!teamInfo?.currentTeam?.id || !dataroomName) {
+          throw new Error("Missing team ID or dataroom name");
+        }
+
+        // First check if the folder already exists
+        const existingFoldersResponse = await fetch(
+          `/api/teams/${teamInfo.currentTeam.id}/folders?root=true`,
+        );
+
+        if (existingFoldersResponse.ok) {
+          const existingFolders = await existingFoldersResponse.json();
+          const existingDataroomFolder = existingFolders.find(
+            (folder: any) => folder.name === dataroomName,
+          );
+
+          if (existingDataroomFolder) {
+            // Folder already exists, use it
+            const folderPath = existingDataroomFolder.path.startsWith("/")
+              ? existingDataroomFolder.path.slice(1)
+              : existingDataroomFolder.path;
+            dataroomFolderPathRef.current = folderPath;
+            return folderPath;
+          }
+        }
+
+        // Folder doesn't exist, create it
+        const dataroomFolderResponse = await createFolderInMainDocs({
+          teamId: teamInfo.currentTeam.id,
+          name: dataroomName,
+          path: undefined, // Create at root level
+        });
+
+        const folderPath = dataroomFolderResponse.path.startsWith("/")
+          ? dataroomFolderResponse.path.slice(1)
+          : dataroomFolderResponse.path;
+
+        dataroomFolderPathRef.current = folderPath;
+
+        analytics.capture("Dataroom Folder Created in Main Docs", {
+          folderName: dataroomName,
+          dataroomId,
+        });
+
+        return folderPath;
+      } catch (error) {
+        console.error("Error handling dataroom folder:", error);
+        // Clear the promise ref on error so subsequent attempts can retry
+        dataroomFolderCreationPromiseRef.current = null;
+        // Use dataroom name as fallback path
+        const fallbackPath = dataroomName || "";
+        dataroomFolderPathRef.current = fallbackPath;
+        return fallbackPath;
+      } finally {
+        // Clear the promise ref once creation is complete
+        dataroomFolderCreationPromiseRef.current = null;
+      }
+    })();
+
+    // Store the promise so concurrent callers can await it
+    dataroomFolderCreationPromiseRef.current = creationPromise;
+    return creationPromise;
+  }, [teamInfo, dataroomName, dataroomId, analytics]);
 
   // this var will help to determine the correct api endpoint to request folder creation (If needed).
   const endpointTargetType = dataroomId
@@ -534,58 +622,10 @@ export default function UploadZone({
               const replicateDataroomFolders =
                 teamInfo.currentTeam?.replicateDataroomFolders ?? true;
 
-              // If replication is disabled and we haven't created the dataroom folder yet, check or create it
-              if (
-                !replicateDataroomFolders &&
-                dataroomName &&
-                !dataroomFolderPathRef.current
-              ) {
-                try {
-                  // First check if the folder already exists
-                  const existingFoldersResponse = await fetch(
-                    `/api/teams/${teamInfo.currentTeam.id}/folders?root=true`,
-                  );
-
-                  if (existingFoldersResponse.ok) {
-                    const existingFolders =
-                      await existingFoldersResponse.json();
-                    const existingDataroomFolder = existingFolders.find(
-                      (folder: any) => folder.name === dataroomName,
-                    );
-
-                    if (existingDataroomFolder) {
-                      // Folder already exists, use it
-                      dataroomFolderPathRef.current =
-                        existingDataroomFolder.path.startsWith("/")
-                          ? existingDataroomFolder.path.slice(1)
-                          : existingDataroomFolder.path;
-                    } else {
-                      // Folder doesn't exist, create it
-                      const dataroomFolderResponse =
-                        await createFolderInMainDocs({
-                          teamId: teamInfo.currentTeam.id,
-                          name: dataroomName,
-                          path: undefined, // Create at root level
-                        });
-                      dataroomFolderPathRef.current =
-                        dataroomFolderResponse.path.startsWith("/")
-                          ? dataroomFolderResponse.path.slice(1)
-                          : dataroomFolderResponse.path;
-
-                      analytics.capture(
-                        "Dataroom Folder Created in Main Docs",
-                        {
-                          folderName: dataroomName,
-                          dataroomId,
-                        },
-                      );
-                    }
-                  }
-                } catch (error) {
-                  console.error("Error handling dataroom folder:", error);
-                  // If there's an error, try to use the dataroom name as path
-                  dataroomFolderPathRef.current = dataroomName;
-                }
+              // If replication is disabled, ensure the dataroom folder exists in "All Documents"
+              // Uses promise-lock pattern to prevent race conditions
+              if (!replicateDataroomFolders && dataroomName) {
+                await getOrCreateDataroomFolder();
               }
 
               const { dataroomPath, mainDocsPath } = await createFolderInBoth({
@@ -693,13 +733,11 @@ export default function UploadZone({
           const replicateDataroomFolders =
             teamInfo.currentTeam?.replicateDataroomFolders ?? true;
 
-          if (
-            !replicateDataroomFolders &&
-            dataroomId &&
-            dataroomFolderPathRef.current
-          ) {
-            // If replication is disabled, upload all files to the dataroom folder in "All Documents"
-            file.whereToUploadPath = dataroomFolderPathRef.current;
+          if (!replicateDataroomFolders && dataroomId && dataroomName) {
+            // If replication is disabled, ensure the dataroom folder exists and use it
+            // This await is safe because getOrCreateDataroomFolder uses a promise-lock
+            const dataroomFolderPath = await getOrCreateDataroomFolder();
+            file.whereToUploadPath = dataroomFolderPath;
           } else {
             // If replication is enabled or not in a dataroom, use the normal folder path
             file.whereToUploadPath = parentPathOfThisEntry ?? folderPathName;
@@ -764,6 +802,7 @@ export default function UploadZone({
       analytics,
       setRejectedFiles,
       acceptableDropZoneFileTypes,
+      getOrCreateDataroomFolder,
     ],
   );
 

@@ -15,12 +15,14 @@ export function useTeams() {
     fetcher,
     {
       dedupingInterval: 20000,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
     },
   );
 
   return {
     teams,
-    loading: !teams && (router.isReady && !!session),
+    loading: !teams && router.isReady && !!session,
     isValidating,
   };
 }
