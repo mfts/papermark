@@ -104,6 +104,7 @@ export async function createFolderInBoth({
   parentDataroomPath,
   setRejectedFiles,
   analytics,
+  replicateDataroomFolders = true,
 }: {
   teamId: string;
   dataroomId: string;
@@ -112,24 +113,42 @@ export async function createFolderInBoth({
   parentDataroomPath?: string;
   setRejectedFiles: (files: { fileName: string; message: string }[]) => void;
   analytics: any;
-}): Promise<{ dataroomPath: string; mainDocsPath: string }> {
+  replicateDataroomFolders?: boolean;
+}): Promise<{ dataroomPath: string; mainDocsPath: string | undefined }> {
   try {
-    const [dataroomResponse, mainDocsResponse] = await Promise.all([
-      createFolderInDataroom({
+    // Always create folder in dataroom
+    const dataroomResponse = await createFolderInDataroom({
+      teamId,
+      dataroomId,
+      name,
+      path: parentDataroomPath,
+    });
+
+    // Conditionally create folder in main docs based on user preference
+    let mainDocsResponse: CreateFolderResponse | undefined;
+    if (replicateDataroomFolders) {
+      mainDocsResponse = await createFolderInMainDocs({
         teamId,
-        dataroomId,
         name,
-        path: parentDataroomPath,
-      }),
-      createFolderInMainDocs({ teamId, name, path: parentMainDocsPath }),
-    ]);
+        path: parentMainDocsPath,
+      });
+    } else {
+      // If not replicating, return undefined to explicitly signal no replication
+      mainDocsResponse = undefined;
+    }
 
     // Track analytics
-    analytics.capture("Folder Added in dataroom and in main documents", {
-      folderName: name,
-      dataroomTargetParent: parentDataroomPath,
-      mainDocsTargetParent: parentMainDocsPath,
-    });
+    analytics.capture(
+      replicateDataroomFolders
+        ? "Folder Added in dataroom and in main documents"
+        : "Folder Added in dataroom only",
+      {
+        folderName: name,
+        dataroomTargetParent: parentDataroomPath,
+        mainDocsTargetParent: parentMainDocsPath,
+        replicateDataroomFolders,
+      },
+    );
 
     // Mutate dataroom folders
     mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/folders?root=true`);
@@ -137,13 +156,16 @@ export async function createFolderInBoth({
     mutate(
       `/api/teams/${teamId}/datarooms/${dataroomId}/folders/${dataroomResponse.path}`,
     );
-    // mutate main docs folders
-    mutate(`/api/teams/${teamId}/folders?root=true`);
-    mutate(`/api/teams/${teamId}/documents`);
+
+    // Only mutate main docs folders if we created them
+    if (replicateDataroomFolders && mainDocsResponse) {
+      mutate(`/api/teams/${teamId}/folders?root=true`);
+      mutate(`/api/teams/${teamId}/documents`);
+    }
 
     return {
       dataroomPath: dataroomResponse.path,
-      mainDocsPath: mainDocsResponse.path,
+      mainDocsPath: mainDocsResponse?.path,
     };
   } catch (error) {
     console.error(

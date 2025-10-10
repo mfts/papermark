@@ -76,11 +76,46 @@ export default function General() {
     return promise;
   };
 
+  const handleReplicateFoldersChange = async (data: {
+    replicateDataroomFolders: string;
+  }) => {
+    analytics.capture("Toggle Replicate Dataroom Folders", {
+      teamId,
+      replicateDataroomFolders: data.replicateDataroomFolders === "true",
+    });
+
+    const promise = fetch(`/api/teams/${teamId}/update-replicate-folders`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        replicateDataroomFolders: data.replicateDataroomFolders === "true",
+      }),
+    }).then(async (res) => {
+      if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error.message);
+      }
+      await Promise.all([mutate(`/api/teams/${teamId}`), mutate(`/api/teams`)]);
+      return res.json();
+    });
+
+    toast.promise(promise, {
+      loading: "Updating folder replication setting...",
+      success: "Successfully updated folder replication setting!",
+      error: (err) =>
+        err.message || "Failed to update folder replication setting",
+    });
+
+    return promise;
+  };
+
   const handleTeamNameChange = async (updateData: any) => {
     try {
       // Sanitize and validate team name before sending
       const sanitizedName = validateContent(updateData.name);
-      
+
       analytics.capture("Update Team Name", {
         teamId,
         name: sanitizedName,
@@ -97,7 +132,10 @@ export default function General() {
           const { error } = await res.json();
           throw new Error(error.message);
         }
-        await Promise.all([mutate(`/api/teams/${teamId}`), mutate(`/api/teams`)]);
+        await Promise.all([
+          mutate(`/api/teams/${teamId}`),
+          mutate(`/api/teams`),
+        ]);
         return res.json();
       });
 
@@ -155,6 +193,21 @@ export default function General() {
             helpText="When enabled, newly uploaded Excel files will be viewed using the Microsoft Office viewer for better formatting and compatibility."
             handleSubmit={handleExcelAdvancedModeChange}
             plan={(isFree && !isTrial) || isPro ? "Business" : undefined}
+          />
+
+          <Form
+            title="Replicate Dataroom Folders"
+            description="When uploading folders to a dataroom, also replicate the folder structure in 'All Documents'."
+            inputAttrs={{
+              name: "replicateDataroomFolders",
+              type: "checkbox",
+              placeholder: "Replicate folder structure in All Documents",
+            }}
+            defaultValue={String(
+              teamInfo?.currentTeam?.replicateDataroomFolders ?? true,
+            )}
+            helpText="When enabled, folders uploaded to datarooms will be created in 'All Documents' with the same structure. When disabled, all documents will be placed in a single folder named after the dataroom in 'All Documents'."
+            handleSubmit={handleReplicateFoldersChange}
           />
           <IgnoredDomainsForm />
           <GlobalBlockListForm />

@@ -1,13 +1,14 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-
-
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import { useTeams } from "@/lib/swr/use-teams";
 import { Team } from "@/lib/types";
-
-
-
-
 
 interface TeamContextProps {
   children: React.ReactNode;
