@@ -7,6 +7,7 @@ import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
+import { useTeamSettings } from "@/lib/swr/use-team-settings";
 import { validateContent } from "@/lib/utils/sanitize-html";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
@@ -25,6 +26,9 @@ export default function General() {
   const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
   const [planModalTrigger, setPlanModalTrigger] = useState<string>("");
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
+
+  // Fetch fresh team settings with proper revalidation
+  const { settings: teamSettings } = useTeamSettings(teamId);
 
   const showUpgradeModal = (plan: PlanEnum, trigger: string) => {
     setSelectedPlan(plan);
@@ -62,7 +66,11 @@ export default function General() {
         const { error } = await res.json();
         throw new Error(error.message);
       }
-      await Promise.all([mutate(`/api/teams/${teamId}`), mutate(`/api/teams`)]);
+      await Promise.all([
+        mutate(`/api/teams/${teamId}`),
+        mutate(`/api/teams`),
+        mutate(`/api/teams/${teamId}/settings`),
+      ]);
       return res.json();
     });
 
@@ -97,7 +105,11 @@ export default function General() {
         const { error } = await res.json();
         throw new Error(error.message);
       }
-      await Promise.all([mutate(`/api/teams/${teamId}`), mutate(`/api/teams`)]);
+      await Promise.all([
+        mutate(`/api/teams/${teamId}`),
+        mutate(`/api/teams`),
+        mutate(`/api/teams/${teamId}/settings`),
+      ]);
       return res.json();
     });
 
@@ -188,7 +200,7 @@ export default function General() {
               placeholder: "Enable advanced mode for Excel files",
             }}
             defaultValue={String(
-              teamInfo?.currentTeam?.enableExcelAdvancedMode ?? false,
+              teamSettings?.enableExcelAdvancedMode ?? false,
             )}
             helpText="When enabled, newly uploaded Excel files will be viewed using the Microsoft Office viewer for better formatting and compatibility."
             handleSubmit={handleExcelAdvancedModeChange}
@@ -204,7 +216,7 @@ export default function General() {
               placeholder: "Replicate folder structure in All Documents",
             }}
             defaultValue={String(
-              teamInfo?.currentTeam?.replicateDataroomFolders ?? true,
+              teamSettings?.replicateDataroomFolders ?? true,
             )}
             helpText="When enabled, folders uploaded to datarooms will be created in 'All Documents' with the same structure. When disabled, all documents will be placed in a single folder named after the dataroom in 'All Documents'."
             handleSubmit={handleReplicateFoldersChange}
