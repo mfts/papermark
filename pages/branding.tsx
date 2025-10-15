@@ -485,7 +485,12 @@ export default function Branding() {
                   <CardContent className="pt-6">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="welcome-message">Welcome Message</Label>
+                        <Label htmlFor="accent-color">
+                          Welcome Message{" "}
+                          <span className="font-normal text-muted-foreground">
+                            (front page)
+                          </span>
+                        </Label>
                         <span className="text-sm text-muted-foreground">
                           <span
                             className={cn(
