@@ -13,17 +13,11 @@ import { daysLeft } from "@/lib/utils";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { AddDataroomModal } from "@/components/datarooms/add-dataroom-modal";
+import DataroomCard from "@/components/datarooms/dataroom-card";
 import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
 import { EmptyDataroom } from "@/components/datarooms/empty-dataroom";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 export default function DataroomsPage() {
@@ -40,6 +34,11 @@ export default function DataroomsPage() {
     isDatarooms ||
     isDataroomsPlus ||
     (isBusiness && numDatarooms < limitDatarooms);
+
+  // Sort datarooms alphabetically by name
+  const sortedDatarooms = datarooms?.sort((a, b) => {
+    return a.name.localeCompare(b.name);
+  });
 
   useEffect(() => {
     if (!isTrial && (isFree || isPro)) router.push("/documents");
@@ -127,51 +126,15 @@ export default function DataroomsPage() {
 
         <div className="space-y-4">
           <ul className="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-2 xl:grid-cols-3">
-            {datarooms &&
-              datarooms.map((dataroom) => (
-                <Link
-                  key={dataroom.id}
-                  href={`/datarooms/${dataroom.id}/documents`}
-                >
-                  <Card className="group relative overflow-hidden duration-500 hover:border-primary/50">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="truncate">
-                          {dataroom.name}
-                        </CardTitle>
-                      </div>
-                      {/* <CardDescription>{dataroom.pId}</CardDescription> */}
-                    </CardHeader>
-                    <CardContent>
-                      <dl className="divide-y divide-gray-100 text-sm leading-6">
-                        <div className="flex justify-between gap-x-4 py-3">
-                          <dt className="text-gray-500 dark:text-gray-400">
-                            Documents
-                          </dt>
-                          <dd className="flex items-start gap-x-2">
-                            <div className="font-medium text-gray-900 dark:text-gray-200">
-                              {dataroom._count.documents ?? 0}
-                            </div>
-                          </dd>
-                        </div>
-                        <div className="flex justify-between gap-x-4 py-3">
-                          <dt className="text-gray-500 dark:text-gray-400">
-                            Views
-                          </dt>
-                          <dd className="flex items-start gap-x-2">
-                            <div className="font-medium text-gray-900 dark:text-gray-200">
-                              {dataroom._count.views ?? 0}
-                            </div>
-                          </dd>
-                        </div>
-                      </dl>
-                    </CardContent>
-                  </Card>
-                </Link>
+            {sortedDatarooms &&
+              sortedDatarooms.map((dataroom) => (
+                <li key={dataroom.id}>
+                  <DataroomCard dataroom={dataroom} />
+                </li>
               ))}
           </ul>
 
-          {datarooms && datarooms.length === 0 && (
+          {sortedDatarooms && sortedDatarooms.length === 0 && (
             <div className="flex items-center justify-center">
               <EmptyDataroom />
             </div>

@@ -9,6 +9,15 @@ export type DataroomWithCount = Dataroom & {
     documents: number;
     views: number;
   };
+  links: {
+    id: string;
+    isArchived: boolean;
+    expiresAt: Date | null;
+    createdAt: Date;
+  }[];
+  views: {
+    viewedAt: Date;
+  }[];
 };
 
 export default function useDatarooms() {

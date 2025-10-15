@@ -48,6 +48,29 @@ export default async function handle(
           _count: {
             select: { documents: true, views: true },
           },
+          links: {
+            where: {
+              linkType: "DATAROOM_LINK",
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            select: {
+              id: true,
+              isArchived: true,
+              expiresAt: true,
+              createdAt: true,
+            },
+          },
+          views: {
+            orderBy: {
+              viewedAt: "desc",
+            },
+            take: 1,
+            select: {
+              viewedAt: true,
+            },
+          },
         },
       });
 
@@ -83,9 +106,9 @@ export default async function handle(
               "business+old",
               "datarooms+old",
               "datarooms-plus+old",
-              "datarooms+drtrial", 
-              "business+drtrial", 
-              "datarooms-plus+drtrial"
+              "datarooms+drtrial",
+              "business+drtrial",
+              "datarooms-plus+drtrial",
             ],
           },
           users: {
