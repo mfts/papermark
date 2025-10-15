@@ -49,13 +49,19 @@ export function NavMain({ items }: { items: NavItem[] }) {
       <SidebarMenu className="space-y-0.5 text-foreground">
         {items.map((item) => (
           <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
-            <SidebarMenuItem
-              className={cn(
-                item.current &&
-                  "rounded-md bg-gray-200 font-semibold dark:bg-secondary",
-              )}
-            >
-              <SidebarMenuButton asChild tooltip={item.title}>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip={item.title}
+                className={cn(
+                  item.current &&
+                    item.items?.length &&
+                    "rounded-md bg-gray-200 font-semibold dark:bg-secondary",
+                  item.current &&
+                    !item.items?.length &&
+                    "rounded-md bg-gray-200 font-semibold dark:bg-secondary",
+                )}
+              >
                 {item.disabled ? (
                   <UpgradePlanModal
                     key={item.title}
