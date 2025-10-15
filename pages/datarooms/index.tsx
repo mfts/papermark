@@ -6,6 +6,11 @@ import { useEffect } from "react";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { PlusIcon } from "lucide-react";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import useDatarooms from "@/lib/swr/use-datarooms";
+import useLimits from "@/lib/swr/use-limits";
+import { daysLeft } from "@/lib/utils";
+
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { AddDataroomModal } from "@/components/datarooms/add-dataroom-modal";
 import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
@@ -20,11 +25,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-
-import { usePlan } from "@/lib/swr/use-billing";
-import useDatarooms from "@/lib/swr/use-datarooms";
-import useLimits from "@/lib/swr/use-limits";
-import { daysLeft } from "@/lib/utils";
 
 export default function DataroomsPage() {
   const { datarooms } = useDatarooms();
@@ -79,7 +79,13 @@ export default function DataroomsPage() {
                 <div className="text-sm text-destructive">
                   <span>Dataroom Trial: </span>
                   <span className="font-medium">
-                    {daysLeft(new Date(datarooms[0].createdAt), 7)} days left
+                    {(() => {
+                      const days = daysLeft(
+                        new Date(datarooms[0].createdAt),
+                        7,
+                      );
+                      return days <= 0 ? "Expired" : `${days} days left`;
+                    })()}
                   </span>
                 </div>
                 <UpgradePlanModal

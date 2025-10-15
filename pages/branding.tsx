@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
-import { Check, CircleHelpIcon, PlusIcon } from "lucide-react";
+import { Check, CircleHelpIcon, UploadIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import sanitizeHtml from "sanitize-html";
 import { toast } from "sonner";
@@ -199,7 +199,7 @@ export default function Branding() {
 
   return (
     <AppLayout>
-      <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
+      <div className="relative mx-2 mb-10 mt-4 space-y-8 px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
         <header>
           <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
             <div className="space-y-1">
@@ -255,451 +255,480 @@ export default function Branding() {
               </p>
             </div>
           </div>
-          <div>
-            <Card className="dark:bg-secondary">
-              <div className="flex w-full flex-col justify-between gap-y-4 md:flex-row md:gap-x-4 md:gap-y-0">
-                <Card className="min-w-max dark:bg-secondary">
+
+          {/* Main Layout */}
+          <div className="flex w-full flex-col gap-6 lg:flex-row lg:gap-8">
+            {/* Settings Column */}
+            <div className="flex w-full flex-col gap-6 lg:w-[480px] lg:shrink-0">
+              {/* Scrollable Settings */}
+              <div className="flex flex-col gap-6 lg:max-h-[calc(100vh-400px)] lg:overflow-y-auto lg:pr-4">
+                {/* Logo Card */}
+                <Card>
                   <CardContent className="pt-6">
-                    <div className="grid gap-6">
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="logo">
-                            Logo{" "}
-                            <span className="text-sm italic text-muted-foreground">
-                              (max 2 MB)
-                            </span>
-                          </Label>
-                          {fileError ? (
-                            <p className="text-sm text-red-500">{fileError}</p>
-                          ) : null}
-                        </div>
-                        <label
-                          htmlFor="image"
-                          className="group relative mt-1 flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
-                        >
-                          {false && (
-                            <div className="absolute z-[5] flex h-full w-full items-center justify-center rounded-md bg-white">
-                              <LoadingSpinner />
-                            </div>
-                          )}
-                          <div
-                            className="absolute z-[5] h-full w-full rounded-md"
-                            onDragOver={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setDragActive(true);
-                            }}
-                            onDragEnter={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setDragActive(true);
-                            }}
-                            onDragLeave={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setDragActive(false);
-                            }}
-                            onDrop={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setDragActive(false);
-                              setFileError(null);
-                              const file =
-                                e.dataTransfer.files && e.dataTransfer.files[0];
-                              if (file) {
-                                if (file.size / 1024 / 1024 > 2) {
-                                  setFileError("File size too big (max 2MB)");
-                                } else if (
-                                  file.type !== "image/png" &&
-                                  file.type !== "image/jpeg"
-                                ) {
-                                  setFileError(
-                                    "File type not supported (.png or .jpg only)",
-                                  );
-                                } else {
-                                  const reader = new FileReader();
-                                  reader.onload = (e) => {
-                                    const dataUrl = e.target?.result as string;
-                                    setLogo(dataUrl);
-                                    // create a blob url for preview
-                                    const blob = convertDataUrlToFile({
-                                      dataUrl,
-                                    });
-                                    const blobUrl = URL.createObjectURL(blob);
-                                    setBlobUrl(blobUrl);
-                                  };
-                                  reader.readAsDataURL(file);
-                                }
+                    <div className="space-y-2">
+                      <Label htmlFor="image">
+                        Logo{" "}
+                        <span className="font-normal text-muted-foreground">
+                          (max 2 MB)
+                        </span>
+                      </Label>
+                      <label
+                        htmlFor="image"
+                        className="group relative mt-2 flex h-20 w-48 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-all hover:border-gray-400 hover:bg-gray-100"
+                      >
+                        <div
+                          className="absolute z-[5] h-full w-full rounded-lg"
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setDragActive(true);
+                          }}
+                          onDragEnter={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setDragActive(true);
+                          }}
+                          onDragLeave={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setDragActive(false);
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setDragActive(false);
+                            setFileError(null);
+                            const file =
+                              e.dataTransfer.files && e.dataTransfer.files[0];
+                            if (file) {
+                              if (file.size / 1024 / 1024 > 2) {
+                                setFileError("File size too big (max 2MB)");
+                              } else if (
+                                file.type !== "image/png" &&
+                                file.type !== "image/jpeg"
+                              ) {
+                                setFileError(
+                                  "File type not supported (.png or .jpg only)",
+                                );
+                              } else {
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                  const dataUrl = e.target?.result as string;
+                                  setLogo(dataUrl);
+                                  const blob = convertDataUrlToFile({
+                                    dataUrl,
+                                  });
+                                  const blobUrl = URL.createObjectURL(blob);
+                                  setBlobUrl(blobUrl);
+                                };
+                                reader.readAsDataURL(file);
                               }
-                            }}
-                          />
+                            }
+                          }}
+                        />
+                        {!logo ? (
                           <div
-                            className={`${
-                              dragActive
-                                ? "cursor-copy border-2 border-black bg-gray-50 opacity-100"
-                                : ""
-                            } absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-md bg-white transition-all ${
-                              logo
-                                ? "opacity-0 group-hover:opacity-100"
-                                : "group-hover:bg-gray-50"
-                            }`}
+                            className={cn(
+                              "flex flex-col items-center justify-center gap-2",
+                              dragActive && "scale-105",
+                            )}
                           >
-                            <PlusIcon
-                              className={`${
-                                dragActive ? "scale-110" : "scale-100"
-                              } h-7 w-7 text-gray-500 transition-all duration-75 group-hover:scale-110 group-active:scale-95`}
+                            <UploadIcon
+                              className="h-8 w-8 text-gray-400"
+                              aria-hidden="true"
                             />
-                            <span className="sr-only">OG image upload</span>
                           </div>
-                          {logo && (
+                        ) : (
+                          <div className="relative flex h-full w-full items-center justify-center p-4">
                             <img
                               src={logo}
-                              alt="Preview"
-                              className="h-full w-full rounded-md object-contain"
+                              alt="Logo preview"
+                              className="max-h-full max-w-full object-contain"
                             />
-                          )}
-                        </label>
-                        <div className="mt-1 flex rounded-md shadow-sm">
-                          <input
-                            id="image"
-                            name="image"
-                            type="file"
-                            accept="image/jpeg,image/png"
-                            className="sr-only"
-                            onChange={onChangeLogo}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor="primary-color">Brand Color</Label>
-                        <div className="flex space-x-1">
-                          <Popover>
-                            <PopoverTrigger>
-                              <div
-                                className="h-9 w-9 cursor-pointer rounded-md shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
-                                style={{ backgroundColor: brandColor }}
-                              />
-                            </PopoverTrigger>
-                            <PopoverContent>
-                              <HexColorPicker
-                                color={brandColor}
-                                onChange={setBrandColor}
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <HexColorInput
-                            className="flex h-9 w-full rounded-md border-0 bg-background px-3 py-2 text-sm shadow-sm ring-1 ring-muted-foreground placeholder:text-muted-foreground focus:border-0 focus:ring-1 focus:ring-gray-300"
-                            color={brandColor}
-                            onChange={setBrandColor}
-                            prefixed
-                          />
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor="accent-color">Background Color</Label>
-                        <div className="flex space-x-1">
-                          <Popover>
-                            <PopoverTrigger>
-                              <div
-                                className="h-9 w-9 cursor-pointer rounded-md shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
-                                style={{ backgroundColor: accentColor }}
-                              />
-                            </PopoverTrigger>
-                            <PopoverContent>
-                              <HexColorPicker
-                                color={accentColor}
-                                onChange={setAccentColor}
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <HexColorInput
-                            className="flex h-9 w-full rounded-md border-0 bg-background px-3 py-2 text-sm shadow-sm ring-1 ring-muted-foreground placeholder:text-muted-foreground focus:border-0 focus:ring-1 focus:ring-gray-300"
-                            color={accentColor}
-                            onChange={setAccentColor}
-                            prefixed
-                          />
-                        </div>
-                        <div className="mt-2 flex space-x-1">
-                          <div
-                            className="relative h-9 w-9 cursor-pointer rounded-md bg-white shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
-                            onClick={() => setAccentColor("#ffffff")}
-                          >
-                            {accentColor === "#ffffff" && (
-                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
-                            )}
                           </div>
-                          <div
-                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-50 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
-                            onClick={() => setAccentColor("#f9fafb")}
-                          >
-                            {accentColor === "#f9fafb" && (
-                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
-                            )}
-                          </div>
-                          <div
-                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-200 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
-                            onClick={() => setAccentColor("#e5e7eb")}
-                          >
-                            {accentColor === "#e5e7eb" && (
-                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
-                            )}
-                          </div>
-                          <div
-                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-400 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
-                            onClick={() => setAccentColor("#9ca3af")}
-                          >
-                            {accentColor === "#9ca3af" && (
-                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white" />
-                            )}
-                          </div>
-                          <div
-                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-800 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
-                            onClick={() => setAccentColor("#1f2937")}
-                          >
-                            {accentColor === "#1f2937" && (
-                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white" />
-                            )}
-                          </div>
-                          <div
-                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-950 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
-                            onClick={() => setAccentColor("#030712")}
-                          >
-                            {accentColor === "#030712" && (
-                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      {/* Welcome Message */}
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="welcome-message">
-                            Welcome Message
-                          </Label>
-                          <span className="text-sm text-muted-foreground">
-                            <span
-                              className={cn(
-                                welcomeMessageError && "text-red-500",
-                              )}
-                            >
-                              {welcomeMessage.length}
-                            </span>
-                            /{MAX_WELCOME_MESSAGE_LENGTH}
-                          </span>
-                        </div>
-                        <Textarea
-                          id="welcome-message"
-                          value={welcomeMessage}
-                          onChange={(e) =>
-                            handleWelcomeMessageChange(e.target.value)
-                          }
-                          placeholder="Your action is requested to continue"
-                          className={cn(
-                            "min-h-10",
-                            welcomeMessageError &&
-                              "border-red-500 focus:border-red-500 focus:ring-red-500",
-                          )}
-                        />
-                        {welcomeMessageError && (
-                          <p className="text-xs text-red-500">
-                            {welcomeMessageError}
-                          </p>
                         )}
-                        <p className="text-xs text-muted-foreground">
-                          Keep the message concise - it should fit within two
-                          lines for the best user experience.
-                        </p>
+                      </label>
+                      <input
+                        id="image"
+                        name="image"
+                        type="file"
+                        accept="image/jpeg,image/png"
+                        className="sr-only"
+                        onChange={onChangeLogo}
+                      />
+                      {fileError && (
+                        <p className="text-sm text-red-500">{fileError}</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Brand Color Card */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="primary-color">Brand Color</Label>
+                      <div className="flex items-center space-x-3">
+                        <Popover>
+                          <PopoverTrigger>
+                            <div
+                              className="h-10 w-10 cursor-pointer rounded-md border-2 border-gray-300 shadow-sm transition-all hover:border-gray-400"
+                              style={{ backgroundColor: brandColor }}
+                            />
+                          </PopoverTrigger>
+                          <PopoverContent>
+                            <HexColorPicker
+                              color={brandColor}
+                              onChange={setBrandColor}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <HexColorInput
+                          className="flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                          color={brandColor}
+                          onChange={setBrandColor}
+                          prefixed
+                        />
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="border-t p-6">
-                    {plan === "free" && !isTrial ? (
-                      <UpgradeButton
-                        text="Save Branding"
-                        clickedPlan={PlanEnum.Pro}
-                        trigger="branding_page"
-                        highlightItem={["custom-branding"]}
-                      />
-                    ) : (
-                      <Button
-                        onClick={saveBranding}
-                        loading={isLoading}
-                        disabled={!!welcomeMessageError}
-                      >
-                        Save changes
-                      </Button>
-                    )}
-                    {/* delete button */}
-                    <Button
-                      variant="link"
-                      onClick={handleDelete}
-                      disabled={!brand}
-                    >
-                      Reset branding
-                    </Button>
-                  </CardFooter>
                 </Card>
-                <Tabs defaultValue="document-view" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="document-view">
-                      Document View
-                    </TabsTrigger>
-                    <TabsTrigger value="front-page">Front page</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="document-view">
-                    <div className="flex justify-center">
-                      <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                        <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
-                          <div className="mx-auto flex h-7 items-center justify-center">
-                            <div className="pointer-events-none absolute left-3">
-                              <div className="flex flex-row flex-nowrap justify-start">
-                                <div className="pointer-events-auto">
-                                  <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
-                                </div>
-                                <div className="pointer-events-auto">
-                                  <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
-                                </div>
-                                <div className="pointer-events-auto">
-                                  <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex w-[70%] items-center justify-center rounded-xl bg-white p-1 opacity-70">
-                              <div
-                                aria-hidden="true"
-                                className="mr-1 mt-0.5 flex text-muted-foreground"
-                              >
-                                <svg
-                                  aria-hidden="true"
-                                  height="8"
-                                  width="8"
-                                  viewBox="0 0 16 16"
-                                  fill="currentColor"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path d="M8.75 11.25a1.25 1.25 0 1 0-1.5 0v1a.75.75 0 0 0 1.5 0v-1Z"></path>
-                                  <path
-                                    fillRule="evenodd"
-                                    clipRule="evenodd"
-                                    d="M3.5 4v2h-1a1 1 0 0 0-1 1v6a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3V7a1 1 0 0 0-1-1h-1V4a4 4 0 0 0-4-4h-1a4 4 0 0 0-4 4ZM11 6V4a2.5 2.5 0 0 0-2.5-2.5h-1A2.5 2.5 0 0 0 5 4v2h6Zm-8 7V7.5h10V13a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 13Z"
-                                  ></path>
-                                </svg>
-                              </div>
-                              <span className="whitespace-normal text-xs text-muted-foreground">
-                                papermark.com/view/...
-                              </span>
-                            </div>
-                          </div>
-                          <iframe
-                            key={`document-view-${debouncedBrandColor}-${debouncedAccentColor}`}
-                            name="document-view"
-                            id="document-view"
-                            src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
-                            style={{
-                              width: "1390px",
-                              height: "831px",
-                              transform: "scale(0.497)",
-                              transformOrigin: "left top",
-                              background: "rgb(255, 255, 255)",
-                              position: "absolute",
-                              top: "0px",
-                              left: "0px",
-                              borderTop: "none",
-                              borderRight: "0px",
-                              borderBottom: "0px",
-                              borderLeft: "0px",
-                              borderImage: "initial",
-                              overflow: "hidden",
-                              pointerEvents: "none",
-                              borderBottomLeftRadius: "8px",
-                              borderBottomRightRadius: "8px",
-                              marginTop: "29px",
-                            }}
-                          ></iframe>
+
+                {/* Background Color Card */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="accent-color">
+                        Background Color{" "}
+                        <span className="font-normal text-muted-foreground">
+                          (front page)
+                        </span>
+                      </Label>
+                      <div className="flex items-center space-x-3">
+                        <Popover>
+                          <PopoverTrigger>
+                            <div
+                              className="h-10 w-10 cursor-pointer rounded-md border-2 border-gray-300 shadow-sm transition-all hover:border-gray-400"
+                              style={{ backgroundColor: accentColor }}
+                            />
+                          </PopoverTrigger>
+                          <PopoverContent>
+                            <HexColorPicker
+                              color={accentColor}
+                              onChange={setAccentColor}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <HexColorInput
+                          className="flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                          color={accentColor}
+                          onChange={setAccentColor}
+                          prefixed
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <div
+                          className="relative h-10 w-10 cursor-pointer rounded-md bg-white shadow-sm ring-2 ring-gray-300 transition-all hover:ring-gray-400"
+                          onClick={() => setAccentColor("#ffffff")}
+                        >
+                          {accentColor === "#ffffff" && (
+                            <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
+                          )}
+                        </div>
+                        <div
+                          className="relative h-10 w-10 cursor-pointer rounded-md bg-gray-50 shadow-sm ring-2 ring-gray-300 transition-all hover:ring-gray-400"
+                          onClick={() => setAccentColor("#f9fafb")}
+                        >
+                          {accentColor === "#f9fafb" && (
+                            <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
+                          )}
+                        </div>
+                        <div
+                          className="relative h-10 w-10 cursor-pointer rounded-md bg-gray-200 shadow-sm ring-2 ring-gray-300 transition-all hover:ring-gray-400"
+                          onClick={() => setAccentColor("#e5e7eb")}
+                        >
+                          {accentColor === "#e5e7eb" && (
+                            <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
+                          )}
+                        </div>
+                        <div
+                          className="relative h-10 w-10 cursor-pointer rounded-md bg-gray-400 shadow-sm ring-2 ring-gray-300 transition-all hover:ring-gray-400"
+                          onClick={() => setAccentColor("#9ca3af")}
+                        >
+                          {accentColor === "#9ca3af" && (
+                            <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white" />
+                          )}
+                        </div>
+                        <div
+                          className="relative h-10 w-10 cursor-pointer rounded-md bg-gray-800 shadow-sm ring-2 ring-gray-300 transition-all hover:ring-gray-400"
+                          onClick={() => setAccentColor("#1f2937")}
+                        >
+                          {accentColor === "#1f2937" && (
+                            <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white" />
+                          )}
+                        </div>
+                        <div
+                          className="relative h-10 w-10 cursor-pointer rounded-md bg-gray-950 shadow-sm ring-2 ring-gray-300 transition-all hover:ring-gray-400"
+                          onClick={() => setAccentColor("#030712")}
+                        >
+                          {accentColor === "#030712" && (
+                            <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white" />
+                          )}
                         </div>
                       </div>
                     </div>
-                  </TabsContent>
-                  <TabsContent value="front-page">
-                    <div className="flex justify-center">
-                      <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                        <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
-                          <div className="mx-auto flex h-7 items-center justify-center">
-                            <div className="pointer-events-none absolute left-3">
-                              <div className="flex flex-row flex-nowrap justify-start">
-                                <div className="pointer-events-auto">
-                                  <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
-                                </div>
-                                <div className="pointer-events-auto">
-                                  <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
-                                </div>
-                                <div className="pointer-events-auto">
-                                  <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex w-[70%] items-center justify-center rounded-xl bg-white p-1 opacity-70">
-                              <div
-                                aria-hidden="true"
-                                className="mr-1 mt-0.5 flex text-muted-foreground"
-                              >
-                                <svg
-                                  aria-hidden="true"
-                                  height="8"
-                                  width="8"
-                                  viewBox="0 0 16 16"
-                                  fill="currentColor"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path d="M8.75 11.25a1.25 1.25 0 1 0-1.5 0v1a.75.75 0 0 0 1.5 0v-1Z"></path>
-                                  <path
-                                    fillRule="evenodd"
-                                    clipRule="evenodd"
-                                    d="M3.5 4v2h-1a1 1 0 0 0-1 1v6a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3V7a1 1 0 0 0-1-1h-1V4a4 4 0 0 0-4-4h-1a4 4 0 0 0-4 4ZM11 6V4a2.5 2.5 0 0 0-2.5-2.5h-1A2.5 2.5 0 0 0 5 4v2h6Zm-8 7V7.5h10V13a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 13Z"
-                                  ></path>
-                                </svg>
-                              </div>
-                              <span className="whitespace-normal text-xs text-muted-foreground">
-                                papermark.com/view/...
-                              </span>
-                            </div>
-                          </div>
-                          <iframe
-                            key={`access-screen-${debouncedBrandColor}-${debouncedAccentColor}-${debouncedWelcomeMessage}`}
-                            name="access-screen"
-                            id="access-screen"
-                            src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
-                            style={{
-                              width: "1390px",
-                              height: "831px",
-                              transform: "scale(0.497)",
-                              transformOrigin: "left top",
-                              background: "rgb(255, 255, 255)",
-                              position: "absolute",
-                              top: "0px",
-                              left: "0px",
-                              borderTop: "none",
-                              borderRight: "0px",
-                              borderBottom: "0px",
-                              borderLeft: "0px",
-                              borderImage: "initial",
-                              overflow: "hidden",
-                              pointerEvents: "none",
-                              borderBottomLeftRadius: "8px",
-                              borderBottomRightRadius: "8px",
-                              marginTop: "29px",
-                            }}
-                          ></iframe>
-                        </div>
+                  </CardContent>
+                </Card>
+
+                {/* Welcome Message Card */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="welcome-message">Welcome Message</Label>
+                        <span className="text-sm text-muted-foreground">
+                          <span
+                            className={cn(
+                              welcomeMessageError && "text-red-500",
+                            )}
+                          >
+                            {welcomeMessage.length}
+                          </span>
+                          /{MAX_WELCOME_MESSAGE_LENGTH}
+                        </span>
                       </div>
+                      <Textarea
+                        id="welcome-message"
+                        value={welcomeMessage}
+                        onChange={(e) =>
+                          handleWelcomeMessageChange(e.target.value)
+                        }
+                        placeholder="Your action is requested to continue"
+                        className={cn(
+                          "min-h-24 resize-none",
+                          welcomeMessageError &&
+                            "border-red-500 focus:border-red-500 focus:ring-red-500",
+                        )}
+                      />
+                      {welcomeMessageError && (
+                        <p className="text-xs text-red-500">
+                          {welcomeMessageError}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Keep the message concise - it should fit within two
+                        lines for the best user experience.
+                      </p>
                     </div>
-                  </TabsContent>
-                </Tabs>
+                  </CardContent>
+                </Card>
               </div>
-            </Card>
+
+              {/* Action Buttons - Always Visible */}
+              <div className="flex items-center gap-4 border-t bg-background pt-4">
+                {plan === "free" && !isTrial ? (
+                  <UpgradeButton
+                    text="Save changes"
+                    clickedPlan={PlanEnum.Pro}
+                    trigger="branding_page"
+                    highlightItem={["custom-branding"]}
+                  />
+                ) : (
+                  <Button
+                    onClick={saveBranding}
+                    loading={isLoading}
+                    disabled={!!welcomeMessageError}
+                    className="bg-black text-white hover:bg-gray-800"
+                  >
+                    Save changes
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  onClick={handleDelete}
+                  disabled={!brand}
+                >
+                  Reset branding
+                </Button>
+              </div>
+            </div>
+
+            {/* Separator Line */}
+            <div className="hidden lg:block lg:w-px lg:self-stretch lg:bg-border"></div>
+
+            {/* Preview Column */}
+            <div className="flex-1 lg:pl-4">
+              <Tabs defaultValue="document-view" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="document-view">Document View</TabsTrigger>
+                  <TabsTrigger value="front-page">Front page</TabsTrigger>
+                </TabsList>
+                <TabsContent value="document-view" className="mt-6">
+                  <div className="flex justify-center">
+                    <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
+                      <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
+                        <div className="mx-auto flex h-7 items-center justify-center">
+                          <div className="pointer-events-none absolute left-3">
+                            <div className="flex flex-row flex-nowrap justify-start">
+                              <div className="pointer-events-auto">
+                                <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
+                              </div>
+                              <div className="pointer-events-auto">
+                                <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
+                              </div>
+                              <div className="pointer-events-auto">
+                                <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex w-[70%] items-center justify-center rounded-xl bg-white p-1 opacity-70">
+                            <div
+                              aria-hidden="true"
+                              className="mr-1 mt-0.5 flex text-muted-foreground"
+                            >
+                              <svg
+                                aria-hidden="true"
+                                height="8"
+                                width="8"
+                                viewBox="0 0 16 16"
+                                fill="currentColor"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path d="M8.75 11.25a1.25 1.25 0 1 0-1.5 0v1a.75.75 0 0 0 1.5 0v-1Z"></path>
+                                <path
+                                  fillRule="evenodd"
+                                  clipRule="evenodd"
+                                  d="M3.5 4v2h-1a1 1 0 0 0-1 1v6a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3V7a1 1 0 0 0-1-1h-1V4a4 4 0 0 0-4-4h-1a4 4 0 0 0-4 4ZM11 6V4a2.5 2.5 0 0 0-2.5-2.5h-1A2.5 2.5 0 0 0 5 4v2h6Zm-8 7V7.5h10V13a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 13Z"
+                                ></path>
+                              </svg>
+                            </div>
+                            <span className="whitespace-normal text-xs text-muted-foreground">
+                              papermark.com/view/...
+                            </span>
+                          </div>
+                        </div>
+                        <iframe
+                          key={`document-view-${debouncedBrandColor}-${debouncedAccentColor}`}
+                          name="document-view"
+                          id="document-view"
+                          src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
+                          style={{
+                            width: "1390px",
+                            height: "831px",
+                            transform: "scale(0.497)",
+                            transformOrigin: "left top",
+                            background: "rgb(255, 255, 255)",
+                            position: "absolute",
+                            top: "0px",
+                            left: "0px",
+                            borderTop: "none",
+                            borderRight: "0px",
+                            borderBottom: "0px",
+                            borderLeft: "0px",
+                            borderImage: "initial",
+                            overflow: "hidden",
+                            pointerEvents: "none",
+                            borderBottomLeftRadius: "8px",
+                            borderBottomRightRadius: "8px",
+                            marginTop: "29px",
+                          }}
+                        ></iframe>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+                <TabsContent value="front-page" className="mt-6">
+                  <div className="flex justify-center">
+                    <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
+                      <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
+                        <div className="mx-auto flex h-7 items-center justify-center">
+                          <div className="pointer-events-none absolute left-3">
+                            <div className="flex flex-row flex-nowrap justify-start">
+                              <div className="pointer-events-auto">
+                                <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
+                              </div>
+                              <div className="pointer-events-auto">
+                                <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
+                              </div>
+                              <div className="pointer-events-auto">
+                                <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex w-[70%] items-center justify-center rounded-xl bg-white p-1 opacity-70">
+                            <div
+                              aria-hidden="true"
+                              className="mr-1 mt-0.5 flex text-muted-foreground"
+                            >
+                              <svg
+                                aria-hidden="true"
+                                height="8"
+                                width="8"
+                                viewBox="0 0 16 16"
+                                fill="currentColor"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path d="M8.75 11.25a1.25 1.25 0 1 0-1.5 0v1a.75.75 0 0 0 1.5 0v-1Z"></path>
+                                <path
+                                  fillRule="evenodd"
+                                  clipRule="evenodd"
+                                  d="M3.5 4v2h-1a1 1 0 0 0-1 1v6a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3V7a1 1 0 0 0-1-1h-1V4a4 4 0 0 0-4-4h-1a4 4 0 0 0-4 4ZM11 6V4a2.5 2.5 0 0 0-2.5-2.5h-1A2.5 2.5 0 0 0 5 4v2h6Zm-8 7V7.5h10V13a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 13Z"
+                                ></path>
+                              </svg>
+                            </div>
+                            <span className="whitespace-normal text-xs text-muted-foreground">
+                              papermark.com/view/...
+                            </span>
+                          </div>
+                        </div>
+                        <iframe
+                          key={`access-screen-${debouncedBrandColor}-${debouncedAccentColor}-${debouncedWelcomeMessage}`}
+                          name="access-screen"
+                          id="access-screen"
+                          src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
+                          style={{
+                            width: "1390px",
+                            height: "831px",
+                            transform: "scale(0.497)",
+                            transformOrigin: "left top",
+                            background: "rgb(255, 255, 255)",
+                            position: "absolute",
+                            top: "0px",
+                            left: "0px",
+                            borderTop: "none",
+                            borderRight: "0px",
+                            borderBottom: "0px",
+                            borderLeft: "0px",
+                            borderImage: "initial",
+                            overflow: "hidden",
+                            pointerEvents: "none",
+                            borderBottomLeftRadius: "8px",
+                            borderBottomRightRadius: "8px",
+                            marginTop: "29px",
+                          }}
+                        ></iframe>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              {/* Preview Mode Info */}
+              {/* <div className="mt-6 flex justify-center">
+                <div className="w-[698px] space-y-2 rounded-lg border-border bg-card p-4">
+                  <h4 className="text-sm font-semibold text-foreground">
+                    Preview Mode
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Changes will be reflected in real-time as you adjust
+                    settings.
+                  </p>
+                </div>
+              </div> */}
+            </div>
           </div>
         </div>
-      </main>
+      </div>
     </AppLayout>
   );
 }
