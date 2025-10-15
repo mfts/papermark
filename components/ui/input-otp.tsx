@@ -6,24 +6,30 @@ import { Dot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { determineTextColor } from "@/lib/utils/determine-text-color";
 
+// Create a context to pass accentColor to InputOTPSlot components
+const AccentColorContext = React.createContext<string | null | undefined>(
+  undefined,
+);
+
 const InputOTP = React.forwardRef<
   React.ElementRef<typeof OTPInput>,
   React.ComponentPropsWithoutRef<typeof OTPInput> & {
     accentColor?: string | null;
   }
 >(({ className, containerClassName, accentColor, ...props }, ref) => (
-  <OTPInput
-    ref={ref}
-    data-1p-ignore
-    translate="no"
-    containerClassName={cn(
-      "flex items-center gap-2 has-[:disabled]:opacity-50 notranslate",
-      containerClassName,
-    )}
-    className={cn("disabled:cursor-not-allowed", className)}
-    context={{ accentColor }}
-    {...props}
-  />
+  <AccentColorContext.Provider value={accentColor}>
+    <OTPInput
+      ref={ref}
+      data-1p-ignore
+      translate="no"
+      containerClassName={cn(
+        "flex items-center gap-2 has-[:disabled]:opacity-50 notranslate",
+        containerClassName,
+      )}
+      className={cn("disabled:cursor-not-allowed", className)}
+      {...props}
+    />
+  </AccentColorContext.Provider>
 ));
 InputOTP.displayName = "InputOTP";
 
@@ -37,11 +43,13 @@ InputOTPGroup.displayName = "InputOTPGroup";
 
 const InputOTPSlot = React.forwardRef<
   React.ElementRef<"div">,
-  React.ComponentPropsWithoutRef<"div"> & { index: number }
+  React.ComponentPropsWithoutRef<"div"> & {
+    index: number;
+  }
 >(({ index, className, ...props }, ref) => {
   const inputOTPContext = React.useContext(OTPInputContext);
   const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index];
-  const accentColor = (inputOTPContext as any)?.accentColor;
+  const accentColor = React.useContext(AccentColorContext);
   const textColor = determineTextColor(accentColor);
 
   return (
@@ -55,7 +63,7 @@ const InputOTPSlot = React.forwardRef<
       style={{
         color: textColor,
         borderColor: textColor,
-        ringOffsetColor: accentColor || "white",
+        caretColor: textColor,
       }}
       {...props}
     >
