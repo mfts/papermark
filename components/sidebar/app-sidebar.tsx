@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { usePlan } from "@/lib/swr/use-billing";
+import useDatarooms from "@/lib/swr/use-datarooms";
 import useLimits from "@/lib/swr/use-limits";
 import { useSlackIntegration } from "@/lib/swr/use-slack-integration";
 import { nFormatter } from "@/lib/utils";
@@ -70,6 +71,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     enabled: !!currentTeam?.id,
   });
 
+  // Fetch datarooms for the current team
+  const { datarooms } = useDatarooms();
+
   useEffect(() => {
     if (Cookies.get("hideProBanner") !== "pro-banner") {
       setShowProBanner(true);
@@ -87,6 +91,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       setShowSlackBanner(false);
     }
   }, []);
+
+  // Prepare datarooms items for sidebar (limit to first 5, sorted by most recent)
+  const dataroomItems =
+    datarooms && datarooms.length > 0
+      ? datarooms.slice(0, 5).map((dataroom) => ({
+          title: dataroom.name,
+          url: `/datarooms/${dataroom.id}/documents`,
+          current:
+            router.pathname.includes("/datarooms/[id]") &&
+            String(router.query.id) === String(dataroom.id),
+        }))
+      : undefined;
 
   const data = {
     navMain: [
@@ -108,11 +124,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "All Datarooms",
         url: "/datarooms",
         icon: ServerIcon,
-        current: router.pathname.includes("datarooms"),
+        current: router.pathname === "/datarooms",
         disabled: !isBusiness && !isDatarooms && !isDataroomsPlus && !isTrial,
         trigger: "sidebar_datarooms",
         plan: PlanEnum.Business,
         highlightItem: ["datarooms"],
+        isActive:
+          router.pathname.includes("datarooms") &&
+          (isBusiness || isDatarooms || isDataroomsPlus || isTrial),
+        items:
+          isBusiness || isDatarooms || isDataroomsPlus || isTrial
+            ? dataroomItems
+            : undefined,
       },
       {
         title: "Visitors",

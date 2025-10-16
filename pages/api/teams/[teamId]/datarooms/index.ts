@@ -24,22 +24,23 @@ export default async function handle(
     const { teamId } = req.query as { teamId: string };
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
           },
+        },
+        select: {
+          teamId: true,
         },
       });
 
-      if (!team) {
+      if (!teamAccess) {
         return res.status(401).end("Unauthorized");
       }
 
+      // Check if the user is part of the team
       const datarooms = await prisma.dataroom.findMany({
         where: {
           teamId: teamId,
@@ -48,6 +49,32 @@ export default async function handle(
           _count: {
             select: { documents: true, views: true },
           },
+          links: {
+            where: {
+              linkType: "DATAROOM_LINK",
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            select: {
+              id: true,
+              isArchived: true,
+              expiresAt: true,
+              createdAt: true,
+            },
+          },
+          views: {
+            orderBy: {
+              viewedAt: "desc",
+            },
+            take: 1,
+            select: {
+              viewedAt: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
         },
       });
 
@@ -83,9 +110,9 @@ export default async function handle(
               "business+old",
               "datarooms+old",
               "datarooms-plus+old",
-              "datarooms+drtrial", 
-              "business+drtrial", 
-              "datarooms-plus+drtrial"
+              "datarooms+drtrial",
+              "business+drtrial",
+              "datarooms-plus+drtrial",
             ],
           },
           users: {
