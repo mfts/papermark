@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 
 import { useEffect } from "react";
 
+import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { PlusIcon } from "lucide-react";
 
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 export default function DataroomsPage() {
+  const teamInfo = useTeam();
   const { datarooms } = useDatarooms();
   const { isFree, isPro, isBusiness, isDatarooms, isDataroomsPlus, isTrial } =
     usePlan();
@@ -36,7 +38,7 @@ export default function DataroomsPage() {
     (isBusiness && numDatarooms < limitDatarooms);
 
   // Sort datarooms alphabetically by name
-  const sortedDatarooms = datarooms?.sort((a, b) => {
+  const sortedDatarooms = datarooms?.slice().sort((a, b) => {
     return a.name.localeCompare(b.name);
   });
 
@@ -80,7 +82,11 @@ export default function DataroomsPage() {
                   <span className="font-medium">
                     {(() => {
                       const startDate =
-                        datarooms?.[0]?.createdAt ?? new Date(Date.now());
+                        datarooms && datarooms.length > 0
+                          ? datarooms[datarooms.length - 1]?.createdAt
+                          : new Date(
+                              teamInfo?.currentTeam?.createdAt ?? Date.now(),
+                            );
                       const days = daysLeft(new Date(startDate), 7);
                       if (days <= 0) return "Expired";
                       const label = days === 1 ? "day" : "days";
