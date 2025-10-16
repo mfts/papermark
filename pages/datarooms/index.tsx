@@ -79,11 +79,12 @@ export default function DataroomsPage() {
                   <span>Dataroom Trial: </span>
                   <span className="font-medium">
                     {(() => {
-                      const days = daysLeft(
-                        new Date(datarooms[0].createdAt),
-                        7,
-                      );
-                      return days <= 0 ? "Expired" : `${days} days left`;
+                      const startDate =
+                        datarooms?.[0]?.createdAt ?? new Date(Date.now());
+                      const days = daysLeft(new Date(startDate), 7);
+                      if (days <= 0) return "Expired";
+                      const label = days === 1 ? "day" : "days";
+                      return `${days} ${label} left`;
                     })()}
                   </span>
                 </div>
