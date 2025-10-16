@@ -95,19 +95,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Prepare datarooms items for sidebar (limit to first 5, sorted by most recent)
   const dataroomItems =
     datarooms && datarooms.length > 0
-      ? datarooms
-          .sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-          )
-          .slice(0, 5)
-          .map((dataroom) => ({
-            title: dataroom.name,
-            url: `/datarooms/${dataroom.id}/documents`,
-            current:
-              router.pathname.includes("/datarooms/[id]") &&
-              String(router.query.id) === String(dataroom.id),
-          }))
+      ? datarooms.slice(0, 5).map((dataroom) => ({
+          title: dataroom.name,
+          url: `/datarooms/${dataroom.id}/documents`,
+          current:
+            router.pathname.includes("/datarooms/[id]") &&
+            String(router.query.id) === String(dataroom.id),
+        }))
       : undefined;
 
   const data = {
