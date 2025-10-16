@@ -87,7 +87,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                   </Link>
                 )}
               </SidebarMenuButton>
-              {item.items?.length ? (
+              {!item.disabled && item.items?.length ? (
                 <>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuAction className="data-[state=open]:rotate-90">
@@ -106,9 +106,9 @@ export function NavMain({ items }: { items: NavItem[] }) {
                           )}
                         >
                           <SidebarMenuSubButton asChild>
-                            <a href={subItem.url}>
+                            <Link href={subItem.url}>
                               <span>{subItem.title}</span>
-                            </a>
+                            </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))}

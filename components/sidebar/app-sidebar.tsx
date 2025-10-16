@@ -135,8 +135,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         trigger: "sidebar_datarooms",
         plan: PlanEnum.Business,
         highlightItem: ["datarooms"],
-        isActive: router.pathname.includes("datarooms"),
-        items: dataroomItems,
+        isActive:
+          router.pathname.includes("datarooms") &&
+          (isBusiness || isDatarooms || isDataroomsPlus || isTrial),
+        items:
+          isBusiness || isDatarooms || isDataroomsPlus || isTrial
+            ? dataroomItems
+            : undefined,
       },
       {
         title: "Visitors",
