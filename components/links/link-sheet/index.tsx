@@ -265,6 +265,7 @@ export default function LinkSheet({
         enableScreenshotProtection:
           preset.enableScreenshotProtection || prev.enableScreenshotProtection,
         enableNotification: !!preset.enableNotification,
+        showBanner: preset.showBanner ?? prev.showBanner,
       };
     });
 

@@ -488,7 +488,7 @@ async function handleDocumentCreate(
         enableNotification: link.enableNotification,
         enableFeedback: link.enableFeedback,
         enableScreenshotProtection: link.enableScreenshotProtection,
-        showBanner: link.showBanner,
+        showBanner: link.showBanner ?? preset?.showBanner ?? false,
         audienceType: link.audienceType,
         groupId: isGroupAudience ? link.groupId : null,
         // For group links, ignore allow/deny lists from presets as access is controlled by group membership
@@ -700,7 +700,7 @@ async function handleLinkCreate(
         enableNotification: link.enableNotification,
         enableFeedback: link.enableFeedback,
         enableScreenshotProtection: link.enableScreenshotProtection,
-        showBanner: link.showBanner,
+        showBanner: link.showBanner ?? preset?.showBanner ?? false,
         audienceType: link.audienceType,
         groupId: isGroupAudience ? link.groupId : null,
         // For group links, ignore allow/deny lists from presets as access is controlled by group membership
@@ -877,7 +877,7 @@ async function handleDataroomCreate(
           enableNotification: link.enableNotification,
           enableFeedback: link.enableFeedback,
           enableScreenshotProtection: link.enableScreenshotProtection,
-          showBanner: link.showBanner,
+          showBanner: link.showBanner ?? preset?.showBanner ?? false,
           audienceType: link.audienceType,
           groupId: isGroupAudience ? link.groupId : null,
           allowList: link.allowList || preset?.allowList,

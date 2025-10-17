@@ -217,6 +217,7 @@ export function DataroomLinkSheet({
         enableScreenshotProtection:
           preset.enableScreenshotProtection || prev.enableScreenshotProtection,
         enableNotification: !!preset.enableNotification,
+        showBanner: preset.showBanner ?? prev.showBanner,
       };
     });
 
