@@ -791,13 +791,18 @@ export default function PagesVerticalViewer({
               ref={containerRef}
             >
               <div className="flex min-h-full min-w-full justify-center">
-                <div className="flex w-full max-w-[1400px] justify-center">
+                <div
+                  className="flex w-full max-w-[1400px] justify-center"
+                  style={{
+                    minWidth: scale > 1 ? `${100 * scale}%` : "100%",
+                  }}
+                >
                   <div
                     className="transform-container w-full"
                     style={{
                       transform: `scale(${scale})`,
                       transition: "transform 0.2s ease-out",
-                      transformOrigin: scale <= 1 ? "center top" : "left top",
+                      transformOrigin: "center top",
                     }}
                   >
                     <div

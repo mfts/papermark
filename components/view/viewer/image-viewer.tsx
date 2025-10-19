@@ -120,7 +120,7 @@ export default function ImageViewer({
     return () => {
       window.removeEventListener("resize", updateImageDimensions);
     };
-  }, []);
+  }, [scale]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -300,58 +300,72 @@ export default function ImageViewer({
           )}
           ref={containerRef}
         >
-          <div className={cn("h-full w-full", scale > 1 && "overflow-auto")}>
+          {/* Scroll Container */}
+          <div className="h-full w-full overflow-auto">
+            {/* Sizer defines scrollable dimensions at current scale */}
             <div
-              className="flex min-h-full w-full items-center justify-center"
+              className="mx-auto"
               style={{
-                transform: `scale(${scale})`,
-                transition: "transform 0.2s ease-out",
-                transformOrigin: scale <= 1 ? "center center" : "left top",
-                minWidth: scale > 1 ? `${100 * scale}%` : "100%",
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+                width:
+                  imageDimensions && scale > 1
+                    ? `${imageDimensions.width * scale}px`
+                    : "100%",
+                height:
+                  imageDimensions && scale > 1
+                    ? `${imageDimensions.height * scale}px`
+                    : "auto",
               }}
             >
-              <div className="viewer-container relative my-auto flex w-full justify-center">
-                <img
-                  className="viewer-image-mobile !pointer-events-auto max-h-[calc(100dvh-64px)] object-contain"
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  ref={(ref) => {
-                    imageRefs.current = ref;
-                    if (ref) {
-                      ref.onload = () =>
-                        setImageDimensions({
-                          width: ref.clientWidth,
-                          height: ref.clientHeight,
-                        });
-                    }
-                  }}
-                  src={file}
-                  alt="Image 1"
-                />
-
-                {/* Add Watermark Component */}
-                {watermarkConfig ? (
-                  <SVGWatermark
-                    config={watermarkConfig}
-                    viewerData={{
-                      email: viewerEmail,
-                      date: new Date().toLocaleDateString(),
-                      time: new Date().toLocaleTimeString(),
-                      link: linkName,
-                      ipAddress: ipAddress,
+              {/* Scaled content */}
+              <div
+                style={{
+                  transition: "transform 0.2s ease-out",
+                  transformOrigin: "center top",
+                  transform: `scale(${scale})`,
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                <div className="viewer-container relative mx-auto flex w-full justify-center">
+                  <img
+                    className="viewer-image-mobile !pointer-events-auto max-h-[calc(100dvh-64px)] object-contain"
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                     }}
-                    documentDimensions={
-                      imageDimensions ?? { width: 0, height: 0 }
-                    }
-                    pageIndex={0}
+                    ref={(ref) => {
+                      imageRefs.current = ref;
+                      if (ref) {
+                        ref.onload = () =>
+                          setImageDimensions({
+                            width: ref.clientWidth,
+                            height: ref.clientHeight,
+                          });
+                      }
+                    }}
+                    src={file}
+                    alt="Image 1"
                   />
-                ) : null}
+
+                  {watermarkConfig ? (
+                    <SVGWatermark
+                      config={watermarkConfig}
+                      viewerData={{
+                        email: viewerEmail,
+                        date: new Date().toLocaleDateString(),
+                        time: new Date().toLocaleTimeString(),
+                        link: linkName,
+                        ipAddress: ipAddress,
+                      }}
+                      documentDimensions={
+                        imageDimensions ?? { width: 0, height: 0 }
+                      }
+                      pageIndex={0}
+                    />
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>
