@@ -18,10 +18,8 @@ import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import LoadingSpinner from "@/components/ui/loading-spinner";
 import {
   Popover,
   PopoverContent,
@@ -43,6 +41,9 @@ export default function DataroomBrandPage() {
   const [accentColor, setAccentColor] = useState<string>("#FFFFFF");
   const [logo, setLogo] = useState<string | null>(null);
   const [banner, setBanner] = useState<string | null>(DEFAULT_BANNER_IMAGE);
+  const [originalBanner, setOriginalBanner] = useState<string | null>(
+    DEFAULT_BANNER_IMAGE,
+  );
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [bannerBlobUrl, setBannerBlobUrl] = useState<string | null>(null);
   const [welcomeMessage, setWelcomeMessage] = useState<string>(
@@ -123,6 +124,8 @@ export default function DataroomBrandPage() {
           reader.onload = (e) => {
             const dataUrl = e.target?.result as string;
             setBanner(dataUrl);
+            // When uploading a new image, this becomes the new "original" until saved
+            setOriginalBanner(dataUrl);
             // create a blob url for preview
             const blob = convertDataUrlToFile({ dataUrl });
             const bannerBlobUrl = URL.createObjectURL(blob);
@@ -140,7 +143,9 @@ export default function DataroomBrandPage() {
       setBrandColor(brand.brandColor || "#000000");
       setAccentColor(brand.accentColor || "#FFFFFF");
       setLogo(brand.logo || null);
-      setBanner(brand.banner || DEFAULT_BANNER_IMAGE);
+      const bannerValue = brand.banner || DEFAULT_BANNER_IMAGE;
+      setBanner(bannerValue);
+      setOriginalBanner(bannerValue);
       const message =
         brand.welcomeMessage || "Your action is requested to continue";
       setWelcomeMessage(message);
@@ -221,6 +226,8 @@ export default function DataroomBrandPage() {
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroom.id}/branding`,
       );
+      // Update the original banner state to the new saved value
+      setOriginalBanner(data.banner);
       setIsLoading(false);
       toast.success("Branding updated successfully");
     }
@@ -241,6 +248,7 @@ export default function DataroomBrandPage() {
     if (res.ok) {
       setLogo(null);
       setBanner(DEFAULT_BANNER_IMAGE);
+      setOriginalBanner(DEFAULT_BANNER_IMAGE);
       setBrandColor("#000000");
       setIsLoading(false);
       toast.success("Branding reset successfully");
@@ -441,6 +449,8 @@ export default function DataroomBrandPage() {
                               reader.onload = (e) => {
                                 const dataUrl = e.target?.result as string;
                                 setBanner(dataUrl);
+                                // When uploading a new image, this becomes the new "original" until saved
+                                setOriginalBanner(dataUrl);
                                 const blob = convertDataUrlToFile({
                                   dataUrl,
                                 });
@@ -466,7 +476,10 @@ export default function DataroomBrandPage() {
                         </div>
                       ) : banner === "no-banner" ? (
                         <div className="flex flex-col items-center justify-center gap-2">
-                          <p className="text-sm font-medium text-gray-600">Banner Hidden</p>
+                          <p className="text-center text-sm font-medium text-gray-600">
+                            Banner Hidden <br />
+                            Upload to add banner
+                          </p>
                         </div>
                       ) : (
                         <div className="relative flex h-full w-full items-center justify-center p-4">
@@ -494,22 +507,29 @@ export default function DataroomBrandPage() {
                         onClick={() => setBanner("no-banner")}
                         className={cn(
                           "text-xs",
-                          banner === "no-banner" && "border-black"
+                          banner === "no-banner" && "border-black",
                         )}
                       >
                         Hide Banner
                       </Button>
-                      {(banner === "no-banner" || (banner && banner !== DEFAULT_BANNER_IMAGE && !banner.startsWith("data:"))) && (
+                      {(banner === "no-banner" &&
+                        originalBanner !== "no-banner") ||
+                      (banner &&
+                        banner !== DEFAULT_BANNER_IMAGE &&
+                        !banner.startsWith("data:") &&
+                        banner !== originalBanner) ? (
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => setBanner(DEFAULT_BANNER_IMAGE)}
+                          onClick={() => setBanner(originalBanner)}
                           className="text-xs"
                         >
-                          Use Default Banner
+                          {originalBanner === DEFAULT_BANNER_IMAGE
+                            ? "Use Default Banner"
+                            : "Restore Banner"}
                         </Button>
-                      )}
+                      ) : null}
                     </div>
                     {fileError && (
                       <p className="text-sm text-red-500">{fileError}</p>
