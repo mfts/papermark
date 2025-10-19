@@ -44,21 +44,23 @@ export default function ViewPage() {
         </div>
 
         {/* Banner section */}
-        <div className="relative h-[30vh]">
-          <img
-            className="h-[30vh] w-full object-cover"
-            src={brandBanner || DEFAULT_BANNER_IMAGE}
-            alt="Banner"
-            width={1920}
-            height={320}
-          />
-          <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
-            <div className="px-5 py-2 sm:px-10">
-              <div className="text-3xl">Example Data Room</div>
-              <time className="text-sm">Last updated 2 hours ago</time>
+        {brandBanner !== "hide-banner" && brandBanner !== "no-banner" && (
+          <div className="relative h-[30vh]">
+            <img
+              className="h-[30vh] w-full object-cover"
+              src={brandBanner || DEFAULT_BANNER_IMAGE}
+              alt="Banner"
+              width={1920}
+              height={320}
+            />
+            <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
+              <div className="px-5 py-2 sm:px-10">
+                <div className="text-3xl">Example Data Room</div>
+                <time className="text-sm">Last updated 2 hours ago</time>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </nav>
 
       {/* Body */}

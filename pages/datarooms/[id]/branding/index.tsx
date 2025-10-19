@@ -186,12 +186,16 @@ export default function DataroomBrandPage() {
 
     let bannerBlobUrl: string | null =
       banner && banner.startsWith("data:") ? null : banner;
+    // Don't upload if banner is set to hide
     if (banner && banner.startsWith("data:")) {
       // Convert the data URL to a blob
       const blob = convertDataUrlToFile({ dataUrl: banner });
       // Upload the blob to vercel storage
       bannerBlobUrl = await uploadImage(blob);
       setBanner(bannerBlobUrl);
+    } else if (banner === "hide-banner" || banner === "no-banner") {
+      // Use the special value to hide the banner
+      bannerBlobUrl = "hide-banner";
     }
 
     const data = {
@@ -460,6 +464,10 @@ export default function DataroomBrandPage() {
                             aria-hidden="true"
                           />
                         </div>
+                      ) : banner === "hide-banner" || banner === "no-banner" ? (
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <p className="text-sm font-medium text-gray-600">Banner Hidden</p>
+                        </div>
                       ) : (
                         <div className="relative flex h-full w-full items-center justify-center p-4">
                           <img
@@ -478,6 +486,31 @@ export default function DataroomBrandPage() {
                       className="sr-only"
                       onChange={onChangeBanner}
                     />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setBanner("hide-banner")}
+                        className={cn(
+                          "text-xs",
+                          (banner === "hide-banner" || banner === "no-banner") && "border-black"
+                        )}
+                      >
+                        Hide Banner
+                      </Button>
+                      {(banner === "hide-banner" || banner === "no-banner" || (banner && banner !== DEFAULT_BANNER_IMAGE && !banner.startsWith("data:"))) && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setBanner(DEFAULT_BANNER_IMAGE)}
+                          className="text-xs"
+                        >
+                          Use Default Banner
+                        </Button>
+                      )}
+                    </div>
                     {fileError && (
                       <p className="text-sm text-red-500">{fileError}</p>
                     )}
@@ -722,10 +755,10 @@ export default function DataroomBrandPage() {
                         </div>
                       </div>
                       <iframe
-                        key={`dataroom-view-${debouncedBrandColor}-${debouncedAccentColor}`}
+                        key={`dataroom-view-${debouncedBrandColor}-${debouncedAccentColor}-${banner}`}
                         name="dataroom-view"
                         id="dataroom-view"
-                        src={`/room_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
+                        src={`/room_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${(banner === "hide-banner" || banner === "no-banner") ? encodeURIComponent("hide-banner") : bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
                         style={{
                           width: "1390px",
                           height: "831px",
