@@ -193,7 +193,7 @@ export default function DataroomNav({
       </div>
 
       {/* Banner section */}
-      {brand?.banner !== "hide-banner" && brand?.banner !== "no-banner" && (
+      {brand?.banner !== "no-banner" && (
         <div className="relative h-[20vh] sm:h-auto sm:max-h-80">
           <img
             className="h-full w-full object-cover sm:max-h-80 sm:object-contain xl:object-cover"
