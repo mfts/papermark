@@ -17,7 +17,7 @@ const createAgreementSchema = z.object({
     .string()
     .min(1, "Name is required")
     .max(150, "Name must be less than 150 characters"),
-  content: z.string().min(1, "Content is required"),
+  content: z.string().min(1, "Content is required").max(1500, "Content must be less than 1500 characters"),
   contentType: z.enum(["LINK", "TEXT"]).default("LINK"),
   requireName: z.boolean().default(false),
 });
