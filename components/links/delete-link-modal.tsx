@@ -50,61 +50,56 @@ function DeleteLinkModal({
   };
 
   async function deleteLink(linkId: string) {
-    return new Promise(async (resolve, reject) => {
-      setDeleting(true);
+    setDeleting(true);
 
-      try {
-        const response = await fetch(
-          `/api/teams/${teamInfo?.currentTeam?.id}/links/${linkId}`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-            },
+    try {
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/links/${linkId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
           },
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(
+          error.error || error.message || "Failed to delete link",
         );
+      }
 
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(
-            error.error || error.message || "Failed to delete link",
-          );
-        }
+      analytics.capture("Link Deleted", {
+        team: teamInfo?.currentTeam?.id,
+        linkId,
+        linkType: link?.linkType,
+        viewCount: link?._count.views || 0,
+      });
 
-        analytics.capture("Link Deleted", {
-          team: teamInfo?.currentTeam?.id,
-          linkId,
-          linkType: link?.linkType,
-          viewCount: link?._count.views || 0,
-        });
+      // Mutate the links cache based on target type
+      const endpointTargetType = `${targetType.toLowerCase()}s`; // "documents" or "datarooms"
+      const targetId = link?.documentId || link?.dataroomId;
 
-        // Mutate the links cache based on target type
-        const endpointTargetType = `${targetType.toLowerCase()}s`; // "documents" or "datarooms"
-        const targetId = link?.documentId || link?.dataroomId;
+      await mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          targetId ?? "",
+        )}/links`,
+      );
 
+      // If this is a group link, also mutate the group-specific links cache
+      if (link?.groupId) {
         await mutate(
           `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
             targetId ?? "",
-          )}/links`,
+          )}/groups/${link.groupId}/links`,
         );
-
-        // If this is a group link, also mutate the group-specific links cache
-        if (link?.groupId) {
-          await mutate(
-            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
-              targetId ?? "",
-            )}/groups/${link.groupId}/links`,
-          );
-        }
-
-        setDeleting(false);
-        setShowDeleteLinkModal(false);
-        resolve(null);
-      } catch (error) {
-        setDeleting(false);
-        reject((error as Error).message);
       }
-    });
+
+      setShowDeleteLinkModal(false);
+    } finally {
+      setDeleting(false);
+    }
   }
 
   if (!link) return null;
