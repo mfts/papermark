@@ -1,8 +1,8 @@
 import sanitizeHtml from "sanitize-html";
 
-export function validateContent(html: string) {
-  if (html.length > 1000) {
-    throw new Error("Content cannot be longer than 1000 characters");
+export function validateContent(html: string, length: number = 1000) {
+  if (html.length > length) {
+    throw new Error(`Content cannot be longer than ${length} characters`);
   }
   const sanitized = sanitizeHtml(html, {
     allowedTags: [],
