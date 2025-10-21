@@ -42,6 +42,7 @@ export default async function handle(
           enableScreenshotProtection: true,
           password: true,
           isArchived: true,
+          deletedAt: true,
           enableIndexFile: true,
           enableCustomMetatag: true,
           metaTitle: true,
@@ -94,6 +95,10 @@ export default async function handle(
 
       if (!link) {
         return res.status(404).json({ error: "Link not found" });
+      }
+
+      if (link.deletedAt) {
+        return res.status(404).json({ error: "Link has been deleted" });
       }
 
       if (link.isArchived) {
@@ -477,6 +482,7 @@ export default async function handle(
           },
           team: {
             select: {
+              plan: true,
               users: {
                 where: {
                   userId: userId,
@@ -495,6 +501,14 @@ export default async function handle(
         return res.status(404).json({ error: "Link not found" });
       }
 
+      // Check if team is on free plan
+      if (linkToBeDeleted.team?.plan === "free") {
+        return res.status(403).json({
+          error:
+            "Link deletion is not available on the free plan. Please upgrade to delete links.",
+        });
+      }
+
       // Check authorization based on link type
       let isAuthorized = false;
 
@@ -510,9 +524,14 @@ export default async function handle(
         return res.status(401).end("Unauthorized to delete this link");
       }
 
-      await prisma.link.delete({
+      // Soft delete the link by setting deletedAt and isArchived
+      await prisma.link.update({
         where: {
           id: id,
+        },
+        data: {
+          deletedAt: new Date(),
+          isArchived: true,
         },
       });
 

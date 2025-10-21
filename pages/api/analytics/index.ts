@@ -244,6 +244,7 @@ export default async function handler(
                 isArchived: false,
               },
             },
+            deletedAt: null,
           },
           select: {
             id: true,

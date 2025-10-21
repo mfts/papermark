@@ -54,6 +54,7 @@ export default async function handle(
           groupId: groupId,
           dataroomId: dataroomId,
           linkType: "DATAROOM_LINK",
+          deletedAt: null,
         },
         orderBy: {
           createdAt: "desc",

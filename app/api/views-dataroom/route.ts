@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
         password: true,
         domainSlug: true,
         isArchived: true,
+        deletedAt: true,
         slug: true,
         domainId: true,
         allowList: true,
@@ -150,6 +151,13 @@ export async function POST(request: NextRequest) {
     if (link.isArchived) {
       return NextResponse.json(
         { message: "Link is no longer available." },
+        { status: 404 },
+      );
+    }
+
+    if (link.deletedAt) {
+      return NextResponse.json(
+        { message: "Link has been deleted." },
         { status: 404 },
       );
     }

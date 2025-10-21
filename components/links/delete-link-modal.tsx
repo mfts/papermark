@@ -12,13 +12,13 @@ import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
+import { LinkWithViews } from "@/lib/types";
+
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
-
-import { useAnalytics } from "@/lib/analytics";
-import { LinkWithViews } from "@/lib/types";
 
 function DeleteLinkModal({
   showDeleteLinkModal,
@@ -33,6 +33,7 @@ function DeleteLinkModal({
 }) {
   const router = useRouter();
   const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
   const analytics = useAnalytics();
 
   const [deleting, setDeleting] = useState(false);
@@ -53,16 +54,21 @@ function DeleteLinkModal({
       setDeleting(true);
 
       try {
-        const response = await fetch(`/api/links/${linkId}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
+        const response = await fetch(
+          `/api/teams/${teamInfo?.currentTeam?.id}/links/${linkId}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
           },
-        });
+        );
 
         if (!response.ok) {
           const error = await response.json();
-          throw new Error(error.message || "Failed to delete link");
+          throw new Error(
+            error.error || error.message || "Failed to delete link",
+          );
         }
 
         analytics.capture("Link Deleted", {
@@ -115,15 +121,19 @@ function DeleteLinkModal({
         <DialogTitle className="text-2xl">Delete Link</DialogTitle>
         <DialogDescription className="space-y-2">
           <p>
-            <strong>Warning</strong>: This will permanently delete the link{" "}
+            <strong>Warning</strong>: This will delete the link{" "}
             <span className="font-semibold">
               {link.name || `Link #${link.id.slice(-5)}`}
-            </span>{" "}
-            and all associated data.
+            </span>
+            . The link will no longer be accessible.
           </p>
           <p>
-            This includes <strong>{viewCount} view{viewCount !== 1 ? "s" : ""}</strong> and all
-            visitor analytics. This action cannot be undone.
+            All link data including{" "}
+            <strong>
+              {viewCount} view{viewCount !== 1 ? "s" : ""}
+            </strong>{" "}
+            and visitor analytics will be preserved for historical reporting.
+            The link will be marked as deleted and archived.
           </p>
         </DialogDescription>
       </div>

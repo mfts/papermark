@@ -49,6 +49,7 @@ export default async function handle(
           dataroomId,
           linkType: "DATAROOM_LINK",
           teamId: teamId,
+          deletedAt: null, // exclude deleted links
         },
         orderBy: {
           createdAt: "desc",

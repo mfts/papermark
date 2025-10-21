@@ -25,7 +25,7 @@ export default async function handle(
     try {
       // Update the link in the database
       const updatedLink = await prisma.link.update({
-        where: { id: id },
+        where: { id: id, deletedAt: null },
         data: {
           isArchived: isArchived,
         },

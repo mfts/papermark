@@ -288,7 +288,7 @@ export async function fetchDataroomDocumentLinkData({
   }
 
   const linkData = await prisma.link.findUnique({
-    where: { id: linkId, teamId, linkType: "DATAROOM_LINK" },
+    where: { id: linkId, teamId, linkType: "DATAROOM_LINK", deletedAt: null },
     select: {
       dataroom: {
         select: {
@@ -357,7 +357,7 @@ export async function fetchDocumentLinkData({
   teamId: string;
 }) {
   const linkData = await prisma.link.findUnique({
-    where: { id: linkId, teamId },
+    where: { id: linkId, teamId, deletedAt: null },
     select: {
       document: {
         select: {

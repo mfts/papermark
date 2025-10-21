@@ -913,17 +913,21 @@ export default function LinksTable({
                                 <Code2Icon className="mr-2 h-4 w-4" />
                                 Get Embed Code
                               </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setLinkToDelete(link);
-                                  setShowDeleteLinkModal(true);
-                                }}
-                                className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-                              >
-                                <Trash2Icon className="mr-2 h-4 w-4" />
-                                Delete Link
-                              </DropdownMenuItem>
+                              {!isFree && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setLinkToDelete(link);
+                                      setShowDeleteLinkModal(true);
+                                    }}
+                                    className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                                  >
+                                    <Trash2Icon className="mr-2 h-4 w-4" />
+                                    Delete Link
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>

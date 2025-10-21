@@ -64,6 +64,7 @@ export default async function handle(
           id: true,
           ownerId: true,
           links: {
+            where: { deletedAt: null }, // exclude deleted links
             orderBy: { createdAt: "desc" },
             include: {
               views: { orderBy: { viewedAt: "desc" } },
