@@ -35,6 +35,7 @@ export default async function handle(
         enableScreenshotProtection: true,
         password: true,
         isArchived: true,
+        deletedAt: true,
         enableCustomMetatag: true,
         metaTitle: true,
         metaDescription: true,
@@ -84,6 +85,10 @@ export default async function handle(
 
     if (!link) {
       return res.status(404).json({ error: "Link not found" });
+    }
+
+    if (link.deletedAt) {
+      return res.status(404).json({ error: "Link has been deleted" });
     }
 
     if (link.isArchived) {
