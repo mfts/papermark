@@ -43,6 +43,7 @@ export default async function handle(
               allowDownload: true,
               expiresAt: true,
               isArchived: true,
+              deletedAt: true,
               enableWatermark: true,
               watermarkConfig: true,
               name: true,
@@ -96,6 +97,11 @@ export default async function handle(
 
       // if link is archived, we should not allow the download
       if (view.link.isArchived) {
+        return res.status(403).json({ error: "Error downloading" });
+      }
+
+      // if link is deleted, we should not allow the download
+      if (view.link.deletedAt) {
         return res.status(403).json({ error: "Error downloading" });
       }
 

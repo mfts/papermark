@@ -35,6 +35,7 @@ export default async function handle(
           id: id,
         },
         select: {
+          deletedAt: true,
           document: {
             select: {
               id: true,
@@ -57,7 +58,7 @@ export default async function handle(
       });
 
       // If link doesn't exist (deleted), return empty array
-      if (!result || !result.document) {
+      if (!result || !result.document || result.deletedAt) {
         return res.status(200).json([]);
       }
 

@@ -7,14 +7,14 @@ import { type Message } from "ai/react";
 import { getServerSession } from "next-auth";
 import { usePlausible } from "next-plausible";
 
-import { Chat } from "@/components/chat/chat";
-import Sparkle from "@/components/shared/icons/sparkle";
-import { Button } from "@/components/ui/button";
-
 import { getFile } from "@/lib/files/get-file";
 import prisma from "@/lib/prisma";
 import { usePlan } from "@/lib/swr/use-billing";
 import { CustomUser } from "@/lib/types";
+
+import { Chat } from "@/components/chat/chat";
+import Sparkle from "@/components/shared/icons/sparkle";
+import { Button } from "@/components/ui/button";
 
 export const getServerSideProps = async (context: any) => {
   const { linkId } = context.params;
@@ -30,7 +30,7 @@ export const getServerSideProps = async (context: any) => {
   }
 
   const link = await prisma.link.findUnique({
-    where: { id: linkId },
+    where: { id: linkId, deletedAt: null },
     select: {
       document: {
         select: {

@@ -52,6 +52,7 @@ export default async function handle(
           links: {
             where: {
               linkType: "DATAROOM_LINK",
+              deletedAt: null,
             },
             orderBy: {
               createdAt: "desc",
