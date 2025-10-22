@@ -75,6 +75,7 @@ export default async function handle(
         prisma.link.findMany({
           where: {
             permissionGroupId: { in: groupIds },
+            deletedAt: null,
           },
           select: {
             id: true,

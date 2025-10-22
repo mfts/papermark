@@ -14,6 +14,7 @@ import {
   FileSlidersIcon,
   LinkIcon,
   Settings2Icon,
+  Trash2Icon,
 } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { toast } from "sonner";
@@ -63,6 +64,7 @@ import MoreHorizontal from "../shared/icons/more-horizontal";
 import { Badge } from "../ui/badge";
 import { Label } from "../ui/label";
 import { ButtonTooltip } from "../ui/tooltip";
+import { useDeleteLinkModal } from "./delete-link-modal";
 import EmbedCodeModal from "./embed-code-modal";
 import LinkActiveControls, {
   countActiveSettings,
@@ -170,6 +172,12 @@ export default function LinksTable({
     useState<boolean>(false);
   const [editPermissionLink, setEditPermissionLink] =
     useState<LinkWithViews | null>(null);
+
+  const [linkToDelete, setLinkToDelete] = useState<LinkWithViews | null>(null);
+  const { setShowDeleteLinkModal, DeleteLinkModal } = useDeleteLinkModal({
+    link: linkToDelete,
+    targetType,
+  });
 
   const handleCopyToClipboard = (linkString: string) => {
     copyToClipboard(`${linkString}`, "Link copied to clipboard.");
@@ -905,6 +913,21 @@ export default function LinksTable({
                                 <Code2Icon className="mr-2 h-4 w-4" />
                                 Get Embed Code
                               </DropdownMenuItem>
+                              {!isFree && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setLinkToDelete(link);
+                                      setShowDeleteLinkModal(true);
+                                    }}
+                                    className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                                  >
+                                    <Trash2Icon className="mr-2 h-4 w-4" />
+                                    Delete Link
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -983,6 +1006,8 @@ export default function LinksTable({
             linkName={selectedEmbedLink.name}
           />
         )}
+
+        <DeleteLinkModal />
       </div>
     </>
   );

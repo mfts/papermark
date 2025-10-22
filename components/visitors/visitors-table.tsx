@@ -180,7 +180,9 @@ export default function VisitorsTable({
                                 )}
                               </p>
                               <p className="text-xs text-muted-foreground/60 sm:text-sm">
-                                {view.link.name ? view.link.name : view.linkId}
+                                {view.link && view.link.name
+                                  ? view.link.name
+                                  : view.linkId}
                               </p>
                             </div>
                           </div>
@@ -325,7 +327,7 @@ export default function VisitorsTable({
                                     )}
                                   </p>
                                   <p className="text-xs text-muted-foreground/60 sm:text-sm">
-                                    {view.link.name
+                                    {view.link && view.link.name
                                       ? view.link.name
                                       : view.linkId}
                                   </p>

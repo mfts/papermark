@@ -56,6 +56,7 @@ export default async function handle(
           by: ["documentId"],
           where: {
             documentId: { in: documentIds },
+            deletedAt: null,
           },
           _count: { id: true },
         }),

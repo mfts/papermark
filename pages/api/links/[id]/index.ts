@@ -42,6 +42,7 @@ export default async function handle(
           enableScreenshotProtection: true,
           password: true,
           isArchived: true,
+          deletedAt: true,
           enableIndexFile: true,
           enableCustomMetatag: true,
           metaTitle: true,
@@ -94,6 +95,10 @@ export default async function handle(
 
       if (!link) {
         return res.status(404).json({ error: "Link not found" });
+      }
+
+      if (link.deletedAt) {
+        return res.status(404).json({ error: "Link has been deleted" });
       }
 
       if (link.isArchived) {
@@ -456,6 +461,7 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
+    const userId = (session.user as CustomUser).id;
     const { id } = req.query as { id: string };
 
     try {
@@ -469,6 +475,25 @@ export default async function handle(
               ownerId: true,
             },
           },
+          dataroom: {
+            select: {
+              teamId: true,
+            },
+          },
+          team: {
+            select: {
+              plan: true,
+              users: {
+                where: {
+                  userId: userId,
+                },
+                select: {
+                  userId: true,
+                  role: true,
+                },
+              },
+            },
+          },
         },
       });
 
@@ -476,15 +501,37 @@ export default async function handle(
         return res.status(404).json({ error: "Link not found" });
       }
 
-      if (
-        linkToBeDeleted.document!.ownerId !== (session.user as CustomUser).id
-      ) {
-        return res.status(401).end("Unauthorized to access the link");
+      // Check if team is on free plan
+      if (linkToBeDeleted.team?.plan === "free") {
+        return res.status(403).json({
+          error:
+            "Link deletion is not available on the free plan. Please upgrade to delete links.",
+        });
       }
 
-      await prisma.link.delete({
+      // Check authorization based on link type
+      let isAuthorized = false;
+
+      if (linkToBeDeleted.documentId && linkToBeDeleted.document) {
+        // Document link - check if user owns the document
+        isAuthorized = linkToBeDeleted.document.ownerId === userId;
+      } else if (linkToBeDeleted.dataroomId && linkToBeDeleted.team) {
+        // Dataroom link - check if user is a member of the team
+        isAuthorized = linkToBeDeleted.team.users.length > 0;
+      }
+
+      if (!isAuthorized) {
+        return res.status(401).end("Unauthorized to delete this link");
+      }
+
+      // Soft delete the link by setting deletedAt and isArchived
+      await prisma.link.update({
         where: {
           id: id,
+        },
+        data: {
+          deletedAt: new Date(),
+          isArchived: true,
         },
       });
 

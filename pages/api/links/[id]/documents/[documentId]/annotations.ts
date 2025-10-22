@@ -37,6 +37,7 @@ export default async function handle(
             teamId: true,
             documentId: true,
             dataroomId: true,
+            deletedAt: true,
           },
         },
       },
@@ -44,6 +45,10 @@ export default async function handle(
 
     if (!view) {
       return res.status(404).json({ error: "View not found" });
+    }
+
+    if (view.link.deletedAt) {
+      return res.status(404).json({ error: "Link deleted" });
     }
 
     // Check TTL - deny access for views older than 23 hours

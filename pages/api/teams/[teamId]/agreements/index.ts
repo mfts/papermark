@@ -54,7 +54,11 @@ export default async function handle(
             include: {
               _count: {
                 select: {
-                  links: true,
+                  links: {
+                    where: {
+                      deletedAt: null,
+                    },
+                  },
                 },
               },
             },

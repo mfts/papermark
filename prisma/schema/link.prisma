@@ -27,6 +27,7 @@ model Link {
   emailAuthenticated         Boolean    @default(false) // Optional email authentication flag
   allowDownload              Boolean?   @default(false) // Optional give user a option to allow to download the document
   isArchived                 Boolean    @default(false) // Indicates if the link is archived
+  deletedAt                  DateTime? // Soft delete timestamp
   views                      View[]
   domain                     Domain?    @relation(fields: [domainId], references: [id], onDelete: SetNull)
   domainId                   String? // This can be nullable, representing links without custom domains
@@ -88,6 +89,7 @@ model Link {
   @@index([teamId])
   @@index([documentId, isArchived]) // Performance optimization for active links filtering
   @@index([permissionGroupId]) // Performance optimization for permission group queries
+  @@index([deletedAt]) // Performance optimization for filtering deleted links
 }
 
 model LinkPreset {

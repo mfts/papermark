@@ -35,6 +35,7 @@ export default async function handle(
           id: id,
         },
         select: {
+          deletedAt: true,
           document: {
             select: {
               id: true,
@@ -56,7 +57,12 @@ export default async function handle(
         },
       });
 
-      const docId = result?.document!.id!;
+      // If link doesn't exist (deleted), return empty array
+      if (!result || !result.document || result.deletedAt) {
+        return res.status(200).json([]);
+      }
+
+      const docId = result.document.id;
 
       // check if the the team that own the document has the current user
       await getDocumentWithTeamAndUser({

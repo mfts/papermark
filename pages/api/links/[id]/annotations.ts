@@ -45,6 +45,10 @@ export default async function handle(
       return res.status(404).json({ error: "Annotation not found" });
     }
 
+    if (view.link.deletedAt) {
+      return res.status(404).json({ error: "Link deleted" });
+    }
+
     if (view.viewedAt < new Date(Date.now() - 1000 * 60 * 60 * 23)) {
       // if view is older than 23 hours, we should not allow the annotations to be accessed
       return res.status(404).json({ error: "Annotation not found" });

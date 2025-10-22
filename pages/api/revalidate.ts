@@ -79,6 +79,7 @@ export default async function handler(
           links: {
             where: {
               isArchived: false,
+              deletedAt: null,
               domainId: null,
             },
             select: {
