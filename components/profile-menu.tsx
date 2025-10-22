@@ -7,6 +7,8 @@ import { HelpCircle, LogOut, Search } from "lucide-react";
 import { FileText } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
+import { cn } from "@/lib/utils";
+
 import ChevronUp from "@/components/shared/icons/chevron-up";
 import {
   Command,
@@ -25,8 +27,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-
-import { cn } from "@/lib/utils";
 
 import { SearchCommand } from "./search-command";
 import UserRound from "./shared/icons/user-round";
@@ -141,7 +141,7 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
                   </button>
 
                   <a
-                    href="mailto:support@papermark.io"
+                    href="mailto:support@papermark.com"
                     className="my-1 flex items-center px-3 py-2 text-sm duration-200 hover:bg-gray-200 dark:hover:bg-muted"
                   >
                     <HelpCircle className="mr-2 h-4 w-4" />

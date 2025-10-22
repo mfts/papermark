@@ -47,7 +47,7 @@ const Progress = React.forwardRef<
         <div className="absolute inset-0 flex items-center justify-center py-2">
           <div className="absolute inset-0 flex items-center justify-center gap-x-2 overflow-hidden bg-destructive text-destructive-foreground">
             <span className="text-xs">{text}</span>
-            <a href="mailto:support@papermark.io" title="Contact Support">
+            <a href="mailto:support@papermark.com" title="Contact Support">
               <HelpCircleIcon className="size-4" />
             </a>
           </div>

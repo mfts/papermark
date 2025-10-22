@@ -1,6 +1,6 @@
-import LoginLink from "@/components/emails/verification-link";
-
 import { sendEmail } from "@/lib/resend";
+
+import LoginLink from "@/components/emails/verification-link";
 
 import { generateChecksum } from "../utils/generate-checksum";
 
@@ -20,7 +20,8 @@ export const sendVerificationRequestEmail = async (params: {
   try {
     await sendEmail({
       to: email as string,
-      subject: "Welcome to Papermark!",
+      system: true,
+      subject: "Your Papermark Login Link",
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
     });

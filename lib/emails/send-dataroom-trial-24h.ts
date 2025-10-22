@@ -12,6 +12,7 @@ export const sendDataroomTrial24hReminderEmail = async (params: {
   try {
     await sendEmail({
       to: email,
+      from: "Marc Seitz <marc@papermark.com>",
       subject: "Your Data Room plan trial expires in 24 hours",
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
