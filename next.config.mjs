@@ -26,13 +26,9 @@ const nextConfig = {
         ],
       },
       {
-        source: "/view/cm2xiaxzo000d147xszm9q72o",
-        destination: "/view/cm34cqqqx000212oekj9upn8o",
-        permanent: false,
-      },
-      {
-        source: "/view/cm5morpmg000btdwrlahi7f2y",
-        destination: "/view/cm68iygxd0005wuf5svbr6c1x",
+        // temporary redirect set on 2025-10-22
+        source: "/view/cmdn06aw00001ju04jgsf8h4f",
+        destination: "/view/cmh0uiv6t001mjm04sk10ecc8",
         permanent: false,
       },
       {
