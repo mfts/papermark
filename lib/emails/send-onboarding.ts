@@ -1,10 +1,10 @@
+import { sendEmail } from "@/lib/resend";
+
+import Onboarding5Email from "@/components/emails/data-rooms-information";
 import Onboarding1Email from "@/components/emails/onboarding-1";
 import Onboarding2Email from "@/components/emails/onboarding-2";
 import Onboarding3Email from "@/components/emails/onboarding-3";
 import Onboarding4Email from "@/components/emails/onboarding-4";
-import Onboarding5Email from "@/components/emails/data-rooms-information";
-
-import { sendEmail } from "@/lib/resend";
 
 import { CreateUserEmailProps } from "../types";
 
@@ -55,6 +55,7 @@ export const sendOnboardingEmail = async (
     await sendEmail({
       to: email as string,
       subject,
+      replyTo: "Papermark <support@papermark.com>",
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
     });
