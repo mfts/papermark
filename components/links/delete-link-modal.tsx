@@ -4,7 +4,9 @@ import {
   Dispatch,
   SetStateAction,
   useCallback,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -38,6 +40,17 @@ function DeleteLinkModal({
 
   const [deleting, setDeleting] = useState(false);
   const [isValid, setIsValid] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Reset validation and clear input when modal opens
+  useEffect(() => {
+    if (showDeleteLinkModal) {
+      setIsValid(false);
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+    }
+  }, [showDeleteLinkModal]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
@@ -157,6 +170,7 @@ function DeleteLinkModal({
           </label>
           <div className="relative mt-1 rounded-md shadow-sm">
             <Input
+              ref={inputRef}
               type="text"
               name="verification"
               id="verification"
