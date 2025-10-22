@@ -42,7 +42,7 @@ export default function CustomFieldsPanel({
   const { isDatarooms, isDataroomsPlus, isBusiness } = usePlan();
 
   const fieldLimit = useMemo(() => {
-    if (isDatarooms || isDataroomsPlus) return 3;
+    if (isDatarooms || isDataroomsPlus) return 5;
     if (isBusiness) return 1;
     return 0;
   }, [isDatarooms, isDataroomsPlus, isBusiness]);
