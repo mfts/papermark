@@ -93,8 +93,8 @@ export default function DataroomTrial() {
 
       await mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
 
-      // Instead of redirecting to "/datarooms", we'll navigate to the dataroom-upload page
-      router.push(`/welcome?type=dataroom-upload&dataroomId=${dataroomId}`);
+      // Navigate to dataroom choice page (scratch vs templates)
+      router.push(`/welcome?type=dataroom-choice&dataroomId=${dataroomId}`);
     } catch (error) {
       toast.error("Error adding dataroom. Please try again.");
       console.error("Error creating dataroom:", error);
@@ -131,6 +131,9 @@ export default function DataroomTrial() {
         <h1 className="font-display max-w-lg text-3xl font-semibold transition-colors sm:text-4xl">
           Start a 7-day free trial!
         </h1>
+        {/* <p className="mt-2 text-lg text-muted-foreground">
+          Data Room Plan Trial
+        </p> */}
       </motion.div>
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
@@ -306,10 +309,12 @@ export default function DataroomTrial() {
               </UpgradePlanModal>{" "}
               plan. <br /> */}
               No credit card is required. After the trial, upgrade to{" "}
-              <UpgradePlanModal clickedPlan={PlanEnum.Business}>
-                <button className="underline">
-                  Papermark Business or Data Rooms
-                </button>
+              <UpgradePlanModal
+                clickedPlan={PlanEnum.Business}
+                highlightItem={["datarooms"]}
+                trigger="dataroom_trial_form"
+              >
+                <button className="underline">Papermark Data Rooms</button>
               </UpgradePlanModal>{" "}
               to continue using data rooms.
             </div>
