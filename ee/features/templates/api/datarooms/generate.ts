@@ -90,49 +90,54 @@ export default async function handle(
 
       const pId = newId("dataroom");
 
-      // Create the dataroom
-      const dataroom = await prisma.dataroom.create({
-        data: {
-          name: name,
-          teamId: teamId,
-          pId: pId,
-        },
-      });
-
       // Create folders based on the selected template
       const template = DATAROOM_TEMPLATES[type];
 
-      // Helper function to create folders recursively
-      const createFolders = async (
-        folders: FolderTemplate[],
-        parentPath: string = "",
-        parentId: string | null = null,
-      ): Promise<void> => {
-        for (const folder of folders) {
-          const folderPath = parentPath + "/" + slugify(folder.name);
+      // Create the dataroom and folders in a transaction to prevent hanging results
+      const dataroom = await prisma.$transaction(async (tx) => {
+        // Create the dataroom
+        const createdDataroom = await tx.dataroom.create({
+          data: {
+            name: name,
+            teamId: teamId,
+            pId: pId,
+          },
+        });
 
-          // Create the folder
-          const createdFolder = await prisma.dataroomFolder.create({
-            data: {
-              name: folder.name,
-              path: folderPath,
-              parentId: parentId,
-              dataroomId: dataroom.id,
-            },
-          });
+        // Helper function to create folders recursively
+        const createFolders = async (
+          folders: FolderTemplate[],
+          parentPath: string = "",
+          parentId: string | null = null,
+        ): Promise<void> => {
+          for (const folder of folders) {
+            const folderPath = parentPath + "/" + slugify(folder.name);
 
-          // If the folder has subfolders, create them recursively
-          if (folder.subfolders && folder.subfolders.length > 0) {
-            await createFolders(
-              folder.subfolders,
-              folderPath,
-              createdFolder.id,
-            );
+            // Create the folder
+            const createdFolder = await tx.dataroomFolder.create({
+              data: {
+                name: folder.name,
+                path: folderPath,
+                parentId: parentId,
+                dataroomId: createdDataroom.id,
+              },
+            });
+
+            // If the folder has subfolders, create them recursively
+            if (folder.subfolders && folder.subfolders.length > 0) {
+              await createFolders(
+                folder.subfolders,
+                folderPath,
+                createdFolder.id,
+              );
+            }
           }
-        }
-      };
+        };
 
-      await createFolders(template.folders);
+        await createFolders(template.folders);
+
+        return createdDataroom;
+      });
 
       const dataroomWithCount = {
         ...dataroom,

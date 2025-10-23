@@ -64,37 +64,40 @@ export default async function handle(
 
       const template = DATAROOM_TEMPLATES[type];
 
-      // Helper function to create folders recursively
-      const createFolders = async (
-        folders: FolderTemplate[],
-        parentPath: string = "",
-        parentId: string | null = null,
-      ): Promise<void> => {
-        for (const folder of folders) {
-          const folderPath = parentPath + "/" + slugify(folder.name);
+      // Create folders in a transaction to prevent hanging results
+      await prisma.$transaction(async (tx) => {
+        // Helper function to create folders recursively
+        const createFolders = async (
+          folders: FolderTemplate[],
+          parentPath: string = "",
+          parentId: string | null = null,
+        ): Promise<void> => {
+          for (const folder of folders) {
+            const folderPath = parentPath + "/" + slugify(folder.name);
 
-          // Create the folder
-          const createdFolder = await prisma.dataroomFolder.create({
-            data: {
-              name: folder.name,
-              path: folderPath,
-              parentId: parentId,
-              dataroomId: dataroom.id,
-            },
-          });
+            // Create the folder
+            const createdFolder = await tx.dataroomFolder.create({
+              data: {
+                name: folder.name,
+                path: folderPath,
+                parentId: parentId,
+                dataroomId: dataroom.id,
+              },
+            });
 
-          // If the folder has subfolders, create them recursively
-          if (folder.subfolders && folder.subfolders.length > 0) {
-            await createFolders(
-              folder.subfolders,
-              folderPath,
-              createdFolder.id,
-            );
+            // If the folder has subfolders, create them recursively
+            if (folder.subfolders && folder.subfolders.length > 0) {
+              await createFolders(
+                folder.subfolders,
+                folderPath,
+                createdFolder.id,
+              );
+            }
           }
-        }
-      };
+        };
 
-      await createFolders(template.folders);
+        await createFolders(template.folders);
+      });
 
       res.status(200).json({
         message: "Template applied successfully",
