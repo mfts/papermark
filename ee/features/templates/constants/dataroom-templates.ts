@@ -1,5 +1,3 @@
-// Shared dataroom templates used for both generation and application
-
 export interface FolderTemplate {
   name: string;
   subfolders?: FolderTemplate[];
