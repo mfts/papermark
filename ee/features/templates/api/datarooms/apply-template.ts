@@ -4,6 +4,7 @@ import {
   DATAROOM_TEMPLATES,
   FolderTemplate,
 } from "@/ee/features/templates/constants/dataroom-templates";
+import { applyTemplateSchema } from "@/ee/features/templates/schemas/dataroom-templates";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
@@ -28,14 +29,18 @@ export default async function handle(
       teamId: string;
       id: string;
     };
-    const { type } = req.body as { type: string };
 
-    // Validate the type
-    if (!type || !DATAROOM_TEMPLATES[type]) {
+    // Validate request body using Zod schema for SSRF protection
+    const validationResult = applyTemplateSchema.safeParse(req.body);
+
+    if (!validationResult.success) {
       return res.status(400).json({
         message: "Invalid template type.",
+        errors: validationResult.error.flatten().fieldErrors,
       });
     }
+
+    const { type } = validationResult.data;
 
     try {
       // Check if the user is part of the team and has access to the dataroom

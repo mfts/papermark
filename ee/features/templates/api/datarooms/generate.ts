@@ -4,6 +4,7 @@ import {
   DATAROOM_TEMPLATES,
   FolderTemplate,
 } from "@/ee/features/templates/constants/dataroom-templates";
+import { generateDataroomSchema } from "@/ee/features/templates/schemas/dataroom-templates";
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
@@ -28,14 +29,18 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     const { teamId } = req.query as { teamId: string };
-    const { name, type } = req.body as { name: string; type: string };
 
-    // Validate the type
-    if (!type || !DATAROOM_TEMPLATES[type]) {
+    // Validate request body using Zod schema for SSRF protection
+    const validationResult = generateDataroomSchema.safeParse(req.body);
+
+    if (!validationResult.success) {
       return res.status(400).json({
         message: "Invalid dataroom type. Please select a valid type.",
+        errors: validationResult.error.flatten().fieldErrors,
       });
     }
+
+    const { name, type } = validationResult.data;
 
     try {
       // Check if the user is part of the team
