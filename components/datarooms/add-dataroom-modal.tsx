@@ -265,7 +265,7 @@ export function AddDataroomModal({
                     </Label>
                     <Input
                       id="dataroom-name-generate"
-                      placeholder="ACME Aquisition"
+                      placeholder="ACME Acquisition"
                       value={dataroomName}
                       onChange={(e) => setDataroomName(e.target.value)}
                     />

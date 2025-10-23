@@ -1,24 +1,7 @@
 import { z } from "zod";
 
-/**
- * Valid dataroom template types
- */
-export const DATAROOM_TEMPLATE_TYPES = [
-  "startup-fundraising",
-  "raising-first-fund",
-  "ma-acquisition",
-  "series-a-plus",
-  "real-estate-transaction",
-  "fund-management",
-  "portfolio-management",
-  "project-management",
-  "sales-dataroom",
-] as const;
+import { DATAROOM_TEMPLATE_TYPES } from "../constants/dataroom-templates";
 
-/**
- * Schema for validating template type selection
- * Protects against invalid template types and injection attacks
- */
 export const applyTemplateSchema = z.object({
   type: z
     .enum(DATAROOM_TEMPLATE_TYPES, {

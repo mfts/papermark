@@ -3,6 +3,18 @@ export interface FolderTemplate {
   subfolders?: FolderTemplate[];
 }
 
+export const DATAROOM_TEMPLATE_TYPES = [
+  "startup-fundraising",
+  "raising-first-fund",
+  "ma-acquisition",
+  "series-a-plus",
+  "real-estate-transaction",
+  "fund-management",
+  "portfolio-management",
+  "project-management",
+  "sales-dataroom",
+] as const;
+
 export const DATAROOM_TEMPLATES: Record<
   string,
   { name: string; folders: FolderTemplate[] }
