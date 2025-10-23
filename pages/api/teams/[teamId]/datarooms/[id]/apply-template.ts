@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
@@ -9,7 +8,6 @@ import {
   DATAROOM_TEMPLATES,
   FolderTemplate,
 } from "@/lib/constants/dataroom-templates";
-import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -18,7 +16,6 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "POST") {
-    // POST /api/teams/:teamId/datarooms/generate
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       res.status(401).end("Unauthorized");
@@ -26,75 +23,39 @@ export default async function handle(
     }
 
     const userId = (session.user as CustomUser).id;
-
-    const { teamId } = req.query as { teamId: string };
-    const { name, type } = req.body as { name: string; type: string };
+    const { teamId, id: dataroomId } = req.query as {
+      teamId: string;
+      id: string;
+    };
+    const { type } = req.body as { type: string };
 
     // Validate the type
     if (!type || !DATAROOM_TEMPLATES[type]) {
       return res.status(400).json({
-        message: "Invalid dataroom type. Please select a valid type.",
+        message: "Invalid template type.",
       });
     }
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
+      // Check if the user is part of the team and has access to the dataroom
+      const dataroom = await prisma.dataroom.findUnique({
         where: {
-          id: teamId,
-          plan: {
-            // exclude all teams not on `business`, `datarooms`, `datarooms-plus`, `business+old`, `datarooms+old`, `datarooms-plus+old` plan
-            in: [
-              "business",
-              "datarooms",
-              "datarooms-plus",
-              "business+old",
-              "datarooms+old",
-              "datarooms-plus+old",
-              "datarooms+drtrial",
-              "business+drtrial",
-              "datarooms-plus+drtrial",
-            ],
-          },
-          users: {
-            some: {
-              userId: userId,
+          id: dataroomId,
+          teamId: teamId,
+          team: {
+            users: {
+              some: {
+                userId: userId,
+              },
             },
           },
         },
       });
 
-      if (!team) {
+      if (!dataroom) {
         return res.status(401).end("Unauthorized");
       }
 
-      // Limits: Check if the user has reached the limit of datarooms in the team
-      const dataroomCount = await prisma.dataroom.count({
-        where: {
-          teamId: teamId,
-        },
-      });
-
-      const limits = await getLimits({ teamId, userId });
-
-      if (limits && dataroomCount >= limits.datarooms) {
-        return res
-          .status(403)
-          .json({ message: "You have reached the limit of datarooms" });
-      }
-
-      const pId = newId("dataroom");
-
-      // Create the dataroom
-      const dataroom = await prisma.dataroom.create({
-        data: {
-          name: name,
-          teamId: teamId,
-          pId: pId,
-        },
-      });
-
-      // Create folders based on the selected template
       const template = DATAROOM_TEMPLATES[type];
 
       // Helper function to create folders recursively
@@ -129,21 +90,14 @@ export default async function handle(
 
       await createFolders(template.folders);
 
-      const dataroomWithCount = {
-        ...dataroom,
-        _count: { documents: 0 },
-      };
-
-      res.status(201).json({
-        dataroom: dataroomWithCount,
-        message: "Dataroom generated successfully",
+      res.status(200).json({
+        message: "Template applied successfully",
       });
     } catch (error) {
-      console.error("Error generating dataroom:", error);
-      return res.status(500).json({ error: "Error generating dataroom" });
+      console.error("Error applying template:", error);
+      return res.status(500).json({ error: "Error applying template" });
     }
   } else {
-    // We only allow POST requests
     res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
