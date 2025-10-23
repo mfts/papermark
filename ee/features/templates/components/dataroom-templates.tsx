@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import {
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { useAnalytics } from "@/lib/analytics";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
@@ -78,14 +79,30 @@ export default function DataroomTemplates({
   const analytics = useAnalytics();
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isValidDataroomId, setIsValidDataroomId] = useState(false);
+
+  // Validate dataroomId on mount
+  useEffect(() => {
+    try {
+      z.string().cuid().parse(dataroomId);
+      setIsValidDataroomId(true);
+    } catch (error) {
+      console.error("Invalid dataroom ID:", error);
+      toast.error("Invalid dataroom ID. Redirecting...");
+      router.push("/documents");
+    }
+  }, [dataroomId, router]);
 
   const handleTemplateSelect = async (templateType: string) => {
-    setSelectedTemplate(templateType);
-    setLoading(true);
-
+    // Validate dataroomId before making API call
     try {
+      const dataroomIdParsed = z.string().cuid().parse(dataroomId);
+
+      setSelectedTemplate(templateType);
+      setLoading(true);
+
       const response = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/apply-template`,
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomIdParsed}/apply-template`,
         {
           method: "POST",
           headers: {
@@ -106,19 +123,29 @@ export default function DataroomTemplates({
       }
 
       analytics.capture("Dataroom Template Applied", {
-        dataroomId,
+        dataroomId: dataroomIdParsed,
         templateType,
       });
 
       toast.success("Template applied successfully! 🎉");
-      router.push(`/datarooms/${dataroomId}/documents`);
+      router.push(`/datarooms/${dataroomIdParsed}/documents`);
     } catch (error) {
-      console.error("Error applying template:", error);
-      toast.error("Error applying template. Please try again.");
+      if (error instanceof z.ZodError) {
+        console.error("Invalid dataroom ID:", error);
+        toast.error("Invalid dataroom ID.");
+      } else {
+        console.error("Error applying template:", error);
+        toast.error("Error applying template. Please try again.");
+      }
       setLoading(false);
       setSelectedTemplate(null);
     }
   };
+
+  // Don't render until dataroomId is validated
+  if (!isValidDataroomId) {
+    return null;
+  }
 
   return (
     <motion.div
