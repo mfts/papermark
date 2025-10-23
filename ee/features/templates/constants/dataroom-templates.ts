@@ -59,7 +59,7 @@ export const DATAROOM_TEMPLATES: Record<
       },
       {
         name: "4 Fund Model",
-        subfolders: [{ name: "XLSX grantular track record" }],
+        subfolders: [{ name: "XLSX granular track record" }],
       },
       {
         name: "5 Legal",
