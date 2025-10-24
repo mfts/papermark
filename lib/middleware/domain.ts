@@ -26,6 +26,12 @@ export default async function DomainMiddleware(req: NextRequest) {
       );
     }
 
+    if (host === "partners.braxtech.net") {
+      return NextResponse.redirect(
+        new URL("https://partners.braxtech.net/investors", req.url),
+      );
+    }
+
     return NextResponse.redirect(
       new URL("https://www.papermark.com/home", req.url),
     );
