@@ -192,7 +192,7 @@ export function ContactsTable({
               onClick={() => handleSort("totalVisits")}
               className={getSortClass("totalVisits")}
             >
-              Total Visits
+              Total Views
               {getSortIcon("totalVisits")}
             </Button>
           );
@@ -222,7 +222,7 @@ export function ContactsTable({
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Last Viewed</TableHead>
-              <TableHead>Total Visits</TableHead>
+              <TableHead>Total Views</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

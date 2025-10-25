@@ -70,9 +70,7 @@ export function AddDataroomModal({
   });
 
   const dataroomSchemaWithType = z.object({
-    name: z.string().trim().min(3, {
-      message: "Please provide a dataroom name with at least 3 characters.",
-    }),
+    name: z.string().trim().optional(),
     type: z.enum(
       [
         "startup-fundraising",
@@ -115,7 +113,10 @@ export function AddDataroomModal({
         : `/api/teams/${teamInfo?.currentTeam?.id}/datarooms`;
 
       const body = useTemplate
-        ? { name: dataroomName.trim(), type: dataroomType }
+        ? {
+            name: dataroomName.trim() || undefined,
+            type: dataroomType,
+          }
         : { name: dataroomName.trim() };
 
       const response = await fetch(endpoint, {
@@ -223,7 +224,10 @@ export function AddDataroomModal({
                   className="flex flex-col space-y-4"
                 >
                   <div className="space-y-1">
-                    <Label htmlFor="dataroom-name-create">Dataroom Name</Label>
+                    <Label htmlFor="dataroom-name-create">
+                      Dataroom Name{" "}
+                      <span className="text-black dark:text-white">*</span>
+                    </Label>
                     <Input
                       id="dataroom-name-create"
                       placeholder="ACME Acquisition"
@@ -265,13 +269,16 @@ export function AddDataroomModal({
                     </Label>
                     <Input
                       id="dataroom-name-generate"
-                      placeholder="ACME Acquisition"
+                      placeholder="Leave empty to use template name"
                       value={dataroomName}
                       onChange={(e) => setDataroomName(e.target.value)}
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="dataroom-type">Dataroom Type</Label>
+                    <Label htmlFor="dataroom-type">
+                      Dataroom Type{" "}
+                      <span className="text-black dark:text-white">*</span>
+                    </Label>
                     <Select
                       value={dataroomType}
                       onValueChange={setDataroomType}

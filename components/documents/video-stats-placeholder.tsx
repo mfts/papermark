@@ -19,7 +19,7 @@ export default function VideoStatsPlaceholder({
 
   const mockStats = [
     {
-      name: "Total visits",
+      name: "Total views",
       value: "0",
       active: false,
     },

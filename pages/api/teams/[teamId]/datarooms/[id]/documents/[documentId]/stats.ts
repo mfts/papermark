@@ -103,7 +103,7 @@ export default async function handle(
           views: [],
           duration: { data: [] },
           total_duration: 0,
-          groupedReactions: [],
+          avgCompletionRate: 0,
           totalViews: 0,
           totalPagesMax: 0,
         });
@@ -145,7 +145,7 @@ export default async function handle(
         views: filteredViews,
         duration,
         total_duration: 0, // INFO: hiding this for now
-        groupedReactions: [], // INFO: hiding this as not relevant
+        avgCompletionRate: 0, // INFO: hiding this for now
         totalViews: filteredViews.length,
         completionRate: 0,
         totalPagesMax: dataroomDocument.document.versions[0].numPages,

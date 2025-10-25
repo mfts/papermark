@@ -80,7 +80,7 @@ export default async function handle(
           views: [],
           duration: { data: [] },
           total_duration: 0,
-          groupedReactions: [],
+          avgCompletionRate: 0,
         });
       }
 

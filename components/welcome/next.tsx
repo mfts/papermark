@@ -38,7 +38,7 @@ export default function Next() {
       </motion.div>
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="grid w-full grid-cols-1 divide-y divide-border rounded-md border border-border text-foreground md:grid-cols-2 md:divide-x"
+        className="grid w-full max-w-2xl grid-cols-1 divide-y divide-border rounded-md border border-border text-foreground md:grid-cols-2 md:divide-x"
       >
         <button
           onClick={() =>
@@ -52,7 +52,10 @@ export default function Next() {
           className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
         >
           <FileIcon className="pointer-events-none h-auto w-12 sm:w-12" />
-          <p>Document</p>
+          <p className="text-lg font-medium">Document</p>
+          <p className="text-sm text-muted-foreground">
+            Share a single document with page-by-page analytics
+          </p>
         </button>
         <button
           onClick={() =>
@@ -66,7 +69,10 @@ export default function Next() {
           className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
         >
           <ServerIcon className="pointer-events-none h-auto w-12 sm:w-12" />
-          <p>Data Room</p>
+          <p className="text-lg font-medium">Data Room</p>
+          <p className="text-sm text-muted-foreground">
+            Share multiple documents with folders and page-by-page analytics
+          </p>
         </button>
       </motion.div>
 

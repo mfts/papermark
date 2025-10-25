@@ -414,7 +414,7 @@ const AnalyticsBreadcrumb = () => {
       case "visitors":
         return "Visitors";
       case "views":
-        return "Recent Visits";
+        return "Recent Views";
       default:
         return "Analytics";
     }

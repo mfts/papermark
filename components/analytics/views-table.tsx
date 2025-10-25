@@ -48,6 +48,7 @@ import {
 import { BadgeTooltip } from "@/components/ui/tooltip";
 import { DataTablePagination } from "@/components/visitors/data-table-pagination";
 import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
+
 import { UpgradeButton } from "../ui/upgrade-button";
 
 interface View {
@@ -73,7 +74,7 @@ interface View {
 const columns: ColumnDef<View>[] = [
   {
     accessorKey: "viewerEmail",
-    header: "Recent Visits",
+    header: "Recent Views",
     cell: ({ row }) => (
       <div className="flex items-center overflow-visible sm:space-x-3">
         <VisitorAvatar viewerEmail={row.original.viewerEmail} />
@@ -246,7 +247,7 @@ const columns: ColumnDef<View>[] = [
             "px-0",
           )}
         >
-          Last Visited
+          Last Viewed
           {column.getIsSorted() === "asc" ? (
             <ChevronUpIcon className="ml-2 h-4 w-4" />
           ) : column.getIsSorted() === "desc" ? (
@@ -420,7 +421,7 @@ export default function ViewsTable({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  <p>No visits in the last {interval}</p>
+                  <p>No views in the last {interval}</p>
                 </TableCell>
               </TableRow>
             )}

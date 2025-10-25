@@ -1,9 +1,9 @@
 import ErrorPage from "next/error";
 
+import { useDataroomStats } from "@/lib/swr/use-dataroom-stats";
+
 import StatsElement from "@/components/documents/stats-element";
 import { Skeleton } from "@/components/ui/skeleton";
-
-import { useDataroomStats } from "@/lib/swr/use-dataroom-stats";
 
 export default function StatsCard() {
   const { stats, loading, error } = useDataroomStats();
@@ -30,12 +30,12 @@ export default function StatsCard() {
 
   const statistics = [
     {
-      name: "Number of visits",
+      name: "Number of views",
       value: stats?.dataroomViews.length.toString() ?? "0",
       active: true,
     },
     {
-      name: "Number of documents visits",
+      name: "Number of documents views",
       value: stats?.documentViews.length.toString() ?? "0",
       active: true,
     },

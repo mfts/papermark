@@ -138,8 +138,8 @@ export default function VisitorsTable({
           <TableHeader>
             <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
               <TableHead>Name</TableHead>
-              <TableHead>Visit Duration</TableHead>
-              <TableHead>Visit Completion</TableHead>
+              <TableHead>View Duration</TableHead>
+              <TableHead>View Completion</TableHead>
               <TableHead>Last Viewed</TableHead>
               <TableHead className="text-center sm:text-right"></TableHead>
             </TableRow>
@@ -150,7 +150,7 @@ export default function VisitorsTable({
                 <TableRow>
                   <TableCell colSpan={5}>
                     <div className="flex h-40 w-full items-center justify-center">
-                      <p>No visits yet. Try sharing a link.</p>
+                      <p>No views yet. Try sharing a link.</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -478,7 +478,7 @@ export default function VisitorsTable({
                     <div className="flex flex-col items-start justify-center gap-1 sm:flex-row sm:items-center">
                       <span className="flex items-center gap-x-1">
                         <AlertTriangleIcon className="inline-block h-4 w-4 text-yellow-500" />
-                        Some older visits may not be shown because your document
+                        Some older views may not be shown because your document
                         has more than 20 views.{" "}
                       </span>
                       <UpgradePlanModal

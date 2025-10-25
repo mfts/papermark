@@ -257,7 +257,7 @@ async function exportDocumentVisits(
     "Name",
     "Email",
     "Link Name",
-    "Total Visit Duration (s)",
+    "Total View Duration (s)",
     "Total Document Completion (%)",
     "Document version",
     "Downloaded at",

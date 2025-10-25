@@ -267,7 +267,7 @@ export function ContactsDocumentsTable({
               <TableHead>Document Name</TableHead>
               <TableHead>Last Viewed</TableHead>
               <TableHead>Time Spent</TableHead>
-              <TableHead>Visits</TableHead>
+              <TableHead>Views</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
