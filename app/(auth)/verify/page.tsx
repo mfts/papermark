@@ -57,7 +57,8 @@ export default function VerifyPage({
   const isValidVerificationUrl = (url: string, checksum: string): boolean => {
     try {
       const urlObj = new URL(url);
-      if (urlObj.origin !== process.env.NEXTAUTH_URL) return false;
+      const expectedOrigin = new URL(process.env.NEXTAUTH_URL!).origin;
+      if (urlObj.origin !== expectedOrigin) return false;
       const expectedChecksum = generateChecksum(url);
       return checksum === expectedChecksum;
     } catch {
