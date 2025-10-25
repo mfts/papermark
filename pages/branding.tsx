@@ -543,7 +543,6 @@ export default function Branding() {
                     onClick={saveBranding}
                     loading={isLoading}
                     disabled={!!welcomeMessageError}
-                    className="bg-black text-white hover:bg-gray-800"
                   >
                     Save changes
                   </Button>
