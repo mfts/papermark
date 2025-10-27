@@ -42,7 +42,7 @@ export default function ProBanner({
       </p>
       <div className="flex">
         <UpgradePlanModal
-          clickedPlan={PlanEnum.Pro}
+          clickedPlan={PlanEnum.Business}
           trigger={"pro_banner"}
         >
           <Button

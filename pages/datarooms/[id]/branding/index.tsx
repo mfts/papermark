@@ -292,7 +292,7 @@ export default function DataroomBrandPage() {
         {/* Main Layout */}
         <div className="flex w-full flex-col gap-6 lg:flex-row lg:gap-8">
           {/* Settings Column */}
-          <div className="flex w-full flex-col gap-6 lg:w-[480px] lg:shrink-0">
+          <div className="flex w-full flex-col gap-6 lg:w-[420px] lg:shrink-0">
             {/* Scrollable Settings */}
             <div className="flex flex-col gap-6 lg:max-h-[calc(100vh-400px)] lg:overflow-y-auto lg:pr-4">
               {/* Logo Card */}
@@ -732,8 +732,11 @@ export default function DataroomBrandPage() {
               {/* Dataroom View */}
               <TabsContent value="dataroom-view" className="mt-6">
                 <div className="flex justify-center">
-                  <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                    <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
+                  <div
+                    className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
+                    style={{ aspectRatio: "698 / 450" }}
+                  >
+                    <div className="relative h-full overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
                       <div className="mx-auto flex h-7 items-center justify-center">
                         <div className="pointer-events-none absolute left-3">
                           <div className="flex flex-row flex-nowrap justify-start">
@@ -779,24 +782,11 @@ export default function DataroomBrandPage() {
                         name="dataroom-view"
                         id="dataroom-view"
                         src={`/room_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${banner === "no-banner" ? encodeURIComponent("no-banner") : bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
+                        className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
                         style={{
-                          width: "1390px",
-                          height: "831px",
-                          transform: "scale(0.497)",
-                          transformOrigin: "left top",
-                          background: "rgb(255, 255, 255)",
-                          position: "absolute",
-                          top: "0px",
-                          left: "0px",
-                          borderTop: "none",
-                          borderRight: "0px",
-                          borderBottom: "0px",
-                          borderLeft: "0px",
-                          borderImage: "initial",
-                          overflow: "hidden",
+                          width: "200%",
+                          height: "200%",
                           pointerEvents: "none",
-                          borderBottomLeftRadius: "8px",
-                          borderBottomRightRadius: "8px",
                           marginTop: "29px",
                         }}
                       />
@@ -807,8 +797,11 @@ export default function DataroomBrandPage() {
               {/* Document View */}
               <TabsContent value="document-view" className="mt-6">
                 <div className="flex justify-center">
-                  <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                    <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
+                  <div
+                    className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
+                    style={{ aspectRatio: "698 / 450" }}
+                  >
+                    <div className="relative h-full overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
                       <div className="mx-auto flex h-7 items-center justify-center">
                         <div className="pointer-events-none absolute left-3">
                           <div className="flex flex-row flex-nowrap justify-start">
@@ -854,24 +847,11 @@ export default function DataroomBrandPage() {
                         name="document-view"
                         id="document-view"
                         src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
+                        className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
                         style={{
-                          width: "1390px",
-                          height: "831px",
-                          transform: "scale(0.497)",
-                          transformOrigin: "left top",
-                          background: "rgb(255, 255, 255)",
-                          position: "absolute",
-                          top: "0px",
-                          left: "0px",
-                          borderTop: "none",
-                          borderRight: "0px",
-                          borderBottom: "0px",
-                          borderLeft: "0px",
-                          borderImage: "initial",
-                          overflow: "hidden",
+                          width: "200%",
+                          height: "200%",
                           pointerEvents: "none",
-                          borderBottomLeftRadius: "8px",
-                          borderBottomRightRadius: "8px",
                           marginTop: "29px",
                         }}
                       />
@@ -881,8 +861,11 @@ export default function DataroomBrandPage() {
               </TabsContent>
               <TabsContent value="access-view" className="mt-6">
                 <div className="flex justify-center">
-                  <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                    <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
+                  <div
+                    className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
+                    style={{ aspectRatio: "698 / 450" }}
+                  >
+                    <div className="relative h-full overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
                       <div className="mx-auto flex h-7 items-center justify-center">
                         <div className="pointer-events-none absolute left-3">
                           <div className="flex flex-row flex-nowrap justify-start">
@@ -928,24 +911,11 @@ export default function DataroomBrandPage() {
                         name="access-screen"
                         id="access-screen"
                         src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
+                        className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
                         style={{
-                          width: "1390px",
-                          height: "831px",
-                          transform: "scale(0.497)",
-                          transformOrigin: "left top",
-                          background: "rgb(255, 255, 255)",
-                          position: "absolute",
-                          top: "0px",
-                          left: "0px",
-                          borderTop: "none",
-                          borderRight: "0px",
-                          borderBottom: "0px",
-                          borderLeft: "0px",
-                          borderImage: "initial",
-                          overflow: "hidden",
+                          width: "200%",
+                          height: "200%",
                           pointerEvents: "none",
-                          borderBottomLeftRadius: "8px",
-                          borderBottomRightRadius: "8px",
                           marginTop: "29px",
                         }}
                       />
@@ -957,7 +927,7 @@ export default function DataroomBrandPage() {
 
             {/* Preview Mode Info */}
             {/* <div className="mt-6 flex justify-center">
-              <div className="w-[698px] space-y-2 rounded-lg border border-border bg-card p-4">
+              <div className="w-full max-w-[698px] space-y-2 rounded-lg border border-border bg-card p-4">
                 <h4 className="text-sm font-semibold text-foreground">
                   Preview Mode
                 </h4>

@@ -204,11 +204,11 @@ export default function Branding() {
           <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
             <div className="space-y-1">
               <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-                Branding
+                Global Branding
               </h1>
               <p className="text-xs text-muted-foreground sm:text-sm">
                 Customize how your brand appears globally across Papermark
-                documents your visitors see.
+                documents and data rooms your visitors see.
               </p>
             </div>
           </section>
@@ -237,12 +237,13 @@ export default function Branding() {
           <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
             <div className="space-y-1">
               <h3 className="text-2xl font-semibold tracking-tight text-foreground">
-                Document Branding
+                Global Branding
               </h3>
               <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
-                All direct links to documents will have your branding applied.
+                All direct links to documents and data rooms will have your
+                branding applied.
                 <span className="italic">
-                  Data rooms are styled individually.
+                  You can ovewrite the branding for each data room individually.
                 </span>
                 <BadgeTooltip
                   linkText="Click here"
@@ -259,7 +260,7 @@ export default function Branding() {
           {/* Main Layout */}
           <div className="flex w-full flex-col gap-6 lg:flex-row lg:gap-8">
             {/* Settings Column */}
-            <div className="flex w-full flex-col gap-6 lg:w-[480px] lg:shrink-0">
+            <div className="flex w-full flex-col gap-6 lg:w-[420px] lg:shrink-0">
               {/* Scrollable Settings */}
               <div className="flex flex-col gap-6 lg:max-h-[calc(100vh-400px)] lg:overflow-y-auto lg:pr-4">
                 {/* Logo Card */}
@@ -570,8 +571,11 @@ export default function Branding() {
                 </TabsList>
                 <TabsContent value="document-view" className="mt-6">
                   <div className="flex justify-center">
-                    <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                      <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
+                    <div
+                      className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
+                      style={{ aspectRatio: "698 / 450" }}
+                    >
+                      <div className="relative h-full overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
                         <div className="mx-auto flex h-7 items-center justify-center">
                           <div className="pointer-events-none absolute left-3">
                             <div className="flex flex-row flex-nowrap justify-start">
@@ -617,24 +621,11 @@ export default function Branding() {
                           name="document-view"
                           id="document-view"
                           src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
+                          className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
                           style={{
-                            width: "1390px",
-                            height: "831px",
-                            transform: "scale(0.497)",
-                            transformOrigin: "left top",
-                            background: "rgb(255, 255, 255)",
-                            position: "absolute",
-                            top: "0px",
-                            left: "0px",
-                            borderTop: "none",
-                            borderRight: "0px",
-                            borderBottom: "0px",
-                            borderLeft: "0px",
-                            borderImage: "initial",
-                            overflow: "hidden",
+                            width: "200%",
+                            height: "200%",
                             pointerEvents: "none",
-                            borderBottomLeftRadius: "8px",
-                            borderBottomRightRadius: "8px",
                             marginTop: "29px",
                           }}
                         ></iframe>
@@ -644,8 +635,11 @@ export default function Branding() {
                 </TabsContent>
                 <TabsContent value="front-page" className="mt-6">
                   <div className="flex justify-center">
-                    <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                      <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
+                    <div
+                      className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
+                      style={{ aspectRatio: "698 / 450" }}
+                    >
+                      <div className="relative h-full overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
                         <div className="mx-auto flex h-7 items-center justify-center">
                           <div className="pointer-events-none absolute left-3">
                             <div className="flex flex-row flex-nowrap justify-start">
@@ -691,24 +685,11 @@ export default function Branding() {
                           name="access-screen"
                           id="access-screen"
                           src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
+                          className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
                           style={{
-                            width: "1390px",
-                            height: "831px",
-                            transform: "scale(0.497)",
-                            transformOrigin: "left top",
-                            background: "rgb(255, 255, 255)",
-                            position: "absolute",
-                            top: "0px",
-                            left: "0px",
-                            borderTop: "none",
-                            borderRight: "0px",
-                            borderBottom: "0px",
-                            borderLeft: "0px",
-                            borderImage: "initial",
-                            overflow: "hidden",
+                            width: "200%",
+                            height: "200%",
                             pointerEvents: "none",
-                            borderBottomLeftRadius: "8px",
-                            borderBottomRightRadius: "8px",
                             marginTop: "29px",
                           }}
                         ></iframe>
@@ -720,7 +701,7 @@ export default function Branding() {
 
               {/* Preview Mode Info */}
               {/* <div className="mt-6 flex justify-center">
-                <div className="w-[698px] space-y-2 rounded-lg border-border bg-card p-4">
+                <div className="w-full max-w-[698px] space-y-2 rounded-lg border-border bg-card p-4">
                   <h4 className="text-sm font-semibold text-foreground">
                     Preview Mode
                   </h4>
