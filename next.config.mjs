@@ -74,6 +74,7 @@ const nextConfig = {
               `style-src 'self' 'unsafe-inline' https: ${isDev ? "http:" : ""}; ` +
               `img-src 'self' data: blob: https: ${isDev ? "http:" : ""}; ` +
               `font-src 'self' data: https: ${isDev ? "http:" : ""}; ` +
+              `worker-src 'self' blob:; ` +
               `frame-ancestors 'none'; ` +
               `connect-src 'self' https: ${isDev ? "http: ws: wss:" : ""}; ` + // Add WebSocket for hot reload
               `${isDev ? "" : "upgrade-insecure-requests;"} ` +
@@ -102,6 +103,7 @@ const nextConfig = {
               `style-src 'self' 'unsafe-inline' https: ${isDev ? "http:" : ""}; ` +
               `img-src 'self' data: blob: https: ${isDev ? "http:" : ""}; ` +
               `font-src 'self' data: https: ${isDev ? "http:" : ""}; ` +
+              `worker-src 'self' blob:; ` +
               "frame-ancestors *; " + // This allows iframe embedding
               `connect-src 'self' https: ${isDev ? "http: ws: wss:" : ""}; ` + // Add WebSocket for hot reload
               `${isDev ? "" : "upgrade-insecure-requests;"}`,
