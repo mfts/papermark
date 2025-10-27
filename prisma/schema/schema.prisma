@@ -73,6 +73,7 @@ model User {
 model Brand {
   id             String  @id @default(cuid())
   logo           String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  banner         String? // Banner image for dataroom view (fallback)
   brandColor     String? // This should be a reference to the brand color
   accentColor    String? // This should be a reference to the accent color
   welcomeMessage String? // This should be a reference to the welcome message

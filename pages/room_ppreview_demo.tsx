@@ -44,11 +44,11 @@ export default function ViewPage() {
         </div>
 
         {/* Banner section */}
-        {brandBanner !== "no-banner" && (
+        {brandBanner && brandBanner !== "no-banner" && (
           <div className="relative h-[30vh]">
             <img
               className="h-[30vh] w-full object-cover"
-              src={brandBanner || DEFAULT_BANNER_IMAGE}
+              src={brandBanner}
               alt="Banner"
               width={1920}
               height={320}

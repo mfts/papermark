@@ -157,7 +157,7 @@ export default async function handle(
 
       const verifyParamsObject = Object.fromEntries(verifyParams.entries());
 
-      const jwtToken = generateJWT(verifyParamsObject);
+      const jwtToken = generateJWT(verifyParamsObject, 60 * 60 * 24 * 7); // 7 days
 
       const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/invitation?token=${jwtToken}`;
 

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 import { useDebounce } from "use-debounce";
 
-import { useDataroomBrand } from "@/lib/swr/use-brand";
+import { useBrand, useDataroomBrand } from "@/lib/swr/use-brand";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { cn, convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
@@ -35,15 +35,16 @@ export default function DataroomBrandPage() {
   const router = useRouter();
   const teamInfo = useTeam();
   const { dataroom } = useDataroom();
-  const { brand } = useDataroomBrand({ dataroomId: dataroom?.id });
+  const { brand: dataroomBrand } = useDataroomBrand({
+    dataroomId: dataroom?.id,
+  });
+  const { brand: globalBrand } = useBrand();
 
   const [brandColor, setBrandColor] = useState<string>("#000000");
   const [accentColor, setAccentColor] = useState<string>("#FFFFFF");
   const [logo, setLogo] = useState<string | null>(null);
-  const [banner, setBanner] = useState<string | null>(DEFAULT_BANNER_IMAGE);
-  const [originalBanner, setOriginalBanner] = useState<string | null>(
-    DEFAULT_BANNER_IMAGE,
-  );
+  const [banner, setBanner] = useState<string | null>(null);
+  const [originalBanner, setOriginalBanner] = useState<string | null>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [bannerBlobUrl, setBannerBlobUrl] = useState<string | null>(null);
   const [welcomeMessage, setWelcomeMessage] = useState<string>(
@@ -139,21 +140,28 @@ export default function DataroomBrandPage() {
   );
 
   useEffect(() => {
-    if (brand) {
-      setBrandColor(brand.brandColor || "#000000");
-      setAccentColor(brand.accentColor || "#FFFFFF");
-      setLogo(brand.logo || null);
-      const bannerValue = brand.banner || DEFAULT_BANNER_IMAGE;
+    // Merge dataroom brand with global brand as fallback
+    if (dataroomBrand || globalBrand) {
+      setBrandColor(
+        dataroomBrand?.brandColor || globalBrand?.brandColor || "#000000",
+      );
+      setAccentColor(
+        dataroomBrand?.accentColor || globalBrand?.accentColor || "#FFFFFF",
+      );
+      setLogo(dataroomBrand?.logo || globalBrand?.logo || null);
+      const bannerValue = dataroomBrand?.banner || globalBrand?.banner || null;
       setBanner(bannerValue);
       setOriginalBanner(bannerValue);
       const message =
-        brand.welcomeMessage || "Your action is requested to continue";
+        dataroomBrand?.welcomeMessage ||
+        globalBrand?.welcomeMessage ||
+        "Your action is requested to continue";
       setWelcomeMessage(message);
       // Validate existing message
       const error = validateWelcomeMessage(message);
       setWelcomeMessageError(error);
     }
-  }, [brand]);
+  }, [dataroomBrand, globalBrand]);
 
   // Handle welcome message change with validation
   const handleWelcomeMessageChange = (value: string) => {
@@ -215,7 +223,7 @@ export default function DataroomBrandPage() {
     const res = await fetch(
       `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroom.id}/branding`,
       {
-        method: brand ? "PUT" : "POST",
+        method: dataroomBrand ? "PUT" : "POST",
         body: JSON.stringify(data),
         headers: {
           "Content-Type": "application/json",
@@ -272,7 +280,7 @@ export default function DataroomBrandPage() {
         <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
             <h3 className="text-2xl font-semibold tracking-tight text-foreground">
-              Branding
+              Data Room Branding
             </h3>
             <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
               Customize your data room&apos;s branding for a cohesive user
@@ -712,7 +720,11 @@ export default function DataroomBrandPage() {
               >
                 Save changes
               </Button>
-              <Button variant="ghost" onClick={handleDelete} disabled={!brand}>
+              <Button
+                variant="ghost"
+                onClick={handleDelete}
+                disabled={!dataroomBrand}
+              >
                 Reset branding
               </Button>
             </div>

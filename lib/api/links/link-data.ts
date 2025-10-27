@@ -213,17 +213,19 @@ export async function fetchDataroomLinkData({
     },
     select: {
       logo: true,
+      banner: true,
       brandColor: true,
       accentColor: true,
+      welcomeMessage: true,
     },
   });
 
   const brand = {
     logo: dataroomBrand?.logo || teamBrand?.logo,
-    banner: dataroomBrand?.banner || null,
+    banner: dataroomBrand?.banner || teamBrand?.banner || null,
     brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
     accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
-    welcomeMessage: dataroomBrand?.welcomeMessage,
+    welcomeMessage: dataroomBrand?.welcomeMessage || teamBrand?.welcomeMessage,
   };
 
   // Extract access controls from either ViewerGroup or PermissionGroup
