@@ -22,9 +22,13 @@ export default function ViewPage() {
         <div className="mx-auto px-2 sm:px-6 lg:px-8">
           <div className="relative flex h-16 items-center justify-between">
             <div className="flex flex-1 items-stretch justify-start">
-              <div className="relative flex h-8 w-36 flex-shrink-0 items-center">
+              <div className="relative flex h-16 w-36 flex-shrink-0 items-center overflow-y-hidden">
                 {brandLogo ? (
-                  <img className="object-contain" src={brandLogo} alt="Logo" />
+                  <img
+                    className="w-full object-contain"
+                    src={brandLogo}
+                    alt="Logo"
+                  />
                 ) : (
                   <div className="text-2xl font-bold tracking-tighter text-white">
                     Papermark

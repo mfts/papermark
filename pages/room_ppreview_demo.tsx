@@ -26,10 +26,10 @@ export default function ViewPage() {
         <div className="mx-auto px-2 sm:px-6 lg:px-8">
           <div className="relative flex h-16 items-center justify-between">
             <div className="flex flex-1 items-center justify-start">
-              <div className="relative flex h-16 w-36 flex-shrink-0 items-center">
+              <div className="relative flex h-16 w-36 flex-shrink-0 items-center overflow-y-hidden">
                 {brandLogo ? (
                   <img
-                    className="h-16 w-36 object-contain"
+                    className="w-full object-contain"
                     src={brandLogo}
                     alt="Logo"
                   />

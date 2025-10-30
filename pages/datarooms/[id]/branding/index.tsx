@@ -736,20 +736,22 @@ export default function DataroomBrandPage() {
           {/* Preview Column */}
           <div className="flex-1 lg:pl-4">
             <Tabs defaultValue="dataroom-view" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="dataroom-view">Dataroom View</TabsTrigger>
-                <TabsTrigger value="document-view">Document View</TabsTrigger>
-                <TabsTrigger value="access-view">Front Page</TabsTrigger>
-              </TabsList>
+              <div className="w-full overflow-x-auto">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="dataroom-view">Dataroom View</TabsTrigger>
+                  <TabsTrigger value="document-view">Document View</TabsTrigger>
+                  <TabsTrigger value="access-view">Front Page</TabsTrigger>
+                </TabsList>
+              </div>
               {/* Dataroom View */}
               <TabsContent value="dataroom-view" className="mt-6">
                 <div className="flex justify-center">
                   <div
                     className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
-                    style={{ aspectRatio: "698 / 450" }}
+                    style={{ height: "450px" }}
                   >
-                    <div className="relative h-full overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
-                      <div className="mx-auto flex h-7 items-center justify-center">
+                    <div className="relative flex h-full flex-col overflow-hidden rounded-lg bg-gray-100">
+                      <div className="mx-auto flex h-7 shrink-0 items-center justify-center">
                         <div className="pointer-events-none absolute left-3">
                           <div className="flex flex-row flex-nowrap justify-start">
                             <div className="pointer-events-auto">
@@ -763,7 +765,7 @@ export default function DataroomBrandPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex w-[70%] items-center justify-center rounded-xl bg-white p-1 opacity-70">
+                        <div className="flex items-center justify-center rounded-xl bg-white p-1 px-2 opacity-70">
                           <div
                             aria-hidden="true"
                             className="mr-1 mt-0.5 flex text-muted-foreground"
@@ -789,19 +791,22 @@ export default function DataroomBrandPage() {
                           </span>
                         </div>
                       </div>
-                      <iframe
-                        key={`dataroom-view-${debouncedBrandColor}-${debouncedAccentColor}-${banner}`}
-                        name="dataroom-view"
-                        id="dataroom-view"
-                        src={`/room_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${banner === "no-banner" ? encodeURIComponent("no-banner") : bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
-                        className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
-                        style={{
-                          width: "200%",
-                          height: "200%",
-                          pointerEvents: "none",
-                          marginTop: "29px",
-                        }}
-                      />
+                      <div className="relative min-h-0 flex-1 overflow-x-auto">
+                        <div className="relative h-full max-w-[1396px]">
+                          <iframe
+                            key={`dataroom-view-${debouncedBrandColor}-${debouncedAccentColor}-${banner}`}
+                            name="dataroom-view"
+                            id="dataroom-view"
+                            src={`/room_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${banner === "no-banner" ? encodeURIComponent("no-banner") : bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
+                            className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
+                            style={{
+                              width: "200%",
+                              height: "200%",
+                              pointerEvents: "none",
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -811,10 +816,10 @@ export default function DataroomBrandPage() {
                 <div className="flex justify-center">
                   <div
                     className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
-                    style={{ aspectRatio: "698 / 450" }}
+                    style={{ height: "450px" }}
                   >
-                    <div className="relative h-full overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
-                      <div className="mx-auto flex h-7 items-center justify-center">
+                    <div className="relative flex h-full flex-col overflow-hidden rounded-lg bg-gray-100">
+                      <div className="mx-auto flex h-7 shrink-0 items-center justify-center">
                         <div className="pointer-events-none absolute left-3">
                           <div className="flex flex-row flex-nowrap justify-start">
                             <div className="pointer-events-auto">
@@ -828,7 +833,7 @@ export default function DataroomBrandPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex w-[70%] items-center justify-center rounded-xl bg-white p-1 opacity-70">
+                        <div className="flex items-center justify-center rounded-xl bg-white p-1 px-2 opacity-70">
                           <div
                             aria-hidden="true"
                             className="mr-1 mt-0.5 flex text-muted-foreground"
@@ -854,19 +859,22 @@ export default function DataroomBrandPage() {
                           </span>
                         </div>
                       </div>
-                      <iframe
-                        key={`document-view-${debouncedBrandColor}-${debouncedAccentColor}`}
-                        name="document-view"
-                        id="document-view"
-                        src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
-                        className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
-                        style={{
-                          width: "200%",
-                          height: "200%",
-                          pointerEvents: "none",
-                          marginTop: "29px",
-                        }}
-                      />
+                      <div className="relative min-h-0 flex-1 overflow-x-auto">
+                        <div className="relative h-full max-w-[1396px]">
+                          <iframe
+                            key={`document-view-${debouncedBrandColor}-${debouncedAccentColor}`}
+                            name="document-view"
+                            id="document-view"
+                            src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
+                            className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
+                            style={{
+                              width: "200%",
+                              height: "200%",
+                              pointerEvents: "none",
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -875,10 +883,10 @@ export default function DataroomBrandPage() {
                 <div className="flex justify-center">
                   <div
                     className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
-                    style={{ aspectRatio: "698 / 450" }}
+                    style={{ height: "450px" }}
                   >
-                    <div className="relative h-full overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
-                      <div className="mx-auto flex h-7 items-center justify-center">
+                    <div className="relative flex h-full flex-col overflow-hidden rounded-lg bg-gray-100">
+                      <div className="mx-auto flex h-7 shrink-0 items-center justify-center">
                         <div className="pointer-events-none absolute left-3">
                           <div className="flex flex-row flex-nowrap justify-start">
                             <div className="pointer-events-auto">
@@ -892,7 +900,7 @@ export default function DataroomBrandPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex w-[70%] items-center justify-center rounded-xl bg-white p-1 opacity-70">
+                        <div className="flex items-center justify-center rounded-xl bg-white p-1 px-2 opacity-70">
                           <div
                             aria-hidden="true"
                             className="mr-1 mt-0.5 flex text-muted-foreground"
@@ -918,19 +926,22 @@ export default function DataroomBrandPage() {
                           </span>
                         </div>
                       </div>
-                      <iframe
-                        key={`access-screen-${debouncedBrandColor}-${debouncedAccentColor}-${debouncedWelcomeMessage}`}
-                        name="access-screen"
-                        id="access-screen"
-                        src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
-                        className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
-                        style={{
-                          width: "200%",
-                          height: "200%",
-                          pointerEvents: "none",
-                          marginTop: "29px",
-                        }}
-                      />
+                      <div className="relative min-h-0 flex-1 overflow-x-auto">
+                        <div className="relative h-full max-w-[1396px]">
+                          <iframe
+                            key={`access-screen-${debouncedBrandColor}-${debouncedAccentColor}-${debouncedWelcomeMessage}`}
+                            name="access-screen"
+                            id="access-screen"
+                            src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
+                            className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
+                            style={{
+                              width: "200%",
+                              height: "200%",
+                              pointerEvents: "none",
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

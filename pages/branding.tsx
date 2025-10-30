@@ -291,21 +291,24 @@ export default function Branding() {
               <h3 className="text-2xl font-semibold tracking-tight text-foreground">
                 Global Branding
               </h3>
-              <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground">
                 All direct links to documents and data rooms will have your
                 branding applied.
-                <span className="italic">
-                  You can ovewrite the branding for each data room individually.
-                </span>
-                <BadgeTooltip
-                  linkText="Click here"
-                  content="How to customize document branding?"
-                  key="branding"
-                  link="https://www.papermark.com/help/article/document-branding"
-                >
-                  <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
-                </BadgeTooltip>
-              </p>
+                <div className="flex items-center gap-2">
+                  <span className="italic">
+                    You can overwrite the branding for each data room
+                    individually.
+                  </span>
+                  <BadgeTooltip
+                    linkText="Click here"
+                    content="How to customize document branding?"
+                    key="branding"
+                    link="https://www.papermark.com/help/article/document-branding"
+                  >
+                    <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+                  </BadgeTooltip>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -737,28 +740,32 @@ export default function Branding() {
             {/* Preview Column */}
             <div className="flex-1 lg:pl-4">
               <Tabs defaultValue="document-view" className="w-full">
-                <TabsList
-                  className={cn(
-                    "grid w-full",
-                    hasDataroomAccess ? "grid-cols-3" : "grid-cols-2",
-                  )}
-                >
-                  <TabsTrigger value="document-view">Document View</TabsTrigger>
-                  {hasDataroomAccess && (
-                    <TabsTrigger value="dataroom-view">
-                      Dataroom View
+                <div className="w-full overflow-x-auto">
+                  <TabsList
+                    className={cn(
+                      "grid w-full",
+                      hasDataroomAccess ? "grid-cols-3" : "grid-cols-2",
+                    )}
+                  >
+                    <TabsTrigger value="document-view">
+                      Document View
                     </TabsTrigger>
-                  )}
-                  <TabsTrigger value="front-page">Front Page</TabsTrigger>
-                </TabsList>
+                    {hasDataroomAccess && (
+                      <TabsTrigger value="dataroom-view">
+                        Dataroom View
+                      </TabsTrigger>
+                    )}
+                    <TabsTrigger value="front-page">Front Page</TabsTrigger>
+                  </TabsList>
+                </div>
                 <TabsContent value="document-view" className="mt-6">
                   <div className="flex justify-center">
                     <div
                       className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
-                      style={{ aspectRatio: "698 / 450" }}
+                      style={{ height: "450px" }}
                     >
-                      <div className="relative h-full overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
-                        <div className="mx-auto flex h-7 items-center justify-center">
+                      <div className="relative flex h-full flex-col overflow-hidden rounded-lg bg-gray-100">
+                        <div className="mx-auto flex h-7 shrink-0 items-center justify-center">
                           <div className="pointer-events-none absolute left-3">
                             <div className="flex flex-row flex-nowrap justify-start">
                               <div className="pointer-events-auto">
@@ -772,7 +779,7 @@ export default function Branding() {
                               </div>
                             </div>
                           </div>
-                          <div className="flex w-[70%] items-center justify-center rounded-xl bg-white p-1 opacity-70">
+                          <div className="flex items-center justify-center rounded-xl bg-white p-1 px-2 opacity-70">
                             <div
                               aria-hidden="true"
                               className="mr-1 mt-0.5 flex text-muted-foreground"
@@ -798,19 +805,22 @@ export default function Branding() {
                             </span>
                           </div>
                         </div>
-                        <iframe
-                          key={`document-view-${debouncedBrandColor}-${debouncedAccentColor}`}
-                          name="document-view"
-                          id="document-view"
-                          src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
-                          className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
-                          style={{
-                            width: "200%",
-                            height: "200%",
-                            pointerEvents: "none",
-                            marginTop: "29px",
-                          }}
-                        ></iframe>
+                        <div className="relative min-h-0 flex-1 overflow-x-auto">
+                          <div className="relative h-full max-w-[1396px]">
+                            <iframe
+                              key={`document-view-${debouncedBrandColor}-${debouncedAccentColor}`}
+                              name="document-view"
+                              id="document-view"
+                              src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
+                              className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
+                              style={{
+                                width: "200%",
+                                height: "200%",
+                                pointerEvents: "none",
+                              }}
+                            ></iframe>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -820,10 +830,10 @@ export default function Branding() {
                     <div className="flex justify-center">
                       <div
                         className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
-                        style={{ aspectRatio: "698 / 450" }}
+                        style={{ height: "450px" }}
                       >
-                        <div className="relative h-full overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
-                          <div className="mx-auto flex h-7 items-center justify-center">
+                        <div className="relative flex h-full flex-col overflow-hidden rounded-lg bg-gray-100">
+                          <div className="mx-auto flex h-7 shrink-0 items-center justify-center">
                             <div className="pointer-events-none absolute left-3">
                               <div className="flex flex-row flex-nowrap justify-start">
                                 <div className="pointer-events-auto">
@@ -837,7 +847,7 @@ export default function Branding() {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex w-[70%] items-center justify-center rounded-xl bg-white p-1 opacity-70">
+                            <div className="flex items-center justify-center rounded-xl bg-white p-1 px-2 opacity-70">
                               <div
                                 aria-hidden="true"
                                 className="mr-1 mt-0.5 flex text-muted-foreground"
@@ -859,23 +869,26 @@ export default function Branding() {
                                 </svg>
                               </div>
                               <span className="whitespace-normal text-xs text-muted-foreground">
-                                papermark.com/dataroom/...
+                                papermark.com/view/...
                               </span>
                             </div>
                           </div>
-                          <iframe
-                            key={`dataroom-view-${debouncedBrandColor}-${debouncedAccentColor}-${banner}`}
-                            name="dataroom-view"
-                            id="dataroom-view"
-                            src={`/room_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${banner === "no-banner" ? encodeURIComponent("no-banner") : bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
-                            className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
-                            style={{
-                              width: "200%",
-                              height: "200%",
-                              pointerEvents: "none",
-                              marginTop: "29px",
-                            }}
-                          />
+                          <div className="relative min-h-0 flex-1 overflow-x-auto">
+                            <div className="relative h-full max-w-[1396px]">
+                              <iframe
+                                key={`dataroom-view-${debouncedBrandColor}-${debouncedAccentColor}-${banner}`}
+                                name="dataroom-view"
+                                id="dataroom-view"
+                                src={`/room_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${banner === "no-banner" ? encodeURIComponent("no-banner") : bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
+                                className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
+                                style={{
+                                  width: "200%",
+                                  height: "200%",
+                                  pointerEvents: "none",
+                                }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -885,10 +898,10 @@ export default function Branding() {
                   <div className="flex justify-center">
                     <div
                       className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
-                      style={{ aspectRatio: "698 / 450" }}
+                      style={{ height: "450px" }}
                     >
-                      <div className="relative h-full overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
-                        <div className="mx-auto flex h-7 items-center justify-center">
+                      <div className="relative flex h-full flex-col overflow-hidden rounded-lg bg-gray-100">
+                        <div className="mx-auto flex h-7 shrink-0 items-center justify-center">
                           <div className="pointer-events-none absolute left-3">
                             <div className="flex flex-row flex-nowrap justify-start">
                               <div className="pointer-events-auto">
@@ -902,7 +915,7 @@ export default function Branding() {
                               </div>
                             </div>
                           </div>
-                          <div className="flex w-[70%] items-center justify-center rounded-xl bg-white p-1 opacity-70">
+                          <div className="flex items-center justify-center rounded-xl bg-white p-1 px-2 opacity-70">
                             <div
                               aria-hidden="true"
                               className="mr-1 mt-0.5 flex text-muted-foreground"
@@ -928,19 +941,22 @@ export default function Branding() {
                             </span>
                           </div>
                         </div>
-                        <iframe
-                          key={`access-screen-${debouncedBrandColor}-${debouncedAccentColor}-${debouncedWelcomeMessage}`}
-                          name="access-screen"
-                          id="access-screen"
-                          src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
-                          className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
-                          style={{
-                            width: "200%",
-                            height: "200%",
-                            pointerEvents: "none",
-                            marginTop: "29px",
-                          }}
-                        ></iframe>
+                        <div className="relative min-h-0 flex-1 overflow-x-auto">
+                          <div className="relative h-full max-w-[1396px]">
+                            <iframe
+                              key={`access-screen-${debouncedBrandColor}-${debouncedAccentColor}-${debouncedWelcomeMessage}`}
+                              name="access-screen"
+                              id="access-screen"
+                              src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
+                              className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
+                              style={{
+                                width: "200%",
+                                height: "200%",
+                                pointerEvents: "none",
+                              }}
+                            ></iframe>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
