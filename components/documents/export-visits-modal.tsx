@@ -315,7 +315,7 @@ export function ExportVisitsModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 dark:bg-gray-800">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Export Visits</h3>
+          <h3 className="text-lg font-semibold">Export Views</h3>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600"

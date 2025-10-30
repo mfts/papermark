@@ -787,7 +787,7 @@ export default function DocumentHeader({
                 }
               >
                 <FileDownIcon className="mr-2 h-4 w-4" />
-                Export visits{" "}
+                Export views{" "}
                 {isFree && <PlanBadge className="ml-2" plan="pro" />}
               </DropdownMenuItem>
 

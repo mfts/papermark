@@ -93,12 +93,15 @@ export default async function handle(
       // Create folders based on the selected template
       const template = DATAROOM_TEMPLATES[type];
 
+      // Use template name + "Data Room" if no name is provided
+      const dataroomName = name?.trim() || `${template.name} Data Room`;
+
       // Create the dataroom and folders in a transaction to prevent hanging results
       const dataroom = await prisma.$transaction(async (tx) => {
         // Create the dataroom
         const createdDataroom = await tx.dataroom.create({
           data: {
-            name: name,
+            name: dataroomName,
             teamId: teamId,
             pId: pId,
           },

@@ -36,12 +36,14 @@ export default function Branding() {
   const teamInfo = useTeam();
   const router = useRouter();
   const { brand } = useBrand();
-  const { plan, isTrial } = usePlan();
+  const { plan, isTrial, isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
 
   const [brandColor, setBrandColor] = useState<string>("#000000");
   const [accentColor, setAccentColor] = useState<string>("#030712");
   const [logo, setLogo] = useState<string | null>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [banner, setBanner] = useState<string | null>(null);
+  const [bannerBlobUrl, setBannerBlobUrl] = useState<string | null>(null);
   const [welcomeMessage, setWelcomeMessage] = useState<string>(
     "Your action is requested to continue",
   );
@@ -51,10 +53,16 @@ export default function Branding() {
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [bannerError, setBannerError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [bannerDragActive, setBannerDragActive] = useState(false);
   const [welcomeMessageError, setWelcomeMessageError] = useState<string | null>(
     null,
   );
+
+  // Check if user has access to dataroom branding features
+  const hasDataroomAccess =
+    isBusiness || isDatarooms || isDataroomsPlus || isTrial;
 
   // Welcome message validation
   const MAX_WELCOME_MESSAGE_LENGTH = 80; // Roughly 2 lines of text
@@ -107,11 +115,38 @@ export default function Branding() {
     [setLogo],
   );
 
+  const onChangeBanner = useCallback(
+    (e: any) => {
+      setBannerError(null);
+      const file = e.target.files[0];
+      if (file) {
+        if (file.size / 1024 / 1024 > 2) {
+          setBannerError("File size too big (max 2MB)");
+        } else if (file.type !== "image/png" && file.type !== "image/jpeg") {
+          setBannerError("File type not supported (.png or .jpg only)");
+        } else {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const dataUrl = e.target?.result as string;
+            setBanner(dataUrl);
+            // create a blob url for preview
+            const blob = convertDataUrlToFile({ dataUrl });
+            const blobUrl = URL.createObjectURL(blob);
+            setBannerBlobUrl(blobUrl);
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    },
+    [setBanner],
+  );
+
   useEffect(() => {
     if (brand) {
       setBrandColor(brand.brandColor || "#000000");
       setAccentColor(brand.accentColor || "#FFFFFF");
       setLogo(brand.logo || null);
+      setBanner(brand.banner || null);
       const message =
         brand.welcomeMessage || "Your action is requested to continue";
       setWelcomeMessage(message);
@@ -140,11 +175,20 @@ export default function Branding() {
     }
 
     setIsLoading(true);
-    let blobUrl: string | null = logo && logo.startsWith("data:") ? null : logo;
+    let logoBlobUrl: string | null =
+      logo && logo.startsWith("data:") ? null : logo;
     if (logo && logo.startsWith("data:")) {
       const blob = convertDataUrlToFile({ dataUrl: logo });
-      blobUrl = await uploadImage(blob);
-      setLogo(blobUrl);
+      logoBlobUrl = await uploadImage(blob);
+      setLogo(logoBlobUrl);
+    }
+
+    let bannerBlobUrl: string | null =
+      banner && banner.startsWith("data:") ? null : banner;
+    if (banner && banner.startsWith("data:")) {
+      const blob = convertDataUrlToFile({ dataUrl: banner });
+      bannerBlobUrl = await uploadImage(blob);
+      setBanner(bannerBlobUrl);
     }
 
     const data = {
@@ -152,7 +196,9 @@ export default function Branding() {
         welcomeMessage.trim() || "Your action is requested to continue",
       brandColor: brandColor,
       accentColor: accentColor,
-      logo: blobUrl,
+      logo: logoBlobUrl,
+      // Only include banner if user has dataroom access (Business+)
+      ...(hasDataroomAccess && { banner: bannerBlobUrl }),
     };
 
     const res = await fetch(
@@ -170,6 +216,11 @@ export default function Branding() {
       mutate(`/api/teams/${teamInfo?.currentTeam?.id}/branding`);
       setIsLoading(false);
       toast.success("Branding updated successfully");
+    } else {
+      setIsLoading(false);
+      const errorData = await res.json().catch(() => ({}));
+      console.error("Save error:", errorData);
+      toast.error(errorData.message || "Failed to save branding");
     }
   };
 
@@ -187,6 +238,7 @@ export default function Branding() {
 
     if (res.ok) {
       setLogo(null);
+      setBanner(null);
       setBrandColor("#000000");
       setAccentColor("#030712");
       setWelcomeMessage("Your action is requested to continue");
@@ -204,11 +256,11 @@ export default function Branding() {
           <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
             <div className="space-y-1">
               <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-                Branding
+                Global Branding
               </h1>
               <p className="text-xs text-muted-foreground sm:text-sm">
                 Customize how your brand appears globally across Papermark
-                documents your visitors see.
+                documents and data rooms your visitors see.
               </p>
             </div>
           </section>
@@ -237,29 +289,33 @@ export default function Branding() {
           <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
             <div className="space-y-1">
               <h3 className="text-2xl font-semibold tracking-tight text-foreground">
-                Document Branding
+                Global Branding
               </h3>
-              <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
-                All direct links to documents will have your branding applied.
-                <span className="italic">
-                  Data rooms are styled individually.
-                </span>
-                <BadgeTooltip
-                  linkText="Click here"
-                  content="How to customize document branding?"
-                  key="branding"
-                  link="https://www.papermark.com/help/article/document-branding"
-                >
-                  <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
-                </BadgeTooltip>
-              </p>
+              <div className="text-sm text-muted-foreground">
+                All direct links to documents and data rooms will have your
+                branding applied.
+                <div className="flex items-center gap-2">
+                  <span className="italic">
+                    You can overwrite the branding for each data room
+                    individually.
+                  </span>
+                  <BadgeTooltip
+                    linkText="Click here"
+                    content="How to customize document branding?"
+                    key="branding"
+                    link="https://www.papermark.com/help/article/document-branding"
+                  >
+                    <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+                  </BadgeTooltip>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Main Layout */}
           <div className="flex w-full flex-col gap-6 lg:flex-row lg:gap-8">
             {/* Settings Column */}
-            <div className="flex w-full flex-col gap-6 lg:w-[480px] lg:shrink-0">
+            <div className="flex w-full flex-col gap-6 lg:w-[420px] lg:shrink-0">
               {/* Scrollable Settings */}
               <div className="flex flex-col gap-6 lg:max-h-[calc(100vh-400px)] lg:overflow-y-auto lg:pr-4">
                 {/* Logo Card */}
@@ -362,6 +418,126 @@ export default function Branding() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Banner Card - Only for Business+ users */}
+                {hasDataroomAccess && (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="banner">
+                          Banner{" "}
+                          <span className="font-normal text-muted-foreground">
+                            (for data rooms, max 2 MB)
+                          </span>
+                        </Label>
+                        <label
+                          htmlFor="banner"
+                          className="group relative mt-2 flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-all hover:border-gray-400 hover:bg-gray-100"
+                        >
+                          <div
+                            className="absolute z-[5] h-full w-full rounded-lg"
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setBannerDragActive(true);
+                            }}
+                            onDragEnter={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setBannerDragActive(true);
+                            }}
+                            onDragLeave={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setBannerDragActive(false);
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setBannerDragActive(false);
+                              setBannerError(null);
+                              const file =
+                                e.dataTransfer.files && e.dataTransfer.files[0];
+                              if (file) {
+                                if (file.size / 1024 / 1024 > 2) {
+                                  setBannerError("File size too big (max 2MB)");
+                                } else if (
+                                  file.type !== "image/png" &&
+                                  file.type !== "image/jpeg"
+                                ) {
+                                  setBannerError(
+                                    "File type not supported (.png or .jpg only)",
+                                  );
+                                } else {
+                                  const reader = new FileReader();
+                                  reader.onload = (e) => {
+                                    const dataUrl = e.target?.result as string;
+                                    setBanner(dataUrl);
+                                    const blob = convertDataUrlToFile({
+                                      dataUrl,
+                                    });
+                                    const blobUrl = URL.createObjectURL(blob);
+                                    setBannerBlobUrl(blobUrl);
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }
+                            }}
+                          />
+                          {!banner ? (
+                            <div
+                              className={cn(
+                                "flex flex-col items-center justify-center gap-2",
+                                bannerDragActive && "scale-105",
+                              )}
+                            >
+                              <UploadIcon
+                                className="h-8 w-8 text-gray-400"
+                                aria-hidden="true"
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                Upload banner image
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="relative flex h-full w-full items-center justify-center p-4">
+                              <img
+                                src={banner}
+                                alt="Banner preview"
+                                className="max-h-full max-w-full object-cover"
+                              />
+                            </div>
+                          )}
+                        </label>
+                        <input
+                          id="banner"
+                          name="banner"
+                          type="file"
+                          accept="image/jpeg,image/png"
+                          className="sr-only"
+                          onChange={onChangeBanner}
+                        />
+                        {bannerError && (
+                          <p className="text-sm text-red-500">{bannerError}</p>
+                        )}
+                        {banner && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setBanner(null);
+                              setBannerBlobUrl(null);
+                            }}
+                            className="text-xs"
+                          >
+                            Remove banner
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Brand Color Card */}
                 <Card>
@@ -564,15 +740,32 @@ export default function Branding() {
             {/* Preview Column */}
             <div className="flex-1 lg:pl-4">
               <Tabs defaultValue="document-view" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="document-view">Document View</TabsTrigger>
-                  <TabsTrigger value="front-page">Front page</TabsTrigger>
-                </TabsList>
+                <div className="w-full overflow-x-auto">
+                  <TabsList
+                    className={cn(
+                      "grid w-full",
+                      hasDataroomAccess ? "grid-cols-3" : "grid-cols-2",
+                    )}
+                  >
+                    <TabsTrigger value="document-view">
+                      Document View
+                    </TabsTrigger>
+                    {hasDataroomAccess && (
+                      <TabsTrigger value="dataroom-view">
+                        Dataroom View
+                      </TabsTrigger>
+                    )}
+                    <TabsTrigger value="front-page">Front Page</TabsTrigger>
+                  </TabsList>
+                </div>
                 <TabsContent value="document-view" className="mt-6">
                   <div className="flex justify-center">
-                    <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                      <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
-                        <div className="mx-auto flex h-7 items-center justify-center">
+                    <div
+                      className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
+                      style={{ height: "450px" }}
+                    >
+                      <div className="relative flex h-full flex-col overflow-hidden rounded-lg bg-gray-100">
+                        <div className="mx-auto flex h-7 shrink-0 items-center justify-center">
                           <div className="pointer-events-none absolute left-3">
                             <div className="flex flex-row flex-nowrap justify-start">
                               <div className="pointer-events-auto">
@@ -586,7 +779,7 @@ export default function Branding() {
                               </div>
                             </div>
                           </div>
-                          <div className="flex w-[70%] items-center justify-center rounded-xl bg-white p-1 opacity-70">
+                          <div className="flex items-center justify-center rounded-xl bg-white p-1 px-2 opacity-70">
                             <div
                               aria-hidden="true"
                               className="mr-1 mt-0.5 flex text-muted-foreground"
@@ -612,41 +805,103 @@ export default function Branding() {
                             </span>
                           </div>
                         </div>
-                        <iframe
-                          key={`document-view-${debouncedBrandColor}-${debouncedAccentColor}`}
-                          name="document-view"
-                          id="document-view"
-                          src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
-                          style={{
-                            width: "1390px",
-                            height: "831px",
-                            transform: "scale(0.497)",
-                            transformOrigin: "left top",
-                            background: "rgb(255, 255, 255)",
-                            position: "absolute",
-                            top: "0px",
-                            left: "0px",
-                            borderTop: "none",
-                            borderRight: "0px",
-                            borderBottom: "0px",
-                            borderLeft: "0px",
-                            borderImage: "initial",
-                            overflow: "hidden",
-                            pointerEvents: "none",
-                            borderBottomLeftRadius: "8px",
-                            borderBottomRightRadius: "8px",
-                            marginTop: "29px",
-                          }}
-                        ></iframe>
+                        <div className="relative min-h-0 flex-1 overflow-x-auto">
+                          <div className="relative h-full max-w-[1396px]">
+                            <iframe
+                              key={`document-view-${debouncedBrandColor}-${debouncedAccentColor}`}
+                              name="document-view"
+                              id="document-view"
+                              src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
+                              className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
+                              style={{
+                                width: "200%",
+                                height: "200%",
+                                pointerEvents: "none",
+                              }}
+                            ></iframe>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </TabsContent>
+                {hasDataroomAccess && (
+                  <TabsContent value="dataroom-view" className="mt-6">
+                    <div className="flex justify-center">
+                      <div
+                        className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
+                        style={{ height: "450px" }}
+                      >
+                        <div className="relative flex h-full flex-col overflow-hidden rounded-lg bg-gray-100">
+                          <div className="mx-auto flex h-7 shrink-0 items-center justify-center">
+                            <div className="pointer-events-none absolute left-3">
+                              <div className="flex flex-row flex-nowrap justify-start">
+                                <div className="pointer-events-auto">
+                                  <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
+                                </div>
+                                <div className="pointer-events-auto">
+                                  <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
+                                </div>
+                                <div className="pointer-events-auto">
+                                  <div className="mr-1 inline-block size-2 rounded-full bg-gray-300"></div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-center rounded-xl bg-white p-1 px-2 opacity-70">
+                              <div
+                                aria-hidden="true"
+                                className="mr-1 mt-0.5 flex text-muted-foreground"
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  height="8"
+                                  width="8"
+                                  viewBox="0 0 16 16"
+                                  fill="currentColor"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path d="M8.75 11.25a1.25 1.25 0 1 0-1.5 0v1a.75.75 0 0 0 1.5 0v-1Z"></path>
+                                  <path
+                                    fillRule="evenodd"
+                                    clipRule="evenodd"
+                                    d="M3.5 4v2h-1a1 1 0 0 0-1 1v6a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3V7a1 1 0 0 0-1-1h-1V4a4 4 0 0 0-4-4h-1a4 4 0 0 0-4 4ZM11 6V4a2.5 2.5 0 0 0-2.5-2.5h-1A2.5 2.5 0 0 0 5 4v2h6Zm-8 7V7.5h10V13a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 13Z"
+                                  ></path>
+                                </svg>
+                              </div>
+                              <span className="whitespace-normal text-xs text-muted-foreground">
+                                papermark.com/view/...
+                              </span>
+                            </div>
+                          </div>
+                          <div className="relative min-h-0 flex-1 overflow-x-auto">
+                            <div className="relative h-full max-w-[1396px]">
+                              <iframe
+                                key={`dataroom-view-${debouncedBrandColor}-${debouncedAccentColor}-${banner}`}
+                                name="dataroom-view"
+                                id="dataroom-view"
+                                src={`/room_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${banner === "no-banner" ? encodeURIComponent("no-banner") : bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
+                                className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
+                                style={{
+                                  width: "200%",
+                                  height: "200%",
+                                  pointerEvents: "none",
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                )}
                 <TabsContent value="front-page" className="mt-6">
                   <div className="flex justify-center">
-                    <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                      <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
-                        <div className="mx-auto flex h-7 items-center justify-center">
+                    <div
+                      className="relative w-full max-w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg"
+                      style={{ height: "450px" }}
+                    >
+                      <div className="relative flex h-full flex-col overflow-hidden rounded-lg bg-gray-100">
+                        <div className="mx-auto flex h-7 shrink-0 items-center justify-center">
                           <div className="pointer-events-none absolute left-3">
                             <div className="flex flex-row flex-nowrap justify-start">
                               <div className="pointer-events-auto">
@@ -660,7 +915,7 @@ export default function Branding() {
                               </div>
                             </div>
                           </div>
-                          <div className="flex w-[70%] items-center justify-center rounded-xl bg-white p-1 opacity-70">
+                          <div className="flex items-center justify-center rounded-xl bg-white p-1 px-2 opacity-70">
                             <div
                               aria-hidden="true"
                               className="mr-1 mt-0.5 flex text-muted-foreground"
@@ -686,32 +941,22 @@ export default function Branding() {
                             </span>
                           </div>
                         </div>
-                        <iframe
-                          key={`access-screen-${debouncedBrandColor}-${debouncedAccentColor}-${debouncedWelcomeMessage}`}
-                          name="access-screen"
-                          id="access-screen"
-                          src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
-                          style={{
-                            width: "1390px",
-                            height: "831px",
-                            transform: "scale(0.497)",
-                            transformOrigin: "left top",
-                            background: "rgb(255, 255, 255)",
-                            position: "absolute",
-                            top: "0px",
-                            left: "0px",
-                            borderTop: "none",
-                            borderRight: "0px",
-                            borderBottom: "0px",
-                            borderLeft: "0px",
-                            borderImage: "initial",
-                            overflow: "hidden",
-                            pointerEvents: "none",
-                            borderBottomLeftRadius: "8px",
-                            borderBottomRightRadius: "8px",
-                            marginTop: "29px",
-                          }}
-                        ></iframe>
+                        <div className="relative min-h-0 flex-1 overflow-x-auto">
+                          <div className="relative h-full max-w-[1396px]">
+                            <iframe
+                              key={`access-screen-${debouncedBrandColor}-${debouncedAccentColor}-${debouncedWelcomeMessage}`}
+                              name="access-screen"
+                              id="access-screen"
+                              src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&welcomeMessage=${encodeURIComponent(debouncedWelcomeMessage)}`}
+                              className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
+                              style={{
+                                width: "200%",
+                                height: "200%",
+                                pointerEvents: "none",
+                              }}
+                            ></iframe>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -720,7 +965,7 @@ export default function Branding() {
 
               {/* Preview Mode Info */}
               {/* <div className="mt-6 flex justify-center">
-                <div className="w-[698px] space-y-2 rounded-lg border-border bg-card p-4">
+                <div className="w-full max-w-[698px] space-y-2 rounded-lg border-border bg-card p-4">
                   <h4 className="text-sm font-semibold text-foreground">
                     Preview Mode
                   </h4>

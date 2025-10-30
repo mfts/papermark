@@ -194,7 +194,7 @@ export default function GroupMemberTable({
               <TableRow>
                 <TableCell colSpan={2}>
                   <div className="flex h-40 w-full items-center justify-center">
-                    <p>No visits yet. Try sharing a link.</p>
+                    <p>No views yet. Try sharing a link.</p>
                   </div>
                 </TableCell>
               </TableRow>

@@ -10,12 +10,12 @@ import {
 } from "recharts";
 import useSWR from "swr";
 
+import { fetcher } from "@/lib/utils";
+
 import StatsElement from "@/components/documents/stats-element";
 import VideoChartPlaceholder from "@/components/documents/video-chart-placeholder";
 import { Card, CardContent } from "@/components/ui/card";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-
-import { fetcher } from "@/lib/utils";
 
 interface VideoAnalyticsProps {
   teamId: string;
@@ -62,7 +62,7 @@ export default function VideoAnalytics({
   if (!data?.overall) {
     const emptyStats = [
       {
-        name: "Total visits",
+        name: "Total views",
         value: "0",
         active: false,
       },
@@ -132,12 +132,12 @@ export default function VideoAnalytics({
 
   const stats = [
     {
-      name: "Total visits",
+      name: "Total views",
       value: data.overall.unique_views.toString(),
       active: true,
     },
     {
-      name: "Watch time",
+      name: "View time",
       value: formatTime(data.overall.total_watch_time),
       unit: "minutes",
       active: true,

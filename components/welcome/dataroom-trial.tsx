@@ -40,6 +40,24 @@ export default function DataroomTrial() {
 
   const [loading, setLoading] = useState<boolean>(false);
 
+  // Helper function to convert use case to proper dataroom name
+  const getDataroomName = (useCaseValue: string, customValue: string = "") => {
+    if (useCaseValue === "other" && customValue) {
+      return `${customValue} Data Room`;
+    }
+
+    const useCaseNames: Record<string, string> = {
+      "mergers-and-acquisitions": "Mergers and Acquisitions Data Room",
+      "startup-fundraising": "Startup Fundraising Data Room",
+      "fund-management": "Fund Management & Fundraising Data Room",
+      sales: "Sales Data Room",
+      "project-management": "Project Management Data Room",
+      operations: "Operations Data Room",
+    };
+
+    return useCaseNames[useCaseValue] || "Data Room";
+  };
+
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
@@ -51,6 +69,8 @@ export default function DataroomTrial() {
 
     setLoading(true);
 
+    const dataroomName = getDataroomName(useCase, customUseCase.trim());
+
     try {
       const response = await fetch(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/trial`,
@@ -60,7 +80,7 @@ export default function DataroomTrial() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: "Dataroom #1",
+            name: dataroomName,
             fullName: name,
             companyName,
             useCase: useCase === "other" ? customUseCase.trim() : useCase,
@@ -84,7 +104,7 @@ export default function DataroomTrial() {
       }
 
       analytics.capture("Dataroom Trial Created", {
-        dataroomName: "Dataroom #1",
+        dataroomName: dataroomName,
         useCase: useCase === "other" ? customUseCase.trim() : useCase,
         companySize,
         dataroomId,

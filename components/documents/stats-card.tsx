@@ -1,8 +1,8 @@
 import ErrorPage from "next/error";
 
-import { Skeleton } from "@/components/ui/skeleton";
-
 import { TStatsData } from "@/lib/swr/use-stats";
+
+import { Skeleton } from "@/components/ui/skeleton";
 
 import StatsElement from "./stats-element";
 
@@ -33,22 +33,15 @@ export default function StatsCard({
     );
   }
 
-  const groupedReactionsTotal =
-    stats?.groupedReactions
-      .reduce((accumulator, item) => {
-        return accumulator + item._count.type;
-      }, 0)
-      .toString() ?? "0";
-
   const statistics = [
     {
-      name: "Number of visits",
+      name: "Number of views",
       value: stats?.totalViews.toString() ?? "0",
       active: true,
     },
     {
-      name: "Number of reactions",
-      value: groupedReactionsTotal,
+      name: "Average view completion",
+      value: `${stats?.avgCompletionRate ?? 0}%`,
       active: true,
     },
     {

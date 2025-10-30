@@ -8,6 +8,9 @@ import { BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import { fetcher } from "@/lib/utils";
+
 import { AnalyticsCard } from "@/components/analytics/analytics-card";
 import DashboardViewsChart from "@/components/analytics/dashboard-views-chart";
 import DocumentsTable from "@/components/analytics/documents-table";
@@ -20,9 +23,6 @@ import ViewsTable from "@/components/analytics/views-table";
 import VisitorsTable from "@/components/analytics/visitors-table";
 import AppLayout from "@/components/layouts/app";
 import { TabMenu } from "@/components/tab-menu";
-
-import { usePlan } from "@/lib/swr/use-billing";
-import { fetcher } from "@/lib/utils";
 
 interface OverviewData {
   counts: {
@@ -174,7 +174,7 @@ export default function DashboardPage() {
                 count: overview?.counts.visitors,
               },
               {
-                label: "Recent Visits",
+                label: "Recent Views",
                 href: `/dashboard?interval=${interval}&type=views`,
                 value: "views",
                 currentValue: type,

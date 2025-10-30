@@ -327,8 +327,8 @@ export const daysLeft = (
 
   const diffInMilliseconds = endPeriodDate.getTime() - now.getTime();
 
-  // Convert milliseconds to days and return
-  return Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
+  // Convert milliseconds to days and round down to show complete days remaining
+  return Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24));
 };
 
 const cutoffDate = new Date("2023-10-17T00:00:00.000Z");

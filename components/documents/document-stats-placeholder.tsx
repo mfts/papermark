@@ -29,7 +29,7 @@ export default function DocumentStatsPlaceholder({
           htmlFor="toggle-stats-placeholder"
           className="text-muted-foreground"
         >
-          Exclude internal visits
+          Exclude internal views
         </Label>
       </div>
 
@@ -39,8 +39,8 @@ export default function DocumentStatsPlaceholder({
       {/* Stats Card Placeholder */}
       <div className="grid grid-cols-1 space-y-2 border-foreground/5 sm:grid-cols-3 sm:space-x-2 sm:space-y-0 lg:grid-cols-3 lg:space-x-3">
         {[
-          { name: "Number of visits", value: "0", active: false },
-          { name: "Number of reactions", value: "0", active: false },
+          { name: "Number of views", value: "0", active: false },
+          { name: "Average view completion", value: "%", active: false },
           {
             name: "Total average view duration",
             value: "0",

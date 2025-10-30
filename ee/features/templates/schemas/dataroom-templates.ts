@@ -28,15 +28,17 @@ export const applyTemplateSchema = z.object({
 /**
  * Schema for validating dataroom generation request
  * Includes both name validation and template type validation
+ * Name is optional - if not provided, template name will be used
  */
 export const generateDataroomSchema = z.object({
   name: z
     .string()
-    .min(1, "Dataroom name is required")
     .max(255, "Dataroom name is too long")
+    .optional()
     .refine(
       (name) => {
-        // Ensure no malicious characters in the name
+        // If name is provided, ensure no malicious characters
+        if (!name) return true;
         return (
           !name.includes("\0") &&
           !name.includes("..") &&

@@ -64,8 +64,16 @@ export default async function handle(
 
       const template = DATAROOM_TEMPLATES[type];
 
-      // Create folders in a transaction to prevent hanging results
+      // Update dataroom name and create folders in a transaction
       await prisma.$transaction(async (tx) => {
+        // Update dataroom name to match template
+        await tx.dataroom.update({
+          where: { id: dataroom.id },
+          data: {
+            name: `${template.name} Data Room`,
+          },
+        });
+
         // Helper function to create folders recursively
         const createFolders = async (
           folders: FolderTemplate[],
