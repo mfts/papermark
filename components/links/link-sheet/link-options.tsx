@@ -208,14 +208,12 @@ export const LinkOptions = ({
             }
             handleUpgradeStateChange={handleUpgradeStateChange}
           />
-          {linkType === LinkType.DOCUMENT_LINK ? (
-            <CustomFieldsSection
-              {...{ data, setData }}
-              isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
-              handleUpgradeStateChange={handleUpgradeStateChange}
-              presets={currentPreset}
-            />
-          ) : null}
+          <CustomFieldsSection
+            {...{ data, setData }}
+            isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
+            handleUpgradeStateChange={handleUpgradeStateChange}
+            presets={currentPreset}
+          />
         </div>
       </CollapsibleSection>
 
@@ -279,18 +277,12 @@ export const LinkOptions = ({
                 {...{ data, setData }}
                 isAllowed={
                   isDataroomsPlus ||
-                  ((isBusiness || isDatarooms) && limits?.conversationsInDataroom)
+                  ((isBusiness || isDatarooms) &&
+                    limits?.conversationsInDataroom)
                 }
                 handleUpgradeStateChange={handleUpgradeStateChange}
               />
             ) : null}
-
-            <CustomFieldsSection
-              {...{ data, setData }}
-              isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
-              handleUpgradeStateChange={handleUpgradeStateChange}
-              presets={currentPreset}
-            />
           </div>
         </CollapsibleSection>
       ) : null}
