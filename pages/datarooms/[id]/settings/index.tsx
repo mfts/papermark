@@ -89,6 +89,73 @@ export default function Settings() {
                 })
               }
             />
+            <Form
+              title="Dataroom Description"
+              description="This is the description of your data room on Papermark."
+              inputAttrs={{
+                name: "description",
+                placeholder: "Add a description for your dataroom",
+                maxLength: 500,
+              }}
+              defaultValue={dataroom.description || ""}
+              helpText="Max 500 characters"
+              allowEmpty={true}
+              handleSubmit={(updateData) =>
+                fetch(`/api/teams/${teamId}/datarooms/${dataroom.id}`, {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    description: updateData.description || null,
+                  }),
+                }).then(async (res) => {
+                  if (res.status === 200) {
+                    await Promise.all([
+                      mutate(`/api/teams/${teamId}/datarooms`),
+                      mutate(`/api/teams/${teamId}/datarooms/${dataroom.id}`),
+                    ]);
+                    toast.success("Successfully updated dataroom description!");
+                  } else {
+                    const { error } = await res.json();
+                    toast.error(error.message);
+                  }
+                })
+              }
+            />
+            <Form
+              title="Show Last Updated"
+              description="Display the last updated date on your dataroom banner."
+              inputAttrs={{
+                name: "showLastUpdated",
+                type: "checkbox",
+                placeholder: "Show last updated date",
+              }}
+              defaultValue={String(dataroom.showLastUpdated ?? true)}
+              helpText="When enabled, visitors will see when the dataroom was last updated."
+              handleSubmit={(updateData) =>
+                fetch(`/api/teams/${teamId}/datarooms/${dataroom.id}`, {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    showLastUpdated: updateData.showLastUpdated === "true",
+                  }),
+                }).then(async (res) => {
+                  if (res.status === 200) {
+                    await Promise.all([
+                      mutate(`/api/teams/${teamId}/datarooms`),
+                      mutate(`/api/teams/${teamId}/datarooms/${dataroom.id}`),
+                    ]);
+                    toast.success("Successfully updated display settings!");
+                  } else {
+                    const { error } = await res.json();
+                    toast.error(error.message);
+                  }
+                })
+              }
+            />
             <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />
             <Card className="bg-transparent">
               <CardHeader>

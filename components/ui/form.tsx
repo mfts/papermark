@@ -36,6 +36,7 @@ export function Form({
   validate,
   defaultValue,
   plan,
+  allowEmpty = false,
 }: {
   title: string;
   description: string;
@@ -47,12 +48,13 @@ export function Form({
   validate?: (data: string) => boolean;
   defaultValue?: string;
   plan?: string;
+  allowEmpty?: boolean;
 }) {
   const [saving, setSaving] = useState(false);
   const [value, setValue] = useState(defaultValue);
 
   useEffect(() => {
-    if (defaultValue) setValue(defaultValue);
+    if (defaultValue !== undefined) setValue(defaultValue);
   }, [defaultValue]);
 
   const saveDisabled = useMemo(() => {
@@ -62,8 +64,12 @@ export function Form({
       const defaultVal = defaultValue === "true";
       return currentValue === defaultVal;
     }
+    // Allow empty values if allowEmpty is true
+    if (allowEmpty) {
+      return value === defaultValue;
+    }
     return !value || value === defaultValue;
-  }, [saving, value, defaultValue, inputAttrs.type]);
+  }, [saving, value, defaultValue, inputAttrs.type, allowEmpty]);
 
   const renderInput = () => {
     if (inputAttrs.type === "checkbox") {
@@ -90,7 +96,7 @@ export function Form({
         {...inputAttrs}
         value={value}
         type={inputAttrs.type || "text"}
-        required
+        required={!allowEmpty}
         disabled={!!disabledTooltip}
         onChange={(e) => setValue(e.target.value)}
         onBlur={(e) => setValue(e.target.value.trim())}

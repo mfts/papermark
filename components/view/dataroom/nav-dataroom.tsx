@@ -205,12 +205,17 @@ export default function DataroomNav({
           <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
             <div className="px-5 py-2 sm:px-10">
               <div className="text-3xl">{dataroom.name}</div>
-              <time
-                className="text-sm"
-                dateTime={new Date(dataroom.lastUpdatedAt).toISOString()}
-              >
-                {`Last updated ${formatDate(dataroom.lastUpdatedAt)}`}
-              </time>
+              {dataroom.description && (
+                <p className="mt-1 text-sm">{dataroom.description}</p>
+              )}
+              {dataroom.showLastUpdated !== false && (
+                <time
+                  className="mt-1 block text-sm"
+                  dateTime={new Date(dataroom.lastUpdatedAt).toISOString()}
+                >
+                  {`Last updated ${formatDate(dataroom.lastUpdatedAt)}`}
+                </time>
+              )}
             </div>
           </div>
         </div>

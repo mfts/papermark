@@ -62,6 +62,9 @@ model Link {
   metaFavicon         String? // This will be the meta favicon of the link
   enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
 
+  // custom welcome message (overrides brand welcome message)
+  welcomeMessage String? // Custom welcome message for this specific link
+
   // conversation
   enableConversation Boolean        @default(false) // Controls if conversations are allowed on this link
   conversations      Conversation[]
@@ -128,6 +131,8 @@ model LinkPreset {
   customFields       Json? //[{type: "SHORT_TEXT", identifier: "name", label: "Name", required: true}]
 
   showBanner Boolean? @default(false) // Optional give user a option to show the "Powered by Papermark" banner
+
+  welcomeMessage String? // Custom welcome message for links created from this preset
 
   isDefault Boolean @default(false)
 

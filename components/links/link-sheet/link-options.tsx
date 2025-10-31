@@ -36,6 +36,7 @@ import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
 import UploadSection from "./upload-section";
 import WatermarkSection from "./watermark-section";
+import { WelcomeMessageSection } from "./welcome-message-section";
 
 export type LinkUpgradeOptions = {
   state: boolean;
@@ -170,21 +171,6 @@ export const LinkOptions = ({
         </>
       ) : null}
 
-      {/* OG Section */}
-      <OGSection
-        {...{ data, setData }}
-        isAllowed={
-          isTrial ||
-          (isPro && allowAdvancedLinkControls) ||
-          isBusiness ||
-          isDatarooms ||
-          isDataroomsPlus
-        }
-        handleUpgradeStateChange={handleUpgradeStateChange}
-        editLink={editLink ?? false}
-        presets={currentPreset}
-      />
-
       {/* Security Section */}
       <CollapsibleSection title="Security Controls" defaultOpen={true}>
         <div>
@@ -222,85 +208,91 @@ export const LinkOptions = ({
             }
             handleUpgradeStateChange={handleUpgradeStateChange}
           />
+          {linkType === LinkType.DOCUMENT_LINK ? (
+            <CustomFieldsSection
+              {...{ data, setData }}
+              isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
+              handleUpgradeStateChange={handleUpgradeStateChange}
+              presets={currentPreset}
+            />
+          ) : null}
         </div>
       </CollapsibleSection>
 
-      {/* Advanced Section */}
-      <CollapsibleSection title="Advanced Controls" defaultOpen={true}>
+      {/* Custom Branding Section */}
+      <CollapsibleSection title="Custom Branding" defaultOpen={true}>
         <div>
-          {linkType === LinkType.DATAROOM_LINK && targetId ? (
-            <UploadSection
-              {...{ data, setData }}
-              isAllowed={
-                isTrial ||
-                isDataroomsPlus ||
-                (isDatarooms && limits?.dataroomUpload === true)
-              }
-              handleUpgradeStateChange={handleUpgradeStateChange}
-              targetId={targetId}
-            />
-          ) : null}
+          <WelcomeMessageSection {...{ data, setData }} />
+          <OGSection
+            {...{ data, setData }}
+            isAllowed={
+              isTrial ||
+              (isPro && allowAdvancedLinkControls) ||
+              isBusiness ||
+              isDatarooms ||
+              isDataroomsPlus
+            }
+            handleUpgradeStateChange={handleUpgradeStateChange}
+            editLink={editLink ?? false}
+            presets={currentPreset}
+          />
+          <ProBannerSection
+            {...{ data, setData }}
+            isAllowed={
+              isTrial ||
+              isPro ||
+              isBusiness ||
+              isDatarooms ||
+              isDataroomsPlus ||
+              isStarter
+            }
+            handleUpgradeStateChange={handleUpgradeStateChange}
+          />
+        </div>
+      </CollapsibleSection>
 
-          {linkType === LinkType.DATAROOM_LINK ? (
+      {/* Advanced Section - Only for Datarooms */}
+      {linkType === LinkType.DATAROOM_LINK ? (
+        <CollapsibleSection title="Advanced Controls" defaultOpen={true}>
+          <div>
+            {targetId ? (
+              <UploadSection
+                {...{ data, setData }}
+                isAllowed={
+                  isTrial ||
+                  isDataroomsPlus ||
+                  (isDatarooms && limits?.dataroomUpload === true)
+                }
+                handleUpgradeStateChange={handleUpgradeStateChange}
+                targetId={targetId}
+              />
+            ) : null}
+
             <IndexFileSection
               {...{ data, setData }}
               isAllowed={isTrial || isDataroomsPlus}
               handleUpgradeStateChange={handleUpgradeStateChange}
             />
-          ) : null}
 
-          {linkType === LinkType.DATAROOM_LINK &&
-          limits?.conversationsInDataroom ? (
-            <ConversationSection
+            {limits?.conversationsInDataroom ? (
+              <ConversationSection
+                {...{ data, setData }}
+                isAllowed={
+                  isDataroomsPlus ||
+                  ((isBusiness || isDatarooms) && limits?.conversationsInDataroom)
+                }
+                handleUpgradeStateChange={handleUpgradeStateChange}
+              />
+            ) : null}
+
+            <CustomFieldsSection
               {...{ data, setData }}
-              isAllowed={
-                isDataroomsPlus ||
-                ((isBusiness || isDatarooms) && limits?.conversationsInDataroom)
-              }
+              isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
               handleUpgradeStateChange={handleUpgradeStateChange}
+              presets={currentPreset}
             />
-          ) : null}
-
-          {linkType === LinkType.DOCUMENT_LINK ? (
-            <FeedbackSection {...{ data, setData }} />
-          ) : null}
-
-          {linkType === LinkType.DOCUMENT_LINK ? (
-            <QuestionSection
-              {...{ data, setData }}
-              isAllowed={
-                isTrial ||
-                (isPro && allowAdvancedLinkControls) ||
-                isBusiness ||
-                isDatarooms ||
-                isDataroomsPlus
-              }
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-          ) : null}
-
-          <CustomFieldsSection
-            {...{ data, setData }}
-            isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
-            handleUpgradeStateChange={handleUpgradeStateChange}
-            presets={currentPreset}
-          />
-        </div>
-      </CollapsibleSection>
-
-      {linkType === LinkType.DOCUMENT_LINK ? (
-        <ProBannerSection
-          {...{ data, setData }}
-          isAllowed={
-            isTrial ||
-            isPro ||
-            isBusiness ||
-            isDatarooms ||
-            isDataroomsPlus ||
-            isStarter
-          }
-          handleUpgradeStateChange={handleUpgradeStateChange}
-        />
+          </div>
+        </CollapsibleSection>
       ) : null}
 
       <UpgradePlanModal

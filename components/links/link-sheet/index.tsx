@@ -72,6 +72,7 @@ export const DEFAULT_LINK_PROPS = (
   metaDescription: null,
   metaImage: null,
   metaFavicon: null,
+  welcomeMessage: null,
   enabledQuestion: false,
   questionText: null,
   questionType: null,
@@ -114,6 +115,7 @@ export type DEFAULT_LINK_TYPE = {
   metaDescription: string | null; // metatags
   metaImage: string | null; // metatags
   metaFavicon: string | null; // metaFavicon
+  welcomeMessage: string | null; // custom welcome message
   enableQuestion?: boolean; // feedback question
   questionText: string | null;
   questionType: string | null;
@@ -259,6 +261,7 @@ export default function LinkSheet({
         metaDescription: preset.metaDescription || prev.metaDescription,
         metaImage: preset.metaImage || prev.metaImage,
         metaFavicon: preset.metaFavicon || prev.metaFavicon,
+        welcomeMessage: preset.welcomeMessage || prev.welcomeMessage,
         allowDownload: preset.allowDownload || prev.allowDownload,
         enableAgreement: preset.enableAgreement || prev.enableAgreement,
         agreementId: preset.agreementId || prev.agreementId,
