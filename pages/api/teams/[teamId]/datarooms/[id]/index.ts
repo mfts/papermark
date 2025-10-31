@@ -100,15 +100,19 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      const { name, description, enableChangeNotifications, defaultPermissionStrategy, allowBulkDownload, showLastUpdated } =
-        req.body as {
-          name?: string;
-          description?: string;
-          enableChangeNotifications?: boolean;
-          defaultPermissionStrategy?: DefaultPermissionStrategy;
-          allowBulkDownload?: boolean;
-          showLastUpdated?: boolean;
-        };
+      const {
+        name,
+        enableChangeNotifications,
+        defaultPermissionStrategy,
+        allowBulkDownload,
+        showLastUpdated,
+      } = req.body as {
+        name?: string;
+        enableChangeNotifications?: boolean;
+        defaultPermissionStrategy?: DefaultPermissionStrategy;
+        allowBulkDownload?: boolean;
+        showLastUpdated?: boolean;
+      };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
       const isDataroomsPlus = team.plan.includes("datarooms-plus");
@@ -131,7 +135,6 @@ export default async function handle(
         },
         data: {
           ...(name && { name }),
-          ...(description !== undefined && { description }),
           ...(typeof enableChangeNotifications === "boolean" && {
             enableChangeNotifications,
           }),
