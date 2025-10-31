@@ -209,7 +209,7 @@ export default function AccessForm({
             </a>
             .
           </p>
-          <p className="text-center text-sm text-gray-500">
+          <p className="text-center text-sm tracking-tight text-gray-500">
             See how we protect your data in our{" "}
             <a
               href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/privacy`}

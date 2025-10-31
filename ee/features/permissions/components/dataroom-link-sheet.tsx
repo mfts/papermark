@@ -986,7 +986,7 @@ export function DataroomLinkSheet({
                       variant="default"
                       onClick={(e) => handleSubmit(e, false, true)}
                     >
-                      Manage Permissions
+                      Manage File Permissions
                     </Button>
                   )}
                 <Button
