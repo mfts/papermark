@@ -16,8 +16,7 @@ export default async function handle(
     // DELETE /api/teams/:teamId/datarooms/[:id]/folders/manage
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const {
@@ -46,7 +45,7 @@ export default async function handle(
       });
 
       if (!teamAccess) {
-        return res.status(401).end("Unauthorized");
+        return res.status(401).json({ message: "Unauthorized" });
       }
 
       if (teamAccess.role !== "ADMIN" && teamAccess.role !== "MANAGER") {
@@ -64,7 +63,7 @@ export default async function handle(
       });
 
       if (!dataroom) {
-        return res.status(401).end("Dataroom not found");
+        return res.status(404).json({ message: "Dataroom not found" });
       }
 
       const folder = await prisma.dataroomFolder.findUnique({
@@ -90,7 +89,9 @@ export default async function handle(
   } else {
     // We only allow DELETE requests
     res.setHeader("Allow", ["DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res
+      .status(405)
+      .json({ message: `Method ${req.method} Not Allowed` });
   }
 }
 

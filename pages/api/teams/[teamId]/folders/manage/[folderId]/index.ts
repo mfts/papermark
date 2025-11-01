@@ -16,8 +16,7 @@ export default async function handle(
     // DELETE /api/teams/:teamId/folders/manage/:folderId
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const { teamId, folderId } = req.query as {
@@ -41,7 +40,7 @@ export default async function handle(
       });
 
       if (!teamAccess) {
-        return res.status(401).end("Unauthorized");
+        return res.status(401).json({ message: "Unauthorized" });
       }
 
       if (teamAccess.role !== "ADMIN" && teamAccess.role !== "MANAGER") {
@@ -79,9 +78,11 @@ export default async function handle(
       errorhandler(error, res);
     }
   } else {
-    // We only allow GET, PUT and DELETE requests
+    // We only allow DELETE requests
     res.setHeader("Allow", ["DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res
+      .status(405)
+      .json({ message: `Method ${req.method} Not Allowed` });
   }
 }
 
