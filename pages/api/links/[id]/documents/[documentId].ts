@@ -41,6 +41,7 @@ export default async function handle(
         metaDescription: true,
         metaImage: true,
         metaFavicon: true,
+        welcomeMessage: true,
         enableQuestion: true,
         linkType: true,
         feedback: {

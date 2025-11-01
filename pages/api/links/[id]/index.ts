@@ -49,6 +49,7 @@ export default async function handle(
           metaDescription: true,
           metaImage: true,
           metaFavicon: true,
+          welcomeMessage: true,
           enableQuestion: true,
           linkType: true,
           feedback: {
@@ -330,6 +331,7 @@ export default async function handle(
           metaDescription: linkData.metaDescription || null,
           metaImage: linkData.metaImage || null,
           metaFavicon: linkData.metaFavicon || null,
+          welcomeMessage: linkData.welcomeMessage || null,
           ...(linkData.customFields && {
             customFields: {
               deleteMany: {}, // Delete all existing custom fields

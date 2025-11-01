@@ -83,7 +83,7 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
 
       waitUntil(
         log({
-          message: `Retention offer applied to team ${teamId}: 50% off for ${
+          message: `Retention offer applied to team ${teamId}: 30% off for ${
             isAnnualPlan ? "12 months" : "3 months"
           }`,
           type: "info",

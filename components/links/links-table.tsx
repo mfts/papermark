@@ -229,6 +229,7 @@ export default function LinksTable({
       uploadFolderName: link.uploadFolderName ?? "Home",
       enableIndexFile: link.enableIndexFile ?? false,
       permissionGroupId: link.permissionGroupId ?? null,
+      welcomeMessage: link.welcomeMessage ?? null,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

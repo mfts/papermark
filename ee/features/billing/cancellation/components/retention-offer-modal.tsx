@@ -51,8 +51,8 @@ export function RetentionOfferModal({
     const monthlyPrice = currentPlan.price.monthly.unitPrice;
     const yearlyPrice = currentPlan.price.yearly.unitPrice;
 
-    // Simple logic: 50% discount for 3 months (monthly) or 12 months (annual)
-    const discountPercent = 0.5;
+    // Simple logic: 30% discount for 3 months (monthly) or 12 months (annual)
+    const discountPercent = 0.3;
     const durationMonths = isAnnualPlan ? 12 : 3;
     const basePrice = isAnnualPlan ? yearlyPrice : monthlyPrice;
 
@@ -71,7 +71,7 @@ export function RetentionOfferModal({
       return {
         title: "Special offer just for you",
         subtitle: "Let us make this work for your budget",
-        discount: "50% off your next year",
+        discount: "30% off your next year",
         savings,
         duration: "12 months",
       };
@@ -79,7 +79,7 @@ export function RetentionOfferModal({
       return {
         title: "Special offer just for you",
         subtitle: "Let us make this work for your budget",
-        discount: "50% off for the next 3 months",
+        discount: "30% off for the next 3 months",
         savings,
         duration: "3 months",
       };
@@ -109,7 +109,7 @@ export function RetentionOfferModal({
           mutate(`/api/teams/${currentTeamId}/billing/plan?withDiscount=true`);
           onClose();
           toast.success(
-            `50% discount applied for ${isAnnualPlan ? "12 months" : "3 months"}!`,
+            `30% discount applied for ${isAnnualPlan ? "12 months" : "3 months"}!`,
           );
         }
       })

@@ -109,8 +109,10 @@ export async function fetchDataroomLinkData({
         select: {
           id: true,
           name: true,
+          description: true,
           teamId: true,
           allowBulkDownload: true,
+          showLastUpdated: true,
           createdAt: true,
           documents: {
             where:
@@ -296,7 +298,9 @@ export async function fetchDataroomDocumentLinkData({
         select: {
           id: true,
           name: true,
+          description: true,
           allowBulkDownload: true,
+          showLastUpdated: true,
           documents: {
             where: { id: dataroomDocumentId },
             select: {
