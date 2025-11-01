@@ -109,13 +109,25 @@ textarea,
   text-decoration: none;
 }
 
-.notion-page-icon-inline,
-.notion-page-icon-span {
+/* Align page hero icon to the left */
+.notion-page-icon-hero {
+  left: 0 !important;
+  justify-content: flex-start !important;
+  transform: none !important;
+}
+
+/* Only show arrows on page icons within clickable links */
+.notion-link .notion-page-icon-inline,
+.notion-link .notion-page-icon-span,
+.notion-page-link .notion-page-icon-inline,
+.notion-page-link .notion-page-icon-span {
   position: relative;
 }
 
-.notion-page-icon-inline::after,
-.notion-page-icon-span::after {
+.notion-link .notion-page-icon-inline::after,
+.notion-link .notion-page-icon-span::after,
+.notion-page-link .notion-page-icon-inline::after,
+.notion-page-link .notion-page-icon-span::after {
   content: "";
   position: absolute;
   right: -0.2em;
@@ -129,4 +141,10 @@ textarea,
 
 .notion-toggle:has(.notion-h1) {
   margin-top: 2rem;
+}
+
+/* Fix column layout to be evenly spaced */
+.notion-row .notion-column {
+  flex: 1 1 0;
+  min-width: 0;
 }

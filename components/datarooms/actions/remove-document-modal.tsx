@@ -60,9 +60,7 @@ function RemoveDataroomItemsModal({
           ).then(async (res) => {
             if (!res.ok) {
               const error = await res.json();
-              throw new Error(
-                `Failed to remove dataroom document ${documentId}: ${error.message}`,
-              );
+              throw new Error(error.message || "Failed to remove dataroom document");
             }
             analytics.capture("Dataroom Document Removed", {
               team: teamInfo?.currentTeam?.id,
@@ -78,9 +76,7 @@ function RemoveDataroomItemsModal({
           ).then(async (res) => {
             if (!res.ok) {
               const error = await res.json();
-              throw new Error(
-                `Failed to remove folderId folder ${folderId}: ${error.message}`,
-              );
+              throw new Error(error.message || "Failed to remove dataroom folder");
             }
             analytics.capture("Dataroom folder Removed", {
               team: teamInfo?.currentTeam?.id,

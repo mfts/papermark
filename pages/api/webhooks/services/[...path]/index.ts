@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { LinkPreset } from "@prisma/client";
+import slugify from "@sindresorhus/slugify";
 import { put } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
@@ -8,6 +9,7 @@ import { z } from "zod";
 import { hashToken } from "@/lib/api/auth/token";
 import { createDocument } from "@/lib/documents/create-document";
 import { putFileServer } from "@/lib/files/put-file-server";
+import { newId } from "@/lib/id-helper";
 import { extractTeamId, isValidWebhookId } from "@/lib/incoming-webhooks";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
@@ -63,6 +65,7 @@ const DocumentCreateSchema = BaseSchema.extend({
   contentType: z.string(),
   dataroomId: z.string().optional(),
   folderId: z.string().nullable().optional(),
+  dataroomFolderId: z.string().nullable().optional(),
   createLink: z.boolean().optional().default(false),
   link: LinkSchema.optional(),
 });
@@ -74,10 +77,19 @@ const LinkCreateSchema = BaseSchema.extend({
   link: LinkSchema,
 });
 
+// Schema for dataroom folder structure
+const DataroomFolderSchema: z.ZodType<any> = z.lazy(() =>
+  z.object({
+    name: z.string(),
+    subfolders: z.array(DataroomFolderSchema).optional(),
+  }),
+);
+
 const DataroomCreateSchema = BaseSchema.extend({
   resourceType: z.literal("dataroom.create"),
   name: z.string(),
   description: z.string().optional(),
+  folders: z.array(DataroomFolderSchema).optional(), // Create folders with hierarchy
   createLink: z.boolean().optional().default(false),
   link: LinkSchema.optional(),
 });
@@ -230,8 +242,16 @@ async function handleDocumentCreate(
   token: string,
   res: NextApiResponse,
 ) {
-  const { fileUrl, name, contentType, dataroomId, createLink, link, folderId } =
-    data;
+  const {
+    fileUrl,
+    name,
+    contentType,
+    dataroomId,
+    createLink,
+    link,
+    folderId,
+    dataroomFolderId,
+  } = data;
 
   // Check if the content type is supported
   const supportedContentType = getSupportedContentType(contentType);
@@ -521,10 +541,28 @@ async function handleDocumentCreate(
 
   // If dataroomId was provided, create the relationship
   if (dataroomId) {
+    // If dataroomFolderId is provided, validate it belongs to the dataroom
+    if (dataroomFolderId) {
+      const dataroomFolder = await prisma.dataroomFolder.findUnique({
+        where: {
+          id: dataroomFolderId,
+          dataroomId: dataroomId,
+        },
+      });
+
+      if (!dataroomFolder) {
+        return res.status(400).json({
+          error:
+            "Invalid dataroom folder ID or folder does not belong to the specified dataroom",
+        });
+      }
+    }
+
     await prisma.dataroomDocument.create({
       data: {
         dataroomId,
         documentId: document.id,
+        folderId: dataroomFolderId || null,
       },
     });
   }
@@ -748,6 +786,40 @@ async function handleLinkCreate(
 }
 
 /**
+ * Helper function to create dataroom folders recursively
+ */
+async function createDataroomFoldersRecursive(
+  dataroomId: string,
+  folders: Array<{ name: string; subfolders?: any[] }>,
+  parentPath: string = "",
+  parentId: string | null = null,
+): Promise<void> {
+  for (const folder of folders) {
+    const folderPath = parentPath + "/" + slugify(folder.name);
+
+    // Create the folder
+    const createdFolder = await prisma.dataroomFolder.create({
+      data: {
+        name: folder.name,
+        path: folderPath,
+        parentId: parentId,
+        dataroomId: dataroomId,
+      },
+    });
+
+    // If the folder has subfolders, create them recursively
+    if (folder.subfolders && folder.subfolders.length > 0) {
+      await createDataroomFoldersRecursive(
+        dataroomId,
+        folder.subfolders,
+        folderPath,
+        createdFolder.id,
+      );
+    }
+  }
+}
+
+/**
  * Handle dataroom.create resource type
  */
 async function handleDataroomCreate(
@@ -756,7 +828,7 @@ async function handleDataroomCreate(
   token: string,
   res: NextApiResponse,
 ) {
-  const { name, description, createLink, link } = data;
+  const { name, description, createLink, link, folders } = data;
 
   // If custom domain and slug are provided for link, validate them
   let domainId = null;
@@ -839,11 +911,15 @@ async function handleDataroomCreate(
 
   // Create the dataroom
   try {
+    // Generate unique public ID for the dataroom
+    const pId = newId("dataroom");
+
     // Create dataroom with link if requested
     let createData: any = {
       name,
       description,
       teamId,
+      pId,
     };
 
     if (createLink && link) {
@@ -899,6 +975,11 @@ async function handleDataroomCreate(
         links: createLink, // Only include links if we're creating one
       },
     });
+
+    // Create folders if provided
+    if (folders && folders.length > 0) {
+      await createDataroomFoldersRecursive(dataroom.id, folders);
+    }
 
     if (createLink) {
       waitUntil(
