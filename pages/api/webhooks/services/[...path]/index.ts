@@ -8,6 +8,7 @@ import { z } from "zod";
 import { hashToken } from "@/lib/api/auth/token";
 import { createDocument } from "@/lib/documents/create-document";
 import { putFileServer } from "@/lib/files/put-file-server";
+import { newId } from "@/lib/id-helper";
 import { extractTeamId, isValidWebhookId } from "@/lib/incoming-webhooks";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
@@ -839,11 +840,15 @@ async function handleDataroomCreate(
 
   // Create the dataroom
   try {
+    // Generate unique public ID for the dataroom
+    const pId = newId("dataroom");
+
     // Create dataroom with link if requested
     let createData: any = {
       name,
       description,
       teamId,
+      pId,
     };
 
     if (createLink && link) {
