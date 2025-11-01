@@ -33,25 +33,33 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
           },
+        },
+        select: {
+          role: true,
         },
       });
 
-      if (!team) {
+      if (!teamAccess) {
         return res.status(401).end("Unauthorized");
+      }
+
+      if (teamAccess.role !== "ADMIN" && teamAccess.role !== "MANAGER") {
+        return res.status(403).json({
+          message:
+            "You are not permitted to perform this action. Only admin and managers can delete dataroom folders.",
+        });
       }
 
       const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: dataroomId,
-          teamId: team.id,
+          teamId,
         },
       });
 

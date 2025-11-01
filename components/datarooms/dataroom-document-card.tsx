@@ -137,7 +137,11 @@ export default function DataroomDocumentCard({
         {
           method: "DELETE",
         },
-      ).then(() => {
+      ).then(async (res) => {
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.message || "Failed to remove document");
+        }
         mutate(
           `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}${endpoint}`,
           null,
@@ -155,7 +159,7 @@ export default function DataroomDocumentCard({
       {
         loading: "Removing document...",
         success: "Document removed successfully.",
-        error: "Failed to remove document. Try again.",
+        error: (err) => err.message || "Failed to remove document. Try again.",
       },
     );
   };

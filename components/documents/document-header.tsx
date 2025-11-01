@@ -406,7 +406,11 @@ export default function DocumentHeader({
     toast.promise(
       fetch(`/api/teams/${teamId}/documents/${documentId}`, {
         method: "DELETE",
-      }).then(() => {
+      }).then(async (res) => {
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.message || "Failed to delete document");
+        }
         mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`, null, {
           populateCache: (_, docs) => {
             return docs.filter(
@@ -423,7 +427,7 @@ export default function DocumentHeader({
       {
         loading: "Deleting document...",
         success: "Document deleted successfully.",
-        error: "Failed to delete document. Try again.",
+        error: (err) => err.message || "Failed to delete document. Try again.",
       },
     );
   };
