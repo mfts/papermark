@@ -142,3 +142,9 @@ textarea,
 .notion-toggle:has(.notion-h1) {
   margin-top: 2rem;
 }
+
+/* Fix column layout to be evenly spaced */
+.notion-row .notion-column {
+  flex: 1 1 0;
+  min-width: 0;
+}
