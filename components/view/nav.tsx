@@ -123,7 +123,8 @@ export default function Nav({
       return;
     }
     if (!allowDownload || type === "notion") return;
-    try {
+
+    const downloadPromise = (async () => {
       const response = await fetch(`/api/links/download`, {
         method: "POST",
         headers: {
@@ -133,8 +134,9 @@ export default function Nav({
       });
 
       if (!response.ok) {
-        toast.error("Error downloading file");
-        return;
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || "Failed to download file";
+        throw new Error(errorMessage);
       }
 
       // Check if the response is a PDF file (for watermarked PDFs)
@@ -183,10 +185,17 @@ export default function Nav({
           document.body.removeChild(link);
         }, 100);
       }
-    } catch (error) {
-      console.error("Error downloading file:", error);
-      toast.error("Error downloading file");
-    }
+
+      return "File downloaded successfully";
+    })();
+
+    toast.promise(downloadPromise, {
+      loading: hasWatermark 
+        ? "Preparing download with watermark..." 
+        : "Preparing download...",
+      success: (message) => message,
+      error: (err) => err.message || "Failed to download file",
+    });
   };
 
   useEffect(() => {

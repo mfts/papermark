@@ -123,10 +123,12 @@ export default async function handle(
       }
 
       // get the file to be downloaded, if watermark is enabled and document is not pdf, then get the pdf file, otherwise return the original file
-      // if watermark is enabled and document version is pdf, then get the file
+      // if watermark is enabled and watermark config is present and document version is pdf, then get the file
       // if watermark is not enabled, then get the original file
       const file =
-        view.link.enableWatermark && view.document!.versions[0].type === "pdf"
+        view.link.enableWatermark &&
+        view.link.watermarkConfig &&
+        view.document!.versions[0].type === "pdf"
           ? view.document!.versions[0].file
           : (view.document!.versions[0].originalFile ??
             view.document!.versions[0].file);
@@ -139,7 +141,8 @@ export default async function handle(
 
       if (
         view.document!.versions[0].type === "pdf" &&
-        view.link.enableWatermark
+        view.link.enableWatermark &&
+        view.link.watermarkConfig
       ) {
         const response = await fetch(
           `${process.env.NEXTAUTH_URL}/api/mupdf/annotate-document`,
