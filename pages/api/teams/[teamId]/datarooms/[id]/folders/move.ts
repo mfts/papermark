@@ -81,12 +81,12 @@ export default async function handle(
             });
           }
         }
-        // Fetch all nested subfolders of the selected folders
+        // Fetch all nested subfolders of the selected folders (excluding the folders themselves)
         const allSubfolders = await prisma.dataroomFolder.findMany({
           where: {
             dataroomId: dataroomId,
             OR: foldersToMove.map((folder) => ({
-              path: { startsWith: folder.path },
+              path: { startsWith: `${folder.path}/` },
             })),
           },
         });
