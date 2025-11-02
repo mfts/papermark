@@ -105,9 +105,7 @@ The core Papermark application runs as a Next.js application and handles:
 
 ### 2. **Storage Configuration Manager**
 
-**File**: `ee/features/storage/config.ts`
-
-This component manages storage configurations per team:
+Manages storage configurations per team:
 
 ```typescript
 interface StorageConfig {
@@ -130,8 +128,6 @@ interface StorageConfig {
 
 ### 3. **S3 Client Factory**
 
-**File**: `lib/files/aws-client.ts`
-
 Creates authenticated S3 clients using AWS SDK v3:
 
 ```typescript
@@ -152,97 +148,7 @@ const client = new S3Client({
 - Credential isolation per team
 - Lambda client creation for serverless functions
 
-### 4. **Upload Services**
-
-Papermark supports multiple upload methods to accommodate different file sizes and use cases:
-
-#### a) **Browser Direct Upload** (Small to Medium Files)
-**File**: `pages/api/file/s3/get-presigned-post-url.ts`
-
-- Client requests presigned POST URL from Papermark API
-- Papermark generates presigned URL with team credentials
-- Client uploads directly to S3 using presigned URL
-- No file data passes through Papermark servers
-
-**S3 Operations Used**:
-- `PutObjectCommand` with presigned URL generation
-
-#### b) **TUS Resumable Upload** (Large Files, >100MB)
-**Files**: `pages/api/file/tus/[[...file]].ts`, `ee/features/storage/s3-store.ts`
-
-- Protocol: [TUS (resumable upload protocol)](https://tus.io)
-- Supports pause/resume for unreliable connections
-- Chunked uploads in 8MB parts
-- Multi-region routing based on team configuration
-
-**S3 Operations Used**:
-- `CreateMultipartUploadCommand`
-- `UploadPartCommand`
-- `CompleteMultipartUploadCommand`
-- `AbortMultipartUploadCommand`
-
-#### c) **Multipart Upload** (Very Large Files, >1GB)
-**File**: `pages/api/file/s3/multipart.ts`
-
-- Client-coordinated multipart upload
-- Parallel part uploads for speed
-- Three-phase process: initiate ? upload parts ? complete
-
-**S3 Operations Used**:
-- `CreateMultipartUploadCommand`
-- `UploadPartCommand` (presigned URLs for each part)
-- `CompleteMultipartUploadCommand`
-- `AbortMultipartUploadCommand` (on failure)
-
-#### d) **Server-side Upload** (API/Integration Uploads)
-**Files**: `lib/files/put-file-server.ts`, `lib/files/stream-file-server.ts`
-
-- Used for API integrations, webhooks, email attachments
-- File streams directly from server to S3
-- Uses AWS SDK's `Upload` class for automatic multipart handling
-
-**S3 Operations Used**:
-- `PutObjectCommand`
-- `Upload` (from `@aws-sdk/lib-storage`) for streaming
-
-### 5. **Download Services**
-
-**Files**: `lib/files/get-file.ts`, `pages/api/file/s3/get-presigned-get-url.ts`
-
-Downloads support two modes:
-
-#### a) **S3 Presigned URLs** (Direct Access)
-- 1-hour expiration time
-- Direct download from S3
-- Used when no CDN is configured
-
-**S3 Operations Used**:
-- `GetObjectCommand` with presigned URL generation
-
-#### b) **CloudFront Signed URLs** (CDN Access)
-- 1-hour expiration time
-- Cached content delivery
-- Used when CloudFront is configured
-- Requires RSA private key for signing
-
-**CloudFront Operations Used**:
-- URL signing with `@aws-sdk/cloudfront-signer`
-
-### 6. **Delete Services**
-
-**File**: `lib/files/delete-file-server.ts`
-
-Handles document deletion:
-
-- Lists all objects in document folder (includes versions, watermarked copies)
-- Batch deletion of objects
-- Handles pagination for large document sets
-
-**S3 Operations Used**:
-- `ListObjectsV2Command`
-- `DeleteObjectsCommand`
-
-### 7. **File Organization Structure**
+### 4. **File Organization Structure**
 
 Documents are stored with this path structure:
 
@@ -261,7 +167,7 @@ Documents are stored with this path structure:
 - Efficient batch operations
 - Supports document versioning
 
-### 8. **Metadata Management**
+### 5. **Metadata Management**
 
 **Location**: PostgreSQL database (Prisma ORM)
 
@@ -292,6 +198,211 @@ Document {
 
 ---
 
+## Storage Operations & S3 APIs
+
+### Upload Operations
+
+Papermark supports four upload methods to accommodate different file sizes and use cases:
+
+#### 1. **Browser Direct Upload** (Small to Medium Files: <100MB)
+
+**What Happens**:
+1. Client requests a presigned POST URL from Papermark
+2. Papermark generates presigned URL using team's S3 credentials
+3. Client uploads file directly to S3 using presigned URL
+4. No file data passes through Papermark servers
+5. Papermark saves document metadata to database
+
+**S3 Operations Used**:
+- `PutObjectCommand` with presigned URL generation via `@aws-sdk/s3-request-presigner`
+
+**Benefits**:
+- Fast uploads
+- No server bandwidth usage
+- Reduced server load
+
+---
+
+#### 2. **TUS Resumable Upload** (Large Files: 100MB - 2GB)
+
+**What Happens**:
+1. Client initiates TUS upload session with metadata (filename, size, team)
+2. Papermark creates multipart upload in S3
+3. Client uploads file in 8MB chunks via TUS protocol
+4. Each chunk stored as S3 multipart upload part
+5. On completion, multipart upload finalized
+6. Metadata updated in S3 (Content-Type, Content-Disposition)
+7. Document metadata saved to database
+
+**S3 Operations Used**:
+- `CreateMultipartUploadCommand` - Start multipart upload
+- `UploadPartCommand` - Upload each 8MB chunk
+- `CompleteMultipartUploadCommand` - Finalize upload
+- `AbortMultipartUploadCommand` - Cancel on failure
+- `CopyObjectCommand` - Update metadata after upload
+- `ListPartsCommand` - Resume interrupted uploads
+
+**Benefits**:
+- Pause and resume uploads
+- Reliable for large files over unstable connections
+- Automatic retry on chunk failure
+- Progress tracking
+
+---
+
+#### 3. **Multipart Upload** (Very Large Files: >1GB)
+
+**What Happens**:
+1. Client requests to initiate multipart upload
+2. Papermark creates multipart upload session in S3
+3. Client requests presigned URLs for each part (calculated by file size)
+4. Client uploads parts directly to S3 in parallel using presigned URLs
+5. Client notifies Papermark when all parts uploaded
+6. Papermark completes the multipart upload
+7. Document metadata saved to database
+
+**S3 Operations Used**:
+- `CreateMultipartUploadCommand` - Initiate multipart upload
+- `UploadPartCommand` with presigned URLs - Upload each part (client-driven)
+- `CompleteMultipartUploadCommand` - Finalize with part ETags
+- `AbortMultipartUploadCommand` - Cleanup on failure
+
+**Benefits**:
+- Parallel part uploads for maximum speed
+- Handles files up to 5TB
+- Client controls upload parallelization
+- Efficient use of bandwidth
+
+---
+
+#### 4. **Server-side Upload** (API/Integration Uploads)
+
+**What Happens**:
+1. Server receives file via API (webhook, email attachment, integration)
+2. File streamed directly from server to S3
+3. AWS SDK automatically handles multipart for large files
+4. Document metadata saved to database
+
+**S3 Operations Used**:
+- `PutObjectCommand` - Small files (<5MB)
+- `Upload` class from `@aws-sdk/lib-storage` - Large files (automatic multipart)
+
+**Benefits**:
+- Supports API integrations
+- Handles email attachments
+- Processes files from external sources
+
+---
+
+### Download Operations
+
+#### 1. **S3 Presigned URLs** (Direct Access)
+
+**What Happens**:
+1. User requests document download
+2. Papermark verifies access permissions
+3. Papermark extracts S3 key from document metadata
+4. Papermark generates presigned GET URL (1-hour expiration)
+5. Client redirected to presigned URL
+6. File downloaded directly from S3
+
+**S3 Operations Used**:
+- `GetObjectCommand` with presigned URL generation via `@aws-sdk/s3-request-presigner`
+
+**Benefits**:
+- Direct download from S3 (fast)
+- No Papermark bandwidth usage
+- Secure, time-limited access
+
+---
+
+#### 2. **CloudFront Signed URLs** (CDN Access)
+
+**What Happens**:
+1. User requests document download
+2. Papermark verifies access permissions
+3. Papermark generates CloudFront signed URL using RSA private key (1-hour expiration)
+4. Client redirected to CloudFront URL
+5. File served from CloudFront edge cache (or fetched from S3 origin if not cached)
+
+**CloudFront Operations Used**:
+- URL signing via `@aws-sdk/cloudfront-signer` using private key cryptography
+
+**Benefits**:
+- Cached content delivery (faster global access)
+- Reduced S3 egress costs
+- Lower latency for repeat downloads
+
+---
+
+### Delete Operations
+
+**What Happens**:
+1. User deletes document from Papermark
+2. Papermark lists all objects in document folder (includes original, watermarked, optimized versions)
+3. All objects deleted in batch operation
+4. If more than 1000 objects, operation repeated (pagination)
+5. Document metadata removed from database
+
+**S3 Operations Used**:
+- `ListObjectsV2Command` - List all objects in document folder
+- `DeleteObjectsCommand` - Batch delete up to 1000 objects at once
+
+**Benefits**:
+- Complete cleanup of all document versions
+- Efficient batch deletion
+- Handles pagination for large sets
+
+---
+
+### Additional Storage Operations
+
+#### Document Processing (Watermarking, Optimization)
+
+**What Happens**:
+1. Original document uploaded to S3
+2. Background job retrieves document from S3 via presigned URL
+3. Processing applied (watermarking, video optimization, etc.)
+4. Processed file uploaded back to S3 in same folder
+5. Metadata updated with processed file path
+
+**S3 Operations Used**:
+- `GetObjectCommand` with presigned URL - Retrieve original
+- `PutObjectCommand` - Upload processed version
+
+---
+
+#### Bulk Download (Multiple Documents)
+
+**What Happens**:
+1. User requests bulk download (e.g., entire data room)
+2. Papermark streams multiple files from S3
+3. Files compressed into ZIP archive on-the-fly
+4. ZIP streamed to client
+
+**S3 Operations Used**:
+- `GetObjectCommand` with presigned URLs - Retrieve each file
+- Streaming to avoid memory issues
+
+---
+
+#### Copy/Duplicate Operations
+
+**What Happens**:
+1. User duplicates document or moves to different data room
+2. Papermark copies S3 object to new key path
+3. No file download/upload required
+4. New document metadata created
+
+**S3 Operations Used**:
+- `CopyObjectCommand` - Server-side copy within S3
+
+**Benefits**:
+- Fast, no data transfer
+- Free operation within same region
+
+---
+
 ## S3-Compatible Storage Requirements
 
 ### Required S3 APIs
@@ -307,6 +418,7 @@ Papermark requires the following S3-compatible APIs:
 | `DeleteObjects` | Batch delete | Per document deletion |
 | `ListObjectsV2` | List document versions | Per deletion |
 | `HeadObject` | Check object existence | On-demand |
+| `CopyObject` | Duplicate/move documents | Per copy operation |
 
 #### Multipart Upload (Required for Large Files)
 | API Operation | Usage | Frequency |
@@ -342,7 +454,7 @@ To integrate your S3-compatible storage, you'll need to provide:
 3. **Access Credentials**: 
    - Access Key ID
    - Secret Access Key
-   - With permissions: `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject`, `s3:ListBucket`, `s3:AbortMultipartUpload`, `s3:ListMultipartUploadParts`
+   - With permissions: `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject`, `s3:ListBucket`, `s3:AbortMultipartUpload`, `s3:ListMultipartUploadParts`, `s3:CopyObject`
 4. **Endpoint** (Optional): Custom endpoint URL for S3-compatible services (e.g., MinIO, DigitalOcean Spaces, Backblaze B2)
 5. **CloudFront Distribution** (Optional):
    - Distribution domain
@@ -473,7 +585,8 @@ We offer flexible deployment options to accommodate your security and compliance
            "s3:ListBucket",
            "s3:ListBucketMultipartUploads",
            "s3:ListMultipartUploadParts",
-           "s3:AbortMultipartUpload"
+           "s3:AbortMultipartUpload",
+           "s3:CopyObject"
          ],
          "Resource": [
            "arn:aws:s3:::your-company-papermark-docs/*",
@@ -581,15 +694,19 @@ We offer flexible deployment options to accommodate your security and compliance
 
 **Overview**: We provide an AWS CloudFormation template that automatically provisions all required AWS resources in your account. This is the fastest option for customers with AWS experience.
 
+**What Gets Provisioned**:
+- S3 bucket with recommended security settings
+- IAM user with least-privilege policy
+- CloudFront distribution (optional)
+- CloudWatch alarms for monitoring
+- Bucket logging configuration
+- Encryption configuration
+
 **Setup Process**:
 
 1. **Download CloudFormation Template**
    
-   We provide a template (`papermark-storage-stack.yaml`) that creates:
-   - S3 bucket with recommended settings
-   - IAM user and policy
-   - CloudFront distribution (optional)
-   - CloudWatch alarms for monitoring
+   We provide a template (`papermark-storage-stack.yaml`)
 
 2. **Deploy Stack**
    
@@ -624,85 +741,12 @@ We offer flexible deployment options to accommodate your security and compliance
    Outputs include:
    - Bucket Name
    - Access Key ID
-   - Secret Access Key (encrypted)
+   - Secret Access Key
    - CloudFront Distribution Domain (if enabled)
 
 4. **Share Credentials with Papermark**
    
    Provide the stack outputs to Papermark team securely
-
-**CloudFormation Template Structure**:
-
-```yaml
-# Simplified example - full template provided separately
-AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Papermark Storage Infrastructure'
-
-Parameters:
-  BucketName:
-    Type: String
-    Description: 'Name for the S3 bucket'
-  EnableCloudFront:
-    Type: String
-    Default: 'false'
-    AllowedValues: ['true', 'false']
-
-Resources:
-  PapermarkBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Ref BucketName
-      VersioningConfiguration:
-        Status: Enabled
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-  
-  PapermarkUser:
-    Type: AWS::IAM::User
-    Properties:
-      UserName: papermark-storage-access
-  
-  PapermarkPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: PapermarkS3Access
-      Users:
-        - !Ref PapermarkUser
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - s3:PutObject
-              - s3:GetObject
-              - s3:DeleteObject
-              - s3:ListBucket
-              - s3:AbortMultipartUpload
-            Resource:
-              - !GetAtt PapermarkBucket.Arn
-              - !Sub '${PapermarkBucket.Arn}/*'
-  
-  PapermarkAccessKey:
-    Type: AWS::IAM::AccessKey
-    Properties:
-      UserName: !Ref PapermarkUser
-
-Outputs:
-  BucketName:
-    Value: !Ref PapermarkBucket
-  AccessKeyId:
-    Value: !Ref PapermarkAccessKey
-  SecretAccessKey:
-    Value: !GetAtt PapermarkAccessKey.SecretAccessKey
-  # ... additional outputs
-```
 
 **Benefits**:
 - ? Fastest setup (10-15 minutes)
@@ -837,99 +881,6 @@ Papermark's BYOS architecture supports various compliance frameworks:
 
 ---
 
-## Cost Estimation
-
-### AWS S3 Costs (Example: US East)
-
-| Component | Pricing | Example (100GB, 10K docs) |
-|-----------|---------|---------------------------|
-| **Storage** | $0.023/GB/month | $2.30/month |
-| **PUT Requests** | $0.005/1000 requests | $0.05/month (10K uploads) |
-| **GET Requests** | $0.0004/1000 requests | $0.40/month (100K downloads) |
-| **Data Transfer Out** | $0.09/GB | $9.00/month (100GB egress) |
-| **Total (estimated)** | - | **~$12/month** |
-
-### With CloudFront CDN
-
-| Component | Pricing | Example (100GB, 10K docs) |
-|-----------|---------|---------------------------|
-| **Storage** | $0.023/GB/month | $2.30/month |
-| **PUT Requests** | $0.005/1000 requests | $0.05/month |
-| **CloudFront Data Transfer** | $0.085/GB | $8.50/month (100GB via CDN) |
-| **CloudFront Requests** | $0.0075/10K requests | $0.08/month (100K requests) |
-| **Total (estimated)** | - | **~$11/month** (5% savings) |
-
-**Savings with CloudFront**:
-- Reduced S3 egress costs
-- Faster global delivery
-- Caching reduces origin load
-
-### Alternative: Cloudflare R2
-
-| Component | Pricing | Example (100GB, 10K docs) |
-|-----------|---------|---------------------------|
-| **Storage** | $0.015/GB/month | $1.50/month |
-| **Class A Operations** | $4.50/million | $0.05/month (10K uploads) |
-| **Class B Operations** | $0.36/million | $0.04/month (100K downloads) |
-| **Data Transfer Out** | **FREE** | **$0.00/month** |
-| **Total (estimated)** | - | **~$1.60/month** (86% savings) |
-
----
-
-## Migration Path
-
-If you're currently using Papermark's default storage and want to migrate to your own:
-
-### Migration Process
-
-1. **Setup Your Storage**
-   - Follow one of the deployment options above
-   - Test connectivity with a staging environment
-
-2. **Data Migration**
-   - We provide a migration script to copy existing documents
-   - Minimal downtime (1-2 hours for most customers)
-   - Validation of all transferred files
-
-3. **Configuration Update**
-   - Update environment variables to use your storage
-   - Deploy configuration changes
-   - Smoke testing
-
-4. **Verification**
-   - Upload test documents
-   - Download existing documents
-   - Verify analytics still functioning
-
-5. **Cleanup**
-   - After 30-day grace period, delete documents from old storage
-   - Final verification
-
-**Timeline**: Typically 1-2 weeks from decision to full migration
-
-**Downtime**: < 2 hours during cutover
-
----
-
-## Support & Resources
-
-### Documentation
-- **AWS S3 API Reference**: https://docs.aws.amazon.com/s3/
-- **AWS SDK for JavaScript v3**: https://docs.aws.amazon.com/sdk-for-javascript/v3/
-- **TUS Protocol Specification**: https://tus.io/protocols/resumable-upload
-
-### Papermark Support
-- **Email**: storage-support@papermark.io
-- **Response Time**: < 24 hours for storage issues
-- **Escalation**: Critical issues escalated to infrastructure team
-
-### AWS Support Resources
-- **AWS Support Plans**: Recommended Business or Enterprise support
-- **AWS Well-Architected Framework**: Security, reliability, performance
-- **AWS Trusted Advisor**: Cost optimization, security checks
-
----
-
 ## Frequently Asked Questions
 
 ### Q: Can I use multiple buckets for different teams?
@@ -937,9 +888,6 @@ If you're currently using Papermark's default storage and want to migrate to you
 
 ### Q: What happens if I revoke credentials?
 **A:** Papermark will be unable to access documents. Users will see errors when uploading/downloading. We can coordinate credential rotation with zero downtime.
-
-### Q: Can I migrate data back to Papermark-hosted storage?
-**A:** Yes, the migration process works in both directions.
 
 ### Q: Do you support S3 bucket versioning?
 **A:** Yes, Papermark is compatible with versioned buckets. We always operate on the latest version.
@@ -961,6 +909,12 @@ If you're currently using Papermark's default storage and want to migrate to you
 
 ### Q: What about GDPR data residency?
 **A:** Use EU region buckets (e.g., `eu-central-1`, `eu-west-1`). Papermark application can be deployed in EU regions on request.
+
+### Q: How do you handle failed uploads?
+**A:** For multipart uploads, we automatically abort incomplete uploads to prevent storage costs. TUS protocol supports automatic retry and resume.
+
+### Q: Can I see what S3 operations Papermark performs?
+**A:** Yes, enable AWS CloudTrail and S3 server access logging. All API calls are logged with timestamps and request details.
 
 ---
 
