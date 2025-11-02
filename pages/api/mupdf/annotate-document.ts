@@ -15,6 +15,50 @@ export const config = {
   maxDuration: 300,
 };
 
+/**
+ * Validates a URL to prevent SSRF attacks.
+ * Only allows HTTPS requests to the configured distribution hosts.
+ */
+function validateUrl(urlString: string): URL {
+  let parsedUrl: URL;
+
+  // Parse the URL
+  try {
+    parsedUrl = new URL(urlString);
+  } catch (error) {
+    throw new Error("Invalid URL format");
+  }
+
+  // Validate protocol - only HTTPS allowed
+  if (parsedUrl.protocol !== "https:") {
+    throw new Error("Only HTTPS URLs are allowed");
+  }
+
+  // Get allowed distribution hosts from environment
+  const allowedHosts = [
+    process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST,
+    process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST_US,
+  ].filter((host): host is string => !!host);
+
+  if (allowedHosts.length === 0) {
+    throw new Error("No distribution hosts configured");
+  }
+
+  // Validate hostname against allow-list
+  const hostname = parsedUrl.hostname.toLowerCase();
+  const isAllowedHost = allowedHosts.some(
+    (allowedHost) => hostname === allowedHost.toLowerCase(),
+  );
+
+  if (!isAllowedHost) {
+    throw new Error(
+      "Host not allowed. Only requests to configured distribution hosts are permitted",
+    );
+  }
+
+  return parsedUrl;
+}
+
 interface WatermarkConfig {
   text: string;
   isTiled: boolean;
@@ -289,6 +333,23 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
   const startTime = Date.now();
 
+  // Validate URL to prevent SSRF attacks
+  let validatedUrl: URL;
+  try {
+    validatedUrl = validateUrl(url);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    log({
+      message: `URL validation failed: ${errorMsg}\nAttempted URL: ${url}`,
+      type: "error",
+      mention: false,
+    });
+    return res.status(400).json({
+      error: "Invalid URL",
+      details: errorMsg,
+    });
+  }
+
   try {
     // Fetch the PDF data with timeout
     let response: Response;
@@ -297,7 +358,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for fetch
 
-      response = await fetch(url, {
+      // Use the validated URL string for the fetch
+      response = await fetch(validatedUrl.toString(), {
         signal: controller.signal,
         headers: {
           Accept: "application/pdf",
