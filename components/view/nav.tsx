@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   BadgeInfoIcon,
   Download,
+  Maximize,
   MessageCircle,
   Slash,
   ZoomInIcon,
@@ -76,6 +77,7 @@ export default function Nav({
   hasWatermark,
   handleZoomIn,
   handleZoomOut,
+  handleFullscreen,
 }: {
   navData: TNavData;
   type?: "pdf" | "notion" | "sheet";
@@ -85,6 +87,7 @@ export default function Nav({
   hasWatermark?: boolean;
   handleZoomIn?: () => void;
   handleZoomOut?: () => void;
+  handleFullscreen?: () => void;
 }) {
   const router = useRouter();
   const asPath = router.asPath;
@@ -421,6 +424,28 @@ export default function Nav({
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+
+                {handleFullscreen && (
+                  <TooltipProvider delayDuration={50}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={handleFullscreen}
+                          className="bg-gray-900 text-white hover:bg-gray-900/80"
+                          size="icon"
+                        >
+                          <Maximize className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span className="mr-2 text-xs">Fullscreen</span>
+                        <span className="ml-auto rounded-sm border bg-muted p-0.5 text-xs tracking-widest text-muted-foreground">
+                          F
+                        </span>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
               </div>
             )}
 
