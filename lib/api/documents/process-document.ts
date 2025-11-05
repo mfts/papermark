@@ -5,8 +5,11 @@ import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import notion from "@/lib/notion";
 import { getNotionPageIdFromSlug } from "@/lib/notion/utils";
 import prisma from "@/lib/prisma";
-import { convertCadToPdfTask } from "@/lib/trigger/convert-files";
-import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
+import {
+  convertCadToPdfTask,
+  convertFilesToPdfTask,
+  convertKeynoteToPdfTask,
+} from "@/lib/trigger/convert-files";
 import { processVideo } from "@/lib/trigger/optimize-video-files";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { getExtension } from "@/lib/utils";
@@ -135,7 +138,30 @@ export const processDocument = async ({
   });
 
   // Trigger appropriate conversion tasks based on document type
-  if (type === "docs" || type === "slides") {
+  // Check if it's a Keynote file (slides type with Keynote content type)
+  if (
+    type === "slides" &&
+    (contentType === "application/vnd.apple.keynote" ||
+      contentType === "application/x-iwork-keynote-sffkey")
+  ) {
+    await convertKeynoteToPdfTask.trigger(
+      {
+        documentId: document.id,
+        documentVersionId: document.versions[0].id,
+        teamId,
+      },
+      {
+        idempotencyKey: `${teamId}-${document.versions[0].id}-keynote`,
+        tags: [
+          `team_${teamId}`,
+          `document_${document.id}`,
+          `version:${document.versions[0].id}`,
+        ],
+        queue: conversionQueue(teamPlan),
+        concurrencyKey: teamId,
+      },
+    );
+  } else if (type === "docs" || type === "slides") {
     await convertFilesToPdfTask.trigger(
       {
         documentId: document.id,
