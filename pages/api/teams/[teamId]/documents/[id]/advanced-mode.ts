@@ -94,11 +94,12 @@ export default async function handle(
         data: { advancedExcelEnabled: enabled },
       });
 
-      // Set numPages to 1 when enabling, restore when disabling (if not already 1)
-      const documentVersionPromise = prisma.documentVersion.update({
-        where: { id: documentVersion.id },
-        data: { numPages: enabled ? 1 : documentVersion.numPages || 1 },
-      });
+      const documentVersionPromise = enabled
+        ? prisma.documentVersion.update({
+            where: { id: documentVersion.id },
+            data: { numPages: 1 },
+          })
+        : Promise.resolve();
 
       await Promise.all([documentPromise, documentVersionPromise]);
 
