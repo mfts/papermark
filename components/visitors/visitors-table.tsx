@@ -438,6 +438,8 @@ export default function VisitorsTable({
                                   viewId={view.id}
                                   totalPages={view.versionNumPages}
                                   versionNumber={view.versionNumber}
+                                  downloadType={view.downloadType}
+                                  downloadMetadata={view.downloadMetadata as any}
                                 />
                               )}
                               {!isFreePlan && primaryVersion.type === "pdf" ? (
