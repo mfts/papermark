@@ -26,28 +26,23 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId,
-            },
+          userId_teamId: {
+            userId,
+            teamId,
           },
-        },
-        select: {
-          id: true,
         },
       });
 
-      if (!team) {
+      if (!teamAccess) {
         return res.status(401).end("Unauthorized");
       }
 
-      const document = await prisma.document.findFirst({
+      const document = await prisma.document.findUnique({
         where: {
           id: docId,
-          teamId: teamId,
+          teamId,
         },
         select: {
           id: true,
@@ -102,7 +97,7 @@ export default async function handle(
       // Set numPages to 1 when enabling, restore when disabling (if not already 1)
       const documentVersionPromise = prisma.documentVersion.update({
         where: { id: documentVersion.id },
-        data: { numPages: enabled ? 1 : (documentVersion.numPages || 1) },
+        data: { numPages: enabled ? 1 : documentVersion.numPages || 1 },
       });
 
       await Promise.all([documentPromise, documentVersionPromise]);
