@@ -289,29 +289,32 @@ export default function DocumentHeader({
     }
   };
 
-  const enableAdvancedExcel = async (document: Document) => {
+  const toggleAdvancedExcel = async (document: Document, enabled: boolean) => {
     toast.promise(
       fetch(`/api/teams/${teamId}/documents/${document.id}/advanced-mode`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled }),
       }).then(async (response) => {
         if (!response.ok) {
           const { message } = await response.json();
           throw new Error(message);
         }
         const { message } = await response.json();
-        plausible("advancedExcelEnabled", {
+        plausible(enabled ? "advancedExcelEnabled" : "advancedExcelDisabled", {
           props: { documentId: document.id },
         }); // track the event
         mutate(`/api/teams/${teamId}/documents/${document.id}`);
-        handleCloseAlert("enable-advanced-excel-alert");
+        if (enabled) {
+          handleCloseAlert("enable-advanced-excel-alert");
+        }
         return message;
       }),
       {
-        loading: "Enabling advanced Excel mode...",
+        loading: enabled ? "Enabling advanced Excel mode..." : "Disabling advanced Excel mode...",
         success: (message) => message,
         error: (error) =>
-          error.message || "Failed to enable advanced Excel mode",
+          error.message || (enabled ? "Failed to enable advanced Excel mode" : "Failed to disable advanced Excel mode"),
       },
     );
   };
@@ -714,14 +717,13 @@ export default function DocumentHeader({
                   </DropdownMenuItem>
                 ))} */}
               {prismaDocument.type === "sheet" &&
-                !prismaDocument.advancedExcelEnabled &&
                 supportsAdvancedExcelMode(primaryVersion.contentType) &&
                 (isPro || isBusiness || isDatarooms || isTrial) && (
                   <DropdownMenuItem
-                    onClick={() => enableAdvancedExcel(prismaDocument)}
+                    onClick={() => toggleAdvancedExcel(prismaDocument, !prismaDocument.advancedExcelEnabled)}
                   >
                     <SheetIcon className="mr-2 h-4 w-4" />
-                    Enable Advanced Mode
+                    {prismaDocument.advancedExcelEnabled ? "Disable Advanced Mode" : "Enable Advanced Mode"}
                   </DropdownMenuItem>
                 )}
               {datarooms && datarooms.length !== 0 && (
