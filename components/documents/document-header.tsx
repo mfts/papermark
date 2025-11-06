@@ -21,7 +21,6 @@ import {
   TrashIcon,
   ViewIcon,
 } from "lucide-react";
-import { usePlausible } from "next-plausible";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -39,7 +38,6 @@ import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import FileUp from "@/components/shared/icons/file-up";
 import MoreVertical from "@/components/shared/icons/more-vertical";
-import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -137,8 +135,6 @@ export default function DocumentHeader({
     String(currentTime.getMinutes()).padStart(2, "0");
   "-" + String(currentTime.getSeconds()).padStart(2, "0");
 
-  const plausible = usePlausible();
-
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
     if (!addDataRoomOpen || !addDocumentVersion) {
@@ -210,9 +206,6 @@ export default function DocumentHeader({
             documentId: document.id,
           }),
         }).then(() => {
-          // Once the assistant is activated, redirect to the chat
-          plausible("assistantEnabled", { props: { documentId: document.id } }); // track the event
-
           // refetch to fix the UI delay
           mutate(`/api/teams/${teamId}/documents/${document.id}`);
 
@@ -301,9 +294,6 @@ export default function DocumentHeader({
           throw new Error(message);
         }
         const { message } = await response.json();
-        plausible(enabled ? "advancedExcelEnabled" : "advancedExcelDisabled", {
-          props: { documentId: document.id },
-        }); // track the event
         mutate(`/api/teams/${teamId}/documents/${document.id}`);
         if (enabled) {
           handleCloseAlert("enable-advanced-excel-alert");
@@ -311,10 +301,15 @@ export default function DocumentHeader({
         return message;
       }),
       {
-        loading: enabled ? "Enabling advanced Excel mode..." : "Disabling advanced Excel mode...",
+        loading: enabled
+          ? "Enabling advanced Excel mode..."
+          : "Disabling advanced Excel mode...",
         success: (message) => message,
         error: (error) =>
-          error.message || (enabled ? "Failed to enable advanced Excel mode" : "Failed to disable advanced Excel mode"),
+          error.message ||
+          (enabled
+            ? "Failed to enable advanced Excel mode"
+            : "Failed to disable advanced Excel mode"),
       },
     );
   };
@@ -720,10 +715,17 @@ export default function DocumentHeader({
                 supportsAdvancedExcelMode(primaryVersion.contentType) &&
                 (isPro || isBusiness || isDatarooms || isTrial) && (
                   <DropdownMenuItem
-                    onClick={() => toggleAdvancedExcel(prismaDocument, !prismaDocument.advancedExcelEnabled)}
+                    onClick={() =>
+                      toggleAdvancedExcel(
+                        prismaDocument,
+                        !prismaDocument.advancedExcelEnabled,
+                      )
+                    }
                   >
                     <SheetIcon className="mr-2 h-4 w-4" />
-                    {prismaDocument.advancedExcelEnabled ? "Disable Advanced Mode" : "Enable Advanced Mode"}
+                    {prismaDocument.advancedExcelEnabled
+                      ? "Disable Advanced Mode"
+                      : "Enable Advanced Mode"}
                   </DropdownMenuItem>
                 )}
               {datarooms && datarooms.length !== 0 && (
