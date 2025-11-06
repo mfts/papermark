@@ -40,6 +40,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
@@ -206,9 +207,18 @@ export default function VisitorsTable({
                       </TableCell>
                       {/* Last Viewed */}
                       <TableCell className="text-sm text-muted-foreground">
-                        <time dateTime={new Date(view.viewedAt).toISOString()}>
-                          {timeAgo(view.viewedAt)}
-                        </time>
+                        <TimestampTooltip
+                          timestamp={view.viewedAt}
+                          side="right"
+                          rows={["local", "utc", "unix"]}
+                        >
+                          <time
+                            className="select-none"
+                            dateTime={new Date(view.viewedAt).toISOString()}
+                          >
+                            {timeAgo(view.viewedAt)}
+                          </time>
+                        </TimestampTooltip>
                       </TableCell>
 
                       {/* Actions */}
@@ -353,11 +363,18 @@ export default function VisitorsTable({
                           </TableCell>
                           {/* Last Viewed */}
                           <TableCell className="text-sm text-muted-foreground">
-                            <time
-                              dateTime={new Date(view.viewedAt).toISOString()}
+                            <TimestampTooltip
+                              timestamp={view.viewedAt}
+                              side="right"
+                              rows={["local", "utc", "unix"]}
                             >
-                              {timeAgo(view.viewedAt)}
-                            </time>
+                              <time
+                                className="select-none"
+                                dateTime={new Date(view.viewedAt).toISOString()}
+                              >
+                                {timeAgo(view.viewedAt)}
+                              </time>
+                            </TimestampTooltip>
                           </TableCell>
 
                           {/* Actions */}

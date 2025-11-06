@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
 
 import { Skeleton } from "../ui/skeleton";
@@ -172,12 +173,18 @@ export function ContactsTable({
         cell: ({ row }) => {
           const lastView = row.original.lastViewed;
           return lastView ? (
-            <time
-              dateTime={new Date(lastView).toISOString()}
-              className="text-sm text-muted-foreground"
+            <TimestampTooltip
+              timestamp={lastView}
+              side="right"
+              rows={["local", "utc", "unix"]}
             >
-              {timeAgo(lastView)}
-            </time>
+              <time
+                className="select-none text-sm text-muted-foreground"
+                dateTime={new Date(lastView).toISOString()}
+              >
+                {timeAgo(lastView)}
+              </time>
+            </TimestampTooltip>
           ) : (
             <div className="text-sm text-muted-foreground">-</div>
           );

@@ -19,6 +19,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 
 export default function DataroomVisitHistory({
   viewId,
@@ -151,13 +152,18 @@ export default function DataroomVisitHistory({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <time
-                    className="truncate text-sm text-muted-foreground"
-                    dateTime={event.timestamp.toISOString()}
-                    title={event.timestamp.toLocaleString()}
+                  <TimestampTooltip
+                    timestamp={event.timestamp}
+                    side="right"
+                    rows={["local", "utc", "unix"]}
                   >
-                    {timeAgo(event.timestamp)}
-                  </time>
+                    <time
+                      className="select-none truncate text-sm text-muted-foreground"
+                      dateTime={event.timestamp.toISOString()}
+                    >
+                      {timeAgo(event.timestamp)}
+                    </time>
+                  </TimestampTooltip>
                 </TableCell>
                 <TableCell className="table-cell">
                   <div className="flex items-center justify-end space-x-4">
@@ -253,13 +259,18 @@ export default function DataroomVisitHistory({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <time
-                    className="truncate text-sm text-muted-foreground"
-                    dateTime={event.timestamp.toISOString()}
-                    title={event.timestamp.toLocaleString()}
+                  <TimestampTooltip
+                    timestamp={event.timestamp}
+                    side="right"
+                    rows={["local", "utc", "unix"]}
                   >
-                    {timeAgo(event.timestamp)}
-                  </time>
+                    <time
+                      className="select-none truncate text-sm text-muted-foreground"
+                      dateTime={event.timestamp.toISOString()}
+                    >
+                      {timeAgo(event.timestamp)}
+                    </time>
+                  </TimestampTooltip>
                 </TableCell>
                 <TableCell className="table-cell"></TableCell>
               </TableRow>
@@ -277,13 +288,18 @@ export default function DataroomVisitHistory({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <time
-                    className="truncate text-sm text-muted-foreground"
-                    dateTime={event.timestamp.toISOString()}
-                    title={event.timestamp.toLocaleString()}
+                  <TimestampTooltip
+                    timestamp={event.timestamp}
+                    side="right"
+                    rows={["local", "utc", "unix"]}
                   >
-                    {timeAgo(event.timestamp)}
-                  </time>
+                    <time
+                      className="select-none truncate text-sm text-muted-foreground"
+                      dateTime={event.timestamp.toISOString()}
+                    >
+                      {timeAgo(event.timestamp)}
+                    </time>
+                  </TimestampTooltip>
                 </TableCell>
                 <TableCell className="table-cell">
                   <div className="flex items-center justify-end space-x-4">
@@ -309,13 +325,18 @@ export default function DataroomVisitHistory({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <time
-                    className="truncate text-sm text-muted-foreground"
-                    dateTime={event.timestamp.toISOString()}
-                    title={event.timestamp.toLocaleString()}
+                  <TimestampTooltip
+                    timestamp={event.timestamp}
+                    side="right"
+                    rows={["local", "utc", "unix"]}
                   >
-                    {timeAgo(event.timestamp)}
-                  </time>
+                    <time
+                      className="select-none truncate text-sm text-muted-foreground"
+                      dateTime={event.timestamp.toISOString()}
+                    >
+                      {timeAgo(event.timestamp)}
+                    </time>
+                  </TimestampTooltip>
                 </TableCell>
                 <TableCell className="table-cell">
                   <div className="flex items-center justify-end space-x-4">

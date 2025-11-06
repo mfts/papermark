@@ -56,6 +56,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 
 import FileProcessStatusBar from "../documents/file-process-status-bar";
 import BarChart from "../shared/icons/bar-chart";
@@ -823,13 +824,20 @@ export default function LinksTable({
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {link.views[0] ? (
-                            <time
-                              dateTime={new Date(
-                                link.views[0].viewedAt,
-                              ).toISOString()}
+                            <TimestampTooltip
+                              timestamp={link.views[0].viewedAt}
+                              side="right"
+                              rows={["local", "utc", "unix"]}
                             >
-                              {timeAgo(link.views[0].viewedAt)}
-                            </time>
+                              <time
+                                className="select-none"
+                                dateTime={new Date(
+                                  link.views[0].viewedAt,
+                                ).toISOString()}
+                              >
+                                {timeAgo(link.views[0].viewedAt)}
+                              </time>
+                            </TimestampTooltip>
                           ) : (
                             "-"
                           )}
