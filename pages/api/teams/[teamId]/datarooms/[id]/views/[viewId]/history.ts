@@ -63,6 +63,8 @@ export default async function handle(
             id: true,
             viewedAt: true,
             downloadedAt: true,
+            downloadType: true,
+            downloadMetadata: true,
             document: {
               select: {
                 id: true,

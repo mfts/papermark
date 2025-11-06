@@ -33,6 +33,8 @@ export default async function handle(
           id: true,
           viewedAt: true,
           viewerEmail: true,
+          viewerId: true,
+          verified: true,
           link: {
             select: {
               allowDownload: true,
@@ -49,6 +51,7 @@ export default async function handle(
           dataroom: {
             select: {
               id: true,
+              name: true,
               teamId: true,
               allowBulkDownload: true,
               folders: {
@@ -64,6 +67,7 @@ export default async function handle(
                   folderId: true,
                   document: {
                     select: {
+                      id: true,
                       name: true,
                       versions: {
                         where: { isPrimary: true },
@@ -174,10 +178,49 @@ export default async function handle(
         );
       }
 
-      // update the view with the downloadedAt timestamp
-      await prisma.view.update({
-        where: { id: viewId },
-        data: { downloadedAt: new Date() },
+      // Don't update DATAROOM_VIEW downloadedAt - we'll show the grouped bulk download entry instead
+
+      // Create individual document views for each document being downloaded
+      const downloadableDocuments = downloadDocuments.filter(
+        (doc) =>
+          doc.document.versions[0] &&
+          doc.document.versions[0].type !== "notion" &&
+          doc.document.versions[0].storageType !== "VERCEL_BLOB",
+      );
+
+      // For bulk downloads, only store metadata if there are less than 100 documents
+      // to avoid storing huge JSON objects
+      const downloadMetadata =
+        downloadableDocuments.length < 100
+          ? {
+              dataroomName: view.dataroom!.name,
+              documentCount: downloadableDocuments.length,
+              documents: downloadableDocuments.map((doc) => ({
+                id: doc.document.id,
+                name: doc.document.name,
+              })),
+            }
+          : {
+              dataroomName: view.dataroom!.name,
+              documentCount: downloadableDocuments.length,
+            };
+
+      await prisma.view.createMany({
+        data: downloadableDocuments.map((doc) => ({
+          viewType: "DOCUMENT_VIEW",
+          documentId: doc.document.id,
+          linkId: linkId,
+          dataroomId: view.dataroom!.id,
+          groupId: view.groupId,
+          dataroomViewId: view.id,
+          viewerEmail: view.viewerEmail,
+          downloadedAt: new Date(),
+          downloadType: "BULK",
+          downloadMetadata: downloadMetadata,
+          viewerId: view.viewerId,
+          verified: view.verified,
+        })),
+        skipDuplicates: true,
       });
 
       // Construct folderStructure and fileKeys
@@ -318,7 +361,7 @@ export default async function handle(
             dataroomId: view.dataroom.id,
             linkId,
             viewerEmail: view.viewerEmail ?? undefined,
-            viewerId: undefined,
+            viewerId: view.viewerId ?? undefined,
             metadata: {
               documentCount: downloadDocuments.length,
               isBulkDownload: true,

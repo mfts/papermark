@@ -32,7 +32,12 @@ import { toast } from "sonner";
 import useSWR from "swr";
 
 import { usePlan } from "@/lib/swr/use-billing";
-import { cn, durationFormat, fetcher, timeAgo } from "@/lib/utils";
+import {
+  cn,
+  durationFormat,
+  fetcher,
+  timeAgo,
+} from "@/lib/utils";
 import { downloadCSV } from "@/lib/utils/csv";
 
 import { Button } from "@/components/ui/button";
@@ -45,6 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 import { DataTablePagination } from "@/components/visitors/data-table-pagination";
 import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
@@ -259,9 +265,15 @@ const columns: ColumnDef<View>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-sm text-muted-foreground">
-        {timeAgo(row.original.viewedAt)}
-      </div>
+      <TimestampTooltip
+        timestamp={row.original.viewedAt}
+        side="right"
+        rows={["local", "utc", "unix"]}
+      >
+        <div className="select-none text-sm text-muted-foreground">
+          {timeAgo(row.original.viewedAt)}
+        </div>
+      </TimestampTooltip>
     ),
   },
 ];

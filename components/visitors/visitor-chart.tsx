@@ -1,5 +1,7 @@
 import ErrorPage from "next/error";
 
+import { DownloadCloudIcon } from "lucide-react";
+
 import BarChartComponent from "@/components/charts/bar-chart";
 
 import { useVisitorStats } from "@/lib/swr/use-stats";
@@ -11,11 +13,24 @@ export default function VisitorChart({
   viewId,
   totalPages = 0,
   versionNumber,
+  downloadType,
+  downloadMetadata,
 }: {
   documentId: string;
   viewId: string;
   totalPages?: number;
   versionNumber?: number;
+  downloadType?: "SINGLE" | "BULK" | "FOLDER" | null;
+  downloadMetadata?: {
+    folderName?: string;
+    folderPath?: string;
+    dataroomName?: string;
+    documentCount?: number;
+    documents?: {
+      id: string;
+      name: string;
+    }[];
+  } | null;
 }) {
   const { stats, error } = useVisitorStats(viewId);
 
@@ -25,6 +40,35 @@ export default function VisitorChart({
 
   if (!stats?.duration.data) {
     return <StatsChartSkeleton />;
+  }
+
+  // Check if this is a download-only view (no pages viewed)
+  const hasViewData = stats.duration.data.some(
+    (item) => item.sum_duration > 0,
+  );
+
+  // If no view data and it's a download (any type), show a message instead of the graph
+  if (!hasViewData && downloadType) {
+    let downloadMessage = "";
+    
+    if (downloadType === "FOLDER" && downloadMetadata?.folderName) {
+      downloadMessage = `Downloaded without viewing via dataroom folder "${downloadMetadata.folderName}"`;
+    } else if (downloadType === "BULK" && downloadMetadata?.dataroomName) {
+      downloadMessage = `Downloaded without viewing via bulk download from "${downloadMetadata.dataroomName}" dataroom`;
+    } else if (downloadType === "BULK") {
+      downloadMessage = "Downloaded without viewing via bulk dataroom download";
+    } else if (downloadType === "SINGLE") {
+      downloadMessage = "Downloaded without viewing";
+    }
+
+    return (
+      <div className="rounded-bl-lg border-b border-l p-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <DownloadCloudIcon className="h-4 w-4" />
+          <span>{downloadMessage}</span>
+        </div>
+      </div>
+    );
   }
 
   let durationData = Array.from({ length: totalPages }, (_, i) => ({

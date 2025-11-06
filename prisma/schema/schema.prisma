@@ -124,6 +124,8 @@ model View {
   verified            Boolean              @default(false) // Whether the viewer email has been verified
   viewedAt            DateTime             @default(now())
   downloadedAt        DateTime? // This is the time the document was downloaded
+  downloadType        DownloadType? // Type of download: SINGLE, BULK, or FOLDER
+  downloadMetadata    Json? // Metadata about the download (folder name, document list, etc.)
   reactions           Reaction[]
   viewType            ViewType             @default(DOCUMENT_VIEW)
   viewerId            String? // This is the viewer ID from the dataroom
@@ -163,6 +165,12 @@ model View {
 enum ViewType {
   DOCUMENT_VIEW
   DATAROOM_VIEW
+}
+
+enum DownloadType {
+  SINGLE  // Individual document download
+  BULK    // Full dataroom bulk download
+  FOLDER  // Folder download
 }
 
 model Viewer {

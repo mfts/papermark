@@ -169,6 +169,7 @@ export default async function handle(
           dataroomViewId: view.id,
           viewerEmail: view.viewerEmail,
           downloadedAt: new Date(),
+          downloadType: "SINGLE",
           viewerId: view.viewerId,
           verified: view.verified,
         },
