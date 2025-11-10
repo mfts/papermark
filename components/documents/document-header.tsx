@@ -32,7 +32,7 @@ import {
   DocumentWithLinksAndLinkCountAndViewCount,
   DocumentWithVersion,
 } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, ensureFileExtension } from "@/lib/utils";
 import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
@@ -477,7 +477,10 @@ export default function DocumentHeader({
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = prismaDocument.name;
+        a.download = ensureFileExtension(prismaDocument.name, {
+          type: documentVersion.type || undefined,
+          contentType: documentVersion.contentType || undefined,
+        });
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);

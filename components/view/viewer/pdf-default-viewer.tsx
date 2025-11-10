@@ -6,6 +6,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { getTrackingOptions } from "@/lib/tracking/tracking-config";
+import { ensureFileExtension } from "@/lib/utils";
 
 import Nav from "@/components/view/nav";
 
@@ -231,7 +232,7 @@ export default function PDFViewer(props: any) {
       //create <a/> to download the file
       const a = document.createElement("a");
       a.href = window.URL.createObjectURL(fileData);
-      a.download = props.name;
+      a.download = ensureFileExtension(props.name, { type: "pdf" });
       document.body.appendChild(a);
       a.click();
 

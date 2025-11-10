@@ -15,6 +15,8 @@ import { ParsedUrlQuery } from "querystring";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
 
+import { getExtensionFromContentType } from "./utils/get-content-type";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -39,6 +41,69 @@ export function getFileNameWithPdfExtension(filename?: string): string {
   // Remove existing extension and add .pdf
   const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
   return `${nameWithoutExt}.pdf`;
+}
+
+/**
+ * Ensures a filename has the correct file extension based on document type or contentType
+ * If the filename already has an extension, it is preserved.
+ * If not, the appropriate extension is added based on the provided type/contentType.
+ */
+export function ensureFileExtension(
+  filename?: string,
+  options?: {
+    type?: string;
+    contentType?: string;
+  },
+): string {
+  if (!filename) return "document";
+
+  // Check if filename already has an extension
+  const hasExtension = /\.[^/.]+$/.test(filename);
+
+  if (hasExtension) {
+    return filename;
+  }
+
+  // If no extension, determine the appropriate one
+  let extension = "";
+
+  // First try to get extension from contentType if provided
+  if (options?.contentType) {
+    const ext = getExtensionFromContentType(options.contentType);
+    if (ext) {
+      extension = ext;
+    }
+  }
+
+  // If no extension from contentType, try using the document type
+  if (!extension && options?.type) {
+    switch (options.type) {
+      case "pdf":
+        extension = "pdf";
+        break;
+      case "image":
+        extension = "png"; // default image extension
+        break;
+      case "sheet":
+        extension = "xlsx";
+        break;
+      case "docs":
+        extension = "docx";
+        break;
+      case "slides":
+        extension = "pptx";
+        break;
+      case "video":
+        extension = "mp4";
+        break;
+      default:
+        // No extension determined
+        break;
+    }
+  }
+
+  // Return filename with extension if one was determined
+  return extension ? `${filename}.${extension}` : filename;
 }
 
 interface SWRError extends Error {

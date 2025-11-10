@@ -91,6 +91,7 @@ export type DocumentVersion = {
   hasPages: boolean;
   isVertical: boolean;
   updatedAt: Date;
+  contentType: string;
 };
 
 type DataroomDocument = {

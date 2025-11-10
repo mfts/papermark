@@ -6,7 +6,7 @@ import { waitUntil } from "@vercel/functions";
 import { getFile } from "@/lib/files/get-file";
 import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
-import { getFileNameWithPdfExtension } from "@/lib/utils";
+import { ensureFileExtension, getFileNameWithPdfExtension } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
 
 export const config = {
@@ -281,7 +281,15 @@ export default async function handle(
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader(
           "Content-Disposition",
-          `attachment; filename="${encodeURIComponent(downloadDocuments[0].document!.name)}"`,
+          `attachment; filename="${encodeURIComponent(
+            ensureFileExtension(downloadDocuments[0].document!.name, {
+              type:
+                downloadDocuments[0].document!.versions[0].type || undefined,
+              contentType:
+                downloadDocuments[0].document!.versions[0].contentType ||
+                undefined,
+            }),
+          )}"`,
         );
         res.setHeader("Content-Length", Buffer.from(pdfBuffer).length);
         res.setHeader("Cache-Control", "no-cache");
@@ -295,7 +303,14 @@ export default async function handle(
         downloadDocuments[0].document!.versions[0].contentType ||
         headResponse.headers.get("content-type") ||
         "application/octet-stream";
-      const fileName = downloadDocuments[0].document!.name;
+      const fileName = ensureFileExtension(
+        downloadDocuments[0].document!.name,
+        {
+          type: downloadDocuments[0].document!.versions[0].type || undefined,
+          contentType:
+            downloadDocuments[0].document!.versions[0].contentType || undefined,
+        },
+      );
 
       // For all other files, return direct download URL
       return res.status(200).json({

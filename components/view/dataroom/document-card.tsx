@@ -6,7 +6,7 @@ import { Download, MoreVerticalIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
-import { timeAgo } from "@/lib/utils";
+import { ensureFileExtension, timeAgo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import {
@@ -136,7 +136,10 @@ export default function DocumentCard({
           disposition && disposition.match(/filename="(.+)"/);
         link.download = filenameMatch
           ? decodeURIComponent(filenameMatch[1])
-          : document.name;
+          : ensureFileExtension(document.name, {
+              type: document.versions[0]?.type || undefined,
+              contentType: document.versions[0]?.contentType || undefined,
+            });
         link.rel = "noopener noreferrer";
         window.document.body.appendChild(link);
         link.click();
