@@ -47,12 +47,20 @@ export const PLAN_PRICING = {
     },
   },
   "Data Rooms": {
+    basePrice: {
+      monthly: "€149/month (3 users included)",
+      yearly: "€99/month (3 users included)",
+    },
     extraUserPrice: {
       monthly: "€49/month per additional user",
       yearly: "€33/month per additional user",
     },
   },
   "Data Rooms Plus": {
+    basePrice: {
+      monthly: "€349/month (5 users included)",
+      yearly: "€249/month (5 users included)",
+    },
     extraUserPrice: {
       monthly: "€69/month per additional user",
       yearly: "€49/month per additional user",
