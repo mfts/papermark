@@ -157,6 +157,26 @@ export default async function handle(
       }
 
       const linkType = link.linkType;
+
+      // Handle workflow links separately
+      if (linkType === "WORKFLOW_LINK") {
+        // For workflow links, fetch brand if available
+        let brand: Partial<Brand> | null = null;
+        if (link.teamId) {
+          const teamBrand = await prisma.brand.findUnique({
+            where: { teamId: link.teamId },
+            select: {
+              logo: true,
+              brandColor: true,
+              accentColor: true,
+            },
+          });
+          brand = teamBrand;
+        }
+        
+        return res.status(200).json({ linkType, brand, linkId: link.id });
+      }
+
       let brand: Partial<Brand> | Partial<DataroomBrand> | null = null;
       let linkData: any;
 
