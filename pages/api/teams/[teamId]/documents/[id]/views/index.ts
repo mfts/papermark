@@ -178,8 +178,16 @@ export default async function handle(
     }
 
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
-    const page = parseInt((req.query.page as string) || "1", 10);
-    const limit = parseInt((req.query.limit as string) || "10", 10);
+    
+    // Parse and validate pagination parameters
+    const rawPage = Number.parseInt((req.query.page as string) || "1", 10);
+    const rawLimit = Number.parseInt((req.query.limit as string) || "10", 10);
+
+    // Apply defaults for invalid values and enforce constraints
+    const page = Number.isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
+    const limit = Number.isNaN(rawLimit) || rawLimit < 1 
+      ? 10 
+      : Math.min(Math.max(rawLimit, 1), 100); // Min 1, Max 100
     const offset = (page - 1) * limit;
 
     const userId = (session.user as CustomUser).id;

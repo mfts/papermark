@@ -3,8 +3,9 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
+import WorkflowAccessView from "@/ee/features/workflows/components/workflow-access-view";
 import NotFound from "@/pages/404";
-import { Brand, DataroomBrand } from "@prisma/client";
+import { Brand, DataroomBrand, DataroomDocument } from "@prisma/client";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
@@ -38,8 +39,14 @@ type DataroomLinkData = {
   brand: DataroomBrand | null;
 };
 
+type WorkflowLinkData = {
+  linkType: "WORKFLOW_LINK";
+  entryLinkId: string;
+  brand: Brand | null;
+};
+
 export interface ViewPageProps {
-  linkData: DocumentLinkData | DataroomLinkData;
+  linkData: DocumentLinkData | DataroomLinkData | WorkflowLinkData;
   notionData: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
@@ -72,11 +79,47 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       throw new Error(`Failed to fetch: ${res.status}`);
     }
 
-    const { linkType, link, brand } = (await res.json()) as
-      | DocumentLinkData
-      | DataroomLinkData;
+    const { linkType, link, brand } = (await res.json()) as any;
 
-    if (!link || !linkType) {
+    if (!linkType) {
+      return {
+        notFound: true,
+      };
+    }
+
+    // Handle workflow links - minimal props needed
+    if (linkType === "WORKFLOW_LINK") {
+      return {
+        props: {
+          linkData: {
+            linkType: "WORKFLOW_LINK",
+            entryLinkId: linkId,
+            brand: brand || null,
+          },
+          notionData: {
+            rootNotionPageId: null,
+            recordMap: null,
+            theme: null,
+          },
+          meta: {
+            enableCustomMetatag: false,
+            metaTitle: null,
+            metaDescription: null,
+            metaImage: null,
+            metaUrl: `https://www.papermark.com/view/${linkId}`,
+            metaFavicon: "/favicon.ico",
+          },
+          showPoweredByBanner: false,
+          showAccountCreationSlide: false,
+          useAdvancedExcelViewer: false,
+          useCustomAccessForm: false,
+          logoOnAccessForm: false,
+        },
+        revalidate: 60,
+      };
+    }
+
+    if (!link) {
       return {
         notFound: true,
       };
@@ -199,12 +242,15 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       const dataroomIndexEnabled = featureFlags.dataroomIndex;
       const annotationsEnabled = featureFlags.annotations;
 
-      const lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
-        return Math.max(
-          max,
-          new Date(doc.document.versions[0].updatedAt).getTime(),
-        );
-      }, new Date(link.dataroom.createdAt).getTime());
+      const lastUpdatedAt = link.dataroom.documents.reduce(
+        (max: number, doc: any) => {
+          return Math.max(
+            max,
+            new Date(doc.document.versions[0].updatedAt).getTime(),
+          );
+        },
+        new Date(link.dataroom.createdAt).getTime(),
+      );
 
       return {
         props: {
@@ -323,10 +369,31 @@ export default function ViewPage({
     previewToken?: string;
     preview?: string;
   };
-  const { linkType, link, brand } = linkData;
+  const { linkType } = linkData;
+
+  // Render workflow access view for WORKFLOW_LINK
+  if (linkType === "WORKFLOW_LINK") {
+    const { entryLinkId, brand } = linkData as WorkflowLinkData;
+
+    return (
+      <>
+        <CustomMetaTag
+          favicon={meta.metaFavicon}
+          enableBranding={false}
+          title="Access Workflow | Powered by Papermark"
+          description={null}
+          imageUrl={null}
+          url={meta.metaUrl ?? ""}
+        />
+        <WorkflowAccessView entryLinkId={entryLinkId} brand={brand} />
+      </>
+    );
+  }
 
   // Render the document view for DOCUMENT_LINK
   if (linkType === "DOCUMENT_LINK") {
+    const { link, brand } = linkData as DocumentLinkData;
+
     if (!linkData || status === "loading" || router.isFallback) {
       return (
         <>
@@ -408,6 +475,8 @@ export default function ViewPage({
 
   // Render the dataroom view for DATAROOM_LINK
   if (linkType === "DATAROOM_LINK") {
+    const { link, brand } = linkData as DataroomLinkData;
+
     if (!link || status === "loading" || router.isFallback) {
       return (
         <>

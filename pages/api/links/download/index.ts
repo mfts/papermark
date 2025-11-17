@@ -8,6 +8,11 @@ import prisma from "@/lib/prisma";
 import { getFileNameWithPdfExtension } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
 
+// This function can run for a maximum of 300 seconds
+export const config = {
+  maxDuration: 300,
+};
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,

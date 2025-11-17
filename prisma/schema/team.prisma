@@ -28,6 +28,7 @@ model Team {
 
   links Link[]
   views View[]
+  workflows Workflow[]
 
   plan           String    @default("free")
   stripeId       String?   @unique // Stripe customer ID

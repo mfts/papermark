@@ -1,6 +1,7 @@
 enum LinkType {
   DOCUMENT_LINK
   DATAROOM_LINK
+  WORKFLOW_LINK
 }
 
 enum LinkAudienceType {
@@ -87,6 +88,9 @@ model Link {
 
   tags TagItem[]
   viewerInvitations ViewerInvitation[]
+
+  // workflow entry link
+  workflow Workflow?
 
   @@unique([domainSlug, slug])
   @@index([documentId])

@@ -68,7 +68,7 @@ const linkEventSchema = z.object({
   dataroomId: z.string().nullable(),
   groupId: z.string().nullable(),
 
-  linkType: z.enum(["DOCUMENT_LINK", "DATAROOM_LINK"]),
+  linkType: z.enum(["DOCUMENT_LINK", "DATAROOM_LINK", "WORKFLOW_LINK"]),
   teamId: z.string(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),

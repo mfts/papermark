@@ -4,7 +4,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
-import { Domain } from "@prisma/client";
+import { Domain, LinkType } from "@prisma/client";
 import { mutate } from "swr";
 
 import { BLOCKED_PATHNAMES } from "@/lib/constants";
@@ -36,7 +36,7 @@ export default function DomainSection({
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
   domains?: Domain[];
-  linkType: "DOCUMENT_LINK" | "DATAROOM_LINK";
+  linkType: Omit<LinkType, "WORKFLOW_LINK">;
   editLink?: boolean;
 }) {
   const [isModalOpen, setModalOpen] = useState(false);

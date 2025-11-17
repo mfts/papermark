@@ -17,8 +17,10 @@ import {
   HouseIcon,
   Loader,
   ServerIcon,
+  WorkflowIcon,
 } from "lucide-react";
 
+import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
 import useLimits from "@/lib/swr/use-limits";
@@ -70,6 +72,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { integration: slackIntegration } = useSlackIntegration({
     enabled: !!currentTeam?.id,
   });
+
+  // Check feature flags
+  const { features } = useFeatureFlags();
 
   // Fetch datarooms for the current team
   const { datarooms } = useDatarooms();
@@ -148,6 +153,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         highlightItem: ["visitors"],
       },
       {
+        title: "Workflows",
+        url: "/workflows",
+        icon: WorkflowIcon,
+        current: router.pathname.includes("/workflows"),
+        disabled: !features?.workflows,
+        trigger: "sidebar_workflows",
+        plan: PlanEnum.DataRoomsPlus,
+        highlightItem: ["workflows"],
+      },
+      {
         title: "Branding",
         url: "/branding",
         icon: BrushIcon,
@@ -200,6 +215,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ],
   };
 
+  // Filter out items that should be hidden based on feature flags
+  const filteredNavMain = data.navMain.filter((item) => {
+    // Hide workflows if feature flag is not enabled
+    if (item.title === "Workflows" && !features?.workflows) {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <Sidebar
       className="bg-gray-50 dark:bg-black"
@@ -244,7 +268,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         )}
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={filteredNavMain} />
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu className="group-data-[collapsible=icon]:hidden">
