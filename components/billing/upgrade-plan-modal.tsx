@@ -402,7 +402,7 @@ export function UpgradePlanModal({
           })}
         </div>
         <div className="flex flex-col items-center text-center text-sm text-muted-foreground">
-          All plans include unlimited viewers and page by page document
+          All plans include unlimited visitors and page by page document
           analytics.
           <div className="flex items-center gap-2">
             <Link
