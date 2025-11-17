@@ -1,10 +1,12 @@
 import { useState } from "react";
 
-import { Hash, ListOrderedIcon, RefreshCw } from "lucide-react";
+import { PlanEnum } from "@/ee/stripe/constants";
+import { ListOrderedIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
+import { usePlan } from "@/lib/swr/use-billing";
 
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,18 +30,21 @@ export default function RebuildIndexButton({
   dataroomId,
   disabled = false,
 }: RebuildIndexButtonProps) {
-  const { isFeatureEnabled } = useFeatureFlags();
+  const { isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const isDataroomIndexEnabled = isFeatureEnabled("dataroomIndex");
-
-  // Don't render if feature is not enabled
-  if (!isDataroomIndexEnabled) {
+  // INFO: Don't render if user doesn't have a datarooms plan
+  if (!isDatarooms && !isDataroomsPlus && !isTrial) {
     return null;
   }
 
   const handleRebuildIndex = async () => {
+    if (!isDataroomsPlus) {
+      toast.error("Upgrade to Data Rooms Plus plan to use this feature.");
+      return;
+    }
+
     try {
       setIsLoading(true);
 
@@ -120,14 +125,27 @@ export default function RebuildIndexButton({
             </div>
           </div>
         </div>
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleRebuildIndex} loading={isLoading}>
-            <ListOrderedIcon className="h-4 w-4" />
-            Rebuild Index
-          </Button>
+          {isDataroomsPlus ? (
+            <>
+              <Button variant="outline" onClick={() => setIsOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleRebuildIndex} loading={isLoading}>
+                <ListOrderedIcon className="h-4 w-4" />
+                Rebuild Index
+              </Button>
+            </>
+          ) : (
+            <UpgradePlanModal
+              clickedPlan={PlanEnum.DataRoomsPlus}
+              trigger="datarooms_rebuild_index_button"
+              highlightItem={["indexing"]}
+            >
+              <Button>Upgrade to rebuild index</Button>
+            </UpgradePlanModal>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

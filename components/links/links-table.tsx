@@ -3,6 +3,8 @@ import { useRouter } from "next/router";
 import { useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { InviteViewersModal } from "@/ee/features/dataroom-invitations/components/invite-viewers-modal";
+import { invitationEmailSchema } from "@/ee/features/dataroom-invitations/lib/schema/dataroom-invitations";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { DocumentVersion, LinkAudienceType } from "@prisma/client";
 import { isWithinInterval, subMinutes } from "date-fns";
@@ -22,16 +24,14 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 import z from "zod";
 
+import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
-import { invitationEmailSchema } from "@/ee/features/dataroom-invitations/lib/schema/dataroom-invitations";
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
-import { InviteViewersModal } from "@/components/datarooms/invite-viewers-modal";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,

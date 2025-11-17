@@ -88,8 +88,7 @@ export function InviteViewersModal({
     if (groupId) {
       return (
         groupLinks?.map((link) => {
-          const identifier = link.slug || link.id;
-          const last5 = identifier.slice(-5);
+          const last5 = link.id.slice(-5);
           return {
             id: link.id,
             name: link.name || `Link #${last5}`,

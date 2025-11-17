@@ -67,9 +67,13 @@ export const CreateWorkflowRequestSchema = z.object({
   domain: z.string().nullish(), // null or undefined means papermark.com
   slug: z
     .string()
-    .regex(/^[a-zA-Z0-9_-]+$/, "Slug must contain only letters, numbers, hyphens, and underscores")
+    .regex(
+      /^[a-zA-Z0-9-]+$/,
+      "Slug must contain only letters, numbers, and hyphens",
+    )
     .min(1)
-    .max(100),
+    .max(100)
+    .nullish(), // slug is only required for custom domains, not for papermark.com
 });
 
 export const UpdateWorkflowRequestSchema = z.object({
@@ -147,4 +151,3 @@ export interface StepExecutionResult {
   actionsResult?: any;
   error?: string;
 }
-

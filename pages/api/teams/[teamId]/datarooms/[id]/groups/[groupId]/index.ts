@@ -57,7 +57,19 @@ export default async function handle(
         include: {
           members: {
             include: {
-              viewer: true,
+              viewer: {
+                include: {
+                  invitations: {
+                    where: {
+                      groupId: groupId,
+                    },
+                    orderBy: {
+                      sentAt: "desc",
+                    },
+                    take: 1,
+                  },
+                },
+              },
             },
           },
           accessControls: true,
