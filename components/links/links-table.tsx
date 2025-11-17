@@ -13,6 +13,7 @@ import {
   EyeIcon,
   FileSlidersIcon,
   LinkIcon,
+  SendIcon,
   Settings2Icon,
   Trash2Icon,
 } from "lucide-react";
@@ -26,8 +27,11 @@ import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
+import { invitationEmailSchema } from "@/ee/features/dataroom-invitations/lib/schema/dataroom-invitations";
+import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { InviteViewersModal } from "@/components/datarooms/invite-viewers-modal";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -93,11 +97,13 @@ export default function LinksTable({
   links,
   primaryVersion,
   mutateDocument,
+  dataroomName,
 }: {
   targetType: "DOCUMENT" | "DATAROOM";
   links?: LinkWithViews[];
   primaryVersion?: DocumentVersion;
   mutateDocument?: () => void;
+  dataroomName?: string;
 }) {
   const [tags, _] = useQueryState<string[]>("tags", {
     parse: (value: string) => value.split(",").filter(Boolean),
@@ -116,6 +122,7 @@ export default function LinksTable({
   };
 
   const { isMobile } = useMediaQuery();
+  const { isFeatureEnabled } = useFeatureFlags();
 
   let processedLinks = useMemo(() => {
     if (!links?.length) return [];
@@ -179,6 +186,18 @@ export default function LinksTable({
     link: linkToDelete,
     targetType,
   });
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState<boolean>(false);
+  const [inviteLink, setInviteLink] = useState<LinkWithViews | null>(null);
+  const [inviteDefaultEmails, setInviteDefaultEmails] = useState<string[]>([]);
+
+  const linksApiRoute =
+    currentTeamId && targetId
+      ? groupId
+        ? `/api/teams/${currentTeamId}/datarooms/${targetId}/groups/${groupId}/links`
+        : `/api/teams/${currentTeamId}/datarooms/${targetId}/links`
+      : null;
+
+  const dataroomDisplayName = dataroomName ?? "this dataroom";
 
   const handleCopyToClipboard = (linkString: string) => {
     copyToClipboard(`${linkString}`, "Link copied to clipboard.");
@@ -313,6 +332,24 @@ export default function LinksTable({
 
     toast.success("Link duplicated successfully");
     setIsLoading(false);
+  };
+
+  const handleSendInvitations = (link: LinkWithViews) => {
+    if (targetType !== "DATAROOM") {
+      return;
+    }
+
+    const sanitizedEmails = Array.from(
+      new Set(
+        (link.allowList ?? []).filter(
+          (value) => invitationEmailSchema.safeParse(value).success,
+        ),
+      ),
+    );
+
+    setInviteDefaultEmails(sanitizedEmails);
+    setInviteLink(link);
+    setIsInviteModalOpen(true);
   };
 
   const handleEditPermissions = (link: LinkWithViews) => {
@@ -902,6 +939,15 @@ export default function LinksTable({
                                 <EyeIcon className="mr-2 h-4 w-4" />
                                 Preview Link
                               </DropdownMenuItem>
+                              {targetType === "DATAROOM" &&
+                                isFeatureEnabled("dataroomInvitations") && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleSendInvitations(link)}
+                                  >
+                                    <SendIcon className="mr-2 h-4 w-4" />
+                                    Send Invitations
+                                  </DropdownMenuItem>
+                                )}
                               <DropdownMenuItem
                                 disabled={!canAddLinks}
                                 onClick={() => handleDuplicateLink(link)}
@@ -996,6 +1042,28 @@ export default function LinksTable({
               permissionGroupId={editPermissionLink?.permissionGroupId}
               onSave={handlePermissionsSave}
             />
+            {inviteLink && isFeatureEnabled("dataroomInvitations") ? (
+              <InviteViewersModal
+                open={isInviteModalOpen}
+                setOpen={(open) => {
+                  setIsInviteModalOpen(open);
+                  if (!open) {
+                    setInviteLink(null);
+                  }
+                }}
+                dataroomId={targetId}
+                dataroomName={dataroomDisplayName}
+                groupId={inviteLink.groupId ?? undefined}
+                linkId={inviteLink.id}
+                defaultEmails={inviteDefaultEmails}
+                onSuccess={() => {
+                  if (linksApiRoute) {
+                    mutate(linksApiRoute);
+                  }
+                  setInviteLink(null);
+                }}
+              />
+            ) : null}
           </>
         ) : (
           <LinkSheet

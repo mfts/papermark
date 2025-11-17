@@ -86,6 +86,7 @@ model Link {
   customFields CustomField[]
 
   tags TagItem[]
+  viewerInvitations ViewerInvitation[]
 
   @@unique([domainSlug, slug])
   @@index([documentId])
