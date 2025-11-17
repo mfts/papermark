@@ -299,12 +299,22 @@ async function handleAccess(req: NextRequest, link: any) {
     executionResult.targetDataroomId,
   );
 
-  const targetPath = executionResult.targetUrl
-    ? new URL(executionResult.targetUrl).pathname
-    : "/";
-  const cookieFlagId = executionResult.targetUrl
-    ? new URL(executionResult.targetUrl).pathname.split("/").pop()
-    : executionResult.targetLinkId;
+  // Parse target URL safely with fallback
+  let targetPath = "/";
+  let cookieFlagId = executionResult.targetLinkId;
+
+  if (executionResult.targetUrl) {
+    try {
+      const parsedUrl = new URL(executionResult.targetUrl);
+      targetPath = parsedUrl.pathname;
+      const pathSegment = parsedUrl.pathname.split("/").pop();
+      if (pathSegment) {
+        cookieFlagId = pathSegment;
+      }
+    } catch (error) {
+      console.error("Failed to parse target URL, using fallback values");
+    }
+  }
 
   // Set link session cookie (httpOnly)
   cookies().set(`pm_ls_${executionResult.targetLinkId}`, sessionToken, {
@@ -362,12 +372,6 @@ async function handleAccess(req: NextRequest, link: any) {
       path: targetPath,
     });
   }
-
-  console.log("--------------------------------");
-  console.log("sessionToken", sessionToken);
-  console.log("--------------------------------");
-  console.log("executionResult", executionResult);
-  console.log("--------------------------------");
 
   return NextResponse.json({
     success: true,

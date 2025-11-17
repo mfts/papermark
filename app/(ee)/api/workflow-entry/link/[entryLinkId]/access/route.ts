@@ -195,8 +195,22 @@ export async function POST(
       executionResult.targetDataroomId,
     );
 
-    const targetPath = `/view/${executionResult.targetLinkId}`;
-    const cookieFlagId = executionResult.targetLinkId;
+    // Parse target URL safely with fallback
+    let targetPath = `/view/${executionResult.targetLinkId}`;
+    let cookieFlagId = executionResult.targetLinkId;
+
+    if (executionResult.targetUrl) {
+      try {
+        const parsedUrl = new URL(executionResult.targetUrl);
+        targetPath = parsedUrl.pathname;
+        const pathSegment = parsedUrl.pathname.split("/").pop();
+        if (pathSegment) {
+          cookieFlagId = pathSegment;
+        }
+      } catch (error) {
+        console.error("Failed to parse target URL, using fallback values");
+      }
+    }
 
     // Set link session cookie (httpOnly)
     cookies().set(`pm_ls_${executionResult.targetLinkId}`, sessionToken, {
@@ -254,12 +268,6 @@ export async function POST(
         path: targetPath,
       });
     }
-
-    console.log("--------------------------------");
-    console.log("sessionToken", sessionToken);
-    console.log("--------------------------------");
-    console.log("executionResult", executionResult);
-    console.log("--------------------------------");
 
     return NextResponse.json({
       success: true,
