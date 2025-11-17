@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { useUninvitedMembers } from "@/ee/features/dataroom-invitations/lib/swr/use-dataroom-invitations";
 import {
   MailCheckIcon,
   MoreHorizontalIcon,
@@ -12,10 +13,9 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { useDataroomGroup } from "@/lib/swr/use-dataroom-groups";
-import { useUninvitedMembers } from "@/ee/features/dataroom-invitations/lib/swr/use-dataroom-invitations";
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ import {
 import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
 
-import { InviteViewersModal } from "../invite-viewers-modal";
+import { InviteViewersModal } from "../../../ee/features/dataroom-invitations/components/invite-viewers-modal";
 import { AddGroupMemberModal } from "./add-member-modal";
 
 export default function GroupMemberTable({
@@ -291,7 +291,9 @@ export default function GroupMemberTable({
                           {/* Name */}
                           <TableCell className="">
                             <div className="flex items-center overflow-visible sm:space-x-3">
-                              <VisitorAvatar viewerEmail={viewer.viewer.email} />
+                              <VisitorAvatar
+                                viewerEmail={viewer.viewer.email}
+                              />
                               <div className="min-w-0 flex-1">
                                 <div className="focus:outline-none">
                                   <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
@@ -310,8 +312,8 @@ export default function GroupMemberTable({
                               </div>
                             </div>
                           </TableCell>
-                        {/* Last Viewed */}
-                        {/* <TableCell className="text-sm text-muted-foreground">
+                          {/* Last Viewed */}
+                          {/* <TableCell className="text-sm text-muted-foreground">
                         <time
                           dateTime={new Date(viewer.viewer.updatedAt).toISOString()}
                         >
@@ -320,33 +322,33 @@ export default function GroupMemberTable({
                             : "-"}
                         </time>
                       </TableCell> */}
-                        {/* Actions */}
-                        <TableCell className="p-0 text-center">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                className="h-8 w-8 p-0 group-hover/row:ring-1 group-hover/row:ring-gray-200 group-hover/row:dark:ring-gray-700"
-                              >
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontalIcon className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="gap-x-2 text-destructive focus:bg-destructive focus:text-destructive-foreground"
-                                onClick={() => handleRemoveMember(viewer.id)}
-                              >
-                                <UserXIcon className="h-4 w-4" />
-                                Remove Member
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
+                          {/* Actions */}
+                          <TableCell className="p-0 text-center">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 group-hover/row:ring-1 group-hover/row:ring-gray-200 group-hover/row:dark:ring-gray-700"
+                                >
+                                  <span className="sr-only">Open menu</span>
+                                  <MoreHorizontalIcon className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="gap-x-2 text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                                  onClick={() => handleRemoveMember(viewer.id)}
+                                >
+                                  <UserXIcon className="h-4 w-4" />
+                                  Remove Member
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
                     })
                   ) : (
                     <TableRow>
