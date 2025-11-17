@@ -1,6 +1,7 @@
 enum LinkType {
   DOCUMENT_LINK
   DATAROOM_LINK
+  WORKFLOW_LINK
 }
 
 enum LinkAudienceType {
@@ -86,6 +87,9 @@ model Link {
   customFields CustomField[]
 
   tags TagItem[]
+
+  // workflow entry link
+  workflow Workflow?
 
   @@unique([domainSlug, slug])
   @@index([documentId])

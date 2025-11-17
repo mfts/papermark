@@ -86,7 +86,7 @@ export const LinkOptions = ({
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   targetId?: string;
-  linkType: LinkType;
+  linkType: Omit<LinkType, "WORKFLOW_LINK">;
   editLink?: boolean;
   currentPreset?: LinkPreset | null;
 }) => {

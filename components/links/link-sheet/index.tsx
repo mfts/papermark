@@ -49,7 +49,7 @@ import { LinkOptions } from "./link-options";
 import TagSection from "./tags/tag-section";
 
 export const DEFAULT_LINK_PROPS = (
-  linkType: LinkType,
+  linkType: Omit<LinkType, "WORKFLOW_LINK">,
   groupId: string | null = null,
   showBanner: boolean = true,
 ) => ({
@@ -147,7 +147,7 @@ export default function LinkSheet({
 }: {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  linkType: LinkType;
+  linkType: Omit<LinkType, "WORKFLOW_LINK">;
   currentLink?: DEFAULT_LINK_TYPE;
   existingLinks?: LinkWithViews[];
 }) {
