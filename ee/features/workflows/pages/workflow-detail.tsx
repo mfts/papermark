@@ -1,6 +1,7 @@
 import { useRouter } from "next/router";
 
 import { useState } from "react";
+import { z } from "zod";
 
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
@@ -73,17 +74,25 @@ export default function WorkflowDetailPage() {
   const [showStepDialog, setShowStepDialog] = useState(false);
   const [editingStep, setEditingStep] = useState<WorkflowStep | null>(null);
 
+  // Validate IDs to prevent SSRF
+  const validWorkflowId =
+    workflowId && z.string().cuid().safeParse(workflowId).success
+      ? workflowId
+      : null;
+  const validTeamId =
+    teamId && z.string().cuid().safeParse(teamId).success ? teamId : null;
+
   const {
     data: workflow,
     error,
     mutate,
   } = useSWR<Workflow>(
-    workflowId ? `/api/workflows/${workflowId}` : null,
+    validWorkflowId ? `/api/workflows/${validWorkflowId}` : null,
     fetcher,
   );
 
   const { data: links } = useSWR<Link[]>(
-    teamId ? `/api/teams/${teamId}/workflow-links` : null,
+    validTeamId ? `/api/teams/${validTeamId}/workflow-links` : null,
     fetcher,
   );
 
@@ -96,6 +105,15 @@ export default function WorkflowDetailPage() {
   };
 
   const handleDeleteStep = async (stepId: string) => {
+    // Validate IDs to prevent SSRF
+    const workflowIdValidation = z.string().cuid().safeParse(workflowId);
+    const stepIdValidation = z.string().cuid().safeParse(stepId);
+
+    if (!workflowIdValidation.success || !stepIdValidation.success) {
+      toast.error("Invalid workflow or step ID");
+      return;
+    }
+
     try {
       const response = await fetch(
         `/api/workflows/${workflowId}/steps/${stepId}`,
@@ -169,9 +187,9 @@ export default function WorkflowDetailPage() {
         </div>
 
         {/* Step Form Dialog */}
-        {showStepDialog && (
+        {showStepDialog && validWorkflowId && (
           <StepFormDialog
-            workflowId={workflowId}
+            workflowId={validWorkflowId}
             step={editingStep}
             links={links || []}
             open={showStepDialog}

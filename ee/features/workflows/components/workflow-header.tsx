@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
+import { z } from "zod";
 import { TrashIcon, CopyIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -36,6 +37,13 @@ export function WorkflowHeader({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleToggleActive = async () => {
+    // Validate workflowId to prevent SSRF
+    const workflowIdValidation = z.string().cuid().safeParse(workflowId);
+    if (!workflowIdValidation.success) {
+      toast.error("Invalid workflow ID");
+      return;
+    }
+
     try {
       const response = await fetch(`/api/workflows/${workflowId}`, {
         method: "PATCH",
@@ -59,6 +67,14 @@ export function WorkflowHeader({
   };
 
   const handleDeleteWorkflow = async () => {
+    // Validate workflowId to prevent SSRF
+    const workflowIdValidation = z.string().cuid().safeParse(workflowId);
+    if (!workflowIdValidation.success) {
+      toast.error("Invalid workflow ID");
+      setShowDeleteDialog(false);
+      return;
+    }
+
     setIsDeleting(true);
 
     try {

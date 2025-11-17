@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { cn } from "@/lib/utils";
 
@@ -124,6 +125,21 @@ export function StepFormDialog({
     if (!allowListInput.trim()) {
       toast.error("At least one email or domain is required");
       return;
+    }
+
+    // Validate IDs to prevent SSRF
+    const workflowIdValidation = z.string().cuid().safeParse(workflowId);
+    if (!workflowIdValidation.success) {
+      toast.error("Invalid workflow ID");
+      return;
+    }
+
+    if (step) {
+      const stepIdValidation = z.string().cuid().safeParse(step.id);
+      if (!stepIdValidation.success) {
+        toast.error("Invalid step ID");
+        return;
+      }
     }
 
     setIsSubmitting(true);
