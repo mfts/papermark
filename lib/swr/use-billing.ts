@@ -42,7 +42,8 @@ export type BasePlan =
   | "trial"
   | "business"
   | "datarooms"
-  | "datarooms-plus";
+  | "datarooms-plus"
+  | "datarooms-premium";
 
 type PlanWithTrial = `${BasePlan}+drtrial`;
 type PlanWithOld = `${BasePlan}+old` | `${BasePlan}+drtrial+old`;
@@ -127,8 +128,9 @@ export function usePlan({
     isPro: parsedPlan.plan === "pro",
     isBusiness: parsedPlan.plan === "business",
     isDatarooms:
-      parsedPlan.plan === "datarooms" || parsedPlan.plan === "datarooms-plus",
+      parsedPlan.plan === "datarooms" || parsedPlan.plan === "datarooms-plus" || parsedPlan.plan === "datarooms-premium",
     isDataroomsPlus: parsedPlan.plan === "datarooms-plus",
+    isDataroomsPremium: parsedPlan.plan === "datarooms-premium",
     loading: !plan && !error && !!teamId, // Only show loading if we have a teamId but no data
     error,
     mutate,

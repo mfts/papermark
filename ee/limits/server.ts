@@ -6,6 +6,7 @@ import {
   BUSINESS_PLAN_LIMITS,
   DATAROOMS_PLAN_LIMITS,
   DATAROOMS_PLUS_PLAN_LIMITS,
+  DATAROOMS_PREMIUM_PLAN_LIMITS,
   FREE_PLAN_LIMITS,
   PRO_PLAN_LIMITS,
   TPlanLimits,
@@ -24,6 +25,7 @@ const planLimitsMap: Record<string, TPlanLimits> = {
   business: BUSINESS_PLAN_LIMITS,
   datarooms: DATAROOMS_PLAN_LIMITS,
   "datarooms-plus": DATAROOMS_PLUS_PLAN_LIMITS,
+  "datarooms-premium": DATAROOMS_PREMIUM_PLAN_LIMITS,
 };
 
 export const configSchema = z.object({
