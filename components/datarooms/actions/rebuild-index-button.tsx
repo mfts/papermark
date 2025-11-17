@@ -4,6 +4,7 @@ import { PlanEnum } from "@/ee/stripe/constants";
 import { ListOrderedIcon } from "lucide-react";
 import { toast } from "sonner";
 
+import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { usePlan } from "@/lib/swr/use-billing";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
@@ -30,17 +31,28 @@ export default function RebuildIndexButton({
   dataroomId,
   disabled = false,
 }: RebuildIndexButtonProps) {
+  const { isFeatureEnabled } = useFeatureFlags();
   const { isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  // INFO: Don't render if user doesn't have a datarooms plan
-  if (!isDatarooms && !isDataroomsPlus && !isTrial) {
+  const isDataroomIndexEnabled = isFeatureEnabled("dataroomIndex");
+  const hasDataroomsPlan = isDatarooms || isDataroomsPlus || isTrial;
+  const hasDataroomsPlusPlan = isDataroomsPlus;
+
+  // Show button if: feature flag is enabled OR user has datarooms plan or higher
+  const shouldShowButton = isDataroomIndexEnabled || hasDataroomsPlan;
+
+  // Allow usage if: feature flag is enabled OR user has datarooms-plus plan
+  const canUseFeature = isDataroomIndexEnabled || hasDataroomsPlusPlan;
+
+  // Don't render if conditions aren't met
+  if (!shouldShowButton) {
     return null;
   }
 
   const handleRebuildIndex = async () => {
-    if (!isDataroomsPlus) {
+    if (!canUseFeature) {
       toast.error("Upgrade to Data Rooms Plus plan to use this feature.");
       return;
     }
@@ -127,7 +139,7 @@ export default function RebuildIndexButton({
         </div>
 
         <DialogFooter>
-          {isDataroomsPlus ? (
+          {canUseFeature ? (
             <>
               <Button variant="outline" onClick={() => setIsOpen(false)}>
                 Cancel
