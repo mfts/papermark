@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { ItemType, ViewerGroupAccessControls } from "@prisma/client";
@@ -19,6 +19,7 @@ import {
   EyeOffIcon,
   File,
   Folder,
+  HomeIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
@@ -33,6 +34,7 @@ import {
 
 import CloudDownloadOff from "@/components/shared/icons/cloud-download-off";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -53,9 +55,13 @@ const PermissionItemName = ({ item }: { item: FileOrFolder }) => {
     isDataroomIndexEnabled,
   );
 
+  const isRoot = item.id === "__dataroom_root__";
+
   return (
     <div className="flex items-center text-foreground">
-      {item.itemType === ItemType.DATAROOM_FOLDER ? (
+      {isRoot ? (
+        <HomeIcon className="mr-2 h-5 w-5" />
+      ) : item.itemType === ItemType.DATAROOM_FOLDER ? (
         <Folder className="mr-2 h-5 w-5" />
       ) : (
         <File className="mr-2 h-5 w-5" />
@@ -94,28 +100,34 @@ type ColumnExtra = {
 
 const createColumns = (extra: ColumnExtra): ColumnDef<FileOrFolder>[] => [
   {
-    id: "expander",
-    header: () => null,
-    cell: ({ row }) => {
-      return row.getCanExpand() ? (
-        <Button
-          variant="ghost"
-          onClick={row.getToggleExpandedHandler()}
-          className="h-6 w-6 p-0"
-        >
-          {row.getIsExpanded() ? (
-            <ChevronDown className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
-        </Button>
-      ) : null;
-    },
-  },
-  {
     accessorKey: "name",
     header: "Name",
-    cell: ({ row }) => <PermissionItemName item={row.original} />,
+    cell: ({ row }) => {
+      const isRoot = row.original.id === "__dataroom_root__";
+      return (
+        <div className="flex items-center text-foreground">
+          {isRoot ? (
+            <div className="h-6 w-6 shrink-0" />
+          ) : row.getCanExpand() ? (
+            <Button
+              variant="ghost"
+              onClick={row.getToggleExpandedHandler()}
+              className="mr-1 h-6 w-6 shrink-0 p-0"
+              disabled={isRoot}
+            >
+              {row.getIsExpanded() ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </Button>
+          ) : (
+            <div className="mr-1 h-6 w-6 shrink-0" />
+          )}
+          <PermissionItemName item={row.original} />
+        </div>
+      );
+    },
   },
   {
     id: "actions",
@@ -181,7 +193,7 @@ const createColumns = (extra: ColumnExtra): ColumnDef<FileOrFolder>[] => [
   },
 ];
 
-// Update the buildTree function to include permissions
+// Build tree function to include permissions
 const buildTree = (
   items: any[],
   permissions: ViewerGroupAccessControls[],
@@ -189,9 +201,13 @@ const buildTree = (
 ): FileOrFolder[] => {
   const getPermissions = (id: string) => {
     const permission = permissions.find((p) => p.itemId === id);
+
+    // If we have permission data loaded, use it. Otherwise default to true for consistency.
+    const hasPermissionData = permissions.length > 0;
+
     return {
-      view: permission?.canView ?? false,
-      download: permission?.canDownload ?? false,
+      view: permission ? permission.canView : hasPermissionData ? false : true,
+      download: permission ? permission.canDownload : false,
       partialView: false,
       partialDownload: false,
     };
@@ -219,42 +235,40 @@ const buildTree = (
 
       const folderPermissions = getPermissions(folder.id);
 
-      // Calculate view and partialView
-      const someSubItemViewable = allSubItems.some(
-        (subItem) => subItem.permissions.view,
-      );
-      const allSubItemsViewable = allSubItems.every(
-        (subItem) => subItem.permissions.view,
-      );
-      const someSubItemDownloadable = allSubItems.some(
-        (subItem) => subItem.permissions.download,
-      );
-      const allSubItemsDownloadable = allSubItems.every(
-        (subItem) => subItem.permissions.download,
-      );
+      // Calculate view and partialView for folders
+      let viewStatus = folderPermissions.view;
+      let partialView = false;
+      let downloadStatus = folderPermissions.download;
+      let partialDownload = false;
 
-      folderPermissions.view = folderPermissions.view || someSubItemViewable;
-      folderPermissions.partialView =
-        someSubItemViewable && !allSubItemsViewable;
-      folderPermissions.download =
-        folderPermissions.download || someSubItemDownloadable;
-      folderPermissions.partialDownload =
-        someSubItemDownloadable && !allSubItemsDownloadable;
+      if (allSubItems.length > 0) {
+        const viewableItems = allSubItems.filter(
+          (item) => item.permissions.view,
+        );
+        const downloadableItems = allSubItems.filter(
+          (item) => item.permissions.download,
+        );
 
-      // Propagate view/download permission up if any subitem has view/download permission
-      folderPermissions.view =
-        folderPermissions.view ||
-        allSubItems.some((subItem) => subItem.permissions.view);
-      folderPermissions.download =
-        folderPermissions.download ||
-        allSubItems.some((subItem) => subItem.permissions.download);
+        viewStatus = viewableItems.length > 0;
+        partialView =
+          viewableItems.length > 0 && viewableItems.length < allSubItems.length;
+        downloadStatus = downloadableItems.length > 0;
+        partialDownload =
+          downloadableItems.length > 0 &&
+          downloadableItems.length < allSubItems.length;
+      }
 
       result.push({
         id: folder.id,
         name: folder.name,
         hierarchicalIndex: folder.hierarchicalIndex,
         subItems: allSubItems,
-        permissions: folderPermissions,
+        permissions: {
+          view: viewStatus,
+          download: downloadStatus,
+          partialView,
+          partialDownload,
+        },
         itemType: ItemType.DATAROOM_FOLDER,
       });
     });
@@ -280,6 +294,57 @@ const buildTree = (
   return result;
 };
 
+// Build tree with virtual root folder
+const buildTreeWithRoot = (
+  items: any[],
+  permissions: ViewerGroupAccessControls[],
+  dataroomName: string = "Dataroom Home",
+): FileOrFolder[] => {
+  // Get all items (folders and root documents)
+  const allItems = buildTree(items, permissions, null);
+
+  // Calculate overall permissions for the virtual root
+  const calculateRootPermissions = (items: FileOrFolder[]) => {
+    const flattenItems = (items: FileOrFolder[]): FileOrFolder[] => {
+      return items.reduce((acc, item) => {
+        acc.push(item);
+        if (item.subItems) {
+          acc.push(...flattenItems(item.subItems));
+        }
+        return acc;
+      }, [] as FileOrFolder[]);
+    };
+
+    const allFlatItems = flattenItems(items);
+    const viewableItems = allFlatItems.filter((item) => item.permissions.view);
+    const downloadableItems = allFlatItems.filter(
+      (item) => item.permissions.download,
+    );
+
+    return {
+      view: viewableItems.length > 0,
+      download: downloadableItems.length > 0,
+      partialView:
+        viewableItems.length > 0 && viewableItems.length < allFlatItems.length,
+      partialDownload:
+        downloadableItems.length > 0 &&
+        downloadableItems.length < allFlatItems.length,
+    };
+  };
+
+  const rootPermissions = calculateRootPermissions(allItems);
+
+  return [
+    {
+      id: "__dataroom_root__",
+      name: dataroomName,
+      subItems: allItems,
+      permissions: rootPermissions,
+      itemType: ItemType.DATAROOM_FOLDER,
+    },
+  ];
+};
+
 export default function ExpandableTable({
   dataroomId,
   groupId,
@@ -299,8 +364,17 @@ export default function ExpandableTable({
   const [pendingChanges, setPendingChanges] = useState<ItemPermission>({});
   const [debouncedPendingChanges] = useDebounce(pendingChanges, 2000);
 
+  // Use ref to access current data without dependency
+  const dataRef = useRef<FileOrFolder[]>([]);
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
   const updatePermissions = useCallback(
     (id: string, newPermissions: string[]) => {
+      const isRoot = id === "__dataroom_root__";
+
       const findItemAndParents = (
         items: FileOrFolder[],
         targetId: string,
@@ -321,7 +395,7 @@ export default function ExpandableTable({
         return null;
       };
 
-      const result = findItemAndParents(data, id);
+      const result = findItemAndParents(dataRef.current, id);
       if (!result) return;
 
       const { item, parents } = result;
@@ -348,6 +422,80 @@ export default function ExpandableTable({
         updatedPermissions.view = true;
       }
 
+      // Handle root-level permissions (affects all items)
+      if (isRoot) {
+        setData((prevData) => {
+          const updateAllItems = (items: FileOrFolder[]): FileOrFolder[] => {
+            return items.map((currentItem) => {
+              if (currentItem.id === "__dataroom_root__") {
+                return {
+                  ...currentItem,
+                  permissions: {
+                    view: updatedPermissions.view,
+                    download: updatedPermissions.download,
+                    partialView: false,
+                    partialDownload: false,
+                  },
+                  subItems: currentItem.subItems
+                    ? updateAllItems(currentItem.subItems)
+                    : undefined,
+                };
+              }
+
+              const updatedItem = {
+                ...currentItem,
+                permissions: {
+                  view: updatedPermissions.view,
+                  download: updatedPermissions.download,
+                  partialView: false,
+                  partialDownload: false,
+                },
+                subItems: currentItem.subItems
+                  ? updateAllItems(currentItem.subItems)
+                  : undefined,
+              };
+
+              return updatedItem;
+            });
+          };
+
+          return updateAllItems(prevData);
+        });
+
+        // Collect changes for all items
+        const collectAllChanges = (items: FileOrFolder[]): ItemPermission => {
+          let changes: ItemPermission = {};
+
+          const processItems = (items: FileOrFolder[]) => {
+            items.forEach((item) => {
+              // Don't save the virtual __dataroom_root__ item to database
+              if (item.id !== "__dataroom_root__") {
+                changes[item.id] = {
+                  view: updatedPermissions.view,
+                  download: updatedPermissions.download,
+                  itemType: item.itemType,
+                };
+              }
+
+              if (item.subItems) {
+                processItems(item.subItems);
+              }
+            });
+          };
+
+          processItems(items);
+          return changes;
+        };
+
+        const rootChanges = collectAllChanges(dataRef.current);
+        setPendingChanges((prev) => ({
+          ...prev,
+          ...rootChanges,
+        }));
+
+        return;
+      }
+
       setData((prevData) => {
         const updateItemInTree = (items: FileOrFolder[]): FileOrFolder[] => {
           return items.map((currentItem) => {
@@ -358,6 +506,7 @@ export default function ExpandableTable({
                   view: updatedPermissions.view,
                   download: updatedPermissions.download,
                   partialView: false,
+                  partialDownload: false,
                 },
               };
 
@@ -416,6 +565,52 @@ export default function ExpandableTable({
           parent: FileOrFolder,
           subItems: FileOrFolder[],
         ): FileOrFolder => {
+          const isParentRoot = parent.id === "__dataroom_root__";
+
+          // For root folder, calculate based on all descendants
+          const calculatePermissions = (items: FileOrFolder[]) => {
+            const flattenItems = (items: FileOrFolder[]): FileOrFolder[] => {
+              return items.reduce((acc, item) => {
+                if (item.id !== "__dataroom_root__") {
+                  acc.push(item);
+                }
+                if (item.subItems) {
+                  acc.push(...flattenItems(item.subItems));
+                }
+                return acc;
+              }, [] as FileOrFolder[]);
+            };
+
+            const allItems = flattenItems(items);
+            const viewableItems = allItems.filter(
+              (item) => item.permissions.view,
+            );
+            const downloadableItems = allItems.filter(
+              (item) => item.permissions.download,
+            );
+
+            return {
+              view: viewableItems.length > 0,
+              partialView:
+                viewableItems.length > 0 &&
+                viewableItems.length < allItems.length,
+              download: downloadableItems.length > 0,
+              partialDownload:
+                downloadableItems.length > 0 &&
+                downloadableItems.length < allItems.length,
+            };
+          };
+
+          if (isParentRoot) {
+            const rootPermissions = calculatePermissions(subItems);
+            return {
+              ...parent,
+              permissions: rootPermissions,
+              subItems,
+            };
+          }
+
+          // For regular folders
           const someSubItemViewable = subItems.some(
             (subItem) => subItem.permissions.view,
           );
@@ -445,18 +640,21 @@ export default function ExpandableTable({
         return updateItemInTree(prevData);
       });
 
-      // database changes
+      // Collect changes for database update
       const collectChanges = (
         item: FileOrFolder,
         parents: FileOrFolder[],
       ): ItemPermission => {
-        let changes: ItemPermission = {
-          [item.id]: {
+        let changes: ItemPermission = {};
+
+        // Don't save the virtual __dataroom_root__ item to database
+        if (item.id !== "__dataroom_root__") {
+          changes[item.id] = {
             view: updatedPermissions.view,
             download: updatedPermissions.download,
             itemType: item.itemType,
-          },
-        };
+          };
+        }
 
         // Collect changes for all subitems
         const collectSubItemChanges = (
@@ -464,11 +662,14 @@ export default function ExpandableTable({
         ) => {
           if (!subItems) return;
           subItems.forEach((subItem) => {
-            changes[subItem.id] = {
-              view: updatedPermissions.view,
-              download: updatedPermissions.download,
-              itemType: subItem.itemType,
-            };
+            // Don't save the virtual __dataroom_root__ item to database
+            if (subItem.id !== "__dataroom_root__") {
+              changes[subItem.id] = {
+                view: updatedPermissions.view,
+                download: updatedPermissions.download,
+                itemType: subItem.itemType,
+              };
+            }
             collectSubItemChanges(subItem.subItems);
           });
         };
@@ -476,35 +677,40 @@ export default function ExpandableTable({
         collectSubItemChanges(item.subItems);
 
         // Ensure all parent folders are viewable if the item is being set to viewable
-        // and downloadable if the item is being set to downloadable
         if (updatedPermissions.view || updatedPermissions.download) {
           parents.forEach((parent) => {
-            changes[parent.id] = {
-              view: true, // Always enable view for parent folders if child is viewable
-              download: updatedPermissions.download
-                ? true
-                : parent.permissions.download, // Always enable download for parent folders if child is downloadable
-              itemType: parent.itemType,
-            };
+            // Don't save the virtual __dataroom_root__ item to database
+            if (parent.id !== "__dataroom_root__") {
+              changes[parent.id] = {
+                view: true,
+                download: updatedPermissions.download
+                  ? true
+                  : parent.permissions.download,
+                itemType: parent.itemType,
+              };
+            }
           });
         } else {
           // If turning off view, recalculate parent permissions
           [...parents].reverse().forEach((parent) => {
-            const otherChildren =
-              parent.subItems?.filter((subItem) => subItem.id !== item.id) ||
-              [];
-            const someSubItemViewable = otherChildren.some(
-              (subItem) => subItem.permissions.view,
-            );
-            const someSubItemDownloadable = otherChildren.some(
-              (subItem) => subItem.permissions.download,
-            );
+            // Don't save the virtual __dataroom_root__ item to database
+            if (parent.id !== "__dataroom_root__") {
+              const otherChildren =
+                parent.subItems?.filter((subItem) => subItem.id !== item.id) ||
+                [];
+              const someSubItemViewable = otherChildren.some(
+                (subItem) => subItem.permissions.view,
+              );
+              const someSubItemDownloadable = otherChildren.some(
+                (subItem) => subItem.permissions.download,
+              );
 
-            changes[parent.id] = {
-              view: someSubItemViewable,
-              download: someSubItemDownloadable,
-              itemType: parent.itemType,
-            };
+              changes[parent.id] = {
+                view: someSubItemViewable,
+                download: someSubItemDownloadable,
+                itemType: parent.itemType,
+              };
+            }
           });
         }
 
@@ -516,12 +722,12 @@ export default function ExpandableTable({
         ...collectChanges(item, parents),
       }));
     },
-    [data],
+    [],
   );
 
   useEffect(() => {
     if (folders && !loading) {
-      const treeData = buildTree(folders, permissions);
+      const treeData = buildTreeWithRoot(folders, permissions, "Dataroom Home");
       setData(treeData);
     }
   }, [folders, loading, permissions]);
@@ -578,6 +784,18 @@ export default function ExpandableTable({
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     getSubRows: (row) => row.subItems,
+    initialState: {
+      expanded: {
+        "0": true, // Always expand the root folder (first row)
+      },
+    },
+    getRowCanExpand: (row) => {
+      // Root folder is always expanded and cannot be collapsed
+      if (row.original.id === "__dataroom_root__") {
+        return true;
+      }
+      return (row.subRows?.length ?? 0) > 0;
+    },
   });
 
   if (loading) return <div>Loading...</div>;
@@ -606,24 +824,35 @@ export default function ExpandableTable({
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    style={{
-                      paddingLeft: `${row.depth * 1.25 + 1}rem`,
-                    }}
-                    className="py-2 last:flex last:justify-end"
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
+            table.getRowModel().rows.map((row) => {
+              const isRoot = row.original.id === "__dataroom_root__";
+              return (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  className={cn(isRoot && "bg-blue-50/50 dark:bg-blue-950/50")}
+                >
+                  {row.getVisibleCells().map((cell, index) => (
+                    <TableCell
+                      key={cell.id}
+                      style={
+                        index === 0
+                          ? {
+                              paddingLeft: `${row.depth * 1.25}rem`,
+                            }
+                          : undefined
+                      }
+                      className="py-2 last:flex last:justify-end"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">

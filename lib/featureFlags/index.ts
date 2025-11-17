@@ -12,6 +12,7 @@ export type BetaFeatures =
   | "dataroomIndex"
   | "slack"
   | "annotations"
+  | "dataroomInvitations"
   | "workflows";
 
 type BetaFeaturesRecord = Record<BetaFeatures, string[]>;
@@ -29,6 +30,7 @@ export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
     dataroomIndex: false,
     slack: false,
     annotations: false,
+    dataroomInvitations: false,
     workflows: false,
   };
 

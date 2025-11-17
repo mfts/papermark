@@ -87,6 +87,7 @@ model Link {
   customFields CustomField[]
 
   tags TagItem[]
+  viewerInvitations ViewerInvitation[]
 
   // workflow entry link
   workflow Workflow?

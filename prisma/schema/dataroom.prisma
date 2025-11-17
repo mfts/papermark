@@ -124,6 +124,7 @@ model ViewerGroup {
 
   views         View[]
   conversations Conversation[]
+  invitations   ViewerInvitation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

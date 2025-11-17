@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { useDataroom, useDataroomLinks } from "@/lib/swr/use-dataroom";
+
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import StatsCard from "@/components/datarooms/stats-card";
@@ -8,8 +10,6 @@ import LinkSheet from "@/components/links/link-sheet";
 import LinksTable from "@/components/links/links-table";
 import { Button } from "@/components/ui/button";
 import DataroomVisitorsTable from "@/components/visitors/dataroom-visitors-table";
-
-import { useDataroom, useDataroomLinks } from "@/lib/swr/use-dataroom";
 
 export default function DataroomPage() {
   const { dataroom } = useDataroom();
@@ -43,7 +43,11 @@ export default function DataroomPage() {
           <StatsCard />
 
           {/* Links */}
-          <LinksTable links={links} targetType={"DATAROOM"} />
+          <LinksTable
+            links={links}
+            targetType={"DATAROOM"}
+            dataroomName={dataroom.name}
+          />
 
           {/* Visitors */}
           <DataroomVisitorsTable dataroomId={dataroom.id} />
