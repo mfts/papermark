@@ -40,13 +40,7 @@ export default async function handler(
   }
 
   try {
-    // Check if dataroomIndex feature flag is enabled
-    const featureFlags = await getFeatureFlags({ teamId });
-    if (!featureFlags.dataroomIndex) {
-      return res.status(403).json({ message: "Feature not enabled" });
-    }
-
-    // Verify user has access to this dataroom
+    // Verify user has access to this dataroom and get team plan
     const dataroom = await prisma.dataroom.findUnique({
       where: {
         id: dataroomId,
@@ -62,11 +56,28 @@ export default async function handler(
       select: {
         id: true,
         name: true,
+        team: {
+          select: {
+            plan: true,
+          },
+        },
       },
     });
 
     if (!dataroom) {
       return res.status(404).json({ message: "Dataroom not found" });
+    }
+
+    // Check if user has access: feature flag enabled OR datarooms-plus plan
+    const featureFlags = await getFeatureFlags({ teamId });
+    const hasDataroomsPlusPlan =
+      dataroom.team.plan === "datarooms-plus" ||
+      dataroom.team.plan === "datarooms-plus+old";
+
+    if (!featureFlags.dataroomIndex && !hasDataroomsPlusPlan) {
+      return res.status(403).json({
+        message: "This feature requires a Data Rooms Plus plan",
+      });
     }
 
     // Calculate and update hierarchical indexes
