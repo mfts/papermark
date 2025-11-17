@@ -98,7 +98,7 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
       { 
         id: "datarooms", 
         text: "Multi-file sharing",
-        tooltip: "Allow you to share multiple files and folders in a single links. Simplified data rooms security settings for sharing multiple files and folders, described in Business plan. "
+        tooltip: "Allow you to share multiple files and folders in a single links. Simplified data rooms settings for sharing multiple files and folders. "
       },
       { id: "documents", text: "1000 documents" },
       {
@@ -115,7 +115,7 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
      
       { id: "webhooks", text: "Webhooks" },
       // { id: "file-types-advanced", text: "More file types: dwg, kml, zip" },
-      // { id: "retention", text: "2-year analytics retention" },
+      { id: "retention", text: "2-year analytics retention" },
     ],
   },
   [PlanEnum.DataRooms]: {
@@ -143,7 +143,7 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
       { id: "groups", text: "Data room groups" },
       // { id: "audit", text: "Audit log for viewers" },
     
-      // { id: "onboarding", text: "Custom onboarding" },
+      { id: "onboarding", text: "Priority support" },
       // { id: "retention", text: "2-year analytics retention" },
     ],
   },
@@ -194,7 +194,7 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
       { id: "workflows", text: "Workflows" },
       { id: "assign", text: "Assign team members" },
       { id: "sso", text: "SSO (Single Sign-On) on request" },
-      { id: "whitelabel", text: "Whitelabeling and custom layouts" },
+      { id: "whitelabel", text: "Whitelabeling" },
       { id: "api", text: "Full API access" },
       { id: "security", text: "Advanced security and certification" },
       { id: "onboarding", text: "Priority onboarding & training" },
