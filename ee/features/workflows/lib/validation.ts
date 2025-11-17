@@ -1,16 +1,17 @@
 import { ZodError } from "zod";
+
 import {
-  ConditionsConfigSchema,
-  ActionSchema,
-  WorkflowStepDefinitionSchema,
-  CreateWorkflowRequestSchema,
-  UpdateWorkflowRequestSchema,
-  CreateWorkflowStepRequestSchema,
-  UpdateWorkflowStepRequestSchema,
-  ReorderStepsRequestSchema,
-  type ConditionsConfig,
   type Action,
+  ActionSchema,
+  type ConditionsConfig,
+  ConditionsConfigSchema,
+  CreateWorkflowRequestSchema,
+  CreateWorkflowStepRequestSchema,
+  ReorderStepsRequestSchema,
+  UpdateWorkflowRequestSchema,
+  UpdateWorkflowStepRequestSchema,
   type WorkflowStepDefinition,
+  WorkflowStepDefinitionSchema,
 } from "./types";
 
 export {
@@ -34,7 +35,9 @@ export function validateConditions(
     if (error instanceof ZodError) {
       return {
         valid: false,
-        error: error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", "),
+        error: error.errors
+          .map((e) => `${e.path.join(".")}: ${e.message}`)
+          .join(", "),
       };
     }
     return { valid: false, error: "Invalid conditions format" };
@@ -57,7 +60,9 @@ export function validateActions(
     if (error instanceof ZodError) {
       return {
         valid: false,
-        error: error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", "),
+        error: error.errors
+          .map((e) => `${e.path.join(".")}: ${e.message}`)
+          .join(", "),
       };
     }
     return { valid: false, error: "Invalid actions format" };
@@ -79,7 +84,9 @@ export function validateWorkflowStep(
     if (error instanceof ZodError) {
       return {
         valid: false,
-        error: error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", "),
+        error: error.errors
+          .map((e) => `${e.path.join(".")}: ${e.message}`)
+          .join(", "),
       };
     }
     return { valid: false, error: "Invalid workflow step format" };
@@ -90,6 +97,7 @@ export function validateWorkflowStep(
  * Helper to format Zod validation errors for API responses
  */
 export function formatZodError(error: ZodError): string {
-  return error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ");
+  return error.errors
+    .map((e) => `${e.path.join(".")}: ${e.message}`)
+    .join(", ");
 }
-

@@ -203,7 +203,8 @@ export async function POST(
     }
 
     // Validate target link exists and belongs to the team
-    const routeAction = actions.find((a) => a.type === "route");
+    // Use actionsValidation.data so enrichment persists
+    const routeAction = actionsValidation.data.find((a) => a.type === "route");
     if (routeAction && routeAction.targetLinkId) {
       const targetLink = await prisma.link.findUnique({
         where: {
@@ -219,7 +220,7 @@ export async function POST(
         );
       }
 
-      // Update action with target details
+      // Update action with target details (mutates actionsValidation.data)
       if (targetLink.linkType === "DOCUMENT_LINK" && targetLink.documentId) {
         routeAction.targetDocumentId = targetLink.documentId;
       } else if (
@@ -250,8 +251,8 @@ export async function POST(
       });
     }
 
-    // Create step and update target link's allowList in transaction
-    const [newStep] = await prisma.$transaction([
+    // Create step and conditionally update target link's allowList in transaction
+    const transactionSteps: any[] = [
       prisma.workflowStep.create({
         data: {
           workflowId,
@@ -262,14 +263,21 @@ export async function POST(
           actions: actionsValidation.data as any,
         },
       }),
-      // Update target link's allowList
-      prisma.link.update({
-        where: { id: routeAction.targetLinkId },
-        data: {
-          allowList: allowListItems,
-        },
-      }),
-    ]);
+    ];
+
+    // Only update link allowList if we have a route action with a target link
+    if (routeAction && routeAction.targetLinkId) {
+      transactionSteps.push(
+        prisma.link.update({
+          where: { id: routeAction.targetLinkId },
+          data: {
+            allowList: allowListItems,
+          },
+        }),
+      );
+    }
+
+    const [newStep] = await prisma.$transaction(transactionSteps);
 
     return NextResponse.json(newStep, { status: 201 });
   } catch (error) {

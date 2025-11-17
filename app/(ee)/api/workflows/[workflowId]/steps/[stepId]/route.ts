@@ -51,6 +51,7 @@ export async function PATCH(
     }
 
     // Validate conditions if provided
+    let validatedConditions: any | undefined;
     if (validation.data.conditions) {
       const conditionsValidation = validateConditions(
         validation.data.conditions,
@@ -61,9 +62,11 @@ export async function PATCH(
           { status: 400 },
         );
       }
+      validatedConditions = conditionsValidation.data;
     }
 
     // Validate actions if provided
+    let validatedActions: any[] | undefined;
     if (validation.data.actions) {
       const actionsValidation = validateActions(validation.data.actions);
       if (!actionsValidation.valid) {
@@ -73,8 +76,11 @@ export async function PATCH(
         );
       }
 
+      // Use actionsValidation.data so enrichment persists
+      validatedActions = actionsValidation.data;
+
       // Validate target link exists and belongs to the team
-      const routeAction = validation.data.actions.find((a) => a.type === "route");
+      const routeAction = validatedActions.find((a) => a.type === "route");
       if (routeAction && routeAction.targetLinkId) {
         // First get the workflow to get teamId
         const workflow = await prisma.workflow.findUnique({
@@ -97,7 +103,7 @@ export async function PATCH(
             );
           }
 
-          // Update action with target details
+          // Update action with target details (mutates validatedActions)
           if (targetLink.linkType === "DOCUMENT_LINK" && targetLink.documentId) {
             routeAction.targetDocumentId = targetLink.documentId;
           } else if (
@@ -149,11 +155,10 @@ export async function PATCH(
 
     // Extract emails and domains from conditions to sync with link allowList (if conditions updated)
     let allowListItems: string[] | undefined;
-    if (validation.data.conditions) {
+    if (validatedConditions) {
       allowListItems = [];
-      const conditionsData = validation.data.conditions as any;
-      if (conditionsData.items) {
-        conditionsData.items.forEach((condition: any) => {
+      if (validatedConditions.items) {
+        validatedConditions.items.forEach((condition: any) => {
           const values = Array.isArray(condition.value)
             ? condition.value
             : [condition.value];
@@ -169,8 +174,8 @@ export async function PATCH(
 
     // Get target link ID (either from update or existing step)
     let targetLinkId: string | undefined;
-    if (validation.data.actions) {
-      const routeAction = validation.data.actions.find((a) => a.type === "route");
+    if (validatedActions) {
+      const routeAction = validatedActions.find((a) => a.type === "route");
       targetLinkId = routeAction?.targetLinkId;
     } else {
       // Get from existing step
@@ -183,11 +188,20 @@ export async function PATCH(
       targetLinkId = existingRouteAction?.targetLinkId;
     }
 
+    // Build update data with validated conditions and actions (if provided)
+    const updateData: any = { ...validation.data };
+    if (validatedConditions) {
+      updateData.conditions = validatedConditions;
+    }
+    if (validatedActions) {
+      updateData.actions = validatedActions;
+    }
+
     // Update step and optionally update link allowList in transaction
     const updates: any[] = [
       prisma.workflowStep.update({
         where: { id: stepId },
-        data: validation.data as any,
+        data: updateData as any,
       }),
     ];
 
