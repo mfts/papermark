@@ -106,7 +106,7 @@ export const VerifyEmailRequestSchema = z.object({
 
 export const AccessRequestSchema = z.object({
   email: z.string().email("Invalid email address"),
-  code: z.string().length(6, "Verification code must be 6 digits"),
+  code: z.string().regex(/^\d{6}$/, "Verification code must be 6 digits"),
 });
 
 export type CreateWorkflowRequest = z.infer<typeof CreateWorkflowRequestSchema>;
