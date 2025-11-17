@@ -53,6 +53,7 @@ interface Link {
 
 interface StepFormDialogProps {
   workflowId: string;
+  teamId: string;
   step: WorkflowStep | null;
   links: Link[];
   open: boolean;
@@ -62,6 +63,7 @@ interface StepFormDialogProps {
 
 export function StepFormDialog({
   workflowId,
+  teamId,
   step,
   links,
   open,
@@ -160,8 +162,9 @@ export function StepFormDialog({
 
     // Validate IDs to prevent SSRF
     const workflowIdValidation = z.string().cuid().safeParse(workflowId);
-    if (!workflowIdValidation.success) {
-      toast.error("Invalid workflow ID");
+    const teamIdValidation = z.string().cuid().safeParse(teamId);
+    if (!workflowIdValidation.success || !teamIdValidation.success) {
+      toast.error("Invalid workflow or team ID");
       return;
     }
 
@@ -227,8 +230,8 @@ export function StepFormDialog({
       };
 
       const url = step
-        ? `/api/workflows/${workflowId}/steps/${step.id}`
-        : `/api/workflows/${workflowId}/steps`;
+        ? `/api/workflows/${workflowId}/steps/${step.id}?teamId=${teamId}`
+        : `/api/workflows/${workflowId}/steps?teamId=${teamId}`;
 
       const response = await fetch(url, {
         method: step ? "PATCH" : "POST",

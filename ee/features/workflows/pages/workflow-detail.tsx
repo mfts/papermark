@@ -87,7 +87,7 @@ export default function WorkflowDetailPage() {
     error,
     mutate,
   } = useSWR<Workflow>(
-    validWorkflowId ? `/api/workflows/${validWorkflowId}` : null,
+    validWorkflowId && validTeamId ? `/api/workflows/${validWorkflowId}?teamId=${validTeamId}` : null,
     fetcher,
   );
 
@@ -108,15 +108,16 @@ export default function WorkflowDetailPage() {
     // Validate IDs to prevent SSRF
     const workflowIdValidation = z.string().cuid().safeParse(workflowId);
     const stepIdValidation = z.string().cuid().safeParse(stepId);
+    const teamIdValidation = z.string().cuid().safeParse(teamId);
 
-    if (!workflowIdValidation.success || !stepIdValidation.success) {
-      toast.error("Invalid workflow or step ID");
+    if (!workflowIdValidation.success || !stepIdValidation.success || !teamIdValidation.success) {
+      toast.error("Invalid workflow, step, or team ID");
       return;
     }
 
     try {
       const response = await fetch(
-        `/api/workflows/${workflowId}/steps/${stepId}`,
+        `/api/workflows/${workflowId}/steps/${stepId}?teamId=${teamId}`,
         {
           method: "DELETE",
         },
@@ -165,6 +166,7 @@ export default function WorkflowDetailPage() {
         <div className="max-w-4xl space-y-6">
           <WorkflowHeader
             workflowId={workflowId}
+            teamId={teamId!}
             name={workflow.name}
             description={workflow.description}
             isActive={workflow.isActive}
@@ -187,9 +189,10 @@ export default function WorkflowDetailPage() {
         </div>
 
         {/* Step Form Dialog */}
-        {showStepDialog && validWorkflowId && (
+        {showStepDialog && validWorkflowId && validTeamId && (
           <StepFormDialog
             workflowId={validWorkflowId}
+            teamId={validTeamId}
             step={editingStep}
             links={links || []}
             open={showStepDialog}

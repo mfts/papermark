@@ -63,7 +63,6 @@ export type WorkflowStepDefinition = z.infer<
 export const CreateWorkflowRequestSchema = z.object({
   name: z.string().min(1, "Workflow name is required").max(100),
   description: z.string().max(500).optional(),
-  teamId: z.string().cuid(),
   // Entry link details
   domain: z.string().nullish(), // null or undefined means papermark.com
   slug: z

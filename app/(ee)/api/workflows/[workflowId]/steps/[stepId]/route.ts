@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { z } from "zod";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+
 import {
   UpdateWorkflowStepRequestSchema,
   formatZodError,
-  validateConditions,
   validateActions,
+  validateConditions,
 } from "@/ee/features/workflows/lib/validation";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { getServerSession } from "next-auth";
+import { z } from "zod";
 
-// PATCH /app/(ee)/api/workflows/[workflowId]/steps/[stepId] - Update step
+import prisma from "@/lib/prisma";
+import { CustomUser } from "@/lib/types";
+
+// PATCH /app/(ee)/api/workflows/[workflowId]/steps/[stepId]?teamId=xxx - Update step
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { workflowId: string; stepId: string } },
@@ -23,20 +25,49 @@ export async function PATCH(
     }
 
     const { workflowId, stepId } = params;
-    const body = await req.json();
+    const searchParams = req.nextUrl.searchParams;
+    const teamId = searchParams.get("teamId");
 
-    // Validate IDs format
-    const idsValidation = z.object({
-      workflowId: z.string().cuid(),
-      stepId: z.string().cuid(),
-    }).safeParse({ workflowId, stepId });
-
-    if (!idsValidation.success) {
+    if (!teamId) {
       return NextResponse.json(
-        { error: "Invalid ID format" },
+        { error: "teamId parameter is required" },
         { status: 400 },
       );
     }
+
+    // Validate IDs format
+    const idsValidation = z
+      .object({
+        workflowId: z.string().cuid(),
+        stepId: z.string().cuid(),
+        teamId: z.string().cuid(),
+      })
+      .safeParse({ workflowId, stepId, teamId });
+
+    if (!idsValidation.success) {
+      return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
+    }
+
+    const userId = (session.user as CustomUser).id;
+
+    // Check user is part of the team using userTeam table
+    const teamAccess = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId: userId,
+          teamId: teamId,
+        },
+      },
+    });
+
+    if (!teamAccess) {
+      return NextResponse.json(
+        { error: "Unauthorized to access this team" },
+        { status: 403 },
+      );
+    }
+
+    const body = await req.json();
 
     // Validate request body
     const validation = UpdateWorkflowStepRequestSchema.safeParse(body);
@@ -104,7 +135,10 @@ export async function PATCH(
           }
 
           // Update action with target details (mutates validatedActions)
-          if (targetLink.linkType === "DOCUMENT_LINK" && targetLink.documentId) {
+          if (
+            targetLink.linkType === "DOCUMENT_LINK" &&
+            targetLink.documentId
+          ) {
             routeAction.targetDocumentId = targetLink.documentId;
           } else if (
             targetLink.linkType === "DATAROOM_LINK" &&
@@ -116,41 +150,25 @@ export async function PATCH(
       }
     }
 
-    // Check step exists and user has access
+    // Check step exists and workflow belongs to team
     const step = await prisma.workflowStep.findUnique({
-      where: { id: stepId, workflowId },
+      where: {
+        id: stepId,
+        workflowId: workflowId,
+      },
       select: {
         id: true,
         workflow: {
           select: {
             id: true,
             teamId: true,
-            team: {
-              select: {
-                users: { select: { userId: true } },
-              },
-            },
           },
         },
       },
     });
 
-    if (!step) {
-      return NextResponse.json(
-        { error: "Step not found" },
-        { status: 404 },
-      );
-    }
-
-    const isUserPartOfTeam = step.workflow.team.users.some(
-      (user) => user.userId === (session.user as CustomUser).id,
-    );
-
-    if (!isUserPartOfTeam) {
-      return NextResponse.json(
-        { error: "Unauthorized to modify this step" },
-        { status: 403 },
-      );
+    if (!step || step.workflow.teamId !== teamId) {
+      return NextResponse.json({ error: "Step not found" }, { status: 404 });
     }
 
     // Extract emails and domains from conditions to sync with link allowList (if conditions updated)
@@ -184,7 +202,9 @@ export async function PATCH(
         select: { actions: true },
       });
       const existingActions = existingStep?.actions as any[];
-      const existingRouteAction = existingActions?.find((a) => a.type === "route");
+      const existingRouteAction = existingActions?.find(
+        (a) => a.type === "route",
+      );
       targetLinkId = existingRouteAction?.targetLinkId;
     }
 
@@ -227,7 +247,7 @@ export async function PATCH(
   }
 }
 
-// DELETE /app/(ee)/api/workflows/[workflowId]/steps/[stepId] - Delete step
+// DELETE /app/(ee)/api/workflows/[workflowId]/steps/[stepId]?teamId=xxx - Delete step
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { workflowId: string; stepId: string } },
@@ -239,23 +259,54 @@ export async function DELETE(
     }
 
     const { workflowId, stepId } = params;
+    const searchParams = req.nextUrl.searchParams;
+    const teamId = searchParams.get("teamId");
 
-    // Validate IDs format
-    const idsValidation = z.object({
-      workflowId: z.string().cuid(),
-      stepId: z.string().cuid(),
-    }).safeParse({ workflowId, stepId });
-
-    if (!idsValidation.success) {
+    if (!teamId) {
       return NextResponse.json(
-        { error: "Invalid ID format" },
+        { error: "teamId parameter is required" },
         { status: 400 },
       );
     }
 
-    // Check step exists and user has access
+    // Validate IDs format
+    const idsValidation = z
+      .object({
+        workflowId: z.string().cuid(),
+        stepId: z.string().cuid(),
+        teamId: z.string().cuid(),
+      })
+      .safeParse({ workflowId, stepId, teamId });
+
+    if (!idsValidation.success) {
+      return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
+    }
+
+    const userId = (session.user as CustomUser).id;
+
+    // Check user is part of the team using userTeam table
+    const teamAccess = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId: userId,
+          teamId: teamId,
+        },
+      },
+    });
+
+    if (!teamAccess) {
+      return NextResponse.json(
+        { error: "Unauthorized to access this team" },
+        { status: 403 },
+      );
+    }
+
+    // Check step exists and workflow belongs to team
     const step = await prisma.workflowStep.findUnique({
-      where: { id: stepId, workflowId },
+      where: {
+        id: stepId,
+        workflowId: workflowId,
+      },
       select: {
         id: true,
         stepOrder: true,
@@ -263,41 +314,13 @@ export async function DELETE(
           select: {
             id: true,
             teamId: true,
-            team: {
-              select: {
-                users: { select: { userId: true } },
-              },
-            },
-            steps: {
-              where: {
-                stepOrder: { gt: 0 }, // placeholder, will be updated below
-              },
-              select: {
-                id: true,
-                stepOrder: true,
-              },
-            },
           },
         },
       },
     });
 
-    if (!step) {
-      return NextResponse.json(
-        { error: "Step not found" },
-        { status: 404 },
-      );
-    }
-
-    const isUserPartOfTeam = step.workflow.team.users.some(
-      (user) => user.userId === (session.user as CustomUser).id,
-    );
-
-    if (!isUserPartOfTeam) {
-      return NextResponse.json(
-        { error: "Unauthorized to delete this step" },
-        { status: 403 },
-      );
+    if (!step || step.workflow.teamId !== teamId) {
+      return NextResponse.json({ error: "Step not found" }, { status: 404 });
     }
 
     // Get steps that need reordering (those after the deleted step)
@@ -334,4 +357,3 @@ export async function DELETE(
     );
   }
 }
-

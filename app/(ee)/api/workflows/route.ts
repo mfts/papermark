@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /app/(ee)/api/workflows - Create a new workflow
+// POST /app/(ee)/api/workflows?teamId=xxx - Create a new workflow
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -96,6 +96,42 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = (session.user as CustomUser).id;
+    const searchParams = req.nextUrl.searchParams;
+    const teamId = searchParams.get("teamId");
+
+    if (!teamId) {
+      return NextResponse.json(
+        { error: "teamId parameter is required" },
+        { status: 400 },
+      );
+    }
+
+    // Validate teamId format
+    const teamIdValidation = z.string().cuid().safeParse(teamId);
+    if (!teamIdValidation.success) {
+      return NextResponse.json(
+        { error: "Invalid teamId format" },
+        { status: 400 },
+      );
+    }
+
+    // Check user is part of the team using userTeam table
+    const teamAccess = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId: userId,
+          teamId: teamId,
+        },
+      },
+    });
+
+    if (!teamAccess) {
+      return NextResponse.json(
+        { error: "Unauthorized to access this team" },
+        { status: 403 },
+      );
+    }
+
     const body = await req.json();
 
     // Validate request body
@@ -110,16 +146,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, description, teamId, domain, slug } = validation.data;
+    const { name, description, domain, slug } = validation.data;
 
-    // Check user is part of the team
+    // Get team details for plan check
     const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-        users: {
-          some: { userId },
-        },
-      },
+      where: { id: teamId },
       select: {
         id: true,
         plan: true,
@@ -127,10 +158,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!team) {
-      return NextResponse.json(
-        { error: "Team not found or unauthorized" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
     // Check if workflows feature flag is enabled

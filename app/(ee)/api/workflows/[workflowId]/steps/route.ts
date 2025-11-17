@@ -13,7 +13,7 @@ import {
 } from "@/ee/features/workflows/lib/validation";
 import { ReorderStepsRequest } from "@/ee/features/workflows/lib/types";
 
-// GET /app/(ee)/api/workflows/[workflowId]/steps - List all steps
+// GET /app/(ee)/api/workflows/[workflowId]/steps?teamId=xxx - List all steps
 export async function GET(
   req: NextRequest,
   { params }: { params: { workflowId: string } },
@@ -25,27 +25,56 @@ export async function GET(
     }
 
     const { workflowId } = params;
+    const searchParams = req.nextUrl.searchParams;
+    const teamId = searchParams.get("teamId");
 
-    // Validate workflowId format
-    const workflowIdValidation = z.string().cuid().safeParse(workflowId);
-    if (!workflowIdValidation.success) {
+    if (!teamId) {
       return NextResponse.json(
-        { error: "Invalid workflowId format" },
+        { error: "teamId parameter is required" },
         { status: 400 },
       );
     }
 
-    // Check workflow exists and user has access
+    // Validate IDs format
+    const idsValidation = z.object({
+      workflowId: z.string().cuid(),
+      teamId: z.string().cuid(),
+    }).safeParse({ workflowId, teamId });
+
+    if (!idsValidation.success) {
+      return NextResponse.json(
+        { error: "Invalid ID format" },
+        { status: 400 },
+      );
+    }
+
+    const userId = (session.user as CustomUser).id;
+
+    // Check user is part of the team using userTeam table
+    const teamAccess = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId: userId,
+          teamId: teamId,
+        },
+      },
+    });
+
+    if (!teamAccess) {
+      return NextResponse.json(
+        { error: "Unauthorized to access this team" },
+        { status: 403 },
+      );
+    }
+
+    // Check workflow exists and belongs to team
     const workflow = await prisma.workflow.findUnique({
-      where: { id: workflowId },
+      where: {
+        id: workflowId,
+        teamId: teamId,
+      },
       select: {
         id: true,
-        teamId: true,
-        team: {
-          select: {
-            users: { select: { userId: true } },
-          },
-        },
       },
     });
 
@@ -53,17 +82,6 @@ export async function GET(
       return NextResponse.json(
         { error: "Workflow not found" },
         { status: 404 },
-      );
-    }
-
-    const isUserPartOfTeam = workflow.team.users.some(
-      (user) => user.userId === (session.user as CustomUser).id,
-    );
-
-    if (!isUserPartOfTeam) {
-      return NextResponse.json(
-        { error: "Unauthorized to access this workflow" },
-        { status: 403 },
       );
     }
 
@@ -111,7 +129,7 @@ export async function GET(
   }
 }
 
-// POST /app/(ee)/api/workflows/[workflowId]/steps - Create a new step
+// POST /app/(ee)/api/workflows/[workflowId]/steps?teamId=xxx - Create a new step
 export async function POST(
   req: NextRequest,
   { params }: { params: { workflowId: string } },
@@ -123,16 +141,49 @@ export async function POST(
     }
 
     const { workflowId } = params;
-    const body = await req.json();
+    const searchParams = req.nextUrl.searchParams;
+    const teamId = searchParams.get("teamId");
 
-    // Validate workflowId format
-    const workflowIdValidation = z.string().cuid().safeParse(workflowId);
-    if (!workflowIdValidation.success) {
+    if (!teamId) {
       return NextResponse.json(
-        { error: "Invalid workflowId format" },
+        { error: "teamId parameter is required" },
         { status: 400 },
       );
     }
+
+    // Validate IDs format
+    const idsValidation = z.object({
+      workflowId: z.string().cuid(),
+      teamId: z.string().cuid(),
+    }).safeParse({ workflowId, teamId });
+
+    if (!idsValidation.success) {
+      return NextResponse.json(
+        { error: "Invalid ID format" },
+        { status: 400 },
+      );
+    }
+
+    const userId = (session.user as CustomUser).id;
+
+    // Check user is part of the team using userTeam table
+    const teamAccess = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId: userId,
+          teamId: teamId,
+        },
+      },
+    });
+
+    if (!teamAccess) {
+      return NextResponse.json(
+        { error: "Unauthorized to access this team" },
+        { status: 403 },
+      );
+    }
+
+    const body = await req.json();
 
     // Validate request body
     const validation = CreateWorkflowStepRequestSchema.safeParse(body);
@@ -165,17 +216,15 @@ export async function POST(
       );
     }
 
-    // Check workflow exists and user has access
+    // Check workflow exists and belongs to team
     const workflow = await prisma.workflow.findUnique({
-      where: { id: workflowId },
+      where: {
+        id: workflowId,
+        teamId: teamId,
+      },
       select: {
         id: true,
         teamId: true,
-        team: {
-          select: {
-            users: { select: { userId: true } },
-          },
-        },
         steps: {
           select: { stepOrder: true },
           orderBy: { stepOrder: "desc" },
@@ -188,17 +237,6 @@ export async function POST(
       return NextResponse.json(
         { error: "Workflow not found" },
         { status: 404 },
-      );
-    }
-
-    const isUserPartOfTeam = workflow.team.users.some(
-      (user) => user.userId === (session.user as CustomUser).id,
-    );
-
-    if (!isUserPartOfTeam) {
-      return NextResponse.json(
-        { error: "Unauthorized to modify this workflow" },
-        { status: 403 },
       );
     }
 
@@ -289,7 +327,7 @@ export async function POST(
   }
 }
 
-// PUT /app/(ee)/api/workflows/[workflowId]/steps - Reorder steps
+// PUT /app/(ee)/api/workflows/[workflowId]/steps?teamId=xxx - Reorder steps
 export async function PUT(
   req: NextRequest,
   { params }: { params: { workflowId: string } },
@@ -301,16 +339,49 @@ export async function PUT(
     }
 
     const { workflowId } = params;
-    const body = await req.json();
+    const searchParams = req.nextUrl.searchParams;
+    const teamId = searchParams.get("teamId");
 
-    // Validate workflowId format
-    const workflowIdValidation = z.string().cuid().safeParse(workflowId);
-    if (!workflowIdValidation.success) {
+    if (!teamId) {
       return NextResponse.json(
-        { error: "Invalid workflowId format" },
+        { error: "teamId parameter is required" },
         { status: 400 },
       );
     }
+
+    // Validate IDs format
+    const idsValidation = z.object({
+      workflowId: z.string().cuid(),
+      teamId: z.string().cuid(),
+    }).safeParse({ workflowId, teamId });
+
+    if (!idsValidation.success) {
+      return NextResponse.json(
+        { error: "Invalid ID format" },
+        { status: 400 },
+      );
+    }
+
+    const userId = (session.user as CustomUser).id;
+
+    // Check user is part of the team using userTeam table
+    const teamAccess = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId: userId,
+          teamId: teamId,
+        },
+      },
+    });
+
+    if (!teamAccess) {
+      return NextResponse.json(
+        { error: "Unauthorized to access this team" },
+        { status: 403 },
+      );
+    }
+
+    const body = await req.json();
 
     // Validate request body
     const validation = ReorderStepsRequestSchema.safeParse(body);
@@ -324,17 +395,14 @@ export async function PUT(
       );
     }
 
-    // Check workflow exists and user has access
+    // Check workflow exists and belongs to team
     const workflow = await prisma.workflow.findUnique({
-      where: { id: workflowId },
+      where: {
+        id: workflowId,
+        teamId: teamId,
+      },
       select: {
         id: true,
-        teamId: true,
-        team: {
-          select: {
-            users: { select: { userId: true } },
-          },
-        },
       },
     });
 
@@ -342,17 +410,6 @@ export async function PUT(
       return NextResponse.json(
         { error: "Workflow not found" },
         { status: 404 },
-      );
-    }
-
-    const isUserPartOfTeam = workflow.team.users.some(
-      (user) => user.userId === (session.user as CustomUser).id,
-    );
-
-    if (!isUserPartOfTeam) {
-      return NextResponse.json(
-        { error: "Unauthorized to modify this workflow" },
-        { status: 403 },
       );
     }
 

@@ -17,6 +17,7 @@ import {
 
 interface WorkflowHeaderProps {
   workflowId: string;
+  teamId: string;
   name: string;
   description: string | null;
   isActive: boolean;
@@ -26,6 +27,7 @@ interface WorkflowHeaderProps {
 
 export function WorkflowHeader({
   workflowId,
+  teamId,
   name,
   description,
   isActive,
@@ -37,15 +39,16 @@ export function WorkflowHeader({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleToggleActive = async () => {
-    // Validate workflowId to prevent SSRF
+    // Validate IDs to prevent SSRF
     const workflowIdValidation = z.string().cuid().safeParse(workflowId);
-    if (!workflowIdValidation.success) {
-      toast.error("Invalid workflow ID");
+    const teamIdValidation = z.string().cuid().safeParse(teamId);
+    if (!workflowIdValidation.success || !teamIdValidation.success) {
+      toast.error("Invalid workflow or team ID");
       return;
     }
 
     try {
-      const response = await fetch(`/api/workflows/${workflowId}`, {
+      const response = await fetch(`/api/workflows/${workflowId}?teamId=${teamId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -67,10 +70,11 @@ export function WorkflowHeader({
   };
 
   const handleDeleteWorkflow = async () => {
-    // Validate workflowId to prevent SSRF
+    // Validate IDs to prevent SSRF
     const workflowIdValidation = z.string().cuid().safeParse(workflowId);
-    if (!workflowIdValidation.success) {
-      toast.error("Invalid workflow ID");
+    const teamIdValidation = z.string().cuid().safeParse(teamId);
+    if (!workflowIdValidation.success || !teamIdValidation.success) {
+      toast.error("Invalid workflow or team ID");
       setShowDeleteDialog(false);
       return;
     }
@@ -78,7 +82,7 @@ export function WorkflowHeader({
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`/api/workflows/${workflowId}`, {
+      const response = await fetch(`/api/workflows/${workflowId}?teamId=${teamId}`, {
         method: "DELETE",
       });
 

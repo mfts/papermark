@@ -5,7 +5,7 @@ import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
-// GET /app/(ee)/api/workflows/[workflowId]/executions - List workflow executions
+// GET /app/(ee)/api/workflows/[workflowId]/executions?teamId=xxx - List workflow executions
 export async function GET(
   req: NextRequest,
   { params }: { params: { workflowId: string } },
@@ -18,6 +18,14 @@ export async function GET(
 
     const { workflowId } = params;
     const searchParams = req.nextUrl.searchParams;
+    const teamId = searchParams.get("teamId");
+
+    if (!teamId) {
+      return NextResponse.json(
+        { error: "teamId parameter is required" },
+        { status: 400 },
+      );
+    }
 
     // Parse and validate pagination parameters
     const rawPage = Number.parseInt(searchParams.get("page") || "1", 10);
@@ -30,26 +38,46 @@ export async function GET(
       : Math.min(Math.max(rawLimit, 1), 100); // Min 1, Max 100
     const skip = (page - 1) * limit;
 
-    // Validate workflowId format
-    const workflowIdValidation = z.string().cuid().safeParse(workflowId);
-    if (!workflowIdValidation.success) {
+    // Validate IDs format
+    const idsValidation = z.object({
+      workflowId: z.string().cuid(),
+      teamId: z.string().cuid(),
+    }).safeParse({ workflowId, teamId });
+
+    if (!idsValidation.success) {
       return NextResponse.json(
-        { error: "Invalid workflowId format" },
+        { error: "Invalid ID format" },
         { status: 400 },
       );
     }
 
-    // Check workflow exists and user has access
+    const userId = (session.user as CustomUser).id;
+
+    // Check user is part of the team using userTeam table
+    const teamAccess = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId: userId,
+          teamId: teamId,
+        },
+      },
+    });
+
+    if (!teamAccess) {
+      return NextResponse.json(
+        { error: "Unauthorized to access this team" },
+        { status: 403 },
+      );
+    }
+
+    // Check workflow exists and belongs to team
     const workflow = await prisma.workflow.findUnique({
-      where: { id: workflowId },
+      where: {
+        id: workflowId,
+        teamId: teamId,
+      },
       select: {
         id: true,
-        teamId: true,
-        team: {
-          select: {
-            users: { select: { userId: true } },
-          },
-        },
       },
     });
 
@@ -57,17 +85,6 @@ export async function GET(
       return NextResponse.json(
         { error: "Workflow not found" },
         { status: 404 },
-      );
-    }
-
-    const isUserPartOfTeam = workflow.team.users.some(
-      (user) => user.userId === (session.user as CustomUser).id,
-    );
-
-    if (!isUserPartOfTeam) {
-      return NextResponse.json(
-        { error: "Unauthorized to access this workflow" },
-        { status: 403 },
       );
     }
 

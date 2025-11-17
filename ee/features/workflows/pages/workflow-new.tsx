@@ -54,7 +54,7 @@ export default function NewWorkflowPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/workflows", {
+      const response = await fetch(`/api/workflows?teamId=${teamId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -62,7 +62,6 @@ export default function NewWorkflowPage() {
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim() || undefined,
-          teamId,
           domain: domain === "papermark.com" ? undefined : domain,
           slug: domain === "papermark.com" ? undefined : slug.trim(),
         }),
