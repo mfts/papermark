@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 import WorkflowAccessView from "@/ee/features/workflows/components/workflow-access-view";
 import NotFound from "@/pages/404";
-import { Brand, DataroomBrand } from "@prisma/client";
+import { Brand, DataroomBrand, DataroomDocument } from "@prisma/client";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
@@ -242,12 +242,15 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       const dataroomIndexEnabled = featureFlags.dataroomIndex;
       const annotationsEnabled = featureFlags.annotations;
 
-      const lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
-        return Math.max(
-          max,
-          new Date(doc.document.versions[0].updatedAt).getTime(),
-        );
-      }, new Date(link.dataroom.createdAt).getTime());
+      const lastUpdatedAt = link.dataroom.documents.reduce(
+        (max: number, doc: any) => {
+          return Math.max(
+            max,
+            new Date(doc.document.versions[0].updatedAt).getTime(),
+          );
+        },
+        new Date(link.dataroom.createdAt).getTime(),
+      );
 
       return {
         props: {

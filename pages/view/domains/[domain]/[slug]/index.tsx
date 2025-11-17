@@ -221,12 +221,15 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       const featureFlags = await getFeatureFlags({ teamId });
       const dataroomIndexEnabled = featureFlags.dataroomIndex;
 
-      const lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
-        return Math.max(
-          max,
-          new Date(doc.document.versions[0].updatedAt).getTime(),
-        );
-      }, new Date(link.dataroom.createdAt).getTime());
+      const lastUpdatedAt = link.dataroom.documents.reduce(
+        (max: number, doc: any) => {
+          return Math.max(
+            max,
+            new Date(doc.document.versions[0].updatedAt).getTime(),
+          );
+        },
+        new Date(link.dataroom.createdAt).getTime(),
+      );
 
       return {
         props: {

@@ -34,16 +34,15 @@ export async function GET(
     }
 
     // Validate IDs format
-    const idsValidation = z.object({
-      workflowId: z.string().cuid(),
-      teamId: z.string().cuid(),
-    }).safeParse({ workflowId, teamId });
+    const idsValidation = z
+      .object({
+        workflowId: z.string().cuid(),
+        teamId: z.string().cuid(),
+      })
+      .safeParse({ workflowId, teamId });
 
     if (!idsValidation.success) {
-      return NextResponse.json(
-        { error: "Invalid ID format" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
     }
 
     const userId = (session.user as CustomUser).id;
@@ -98,11 +97,8 @@ export async function GET(
         ? `https://${workflow.entryLink.domainSlug}/${workflow.entryLink.slug}`
         : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${workflow.entryLink.id}`;
 
-    // Remove team data from response
-    const { team, ...workflowData } = workflow;
-
     return NextResponse.json({
-      ...workflowData,
+      ...workflow,
       entryUrl,
     });
   } catch (error) {
@@ -137,16 +133,15 @@ export async function PATCH(
     }
 
     // Validate IDs format
-    const idsValidation = z.object({
-      workflowId: z.string().cuid(),
-      teamId: z.string().cuid(),
-    }).safeParse({ workflowId, teamId });
+    const idsValidation = z
+      .object({
+        workflowId: z.string().cuid(),
+        teamId: z.string().cuid(),
+      })
+      .safeParse({ workflowId, teamId });
 
     if (!idsValidation.success) {
-      return NextResponse.json(
-        { error: "Invalid ID format" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
     }
 
     const userId = (session.user as CustomUser).id;
@@ -248,16 +243,15 @@ export async function DELETE(
     }
 
     // Validate IDs format
-    const idsValidation = z.object({
-      workflowId: z.string().cuid(),
-      teamId: z.string().cuid(),
-    }).safeParse({ workflowId, teamId });
+    const idsValidation = z
+      .object({
+        workflowId: z.string().cuid(),
+        teamId: z.string().cuid(),
+      })
+      .safeParse({ workflowId, teamId });
 
     if (!idsValidation.success) {
-      return NextResponse.json(
-        { error: "Invalid ID format" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
     }
 
     const userId = (session.user as CustomUser).id;

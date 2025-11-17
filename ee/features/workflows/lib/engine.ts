@@ -83,7 +83,7 @@ export class WorkflowEngine {
               context,
             );
 
-            let actionsResult = null;
+            let actionsResult: (Action & { routed: boolean }) | undefined;
 
             // If conditions matched, execute the route action
             if (conditionsMatched && actions.length > 0) {
@@ -92,7 +92,7 @@ export class WorkflowEngine {
                 targetLinkId = routeAction.targetLinkId;
                 targetDocumentId = routeAction.targetDocumentId;
                 targetDataroomId = routeAction.targetDataroomId;
-                actionsResult = { routed: true, targetLinkId };
+                actionsResult = { ...routeAction, routed: true };
               }
             }
 
@@ -103,7 +103,7 @@ export class WorkflowEngine {
                 workflowStepId: step.id,
                 conditionsMatched,
                 conditionResults: conditions,
-                actionsExecuted: actionsResult ? [actionsResult] : null,
+                ...(actionsResult ? { actionsExecuted: [actionsResult] } : {}),
                 duration: Date.now() - startTime,
               },
             });
