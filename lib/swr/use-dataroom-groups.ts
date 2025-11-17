@@ -7,6 +7,7 @@ import {
   ViewerGroup,
   ViewerGroupAccessControls,
   ViewerGroupMembership,
+  ViewerInvitation,
 } from "@prisma/client";
 import useSWR from "swr";
 
@@ -80,7 +81,7 @@ export function useDataroomGroupLinks() {
 }
 
 type ViewerGroupWithMembers = ViewerGroup & {
-  members: (ViewerGroupMembership & { viewer: Viewer })[];
+  members: (ViewerGroupMembership & { viewer: Viewer & { invitations?: ViewerInvitation[] } })[];
   accessControls: ViewerGroupAccessControls[];
 };
 

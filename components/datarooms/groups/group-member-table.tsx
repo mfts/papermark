@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import {
+  MailCheckIcon,
   MoreHorizontalIcon,
   PlusCircleIcon,
   SendIcon,
@@ -36,6 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
 
 import { InviteViewersModal } from "../invite-viewers-modal";
@@ -282,21 +284,32 @@ export default function GroupMemberTable({
                       </TableRow>
                     ))}
                   {viewerGroupMembers ? (
-                    viewerGroupMembers.map((viewer) => (
-                      <TableRow key={viewer.id} className="group/row">
-                        {/* Name */}
-                        <TableCell className="">
-                          <div className="flex items-center overflow-visible sm:space-x-3">
-                            <VisitorAvatar viewerEmail={viewer.viewer.email} />
-                            <div className="min-w-0 flex-1">
-                              <div className="focus:outline-none">
-                                <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
-                                  {viewer.viewer.email}
-                                </p>
+                    viewerGroupMembers.map((viewer) => {
+                      const latestInvitation = viewer.viewer.invitations?.[0];
+                      return (
+                        <TableRow key={viewer.id} className="group/row">
+                          {/* Name */}
+                          <TableCell className="">
+                            <div className="flex items-center overflow-visible sm:space-x-3">
+                              <VisitorAvatar viewerEmail={viewer.viewer.email} />
+                              <div className="min-w-0 flex-1">
+                                <div className="focus:outline-none">
+                                  <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
+                                    {viewer.viewer.email}
+                                    {latestInvitation && (
+                                      <TimestampTooltip
+                                        timestamp={latestInvitation.sentAt}
+                                        side="right"
+                                        rows={["local", "utc"]}
+                                      >
+                                        <MailCheckIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
+                                      </TimestampTooltip>
+                                    )}
+                                  </p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </TableCell>
+                          </TableCell>
                         {/* Last Viewed */}
                         {/* <TableCell className="text-sm text-muted-foreground">
                         <time
@@ -333,7 +346,8 @@ export default function GroupMemberTable({
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    ))
+                    );
+                    })
                   ) : (
                     <TableRow>
                       <TableCell className="min-w-[100px]">
