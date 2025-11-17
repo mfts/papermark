@@ -64,7 +64,7 @@ export default function NewWorkflowPage() {
           description: description.trim() || undefined,
           teamId,
           domain: domain === "papermark.com" ? undefined : domain,
-          slug: slug.trim(),
+          slug: domain === "papermark.com" ? undefined : slug.trim(),
         }),
       });
 
