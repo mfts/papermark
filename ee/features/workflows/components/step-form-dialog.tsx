@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { toast } from "sonner";
 import { z } from "zod";
@@ -93,6 +93,37 @@ export function StepFormDialog({
     return "";
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Re-populate state when step or open changes to prevent stale values
+  useEffect(() => {
+    if (open) {
+      // Reset name
+      setName(step?.name || "");
+
+      // Reset targetLinkId
+      setTargetLinkId(step?.actions?.[0]?.targetLinkId || "");
+
+      // Reset allowListInput
+      if (step && step.conditions?.items && step.conditions.items.length > 0) {
+        const allValues: string[] = [];
+        step.conditions.items.forEach((condition) => {
+          const values = Array.isArray(condition.value)
+            ? condition.value
+            : [condition.value];
+          if (condition.type === "domain") {
+            // Prefix domains with @
+            allValues.push(...values.map((v) => `@${v}`));
+          } else {
+            // Email addresses as-is
+            allValues.push(...values);
+          }
+        });
+        setAllowListInput(allValues.join("\n"));
+      } else {
+        setAllowListInput("");
+      }
+    }
+  }, [step, open]);
 
   // When link is selected, pre-fill allowList
   const handleLinkChange = (linkId: string) => {
