@@ -7,6 +7,7 @@ import {
   UpdateWorkflowRequestSchema,
   CreateWorkflowStepRequestSchema,
   UpdateWorkflowStepRequestSchema,
+  ReorderStepsRequestSchema,
   type ConditionsConfig,
   type Action,
   type WorkflowStepDefinition,
@@ -17,6 +18,7 @@ export {
   UpdateWorkflowRequestSchema,
   CreateWorkflowStepRequestSchema,
   UpdateWorkflowStepRequestSchema,
+  ReorderStepsRequestSchema,
 };
 
 /**
