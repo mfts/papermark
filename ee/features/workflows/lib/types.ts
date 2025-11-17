@@ -65,7 +65,7 @@ export const CreateWorkflowRequestSchema = z.object({
   description: z.string().max(500).optional(),
   teamId: z.string().cuid(),
   // Entry link details
-  domain: z.string().optional(), // null means papermark.com
+  domain: z.string().nullish(), // null or undefined means papermark.com
   slug: z
     .string()
     .regex(/^[a-zA-Z0-9_-]+$/, "Slug must contain only letters, numbers, hyphens, and underscores")
