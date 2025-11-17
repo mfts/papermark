@@ -19,9 +19,15 @@ export async function GET(
     const { workflowId } = params;
     const searchParams = req.nextUrl.searchParams;
 
-    // Parse pagination parameters
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
+    // Parse and validate pagination parameters
+    const rawPage = Number.parseInt(searchParams.get("page") || "1", 10);
+    const rawLimit = Number.parseInt(searchParams.get("limit") || "20", 10);
+
+    // Apply defaults for invalid values and enforce constraints
+    const page = Number.isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
+    const limit = Number.isNaN(rawLimit) || rawLimit < 1 
+      ? 20 
+      : Math.min(Math.max(rawLimit, 1), 100); // Min 1, Max 100
     const skip = (page - 1) * limit;
 
     // Validate workflowId format
