@@ -18,7 +18,7 @@ export const rateLimiters = {
   // 5 billing operations per hour per IP
   billing: new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(5, "30 m"),
+    limiter: Ratelimit.slidingWindow(10, "20 m"),
     prefix: "rl:billing",
     enableProtection: true,
     analytics: true,
