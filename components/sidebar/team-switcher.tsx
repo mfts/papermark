@@ -27,6 +27,7 @@ import {
 import { AddSeatModal } from "../billing/add-seat-modal";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { AddTeamMembers } from "../teams/add-team-member-modal";
+import { AddTeamModal } from "../teams/add-team-modal";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 
 export function TeamSwitcher({
@@ -44,7 +45,7 @@ export function TeamSwitcher({
     React.useState<boolean>(false);
   const { isMobile } = useSidebar();
   const { canAddUsers, showUpgradePlanModal } = useLimits();
-  const { isTrial } = usePlan();
+  const { isTrial, isDataroomsPremium } = usePlan();
 
   const switchTeam = (team: Team) => {
     localStorage.setItem("currentTeamId", team.id);
@@ -104,13 +105,36 @@ export function TeamSwitcher({
                 {/* <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut> */}
               </DropdownMenuItem>
             ))}
-            {/* <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 p-2">
-              <div className="flex size-6 items-center justify-center rounded-md border bg-background">
-                <Plus className="size-4" />
-              </div>
-              <div className="font-medium text-muted-foreground">Add team</div>
-            </DropdownMenuItem> */}
+            <DropdownMenuSeparator />
+            {isDataroomsPremium ? (
+              <AddTeamModal setCurrentTeam={setCurrentTeam}>
+                <DropdownMenuItem
+                  className="gap-2 p-2 cursor-pointer"
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <div className="flex size-6 items-center justify-center rounded-md border bg-background">
+                    <UserRoundPlusIcon className="size-4" />
+                  </div>
+                  <div className="font-medium text-muted-foreground">Add new team</div>
+                </DropdownMenuItem>
+              </AddTeamModal>
+            ) : (
+              <UpgradePlanModal
+                clickedPlan={PlanEnum.DataRoomsPremium}
+                trigger="add_new_team"
+                highlightItem={["teams"]}
+              >
+                <DropdownMenuItem
+                  className="gap-2 p-2 cursor-pointer"
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <div className="flex size-6 items-center justify-center rounded-md border bg-background">
+                    <UserRoundPlusIcon className="size-4" />
+                  </div>
+                  <div className="font-medium text-muted-foreground">Add new team</div>
+                </DropdownMenuItem>
+              </UpgradePlanModal>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

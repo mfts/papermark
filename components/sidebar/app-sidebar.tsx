@@ -60,6 +60,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     isBusiness,
     isDatarooms,
     isDataroomsPlus,
+    isDataroomsPremium,
     isFree,
     isTrial,
   } = usePlan();
@@ -239,7 +240,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </p>
         <p className="ml-2 flex items-center text-2xl font-bold tracking-tighter text-black group-data-[collapsible=icon]:hidden dark:text-white">
           <Link href="/dashboard">Papermark</Link>
-          {userPlan && !isFree && !isDataroomsPlus ? (
+          {userPlan && !isFree && !isDataroomsPlus && !isDataroomsPremium ? (
             <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
               {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
             </span>
@@ -247,6 +248,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {isDataroomsPlus ? (
             <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
               Datarooms+
+            </span>
+          ) : null}
+          {isDataroomsPremium ? (
+            <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
+              Premium
             </span>
           ) : null}
           {isTrial ? (

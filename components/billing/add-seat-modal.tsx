@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
@@ -180,10 +181,17 @@ export function AddSeatModal({
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex flex-col gap-2 sm:flex-col sm:justify-center">
           <Button onClick={handleSubmit} className="w-full" disabled={loading}>
             {loading ? "Redirecting..." : "Proceed to checkout"}
           </Button>
+          <Link
+            href="/settings/upgrade"
+            className="block w-full text-center text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+            onClick={() => setOpen(false)}
+          >
+            or upgrade to higher plan
+          </Link>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
@@ -34,6 +35,7 @@ export function AddTeamMembers({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const analytics = useAnalytics();
+  const router = useRouter();
   const emailSchema = z
     .string()
     .trim()
@@ -81,6 +83,9 @@ export function AddTeamMembers({
     toast.success("An invitation email has been sent!");
     setOpen(false);
     setLoading(false);
+    
+    // Redirect to team members page
+    router.push("/settings/people");
   };
 
   return (
