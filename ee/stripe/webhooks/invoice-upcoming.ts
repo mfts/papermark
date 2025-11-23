@@ -31,7 +31,7 @@ export async function invoiceUpcoming(
           item.price.recurring.interval_count === 12)
       );
     }
-    return res.status(200).json({ received: true });
+    return false;
   });
 
   if (!hasYearlyPlan) {

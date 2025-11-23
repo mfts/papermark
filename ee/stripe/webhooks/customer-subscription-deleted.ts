@@ -1,6 +1,7 @@
 import { NextApiResponse } from "next";
 
 import { FREE_PLAN_LIMITS } from "@/ee/limits/constants";
+import { Prisma } from "@prisma/client";
 import Stripe from "stripe";
 
 import prisma from "@/lib/prisma";
@@ -40,12 +41,24 @@ export async function customerSubscriptionDeleted(
       type: "info",
     });
   } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      await log({
+        message: `Team with Stripe ID ${stripeId} and Subscription ID ${subscriptionId} not found`,
+        type: "error",
+      });
+      return res
+        .status(200)
+        .send("Team not found in database. Customer deleted their account.");
+    }
     await log({
       message: `Error updating team ${stripeId} subscription ${subscriptionId}: ${error}`,
       type: "error",
     });
     return res
       .status(200)
-      .send("Team not found in database. Customer deleted their account.");
+      .send("Error processing subscription deletion webhook.");
   }
 }
