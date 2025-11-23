@@ -31,7 +31,7 @@ export async function invoiceUpcoming(
           item.price.recurring.interval_count === 12)
       );
     }
-    return false;
+    return res.status(200).json({ received: true });
   });
 
   if (!hasYearlyPlan) {
@@ -39,7 +39,7 @@ export async function invoiceUpcoming(
       message: "Invoice is not for yearly renewal, skipping reminder email",
       type: "info",
     });
-    return;
+    return res.status(200).json({ received: true });
   }
 
   const customerEmail = invoice.customer_email;
@@ -50,7 +50,7 @@ export async function invoiceUpcoming(
       message: "No customer email found in invoice.upcoming event",
       type: "error",
     });
-    return;
+    return res.status(200).json({ received: true });
   }
 
   // Calculate renewal date (period_end is when the invoice will be charged)
