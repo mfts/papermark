@@ -49,7 +49,16 @@ const SubscriptionRenewalReminderEmail = ({
             </Text>
             <Text>
               If you need to update your billing details or have any questions,
-              please visit your account settings.
+              please visit your{" "}
+              <a
+                href="https://app.papermark.com/settings/billing"
+                className="underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                billing settings
+              </a>
+              .
             </Text>
             {isOldAccount ? (
               <>
