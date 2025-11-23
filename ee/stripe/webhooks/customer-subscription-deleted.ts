@@ -35,20 +35,6 @@ export async function customerSubscriptionDeleted(
       select: { id: true },
     });
 
-    if (!team) {
-      await log({
-        message:
-          "Team with Stripe ID *`" +
-          stripeId +
-          "` and Subscription ID *`" +
-          subscriptionId +
-          "` not found in Stripe webhook `customer.subscription.deleted` callback" +
-          `\n\n Event: https://dashboard.stripe.com/events/${event.id}`,
-        type: "error",
-      });
-      return res.status(200).json({ received: true });
-    }
-
     await log({
       message: ":cry: Team *`" + team.id + "`* deleted their subscription",
       type: "info",
