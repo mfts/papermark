@@ -1,6 +1,7 @@
 import { NextApiResponse } from "next";
 
 import { FREE_PLAN_LIMITS } from "@/ee/limits/constants";
+import { Prisma } from "@prisma/client";
 import Stripe from "stripe";
 
 import prisma from "@/lib/prisma";
@@ -18,38 +19,46 @@ export async function customerSubscriptionDeleted(
   // get free plan limits
   const freePlanLimits = structuredClone(FREE_PLAN_LIMITS);
 
-  // If a team cancels their subscription, reset their limits to free
-  const team = await prisma.team.update({
-    where: {
-      stripeId,
-      subscriptionId,
-    },
-    data: {
-      plan: "free",
-      subscriptionId: null,
-      endsAt: null,
-      startsAt: null,
-      limits: freePlanLimits,
-    },
-    select: { id: true },
-  });
+  try {
+    // If a team cancels their subscription, reset their limits to free
+    const team = await prisma.team.update({
+      where: {
+        stripeId,
+        subscriptionId,
+      },
+      data: {
+        plan: "free",
+        subscriptionId: null,
+        endsAt: null,
+        startsAt: null,
+        limits: freePlanLimits,
+      },
+      select: { id: true },
+    });
 
-  if (!team) {
     await log({
-      message:
-        "Team with Stripe ID *`" +
-        stripeId +
-        "` and Subscription ID *`" +
-        subscriptionId +
-        "`* not found in Stripe webhook `customer.subscription.deleted` callback" +
-        `\n\n Event: https://dashboard.stripe.com/events/${event.id}`,
+      message: ":cry: Team *`" + team.id + "`* deleted their subscription",
+      type: "info",
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      await log({
+        message: `Team with Stripe ID ${stripeId} and Subscription ID ${subscriptionId} not found`,
+        type: "error",
+      });
+      return res
+        .status(200)
+        .send("Team not found in database. Customer deleted their account.");
+    }
+    await log({
+      message: `Error updating team ${stripeId} subscription ${subscriptionId}: ${error}`,
       type: "error",
     });
-    return res.status(200).json({ received: true });
+    return res
+      .status(200)
+      .send("Error processing subscription deletion webhook.");
   }
-
-  await log({
-    message: ":cry: Team *`" + team.id + "`* deleted their subscription",
-    type: "info",
-  });
 }
