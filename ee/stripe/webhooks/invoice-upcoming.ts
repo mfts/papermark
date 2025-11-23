@@ -1,10 +1,15 @@
-import { tasks } from "@trigger.dev/sdk/v3";
+import { NextApiResponse } from "next";
+
+import { sendSubscriptionRenewalReminderEmail } from "@/ee/features/billing/renewal-reminder/lib/send-subscription-renewal-reminder";
 import Stripe from "stripe";
 
-import { sendRenewalReminderEmailTask } from "@/lib/trigger/send-renewal-reminder";
 import { log } from "@/lib/utils";
 
-export async function invoiceUpcoming(event: Stripe.Event) {
+export async function invoiceUpcoming(
+  event: Stripe.Event,
+  res: NextApiResponse,
+  isOldAccount: boolean = false,
+) {
   const invoice = event.data.object as Stripe.Invoice;
 
   // Only process invoices for yearly renewals
@@ -14,7 +19,7 @@ export async function invoiceUpcoming(event: Stripe.Event) {
       message: "No line items found in invoice.upcoming event",
       type: "info",
     });
-    return;
+    return res.status(200).json({ received: true });
   }
 
   // Check if this is a yearly subscription
@@ -52,47 +57,28 @@ export async function invoiceUpcoming(event: Stripe.Event) {
   const renewalTimestamp = invoice.period_end;
   const renewalDate = new Date(renewalTimestamp * 1000);
   const formattedRenewalDate = renewalDate.toLocaleDateString("en-US", {
-    year: "numeric",
     month: "long",
     day: "numeric",
   });
 
-  // Format amount (convert from cents to dollars/euros)
-  const amount = (invoice.amount_due / 100).toFixed(2);
-  const currency = invoice.currency;
-
-  // Calculate delay: webhook arrives ~7 days before, we want to send 3 days before
-  // So we delay by 4 days
-  const delayInMs = 4 * 24 * 60 * 60 * 1000; // 4 days in milliseconds
-  const scheduledTime = new Date(Date.now() + delayInMs);
-
   try {
-    // Schedule the task to run in 4 days
-    const handle = await tasks.trigger(
-      sendRenewalReminderEmailTask.id,
-      {
-        customerEmail,
-        customerName,
-        renewalDate: formattedRenewalDate,
-        amount,
-        currency,
-      },
-      {
-        delay: delayInMs,
-      },
-    );
+    // send email immediately
+    await sendSubscriptionRenewalReminderEmail({
+      customerEmail,
+      customerName,
+      renewalDate: formattedRenewalDate,
+      isOldAccount,
+    });
 
     await log({
-      message: `Scheduled renewal reminder email for ${customerEmail} to be sent on ${scheduledTime.toISOString()}. Renewal date: ${formattedRenewalDate}`,
+      message: `Renewal reminder email sent for ${customerEmail}. Renewal date: ${formattedRenewalDate}`,
       type: "info",
     });
-
-    return handle;
   } catch (error) {
     await log({
-      message: `Failed to schedule renewal reminder email for ${customerEmail}: ${error}`,
+      message: `Failed to send renewal reminder email for ${customerEmail}: ${error}`,
       type: "error",
     });
-    throw error;
+    return res.status(200).json({ received: true });
   }
 }

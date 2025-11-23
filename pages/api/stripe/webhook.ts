@@ -74,7 +74,7 @@ export default async function webhookHandler(
           await processPaymentFailure(event);
           break;
         case "invoice.upcoming":
-          await invoiceUpcoming(event);
+          await invoiceUpcoming(event, res);
           break;
       }
     } catch (error) {
