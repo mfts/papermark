@@ -3,15 +3,13 @@ import SubscriptionRenewalReminderEmail from "@/ee/features/billing/renewal-remi
 import { sendEmail } from "@/lib/resend";
 
 export const sendSubscriptionRenewalReminderEmail = async (params: {
-  customerName: string | null;
   customerEmail: string;
   renewalDate: string;
   isOldAccount: boolean;
 }) => {
-  const { customerName, customerEmail, renewalDate, isOldAccount } = params;
+  const { customerEmail, renewalDate, isOldAccount } = params;
 
   const emailTemplate = SubscriptionRenewalReminderEmail({
-    customerName,
     renewalDate,
     isOldAccount,
   });

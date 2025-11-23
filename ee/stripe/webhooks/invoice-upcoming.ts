@@ -43,7 +43,6 @@ export async function invoiceUpcoming(
   }
 
   const customerEmail = invoice.customer_email;
-  const customerName = invoice.customer_name;
 
   if (!customerEmail) {
     await log({
@@ -65,7 +64,6 @@ export async function invoiceUpcoming(
     // send email immediately
     await sendSubscriptionRenewalReminderEmail({
       customerEmail,
-      customerName,
       renewalDate: formattedRenewalDate,
       isOldAccount,
     });

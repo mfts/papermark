@@ -14,13 +14,11 @@ import {
 import { Footer } from "@/components/emails/shared/footer";
 
 interface SubscriptionRenewalReminderEmailProps {
-  customerName: string | null;
   renewalDate: string;
   isOldAccount: boolean;
 }
 
 const SubscriptionRenewalReminderEmail = ({
-  customerName,
   renewalDate,
   isOldAccount,
 }: SubscriptionRenewalReminderEmailProps) => {
@@ -37,7 +35,6 @@ const SubscriptionRenewalReminderEmail = ({
             <Text className="text-2xl font-bold">
               Is your payment information up to date?
             </Text>
-            <Text>Hi{customerName && ` ${customerName}`},</Text>
             <Text>
               Another year has come and gone, which means your annual Papermark
               subscription will automatically renew on {renewalDate}.
