@@ -196,7 +196,8 @@ export default function DownloadOnlyViewer({
       return;
     }
     if (!allowDownload) return;
-    try {
+
+    const downloadPromise = (async () => {
       const response = await fetch(`/api/links/download`, {
         method: "POST",
         headers: {
@@ -206,8 +207,9 @@ export default function DownloadOnlyViewer({
       });
 
       if (!response.ok) {
-        toast.error("Error downloading file");
-        return;
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || "Failed to download file";
+        throw new Error(errorMessage);
       }
 
       // Check if the response is a PDF file (for watermarked PDFs)
@@ -234,10 +236,15 @@ export default function DownloadOnlyViewer({
         const { downloadUrl } = await response.json();
         window.open(downloadUrl, "_blank");
       }
-    } catch (error) {
-      console.error("Error downloading file:", error);
-      toast.error("Error downloading file");
-    }
+
+      return "File downloaded successfully";
+    })();
+
+    toast.promise(downloadPromise, {
+      loading: "Preparing download...",
+      success: (message) => message,
+      error: (err) => err.message || "Failed to download file",
+    });
   };
 
   return (

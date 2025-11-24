@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import DataroomVisitHistory from "./dataroom-visitors-history";
@@ -131,13 +132,24 @@ export default function DataroomViewersTable({
                       </TableCell> */}
                       {/* Last Viewed */}
                       <TableCell className="text-sm text-muted-foreground">
-                        <time
-                          dateTime={new Date(viewer.lastViewedAt).toISOString()}
-                        >
-                          {viewer.lastViewedAt
-                            ? timeAgo(viewer.lastViewedAt)
-                            : "-"}
-                        </time>
+                        {viewer.lastViewedAt ? (
+                          <TimestampTooltip
+                            timestamp={viewer.lastViewedAt}
+                            side="right"
+                            rows={["local", "utc", "unix"]}
+                          >
+                            <time
+                              className="select-none"
+                              dateTime={new Date(
+                                viewer.lastViewedAt,
+                              ).toISOString()}
+                            >
+                              {timeAgo(viewer.lastViewedAt)}
+                            </time>
+                          </TimestampTooltip>
+                        ) : (
+                          "-"
+                        )}
                       </TableCell>
                       {/* Actions */}
                       <TableCell className="cursor-pointer p-0 text-center sm:text-right">
@@ -164,19 +176,20 @@ export default function DataroomViewersTable({
                                 </TableCell>
 
                                 <TableCell>
-                                  <div>
+                                  <TimestampTooltip
+                                    timestamp={view.viewedAt}
+                                    side="right"
+                                    rows={["local", "utc", "unix"]}
+                                  >
                                     <time
-                                      className="truncate text-sm text-muted-foreground"
+                                      className="select-none truncate text-sm text-muted-foreground"
                                       dateTime={new Date(
                                         view.viewedAt,
-                                      ).toLocaleString()}
-                                      title={new Date(
-                                        view.viewedAt,
-                                      ).toLocaleString()}
+                                      ).toISOString()}
                                     >
                                       {timeAgo(view.viewedAt)}
                                     </time>
-                                  </div>
+                                  </TimestampTooltip>
                                 </TableCell>
                                 <TableCell className="table-cell"></TableCell>
                               </TableRow>
@@ -191,19 +204,20 @@ export default function DataroomViewersTable({
                                   </TableCell>
 
                                   <TableCell>
-                                    <div>
+                                    <TimestampTooltip
+                                      timestamp={view.downloadedAt}
+                                      side="right"
+                                      rows={["local", "utc", "unix"]}
+                                    >
                                       <time
-                                        className="truncate text-sm text-muted-foreground"
+                                        className="select-none truncate text-sm text-muted-foreground"
                                         dateTime={new Date(
                                           view.downloadedAt,
-                                        ).toLocaleString()}
-                                        title={new Date(
-                                          view.downloadedAt,
-                                        ).toLocaleString()}
+                                        ).toISOString()}
                                       >
                                         {timeAgo(view.downloadedAt)}
                                       </time>
-                                    </div>
+                                    </TimestampTooltip>
                                   </TableCell>
                                   <TableCell className="table-cell"></TableCell>
                                 </TableRow>

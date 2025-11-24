@@ -257,6 +257,7 @@ export default function DataroomView({
         brand={brand}
         customFields={link.customFields}
         logoOnAccessForm={logoOnAccessForm}
+        linkWelcomeMessage={link.welcomeMessage}
       />
     );
   }

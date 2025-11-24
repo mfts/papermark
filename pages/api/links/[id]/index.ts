@@ -49,6 +49,7 @@ export default async function handle(
           metaDescription: true,
           metaImage: true,
           metaFavicon: true,
+          welcomeMessage: true,
           enableQuestion: true,
           linkType: true,
           feedback: {
@@ -118,6 +119,25 @@ export default async function handle(
       }
 
       const linkType = link.linkType;
+
+      // Handle workflow links separately
+      if (linkType === "WORKFLOW_LINK") {
+        // For workflow links, fetch brand if available
+        let brand: Partial<Brand> | null = null;
+        if (link.teamId) {
+          const teamBrand = await prisma.brand.findUnique({
+            where: { teamId: link.teamId },
+            select: {
+              logo: true,
+              brandColor: true,
+              accentColor: true,
+            },
+          });
+          brand = teamBrand;
+        }
+        
+        return res.status(200).json({ linkType, brand });
+      }
 
       let brand: Partial<Brand> | Partial<DataroomBrand> | null = null;
       let linkData: any;
@@ -330,6 +350,7 @@ export default async function handle(
           metaDescription: linkData.metaDescription || null,
           metaImage: linkData.metaImage || null,
           metaFavicon: linkData.metaFavicon || null,
+          welcomeMessage: linkData.welcomeMessage || null,
           ...(linkData.customFields && {
             customFields: {
               deleteMany: {}, // Delete all existing custom fields

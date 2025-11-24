@@ -124,6 +124,8 @@ model View {
   verified            Boolean              @default(false) // Whether the viewer email has been verified
   viewedAt            DateTime             @default(now())
   downloadedAt        DateTime? // This is the time the document was downloaded
+  downloadType        DownloadType? // Type of download: SINGLE, BULK, or FOLDER
+  downloadMetadata    Json? // Metadata about the download (folder name, document list, etc.)
   reactions           Reaction[]
   viewType            ViewType             @default(DOCUMENT_VIEW)
   viewerId            String? // This is the viewer ID from the dataroom
@@ -165,6 +167,12 @@ enum ViewType {
   DATAROOM_VIEW
 }
 
+enum DownloadType {
+  SINGLE  // Individual document download
+  BULK    // Full dataroom bulk download
+  FOLDER  // Folder download
+}
+
 model Viewer {
   id                      String    @id @default(cuid())
   email                   String
@@ -179,6 +187,7 @@ model Viewer {
 
   views                     View[]
   groups                    ViewerGroupMembership[]
+  invitations               ViewerInvitation[]
   participatedConversations ConversationParticipant[]
   messages                  Message[]
 
@@ -441,4 +450,30 @@ model TagItem {
   @@index([tagId, linkId])
   @@index([tagId, documentId])
   @@index([tagId, dataroomId])
+}
+
+model ViewerInvitation {
+  id            String             @id @default(cuid())
+  viewerId      String
+  viewer        Viewer             @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  linkId        String
+  link          Link               @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  groupId       String?
+  group         ViewerGroup?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  invitedBy     String
+  customMessage String?
+  sentAt        DateTime           @default(now())
+  status        InvitationStatus   @default(SENT)
+
+  createdAt DateTime @default(now())
+
+  @@index([viewerId])
+  @@index([linkId])
+  @@index([groupId])
+}
+
+enum InvitationStatus {
+  SENT
+  FAILED
+  BOUNCED
 }

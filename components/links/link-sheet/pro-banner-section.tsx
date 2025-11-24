@@ -36,7 +36,9 @@ export function ProBannerSection({
   return (
     <div className="pb-5">
       <LinkItem
-        title="Show Visitor Statistics & Papermark Branding"
+        title="Show Secured by Papermark"
+        tooltipContent="Display 'Secured by Papermark' branding on your shared documents"
+        link="https://www.papermark.com/help/article/remove-papermark-branding"
         enabled={enabled}
         action={handleShowBanner}
         isAllowed={isAllowed}

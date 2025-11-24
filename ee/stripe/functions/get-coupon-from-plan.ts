@@ -2,12 +2,12 @@ import { isOldAccount } from "../utils";
 
 const COUPON_MAP = {
   monthly: {
-    old: "uAYqcOkk",
-    new: "BuzdmLfl",
+    old: "w15almTc",
+    new: "jTyAvVA6",
   },
   yearly: {
-    old: "9VvXFpF0",
-    new: "pgJhUesw",
+    old: "qB9tm34e",
+    new: "EDTyNLr5",
   },
 };
 

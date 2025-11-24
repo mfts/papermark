@@ -11,7 +11,9 @@ export type BetaFeatures =
   | "usStorage"
   | "dataroomIndex"
   | "slack"
-  | "annotations";
+  | "annotations"
+  | "dataroomInvitations"
+  | "workflows";
 
 type BetaFeaturesRecord = Record<BetaFeatures, string[]>;
 
@@ -28,6 +30,8 @@ export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
     dataroomIndex: false,
     slack: false,
     annotations: false,
+    dataroomInvitations: false,
+    workflows: false,
   };
 
   // Return all features as true if edge config is not available

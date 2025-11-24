@@ -37,6 +37,9 @@ model Dataroom {
   // bulk download setting
   allowBulkDownload Boolean @default(true) // Allow bulk download of entire dataroom
 
+  // display settings
+  showLastUpdated Boolean @default(true) // Show/hide last updated date in dataroom view
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -121,6 +124,7 @@ model ViewerGroup {
 
   views         View[]
   conversations Conversation[]
+  invitations   ViewerInvitation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

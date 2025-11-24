@@ -13,16 +13,20 @@ import {
   Text,
 } from "@react-email/components";
 
-import { Footer } from "./shared/footer";
+import { Footer } from "../../../../../components/emails/shared/footer";
 
 export default function DataroomViewerInvitation({
   dataroomName = "Example Data Room",
   senderEmail = "sender@example.com",
   url = "https://app.papermark.com/datarooms/123",
+  recipientEmail = "recipient@example.com",
+  customMessage,
 }: {
   dataroomName: string;
   senderEmail: string;
   url: string;
+  recipientEmail: string;
+  customMessage?: string | null;
 }) {
   return (
     <Html>
@@ -46,6 +50,14 @@ export default function DataroomViewerInvitation({
               The invitation was sent by{" "}
               <span className="font-semibold">{senderEmail}</span>.
             </Text>
+            {customMessage ? (
+              <Text
+                className="text-sm leading-6 text-black"
+                style={{ whiteSpace: "pre-wrap" }}
+              >
+                {customMessage}
+              </Text>
+            ) : null}
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
@@ -59,11 +71,20 @@ export default function DataroomViewerInvitation({
               or copy and paste this URL into your browser: <br />
               {`${url}`}
             </Text>
-            <Text className="text-sm text-gray-400">Papermark</Text>
-            <Footer
-              footerText="If you have any feedback or questions about this email, simply
-                reply to it."
-            />
+            <Hr />
+            <Section className="mt-8 text-gray-400">
+              <Text className="text-xs">
+                © {new Date().getFullYear()} Papermark, Inc. All rights
+                reserved.
+              </Text>
+              <Text className="text-xs">
+                This email was intended for{" "}
+                <span className="text-black">{recipientEmail}</span>. If you
+                were not expecting this email, you can ignore this email. If you
+                have any feedback or questions about this email, simply reply to
+                it.
+              </Text>
+            </Section>
           </Container>
         </Body>
       </Tailwind>

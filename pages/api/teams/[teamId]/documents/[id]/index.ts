@@ -19,7 +19,7 @@ export default async function handle(
     // GET /api/teams/:teamId/documents/:id
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
-      return res.status(401).end("Unauthorized");
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
@@ -53,7 +53,7 @@ export default async function handle(
       });
 
       if (!teamAccess) {
-        return res.status(401).end("Unauthorized");
+        return res.status(401).json({ message: "Unauthorized" });
       }
 
       // Then fetch the specific document with its relationships (targeted query)
@@ -139,8 +139,7 @@ export default async function handle(
     // PUT /api/teams/:teamId/document/:id
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
+      return res.status(401).json({ message: "Unauthorized" });
     }
     const userId = (session.user as CustomUser).id;
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
@@ -175,7 +174,7 @@ export default async function handle(
     });
 
     if (!document) {
-      return res.status(404).end("Document not found");
+      return res.status(404).json({ message: "Document not found" });
     }
 
     return res.status(200).json({
@@ -187,8 +186,7 @@ export default async function handle(
     // DELETE /api/teams/:teamId/document/:id
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
@@ -196,18 +194,32 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
+      const teamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
+          },
+        },
+        select: {
+          role: true,
+        },
+      });
+      if (!teamAccess) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (teamAccess.role !== "ADMIN" && teamAccess.role !== "MANAGER") {
+        return res.status(403).json({
+          message:
+            "You are not permitted to perform this action. Only admin and managers can delete documents.",
+        });
+      }
+
       const documentVersions = await prisma.document.findUnique({
         where: {
           id: docId,
           teamId: teamId,
-          team: {
-            users: {
-              some: {
-                // role: { in: ["ADMIN", "MANAGER"] },
-                userId: userId,
-              },
-            },
-          },
         },
         include: {
           versions: {
@@ -222,7 +234,7 @@ export default async function handle(
       });
 
       if (!documentVersions) {
-        return res.status(404).end("Document not found");
+        return res.status(404).json({ message: "Document not found" });
       }
 
       //if it is not notion document then only delete the document from storage
@@ -251,6 +263,8 @@ export default async function handle(
   } else {
     // We only allow GET, PUT and DELETE requests
     res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res
+      .status(405)
+      .json({ message: `Method ${req.method} Not Allowed` });
   }
 }

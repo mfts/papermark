@@ -31,6 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { ExportVisitsModal } from "../datarooms/export-visits-modal";
@@ -165,9 +166,18 @@ export default function DataroomVisitorsTable({
                       </TableCell> */}
                       {/* Last Viewed */}
                       <TableCell className="text-sm text-muted-foreground">
-                        <time dateTime={new Date(view.viewedAt).toISOString()}>
-                          {timeAgo(view.viewedAt)}
-                        </time>
+                        <TimestampTooltip
+                          timestamp={view.viewedAt}
+                          side="right"
+                          rows={["local", "utc", "unix"]}
+                        >
+                          <time
+                            className="select-none"
+                            dateTime={new Date(view.viewedAt).toISOString()}
+                          >
+                            {timeAgo(view.viewedAt)}
+                          </time>
+                        </TimestampTooltip>
                       </TableCell>
                       {/* Actions */}
                       <TableCell className="cursor-pointer p-0 text-center sm:text-right">
@@ -200,17 +210,18 @@ export default function DataroomVisitorsTable({
                           </TableCell>
 
                           <TableCell>
-                            <div>
+                            <TimestampTooltip
+                              timestamp={view.viewedAt}
+                              side="right"
+                              rows={["local", "utc", "unix"]}
+                            >
                               <time
-                                className="truncate text-sm text-muted-foreground"
-                                dateTime={new Date(
-                                  view.viewedAt,
-                                ).toLocaleString()}
-                                title={new Date(view.viewedAt).toLocaleString()}
+                                className="select-none truncate text-sm text-muted-foreground"
+                                dateTime={new Date(view.viewedAt).toISOString()}
                               >
                                 {timeAgo(view.viewedAt)}
                               </time>
-                            </div>
+                            </TimestampTooltip>
                           </TableCell>
                           <TableCell className="table-cell"></TableCell>
                         </TableRow>
@@ -225,19 +236,20 @@ export default function DataroomVisitorsTable({
                             </TableCell>
 
                             <TableCell>
-                              <div>
+                              <TimestampTooltip
+                                timestamp={view.downloadedAt}
+                                side="right"
+                                rows={["local", "utc", "unix"]}
+                              >
                                 <time
-                                  className="truncate text-sm text-muted-foreground"
+                                  className="select-none truncate text-sm text-muted-foreground"
                                   dateTime={new Date(
                                     view.downloadedAt,
-                                  ).toLocaleString()}
-                                  title={new Date(
-                                    view.downloadedAt,
-                                  ).toLocaleString()}
+                                  ).toISOString()}
                                 >
                                   {timeAgo(view.downloadedAt)}
                                 </time>
-                              </div>
+                              </TimestampTooltip>
                             </TableCell>
                             <TableCell className="table-cell"></TableCell>
                           </TableRow>

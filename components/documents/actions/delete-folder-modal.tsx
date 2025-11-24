@@ -37,7 +37,13 @@ export function useDeleteFolderModal(
           {
             method: "DELETE",
           },
-        ),
+        ).then(async (res) => {
+          if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || "Failed to delete folder");
+          }
+          return res;
+        }),
         {
           loading: isDataroom ? "Removing folder..." : "Deleting folder...",
           success: () => {
@@ -54,9 +60,11 @@ export function useDeleteFolderModal(
               ? "Folder removed successfully."
               : `Folder deleted successfully with ${folderToDelete?._count.documents} documents and ${folderToDelete?._count.childFolders} folders`;
           },
-          error: isDataroom
-            ? "Failed to remove folder."
-            : "Failed to delete folder. Move documents first.",
+          error: (err) =>
+            err.message ||
+            (isDataroom
+              ? "Failed to remove folder."
+              : "Failed to delete folder. Move documents first."),
         },
       );
     };

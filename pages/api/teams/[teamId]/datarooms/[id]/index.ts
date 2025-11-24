@@ -100,13 +100,19 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      const { name, enableChangeNotifications, defaultPermissionStrategy, allowBulkDownload } =
-        req.body as {
-          name?: string;
-          enableChangeNotifications?: boolean;
-          defaultPermissionStrategy?: DefaultPermissionStrategy;
-          allowBulkDownload?: boolean;
-        };
+      const {
+        name,
+        enableChangeNotifications,
+        defaultPermissionStrategy,
+        allowBulkDownload,
+        showLastUpdated,
+      } = req.body as {
+        name?: string;
+        enableChangeNotifications?: boolean;
+        defaultPermissionStrategy?: DefaultPermissionStrategy;
+        allowBulkDownload?: boolean;
+        showLastUpdated?: boolean;
+      };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
       const isDataroomsPlus = team.plan.includes("datarooms-plus");
@@ -136,6 +142,9 @@ export default async function handle(
           ...(typeof allowBulkDownload === "boolean" && {
             allowBulkDownload,
           }),
+          ...(typeof showLastUpdated === "boolean" && {
+            showLastUpdated,
+          }),
         },
       });
 
@@ -150,36 +159,30 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
+    const userId = (session.user as CustomUser).id;
     const { teamId, id: dataroomId } = req.query as {
       teamId: string;
       id: string;
     };
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          datarooms: {
-            some: {
-              id: dataroomId,
-            },
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
           },
         },
-        include: { users: true },
+        select: {
+          role: true,
+        },
       });
 
-      if (!team) {
+      if (!teamAccess) {
         return res.status(401).end("Unauthorized");
       }
 
-      // check if current user is admin of the team
-      const isUserAdmin = team.users.some(
-        (user) =>
-          (user.role === "ADMIN" || user.role === "MANAGER") &&
-          user.userId === (session.user as CustomUser).id,
-      );
-      if (!isUserAdmin) {
+      if (teamAccess.role !== "ADMIN" && teamAccess.role !== "MANAGER") {
         return res.status(403).json({
           message:
             "You are not permitted to perform this action. Only admin and managers can delete datarooms.",

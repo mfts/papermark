@@ -728,7 +728,18 @@ export default function PagesVerticalViewer({
     setScale((prev) => Math.max(prev - 0.25, 0.5)); // Min zoom 0.5x
   };
 
-  // Add keyboard shortcuts for zooming
+  // Add fullscreen handler
+  const handleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error("Error attempting to enable fullscreen:", err);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  // Add keyboard shortcuts for zooming and fullscreen
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey) {
@@ -742,6 +753,9 @@ export default function PagesVerticalViewer({
           e.preventDefault();
           setScale(1);
         }
+      } else if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        handleFullscreen();
       }
     };
 
@@ -769,6 +783,7 @@ export default function PagesVerticalViewer({
         hasWatermark={watermarkConfig ? true : false}
         handleZoomIn={handleZoomIn}
         handleZoomOut={handleZoomOut}
+        handleFullscreen={handleFullscreen}
         navData={navDataWithAnnotations}
       />
       <div

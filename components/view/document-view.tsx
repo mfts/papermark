@@ -272,6 +272,7 @@ export default function DocumentView({
         useCustomAccessForm={useCustomAccessForm}
         customFields={link.customFields}
         logoOnAccessForm={logoOnAccessForm}
+        linkWelcomeMessage={link.welcomeMessage}
       />
     );
   }

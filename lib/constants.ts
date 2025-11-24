@@ -75,6 +75,8 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "application/vnd.ms-powerpoint", // .ppt
   "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
   "application/vnd.oasis.opendocument.presentation", // .odp
+  "application/vnd.apple.keynote", // .key
+  "application/x-iwork-keynote-sffkey", // .key (older format)
   "application/msword", // .doc
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
   "application/vnd.oasis.opendocument.text", // .odt
@@ -126,6 +128,8 @@ export const FULL_PLAN_ACCEPTED_FILE_TYPES = {
   "application/vnd.openxmlformats-officedocument.presentationml.presentation":
     [], // ".pptx"
   "application/vnd.oasis.opendocument.presentation": [], // ".odp"
+  "application/vnd.apple.keynote": [".key"], // ".key"
+  "application/x-iwork-keynote-sffkey": [".key"], // ".key"
   "application/msword": [], // ".doc"
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [], // ".docx"
   "application/vnd.oasis.opendocument.text": [], // ".odt"

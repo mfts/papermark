@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Dispatch, SetStateAction, useMemo, useState } from "react";
 
 import { PlanEnum } from "@/ee/stripe/constants";
-import { Tag } from "lucide-react";
+import { CircleHelpIcon, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -14,6 +14,7 @@ import { TagProps } from "@/lib/types";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select-v2";
+import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { DEFAULT_LINK_TYPE } from "..";
 
@@ -113,7 +114,15 @@ export default function TagSection({
   return (
     <>
       <div className="flex justify-between">
-        <Label htmlFor="link-domain">Tags</Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="link-domain">Tags</Label>
+          <BadgeTooltip
+            content="Group links by tags to organize and track performance"
+            link="https://www.papermark.com/help/article/tag-links"
+          >
+            <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+          </BadgeTooltip>
+        </div>
         <Link
           href={`/settings/tags`}
           className="text-xs text-muted-foreground hover:text-foreground hover:underline"
