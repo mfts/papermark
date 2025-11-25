@@ -13,6 +13,7 @@ import UpgradePlanContainer from "@/components/billing/upgrade-plan-container";
 import { GTMComponent } from "@/components/gtm-component";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
+import { TabMenu } from "@/components/tab-menu";
 
 export default function Billing() {
   const router = useRouter();
@@ -54,6 +55,23 @@ export default function Billing() {
       <AppLayout>
         <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
           <SettingsHeader />
+
+          <TabMenu
+            navigation={[
+              {
+                label: "Subscription",
+                href: "/settings/billing",
+                value: "subscription",
+                currentValue: "subscription",
+              },
+              {
+                label: "Invoices",
+                href: "/settings/billing/invoices",
+                value: "invoices",
+                currentValue: "subscription",
+              },
+            ]}
+          />
 
           <UpgradePlanContainer />
         </main>
