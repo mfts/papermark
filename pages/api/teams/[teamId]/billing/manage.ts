@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import { stripeInstance } from "@/ee/stripe";
 import { getQuantityFromPriceId } from "@/ee/stripe/functions/get-quantity-from-plan";
 import getSubscriptionItem from "@/ee/stripe/functions/get-subscription-item";
@@ -12,7 +11,6 @@ import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { getIpAddress } from "@/lib/utils/ip";
 
 import { authOptions } from "../../../auth/[...nextauth]";
 
@@ -26,20 +24,6 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "POST") {
-    // Apply rate limiting
-    const clientIP = getIpAddress(req.headers);
-    const rateLimitResult = await checkRateLimit(
-      rateLimiters.billing,
-      clientIP,
-    );
-
-    if (!rateLimitResult.success) {
-      return res.status(429).json({
-        error: "Too many billing requests. Please try again later.",
-        remaining: rateLimitResult.remaining,
-      });
-    }
-
     // POST /api/teams/:teamId/billing/manage – manage a user's subscription
     const session = await getServerSession(req, res, authOptions);
     if (!session) {

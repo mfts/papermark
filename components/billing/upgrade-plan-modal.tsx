@@ -165,7 +165,9 @@ export function UpgradePlanModal({
   const teamId = teamInfo?.currentTeam?.id;
   const { plan: teamPlan, isCustomer, isOldAccount, isTrial } = usePlan();
   const analytics = useAnalytics();
-  const [dataRoomsPlanSelection, setDataRoomsPlanSelection] = useState<"base" | "plus" | "premium">("base");
+  const [dataRoomsPlanSelection, setDataRoomsPlanSelection] = useState<
+    "base" | "plus" | "premium"
+  >("base");
 
   const plansToShow = useMemo(() => {
     switch (clickedPlan) {
@@ -236,11 +238,11 @@ export function UpgradePlanModal({
         <div className="isolate grid grid-cols-1 gap-4 overflow-hidden rounded-xl p-4 md:grid-cols-2">
           {plansToShow.map((planOption) => {
             const isDataRoomsUpgrade = plansToShow.includes(PlanEnum.DataRooms);
-            
+
             // Determine which plan to show based on selection for Data Rooms
             let effectivePlan = planOption;
             let displayPlanName = planOption;
-            
+
             if (planOption === PlanEnum.DataRooms && isDataRoomsUpgrade) {
               if (dataRoomsPlanSelection === "plus") {
                 effectivePlan = PlanEnum.DataRoomsPlus;
@@ -334,9 +336,7 @@ export function UpgradePlanModal({
                     className={`w-full py-2 text-sm ${
                       planOption === PlanEnum.Business
                         ? "bg-[#fb7a00]/90 text-white hover:bg-[#fb7a00]"
-                        : displayPlanName === PlanEnum.DataRoomsPremium
-                          ? "bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
-                          : "bg-gray-800 text-white hover:bg-gray-900 hover:text-white dark:hover:bg-gray-700/80"
+                        : "bg-gray-800 text-white hover:bg-gray-900 hover:text-white dark:hover:bg-gray-700/80"
                     }`}
                     loading={selectedPlan === planOption}
                     disabled={selectedPlan !== null}
