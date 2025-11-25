@@ -468,7 +468,7 @@ async function handleDocumentCreate(
     const hashedPassword = link.password
       ? await generateEncrpytedPassword(link.password)
       : preset?.password
-        ? preset.password
+        ? await generateEncrpytedPassword(preset.password)
         : null;
 
     const expiresAtDate = link.expiresAt
@@ -505,7 +505,8 @@ async function handleDocumentCreate(
         emailAuthenticated:
           link.emailAuthenticated || preset?.emailAuthenticated || false,
         allowDownload: link.allowDownload || preset?.allowDownload,
-        enableNotification: link.enableNotification ?? preset?.enableNotification ?? false,
+        enableNotification:
+          link.enableNotification ?? preset?.enableNotification ?? false,
         enableFeedback: link.enableFeedback,
         enableScreenshotProtection: link.enableScreenshotProtection,
         showBanner: link.showBanner ?? preset?.showBanner ?? false,
@@ -708,7 +709,7 @@ async function handleLinkCreate(
     const hashedPassword = link.password
       ? await generateEncrpytedPassword(link.password)
       : preset?.password
-        ? preset.password
+        ? await generateEncrpytedPassword(preset.password)
         : null;
 
     const expiresAtDate = link.expiresAt
@@ -735,7 +736,8 @@ async function handleLinkCreate(
         emailAuthenticated:
           link.emailAuthenticated || preset?.emailAuthenticated || false,
         allowDownload: link.allowDownload || preset?.allowDownload,
-        enableNotification: link.enableNotification ?? preset?.enableNotification ?? false,
+        enableNotification:
+          link.enableNotification ?? preset?.enableNotification ?? false,
         enableFeedback: link.enableFeedback,
         enableScreenshotProtection: link.enableScreenshotProtection,
         showBanner: link.showBanner ?? preset?.showBanner ?? false,
@@ -927,7 +929,7 @@ async function handleDataroomCreate(
       const hashedPassword = link.password
         ? await generateEncrpytedPassword(link.password)
         : preset?.password
-          ? preset?.password
+          ? await generateEncrpytedPassword(preset.password)
           : null;
       const expiresAtDate = link.expiresAt
         ? new Date(link.expiresAt)
@@ -950,7 +952,8 @@ async function handleDataroomCreate(
           emailAuthenticated:
             link.emailAuthenticated || preset?.emailAuthenticated || false,
           allowDownload: link.allowDownload || preset?.allowDownload,
-          enableNotification: link.enableNotification ?? preset?.enableNotification ?? false,
+          enableNotification:
+            link.enableNotification ?? preset?.enableNotification ?? false,
           enableFeedback: link.enableFeedback,
           enableScreenshotProtection: link.enableScreenshotProtection,
           showBanner: link.showBanner ?? preset?.showBanner ?? false,
