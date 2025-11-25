@@ -272,7 +272,7 @@ export default function UpgradePlanContainer() {
                     Change billing information
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => manageSubscription({ type: "invoices" })}
+                    onClick={() => router.push("/settings/billing/invoices")}
                   >
                     <ReceiptTextIcon className="h-4 w-4" />
                     View invoices

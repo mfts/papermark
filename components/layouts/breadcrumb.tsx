@@ -219,6 +219,8 @@ const SettingsBreadcrumb = () => {
         return "Presets";
       case "/settings/billing":
         return "Billing";
+      case "/settings/billing/invoices":
+        return "Invoices";
       case "/settings/tokens":
         return "API Tokens";
       case "/settings/webhooks":
@@ -234,6 +236,8 @@ const SettingsBreadcrumb = () => {
     }
   }, [path]);
 
+  const isInvoicesPage = path === "/settings/billing/invoices";
+
   return (
     <Breadcrumb>
       <BreadcrumbList>
@@ -243,9 +247,23 @@ const SettingsBreadcrumb = () => {
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <BreadcrumbPage>{settingsTitle}</BreadcrumbPage>
-        </BreadcrumbItem>
+        {isInvoicesPage ? (
+          <>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/settings/billing">Billing</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Invoices</BreadcrumbPage>
+            </BreadcrumbItem>
+          </>
+        ) : (
+          <BreadcrumbItem>
+            <BreadcrumbPage>{settingsTitle}</BreadcrumbPage>
+          </BreadcrumbItem>
+        )}
       </BreadcrumbList>
     </Breadcrumb>
   );
