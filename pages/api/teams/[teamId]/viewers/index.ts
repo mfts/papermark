@@ -84,13 +84,22 @@ export default async function handle(
             v."createdAt",
             v."updatedAt",
             COALESCE(vs.total_visits, 0)::int as "totalVisits",
-            vs.last_viewed as "lastViewed"
+            vs.last_viewed as "lastViewed",
+            vs.viewer_name as "viewerName"
           FROM "Viewer" v
           LEFT JOIN (
             SELECT 
               "viewerId",
               COUNT(*)::int as total_visits,
-              MAX("viewedAt") as last_viewed
+              MAX("viewedAt") as last_viewed,
+              (
+                SELECT "viewerName"
+                FROM "View" v2
+                WHERE v2."viewerId" = "View"."viewerId"
+                  AND v2."viewerName" IS NOT NULL
+                ORDER BY v2."viewedAt" DESC
+                LIMIT 1
+              ) as viewer_name
             FROM "View"
             WHERE "documentId" IS NOT NULL
             GROUP BY "viewerId"
@@ -109,6 +118,7 @@ export default async function handle(
         updatedAt: Date;
         totalVisits: number;
         lastViewed: Date | null;
+        viewerName: string | null;
       }>;
 
       const totalCountResult = await prisma.$queryRaw`
@@ -128,6 +138,7 @@ export default async function handle(
         updatedAt: viewer.updatedAt,
         totalVisits: viewer.totalVisits,
         lastViewed: viewer.lastViewed,
+        viewerName: viewer.viewerName,
       }));
 
       const response = {

@@ -479,6 +479,9 @@ export default async function handler(
               console.error("Error fetching Tinybird data:", error);
             }
 
+            // Get the name from the most recent view that has a name
+            const viewerName = viewer.views.find((v) => v.viewerName)?.viewerName;
+            
             return {
               email: viewer.email,
               viewerId: viewer.id,
@@ -487,6 +490,7 @@ export default async function handler(
               uniqueDocuments: uniqueDocuments.size,
               verified: viewer.verified,
               totalDuration,
+              viewerName: viewerName || null,
             };
           }),
         );

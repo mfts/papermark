@@ -39,6 +39,7 @@ type Viewer = {
   updatedAt: Date;
   totalVisits: number;
   lastViewed: Date | null;
+  viewerName?: string | null;
 };
 
 export function ContactsTable({
@@ -149,8 +150,13 @@ export function ContactsTable({
             <div className="min-w-0 flex-1">
               <div className="focus:outline-none">
                 <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
-                  {row.original.email}
+                  {row.original.viewerName || row.original.email}
                 </p>
+                {row.original.viewerName && row.original.email && (
+                  <p className="text-xs text-muted-foreground/60">
+                    {row.original.email}
+                  </p>
+                )}
               </div>
             </div>
           </div>
