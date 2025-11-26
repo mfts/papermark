@@ -51,6 +51,7 @@ interface Visitor {
   uniqueDocuments: number;
   verified: boolean;
   totalDuration: number;
+  viewerName?: string | null;
 }
 
 const columns: ColumnDef<Visitor>[] = [
@@ -63,13 +64,18 @@ const columns: ColumnDef<Visitor>[] = [
         <div className="min-w-0 flex-1">
           <div className="focus:outline-none">
             <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
-              {row.original.email}{" "}
+              {row.original.viewerName || row.original.email}{" "}
               {row.original.verified && (
                 <BadgeTooltip content="Verified visitor">
                   <BadgeCheckIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
                 </BadgeTooltip>
               )}
             </p>
+            {row.original.viewerName && row.original.email && (
+              <p className="text-xs text-muted-foreground/60">
+                {row.original.email}
+              </p>
+            )}
             <p className="text-sm text-muted-foreground">
               {row.original.uniqueDocuments} document
               {row.original.uniqueDocuments !== 1 ? "s" : ""} viewed

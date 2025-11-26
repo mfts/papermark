@@ -103,7 +103,7 @@ export default function DataroomVisitorsTable({
                               <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
                                 {view.viewerEmail ? (
                                   <>
-                                    {view.viewerEmail}{" "}
+                                    {view.viewerName || view.viewerEmail}{" "}
                                     {view.verified && (
                                       <BadgeTooltip
                                         content="Verified visitor"
@@ -141,6 +141,11 @@ export default function DataroomVisitorsTable({
                                   "Anonymous"
                                 )}
                               </p>
+                              {view.viewerName && view.viewerEmail && (
+                                <p className="text-xs text-muted-foreground/60">
+                                  {view.viewerEmail}
+                                </p>
+                              )}
                               <p className="text-xs text-muted-foreground/60 sm:text-sm">
                                 {view.link.name ? view.link.name : view.linkId}
                               </p>

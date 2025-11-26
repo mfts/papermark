@@ -65,6 +65,12 @@ export default async function handle(
             orderBy: {
               viewedAt: "desc",
             },
+            select: {
+              id: true,
+              viewedAt: true,
+              downloadedAt: true,
+              viewerName: true,
+            },
           },
         },
       });
@@ -93,11 +99,15 @@ export default async function handle(
       });
 
       const returnViews = viewers.map((viewer) => {
+        // Get the name from the most recent view that has a name
+        const viewerName = viewer.views.find((v) => v.viewerName)?.viewerName;
+        
         return {
           ...viewer,
           dataroomName: dataroom?.name,
           lastViewedAt:
             viewer.views.length > 0 ? viewer.views[0].viewedAt : null,
+          viewerName: viewerName || null,
           internal: users.some((user) => user.email === viewer.email), // set internal to true if view.viewerEmail is in the users list
         };
       });
