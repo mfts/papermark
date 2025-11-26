@@ -11,6 +11,7 @@ import { hashToken } from "@/lib/api/auth/token";
 import { verifyPreviewSession } from "@/lib/auth/preview-auth";
 import { PreviewSession } from "@/lib/auth/preview-auth";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
+import { sendSignedNDAEmail } from "@/lib/emails/send-signed-nda";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
@@ -23,7 +24,8 @@ import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 import { isEmailMatched } from "@/lib/utils/email-domain";
 import { generateOTP } from "@/lib/utils/generate-otp";
-import { LOCALHOST_IP } from "@/lib/utils/geo";
+import { geolocation } from "@vercel/functions";
+import { LOCALHOST_GEO_DATA, LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { validateEmail } from "@/lib/utils/validate-email";
 
@@ -108,6 +110,21 @@ export async function POST(request: NextRequest) {
           select: {
             plan: true,
             globalBlockList: true,
+            users: {
+              select: {
+                role: true,
+                user: {
+                  select: {
+                    email: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        agreement: {
+          select: {
+            name: true,
           },
         },
         customFields: {
@@ -656,6 +673,64 @@ export async function POST(request: NextRequest) {
             }).catch((error) => {
               console.error("Error sending Slack notification:", error);
             }),
+          );
+        }
+
+        // Send NDA completion email if agreement was signed and notifications are enabled
+        if (
+          hasConfirmedAgreement &&
+          link.enableAgreement &&
+          link.agreementId &&
+          link.enableNotification &&
+          link.agreement
+        ) {
+          waitUntil(
+            (async () => {
+              try {
+                // Get location data
+                const geo =
+                  process.env.VERCEL === "1"
+                    ? geolocation(request)
+                    : LOCALHOST_GEO_DATA;
+                const locationString =
+                  geo.city && geo.country
+                    ? geo.region && geo.region !== geo.city
+                      ? `${geo.city}, ${geo.region}, ${geo.country}`
+                      : `${geo.city}, ${geo.country}`
+                    : undefined;
+
+                // Get team members for CC
+                const adminUser = link.team.users.find(
+                  (u) => u.role === "ADMIN",
+                );
+                const adminEmail = adminUser?.user.email || null;
+                const teamMembers = link.team.users
+                  .map((u) => u.user.email)
+                  .filter(
+                    (email): email is string =>
+                      !!email && email !== adminEmail,
+                  );
+
+                // Send NDA completion email
+                await sendSignedNDAEmail({
+                  ownerEmail: adminEmail,
+                  viewId: newView.id,
+                  documentId: documentId,
+                  dataroomId: undefined, // Document view, not dataroom
+                  agreementName: link.agreement.name,
+                  linkName: link.name || `Link #${linkId.slice(-5)}`,
+                  viewerEmail: email ?? null,
+                  viewerName: name ?? null,
+                  teamMembers: teamMembers.length > 0 ? teamMembers : undefined,
+                  locationString,
+                });
+              } catch (error) {
+                log({
+                  message: `Failed to send NDA completion email for view: ${newView.id}. \n\n ${error}`,
+                  type: "error",
+                });
+              }
+            })(),
           );
         }
       }

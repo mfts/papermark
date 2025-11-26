@@ -24,6 +24,7 @@ import {
   Download,
   DownloadCloudIcon,
   FileBadgeIcon,
+  FileTextIcon,
   ServerIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
@@ -101,12 +102,48 @@ const columns: ColumnDef<View>[] = [
                     </BadgeTooltip>
                   )}
                   {row.original.agreementResponse && (
-                    <BadgeTooltip
-                      content={`Agreed to ${row.original.agreementResponse.agreement.name}`}
-                      key="agreement"
-                    >
-                      <FileBadgeIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
-                    </BadgeTooltip>
+                    <>
+                      <BadgeTooltip
+                        content={`Agreed to ${row.original.agreementResponse.agreement.name}`}
+                        key="agreement"
+                      >
+                        <FileBadgeIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
+                      </BadgeTooltip>
+                      <BadgeTooltip
+                        content="Download NDA Certificate"
+                        key="certificate"
+                      >
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              const response = await fetch(
+                                `/api/views/${row.original.id}/nda-certificate`,
+                              );
+                              if (!response.ok) {
+                                throw new Error(
+                                  "Failed to generate certificate",
+                                );
+                              }
+                              const blob = await response.blob();
+                              const url = window.URL.createObjectURL(blob);
+                              const a = document.createElement("a");
+                              a.href = url;
+                              a.download = `NDA-Certificate-${row.original.viewerEmail || "Anonymous"}-${Date.now()}.pdf`;
+                              document.body.appendChild(a);
+                              a.click();
+                              window.URL.revokeObjectURL(url);
+                              document.body.removeChild(a);
+                            } catch (error) {
+                              toast.error("Failed to download certificate");
+                            }
+                          }}
+                          className="h-4 w-4 text-emerald-500 hover:text-emerald-600 cursor-pointer"
+                        >
+                          <FileTextIcon className="h-4 w-4" />
+                        </button>
+                      </BadgeTooltip>
+                    </>
                   )}
                   {row.original.downloadedAt && (
                     <BadgeTooltip
