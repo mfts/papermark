@@ -1,7 +1,14 @@
 import { z } from "zod";
 
 export const customFieldDataSchema = z.object({
-  type: z.enum(["SHORT_TEXT", "LONG_TEXT", "NUMBER", "URL"]),
+  type: z.enum([
+    "SHORT_TEXT",
+    "LONG_TEXT",
+    "NUMBER",
+    "PHONE_NUMBER",
+    "URL",
+    "CHECKBOX",
+  ]),
   identifier: z.string(),
   label: z.string(),
   placeholder: z.string().nullable().optional(),
