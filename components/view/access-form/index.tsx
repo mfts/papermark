@@ -88,8 +88,19 @@ export default function AccessForm({
     if (requireAgreement && requireName && !data.name) return false;
     if (customFields?.length) {
       for (const field of customFields) {
-        if (field.required && !data.customFields?.[field.identifier!]) {
-          return false;
+        if (field.required) {
+          const fieldValue = data.customFields?.[field.identifier!];
+          // For checkbox fields, required means it must be checked (true)
+          if (field.type === "CHECKBOX") {
+            if (fieldValue !== "true") {
+              return false;
+            }
+          } else {
+            // For other field types, required means it must have a value
+            if (!fieldValue) {
+              return false;
+            }
+          }
         }
       }
     }
