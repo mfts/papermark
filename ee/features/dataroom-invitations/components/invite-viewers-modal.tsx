@@ -166,6 +166,16 @@ export function InviteViewersModal({
   const defaultRecipients =
     defaultEmails.length > 0 ? defaultEmails : groupId ? uninvitedEmails : [];
 
+  const currentRecipients =
+    hasEditedRecipients && recipientInput.length > 0
+      ? parseRecipientInput(recipientInput)
+      : defaultRecipients;
+
+  const recipientCount = currentRecipients.length;
+
+  const displayRecipients = currentRecipients.slice(0, 2);
+  const remainingCount = recipientCount - displayRecipients.length;
+
   const fallbackSubject = `You are invited to view ${dataroomName}`;
 
   const handleClose = () => {
@@ -186,7 +196,7 @@ export function InviteViewersModal({
 
     const parsedEmails = hasEditedRecipients
       ? parseRecipientInput(recipientInput)
-      : [];
+      : defaultRecipients;
 
     if (parsedEmails.length > 0) {
       const invalidEmails = parsedEmails.filter(
@@ -225,7 +235,7 @@ export function InviteViewersModal({
         body: JSON.stringify({
           ...(groupId ? { linkId: selectedLinkId } : {}),
           customMessage: customMessage.length > 0 ? customMessage : undefined,
-          emails: parsedEmails.length > 0 ? parsedEmails : undefined,
+          emails: parsedEmails,
         }),
       });
 
@@ -267,137 +277,171 @@ export function InviteViewersModal({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+      <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-5xl">
         <DialogHeader className="text-left">
           <DialogTitle>Share invitation</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {groupId ? (
+        <div className="grid gap-6 overflow-y-auto md:grid-cols-2">
+          {/* Left Column - Input Fields */}
+          <div className="space-y-4 md:overflow-y-auto md:pr-2">
+            {groupId ? (
+              <div className="space-y-2">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Choose link
+                </span>
+                <Select
+                  value={selectedLinkId}
+                  onValueChange={setSelectedLinkId}
+                  disabled={loading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a link" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableLinks.map((link) => (
+                      <SelectItem key={link.id} value={link.id}>
+                        {link.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+
             <div className="space-y-2">
               <span className="text-sm font-medium text-muted-foreground">
-                Choose link
+                Custom message
               </span>
-              <Select
-                value={selectedLinkId}
-                onValueChange={setSelectedLinkId}
+              <Textarea
+                value={customMessage}
+                onChange={(event) => setCustomMessage(event.target.value)}
+                rows={4}
+                maxLength={500}
+                placeholder="Add a short personal message (optional)"
+                className="bg-muted"
                 disabled={loading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a link" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableLinks.map((link) => (
-                    <SelectItem key={link.id} value={link.id}>
-                      {link.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : null}
-
-          <div className="space-y-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              Custom message
-            </span>
-            <Textarea
-              value={customMessage}
-              onChange={(event) => setCustomMessage(event.target.value)}
-              rows={4}
-              maxLength={500}
-              placeholder="Add a short personal message (optional)"
-              className="bg-muted"
-              disabled={loading}
-            />
-            <p className="text-xs text-muted-foreground">
-              {customMessage.length}/500 characters
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              Recipients
-            </span>
-            <Textarea
-              value={recipientInput}
-              onChange={(event) => {
-                setRecipientInput(event.target.value);
-                setHasEditedRecipients(true);
-              }}
-              placeholder={
-                defaultRecipients.length > 0
-                  ? defaultRecipients.join("\n")
-                  : "Enter email addresses separated by comma or new line (leave empty to use allowed visitors)"
-              }
-              className="bg-muted"
-              rows={4}
-              disabled={loading}
-            />
-            <p className="text-xs text-muted-foreground">
-              Leave blank to invite{" "}
-              {defaultRecipients.length > 0
-                ? `${defaultRecipients.length} uninvited member${
-                    defaultRecipients.length !== 1 ? "s" : ""
-                  }`
-                : "all allowed visitors"}
-              .
-            </p>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-2 rounded-md border bg-muted/40 p-4 text-sm text-muted-foreground">
-            <div>
-              <p className="font-medium text-foreground">Email preview</p>
+              />
               <p className="text-xs text-muted-foreground">
-                Sent from Papermark system email
+                {customMessage.length}/500 characters
               </p>
             </div>
 
-            <div className="space-y-1">
-              <p>
-                <span className="font-medium">Subject:</span> {fallbackSubject}
-              </p>
-              <p>
-                <span className="font-medium">From:</span> {senderEmail}
-              </p>
-              <p>
-                <span className="font-medium">To:</span>{" "}
-                {hasEditedRecipients && recipientInput.length > 0
-                  ? parseRecipientInput(recipientInput).join(", ")
-                  : defaultRecipients.join(", ") || "Selected visitors"}
+            <div className="space-y-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                Recipients
+              </span>
+              <Textarea
+                value={recipientInput}
+                onChange={(event) => {
+                  setRecipientInput(event.target.value);
+                  setHasEditedRecipients(true);
+                }}
+                placeholder={
+                  defaultRecipients.length > 0
+                    ? defaultRecipients.join("\n")
+                    : "Enter email addresses separated by comma or new line"
+                }
+                className="bg-muted"
+                rows={6}
+                disabled={loading}
+              />
+              <p className="text-xs text-muted-foreground">
+                {recipientInput.length > 0 || defaultRecipients.length > 0
+                  ? `${recipientCount} recipient${recipientCount !== 1 ? "s" : ""} will receive ${recipientCount !== 1 ? "invitations" : "an invitation"}`
+                  : "Enter email addresses to send invitations"}
               </p>
             </div>
+          </div>
 
-            <Separator />
+          {/* Right Column - Email Preview */}
+          <div className="hidden flex-col overflow-y-auto rounded-md border bg-muted/40 md:flex">
+            <div className="sticky top-0 border-b bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <p className="font-medium text-foreground">Email preview</p>
+            </div>
 
-            <div className="space-y-2 text-muted-foreground">
-              <p>Hey!</p>
-              <p>
-                You have been invited to view the{" "}
-                <span className="font-semibold text-foreground">
-                  {dataroomName}
-                </span>{" "}
-                dataroom on{" "}
-                <span className="font-semibold text-foreground">Papermark</span>
-                . The invitation was sent by{" "}
-                <span className="font-semibold text-foreground">
-                  {senderEmail}
-                </span>
-                .
-              </p>
-              {customMessage.length > 0 ? (
-                <p className="whitespace-pre-wrap text-foreground">
-                  {customMessage}
+            <div className="flex-1 space-y-4 p-4 text-sm">
+              <div className="space-y-1 text-muted-foreground">
+                <p>
+                  <span className="font-medium text-foreground">Subject:</span>{" "}
+                  {fallbackSubject}
                 </p>
-              ) : null}
-              <p>
-                Click the button below to access the dataroom.
-                {selectedLink
-                  ? ` Link ID: ${selectedLink.slug ?? selectedLink.id}`
-                  : ""}
-              </p>
+                <p>
+                  <span className="font-medium text-foreground">From:</span>{" "}
+                  system@papermark.com
+                </p>
+                <p>
+                  <span className="font-medium text-foreground">To:</span>{" "}
+                  {currentRecipients.length > 0 ? (
+                    <>
+                      {displayRecipients.join(", ")}
+                      {remainingCount > 0 && (
+                        <span className="text-foreground">
+                          {" "}
+                          +{remainingCount} more
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    "Recipients"
+                  )}
+                </p>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>Hey!</p>
+                <p>
+                  You have been invited to view the{" "}
+                  <span className="font-semibold text-foreground">
+                    {dataroomName}
+                  </span>{" "}
+                  dataroom on{" "}
+                  <span className="font-semibold text-foreground">
+                    Papermark
+                  </span>
+                  .
+                  <br />
+                  The invitation was sent by{" "}
+                  <span className="font-semibold text-foreground">
+                    {senderEmail}
+                  </span>
+                  .
+                </p>
+                {customMessage.length > 0 ? (
+                  <p className="whitespace-pre-wrap text-foreground">
+                    {customMessage}
+                  </p>
+                ) : null}
+                <div className="my-4 rounded border border-gray-200 bg-black px-5 py-3 text-center text-xs font-semibold text-white">
+                  View the dataroom
+                </div>
+                <p className="text-xs">
+                  or copy and paste this URL into your browser:
+                  <br />
+                  <span className="break-all text-foreground">
+                    {selectedLink
+                      ? `https://papermark.io/view/${selectedLink.slug ?? selectedLink.id}`
+                      : "https://papermark.io/view/..."}
+                  </span>
+                </p>
+                <Separator className="my-2" />
+                <p className="text-xs">
+                  © {new Date().getFullYear()} Papermark, Inc. All rights
+                  reserved.
+                </p>
+                <p className="text-xs">
+                  This email was intended for{" "}
+                  <span className="text-foreground">
+                    {currentRecipients.length > 0
+                      ? currentRecipients[0]
+                      : "recipient@example.com"}
+                  </span>
+                  . If you were not expecting this email, you can ignore this
+                  email.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -415,9 +459,15 @@ export function InviteViewersModal({
             <Button
               onClick={handleSend}
               loading={loading}
-              disabled={groupId ? !selectedLinkId || loading : loading}
+              disabled={
+                groupId
+                  ? !selectedLinkId || loading || recipientCount === 0
+                  : loading || recipientCount === 0
+              }
             >
-              {loading ? "Sending invitations..." : "Send invitations"}
+              {loading
+                ? "Sending invitations..."
+                : `Send ${recipientCount} invitation${recipientCount !== 1 ? "s" : ""}`}
             </Button>
           </div>
         </DialogFooter>
