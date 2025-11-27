@@ -15,6 +15,7 @@ import {
 import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
 import { PreviewSession, verifyPreviewSession } from "@/lib/auth/preview-auth";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
+import { sendSignedNDAEmail } from "@/lib/emails/send-signed-nda";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import {
@@ -29,7 +30,8 @@ import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 import { extractEmailDomain, isEmailMatched } from "@/lib/utils/email-domain";
 import { generateOTP } from "@/lib/utils/generate-otp";
-import { LOCALHOST_IP } from "@/lib/utils/geo";
+import { geolocation } from "@vercel/functions";
+import { LOCALHOST_GEO_DATA, LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { validateEmail } from "@/lib/utils/validate-email";
 
@@ -132,6 +134,21 @@ export async function POST(request: NextRequest) {
           select: {
             plan: true,
             globalBlockList: true,
+            users: {
+              select: {
+                role: true,
+                user: {
+                  select: {
+                    email: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        agreement: {
+          select: {
+            name: true,
           },
         },
         customFields: {
@@ -687,6 +704,63 @@ export async function POST(request: NextRequest) {
               })(),
             );
           }
+
+          // Send NDA completion email if agreement was signed and notifications are enabled
+          if (
+            hasConfirmedAgreement &&
+            link.enableAgreement &&
+            link.agreementId &&
+            link.enableNotification &&
+            link.agreement
+          ) {
+            waitUntil(
+              (async () => {
+                try {
+                  // Get location data
+                  const geo =
+                    process.env.VERCEL === "1"
+                      ? geolocation(request)
+                      : LOCALHOST_GEO_DATA;
+                  const locationString =
+                    geo.city && geo.country
+                      ? geo.region && geo.region !== geo.city
+                        ? `${geo.city}, ${geo.region}, ${geo.country}`
+                        : `${geo.city}, ${geo.country}`
+                      : undefined;
+
+                  // Get team members for CC
+                  const adminUser = link.team.users.find(
+                    (u) => u.role === "ADMIN",
+                  );
+                  const adminEmail = adminUser?.user.email || null;
+                  const teamMembers = link.team.users
+                    .map((u) => u.user.email)
+                    .filter(
+                      (email): email is string =>
+                        !!email && email !== adminEmail,
+                    );
+
+                  // Send NDA completion email
+                  await sendSignedNDAEmail({
+                    ownerEmail: adminEmail,
+                    viewId: newDataroomView.id,
+                    dataroomId: dataroomId,
+                    agreementName: link.agreement.name,
+                    linkName: link.name || `Link #${linkId.slice(-5)}`,
+                    viewerEmail: email ?? null,
+                    viewerName: name ?? null,
+                    teamMembers: teamMembers.length > 0 ? teamMembers : undefined,
+                    locationString,
+                  });
+                } catch (error) {
+                  log({
+                    message: `Failed to send NDA completion email for dataroom view: ${newDataroomView.id}. \n\n ${error}`,
+                    type: "error",
+                  });
+                }
+              })(),
+            );
+          }
         }
 
         const dataroomViewId =
@@ -813,6 +887,64 @@ export async function POST(request: NextRequest) {
                 });
               } catch (error) {
                 console.error("Error sending Slack notification:", error);
+              }
+            })(),
+          );
+        }
+
+        // Send NDA completion email if agreement was signed and notifications are enabled
+        if (
+          newView &&
+          hasConfirmedAgreement &&
+          link.enableAgreement &&
+          link.agreementId &&
+          link.enableNotification &&
+          link.agreement
+        ) {
+          waitUntil(
+            (async () => {
+              try {
+                // Get location data
+                const geo =
+                  process.env.VERCEL === "1"
+                    ? geolocation(request)
+                    : LOCALHOST_GEO_DATA;
+                const locationString =
+                  geo.city && geo.country
+                    ? geo.region && geo.region !== geo.city
+                      ? `${geo.city}, ${geo.region}, ${geo.country}`
+                      : `${geo.city}, ${geo.country}`
+                    : undefined;
+
+                // Get team members for CC
+                const adminUser = link.team.users.find(
+                  (u) => u.role === "ADMIN",
+                );
+                const adminEmail = adminUser?.user.email || null;
+                const teamMembers = link.team.users
+                  .map((u) => u.user.email)
+                  .filter(
+                    (email): email is string =>
+                      !!email && email !== adminEmail,
+                  );
+
+                // Send NDA completion email (for document view within dataroom, link to dataroom)
+                await sendSignedNDAEmail({
+                  ownerEmail: adminEmail,
+                  viewId: newView.id,
+                  dataroomId: dataroomId, // Link to dataroom even for document views
+                  agreementName: link.agreement.name,
+                  linkName: link.name || `Link #${linkId.slice(-5)}`,
+                  viewerEmail: email ?? null,
+                  viewerName: name ?? null,
+                  teamMembers: teamMembers.length > 0 ? teamMembers : undefined,
+                  locationString,
+                });
+              } catch (error) {
+                log({
+                  message: `Failed to send NDA completion email for dataroom document view: ${newView.id}. \n\n ${error}`,
+                  type: "error",
+                });
               }
             })(),
           );

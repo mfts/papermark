@@ -193,10 +193,11 @@ export default async function handler(
                 },
               },
             }),
-            ...(linkData.enableAgreement && {
-              enableAgreement: linkData.enableAgreement,
-              agreementId: linkData.agreementId,
-            }),
+            enableAgreement: linkData.enableAgreement || false,
+            agreementId:
+              linkData.enableAgreement && linkData.agreementId
+                ? linkData.agreementId
+                : null,
             ...(linkData.enableWatermark && {
               enableWatermark: linkData.enableWatermark,
               watermarkConfig: linkData.watermarkConfig,

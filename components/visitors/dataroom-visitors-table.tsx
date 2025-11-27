@@ -7,6 +7,7 @@ import {
   Download,
   DownloadCloudIcon,
   FileBadgeIcon,
+  FileTextIcon,
   MailOpenIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -129,12 +130,54 @@ export default function DataroomVisitorsTable({
                                       </BadgeTooltip>
                                     )}
                                     {view.agreementResponse && (
-                                      <BadgeTooltip
-                                        content={`Agreed to ${view.agreementResponse.agreement.name}`}
-                                        key={`agreement-${view.id}`}
-                                      >
-                                        <FileBadgeIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
-                                      </BadgeTooltip>
+                                      <>
+                                        <BadgeTooltip
+                                          content={`Agreed to ${view.agreementResponse.agreement.name}`}
+                                          key={`agreement-${view.id}`}
+                                        >
+                                          <FileBadgeIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
+                                        </BadgeTooltip>
+                                        <BadgeTooltip
+                                          content="Download NDA Certificate"
+                                          key={`certificate-${view.id}`}
+                                        >
+                                          <button
+                                            onClick={async (e) => {
+                                              e.stopPropagation();
+                                              try {
+                                                const response = await fetch(
+                                                  `/api/views/${view.id}/nda-certificate`,
+                                                );
+                                                if (!response.ok) {
+                                                  throw new Error(
+                                                    "Failed to generate certificate",
+                                                  );
+                                                }
+                                                const blob = await response.blob();
+                                                const url = window.URL.createObjectURL(
+                                                  blob,
+                                                );
+                                                const a = document.createElement(
+                                                  "a",
+                                                );
+                                                a.href = url;
+                                                a.download = `NDA-Certificate-${view.viewerName || view.viewerEmail || "Anonymous"}-${Date.now()}.pdf`;
+                                                document.body.appendChild(a);
+                                                a.click();
+                                                window.URL.revokeObjectURL(url);
+                                                document.body.removeChild(a);
+                                              } catch (error) {
+                                                toast.error(
+                                                  "Failed to download certificate",
+                                                );
+                                              }
+                                            }}
+                                            className="h-4 w-4 text-emerald-500 hover:text-emerald-600 cursor-pointer"
+                                          >
+                                            <FileTextIcon className="h-4 w-4" />
+                                          </button>
+                                        </BadgeTooltip>
+                                      </>
                                     )}
                                   </>
                                 ) : (
