@@ -208,7 +208,7 @@ export function FAQSection({
                         <span className="flex-shrink-0 rounded bg-secondary px-1.5 py-0.5 text-xs font-medium text-secondary-foreground">
                           Q
                         </span>
-                        <div className="line-clamp-2 min-w-0 flex-1 text-left text-sm font-medium text-gray-900">
+                        <div className="line-clamp-2 min-w-0 flex-1 text-left text-sm font-medium text-foreground">
                           {faq.editedQuestion}
                         </div>
                       </div>
@@ -220,7 +220,7 @@ export function FAQSection({
                           <span className="flex-shrink-0 rounded bg-primary/80 px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
                             A
                           </span>
-                          <p className="whitespace-pre-wrap text-sm font-medium text-gray-700">
+                          <p className="whitespace-pre-wrap text-sm font-medium text-muted-foreground">
                             {faq.answer}
                           </p>
                         </div>
