@@ -17,7 +17,7 @@ export const sendSubscriptionRenewalReminderEmail = async (params: {
   try {
     await sendEmail({
       to: customerEmail,
-      subject: "Your Papermark subscription renews soon",
+      subject: "Is your payment information up to date?",
       react: emailTemplate,
       system: true,
       test: process.env.NODE_ENV === "development",
