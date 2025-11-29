@@ -729,23 +729,23 @@ export async function POST(request: NextRequest) {
                       : undefined;
 
                   // Get team members for CC
-                  const adminUser = link.team.users.find(
+                  const adminUser = link.team?.users.find(
                     (u) => u.role === "ADMIN",
                   );
                   const adminEmail = adminUser?.user.email || null;
-                  const teamMembers = link.team.users
+                  const teamMembers = link.team?.users
                     .map((u) => u.user.email)
                     .filter(
                       (email): email is string =>
                         !!email && email !== adminEmail,
-                    );
+                    ) || [];
 
                   // Send NDA completion email
                   await sendSignedNDAEmail({
                     ownerEmail: adminEmail,
                     viewId: newDataroomView.id,
                     dataroomId: dataroomId,
-                    agreementName: link.agreement.name,
+                    agreementName: link.agreement?.name || "NDA",
                     linkName: link.name || `Link #${linkId.slice(-5)}`,
                     viewerEmail: email ?? null,
                     viewerName: name ?? null,
@@ -917,23 +917,23 @@ export async function POST(request: NextRequest) {
                     : undefined;
 
                 // Get team members for CC
-                const adminUser = link.team.users.find(
+                const adminUser = link.team?.users.find(
                   (u) => u.role === "ADMIN",
                 );
                 const adminEmail = adminUser?.user.email || null;
-                const teamMembers = link.team.users
+                const teamMembers = link.team?.users
                   .map((u) => u.user.email)
                   .filter(
                     (email): email is string =>
                       !!email && email !== adminEmail,
-                  );
+                  ) || [];
 
                 // Send NDA completion email (for document view within dataroom, link to dataroom)
                 await sendSignedNDAEmail({
                   ownerEmail: adminEmail,
                   viewId: newView.id,
                   dataroomId: dataroomId, // Link to dataroom even for document views
-                  agreementName: link.agreement.name,
+                  agreementName: link.agreement?.name || "NDA",
                   linkName: link.name || `Link #${linkId.slice(-5)}`,
                   viewerEmail: email ?? null,
                   viewerName: name ?? null,

@@ -34,6 +34,9 @@ export default async function handle(
 
   try {
     // Fetch the view with agreement response and related data
+    // IMPORTANT: We use the agreement from agreementResponse to ensure we get
+    // the agreement that was actually agreed to, not the current link's agreement
+    // (which may have been changed after the user agreed)
     const view = await prisma.view.findUnique({
       where: { id: viewId },
       include: {
@@ -41,9 +44,11 @@ export default async function handle(
           include: {
             agreement: {
               select: {
+                id: true,
                 name: true,
                 content: true,
                 contentType: true,
+                updatedAt: true, // Track when agreement was last updated
               },
             },
           },
@@ -77,6 +82,23 @@ export default async function handle(
     // Check if agreement response exists
     if (!view.agreementResponse) {
       return res.status(400).json({ error: "No agreement response found" });
+    }
+
+    // IMPORTANT: Verify that the agreement hasn't been modified after the user agreed to it
+    // If the agreement was updated after the response was created, we should warn or handle it
+    // NOTE: This is a known limitation - if an Agreement is updated after users agree to it,
+    // the certificate will show the current agreement content, not the original. 
+    // A proper fix would require storing a snapshot of agreement data in AgreementResponse.
+    const agreementUpdatedAfterResponse = 
+      view.agreementResponse.agreement.updatedAt > view.agreementResponse.createdAt;
+    
+    if (agreementUpdatedAfterResponse) {
+      // Log that the agreement was modified after the user agreed
+      // The certificate will use the current agreement content, which may differ from what was agreed to
+      log({
+        message: `Agreement ${view.agreementResponse.agreement.id} was updated after user agreed to it (viewId: ${viewId}). Certificate shows current agreement version, not original.`,
+        type: "error",
+      });
     }
 
     // Fetch user agent data for location, device, browser, OS
