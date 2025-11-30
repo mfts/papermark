@@ -40,7 +40,6 @@ export default function DataroomsPage() {
   const { limits } = useLimits();
   const router = useRouter();
 
-  const [statusFilter, setStatusFilter] = useQueryState("status");
   const [tagsFilter, setTagsFilter] = useQueryState<string[]>("tags", {
     parse: (value: string) => value.split(",").filter(Boolean),
     serialize: (value: string[]) => value.join(","),
@@ -89,7 +88,7 @@ export default function DataroomsPage() {
     return tagsFilter || [];
   }, [tagsFilter]);
 
-  const hasActiveFilters = searchQuery || statusFilter || tagsFilter?.length;
+  const hasActiveFilters = searchQuery || tagsFilter?.length;
 
   useEffect(() => {
     if (!isTrial && (isFree || isPro)) router.push("/documents");
