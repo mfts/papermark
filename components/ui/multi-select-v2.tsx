@@ -115,6 +115,13 @@ interface MultiSelectProps<
    * Optional, can be used to add custom styles.
    */
   className?: string;
+
+  /**
+   * Additional class names to apply to the popover content.
+   * Optional, can be used to customize popover width and styles.
+   */
+  popoverClassName?: string;
+
   isPopoverOpen: boolean;
   setIsPopoverOpen: React.Dispatch<React.SetStateAction<boolean>>;
   loading?: boolean;
@@ -147,6 +154,7 @@ export const MultiSelect = React.forwardRef<
       modalPopover = false,
       asChild = false,
       className,
+      popoverClassName,
       value,
       searchPlaceholder = "Search...",
       inputClassName,
@@ -216,11 +224,7 @@ export const MultiSelect = React.forwardRef<
     // };
     // flex w-full rounded-none rounded-l-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm
     return (
-      <Popover
-        open={isPopoverOpen}
-        onOpenChange={setIsPopoverOpen}
-        modal
-      >
+      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen} modal>
         <PopoverTrigger asChild>
           <Button
             ref={ref}
@@ -271,7 +275,10 @@ export const MultiSelect = React.forwardRef<
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-auto p-0 sm:w-[600px] sm:max-w-[35rem]"
+          className={cn(
+            "w-auto p-0 sm:w-[600px] sm:max-w-[35rem]",
+            popoverClassName,
+          )}
           align="start"
           onEscapeKeyDown={() => setIsPopoverOpen(false)}
         >
