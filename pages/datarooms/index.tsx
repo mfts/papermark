@@ -34,7 +34,7 @@ import { Separator } from "@/components/ui/separator";
 
 export default function DataroomsPage() {
   const teamInfo = useTeam();
-  const { datarooms } = useDatarooms();
+  const { datarooms, totalCount } = useDatarooms();
   const { isFree, isPro, isBusiness, isDatarooms, isDataroomsPlus, isTrial } =
     usePlan();
   const { limits } = useLimits();
@@ -53,13 +53,13 @@ export default function DataroomsPage() {
     },
   });
 
-  const numDatarooms = datarooms?.length ?? 0;
+  const totalDatarooms = totalCount ?? 0;
   const limitDatarooms = limits?.datarooms ?? 1;
 
   const canCreateUnlimitedDatarooms =
     isDatarooms ||
     isDataroomsPlus ||
-    (isBusiness && numDatarooms < limitDatarooms);
+    (isBusiness && totalDatarooms < limitDatarooms);
 
   const searchQuery = router.query.search as string | undefined;
 
@@ -205,8 +205,9 @@ export default function DataroomsPage() {
         {hasActiveFilters && (
           <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
             <span>
-              Showing {sortedDatarooms?.length || 0} of {numDatarooms} dataroom
-              {numDatarooms !== 1 ? "s" : ""}
+              Showing {sortedDatarooms?.length || 0} of {totalDatarooms}{" "}
+              dataroom
+              {totalDatarooms !== 1 ? "s" : ""}
             </span>
             <Button
               variant="link"

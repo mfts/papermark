@@ -30,6 +30,11 @@ export type DataroomWithCount = Dataroom & {
   }[];
 };
 
+export type DataroomsResponse = {
+  datarooms: DataroomWithCount[];
+  totalCount: number;
+};
+
 export default function useDatarooms() {
   const router = useRouter();
   const teamInfo = useTeam();
@@ -45,7 +50,7 @@ export default function useDatarooms() {
   if (tagsQuery) queryParts.push(`tags=${tagsQuery}`);
   const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
 
-  const { data: datarooms, error, mutate } = useSWR<DataroomWithCount[]>(
+  const { data, error, mutate } = useSWR<DataroomsResponse>(
     teamInfo?.currentTeam?.id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/datarooms${queryString}`,
     fetcher,
@@ -57,8 +62,9 @@ export default function useDatarooms() {
   );
 
   return {
-    datarooms,
-    loading: !datarooms && !error,
+    datarooms: data?.datarooms,
+    totalCount: data?.totalCount,
+    loading: !data && !error,
     error,
     mutate,
   };

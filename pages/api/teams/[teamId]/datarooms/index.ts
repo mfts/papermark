@@ -45,6 +45,13 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
+      // Get total unfiltered count first
+      const totalCount = await prisma.dataroom.count({
+        where: {
+          teamId: teamId,
+        },
+      });
+
       // Build where clause based on filters
       const whereClause: any = {
         teamId: teamId,
@@ -144,7 +151,10 @@ export default async function handle(
         });
       }
 
-      return res.status(200).json(filteredDatarooms);
+      return res.status(200).json({
+        datarooms: filteredDatarooms,
+        totalCount,
+      });
     } catch (error) {
       console.error("Request error", error);
       return res.status(500).json({ error: "Error fetching datarooms" });
