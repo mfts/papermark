@@ -10,6 +10,7 @@ import { useDataroom } from "@/lib/swr/use-dataroom";
 
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
+import DataroomTagSection from "@/components/datarooms/settings/dataroom-tag-section";
 import DeleteDataroom from "@/components/datarooms/settings/delete-dataroooom";
 import DuplicateDataroom from "@/components/datarooms/settings/duplicate-dataroom";
 import SettingsTabs from "@/components/datarooms/settings/settings-tabs";
@@ -121,6 +122,11 @@ export default function Settings() {
                   }
                 })
               }
+            />
+            <DataroomTagSection
+              dataroomId={dataroom.id}
+              teamId={teamId!}
+              initialTags={dataroom.tags}
             />
             <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />
             <Card className="bg-transparent">
