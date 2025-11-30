@@ -94,7 +94,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       const MAX_TOTAL_PIXELS = 32_000_000; // ~32MP to stay within memory limits
 
       // Start with default scaling logic
-      let scaleFactor = width >= 1600 ? 2 : 3;
+      // Note: Avoid scale factor 3 exactly due to mupdf 1.26.4 rendering bug with tiling patterns
+      let scaleFactor = width >= 1600 ? 2 : 2.95;
 
       // Check if scaled dimensions would exceed limits
       const scaledWidth = width * scaleFactor;
@@ -122,7 +123,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         scaleFactor = Math.max(1, Math.floor(scaleFactor * 10) / 10); // Round down to 1 decimal
 
         console.log(
-          `Large document detected. Reduced scale factor from ${width >= 1600 ? 2 : 3} to ${scaleFactor}`,
+          `Large document detected. Reduced scale factor from ${width >= 1600 ? 2 : 2.95} to ${scaleFactor}`,
         );
       }
 
