@@ -165,6 +165,22 @@ export default async function handle(
 
         // Handle tags if provided
         if (tags !== undefined) {
+          // Validate that all tags exist and belong to the same team
+          if (tags.length > 0) {
+            const validTags = await tx.tag.findMany({
+              where: {
+                id: { in: tags },
+                teamId: teamId,
+              },
+              select: { id: true },
+            });
+            const validTagIds = new Set(validTags.map((t) => t.id));
+            const invalidTags = tags.filter((id) => !validTagIds.has(id));
+            if (invalidTags.length > 0) {
+              throw new Error(`Invalid tag IDs: ${invalidTags.join(", ")}`);
+            }
+          }
+
           // First, delete all existing tags for this dataroom
           await tx.tagItem.deleteMany({
             where: {
