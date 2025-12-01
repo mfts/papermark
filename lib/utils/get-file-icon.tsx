@@ -1,4 +1,4 @@
-import { FileIcon, MailIcon } from "lucide-react";
+import { FileIcon, Link as LinkIcon, MailIcon } from "lucide-react";
 
 import CadIcon from "@/components/shared/icons/files/cad";
 import DocsIcon from "@/components/shared/icons/files/docs";
@@ -49,6 +49,8 @@ export function fileIcon({
       return <SheetIcon className={className} isLight={isLight} />;
     case "notion":
       return <NotionIcon className={className} />;
+    case "link":
+      return <LinkIcon className={className} />;
     case "image/vnd.dwg":
     case "image/vnd.dxf":
     case "cad":

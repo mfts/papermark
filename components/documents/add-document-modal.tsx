@@ -74,6 +74,8 @@ export function AddDocumentModal({
   const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
+  const [webLink, setWebLink] = useState<string | null>(null);
+  const [uploadMode, setUploadMode] = useState<"file" | "link">("file");
   const [showGroupPermissions, setShowGroupPermissions] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<
     {
@@ -524,9 +526,144 @@ export function AddDocumentModal({
     }
   };
 
+  const handleWebLinkUpload = async (
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
+    event.preventDefault();
+
+    if (!canAddDocuments) {
+      toast.error("You have reached the maximum number of documents.");
+      return;
+    }
+
+    // Check if the field is empty or not
+    if (!webLink) {
+      toast.error("Please enter a website URL to proceed.");
+      return;
+    }
+
+    // Validate URL format with Zod
+    const urlSchema = z.string().url();
+    const urlValidation = urlSchema.safeParse(webLink);
+
+    if (!urlValidation.success) {
+      toast.error("Please enter a valid URL format.");
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      // Extract domain name from URL for the document name
+      let linkName = "Web Link";
+      try {
+        const url = new URL(webLink);
+        linkName = url.hostname.replace("www.", "");
+      } catch (e) {
+        // Use default name if URL parsing fails
+      }
+
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/documents`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: linkName,
+            url: webLink,
+            numPages: 1,
+            type: "link",
+            createLink: false,
+            folderPathName: currentFolderPath?.join("/"),
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const { error } = await response.json();
+        toast.error(error);
+        return;
+      }
+
+      const document = await response.json();
+
+      if (isDataroom && dataroomId) {
+        const dataroomResponse = await addDocumentToDataroom({
+          documentId: document.id,
+          folderPathName: currentFolderPath?.join("/"),
+        });
+
+        if (dataroomResponse?.ok) {
+          const dataroomDocument =
+            (await dataroomResponse.json()) as DataroomDocument & {
+              dataroom: {
+                _count: { viewerGroups: number; permissionGroups: number };
+              };
+            };
+
+          await applyUnifiedPermissionsToDocument(
+            document,
+            dataroomDocument,
+            currentFolderPath,
+          );
+        }
+
+        analytics.capture("Document Added", {
+          documentId: document.id,
+          name: document.name,
+          numPages: document.numPages,
+          path: router.asPath,
+          type: "link",
+          teamId: teamId,
+          dataroomId: dataroomId,
+          $set: {
+            teamId: teamId,
+            teamPlan: plan,
+          },
+        });
+
+        return;
+      }
+
+      if (!newVersion) {
+        toast.success("Web link added. Redirecting to document page...");
+
+        analytics.capture("Document Added", {
+          documentId: document.id,
+          name: document.name,
+          fileSize: null,
+          path: router.asPath,
+          type: "link",
+          teamId: teamId,
+          $set: {
+            teamId: teamId,
+            teamPlan: plan,
+          },
+        });
+
+        // redirect to the document page
+        router.push("/documents/" + document.id);
+      }
+    } catch (error) {
+      setUploading(false);
+      toast.error("An error occurred while processing the web link.");
+      console.error(
+        "An error occurred while processing the web link: ",
+        error,
+      );
+    } finally {
+      setUploading(false);
+      setIsOpen(false);
+    }
+  };
+
   const clearModelStates = () => {
     currentFile !== null && setCurrentFile(null);
     notionLink !== null && setNotionLink(null);
+    webLink !== null && setWebLink(null);
+    setUploadMode("file");
     setIsOpen(!isOpen);
     setAddDocumentModalOpen && setAddDocumentModalOpen(!isOpen);
   };
@@ -605,49 +742,128 @@ export function AddDocumentModal({
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <form
-                    encType="multipart/form-data"
-                    onSubmit={handleFileUpload}
-                    className="flex flex-col space-y-4"
-                  >
-                    <div className="space-y-1">
-                      <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <DocumentUpload
-                          currentFile={currentFile}
-                          setCurrentFile={setCurrentFile}
-                        />
+                  {uploadMode === "file" ? (
+                    <form
+                      encType="multipart/form-data"
+                      onSubmit={handleFileUpload}
+                      className="flex flex-col space-y-4"
+                    >
+                      <div className="space-y-1">
+                        <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                          <DocumentUpload
+                            currentFile={currentFile}
+                            setCurrentFile={setCurrentFile}
+                          />
+                        </div>
                       </div>
-                    </div>
 
-                    {!newVersion ? (
+                      <div className="flex justify-center">
+                        <Button
+                          type="submit"
+                          className="w-full lg:w-1/2"
+                          disabled={uploading || !currentFile}
+                          loading={uploading}
+                        >
+                          {uploading ? "Uploading..." : "Upload Document"}
+                        </Button>
+                      </div>
+
+                      {!newVersion && (
+                        <div className="flex justify-center">
+                          <p className="text-sm text-muted-foreground">
+                            Want to{" "}
+                            <button
+                              type="button"
+                              className="underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                document
+                                  .getElementById("upload-multi-files-zone")
+                                  ?.click();
+                                clearModelStates();
+                              }}
+                            >
+                              upload multiple files
+                            </button>{" "}
+                            or{" "}
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-1 underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setUploadMode("link");
+                              }}
+                            >
+                              share link as a document
+                            
+                            </button>
+                            ?
+                          </p>
+                        </div>
+                      )}
+                    </form>
+                  ) : (
+                    <form
+                      encType="multipart/form-data"
+                      onSubmit={handleWebLinkUpload}
+                      className="flex flex-col space-y-4"
+                    >
+                      <div className="space-y-1">
+                        <Label htmlFor="web-link">Website URL</Label>
+                        <div className="mt-2">
+                          <input
+                            type="text"
+                            name="web-link"
+                            id="web-link"
+                            placeholder="https://example.com"
+                            className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                            value={webLink || ""}
+                            onChange={(e) => setWebLink(e.target.value)}
+                          />
+                        </div>
+                        {/* <small className="text-xs text-muted-foreground">
+                          The page will be captured and converted to a document format.
+                        </small> */}
+                      </div>
+
+                      <div className="flex justify-center">
+                        <Button
+                          type="submit"
+                          className="w-full lg:w-1/2"
+                          disabled={uploading || !webLink}
+                          loading={uploading}
+                        >
+                          {uploading ? "Saving..." : "Save Web Link"}
+                        </Button>
+                      </div>
+
                       <div className="flex justify-center">
                         <button
                           type="button"
-                          className="text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
+                          className="flex items-center gap-2 text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
                           onClick={(e) => {
-                            e.stopPropagation();
-                            document
-                              .getElementById("upload-multi-files-zone")
-                              ?.click();
-                            clearModelStates();
+                            e.preventDefault();
+                            setUploadMode("file");
                           }}
                         >
-                          Want to upload multiple files?
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                            />
+                          </svg>
+                          Back to file upload
                         </button>
                       </div>
-                    ) : null}
-
-                    <div className="flex justify-center">
-                      <Button
-                        type="submit"
-                        className="w-full lg:w-1/2"
-                        disabled={uploading || !currentFile}
-                        loading={uploading}
-                      >
-                        {uploading ? "Uploading..." : "Upload Document"}
-                      </Button>
-                    </div>
-                  </form>
+                    </form>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

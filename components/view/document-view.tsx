@@ -19,6 +19,8 @@ import AccessForm, {
 } from "@/components/view/access-form";
 
 import EmailVerificationMessage from "./access-form/email-verification-form";
+import LinkPreview from "./link-preview";
+import { TNavData } from "./nav";
 import ViewData, { TViewDocumentData } from "./view-data";
 
 type RowData = { [key: string]: any };
@@ -117,6 +119,14 @@ export default function DocumentView({
   );
   const [code, setCode] = useState<string | null>(null);
   const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
+  const [linkOpened, setLinkOpened] = useState<boolean>(false);
+
+  // Check if this is a link document
+  const isLinkDocument = document.type === "link";
+  // For link documents, get URL from viewData.file (from API) or fallback to document.file
+  const linkUrl = isLinkDocument 
+    ? (viewData.file || document.file) 
+    : null;
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
@@ -161,20 +171,24 @@ export default function DocumentView({
           verificationToken,
           isTeamMember,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
-        plausible("documentViewed"); // track the event
-        analytics.identify(
-          userEmail ?? verifiedEmail ?? data.email ?? undefined,
-        );
-        analytics.capture("Link Viewed", {
-          linkId: link.id,
-          documentId: document.id,
-          linkType: "DOCUMENT_LINK",
-          viewerId: viewId,
-          viewerEmail: data.email ?? verifiedEmail ?? userEmail,
-          isEmbedded,
-          isTeamMember,
-          teamId: link.teamId,
-        });
+
+        // For link documents, we don't track views here - only when the link is opened
+        if (!isLinkDocument) {
+          plausible("documentViewed"); // track the event
+          analytics.identify(
+            userEmail ?? verifiedEmail ?? data.email ?? undefined,
+          );
+          analytics.capture("Link Viewed", {
+            linkId: link.id,
+            documentId: document.id,
+            linkType: "DOCUMENT_LINK",
+            viewerId: viewId,
+            viewerEmail: data.email ?? verifiedEmail ?? userEmail,
+            isEmbedded,
+            isTeamMember,
+            teamId: link.teamId,
+          });
+        }
 
         // set the verification token to the cookie
         if (verificationToken) {
@@ -277,6 +291,73 @@ export default function DocumentView({
     );
   }
 
+  const handleLinkContinue = async () => {
+    // Use viewData.file or fallback to document.file
+    const finalLinkUrl = linkUrl || document.file;
+    if (!finalLinkUrl) {
+      console.error("Link URL not available", { linkUrl, documentFile: document.file, viewDataFile: viewData.file });
+      return;
+    }
+
+    // Track link open in analytics and record 100% completion (non-blocking)
+    if (viewData.viewId) {
+      // Record page view for page 1 to mark 100% completion
+      fetch("/api/record_view", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          linkId: link.id,
+          documentId: document.id,
+          viewId: viewData.viewId,
+          pageNumber: 1,
+          versionNumber: document.versions[0].versionNumber,
+          duration: 1000, // 1 second minimum duration
+          time: Date.now(),
+        }),
+        keepalive: true,
+      }).catch((error) => {
+        console.error("Failed to record page view:", error);
+      });
+
+      // Track link open
+      fetch("/api/record_link_open", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          linkId: link.id,
+          documentId: document.id,
+          viewId: viewData.viewId,
+          linkUrl: finalLinkUrl,
+          viewerEmail: data.email ?? verifiedEmail ?? userEmail ?? undefined,
+        }),
+      }).catch((error) => {
+        console.error("Failed to track link open:", error);
+      });
+
+      plausible("linkOpened");
+      analytics.capture("Link Opened", {
+        linkId: link.id,
+        documentId: document.id,
+        linkType: "DOCUMENT_LINK",
+        viewerId: viewData.viewId,
+        viewerEmail: data.email ?? verifiedEmail ?? userEmail,
+        teamId: link.teamId,
+      });
+    }
+
+    // Open link in new window/tab immediately
+    setLinkOpened(true);
+    const newWindow = window.open(finalLinkUrl, "_blank", "noopener,noreferrer");
+    if (!newWindow) {
+      // If popup blocked, fallback to current window
+      window.location.href = finalLinkUrl;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -284,6 +365,41 @@ export default function DocumentView({
       </div>
     );
   }
+
+  // For link documents, show the preview page
+  if (submitted && isLinkDocument) {
+    const navData: TNavData = {
+      linkId: link.id,
+      documentId: document.id,
+      viewId: viewData.viewId,
+      isPreview: viewData.isPreview || false,
+      allowDownload: link.allowDownload || false,
+      brand: brand,
+      annotationsFeatureEnabled: annotationsEnabled || false,
+    };
+
+    // Use viewData.file or fallback to document.file
+    const finalLinkUrl = linkUrl || document.file || "";
+
+    return (
+      <div
+        className="bg-gray-950"
+        style={{
+          backgroundColor:
+            brand && brand.accentColor ? brand.accentColor : "rgb(3, 7, 18)",
+        }}
+      >
+        <LinkPreview
+          linkUrl={finalLinkUrl}
+          linkName={document.name}
+          brand={brand}
+          onContinue={handleLinkContinue}
+          navData={navData}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className="bg-gray-950"

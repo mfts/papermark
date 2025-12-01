@@ -337,11 +337,15 @@ export default async function handle(
         return res.status(404).end("Team not found");
       }
 
+      // For link documents, storageType is optional but processDocument requires it
+      // Use VERCEL_BLOB as a placeholder (not actually used for links)
+      const finalStorageType = storageType || (fileType === "link" ? "VERCEL_BLOB" : "VERCEL_BLOB");
+
       const document = await processDocument({
         documentData: {
           name,
           key: fileUrl,
-          storageType,
+          storageType: finalStorageType,
           numPages,
           supportedFileType: fileType,
           contentType: contentType || null,

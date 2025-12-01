@@ -171,6 +171,7 @@ export const VIEWER_ACCEPTED_FILE_TYPES = {
 export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "pdf",
   "notion",
+  "link",
   "sheet",
   "slides",
   "docs",

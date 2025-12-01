@@ -880,6 +880,7 @@ export async function POST(request: NextRequest) {
             type: documentVersion.storageType,
           });
         }
+        // For link documents, the file is already a URL, no processing needed
         if (documentVersion.type === "sheet") {
           const document = await prisma.document.findUnique({
             where: { id: documentId },
@@ -976,7 +977,8 @@ export async function POST(request: NextRequest) {
             (documentVersion.type === "pdf" ||
               documentVersion.type === "image" ||
               documentVersion.type === "zip" ||
-              documentVersion.type === "video")) ||
+              documentVersion.type === "video" ||
+              documentVersion.type === "link")) ||
           (documentVersion && useAdvancedExcelViewer)
             ? documentVersion.file
             : undefined,
