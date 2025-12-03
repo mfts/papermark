@@ -21,6 +21,7 @@ import { NotionPage } from "@/components/view/viewer/notion-page";
 import PDFViewer from "@/components/view/viewer/pdf-default-viewer";
 
 import { DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE } from "./dataroom/dataroom-document-view";
+import LinkPreview from "./link-preview";
 import { TNavData } from "./nav";
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "./viewer/download-only-viewer";
@@ -110,6 +111,64 @@ export default function ViewData({
       versionNumber={document.versions[0].versionNumber}
       theme={notionData.theme}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      navData={navData}
+    />
+  ) : viewData.fileType === "link" ? (
+    <LinkPreview
+      linkUrl={viewData.file || document.versions[0]?.file || ""}
+      linkName={document.name}
+      brand={brand}
+      onContinue={async () => {
+        const url = viewData.file || document.versions[0]?.file;
+        if (!url) return;
+
+        // Track link open in analytics and record 100% completion (non-blocking)
+        if (navData.viewId) {
+          // Record page view for page 1 to mark 100% completion
+          fetch("/api/record_view", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              linkId: navData.linkId,
+              documentId: navData.documentId,
+              viewId: navData.viewId,
+              pageNumber: 1,
+              versionNumber: document.versions[0]?.versionNumber || 1,
+              duration: 1000, // 1 second minimum duration
+              time: Date.now(),
+            }),
+            keepalive: true,
+          }).catch((error) => {
+            console.error("Failed to record page view:", error);
+          });
+
+          // Track link open
+          fetch("/api/record_link_open", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              linkId: navData.linkId,
+              documentId: navData.documentId,
+              viewId: navData.viewId,
+              linkUrl: url,
+              viewerEmail: viewerEmail,
+            }),
+          }).catch((error) => {
+            console.error("Failed to track link open:", error);
+          });
+        }
+
+        // Open link in new window immediately
+        const newWindow = window.open(url, "_blank", "noopener,noreferrer");
+        if (!newWindow) {
+          // If popup blocked, fallback to current window
+          window.location.href = url;
+        }
+      }}
       navData={navData}
     />
   ) : document.downloadOnly ? (

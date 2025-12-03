@@ -82,6 +82,7 @@ export const validateUrlSecurity = (url: string): boolean => {
 };
 
 // Custom validator for file paths - either Notion URLs or S3 storage paths
+// Note: General URLs for link type are validated at the documentUploadSchema level
 const createFilePathValidator = () => {
   return z
     .string()
@@ -222,12 +223,13 @@ export const documentUploadSchema = z
       .string()
       .min(1, "Document name is required")
       .max(255, "Document name too long"),
-    url: filePathSchema,
+    url: z.string().min(1, "URL is required"), // Use string for now, will validate based on type
     storageType: z
       .enum(["S3_PATH", "VERCEL_BLOB"], {
         errorMap: () => ({ message: "Invalid storage type" }),
       })
-      .default("VERCEL_BLOB"),
+      .default("VERCEL_BLOB")
+      .optional(),
     numPages: z.number().int().positive().optional(),
     type: z.enum(
       SUPPORTED_DOCUMENT_SIMPLE_TYPES as unknown as readonly [
@@ -252,15 +254,42 @@ export const documentUploadSchema = z
         },
       )
       .or(z.literal("text/html")) // Allow text/html for Notion documents
-      .nullish(), // Make contentType optional for Notion files
+      .nullish(), // Make contentType optional for Notion files and links
     createLink: z.boolean().optional(),
     fileSize: z.number().int().positive().optional(),
   })
   .refine(
+    async (data) => {
+      // For link type, validate URL format and security
+      if (data.type === "link") {
+        if (!data.url.startsWith("https://")) {
+          return false;
+        }
+        try {
+          new URL(data.url); // Validate URL format
+          return validateUrlSecurity(data.url);
+        } catch {
+          return false;
+        }
+      }
+      // For other types, use the file path validator
+      return await filePathSchema.safeParseAsync(data.url).then((r) => r.success);
+    },
+    {
+      message: "URL must be a valid HTTPS URL for link type, or a valid file path for other types",
+      path: ["url"],
+    },
+  )
+  .refine(
     (data) => {
-      // Skip content type validation if it's not provided (e.g., for Notion files)
+      // Skip content type validation if it's not provided (e.g., for Notion files or links)
       if (!data.contentType) {
-        return data.type === "notion";
+        return data.type === "notion" || data.type === "link";
+      }
+
+      // For link type, content type is optional
+      if (data.type === "link") {
+        return true;
       }
 
       // Validate that content type matches the declared file type
@@ -280,6 +309,11 @@ export const documentUploadSchema = z
   )
   .refine(
     async (data) => {
+      // For link type, storage type is not required and URL validation is handled elsewhere
+      if (data.type === "link") {
+        return true;
+      }
+
       // Skip storage type validation if not provided (e.g., for Notion files)
       if (!data.storageType) {
         // For Notion URLs, storage type is not required

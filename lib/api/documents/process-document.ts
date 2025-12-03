@@ -75,6 +75,15 @@ export const processDocument = async ({
     }
   }
 
+  // For link type, validate URL format
+  if (type === "link") {
+    try {
+      new URL(key);
+    } catch (error) {
+      throw new Error("Invalid URL format for link document.");
+    }
+  }
+
   const folder = await prisma.folder.findUnique({
     where: {
       teamId_path: {
