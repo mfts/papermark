@@ -42,19 +42,15 @@ export default async function handle(
     }
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
           },
         },
       });
-
-      if (!team) {
+      if (!teamAccess) {
         return res.status(401).end("Unauthorized");
       }
 
@@ -132,10 +128,13 @@ export default async function handle(
         message: "Folder structure generated successfully",
       });
     } catch (error) {
-      console.error("Error generating AI folder structure:", error);
+      const errorMessage = process.env.NODE_ENV === "production" 
+       ? "An unexpected error occurred"
+       : (error as Error).message;
+
       return res.status(500).json({
         message: "Error generating folder structure",
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: errorMessage,
       });
     }
   } else {
