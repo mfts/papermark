@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
-import { PlusIcon } from "lucide-react";
+import { FilterIcon, PlusIcon } from "lucide-react";
+import { useQueryState } from "nuqs";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
 import useLimits from "@/lib/swr/use-limits";
+import { useTags } from "@/lib/swr/use-tags";
 import { daysLeft } from "@/lib/utils";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
@@ -18,29 +20,75 @@ import DataroomCard from "@/components/datarooms/dataroom-card";
 import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
 import { EmptyDataroom } from "@/components/datarooms/empty-dataroom";
 import AppLayout from "@/components/layouts/app";
+import { SearchBoxPersisted } from "@/components/search-box";
 import { Button } from "@/components/ui/button";
+import { MultiSelect } from "@/components/ui/multi-select-v2";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
 export default function DataroomsPage() {
   const teamInfo = useTeam();
-  const { datarooms } = useDatarooms();
+  const { datarooms, totalCount } = useDatarooms();
   const { isFree, isPro, isBusiness, isDatarooms, isDataroomsPlus, isTrial } =
     usePlan();
   const { limits } = useLimits();
   const router = useRouter();
 
-  const numDatarooms = datarooms?.length ?? 0;
+  const [tagsFilter, setTagsFilter] = useQueryState<string[]>("tags", {
+    parse: (value: string) => value.split(",").filter(Boolean),
+    serialize: (value: string[]) => value.join(","),
+  });
+  const [isTagsPopoverOpen, setIsTagsPopoverOpen] = useState(false);
+
+  const { tags: availableTags } = useTags({
+    query: {
+      sortBy: "name",
+      sortOrder: "asc",
+    },
+  });
+
+  const totalDatarooms = totalCount ?? 0;
   const limitDatarooms = limits?.datarooms ?? 1;
 
   const canCreateUnlimitedDatarooms =
     isDatarooms ||
     isDataroomsPlus ||
-    (isBusiness && numDatarooms < limitDatarooms);
+    (isBusiness && totalDatarooms < limitDatarooms);
+
+  const searchQuery = router.query.search as string | undefined;
 
   // Sort datarooms alphabetically by name
   const sortedDatarooms = datarooms?.slice().sort((a, b) => {
     return a.name.localeCompare(b.name);
   });
+
+  // Filter out only dataroom tags
+  const dataroomTags = useMemo(() => {
+    if (!availableTags) return [];
+    return availableTags;
+  }, [availableTags]);
+
+  const tagOptions = useMemo(() => {
+    return (
+      dataroomTags?.map((tag) => ({
+        value: tag.name,
+        label: tag.name,
+        meta: { color: tag.color, description: tag.description },
+      })) || []
+    );
+  }, [dataroomTags]);
+
+  const selectedTagValues = useMemo(() => {
+    return tagsFilter || [];
+  }, [tagsFilter]);
+
+  const hasActiveFilters = searchQuery || tagsFilter?.length;
 
   useEffect(() => {
     if (!isTrial && (isFree || isPro)) router.push("/documents");
@@ -128,6 +176,58 @@ export default function DataroomsPage() {
             )}
           </div>
         </section>
+        {/* Search and Filters */}
+        <div className="mb-4 flex justify-end gap-3">
+          <div className="w-full sm:w-[280px]">
+            <SearchBoxPersisted
+              placeholder="Search datarooms..."
+              inputClassName="h-10"
+            />
+          </div>
+
+          <div className="w-full sm:w-[320px]">
+            <MultiSelect
+              options={tagOptions}
+              value={selectedTagValues}
+              onValueChange={(value) =>
+                setTagsFilter(value.length > 0 ? value : null)
+              }
+              placeholder="Tags"
+              maxCount={2}
+              searchPlaceholder="Search tags..."
+              isPopoverOpen={isTagsPopoverOpen}
+              setIsPopoverOpen={setIsTagsPopoverOpen}
+              popoverClassName="sm:w-[320px]"
+            />
+          </div>
+        </div>
+
+        {hasActiveFilters && (
+          <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <span>
+              Showing {sortedDatarooms?.length || 0} of {totalDatarooms}{" "}
+              dataroom
+              {totalDatarooms !== 1 ? "s" : ""}
+            </span>
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-xs"
+              onClick={() => {
+                router.push(
+                  {
+                    pathname: router.pathname,
+                    query: {},
+                  },
+                  undefined,
+                  { shallow: true },
+                );
+              }}
+            >
+              Clear filters
+            </Button>
+          </div>
+        )}
 
         <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
 

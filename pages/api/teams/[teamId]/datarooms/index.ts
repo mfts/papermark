@@ -21,7 +21,12 @@ export default async function handle(
     }
 
     const userId = (session.user as CustomUser).id;
-    const { teamId } = req.query as { teamId: string };
+    const { teamId, search, status, tags } = req.query as {
+      teamId: string;
+      search?: string;
+      status?: string;
+      tags?: string;
+    };
 
     try {
       const teamAccess = await prisma.userTeam.findUnique({
@@ -40,11 +45,45 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      // Check if the user is part of the team
-      const datarooms = await prisma.dataroom.findMany({
+      // Get total unfiltered count first
+      const totalCount = await prisma.dataroom.count({
         where: {
           teamId: teamId,
         },
+      });
+
+      // Build where clause based on filters
+      const whereClause: any = {
+        teamId: teamId,
+      };
+
+      // Search filter
+      if (search) {
+        whereClause.name = {
+          contains: search,
+          mode: "insensitive",
+        };
+      }
+
+      // Tags filter
+      if (tags) {
+        const tagNames = tags.split(",").filter(Boolean);
+        if (tagNames.length > 0) {
+          whereClause.tags = {
+            some: {
+              tag: {
+                name: {
+                  in: tagNames,
+                },
+              },
+            },
+          };
+        }
+      }
+
+      // Check if the user is part of the team
+      const datarooms = await prisma.dataroom.findMany({
+        where: whereClause,
         include: {
           _count: {
             select: { documents: true, views: true },
@@ -73,13 +112,49 @@ export default async function handle(
               viewedAt: true,
             },
           },
+          tags: {
+            include: {
+              tag: {
+                select: {
+                  id: true,
+                  name: true,
+                  color: true,
+                  description: true,
+                },
+              },
+            },
+          },
         },
         orderBy: {
           createdAt: "desc",
         },
       });
 
-      return res.status(200).json(datarooms);
+      // Status filter (applied after fetching since it's computed)
+      let filteredDatarooms = datarooms;
+      if (status) {
+        filteredDatarooms = datarooms.filter((dataroom) => {
+          const activeLinks = dataroom.links.filter((link) => {
+            if (link.isArchived) return false;
+            if (link.expiresAt && new Date(link.expiresAt) < new Date())
+              return false;
+            return true;
+          });
+          const isActive = activeLinks.length > 0;
+
+          if (status === "active") {
+            return isActive;
+          } else if (status === "inactive") {
+            return !isActive;
+          }
+          return true;
+        });
+      }
+
+      return res.status(200).json({
+        datarooms: filteredDatarooms,
+        totalCount,
+      });
     } catch (error) {
       console.error("Request error", error);
       return res.status(500).json({ error: "Error fetching datarooms" });

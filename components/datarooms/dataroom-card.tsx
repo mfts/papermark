@@ -5,6 +5,9 @@ import { useRouter } from "next/router";
 
 import { formatDistanceToNow } from "date-fns";
 
+import { TagColorProps } from "@/lib/types";
+
+import TagBadge from "@/components/links/link-sheet/tags/tag-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -25,6 +28,15 @@ type DataroomView = {
   viewedAt: Date;
 };
 
+type DataroomTag = {
+  tag: {
+    id: string;
+    name: string;
+    color: string;
+    description: string | null;
+  };
+};
+
 type DataroomWithDetails = {
   id: string;
   name: string;
@@ -35,6 +47,7 @@ type DataroomWithDetails = {
   links: DataroomLink[];
   views: DataroomView[];
   createdAt: Date;
+  tags?: DataroomTag[];
 };
 
 interface DataroomCardProps {
@@ -108,6 +121,28 @@ export default function DataroomCard({ dataroom }: DataroomCardProps) {
               </TooltipProvider>
             </div>
           </div>
+
+          {/* Tags */}
+          {dataroom.tags && dataroom.tags.length > 0 && (
+            <div
+              className="flex flex-wrap gap-1.5"
+              onClick={(e) => e.preventDefault()}
+            >
+              {dataroom.tags.slice(0, 3).map((tagItem) => (
+                <TagBadge
+                  key={tagItem.tag.id}
+                  name={tagItem.tag.name}
+                  color={tagItem.tag.color as TagColorProps}
+                  withIcon
+                />
+              ))}
+              {dataroom.tags.length > 3 && (
+                <span className="text-xs text-muted-foreground">
+                  +{dataroom.tags.length - 3} more
+                </span>
+              )}
+            </div>
+          )}
         </CardHeader>
 
         <CardContent>
