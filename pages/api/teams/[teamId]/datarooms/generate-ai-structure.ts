@@ -2,6 +2,10 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
+import {
+  getDataroomSystemPrompt,
+  getDataroomUserPrompt,
+} from "@/ee/features/templates/lib/prompts";
 import { openai } from "@/lib/openai";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
@@ -55,26 +59,16 @@ export default async function handle(
       }
 
       // Use GPT to generate folder structure
-      const systemPrompt = `Prompt`;
+      const [systemPrompt, userPrompt] = await Promise.all([
+        getDataroomSystemPrompt(),
+        getDataroomUserPrompt(description),
+      ]);
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `Analyze this description carefully and create a highly tailored, specific data room folder structure that perfectly matches this exact use case:
-
-"${description.trim()}"
-
-Generate a folder structure that is:
-- Specifically designed for this exact scenario
-- Includes all relevant document types for this specific transaction/use case
-- Uses industry-appropriate naming conventions
-- Organized logically for this particular purpose
-
-Also suggest an appropriate, professional name for this data room.`,
-          },
+          { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
         max_tokens: 3000,
