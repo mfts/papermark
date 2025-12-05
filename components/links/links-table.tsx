@@ -79,6 +79,7 @@ import LinkSheet, {
   type DEFAULT_LINK_TYPE,
 } from "./link-sheet";
 import { DataroomLinkSheet } from "./link-sheet/dataroom-link-sheet";
+import { DirectDocumentLinksSheet } from "./link-sheet/direct-document-links-sheet";
 import { PermissionsSheet } from "./link-sheet/permissions-sheet";
 import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
@@ -179,6 +180,10 @@ export default function LinksTable({
   const [showPermissionsSheet, setShowPermissionsSheet] =
     useState<boolean>(false);
   const [editPermissionLink, setEditPermissionLink] =
+    useState<LinkWithViews | null>(null);
+  const [showDirectLinksSheet, setShowDirectLinksSheet] =
+    useState<boolean>(false);
+  const [directLinksLink, setDirectLinksLink] =
     useState<LinkWithViews | null>(null);
 
   const [linkToDelete, setLinkToDelete] = useState<LinkWithViews | null>(null);
@@ -355,6 +360,11 @@ export default function LinksTable({
   const handleEditPermissions = (link: LinkWithViews) => {
     setEditPermissionLink(link);
     setShowPermissionsSheet(true);
+  };
+
+  const handleShowDirectLinks = (link: LinkWithViews) => {
+    setDirectLinksLink(link);
+    setShowDirectLinksSheet(true);
   };
 
   const handlePermissionsSave = async (permissions: any) => {
@@ -933,6 +943,14 @@ export default function LinksTable({
                                     Edit File Permissions
                                   </DropdownMenuItem>
                                 )}
+                              {targetType === "DATAROOM" && (
+                                <DropdownMenuItem
+                                  onClick={() => handleShowDirectLinks(link)}
+                                >
+                                  <LinkIcon className="mr-2 h-4 w-4" />
+                                  View Document Links
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem
                                 onClick={() => handlePreviewLink(link)}
                               >
@@ -1042,6 +1060,19 @@ export default function LinksTable({
               permissionGroupId={editPermissionLink?.permissionGroupId}
               onSave={handlePermissionsSave}
             />
+            {directLinksLink && (
+              <DirectDocumentLinksSheet
+                isOpen={showDirectLinksSheet}
+                setIsOpen={(open: boolean) => {
+                  setShowDirectLinksSheet(open);
+                  if (!open) {
+                    setDirectLinksLink(null);
+                  }
+                }}
+                link={directLinksLink}
+                dataroomId={targetId}
+              />
+            )}
             {inviteLink && isFeatureEnabled("dataroomInvitations") ? (
               <InviteViewersModal
                 open={isInviteModalOpen}
