@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { invitationEmailSchema } from "@/ee/features/dataroom-invitations/lib/schema/dataroom-invitations";
+import { INVITATION_LIMITS } from "@/ee/features/security";
 import { useUninvitedMembers } from "@/ee/features/dataroom-invitations/lib/swr/use-dataroom-invitations";
 import { Link } from "@prisma/client";
 import { useSession } from "next-auth/react";
@@ -198,6 +199,14 @@ export function InviteViewersModal({
       ? parseRecipientInput(recipientInput)
       : defaultRecipients;
 
+    // Check max emails per request
+    if (parsedEmails.length > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST) {
+      toast.error(
+        `You can send a maximum of ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST} invitations at a time. Please reduce the number of recipients.`,
+      );
+      return;
+    }
+
     if (parsedEmails.length > 0) {
       const invalidEmails = parsedEmails.filter(
         (email) => !invitationEmailSchema.safeParse(email).success,
@@ -346,10 +355,25 @@ export function InviteViewersModal({
                 rows={6}
                 disabled={loading}
               />
-              <p className="text-xs text-muted-foreground">
-                {recipientInput.length > 0 || defaultRecipients.length > 0
-                  ? `${recipientCount} recipient${recipientCount !== 1 ? "s" : ""} will receive ${recipientCount !== 1 ? "invitations" : "an invitation"}`
-                  : "Enter email addresses to send invitations"}
+              <p
+                className={`text-xs ${
+                  recipientCount > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
+                    ? "text-destructive"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {recipientInput.length > 0 || defaultRecipients.length > 0 ? (
+                  <>
+                    {recipientCount} recipient
+                    {recipientCount !== 1 ? "s" : ""} will receive{" "}
+                    {recipientCount !== 1 ? "invitations" : "an invitation"}
+                    {recipientCount > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
+                      ? ` (maximum ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST} allowed)`
+                      : ""}
+                  </>
+                ) : (
+                  `Enter email addresses (max ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST} per request)`
+                )}
               </p>
             </div>
           </div>
@@ -461,13 +485,20 @@ export function InviteViewersModal({
               loading={loading}
               disabled={
                 groupId
-                  ? !selectedLinkId || loading || recipientCount === 0
-                  : loading || recipientCount === 0
+                  ? !selectedLinkId ||
+                    loading ||
+                    recipientCount === 0 ||
+                    recipientCount > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
+                  : loading ||
+                    recipientCount === 0 ||
+                    recipientCount > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
               }
             >
               {loading
                 ? "Sending invitations..."
-                : `Send ${recipientCount} invitation${recipientCount !== 1 ? "s" : ""}`}
+                : recipientCount > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
+                  ? `Too many recipients (max ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST})`
+                  : `Send ${recipientCount} invitation${recipientCount !== 1 ? "s" : ""}`}
             </Button>
           </div>
         </DialogFooter>

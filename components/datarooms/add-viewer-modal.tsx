@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { INVITATION_LIMITS } from "@/ee/features/security";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -126,9 +127,9 @@ export function AddViewerModal({
       return;
     }
 
-    if (emails.length > 5) {
+    if (emails.length > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST) {
       toast.error(
-        "You can only send invitations to a maximum of 5 emails at a time.",
+        `You can only send invitations to a maximum of ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST} emails at a time.`,
       );
       return;
     }
@@ -180,7 +181,8 @@ export function AddViewerModal({
         <DialogHeader className="text-start">
           <DialogTitle>Invite Visitors</DialogTitle>
           <DialogDescription>
-            Enter email addresses, separated by commas.
+            Enter email addresses, separated by commas (max{" "}
+            {INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST} per request).
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -214,10 +216,37 @@ export function AddViewerModal({
               }}
             />
           </div>
+          {emails.length > 0 && (
+            <p
+              className={`text-xs ${
+                emails.length > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
+                  ? "text-destructive"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {emails.length} of {INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST}{" "}
+              emails added
+              {emails.length > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST &&
+                " (limit exceeded)"}
+            </p>
+          )}
 
           <DialogFooter>
-            <Button type="submit" className="mt-8 h-9 w-full" loading={loading}>
-              {loading ? "Sending emails..." : "Add members"}
+            <Button
+              type="submit"
+              className="mt-8 h-9 w-full"
+              loading={loading}
+              disabled={
+                loading ||
+                emails.length === 0 ||
+                emails.length > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
+              }
+            >
+              {loading
+                ? "Sending emails..."
+                : emails.length > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
+                  ? `Too many emails (max ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST})`
+                  : "Add members"}
             </Button>
           </DialogFooter>
         </form>

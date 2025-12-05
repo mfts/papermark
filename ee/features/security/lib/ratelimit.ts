@@ -3,6 +3,18 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { redis } from "@/lib/redis";
 
 /**
+ * Invitation rate limiting constants
+ */
+export const INVITATION_LIMITS = {
+  // Maximum emails that can be sent in a single request
+  MAX_EMAILS_PER_REQUEST: 30,
+  // Maximum invitations per hour per user
+  MAX_INVITATIONS_PER_HOUR: 50,
+  // Maximum invitations per day per team
+  MAX_INVITATIONS_PER_DAY: 200,
+} as const;
+
+/**
  * Simple rate limiters for core endpoints
  */
 export const rateLimiters = {
@@ -20,6 +32,30 @@ export const rateLimiters = {
     redis,
     limiter: Ratelimit.slidingWindow(10, "20 m"),
     prefix: "rl:billing",
+    enableProtection: true,
+    analytics: true,
+  }),
+
+  // Rate limiter for invitation emails per user (50 per hour)
+  invitationUser: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(
+      INVITATION_LIMITS.MAX_INVITATIONS_PER_HOUR,
+      "1 h",
+    ),
+    prefix: "rl:invitation:user",
+    enableProtection: true,
+    analytics: true,
+  }),
+
+  // Rate limiter for invitation emails per team (200 per day)
+  invitationTeam: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(
+      INVITATION_LIMITS.MAX_INVITATIONS_PER_DAY,
+      "24 h",
+    ),
+    prefix: "rl:invitation:team",
     enableProtection: true,
     analytics: true,
   }),
