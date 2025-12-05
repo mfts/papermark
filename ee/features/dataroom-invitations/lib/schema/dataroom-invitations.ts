@@ -1,8 +1,10 @@
 import { z } from "zod";
 
-import { INVITATION_LIMITS } from "@/ee/features/security";
+import { DEFAULT_INVITATION_LIMITS } from "@/ee/limits/constants";
 
 const MAX_CUSTOM_MESSAGE_LENGTH = 500;
+// Absolute maximum for schema validation (team-specific limits are enforced in the API)
+const ABSOLUTE_MAX_EMAILS = 100;
 
 export const invitationEmailSchema = z.string().email();
 
@@ -21,15 +23,14 @@ export const optionalCustomMessageSchema = z
     return value.length > 0 ? value : undefined;
   });
 
+// Note: The schema uses a higher absolute max for validation.
+// Team-specific limits (default: 30) are enforced in the API handlers.
 export const sendGroupInvitationSchema = z.object({
   linkId: z.string().min(1),
   customMessage: optionalCustomMessageSchema,
   emails: z
     .array(invitationEmailSchema)
-    .max(
-      INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST,
-      `You can send a maximum of ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST} invitations at a time`,
-    )
+    .max(ABSOLUTE_MAX_EMAILS, `Maximum ${ABSOLUTE_MAX_EMAILS} emails allowed`)
     .optional(),
 });
 
@@ -37,12 +38,12 @@ export const sendLinkInvitationSchema = z.object({
   customMessage: optionalCustomMessageSchema,
   emails: z
     .array(invitationEmailSchema)
-    .max(
-      INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST,
-      `You can send a maximum of ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST} invitations at a time`,
-    )
+    .max(ABSOLUTE_MAX_EMAILS, `Maximum ${ABSOLUTE_MAX_EMAILS} emails allowed`)
     .optional(),
 });
+
+// Re-export default limits for UI components
+export { DEFAULT_INVITATION_LIMITS };
 
 export const SendGroupInvitationSchema = sendGroupInvitationSchema;
 export const SendLinkInvitationSchema = sendLinkInvitationSchema;

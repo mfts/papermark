@@ -7,8 +7,10 @@ import {
   DATAROOMS_PLAN_LIMITS,
   DATAROOMS_PLUS_PLAN_LIMITS,
   DATAROOMS_PREMIUM_PLAN_LIMITS,
+  DEFAULT_INVITATION_LIMITS,
   FREE_PLAN_LIMITS,
   PRO_PLAN_LIMITS,
+  TInvitationLimits,
   TPlanLimits,
 } from "./constants";
 
@@ -27,6 +29,15 @@ const planLimitsMap: Record<string, TPlanLimits> = {
   "datarooms-plus": DATAROOMS_PLUS_PLAN_LIMITS,
   "datarooms-premium": DATAROOMS_PREMIUM_PLAN_LIMITS,
 };
+
+/**
+ * Schema for invitation limits that can be configured per team
+ */
+export const invitationLimitsSchema = z.object({
+  maxEmailsPerRequest: z.number().min(1).max(100).optional(),
+  maxInvitationsPerHour: z.number().min(1).max(1000).optional(),
+  maxInvitationsPerDay: z.number().min(1).max(10000).optional(),
+});
 
 export const configSchema = z.object({
   datarooms: z.number().optional(),
@@ -56,6 +67,13 @@ export const configSchema = z.object({
       maxPages: z.number().optional(), // in amount of pages
     })
     .optional(),
+  /**
+   * Invitation rate limits for dataroom email invitations
+   * - maxEmailsPerRequest: Max emails in a single API call (default: 30)
+   * - maxInvitationsPerHour: Per-user hourly limit (default: 50)
+   * - maxInvitationsPerDay: Per-team daily limit (default: 200)
+   */
+  invitations: invitationLimitsSchema.optional(),
 });
 
 export async function getLimits({
@@ -140,5 +158,52 @@ export async function getLimits({
         users: 3,
       }),
     };
+  }
+}
+
+/**
+ * Get invitation rate limits for a team
+ * Returns team-specific limits if configured, otherwise returns defaults
+ *
+ * Note: These limits are enforced at the TEAM level (not per dataroom)
+ * - maxEmailsPerRequest: Maximum emails per API call
+ * - maxInvitationsPerHour: Per-user limit across all datarooms in the team
+ * - maxInvitationsPerDay: Per-team limit across all datarooms
+ */
+export async function getInvitationLimits({
+  teamId,
+}: {
+  teamId: string;
+}): Promise<TInvitationLimits> {
+  try {
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      select: { limits: true },
+    });
+
+    if (!team?.limits) {
+      return DEFAULT_INVITATION_LIMITS;
+    }
+
+    const parsed = configSchema.safeParse(team.limits);
+    if (!parsed.success) {
+      return DEFAULT_INVITATION_LIMITS;
+    }
+
+    // Merge team-specific overrides with defaults
+    return {
+      maxEmailsPerRequest:
+        parsed.data.invitations?.maxEmailsPerRequest ??
+        DEFAULT_INVITATION_LIMITS.maxEmailsPerRequest,
+      maxInvitationsPerHour:
+        parsed.data.invitations?.maxInvitationsPerHour ??
+        DEFAULT_INVITATION_LIMITS.maxInvitationsPerHour,
+      maxInvitationsPerDay:
+        parsed.data.invitations?.maxInvitationsPerDay ??
+        DEFAULT_INVITATION_LIMITS.maxInvitationsPerDay,
+    };
+  } catch (error) {
+    console.error("Error fetching invitation limits:", error);
+    return DEFAULT_INVITATION_LIMITS;
   }
 }

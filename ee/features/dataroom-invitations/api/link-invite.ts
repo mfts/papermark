@@ -4,10 +4,10 @@ import {
   SendLinkInvitationSchema,
   invitationEmailSchema,
 } from "@/ee/features/dataroom-invitations/lib/schema/dataroom-invitations";
+import { getInvitationLimits } from "@/ee/limits/server";
 import {
-  INVITATION_LIMITS,
   checkRateLimit,
-  rateLimiters,
+  createInvitationRateLimiter,
 } from "@/ee/features/security";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { LinkType } from "@prisma/client";
@@ -77,36 +77,36 @@ export default async function handle(
       });
     }
 
+    // Get team-specific invitation limits (or defaults)
+    const invitationLimits = await getInvitationLimits({ teamId });
+
     // Check rate limits for user and team
     const emailCount = emails?.length ?? 0;
 
     // Check max emails per request
-    if (emailCount > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST) {
+    if (emailCount > invitationLimits.maxEmailsPerRequest) {
       return res.status(400).json({
-        error: `You can send a maximum of ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST} invitations at a time`,
+        error: `You can send a maximum of ${invitationLimits.maxEmailsPerRequest} invitations at a time`,
       });
     }
 
     // Check user rate limit (invitations per hour)
-    const userRateLimit = await checkRateLimit(
-      rateLimiters.invitationUser,
-      user.id,
-    );
+    // Note: Rate limits are enforced at the TEAM level, not per dataroom
+    const userRateLimiter = createInvitationRateLimiter("user", invitationLimits);
+    const userRateLimit = await checkRateLimit(userRateLimiter, user.id);
     if (!userRateLimit.success) {
       return res.status(429).json({
-        error: `Rate limit exceeded. You can send up to ${INVITATION_LIMITS.MAX_INVITATIONS_PER_HOUR} invitations per hour. Please try again later.`,
+        error: `Rate limit exceeded. You can send up to ${invitationLimits.maxInvitationsPerHour} invitations per hour. Please try again later.`,
         remaining: userRateLimit.remaining,
       });
     }
 
-    // Check team rate limit (invitations per day)
-    const teamRateLimit = await checkRateLimit(
-      rateLimiters.invitationTeam,
-      teamId,
-    );
+    // Check team rate limit (invitations per day across all datarooms)
+    const teamRateLimiter = createInvitationRateLimiter("team", invitationLimits);
+    const teamRateLimit = await checkRateLimit(teamRateLimiter, teamId);
     if (!teamRateLimit.success) {
       return res.status(429).json({
-        error: `Team rate limit exceeded. Your team can send up to ${INVITATION_LIMITS.MAX_INVITATIONS_PER_DAY} invitations per day. Please try again later.`,
+        error: `Team rate limit exceeded. Your team can send up to ${invitationLimits.maxInvitationsPerDay} invitations per day across all datarooms. Please try again later.`,
         remaining: teamRateLimit.remaining,
       });
     }

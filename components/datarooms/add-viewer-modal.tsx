@@ -3,7 +3,8 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { INVITATION_LIMITS } from "@/ee/features/security";
+import { DEFAULT_INVITATION_LIMITS } from "@/ee/limits/constants";
+import { useLimits } from "@/ee/limits/swr-handler";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -41,6 +42,12 @@ export function AddViewerModal({
   const analytics = useAnalytics();
   const { trial } = usePlan();
   const isTrial = !!trial;
+  const { limits } = useLimits();
+
+  // Use team-specific limits or fall back to defaults
+  const maxEmailsPerRequest =
+    limits?.invitations?.maxEmailsPerRequest ??
+    DEFAULT_INVITATION_LIMITS.maxEmailsPerRequest;
 
   // Email validation regex pattern
   const validateEmail = (email: string) => {
@@ -127,9 +134,9 @@ export function AddViewerModal({
       return;
     }
 
-    if (emails.length > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST) {
+    if (emails.length > maxEmailsPerRequest) {
       toast.error(
-        `You can only send invitations to a maximum of ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST} emails at a time.`,
+        `You can only send invitations to a maximum of ${maxEmailsPerRequest} emails at a time.`,
       );
       return;
     }
@@ -182,7 +189,7 @@ export function AddViewerModal({
           <DialogTitle>Invite Visitors</DialogTitle>
           <DialogDescription>
             Enter email addresses, separated by commas (max{" "}
-            {INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST} per request).
+            {maxEmailsPerRequest} per request).
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -219,15 +226,13 @@ export function AddViewerModal({
           {emails.length > 0 && (
             <p
               className={`text-xs ${
-                emails.length > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
+                emails.length > maxEmailsPerRequest
                   ? "text-destructive"
                   : "text-muted-foreground"
               }`}
             >
-              {emails.length} of {INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST}{" "}
-              emails added
-              {emails.length > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST &&
-                " (limit exceeded)"}
+              {emails.length} of {maxEmailsPerRequest} emails added
+              {emails.length > maxEmailsPerRequest && " (limit exceeded)"}
             </p>
           )}
 
@@ -239,13 +244,13 @@ export function AddViewerModal({
               disabled={
                 loading ||
                 emails.length === 0 ||
-                emails.length > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
+                emails.length > maxEmailsPerRequest
               }
             >
               {loading
                 ? "Sending emails..."
-                : emails.length > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
-                  ? `Too many emails (max ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST})`
+                : emails.length > maxEmailsPerRequest
+                  ? `Too many emails (max ${maxEmailsPerRequest})`
                   : "Add members"}
             </Button>
           </DialogFooter>

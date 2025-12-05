@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { getLimits } from "@/ee/limits/server";
+import { getInvitationLimits, getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
@@ -38,7 +38,11 @@ export default async function handle(
         },
       });
 
-      const limits = await getLimits({ teamId, userId });
+      const [limits, invitationLimits] = await Promise.all([
+        getLimits({ teamId, userId }),
+        getInvitationLimits({ teamId }),
+      ]);
+
       const isTrial = team?.plan.includes("drtrial");
       const featureFlags = await getFeatureFlags({ teamId });
       const conversationsInDataroom =
@@ -49,6 +53,7 @@ export default async function handle(
         ...limits,
         conversationsInDataroom,
         dataroomUpload,
+        invitations: invitationLimits,
       });
     } catch (error) {
       return res.status(500).json((error as Error).message);

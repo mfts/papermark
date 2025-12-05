@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { invitationEmailSchema } from "@/ee/features/dataroom-invitations/lib/schema/dataroom-invitations";
-import { INVITATION_LIMITS } from "@/ee/features/security";
+import {
+  DEFAULT_INVITATION_LIMITS,
+  invitationEmailSchema,
+} from "@/ee/features/dataroom-invitations/lib/schema/dataroom-invitations";
+import { useLimits } from "@/ee/limits/swr-handler";
 import { useUninvitedMembers } from "@/ee/features/dataroom-invitations/lib/swr/use-dataroom-invitations";
 import { Link } from "@prisma/client";
 import { useSession } from "next-auth/react";
@@ -70,6 +73,12 @@ export function InviteViewersModal({
   const teamId = teamInfo?.currentTeam?.id;
   const { data: session } = useSession();
   const senderEmail = session?.user?.email ?? "you";
+  const { limits } = useLimits();
+
+  // Use team-specific limits or fall back to defaults
+  const maxEmailsPerRequest =
+    limits?.invitations?.maxEmailsPerRequest ??
+    DEFAULT_INVITATION_LIMITS.maxEmailsPerRequest;
 
   const { data: groupLinks } = useSWR<LinkOption[]>(
     groupId && teamId
@@ -200,9 +209,9 @@ export function InviteViewersModal({
       : defaultRecipients;
 
     // Check max emails per request
-    if (parsedEmails.length > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST) {
+    if (parsedEmails.length > maxEmailsPerRequest) {
       toast.error(
-        `You can send a maximum of ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST} invitations at a time. Please reduce the number of recipients.`,
+        `You can send a maximum of ${maxEmailsPerRequest} invitations at a time. Please reduce the number of recipients.`,
       );
       return;
     }
@@ -357,7 +366,7 @@ export function InviteViewersModal({
               />
               <p
                 className={`text-xs ${
-                  recipientCount > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
+                  recipientCount > maxEmailsPerRequest
                     ? "text-destructive"
                     : "text-muted-foreground"
                 }`}
@@ -367,12 +376,12 @@ export function InviteViewersModal({
                     {recipientCount} recipient
                     {recipientCount !== 1 ? "s" : ""} will receive{" "}
                     {recipientCount !== 1 ? "invitations" : "an invitation"}
-                    {recipientCount > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
-                      ? ` (maximum ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST} allowed)`
+                    {recipientCount > maxEmailsPerRequest
+                      ? ` (maximum ${maxEmailsPerRequest} allowed)`
                       : ""}
                   </>
                 ) : (
-                  `Enter email addresses (max ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST} per request)`
+                  `Enter email addresses (max ${maxEmailsPerRequest} per request)`
                 )}
               </p>
             </div>
@@ -488,16 +497,16 @@ export function InviteViewersModal({
                   ? !selectedLinkId ||
                     loading ||
                     recipientCount === 0 ||
-                    recipientCount > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
+                    recipientCount > maxEmailsPerRequest
                   : loading ||
                     recipientCount === 0 ||
-                    recipientCount > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
+                    recipientCount > maxEmailsPerRequest
               }
             >
               {loading
                 ? "Sending invitations..."
-                : recipientCount > INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST
-                  ? `Too many recipients (max ${INVITATION_LIMITS.MAX_EMAILS_PER_REQUEST})`
+                : recipientCount > maxEmailsPerRequest
+                  ? `Too many recipients (max ${maxEmailsPerRequest})`
                   : `Send ${recipientCount} invitation${recipientCount !== 1 ? "s" : ""}`}
             </Button>
           </div>

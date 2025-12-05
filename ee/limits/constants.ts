@@ -1,5 +1,24 @@
 // INFO: for numeric values,`null` means unlimited
 
+/**
+ * Invitation rate limits for email invitations
+ */
+export type TInvitationLimits = {
+  maxEmailsPerRequest: number;
+  maxInvitationsPerHour: number;
+  maxInvitationsPerDay: number;
+};
+
+/**
+ * Default invitation limits applied to all plans
+ * These can be overridden per team via the team's limits configuration
+ */
+export const DEFAULT_INVITATION_LIMITS: TInvitationLimits = {
+  maxEmailsPerRequest: 30,
+  maxInvitationsPerHour: 50,
+  maxInvitationsPerDay: 200,
+};
+
 export type TPlanLimits = {
   users: number;
   links: number | null;
@@ -11,6 +30,7 @@ export type TPlanLimits = {
   advancedLinkControlsOnPro: boolean | null;
   watermarkOnBusiness?: boolean | null;
   agreementOnBusiness?: boolean | null;
+  invitations?: TInvitationLimits;
 };
 
 export const FREE_PLAN_LIMITS = {

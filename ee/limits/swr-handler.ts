@@ -5,6 +5,7 @@ import { z } from "zod";
 import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher } from "@/lib/utils";
 
+import { TInvitationLimits } from "./constants";
 import { configSchema } from "./server";
 
 export type LimitProps = z.infer<typeof configSchema> & {
@@ -14,6 +15,7 @@ export type LimitProps = z.infer<typeof configSchema> & {
     users: number;
   };
   dataroomUpload: boolean;
+  invitations: TInvitationLimits;
 };
 
 export function useLimits() {
