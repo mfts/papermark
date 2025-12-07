@@ -18,6 +18,7 @@ import {
   Loader,
   ServerIcon,
   WorkflowIcon,
+  Sparkles as SparklesIcon,
 } from "lucide-react";
 
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
@@ -212,6 +213,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             current: router.pathname.includes("settings/billing"),
           },
         ],
+      },
+      {
+        title: "2025 Recap",
+        url: "/dashboard?openRecap=true",
+        icon: SparklesIcon,
+        current: false,
       },
     ],
   };

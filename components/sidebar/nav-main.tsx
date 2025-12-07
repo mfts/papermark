@@ -60,6 +60,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                   item.current &&
                     !item.items?.length &&
                     "rounded-md bg-gray-200 font-semibold dark:bg-secondary",
+                  item.title === "2025 Recap" && "text-orange-500 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300",
                 )}
               >
                 {item.disabled ? (
