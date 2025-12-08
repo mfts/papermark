@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { AgentsSettingsCard } from "@/ee/features/ai/components/agents-settings-card";
 import { Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -128,6 +129,16 @@ export default function Settings() {
               teamId={teamId!}
               initialTags={dataroom.tags}
             />
+
+            {/* AI Agents Settings */}
+            <AgentsSettingsCard
+              type="dataroom"
+              entityId={dataroom.id}
+              teamId={teamId!}
+              agentsEnabled={dataroom.agentsEnabled}
+              vectorStoreId={dataroom.vectorStoreId}
+            />
+
             <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />
             <Card className="bg-transparent">
               <CardHeader>

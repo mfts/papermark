@@ -86,6 +86,7 @@ export const DEFAULT_LINK_PROPS = (
   customFields: [],
   tags: [],
   enableConversation: false,
+  enableAIAgents: false,
   enableUpload: false,
   isFileRequestOnly: false,
   uploadFolderId: null,
@@ -129,6 +130,7 @@ export type DEFAULT_LINK_TYPE = {
   customFields: CustomFieldData[];
   tags: string[];
   enableConversation: boolean;
+  enableAIAgents: boolean;
   enableUpload: boolean;
   isFileRequestOnly: boolean;
   uploadFolderId: string | null;

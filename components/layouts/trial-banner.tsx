@@ -4,7 +4,6 @@ import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import Cookies from "js-cookie";
 import { CrownIcon } from "lucide-react";
-import { usePlausible } from "next-plausible";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
@@ -44,11 +43,9 @@ function TrialBannerComponent({
   setShowTrialBanner: Dispatch<SetStateAction<boolean | null>>;
 }) {
   const teamInfo = useTeam();
-  const plausible = usePlausible();
 
   const handleHideBanner = () => {
     setShowTrialBanner(false);
-    plausible("clickedHideTrialBanner");
     Cookies.set("hideTrialBanner", "trial-banner", {
       expires: 1,
     });
@@ -90,10 +87,7 @@ function TrialBannerComponent({
                 clickedPlan={PlanEnum.DataRooms}
                 trigger={"trial_navbar"}
               >
-                <span
-                  className="cursor-pointer font-bold text-black underline underline-offset-4 hover:text-gray-700 dark:text-white dark:hover:text-gray-300"
-                  onClick={() => plausible("clickedUpgradeTrialNavbar")}
-                >
+                <span className="cursor-pointer font-bold text-black underline underline-offset-4 hover:text-gray-700 dark:text-white dark:hover:text-gray-300">
                   Upgrade to keep access
                 </span>
               </UpgradePlanModal>{" "}
@@ -109,10 +103,7 @@ function TrialBannerComponent({
                 clickedPlan={PlanEnum.DataRooms}
                 trigger={"trial_navbar"}
               >
-                <span
-                  className="cursor-pointer font-bold text-orange-500 underline underline-offset-4 hover:text-orange-600"
-                  onClick={() => plausible("clickedUpgradeTrialNavbar")}
-                >
+                <span className="cursor-pointer font-bold text-orange-500 underline underline-offset-4 hover:text-orange-600">
                   Upgrade to keep access
                 </span>
               </UpgradePlanModal>

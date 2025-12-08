@@ -46,6 +46,11 @@ model Team {
   enableExcelAdvancedMode Boolean @default(false) // Enable Excel advanced mode for all documents in the team
   replicateDataroomFolders Boolean @default(true) // Replicate dataroom folder structure in "All Documents"
 
+  // AI agents
+  agentsEnabled Boolean @default(false) // Enable AI agents for the team
+  vectorStoreId String? // OpenAI vector store ID for team-level document search
+  chats         Chat[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

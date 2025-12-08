@@ -2,10 +2,11 @@ import { logger, task } from "@trigger.dev/sdk/v3";
 import ffmpeg from "fluent-ffmpeg";
 import { createReadStream, createWriteStream } from "fs";
 import fs from "fs/promises";
-import fetch from "node-fetch";
 import os from "os";
 import path from "path";
+import { Readable } from "stream";
 import { pipeline } from "stream/promises";
+import { ReadableStream } from "stream/web";
 
 import { getFile } from "@/lib/files/get-file";
 import { streamFileServer } from "@/lib/files/stream-file-server";
@@ -46,7 +47,10 @@ export const processVideo = task({
       }
 
       logger.info("Streaming video to temporary file");
-      await pipeline(response.body, createWriteStream(inputPath));
+      await pipeline(
+        Readable.fromWeb(response.body as ReadableStream),
+        createWriteStream(inputPath),
+      );
 
       // Get input metadata first
       const metadata = await new Promise<{

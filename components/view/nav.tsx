@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 
 import React, { useEffect, useState } from "react";
 
+import { useViewerChatSafe } from "@/ee/features/ai/components/viewer-chat-provider";
 import { Brand, DataroomBrand } from "@prisma/client";
 import {
   ArrowUpRight,
@@ -92,6 +93,10 @@ export default function Nav({
   const router = useRouter();
   const asPath = router.asPath;
   const { previewToken, preview } = router.query;
+
+  // Get chat context to adjust navbar when chat is open
+  const chatContext = useViewerChatSafe();
+  const isChatOpen = chatContext?.isOpen && chatContext?.isEnabled;
 
   const {
     linkId,
@@ -193,8 +198,8 @@ export default function Nav({
     })();
 
     toast.promise(downloadPromise, {
-      loading: hasWatermark 
-        ? "Preparing download with watermark..." 
+      loading: hasWatermark
+        ? "Preparing download with watermark..."
         : "Preparing download...",
       success: (message) => message,
       error: (err) => err.message || "Failed to download file",
@@ -232,6 +237,9 @@ export default function Nav({
       className="bg-black"
       style={{
         backgroundColor: brand && brand.brandColor ? brand.brandColor : "black",
+        // Extend navbar to full width when chat panel is open (counteract parent padding)
+        marginRight: isChatOpen ? "-400px" : undefined,
+        // paddingRight: isChatOpen ? "400px" : undefined,
       }}
     >
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
