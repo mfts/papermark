@@ -186,7 +186,7 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        if (!link?.isArchived) {
+        if (link?.isArchived) {
           return NextResponse.json(
             { error: "Link is archived" },
             { status: 403 },
