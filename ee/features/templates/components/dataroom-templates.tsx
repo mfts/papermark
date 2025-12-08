@@ -173,7 +173,7 @@ export default function DataroomTemplates({
           Papermark
         </p>
         <h1 className="font-display max-w-md text-3xl font-semibold transition-colors sm:text-4xl">
-          Which template do you want to use?
+          Select a template to get started
         </h1>
       </motion.div>
 

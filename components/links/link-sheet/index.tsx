@@ -73,7 +73,7 @@ export const DEFAULT_LINK_PROPS = (
   metaImage: null,
   metaFavicon: null,
   welcomeMessage: null,
-  enabledQuestion: false,
+  enableQuestion: false,
   questionText: null,
   questionType: null,
   enableAgreement: false,

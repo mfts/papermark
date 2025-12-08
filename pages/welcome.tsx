@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { GTMComponent } from "@/components/gtm-component";
 import { Button } from "@/components/ui/button";
 import Dataroom from "@/components/welcome/dataroom";
+import DataroomAIGenerate from "@/components/welcome/dataroom-ai-generate";
 import DataroomChoice from "@/components/welcome/dataroom-choice";
 import DataroomTrial from "@/components/welcome/dataroom-trial";
 import DataroomUpload from "@/components/welcome/dataroom-upload";
@@ -56,9 +57,10 @@ export default function Welcome() {
   const isDataroomUpload = router.query.type === "dataroom-upload";
   const isDataroomChoice = router.query.type === "dataroom-choice";
   const isDataroomTemplates = router.query.type === "dataroom-templates";
+  const isDataroomAIGenerate = router.query.type === "dataroom-ai-generate";
 
   const skipButtonText =
-    isDataroomUpload || isDataroomChoice || isDataroomTemplates
+    isDataroomUpload || isDataroomChoice || isDataroomTemplates || isDataroomAIGenerate
       ? "Skip to dataroom"
       : "Skip to dashboard";
   const skipButtonPath =
@@ -128,6 +130,9 @@ export default function Welcome() {
                 dataroomId={router.query.dataroomId as string}
               />
             )}
+          {router.query.type === "dataroom-ai-generate" && (
+            <DataroomAIGenerate key="dataroom-ai-generate" />
+          )}
         </AnimatePresence>
       </div>
     </>
