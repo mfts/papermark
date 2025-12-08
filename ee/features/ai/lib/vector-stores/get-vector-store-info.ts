@@ -1,18 +1,5 @@
 import { openai } from "@/ee/features/ai/lib/models/openai";
-
-interface VectorStoreInfo {
-  id: string;
-  name: string;
-  file_counts: {
-    in_progress: number;
-    completed: number;
-    failed: number;
-    cancelled: number;
-    total: number;
-  };
-  created_at: number;
-  metadata: Record<string, string>;
-}
+import { type OpenAI } from "openai";
 
 /**
  * Get information about a vector store
@@ -21,10 +8,10 @@ interface VectorStoreInfo {
  */
 export async function getVectorStoreInfo(
   vectorStoreId: string,
-): Promise<VectorStoreInfo> {
+): Promise<OpenAI.VectorStores.VectorStore> {
   try {
     const vectorStore = await openai.vectorStores.retrieve(vectorStoreId);
-    return vectorStore as VectorStoreInfo;
+    return vectorStore;
   } catch (error) {
     console.error("Error getting vector store info:", error);
     throw new Error("Failed to get vector store info");
