@@ -74,27 +74,24 @@ export default function Settings() {
       <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
         {document && primaryVersion ? (
           <>
-            {/* Action Header */}
-            <DocumentHeader
-              primaryVersion={primaryVersion}
-              prismaDocument={document}
-              teamId={teamInfo?.currentTeam?.id!}
-            />
+            <header>
+              {/* Action Header */}
+              <DocumentHeader
+                primaryVersion={primaryVersion}
+                prismaDocument={document}
+                teamId={teamInfo?.currentTeam?.id!}
+              />
 
-            <NavMenu
-              navigation={[
-                {
-                  label: "Overview",
-                  href: `/documents/${document.id}`,
-                  segment: `${document.id}`,
-                },
-                {
-                  label: "Settings",
-                  href: `/documents/${document.id}/settings`,
-                  segment: "settings",
-                },
-              ]}
-            />
+              <NavMenu
+                navigation={[
+                  {
+                    label: "Overview",
+                    href: `/documents/${document.id}`,
+                    segment: `${document.id}`,
+                  },
+                ]}
+              />
+            </header>
 
             {/* Settings */}
             <div className="mx-auto grid w-full gap-2">

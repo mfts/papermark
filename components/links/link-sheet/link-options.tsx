@@ -281,9 +281,22 @@ export const LinkOptions = ({
                     limits?.conversationsInDataroom)
                 }
                 handleUpgradeStateChange={handleUpgradeStateChange}
+                linkType={linkType}
               />
             ) : null}
           </div>
+        </CollapsibleSection>
+      ) : null}
+
+      {/* Conversation Section for Document Links */}
+      {linkType === LinkType.DOCUMENT_LINK ? (
+        <CollapsibleSection title="Q&A Conversations" defaultOpen={true}>
+          <ConversationSection
+            {...{ data, setData }}
+            isAllowed={isTrial || isPro || isBusiness || isDatarooms || isDataroomsPlus}
+            handleUpgradeStateChange={handleUpgradeStateChange}
+            linkType={linkType}
+          />
         </CollapsibleSection>
       ) : null}
 

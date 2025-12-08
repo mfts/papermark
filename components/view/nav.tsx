@@ -209,7 +209,6 @@ export default function Nav({
         !e.metaKey &&
         !e.ctrlKey &&
         !e.altKey &&
-        isDataroom &&
         conversationsEnabled &&
         !showConversations // if conversations are already open, don't toggle them
       ) {
@@ -225,7 +224,7 @@ export default function Nav({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isDataroom, conversationsEnabled, showConversations]);
+  }, [conversationsEnabled, showConversations]);
 
   return (
     <nav
@@ -310,13 +309,14 @@ export default function Nav({
                 </Tooltip>
               </TooltipProvider>
             )}
-            {/* Conversation toggle button for dataroom documents */}
-            {isDataroom && conversationsEnabled && (
+            {/* Conversation toggle button for dataroom and document links */}
+            {conversationsEnabled && (
               <Button
                 onClick={() => setShowConversations(!showConversations)}
                 className="bg-gray-900 text-white hover:bg-gray-900/80"
               >
-                View FAQ
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Q&A
               </Button>
             )}
             {/* Annotations toggle button */}
@@ -473,7 +473,7 @@ export default function Nav({
           </div>
         </div>
       </div>
-      {isDataroom && conversationsEnabled && showConversations ? (
+      {conversationsEnabled && showConversations ? (
         <ConversationSidebar
           dataroomId={dataroomId}
           documentId={documentId}

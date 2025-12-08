@@ -84,16 +84,17 @@ export default function ViewData({
     isPreview: viewData.isPreview,
     linkId: link.id,
     brand: brand,
-    viewerId: "viewerId" in viewData ? viewData.viewerId : undefined,
+    viewerId: viewData.viewerId || ("viewerId" in viewData ? viewData.viewerId : undefined),
     isMobile: isMobile,
     isDataroom: !!dataroomId,
     documentId: document.id,
     dataroomId: dataroomId,
     conversationsEnabled:
-      !!dataroomId &&
-      ("conversationsEnabled" in viewData
-        ? viewData.conversationsEnabled
-        : false),
+      (!!dataroomId &&
+        ("conversationsEnabled" in viewData
+          ? viewData.conversationsEnabled
+          : false)) ||
+      (!dataroomId && link.enableConversation === true),
     assistantEnabled: document.assistantEnabled,
     allowDownload:
       document.downloadOnly ||

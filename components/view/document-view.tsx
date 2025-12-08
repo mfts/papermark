@@ -152,6 +152,7 @@ export default function DocumentView({
       } else {
         const {
           viewId,
+          viewerId,
           file,
           pages,
           sheetData,
@@ -189,6 +190,7 @@ export default function DocumentView({
 
         setViewData({
           viewId,
+          viewerId,
           file,
           pages,
           sheetData,

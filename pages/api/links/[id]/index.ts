@@ -63,6 +63,7 @@ export default async function handle(
           showBanner: true,
           enableWatermark: true,
           watermarkConfig: true,
+          enableConversation: true,
           groupId: true,
           permissionGroupId: true,
           audienceType: true,
