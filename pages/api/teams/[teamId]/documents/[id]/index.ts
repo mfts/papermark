@@ -1,15 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import { TeamError, errorhandler } from "@/lib/errorHandler";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import { deleteFile } from "@/lib/files/delete-file-server";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { CustomUser } from "@/lib/types";
 import { serializeFileSize } from "@/lib/utils";
-
-import { authOptions } from "../../../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
@@ -213,6 +213,15 @@ export default async function handle(
       const { agentsEnabled } = req.body as {
         agentsEnabled?: boolean;
       };
+
+      if (agentsEnabled !== undefined) {
+        const features = await getFeatureFlags({ teamId });
+        if (!features.ai) {
+          return res
+            .status(403)
+            .json({ message: "AI feature is not available" });
+        }
+      }
 
       // Build update data object with only provided fields
       const updateData: { agentsEnabled?: boolean } = {};
