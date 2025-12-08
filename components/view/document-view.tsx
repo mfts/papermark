@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { Brand } from "@prisma/client";
 import Cookies from "js-cookie";
-import { usePlausible } from "next-plausible";
 import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
 
@@ -97,7 +96,6 @@ export default function DocumentView({
     enableAgreement,
   } = link;
 
-  const plausible = usePlausible();
   const analytics = useAnalytics();
   const router = useRouter();
 
@@ -161,7 +159,6 @@ export default function DocumentView({
           verificationToken,
           isTeamMember,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
-        plausible("documentViewed"); // track the event
         analytics.identify(
           userEmail ?? verifiedEmail ?? data.email ?? undefined,
         );
