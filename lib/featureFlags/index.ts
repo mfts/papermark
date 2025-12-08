@@ -36,7 +36,7 @@ export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
     ai: false,
   };
 
-  // Return all features as true if edge config is not available
+  // Return all features as false if edge config is not available
   if (!process.env.EDGE_CONFIG) {
     return Object.fromEntries(
       Object.entries(teamFeatures).map(([key, _v]) => [key, false]),
