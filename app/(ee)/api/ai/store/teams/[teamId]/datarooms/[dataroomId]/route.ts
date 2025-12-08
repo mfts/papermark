@@ -158,7 +158,7 @@ export async function POST(
           // Update document version with file ID
           await prisma.documentVersion.update({
             where: { id: primaryVersion.id },
-            data: { fileId },
+            data: { fileId: newFileId },
           });
 
           fileId = newFileId;
