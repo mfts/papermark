@@ -108,12 +108,18 @@ export async function POST(request: NextRequest) {
           select: {
             plan: true,
             globalBlockList: true,
+            agentsEnabled: true,
           },
         },
         customFields: {
           select: {
             identifier: true,
             label: true,
+          },
+        },
+        document: {
+          select: {
+            agentsEnabled: true,
           },
         },
       },
@@ -660,9 +666,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Determine if AI agents should be enabled (requires both team and document level)
+      const agentsEnabled =
+        link.team?.agentsEnabled && link.document?.agentsEnabled;
+
       const returnObject = {
         message: "View recorded",
         viewId: !isPreview && newView ? newView.id : undefined,
+        viewerId: viewer?.id ?? undefined,
         isPreview: isPreview ? true : undefined,
         file:
           (documentVersion &&
@@ -700,6 +711,7 @@ export async function POST(request: NextRequest) {
             : undefined,
         verificationToken: hashedVerificationToken ?? undefined,
         ...(isTeamMember && { isTeamMember: true }),
+        ...(agentsEnabled && { agentsEnabled: true }),
       };
 
       return NextResponse.json(returnObject);

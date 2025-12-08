@@ -1,5 +1,5 @@
 The Papermark Commercial License (the “Commercial License”)
-Copyright (c) 2024-present Papermark, Inc.
+Copyright (c) 2023-present Papermark, Inc.
 
 With regard to the Papermark Software:
 

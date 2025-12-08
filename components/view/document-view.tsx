@@ -45,6 +45,8 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   ipAddress?: string;
   verificationToken?: string;
   isTeamMember?: boolean;
+  agentsEnabled?: boolean;
+  viewerId?: string;
 };
 
 export default function DocumentView({
@@ -157,7 +159,9 @@ export default function DocumentView({
           isPreview,
           ipAddress,
           verificationToken,
+          agentsEnabled,
           isTeamMember,
+          viewerId,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         analytics.identify(
           userEmail ?? verifiedEmail ?? data.email ?? undefined,
@@ -193,6 +197,8 @@ export default function DocumentView({
           isPreview,
           ipAddress,
           isTeamMember,
+          agentsEnabled,
+          viewerId,
         });
         setSubmitted(true);
         setVerificationRequested(false);

@@ -1,5 +1,11 @@
 import dynamic from "next/dynamic";
 
+import { ViewerChatPanel } from "@/ee/features/ai/components/viewer-chat-panel";
+import {
+  ViewerChatLayout,
+  ViewerChatProvider,
+} from "@/ee/features/ai/components/viewer-chat-provider";
+import { ViewerChatToggle } from "@/ee/features/ai/components/viewer-chat-toggle";
 import {
   Brand,
   DataroomBrand,
@@ -104,95 +110,132 @@ export default function ViewData({
 
   // Calculate allowDownload once for all components
 
-  return notionData?.recordMap ? (
-    <NotionPage
-      recordMap={notionData.recordMap}
-      versionNumber={document.versions[0].versionNumber}
-      theme={notionData.theme}
-      screenshotProtectionEnabled={link.enableScreenshotProtection!}
-      navData={navData}
-    />
-  ) : document.downloadOnly ? (
-    <DownloadOnlyViewer
-      versionNumber={document.versions[0].versionNumber}
+  // Check if agents are enabled (returned from views API after access is granted)
+  const agentsEnabled =
+    "agentsEnabled" in viewData ? viewData.agentsEnabled : false;
+
+  // Determine dataroom name if applicable
+  const dataroomName =
+    dataroomId && "dataroomName" in viewData
+      ? viewData.dataroomName
+      : undefined;
+
+  return (
+    <ViewerChatProvider
+      enabled={agentsEnabled}
+      documentId={document.id}
       documentName={document.name}
-      navData={navData}
-    />
-  ) : viewData.fileType === "sheet" && viewData.sheetData ? (
-    <ExcelViewer
-      versionNumber={document.versions[0].versionNumber}
-      sheetData={viewData.sheetData}
-      screenshotProtectionEnabled={link.enableScreenshotProtection!}
-      navData={navData}
-    />
-  ) : viewData.fileType === "sheet" && useAdvancedExcelViewer ? (
-    <AdvancedExcelViewer
-      file={viewData.file!}
-      versionNumber={document.versions[0].versionNumber}
-      navData={navData}
-    />
-  ) : viewData.fileType === "image" ? (
-    <ImageViewer
-      file={viewData.file!}
-      screenshotProtectionEnabled={link.enableScreenshotProtection!}
-      versionNumber={document.versions[0].versionNumber}
-      showPoweredByBanner={showPoweredByBanner}
-      viewerEmail={viewerEmail}
-      watermarkConfig={
-        link.enableWatermark ? (link.watermarkConfig as WatermarkConfig) : null
-      }
-      ipAddress={viewData.ipAddress}
-      linkName={link.name ?? `Link #${link.id.slice(-5)}`}
-      navData={navData}
-    />
-  ) : viewData.pages && !document.versions[0].isVertical ? (
-    <PagesHorizontalViewer
-      pages={viewData.pages}
-      feedbackEnabled={link.enableFeedback!}
-      screenshotProtectionEnabled={link.enableScreenshotProtection!}
-      versionNumber={document.versions[0].versionNumber}
-      showPoweredByBanner={showPoweredByBanner}
-      showAccountCreationSlide={showAccountCreationSlide}
-      enableQuestion={link.enableQuestion}
-      feedback={link.feedback}
-      viewerEmail={viewerEmail}
-      watermarkConfig={
-        link.enableWatermark ? (link.watermarkConfig as WatermarkConfig) : null
-      }
-      ipAddress={viewData.ipAddress}
-      linkName={link.name ?? `Link #${link.id.slice(-5)}`}
-      navData={navData}
-    />
-  ) : viewData.pages && document.versions[0].isVertical ? (
-    <PagesVerticalViewer
-      pages={viewData.pages}
-      feedbackEnabled={link.enableFeedback!}
-      screenshotProtectionEnabled={link.enableScreenshotProtection!}
-      versionNumber={document.versions[0].versionNumber}
-      showPoweredByBanner={showPoweredByBanner}
-      enableQuestion={link.enableQuestion}
-      feedback={link.feedback}
-      viewerEmail={viewerEmail}
-      watermarkConfig={
-        link.enableWatermark ? (link.watermarkConfig as WatermarkConfig) : null
-      }
-      ipAddress={viewData.ipAddress}
-      linkName={link.name ?? `Link #${link.id.slice(-5)}`}
-      navData={navData}
-    />
-  ) : viewData.fileType === "video" ? (
-    <VideoViewer
-      file={viewData.file!}
-      screenshotProtectionEnabled={link.enableScreenshotProtection!}
-      versionNumber={document.versions[0].versionNumber}
-      navData={navData}
-    />
-  ) : (
-    <PDFViewer
-      file={viewData.file}
-      name={document.name}
-      versionNumber={document.versions[0].versionNumber}
-      navData={navData}
-    />
+      dataroomId={dataroomId}
+      dataroomName={dataroomName}
+      linkId={link.id}
+      viewId={viewData.viewId}
+      viewerId={"viewerId" in viewData ? viewData.viewerId : undefined}
+      // focusedDocumentId={dataroomId ? document.id : undefined}
+      // focusedDocumentName={dataroomId ? document.name : undefined}
+    >
+      <ViewerChatLayout>
+        {notionData?.recordMap ? (
+          <NotionPage
+            recordMap={notionData.recordMap}
+            versionNumber={document.versions[0].versionNumber}
+            theme={notionData.theme}
+            screenshotProtectionEnabled={link.enableScreenshotProtection!}
+            navData={navData}
+          />
+        ) : document.downloadOnly ? (
+          <DownloadOnlyViewer
+            versionNumber={document.versions[0].versionNumber}
+            documentName={document.name}
+            navData={navData}
+          />
+        ) : viewData.fileType === "sheet" && viewData.sheetData ? (
+          <ExcelViewer
+            versionNumber={document.versions[0].versionNumber}
+            sheetData={viewData.sheetData}
+            screenshotProtectionEnabled={link.enableScreenshotProtection!}
+            navData={navData}
+          />
+        ) : viewData.fileType === "sheet" && useAdvancedExcelViewer ? (
+          <AdvancedExcelViewer
+            file={viewData.file!}
+            versionNumber={document.versions[0].versionNumber}
+            navData={navData}
+          />
+        ) : viewData.fileType === "image" ? (
+          <ImageViewer
+            file={viewData.file!}
+            screenshotProtectionEnabled={link.enableScreenshotProtection!}
+            versionNumber={document.versions[0].versionNumber}
+            showPoweredByBanner={showPoweredByBanner}
+            viewerEmail={viewerEmail}
+            watermarkConfig={
+              link.enableWatermark
+                ? (link.watermarkConfig as WatermarkConfig)
+                : null
+            }
+            ipAddress={viewData.ipAddress}
+            linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+            navData={navData}
+          />
+        ) : viewData.pages && !document.versions[0].isVertical ? (
+          <PagesHorizontalViewer
+            pages={viewData.pages}
+            feedbackEnabled={link.enableFeedback!}
+            screenshotProtectionEnabled={link.enableScreenshotProtection!}
+            versionNumber={document.versions[0].versionNumber}
+            showPoweredByBanner={showPoweredByBanner}
+            showAccountCreationSlide={showAccountCreationSlide}
+            enableQuestion={link.enableQuestion}
+            feedback={link.feedback}
+            viewerEmail={viewerEmail}
+            watermarkConfig={
+              link.enableWatermark
+                ? (link.watermarkConfig as WatermarkConfig)
+                : null
+            }
+            ipAddress={viewData.ipAddress}
+            linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+            navData={navData}
+          />
+        ) : viewData.pages && document.versions[0].isVertical ? (
+          <PagesVerticalViewer
+            pages={viewData.pages}
+            feedbackEnabled={link.enableFeedback!}
+            screenshotProtectionEnabled={link.enableScreenshotProtection!}
+            versionNumber={document.versions[0].versionNumber}
+            showPoweredByBanner={showPoweredByBanner}
+            enableQuestion={link.enableQuestion}
+            feedback={link.feedback}
+            viewerEmail={viewerEmail}
+            watermarkConfig={
+              link.enableWatermark
+                ? (link.watermarkConfig as WatermarkConfig)
+                : null
+            }
+            ipAddress={viewData.ipAddress}
+            linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+            navData={navData}
+          />
+        ) : viewData.fileType === "video" ? (
+          <VideoViewer
+            file={viewData.file!}
+            screenshotProtectionEnabled={link.enableScreenshotProtection!}
+            versionNumber={document.versions[0].versionNumber}
+            navData={navData}
+          />
+        ) : (
+          <PDFViewer
+            file={viewData.file}
+            name={document.name}
+            versionNumber={document.versions[0].versionNumber}
+            navData={navData}
+          />
+        )}
+      </ViewerChatLayout>
+
+      {/* AI Chat Components */}
+      <ViewerChatPanel />
+      <ViewerChatToggle />
+    </ViewerChatProvider>
   );
 }

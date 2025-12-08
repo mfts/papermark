@@ -22,6 +22,11 @@ model Dataroom {
   // FAQ system
   faqItems DataroomFaqItem[]
 
+  // AI agents
+  agentsEnabled Boolean @default(false) // Enable AI agents for this dataroom
+  vectorStoreId String? // OpenAI vector store ID for AI search
+  chats         Chat[]
+
   // upload external documents
   uploadedDocuments DocumentUpload[]
 
@@ -63,6 +68,8 @@ model DataroomDocument {
   dataroomFAQs DataroomFaqItem[]
 
   uploadedDocuments DocumentUpload[]
+
+  vectorStoreFileId String? // vector store file ID for AI search
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
