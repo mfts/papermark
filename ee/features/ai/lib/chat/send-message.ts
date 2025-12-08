@@ -73,6 +73,11 @@ If you cannot find the answer in the documents, say so clearly.`,
     };
   }
 
+  const latestMessage = history.at(-1);
+  const previousResponseId =
+    (latestMessage?.metadata as { responseId?: string } | null)?.responseId ??
+    null;
+
   // Use AI SDK streamText with file_search tool
   const result = streamText({
     model: openai.responses("gpt-4o-mini"),
@@ -82,11 +87,7 @@ If you cannot find the answer in the documents, say so clearly.`,
     },
     providerOptions: {
       openai: {
-        previousResponseId:
-          history.length > 0
-            ? (history[history.length - 1].metadata as { responseId: string })
-                ?.responseId
-            : null,
+        previousResponseId,
       } satisfies OpenAIResponsesProviderOptions,
     },
     onFinish: async ({ text, usage, response }) => {
