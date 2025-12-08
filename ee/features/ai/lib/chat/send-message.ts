@@ -26,7 +26,7 @@ export async function sendMessage({
   // Get conversation history from database
   const history = await prisma.chatMessage.findMany({
     where: { chatId },
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
     take: 10,
   });
 
