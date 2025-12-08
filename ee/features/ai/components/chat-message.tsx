@@ -18,8 +18,6 @@ import {
 } from "@/components/ai-elements/message";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 
-import type { FileCitation } from "../lib/stream/parse-ui-message-stream";
-
 // ============================================================================
 // Types
 // ============================================================================
@@ -27,7 +25,6 @@ import type { FileCitation } from "../lib/stream/parse-ui-message-stream";
 export interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
-  citations?: FileCitation[];
   isStreaming?: boolean;
   className?: string;
   messageId?: string;
