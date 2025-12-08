@@ -94,7 +94,9 @@ export function YearlyRecapBanner() {
       
       {/* Banner - always shown */}
       <div className="mx-2 my-2 mb-2">
-        <div className="relative overflow-hidden rounded-xl bg-[#EEEFEB] p-6">
+        <div className="relative overflow-hidden rounded-xl p-6" style={{
+          background: "linear-gradient(to right, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 25%, #EEEFEB 50%, rgba(16, 185, 129, 0.1) 75%, rgba(16, 185, 129, 0.2) 100%)"
+        }}>
           {/* Decorative elements */}
           <DocumentStackSVG className="absolute -top-2 -right-2 w-24 h-28" />
           {/* <PeachPaperSVG className="absolute bottom-2 left-2 w-16 h-16" /> */}
@@ -121,7 +123,7 @@ export function YearlyRecapBanner() {
             </div>
             <Button 
               onClick={handleOpenModal} 
-              className="bg-gray-900 hover:bg-gray-800 text-white gap-2 shrink-0"
+              className="bg-gray-900 hover:bg-black text-white gap-2 shrink-0"
             >
               See your Wrapped
               <ArrowRight className="h-4 w-4" />

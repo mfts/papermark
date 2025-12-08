@@ -23,8 +23,6 @@ import {
   Building2,
   Copy,
   Download,
-  Linkedin,
-  Twitter,
   Globe2,
   Files,
   Folder,
@@ -33,6 +31,8 @@ import {
   Grid3x3,
   Circle
 } from "lucide-react";
+import LinkedInIcon from "@/components/shared/icons/linkedin";
+import TwitterIcon from "@/components/shared/icons/twitter";
 import { toast } from "sonner";
 import useSWR from "swr";
 
@@ -109,7 +109,7 @@ const CurvedLineSVG = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const RECAP_GRADIENT = "bg-[#EEEFEB]";
+const RECAP_GRADIENT = "";
 
 const slides = [
   { id: "intro", gradient: RECAP_GRADIENT },
@@ -250,7 +250,9 @@ My Papermark Wrapped ${stats?.year}!
   if (isLoading || !stats) {
     return (
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-4xl bg-[#EEEFEB]">
+        <DialogContent className="max-w-4xl p-0 overflow-hidden border-0" style={{
+          background: "linear-gradient(to right, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 25%, #EEEFEB 50%, rgba(16, 185, 129, 0.1) 75%, rgba(16, 185, 129, 0.2) 100%)"
+        }}>
           <div className="flex items-center justify-center p-8">
             <div className="text-center text-balance">Loading your recap...</div>
           </div>
@@ -263,7 +265,7 @@ My Papermark Wrapped ${stats?.year}!
   if (showShareView) {
     return (
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-[700px] p-0 overflow-hidden border-0 bg-[#EEEFEB]">
+        <DialogContent className="max-w-[700px] p-0 overflow-hidden border-0 bg-white">
           {/* Close button */}
           <button
             onClick={() => setShowShareView(false)}
@@ -282,7 +284,7 @@ My Papermark Wrapped ${stats?.year}!
               return (
                 <div
                   ref={shareCardRef}
-                  className="rounded-2xl overflow-hidden bg-[#EEEFEB] p-8 w-full max-w-[500px]"
+                  className="rounded-2xl overflow-hidden bg-gray-100 p-8 w-full max-w-[500px]"
                 >
                   {/* Stats Grid */}
                   <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
@@ -346,7 +348,7 @@ My Papermark Wrapped ${stats?.year}!
                 size="icon"
                 className="rounded-full"
               >
-                <Linkedin className="h-4 w-4" />
+                <LinkedInIcon className="h-4 w-4" color={false} />
               </Button>
               <Button
                 onClick={handleShareTwitter}
@@ -354,7 +356,7 @@ My Papermark Wrapped ${stats?.year}!
                 size="icon"
                 className="rounded-full"
               >
-                <Twitter className="h-4 w-4" />
+                <TwitterIcon className="h-4 w-4" />
               </Button>
               <Button
                 onClick={handleDownload}
@@ -382,9 +384,12 @@ My Papermark Wrapped ${stats?.year}!
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[1100px] min-w-[700px] p-0 overflow-hidden border-0 bg-[#EEEFEB] [&>button]:hidden">
+      <DialogContent className="max-w-[1100px] min-w-[700px] p-0 overflow-hidden border-0 [&>button]:hidden">
         <div 
-          className={cn("relative min-h-[700px] rounded-3xl shadow-2xl overflow-hidden", slides[currentSlide].gradient)}
+          className="relative min-h-[700px] rounded-3xl shadow-2xl overflow-hidden"
+          style={{
+            background: "linear-gradient(to right, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 25%, #EEEFEB 50%, rgba(16, 185, 129, 0.1) 75%, rgba(16, 185, 129, 0.2) 100%)"
+          }}
         >
           {/* Decorative background elements - same as banner */}
           {/* <DocumentStackSVG className="absolute top-16 -right-2 w-24 h-28 text-foreground opacity-50" /> */}
@@ -569,17 +574,6 @@ function ViewsStatsSlide({ stats }: { stats: YearlyRecapStats }) {
         Your {stats.year} activity on Papermark
       </h2>
       
-      {/* Busiest month */}
-      {stats.mostActiveMonth && (
-        <div className="mb-8 bg-card rounded-2xl px-8 py-5 shadow-lg animate-in slide-in-from-top-4 duration-700">
-          <div className="flex items-center gap-3 text-sm">
-            <Calendar className="h-5 w-5 text-orange-600" />
-            <span className="text-muted-foreground">Busiest month:</span>
-            <span className="font-semibold text-foreground">{stats.mostActiveMonth.month}</span>
-          </div>
-        </div>
-      )}
-      
       {/* Cards from right */}
       <div className="grid grid-cols-3 gap-5 w-full max-w-5xl animate-in slide-in-from-right-8 duration-700">
         <div className="bg-card rounded-2xl p-10 text-center shadow-lg">
@@ -643,6 +637,17 @@ function SummarySlide({ stats }: { stats: YearlyRecapStats }) {
       <p className="text-muted-foreground text-lg max-w-xl text-balance">
         You&apos;ve made an impact with your documents. Here&apos;s to an even bigger {stats.year + 1}!
       </p>
+      
+      {/* Busiest month */}
+      {stats.mostActiveMonth && (
+        <div className="mt-8 bg-card rounded-2xl px-8 py-5 shadow-lg animate-in zoom-in-75 duration-700">
+          <div className="flex items-center gap-3 text-sm">
+            <Calendar className="h-5 w-5 text-orange-600" />
+            <span className="text-muted-foreground">Busiest month:</span>
+            <span className="font-semibold text-foreground">{stats.mostActiveMonth.month}</span>
+          </div>
+        </div>
+      )}
       
       {/* Numbers only */}
       {/* <div className="flex items-center justify-center gap-8 mt-10">

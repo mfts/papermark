@@ -19,51 +19,51 @@ export async function getYearInReviewStats(teamId: string, year?: number) {
     dataroomCounts,
     mostActiveViewer,
   ] = await Promise.all([
-    prisma.document.findMany({
-      where: { teamId },
-      select: { id: true },
-    }),
+      prisma.document.findMany({
+        where: { teamId },
+        select: { id: true },
+      }),
 
     // 1. Total documents, links, and views for the year
-    prisma.team.findUnique({
-      where: { id: teamId },
-      select: {
-        _count: {
-          select: {
-            documents: {
-              where: {
-                createdAt: {
+      prisma.team.findUnique({
+        where: { id: teamId },
+        select: {
+          _count: {
+            select: {
+              documents: {
+                where: {
+                  createdAt: {
                   gte: yearStart,
                   lt: yearEnd,
+                  },
                 },
               },
-            },
-            links: {
-              where: {
-                createdAt: {
+              links: {
+                where: {
+                  createdAt: {
                   gte: yearStart,
                   lt: yearEnd,
+                  },
                 },
               },
-            },
-            views: {
-              where: {
-                viewedAt: {
+              views: {
+                where: {
+                  viewedAt: {
                   gte: yearStart,
                   lt: yearEnd,
-                },
+                  },
                 isArchived: false,
+                },
               },
             },
           },
         },
-      },
-    }),
+      }),
 
-    // 2. Most viewed document
-    prisma.$queryRaw<
-      Array<{ documentId: string; documentName: string; viewCount: number }>
-    >(Prisma.sql`
+      // 2. Most viewed document
+      prisma.$queryRaw<
+        Array<{ documentId: string; documentName: string; viewCount: number }>
+      >(Prisma.sql`
       WITH RankedDocuments AS (
         SELECT 
           d."id" as "documentId",
@@ -88,8 +88,8 @@ export async function getYearInReviewStats(teamId: string, year?: number) {
       LIMIT 1
     `),
 
-    // 3. Most active month
-    prisma.$queryRaw<Array<{ month: Date; viewCount: number }>>(Prisma.sql`
+      // 3. Most active month
+      prisma.$queryRaw<Array<{ month: Date; viewCount: number }>>(Prisma.sql`
       WITH MonthlyViews AS (
         SELECT 
           DATE_TRUNC('month', "viewedAt") as month,
@@ -151,7 +151,7 @@ export async function getYearInReviewStats(teamId: string, year?: number) {
       WHERE rn = 1
       LIMIT 1
     `),
-  ]);
+    ]);
 
   // skip if no documents
   if (documents.length === 0) {
