@@ -469,36 +469,52 @@ export async function POST(request: NextRequest) {
 
     try {
       let viewer: { id: string; verified: boolean } | null = null;
-      if (email && !isPreview) {
-        // find or create a viewer
-        console.time("find-viewer");
-        viewer = await prisma.viewer.findUnique({
-          where: {
-            teamId_email: {
-              teamId: link.teamId!,
-              email: email,
+      if (!isPreview) {
+        if (email) {
+          // find or create a viewer with email
+          console.time("find-viewer");
+          viewer = await prisma.viewer.findUnique({
+            where: {
+              teamId_email: {
+                teamId: link.teamId!,
+                email: email,
+              },
             },
-          },
-          select: { id: true, verified: true },
-        });
-        console.timeEnd("find-viewer");
+            select: { id: true, verified: true },
+          });
+          console.timeEnd("find-viewer");
 
-        if (!viewer) {
-          console.time("create-viewer");
+          if (!viewer) {
+            console.time("create-viewer");
+            viewer = await prisma.viewer.create({
+              data: {
+                email: email,
+                verified: isEmailVerified,
+                teamId: link.teamId!,
+              },
+              select: { id: true, verified: true },
+            });
+            console.timeEnd("create-viewer");
+          } else if (!viewer.verified && isEmailVerified) {
+            await prisma.viewer.update({
+              where: { id: viewer.id },
+              data: { verified: isEmailVerified },
+            });
+          }
+        } else {
+          // For anonymous viewers, create with a generated email based on IP and user agent
+          // This allows anonymous users to participate in conversations
+          const anonymousEmail = `anonymous-${ipAddress?.replace(/\./g, '-') || 'unknown'}-${Date.now()}@anonymous.papermark.com`;
+          console.time("create-anonymous-viewer");
           viewer = await prisma.viewer.create({
             data: {
-              email: email,
-              verified: isEmailVerified,
+              email: anonymousEmail,
+              verified: false,
               teamId: link.teamId!,
             },
             select: { id: true, verified: true },
           });
-          console.timeEnd("create-viewer");
-        } else if (!viewer.verified && isEmailVerified) {
-          await prisma.viewer.update({
-            where: { id: viewer.id },
-            data: { verified: isEmailVerified },
-          });
+          console.timeEnd("create-anonymous-viewer");
         }
       }
 
@@ -663,6 +679,7 @@ export async function POST(request: NextRequest) {
       const returnObject = {
         message: "View recorded",
         viewId: !isPreview && newView ? newView.id : undefined,
+        viewerId: viewer?.id || undefined,
         isPreview: isPreview ? true : undefined,
         file:
           (documentVersion &&

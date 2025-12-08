@@ -85,7 +85,7 @@ export const DEFAULT_LINK_PROPS = (
   groupId: groupId,
   customFields: [],
   tags: [],
-  enableConversation: false,
+  enableConversation: linkType === LinkType.DOCUMENT_LINK ? true : false,
   enableUpload: false,
   isFileRequestOnly: false,
   uploadFolderId: null,
