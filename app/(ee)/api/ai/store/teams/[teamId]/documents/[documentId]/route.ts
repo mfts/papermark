@@ -54,7 +54,7 @@ export async function POST(
 
     // Get document and version
     const document = await prisma.document.findUnique({
-      where: { id: documentId },
+      where: { id: documentId, teamId },
       include: {
         team: {
           select: {
@@ -186,10 +186,10 @@ export async function POST(
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { documentId: string } },
+  { params }: { params: { documentId: string; teamId: string } },
 ) {
   try {
-    const { documentId } = params;
+    const { documentId, teamId } = params;
     const session = await getServerSession(authOptions);
 
     if (!session) {
@@ -198,20 +198,36 @@ export async function DELETE(
 
     const userId = (session.user as CustomUser).id;
 
+    // Verify user is member of team
+    const userTeam = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId,
+          teamId,
+        },
+      },
+    });
+
+    if (!userTeam) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Get document and verify user access
     const document = await prisma.document.findUnique({
-      where: { id: documentId },
+      where: { id: documentId, teamId },
       include: {
         team: {
-          include: {
-            users: {
-              where: { userId },
-            },
+          select: {
+            vectorStoreId: true,
           },
         },
         versions: {
           where: { isPrimary: true },
           take: 1,
+          select: {
+            id: true,
+            vectorStoreFileId: true,
+          },
         },
       },
     });
@@ -221,10 +237,6 @@ export async function DELETE(
         { error: "Document not found" },
         { status: 404 },
       );
-    }
-
-    if (document.team.users.length === 0) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Check if AI feature is enabled for this team

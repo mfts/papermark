@@ -63,9 +63,7 @@ If you cannot find the answer in the documents, say so clearly.`,
       key: "documentId",
       value: filterDocumentId,
     };
-  }
-
-  if (filteredDataroomDocumentIds) {
+  } else if (filteredDataroomDocumentIds) {
     fileSearchOptions.filters = {
       type: "in",
       key: "dataroomDocumentId",
@@ -73,7 +71,7 @@ If you cannot find the answer in the documents, say so clearly.`,
     };
   }
 
-  const latestMessage = history.at(-1);
+  const latestMessage = history.at(0);
   const previousResponseId =
     (latestMessage?.metadata as { responseId?: string } | null)?.responseId ??
     null;
