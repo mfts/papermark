@@ -46,8 +46,8 @@ export const chatQuerySchema = z.object({
   dataroomId: z.string().cuid().optional(),
   userId: z.string().cuid().optional(),
   viewerId: z.string().cuid().optional(),
-  limit: z.number().int().min(1).max(100).optional().default(20),
-  offset: z.number().int().min(0).optional().default(0),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+  offset: z.coerce.number().int().min(0).optional().default(0),
 });
 
 /**
