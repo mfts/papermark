@@ -14,7 +14,6 @@ export function useDomains({ enabled = false }: { enabled?: boolean } = {}) {
     fetcher,
     {
       dedupingInterval: 60000,
-      revalidateOnFocus: false,
     },
   );
 
