@@ -206,6 +206,7 @@ export default async function handler(
               isFileRequestOnly: linkData.isFileRequestOnly,
               uploadFolderId: linkData.uploadFolderId,
             }),
+            enableAIAgents: linkData.enableAIAgents || false,
             enableConversation: linkData.enableConversation || false,
             showBanner: linkData.showBanner,
             ...(linkData.customFields && {

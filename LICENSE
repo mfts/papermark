@@ -2,7 +2,7 @@ Copyright (c) 2023-present Papermark, Inc.
 
 Portions of this software are licensed as follows:
 
-- All content that resides under https://github.com/mfts/papermark/tree/main/ee directory of this repository (Commercial License) is licensed under the license defined in "ee/LICENSE".
+- All content that resides under https://github.com/mfts/papermark/tree/main/ee and https://github.com/mfts/papermark/tree/main/app/(ee) directory of this repository (Commercial License) is licensed under the license defined in "ee/LICENSE".
 - All third party components incorporated into the Papermark Software are licensed under the original license provided by the owner of the applicable component.
 - Content outside of the above mentioned directories or restrictions above is available under the "AGPLv3" license as defined below.
 
