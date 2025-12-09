@@ -13,7 +13,7 @@ import {
   sendDataroomTrialInfoEmailTask,
 } from "@/lib/trigger/send-scheduled-email";
 import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { log, logStore } from "@/lib/utils";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -81,6 +81,18 @@ export default async function handle(
         message: `Dataroom Trial: ${teamId} \n\nEmail: ${email} \nName: ${fullName} \nCompany Name: ${companyName} \nUse Case: ${useCase} \nCompany Size: ${companySize} \nTools: ${tools}`,
         type: "trial",
         mention: true,
+      });
+
+      await logStore({
+        object: {
+          teamId: teamId,
+          email: email,
+          fullName: fullName,
+          companyName: companyName,
+          useCase: useCase,
+          companySize: companySize,
+          tools: tools,
+        },
       });
 
       await prisma.team.update({

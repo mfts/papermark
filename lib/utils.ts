@@ -59,6 +59,32 @@ export async function fetcher<JSON = any>(
   return res.json();
 }
 
+export const logStore = async ({ object }: { object: any }) => {
+  /* If in development or env variable not set, log to the console */
+  if (
+    process.env.NODE_ENV === "development" ||
+    !process.env.PPMK_STORE_WEBHOOK_URL
+  ) {
+    console.log(object);
+    return;
+  }
+
+  try {
+    if (process.env.PPMK_STORE_WEBHOOK_URL) {
+      return await fetch(process.env.PPMK_STORE_WEBHOOK_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(object),
+      });
+    }
+  } catch (e) {
+    console.error("Error logging store:", e);
+    return;
+  }
+};
+
 export const log = async ({
   message,
   type,
