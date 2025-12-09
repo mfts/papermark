@@ -1,42 +1,39 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { 
-  X, 
-  ChevronLeft, 
-  ChevronRight, 
-  Share2,
-  Eye,
-  Clock,
-  FileText,
-  Calendar,
-  Users,
-  Database,
   ArrowRight,
-  MapPin,
-  Building2,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  Clock,
   Copy,
+  Database,
   Download,
-  Globe2,
+  Eye,
+  FileText,
   Files,
   Folder,
-  Paperclip,
-  StickyNote,
+  Globe2,
   Grid3x3,
-  Circle
+  MapPin,
+  Paperclip,
+  Share2,
+  StickyNote,
+  Users,
+  X,
 } from "lucide-react";
-import LinkedInIcon from "@/components/shared/icons/linkedin";
-import TwitterIcon from "@/components/shared/icons/twitter";
 import { toast } from "sonner";
 import useSWR from "swr";
 
-import { fetcher, cn } from "@/lib/utils";
+import { cn, fetcher } from "@/lib/utils";
+
+import LinkedInIcon from "@/components/shared/icons/linkedin";
+import TwitterIcon from "@/components/shared/icons/twitter";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface YearlyRecapStats {
   year: number;
@@ -60,7 +57,7 @@ interface YearlyRecapStats {
   } | null;
   totalDuration: number;
   uniqueCountries: string[];
-  uniqueCities?: string[];
+  distanceTraveled: number;
 }
 
 interface YearlyRecapModalProps {
@@ -71,29 +68,92 @@ interface YearlyRecapModalProps {
 
 // Decorative SVG Components
 const DocumentStackSVG = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="10" y="10" width="60" height="80" rx="2" fill="#F5F5F5" stroke="currentColor" strokeWidth="1.5" />
-    <rect x="15" y="20" width="60" height="80" rx="2" fill="#F5F5F5" stroke="currentColor" strokeWidth="1.5" />
-    <rect x="20" y="30" width="60" height="80" rx="2" fill="#F5F5F5" stroke="currentColor" strokeWidth="1.5" />
+  <svg
+    className={className}
+    viewBox="0 0 100 120"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <rect
+      x="10"
+      y="10"
+      width="60"
+      height="80"
+      rx="2"
+      fill="#F5F5F5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    />
+    <rect
+      x="15"
+      y="20"
+      width="60"
+      height="80"
+      rx="2"
+      fill="#F5F5F5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    />
+    <rect
+      x="20"
+      y="30"
+      width="60"
+      height="80"
+      rx="2"
+      fill="#F5F5F5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    />
   </svg>
 );
 
 const FolderTabSVG = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 20 L10 70 L70 70 L70 30 L45 30 L35 20 Z" fill="#FFB84D" opacity="0.4" stroke="#FFB84D" strokeWidth="1.5" />
+  <svg
+    className={className}
+    viewBox="0 0 100 80"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M10 20 L10 70 L70 70 L70 30 L45 30 L35 20 Z"
+      fill="#FFB84D"
+      opacity="0.4"
+      stroke="#FFB84D"
+      strokeWidth="1.5"
+    />
     <path d="M10 20 L35 20 L45 30 L10 30 Z" fill="#FFB84D" opacity="0.6" />
   </svg>
 );
 
 const StickyNoteSVG = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="10" y="10" width="60" height="60" rx="2" fill="#90EE90" opacity="0.4" stroke="#90EE90" strokeWidth="1.5" />
+  <svg
+    className={className}
+    viewBox="0 0 80 80"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <rect
+      x="10"
+      y="10"
+      width="60"
+      height="60"
+      rx="2"
+      fill="#90EE90"
+      opacity="0.4"
+      stroke="#90EE90"
+      strokeWidth="1.5"
+    />
     <path d="M10 10 L70 10 L60 20 L10 20 Z" fill="#90EE90" opacity="0.6" />
   </svg>
 );
 
 const ScatterDotsSVG = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    className={className}
+    viewBox="0 0 100 100"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <circle cx="25" cy="30" r="2" fill="#000000" opacity="0.5" />
     <circle cx="45" cy="25" r="1.5" fill="#000000" opacity="0.5" />
     <circle cx="65" cy="35" r="2" fill="#000000" opacity="0.5" />
@@ -104,8 +164,19 @@ const ScatterDotsSVG = ({ className }: { className?: string }) => (
 );
 
 const CurvedLineSVG = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M0 25 Q50 10, 100 25 T200 25" stroke="#D3D3D3" strokeWidth="2" fill="none" opacity="0.5" />
+  <svg
+    className={className}
+    viewBox="0 0 200 50"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M0 25 Q50 10, 100 25 T200 25"
+      stroke="#D3D3D3"
+      strokeWidth="2"
+      fill="none"
+      opacity="0.5"
+    />
   </svg>
 );
 
@@ -132,7 +203,7 @@ export function YearlyRecapModal({
   const shareCardRef = useRef<HTMLDivElement>(null);
 
   const { data: stats, isLoading } = useSWR<YearlyRecapStats>(
-    teamId ? `/api/teams/${teamId}/yearly-recap` : null,
+    teamId && isOpen ? `/api/teams/${teamId}/yearly-recap` : null,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -163,7 +234,7 @@ export function YearlyRecapModal({
 
   const captureImage = useCallback(async (): Promise<Blob | null> => {
     if (!shareCardRef.current) return null;
-    
+
     try {
       const html2canvas = (await import("html2canvas")).default;
       const canvas = await html2canvas(shareCardRef.current, {
@@ -171,7 +242,7 @@ export function YearlyRecapModal({
         backgroundColor: null,
         useCORS: true,
       });
-      
+
       return new Promise((resolve) => {
         canvas.toBlob((blob) => {
           resolve(blob);
@@ -216,10 +287,10 @@ export function YearlyRecapModal({
   };
 
   const getShareText = () => {
-    const totalMinutes = Math.floor((stats?.totalDuration || 0) / 60);
+    const totalMinutes = Math.floor((stats?.totalDuration || 0) / 60_000); // from milliseconds to minutes
     const countriesCount = stats?.uniqueCountries?.length || 0;
-    const distanceTraveled = Math.round(countriesCount * 2500);
-    
+    const distanceTraveled = stats?.distanceTraveled || 0;
+
     return `· ${totalMinutes.toLocaleString()} min my docs were viewed
 · ${distanceTraveled.toLocaleString()} km travelled my documents
 · ${stats?.totalDocuments} documents
@@ -235,7 +306,7 @@ My Papermark Wrapped ${stats?.year}!
     const text = getShareText();
     window.open(
       `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://www.papermark.com/")}&summary=${encodeURIComponent(text)}`,
-      "_blank"
+      "_blank",
     );
   };
 
@@ -243,18 +314,24 @@ My Papermark Wrapped ${stats?.year}!
     const text = getShareText();
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
-      "_blank"
+      "_blank",
     );
   };
 
   if (isLoading || !stats) {
     return (
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden border-0" style={{
-          background: "linear-gradient(to right, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 25%, #EEEFEB 50%, rgba(16, 185, 129, 0.1) 75%, rgba(16, 185, 129, 0.2) 100%)"
-        }}>
+        <DialogContent
+          className="max-w-4xl overflow-hidden border-0 p-0"
+          style={{
+            background:
+              "linear-gradient(to right, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 25%, #EEEFEB 50%, rgba(16, 185, 129, 0.1) 75%, rgba(16, 185, 129, 0.2) 100%)",
+          }}
+        >
           <div className="flex items-center justify-center p-8">
-            <div className="text-center text-balance">Loading your recap...</div>
+            <div className="text-balance text-center">
+              Loading your recap...
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -265,11 +342,11 @@ My Papermark Wrapped ${stats?.year}!
   if (showShareView) {
     return (
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-[700px] p-0 overflow-hidden border-0 bg-white">
+        <DialogContent className="max-w-[700px] overflow-hidden border-0 bg-white p-0">
           {/* Close button */}
           <button
             onClick={() => setShowShareView(false)}
-            className="absolute top-4 right-4 z-50 text-foreground/60 hover:text-foreground transition-colors"
+            className="absolute right-4 top-4 z-50 text-foreground/60 transition-colors hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </button>
@@ -277,32 +354,39 @@ My Papermark Wrapped ${stats?.year}!
           {/* Shareable Card */}
           <div className="p-6">
             {(() => {
-              const totalMinutes = Math.floor(stats.totalDuration / 60);
-              const countriesCount = stats.uniqueCountries?.length || 0;
-              const distanceTraveled = Math.round(countriesCount * 2500);
-              
+              const totalMinutes = Math.floor(stats.totalDuration / 60_000); // from milliseconds to minutes
+              const distanceTraveled = stats.distanceTraveled || 0;
+
               return (
                 <div
                   ref={shareCardRef}
-                  className="rounded-2xl overflow-hidden bg-gray-100 p-8 w-full max-w-[500px]"
+                  className="w-full max-w-[500px] overflow-hidden rounded-2xl bg-gray-100 p-8"
                 >
                   {/* Stats Grid */}
-                  <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
+                  <div className="mb-6 rounded-xl bg-white p-6 shadow-sm">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="text-center">
-                        <div className="text-4xl font-bold text-black mb-1">{totalMinutes.toLocaleString()}</div>
+                        <div className="mb-1 text-4xl font-bold text-black">
+                          {totalMinutes.toLocaleString()}
+                        </div>
                         <p className="text-xs text-gray-600">minutes viewed</p>
                       </div>
                       <div className="text-center">
-                        <div className="text-4xl font-bold text-black mb-1">{distanceTraveled.toLocaleString()}</div>
+                        <div className="mb-1 text-4xl font-bold text-black">
+                          {distanceTraveled.toLocaleString()}
+                        </div>
                         <p className="text-xs text-gray-600">km travelled</p>
                       </div>
                       <div className="text-center">
-                        <div className="text-4xl font-bold text-black mb-1">{stats.totalDocuments}</div>
+                        <div className="mb-1 text-4xl font-bold text-black">
+                          {stats.totalDocuments}
+                        </div>
                         <p className="text-xs text-gray-600">documents</p>
                       </div>
                       <div className="text-center">
-                        <div className="text-4xl font-bold text-black mb-1">{stats.totalViews.toLocaleString()}</div>
+                        <div className="mb-1 text-4xl font-bold text-black">
+                          {stats.totalViews.toLocaleString()}
+                        </div>
                         <p className="text-xs text-gray-600">views</p>
                       </div>
                     </div>
@@ -313,12 +397,16 @@ My Papermark Wrapped ${stats?.year}!
                   </div>
 
                   {/* Branding */}
-                  <div className="text-center mt-6">
+                  <div className="mt-6 text-center">
                     <div className="inline-flex items-center gap-2">
-                      <span className="text-lg font-bold text-gray-900">Papermark</span>
-                      <span className="text-lg font-black text-gray-900">WRAPPED</span>
+                      <span className="text-lg font-bold text-gray-900">
+                        Papermark
+                      </span>
+                      <span className="text-lg font-black text-gray-900">
+                        WRAPPED
+                      </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">papermark.com</p>
+                    <p className="mt-1 text-xs text-gray-500">papermark.com</p>
                   </div>
                 </div>
               );
@@ -326,13 +414,16 @@ My Papermark Wrapped ${stats?.year}!
           </div>
 
           {/* $50 grant text */}
-          <p className="px-6 text-sm text-muted-foreground text-center mb-4">
-            Share your stats and receive <span className="font-semibold text-orange-600">$50</span> in credits on your papermark account, please send confirmation to <span className="font-medium">support@papermark.com</span> and include screenshot or link to your post. 
-
+          <p className="mb-4 px-6 text-center text-sm text-muted-foreground">
+            Share your stats and receive{" "}
+            <span className="font-semibold text-orange-600">$50</span> in
+            credits on your papermark account, please send confirmation to{" "}
+            <span className="font-medium">support@papermark.com</span> and
+            include screenshot or link to your post.
           </p>
 
           {/* Share buttons */}
-          <div className="px-6 pb-6 flex items-center justify-between">
+          <div className="flex items-center justify-between px-6 pb-6">
             <div className="flex items-center gap-2">
               <Button
                 onClick={handleCopyLink}
@@ -368,10 +459,10 @@ My Papermark Wrapped ${stats?.year}!
                 <Download className="h-4 w-4" />
               </Button>
             </div>
-            
+
             <Button
               onClick={() => setShowShareView(false)}
-              className="bg-gradient-to-r from-orange-500 to-orange-500 hover:from-orange-600 hover:to-orange-600 text-white gap-2 rounded-full"
+              className="gap-2 rounded-full bg-gradient-to-r from-orange-500 to-orange-500 text-white hover:from-orange-600 hover:to-orange-600"
             >
               Back to Wrapped
               <ArrowRight className="h-4 w-4" />
@@ -384,18 +475,19 @@ My Papermark Wrapped ${stats?.year}!
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[1100px] min-w-[700px] p-0 overflow-hidden border-0 [&>button]:hidden">
-        <div 
-          className="relative min-h-[700px] rounded-3xl shadow-2xl overflow-hidden"
+      <DialogContent className="min-w-[700px] max-w-[1100px] overflow-hidden border-0 p-0 [&>button]:hidden">
+        <div
+          className="relative min-h-[700px] overflow-hidden rounded-3xl shadow-2xl"
           style={{
-            background: "linear-gradient(to right, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 25%, #EEEFEB 50%, rgba(16, 185, 129, 0.1) 75%, rgba(16, 185, 129, 0.2) 100%)"
+            background:
+              "linear-gradient(to right, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 25%, #EEEFEB 50%, rgba(16, 185, 129, 0.1) 75%, rgba(16, 185, 129, 0.2) 100%)",
           }}
         >
           {/* Decorative background elements - same as banner */}
           {/* <DocumentStackSVG className="absolute top-16 -right-2 w-24 h-28 text-foreground opacity-50" /> */}
           {/* <ScatterDotsSVG className="absolute top-1/4 left-1/4 w-20 h-20" /> */}
           {/* <Paperclip className="absolute bottom-16 left-8 w-16 h-16 text-foreground/30" strokeWidth="1" /> */}
-          
+
           {/* Progress bar */}
           <div className="relative z-10 flex gap-2 p-8">
             {slides.map((_, index) => (
@@ -403,7 +495,9 @@ My Papermark Wrapped ${stats?.year}!
                 key={index}
                 className={cn(
                   "h-1.5 flex-1 rounded-full transition-all duration-300",
-                  index <= currentSlide ? "bg-foreground/40" : "bg-foreground/10"
+                  index <= currentSlide
+                    ? "bg-foreground/40"
+                    : "bg-foreground/10",
                 )}
               />
             ))}
@@ -412,14 +506,16 @@ My Papermark Wrapped ${stats?.year}!
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-8 right-8 z-50 text-foreground/60 hover:text-foreground transition-colors"
+            className="absolute right-8 top-8 z-50 text-foreground/60 transition-colors hover:text-foreground"
           >
             <X className="h-6 w-6" />
           </button>
 
           {/* Slide content */}
           <div className="relative z-10 px-16 pb-16 pt-4">
-            {currentSlide === 0 && <IntroSlide stats={stats} onNext={nextSlide} />}
+            {currentSlide === 0 && (
+              <IntroSlide stats={stats} onNext={nextSlide} />
+            )}
             {currentSlide === 1 && <GlobalFootprintSlide stats={stats} />}
             {currentSlide === 2 && <MinutesSlide stats={stats} />}
             {currentSlide === 3 && <ViewsStatsSlide stats={stats} />}
@@ -442,7 +538,7 @@ My Papermark Wrapped ${stats?.year}!
               </Button>
               <Button
                 onClick={handleShare}
-                className="bg-foreground hover:bg-foreground/90 text-gray-100 gap-2 rounded-full px-6"
+                className="gap-2 rounded-full bg-foreground px-6 text-gray-100 hover:bg-foreground/90"
               >
                 <Share2 className="h-4 w-4" />
                 Share
@@ -464,22 +560,29 @@ My Papermark Wrapped ${stats?.year}!
   );
 }
 
-function IntroSlide({ stats, onNext }: { stats: YearlyRecapStats; onNext: () => void }) {
+function IntroSlide({
+  stats,
+  onNext,
+}: {
+  stats: YearlyRecapStats;
+  onNext: () => void;
+}) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[520px] text-center relative">
-      <h1 className="text-6xl font-semibold text-foreground mb-4 relative z-10 text-balance">
-        Your {stats.year} with <span className="text-orange-500">Papermark</span>
+    <div className="relative flex min-h-[520px] flex-col items-center justify-center text-center">
+      <h1 className="relative z-10 mb-4 text-balance text-6xl font-semibold text-foreground">
+        Your {stats.year} with{" "}
+        <span className="text-orange-500">Papermark</span>
       </h1>
-      <p className="max-w-xl text-sm text-gray-500 mb-14 relative z-10">
-        This review is personalised to your platform usage and contains your stats.
-    
+      <p className="relative z-10 mb-14 max-w-xl text-sm text-gray-500">
+        This review is personalised to your platform usage and contains your
+        stats.
       </p>
 
       {/* Let's go button - only appears from bottom */}
       <Button
         onClick={onNext}
         size="lg"
-        className="bg-black  hover:from-orange-600 hover:to-orange-600 text-white text-lg px-10 py-3 h-auto rounded-full shadow-xl animate-in slide-in-from-bottom-12 duration-700 relative z-10"
+        className="relative z-10 h-auto rounded-full bg-black px-10 py-3 text-lg text-white shadow-xl duration-700 animate-in slide-in-from-bottom-12 hover:from-orange-600 hover:to-orange-600"
       >
         Let&apos;s go
         <ArrowRight className="ml-2 h-5 w-5" />
@@ -490,38 +593,33 @@ function IntroSlide({ stats, onNext }: { stats: YearlyRecapStats; onNext: () => 
 
 function GlobalFootprintSlide({ stats }: { stats: YearlyRecapStats }) {
   const countriesCount = stats.uniqueCountries.length;
-  const citiesCount = stats.uniqueCities?.length || Math.round(countriesCount * 1.5);
-  const distanceTraveled = Math.round(countriesCount * 2500);
-  
+  const distanceTraveled = stats.distanceTraveled;
+
   return (
-    <div className="min-h-[520px] flex flex-col items-center justify-center text-center">
+    <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
       {/* Title section - appears from top */}
-      <div className="animate-in slide-in-from-top-8 duration-700">
+      <div className="duration-700 animate-in slide-in-from-top-8">
         {/* Big number */}
-        <h2 className="text-9xl font-bold text-foreground mb-4 text-balance">
-          {distanceTraveled.toLocaleString()} 
+        <h2 className="mb-4 text-balance text-9xl font-bold text-foreground">
+          {distanceTraveled.toLocaleString()}
           <span className="text-2xl font-normal text-foreground">km</span>
         </h2>
-        
-        <p className="text-2xl font-normal text-foreground mb-8 text-balance">
+
+        <p className="mb-8 text-balance text-2xl font-normal text-foreground">
           your documents travelled this year
         </p>
       </div>
 
-      {/* Two boxes side by side - appears from bottom */}
-      <div className="flex gap-6 animate-in slide-in-from-bottom-8 duration-700">
-        {/* Countries box */}
-        <div className="bg-card rounded-2xl p-8 shadow-lg w-56">
-          <MapPin className="h-8 w-8 text-orange-600 mx-auto mb-4" />
-          <div className="text-5xl font-bold text-foreground">{countriesCount}</div>
-          <p className="text-sm text-muted-foreground mt-2 text-balance">Countries</p>
-        </div>
-        
-        {/* Cities box */}
-        <div className="bg-card rounded-2xl p-8 shadow-lg w-56">
-          <Building2 className="h-8 w-8 text-orange-600 mx-auto mb-4" />
-          <div className="text-5xl font-bold text-foreground">{citiesCount}</div>
-          <p className="text-sm text-muted-foreground mt-2 text-balance">Cities</p>
+      {/* Countries box - appears from bottom */}
+      <div className="duration-700 animate-in slide-in-from-bottom-8">
+        <div className="w-56 rounded-2xl bg-card p-8 shadow-lg">
+          <MapPin className="mx-auto mb-4 h-8 w-8 text-orange-600" />
+          <div className="text-5xl font-bold text-foreground">
+            {countriesCount}
+          </div>
+          <p className="mt-2 text-balance text-sm text-muted-foreground">
+            Countries
+          </p>
         </div>
       </div>
     </div>
@@ -529,34 +627,46 @@ function GlobalFootprintSlide({ stats }: { stats: YearlyRecapStats }) {
 }
 
 function MinutesSlide({ stats }: { stats: YearlyRecapStats }) {
-  const totalMinutes = Math.floor(stats.totalDuration / 60);
-  
+  const totalMinutes = Math.floor(stats.totalDuration / 60_000); // from milliseconds to minutes
+
   return (
-    <div className="min-h-[520px] flex flex-col items-center justify-center text-center">
+    <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
       {/* Header from top */}
-      <div className="animate-in slide-in-from-top-8 duration-700">
-        <p className="text-lg text-muted-foreground mb-2">Total time on your documents</p>
-        <h2 
-          className="text-8xl font-bold text-orange-500 mb-2" 
-          style={{ WebkitTextStroke: '2px currentColor', WebkitTextFillColor: 'transparent' }}
+      <div className="duration-700 animate-in slide-in-from-top-8">
+        <p className="mb-2 text-lg text-muted-foreground">
+          Total time on your documents
+        </p>
+        <h2
+          className="mb-2 text-8xl font-bold text-orange-500"
+          style={{
+            WebkitTextStroke: "2px currentColor",
+            WebkitTextFillColor: "transparent",
+          }}
         >
           {totalMinutes.toLocaleString()}
         </h2>
         <p className="text-2xl font-medium text-foreground">minutes</p>
       </div>
-      
+
       {/* Document card from left */}
       {stats.mostViewedDocument && (
-        <div className="bg-white/80 backdrop-blur rounded-xl p-5 shadow-sm animate-in slide-in-from-left-8 duration-700 mt-8 border border-foreground/5 max-w-xl w-full">
+        <div className="mt-8 w-full max-w-xl rounded-xl border border-foreground/5 bg-white/80 p-5 shadow-sm backdrop-blur duration-700 animate-in slide-in-from-left-8">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-orange-500/10">
               <FileText className="h-6 w-6 text-orange-500" />
             </div>
             <div className="text-left">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Most Viewed</span>
-              <h3 className="font-semibold text-foreground mt-1">{stats.mostViewedDocument.documentName}</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                <span className="font-semibold text-orange-500">{stats.mostViewedDocument.viewCount.toLocaleString()}</span> views
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Most Viewed
+              </span>
+              <h3 className="mt-1 font-semibold text-foreground">
+                {stats.mostViewedDocument.documentName}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                <span className="font-semibold text-orange-500">
+                  {stats.mostViewedDocument.viewCount.toLocaleString()}
+                </span>{" "}
+                views
               </p>
             </div>
           </div>
@@ -568,28 +678,40 @@ function MinutesSlide({ stats }: { stats: YearlyRecapStats }) {
 
 function ViewsStatsSlide({ stats }: { stats: YearlyRecapStats }) {
   return (
-    <div className="min-h-[520px] flex flex-col items-center justify-center">
+    <div className="flex min-h-[520px] flex-col items-center justify-center">
       {/* Header from left */}
-      <h2 className="text-3xl font-bold text-foreground mb-8 animate-in slide-in-from-left-8 duration-700 text-center text-balance">
+      <h2 className="mb-8 text-balance text-center text-3xl font-bold text-foreground duration-700 animate-in slide-in-from-left-8">
         Your {stats.year} activity on Papermark
       </h2>
-      
+
       {/* Cards from right */}
-      <div className="grid grid-cols-3 gap-5 w-full max-w-5xl animate-in slide-in-from-right-8 duration-700">
-        <div className="bg-card rounded-2xl p-10 text-center shadow-lg">
-          <Eye className="h-6 w-6 text-orange-500 mx-auto mb-4" />
-          <span className="text-5xl font-bold text-foreground block">{stats.totalViews.toLocaleString()}</span>
-          <p className="text-sm text-muted-foreground mt-3 font-medium text-balance">Views</p>
+      <div className="grid w-full max-w-5xl grid-cols-3 gap-5 duration-700 animate-in slide-in-from-right-8">
+        <div className="rounded-2xl bg-card p-10 text-center shadow-lg">
+          <Eye className="mx-auto mb-4 h-6 w-6 text-orange-500" />
+          <span className="block text-5xl font-bold text-foreground">
+            {stats.totalViews.toLocaleString()}
+          </span>
+          <p className="mt-3 text-balance text-sm font-medium text-muted-foreground">
+            Views
+          </p>
         </div>
-        <div className="bg-card rounded-2xl p-10 text-center shadow-lg">
-          <FileText className="h-6 w-6 text-orange-500 mx-auto mb-4" />
-          <span className="text-5xl font-bold text-foreground block">{stats.totalDocuments.toLocaleString()}</span>
-          <p className="text-sm text-muted-foreground mt-3 font-medium text-balance">Documents</p>
+        <div className="rounded-2xl bg-card p-10 text-center shadow-lg">
+          <FileText className="mx-auto mb-4 h-6 w-6 text-orange-500" />
+          <span className="block text-5xl font-bold text-foreground">
+            {stats.totalDocuments.toLocaleString()}
+          </span>
+          <p className="mt-3 text-balance text-sm font-medium text-muted-foreground">
+            Documents
+          </p>
         </div>
-        <div className="bg-card rounded-2xl p-10 text-center shadow-lg">
-          <Database className="h-6 w-6 text-orange-600 mx-auto mb-4" />
-          <span className="text-5xl font-bold text-foreground block">{stats.totalDatarooms.toLocaleString()}</span>
-          <p className="text-sm text-muted-foreground mt-3 font-medium text-balance">Datarooms</p>
+        <div className="rounded-2xl bg-card p-10 text-center shadow-lg">
+          <Database className="mx-auto mb-4 h-6 w-6 text-orange-600" />
+          <span className="block text-5xl font-bold text-foreground">
+            {stats.totalDatarooms.toLocaleString()}
+          </span>
+          <p className="mt-3 text-balance text-sm font-medium text-muted-foreground">
+            Datarooms
+          </p>
         </div>
       </div>
     </div>
@@ -598,30 +720,35 @@ function ViewsStatsSlide({ stats }: { stats: YearlyRecapStats }) {
 
 function MostActiveSlide({ stats }: { stats: YearlyRecapStats }) {
   return (
-    <div className="min-h-[520px] flex flex-col items-center justify-center text-center">
-      <h2 className="text-3xl font-bold text-foreground mb-2 text-balance">
+    <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
+      <h2 className="mb-2 text-balance text-3xl font-bold text-foreground">
         Your Most Active Viewer
       </h2>
-      <p className="text-muted-foreground text-lg mb-10 text-balance">
+      <p className="mb-10 text-balance text-lg text-muted-foreground">
         Someone really loves your documents!
       </p>
-      
+
       {/* Card appears from bottom only */}
       {stats.mostActiveViewer ? (
-        <div className="bg-card rounded-3xl p-12 shadow-lg animate-in slide-in-from-bottom-8 duration-700 max-w-xl w-full">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center mx-auto mb-6">
+        <div className="w-full max-w-xl rounded-3xl bg-card p-12 shadow-lg duration-700 animate-in slide-in-from-bottom-8">
+          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/40">
             <Users className="h-12 w-12 text-primary" />
           </div>
-          <h3 className="text-2xl font-bold text-foreground text-balance">
+          <h3 className="text-balance text-2xl font-bold text-foreground">
             {stats.mostActiveViewer.name || stats.mostActiveViewer.email}
           </h3>
-          <p className="text-muted-foreground mt-3 text-balance">
-            Viewed your documents <span className="font-semibold text-primary">{stats.mostActiveViewer.viewCount.toLocaleString()} times</span>
+          <p className="mt-3 text-balance text-muted-foreground">
+            Viewed your documents{" "}
+            <span className="font-semibold text-primary">
+              {stats.mostActiveViewer.viewCount.toLocaleString()} times
+            </span>
           </p>
         </div>
       ) : (
-        <div className="bg-card rounded-3xl p-12 shadow-lg">
-          <p className="text-muted-foreground text-balance">No viewer data available</p>
+        <div className="rounded-3xl bg-card p-12 shadow-lg">
+          <p className="text-balance text-muted-foreground">
+            No viewer data available
+          </p>
         </div>
       )}
     </div>
@@ -630,25 +757,28 @@ function MostActiveSlide({ stats }: { stats: YearlyRecapStats }) {
 
 function SummarySlide({ stats }: { stats: YearlyRecapStats }) {
   return (
-    <div className="min-h-[520px] flex flex-col items-center justify-center text-center">
-      <h2 className="text-4xl font-bold text-foreground mb-4 text-balance">
+    <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
+      <h2 className="mb-4 text-balance text-4xl font-bold text-foreground">
         What a year! 🎉
       </h2>
-      <p className="text-muted-foreground text-lg max-w-xl text-balance">
-        You&apos;ve made an impact with your documents. Here&apos;s to an even bigger {stats.year + 1}!
+      <p className="max-w-xl text-balance text-lg text-muted-foreground">
+        You&apos;ve made an impact with your documents. Here&apos;s to an even
+        bigger {stats.year + 1}!
       </p>
-      
+
       {/* Busiest month */}
       {stats.mostActiveMonth && (
-        <div className="mt-8 bg-card rounded-2xl px-8 py-5 shadow-lg animate-in zoom-in-75 duration-700">
+        <div className="mt-8 rounded-2xl bg-card px-8 py-5 shadow-lg duration-700 animate-in zoom-in-75">
           <div className="flex items-center gap-3 text-sm">
             <Calendar className="h-5 w-5 text-orange-600" />
             <span className="text-muted-foreground">Busiest month:</span>
-            <span className="font-semibold text-foreground">{stats.mostActiveMonth.month}</span>
+            <span className="font-semibold text-foreground">
+              {stats.mostActiveMonth.month}
+            </span>
           </div>
         </div>
       )}
-      
+
       {/* Numbers only */}
       {/* <div className="flex items-center justify-center gap-8 mt-10">
         <span className="text-5xl font-bold text-foreground animate-in zoom-in-75 duration-700" style={{ animationDelay: "0ms" }}>
@@ -667,25 +797,22 @@ function SummarySlide({ stats }: { stats: YearlyRecapStats }) {
 
 function ShareOfferSlide({ stats }: { stats: YearlyRecapStats }) {
   return (
-    <div className="min-h-[520px] flex flex-col items-center justify-center text-center">
-      <h2 className="text-3xl font-bold text-foreground mb-6 text-balance">
+    <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
+      <h2 className="mb-6 text-balance text-3xl font-bold text-foreground">
         Share your stats or experience with Papermark
       </h2>
-      
-      <div className="animate-in zoom-in-50 duration-1000">
-        <span className="text-8xl font-bold text-orange-500 mb-2">
-        
-          <h2 
-          className="text-8xl font-semibold text-black mb-2" 
-        
-        >
-            $50
-        </h2>
+
+      <div className="duration-1000 animate-in zoom-in-50">
+        <span className="mb-2 block text-8xl font-bold text-orange-500">
+          $50
         </span>
       </div>
-      
-      <p className="text-sm text-muted-foreground mt-8 text-balance">
-        You will receive $50 in credits on your papermark account, please send confirmation to <span className="font-medium">support@papermark.com</span> and include screenshot or link to your post. 
+
+      <p className="mt-8 text-balance text-sm text-muted-foreground">
+        You will receive $50 in credits on your papermark account, please send
+        confirmation to{" "}
+        <span className="font-medium">support@papermark.com</span> and include
+        screenshot or link to your post.
       </p>
     </div>
   );
