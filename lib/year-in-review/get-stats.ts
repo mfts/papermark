@@ -210,9 +210,6 @@ export async function getYearInReviewStats(
   const yearStart = new Date(`${currentYear}-01-01`);
   const yearEnd = new Date(`${currentYear + 1}-01-01`);
 
-  console.log("yearStart", yearStart);
-  console.log("yearEnd", yearEnd);
-
   // First, get team member emails to exclude from "most viewed" and "most active viewer"
   const teamMembers = await prisma.userTeam.findMany({
     where: { teamId },
@@ -468,10 +465,6 @@ export async function getYearInReviewStats(
     // Map country codes to full names using COUNTRIES constant
     return COUNTRIES[country] || country;
   });
-
-  console.log("uniqueCountries", uniqueCountries);
-  console.log("totalDuration", totalDuration);
-  console.log("distanceTraveled", distanceTraveled);
 
   return {
     year: currentYear,
