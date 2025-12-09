@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   ArrowRight,
@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Circle,
   Clock,
-  Copy,
   Database,
   Download,
   Eye,
@@ -25,13 +24,14 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWRImmutable from "swr/immutable";
 
+import { useAnalytics } from "@/lib/analytics";
 import { cn, fetcher } from "@/lib/utils";
 
 import LinkedInIcon from "@/components/shared/icons/linkedin";
-import TwitterIcon from "@/components/shared/icons/twitter";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -201,13 +201,65 @@ export function YearlyRecapModal({
   const [showShareView, setShowShareView] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const shareCardRef = useRef<HTMLDivElement>(null);
+  const analytics = useAnalytics();
 
-  const { data: stats, isLoading } = useSWR<YearlyRecapStats>(
+  const { data: stats, isLoading } = useSWRImmutable<YearlyRecapStats>(
     teamId && isOpen ? `/api/teams/${teamId}/yearly-recap` : null,
     fetcher,
-    {
-      revalidateOnFocus: false,
+  );
+
+  const handleClose = () => {
+    setCurrentSlide(0);
+    setShowShareView(false);
+    onClose();
+  };
+
+  // Keyboard shortcuts
+  useHotkeys(
+    "right",
+    () => {
+      if (!showShareView && currentSlide < slides.length - 1) {
+        setCurrentSlide((prev) => prev + 1);
+      }
     },
+    { enabled: isOpen },
+    [showShareView, currentSlide],
+  );
+
+  useHotkeys(
+    "left",
+    () => {
+      if (!showShareView && currentSlide > 0) {
+        setCurrentSlide((prev) => prev - 1);
+      }
+    },
+    { enabled: isOpen },
+    [showShareView, currentSlide],
+  );
+
+  useHotkeys(
+    "enter, space",
+    (e) => {
+      e.preventDefault();
+      if (!showShareView && currentSlide < slides.length - 1) {
+        setCurrentSlide((prev) => prev + 1);
+      }
+    },
+    { enabled: isOpen },
+    [showShareView, currentSlide],
+  );
+
+  useHotkeys(
+    "escape",
+    () => {
+      if (showShareView) {
+        setShowShareView(false);
+      } else {
+        handleClose();
+      }
+    },
+    { enabled: isOpen },
+    [showShareView],
   );
 
   const nextSlide = () => {
@@ -223,13 +275,8 @@ export function YearlyRecapModal({
   };
 
   const handleShare = () => {
+    analytics.capture("Yearly Recap Share Clicked", { teamId });
     setShowShareView(true);
-  };
-
-  const handleClose = () => {
-    setCurrentSlide(0);
-    setShowShareView(false);
-    onClose();
   };
 
   const captureImage = useCallback(async (): Promise<Blob | null> => {
@@ -255,16 +302,11 @@ export function YearlyRecapModal({
     }
   }, []);
 
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText("https://www.papermark.com/");
-      toast.success("Link copied to clipboard!");
-    } catch (error) {
-      toast.error("Failed to copy link");
-    }
-  };
-
   const handleDownload = async () => {
+    analytics.capture("Yearly Recap Share Platform Clicked", {
+      teamId,
+      platform: "download",
+    });
     setIsCapturing(true);
     try {
       const blob = await captureImage();
@@ -303,6 +345,10 @@ My Papermark Wrapped ${stats?.year}!
   };
 
   const handleShareLinkedIn = async () => {
+    analytics.capture("Yearly Recap Share Platform Clicked", {
+      teamId,
+      platform: "linkedin",
+    });
     const text = getShareText();
     window.open(
       `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://www.papermark.com/")}&summary=${encodeURIComponent(text)}`,
@@ -311,6 +357,10 @@ My Papermark Wrapped ${stats?.year}!
   };
 
   const handleShareTwitter = async () => {
+    analytics.capture("Yearly Recap Share Platform Clicked", {
+      teamId,
+      platform: "twitter",
+    });
     const text = getShareText();
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
@@ -342,7 +392,7 @@ My Papermark Wrapped ${stats?.year}!
   if (showShareView) {
     return (
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-[700px] overflow-hidden border-0 bg-white p-0">
+        <DialogContent className="max-w-[700px] overflow-hidden border-0 bg-white p-0 [&>button]:hidden">
           {/* Close button */}
           <button
             onClick={() => setShowShareView(false)}
@@ -426,14 +476,6 @@ My Papermark Wrapped ${stats?.year}!
           <div className="flex items-center justify-between px-6 pb-6">
             <div className="flex items-center gap-2">
               <Button
-                onClick={handleCopyLink}
-                variant="secondary"
-                className="gap-2 rounded-full"
-              >
-                <Copy className="h-4 w-4" />
-                Copy link
-              </Button>
-              <Button
                 onClick={handleShareLinkedIn}
                 variant="secondary"
                 size="icon"
@@ -447,7 +489,14 @@ My Papermark Wrapped ${stats?.year}!
                 size="icon"
                 className="rounded-full"
               >
-                <TwitterIcon className="h-4 w-4" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 1200 1227"
+                  className="h-4 w-4"
+                  fill="currentColor"
+                >
+                  <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" />
+                </svg>
               </Button>
               <Button
                 onClick={handleDownload}
@@ -636,13 +685,7 @@ function MinutesSlide({ stats }: { stats: YearlyRecapStats }) {
         <p className="mb-2 text-lg text-muted-foreground">
           Total time on your documents
         </p>
-        <h2
-          className="mb-2 text-8xl font-bold text-orange-500"
-          style={{
-            WebkitTextStroke: "2px currentColor",
-            WebkitTextFillColor: "transparent",
-          }}
-        >
+        <h2 className="mb-2 text-8xl font-bold text-orange-500">
           {totalMinutes.toLocaleString()}
         </h2>
         <p className="text-2xl font-medium text-foreground">minutes</p>

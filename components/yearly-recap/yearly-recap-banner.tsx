@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { ArrowRight, Sparkles } from "lucide-react";
 
+import { useAnalytics } from "@/lib/analytics";
+
 import { Button } from "@/components/ui/button";
 
 import { YearlyRecapModal } from "./yearly-recap-modal";
@@ -88,6 +90,7 @@ const ScatterDotsSVG = ({ className }: { className?: string }) => (
 export function YearlyRecapBanner() {
   const teamInfo = useTeam();
   const router = useRouter();
+  const analytics = useAnalytics();
   const currentYear = new Date().getFullYear();
   const [showModal, setShowModal] = useState(false);
 
@@ -108,6 +111,9 @@ export function YearlyRecapBanner() {
   }, [router.isReady, router.query.openRecap, teamInfo?.currentTeam?.id]);
 
   const handleOpenModal = () => {
+    analytics.capture("Yearly Recap Opened", {
+      teamId: teamInfo?.currentTeam?.id,
+    });
     setShowModal(true);
   };
 
