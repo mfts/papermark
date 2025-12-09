@@ -3,6 +3,12 @@ import { useRouter } from "next/router";
 import { useMemo } from "react";
 import React from "react";
 
+import { ViewerChatPanel } from "@/ee/features/ai/components/viewer-chat-panel";
+import {
+  ViewerChatLayout,
+  ViewerChatProvider,
+} from "@/ee/features/ai/components/viewer-chat-provider";
+import { ViewerChatToggle } from "@/ee/features/ai/components/viewer-chat-toggle";
 import {
   DataroomBrand,
   DataroomFolder,
@@ -368,7 +374,14 @@ export default function DataroomViewer({
   };
 
   return (
-    <>
+    <ViewerChatProvider
+      enabled={viewData.agentsEnabled}
+      dataroomId={dataroom?.id}
+      dataroomName={viewData.dataroomName}
+      linkId={linkId}
+      viewId={viewId}
+      viewerId={viewerId}
+    >
       <DataroomNav
         brand={brand}
         linkId={linkId}
@@ -382,151 +395,160 @@ export default function DataroomViewer({
         conversationsEnabled={viewData.conversationsEnabled}
         isTeamMember={viewData.isTeamMember}
       />
-      <div
-        style={{ height: "calc(100vh - 64px)" }}
-        className="relative flex items-center bg-white dark:bg-black"
-      >
-        <div className="relative mx-auto flex h-full w-full items-start justify-center">
-          {/* Tree view */}
-          <div className="hidden h-full w-1/4 space-y-8 overflow-auto px-3 pb-4 pt-4 md:flex md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
-            <ScrollArea showScrollbar className="w-full">
-              <ViewFolderTree
-                folders={folders}
-                documents={documents}
-                setFolderId={setFolderId}
-                folderId={folderId}
-                dataroomIndexEnabled={dataroomIndexEnabled}
-              />
-              <ScrollBar orientation="horizontal" />
-              <ScrollBar orientation="vertical" />
-            </ScrollArea>
-          </div>
+      <ViewerChatLayout>
+        <div className="relative flex flex-1 items-center overflow-hidden bg-white dark:bg-black">
+          <div className="relative mx-auto flex h-full w-full items-start justify-center">
+            {/* Tree view */}
+            <div className="hidden h-full w-1/4 space-y-8 overflow-auto px-3 pb-4 pt-4 md:flex md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
+              <ScrollArea showScrollbar className="w-full">
+                <ViewFolderTree
+                  folders={folders}
+                  documents={documents}
+                  setFolderId={setFolderId}
+                  folderId={folderId}
+                  dataroomIndexEnabled={dataroomIndexEnabled}
+                />
+                <ScrollBar orientation="horizontal" />
+                <ScrollBar orientation="vertical" />
+              </ScrollArea>
+            </div>
 
-          {/* Detail view */}
-          <ScrollArea showScrollbar className="h-full flex-grow overflow-auto">
-            <div className="h-full px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
-              <div className="flex items-center gap-x-2">
-                {/* sidebar for mobile */}
-                <div className="flex md:hidden">
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <button className="text-muted-foreground lg:hidden">
-                        <PanelLeftIcon className="h-5 w-5" aria-hidden="true" />
-                      </button>
-                    </SheetTrigger>
-                    <SheetPortal>
-                      <SheetOverlay className="fixed top-[35dvh] z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-                      <SheetPrimitive.Content
-                        className={cn(
-                          "fixed top-[35dvh] z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
-                          "left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-lg",
-                          "m-0 w-[280px] p-0 sm:w-[300px] lg:hidden",
-                        )}
-                      >
-                        <div className="mt-8 h-full space-y-8 overflow-auto px-2 py-3">
-                          <ViewFolderTree
-                            folders={folders}
-                            documents={documents}
-                            setFolderId={setFolderId}
-                            folderId={folderId}
-                            dataroomIndexEnabled={dataroomIndexEnabled}
+            {/* Detail view */}
+            <ScrollArea
+              showScrollbar
+              className="h-full flex-grow overflow-auto"
+            >
+              <div className="h-full px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
+                <div className="flex items-center gap-x-2">
+                  {/* sidebar for mobile */}
+                  <div className="flex md:hidden">
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <button className="text-muted-foreground lg:hidden">
+                          <PanelLeftIcon
+                            className="h-5 w-5"
+                            aria-hidden="true"
                           />
-                        </div>
-                        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-                          <XIcon className="h-4 w-4" />
-                          <span className="sr-only">Close</span>
-                        </SheetPrimitive.Close>
-                      </SheetPrimitive.Content>
-                    </SheetPortal>
-                  </Sheet>
-                </div>
-
-                <div className="flex flex-1 items-center justify-between gap-x-2">
-                  <Breadcrumb>
-                    <BreadcrumbList>
-                      <BreadcrumbItem key={"root"}>
-                        <BreadcrumbLink
-                          onClick={() => setFolderId(null)}
-                          className="cursor-pointer"
+                        </button>
+                      </SheetTrigger>
+                      <SheetPortal>
+                        <SheetOverlay className="fixed top-[35dvh] z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+                        <SheetPrimitive.Content
+                          className={cn(
+                            "fixed top-[35dvh] z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
+                            "left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-lg",
+                            "m-0 w-[280px] p-0 sm:w-[300px] lg:hidden",
+                          )}
                         >
-                          Home
-                        </BreadcrumbLink>
-                      </BreadcrumbItem>
-
-                      {breadcrumbFolders.map((folder, index) => (
-                        <React.Fragment key={folder.id}>
-                          <BreadcrumbSeparator />
-                          <BreadcrumbItem>
-                            <ViewerBreadcrumbItem
-                              folder={folder}
+                          <div className="mt-8 h-full space-y-8 overflow-auto px-2 py-3">
+                            <ViewFolderTree
+                              folders={folders}
+                              documents={documents}
                               setFolderId={setFolderId}
-                              isLast={index === breadcrumbFolders.length - 1}
+                              folderId={folderId}
                               dataroomIndexEnabled={dataroomIndexEnabled}
                             />
-                          </BreadcrumbItem>
-                        </React.Fragment>
-                      ))}
-                    </BreadcrumbList>
-                  </Breadcrumb>
+                          </div>
+                          <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+                            <XIcon className="h-4 w-4" />
+                            <span className="sr-only">Close</span>
+                          </SheetPrimitive.Close>
+                        </SheetPrimitive.Content>
+                      </SheetPortal>
+                    </Sheet>
+                  </div>
 
-                  <div className="flex items-center gap-x-2">
-                    <SearchBoxPersisted inputClassName="h-9" />
-                    {enableIndexFile && viewId && viewerId && (
-                      <IndexFileDialog
-                        linkId={linkId}
-                        viewId={viewId}
-                        dataroomId={dataroom?.id}
-                        viewerId={viewerId}
-                        viewerEmail={viewerEmail}
-                      />
-                    )}
+                  <div className="flex flex-1 items-center justify-between gap-x-2">
+                    <Breadcrumb>
+                      <BreadcrumbList>
+                        <BreadcrumbItem key={"root"}>
+                          <BreadcrumbLink
+                            onClick={() => setFolderId(null)}
+                            className="cursor-pointer"
+                          >
+                            Home
+                          </BreadcrumbLink>
+                        </BreadcrumbItem>
 
-                    {viewData?.enableVisitorUpload && viewerId && (
-                      <DocumentUploadModal
-                        linkId={linkId}
-                        dataroomId={dataroom?.id}
-                        viewerId={viewerId}
-                        folderId={folderId ?? undefined}
-                      />
-                    )}
+                        {breadcrumbFolders.map((folder, index) => (
+                          <React.Fragment key={folder.id}>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                              <ViewerBreadcrumbItem
+                                folder={folder}
+                                setFolderId={setFolderId}
+                                isLast={index === breadcrumbFolders.length - 1}
+                                dataroomIndexEnabled={dataroomIndexEnabled}
+                              />
+                            </BreadcrumbItem>
+                          </React.Fragment>
+                        ))}
+                      </BreadcrumbList>
+                    </Breadcrumb>
+
+                    <div className="flex items-center gap-x-2">
+                      <SearchBoxPersisted inputClassName="h-9" />
+                      {enableIndexFile && viewId && viewerId && (
+                        <IndexFileDialog
+                          linkId={linkId}
+                          viewId={viewId}
+                          dataroomId={dataroom?.id}
+                          viewerId={viewerId}
+                          viewerEmail={viewerEmail}
+                        />
+                      )}
+
+                      {viewData?.enableVisitorUpload && viewerId && (
+                        <DocumentUploadModal
+                          linkId={linkId}
+                          dataroomId={dataroom?.id}
+                          viewerId={viewerId}
+                          folderId={folderId ?? undefined}
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Search results banner */}
-              {searchQuery && (
-                <div className="mt-4 rounded-md border border-muted/50 bg-muted px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm font-medium text-muted-foreground">
-                      Search results for &quot;{searchQuery}&quot;
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      ({mixedItems.length} result
-                      {mixedItems.length !== 1 ? "s" : ""} across all folders)
+                {/* Search results banner */}
+                {searchQuery && (
+                  <div className="mt-4 rounded-md border border-muted/50 bg-muted px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-medium text-muted-foreground">
+                        Search results for &quot;{searchQuery}&quot;
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        ({mixedItems.length} result
+                        {mixedItems.length !== 1 ? "s" : ""} across all folders)
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-
-              <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
-                {mixedItems.length === 0 ? (
-                  <li className="py-6 text-center text-muted-foreground">
-                    {searchQuery
-                      ? "No documents match your search."
-                      : "No items available."}
-                  </li>
-                ) : (
-                  mixedItems.map((item) => (
-                    <li key={item.id}>{renderItem(item)}</li>
-                  ))
                 )}
-              </ul>
-            </div>
-            <ScrollBar orientation="vertical" />
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+
+                <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
+                  {mixedItems.length === 0 ? (
+                    <li className="py-6 text-center text-muted-foreground">
+                      {searchQuery
+                        ? "No documents match your search."
+                        : "No items available."}
+                    </li>
+                  ) : (
+                    mixedItems.map((item) => (
+                      <li key={item.id}>{renderItem(item)}</li>
+                    ))
+                  )}
+                </ul>
+              </div>
+              <ScrollBar orientation="vertical" />
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </div>
         </div>
-      </div>
-    </>
+      </ViewerChatLayout>
+
+      {/* AI Chat Components */}
+      <ViewerChatPanel />
+      <ViewerChatToggle />
+    </ViewerChatProvider>
   );
 }

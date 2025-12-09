@@ -5,7 +5,6 @@ import Head from "next/head";
 import { TeamProvider } from "@/context/team-context";
 import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
-import PlausibleProvider from "next-plausible";
 import { NuqsAdapter } from "nuqs/adapters/next/pages";
 
 import { EXCLUDED_PATHS } from "@/lib/constants";
@@ -74,25 +73,20 @@ export default function App({
       <SessionProvider session={session}>
         <PostHogCustomProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-            <PlausibleProvider
-              domain="papermark.io"
-              enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
-            >
-              <NuqsAdapter>
-                <main className={inter.className}>
-                  <Toaster closeButton />
-                  <TooltipProvider delayDuration={100}>
-                    {EXCLUDED_PATHS.includes(router.pathname) ? (
+            <NuqsAdapter>
+              <main className={inter.className}>
+                <Toaster closeButton />
+                <TooltipProvider delayDuration={100}>
+                  {EXCLUDED_PATHS.includes(router.pathname) ? (
+                    <Component {...pageProps} />
+                  ) : (
+                    <TeamProvider>
                       <Component {...pageProps} />
-                    ) : (
-                      <TeamProvider>
-                        <Component {...pageProps} />
-                      </TeamProvider>
-                    )}
-                  </TooltipProvider>
-                </main>
-              </NuqsAdapter>
-            </PlausibleProvider>
+                    </TeamProvider>
+                  )}
+                </TooltipProvider>
+              </main>
+            </NuqsAdapter>
           </ThemeProvider>
         </PostHogCustomProvider>
       </SessionProvider>

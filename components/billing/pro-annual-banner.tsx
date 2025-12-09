@@ -5,7 +5,6 @@ import { Dispatch, SetStateAction, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
 import Cookies from "js-cookie";
-import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -18,7 +17,6 @@ export default function ProAnnualBanner({
 }: {
   setShowProAnnualBanner: Dispatch<SetStateAction<boolean | null>>;
 }) {
-  const plausible = usePlausible();
   const router = useRouter();
   const teamInfo = useTeam();
   const { plan: teamPlan, trial, isCustomer, isOldAccount } = usePlan();
@@ -27,7 +25,6 @@ export default function ProAnnualBanner({
 
   const handleHideBanner = () => {
     setShowProAnnualBanner(false);
-    plausible("clickedHideProAnnualBanner");
     Cookies.set("hideProAnnualBanner", "pro-annual-banner", {
       expires: 7,
     });

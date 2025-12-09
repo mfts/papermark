@@ -1,9 +1,8 @@
 import { useRouter } from "next/router";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -23,7 +22,6 @@ import { Label } from "../ui/label";
 
 export function DeleteTeamModal({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const plausible = usePlausible();
   const [teamName, setTeamName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const teamInfo = useTeam();

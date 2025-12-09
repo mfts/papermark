@@ -28,19 +28,15 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
           },
         },
       });
-
-      if (!team) {
+      if (!teamAccess) {  
         return res.status(401).end("Unauthorized");
       }
 
@@ -119,6 +115,7 @@ export default async function handle(
         allowBulkDownload,
         showLastUpdated,
         tags,
+        agentsEnabled,
       } = req.body as {
         name?: string;
         enableChangeNotifications?: boolean;
@@ -126,6 +123,7 @@ export default async function handle(
         allowBulkDownload?: boolean;
         showLastUpdated?: boolean;
         tags?: string[];
+        agentsEnabled?: boolean;
       };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
@@ -138,6 +136,12 @@ export default async function handle(
         !isTrial &&
         !featureFlags.roomChangeNotifications
       ) {
+        return res.status(403).json({
+          message: "This feature is not available in your plan",
+        });
+      }
+
+      if (agentsEnabled !== undefined && !featureFlags.ai) {
         return res.status(403).json({
           message: "This feature is not available in your plan",
         });
@@ -159,6 +163,9 @@ export default async function handle(
             }),
             ...(typeof showLastUpdated === "boolean" && {
               showLastUpdated,
+            }),
+            ...(typeof agentsEnabled === "boolean" && {
+              agentsEnabled,
             }),
           },
         });

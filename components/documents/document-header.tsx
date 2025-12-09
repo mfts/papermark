@@ -9,6 +9,7 @@ import { Document, DocumentVersion } from "@prisma/client";
 import {
   ArrowRightIcon,
   BetweenHorizontalStartIcon,
+  Bot,
   ChevronRight,
   CloudDownloadIcon,
   DownloadIcon,
@@ -25,9 +26,11 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { DocumentAIDialog } from "@/ee/features/ai/components/document-ai-dialog";
 import { getFile } from "@/lib/files/get-file";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
+import { useTeamAI } from "@/lib/swr/use-team-ai";
 import {
   DocumentWithLinksAndLinkCountAndViewCount,
   DocumentWithVersion,
@@ -83,6 +86,7 @@ export default function DocumentHeader({
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
   const { isPro, isFree, isTrial, isBusiness, isDatarooms } = usePlan();
+  const { canUseAI, isAIEnabled } = useTeamAI();
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
@@ -94,6 +98,7 @@ export default function DocumentHeader({
   const [planModalTrigger, setPlanModalTrigger] = useState<string>("");
   const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
   const [exportModalOpen, setExportModalOpen] = useState<boolean>(false);
+  const [aiDialogOpen, setAiDialogOpen] = useState<boolean>(false);
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -735,6 +740,25 @@ export default function DocumentHeader({
                 </DropdownMenuItem>
               )}
 
+              {/* AI Agents - only show when team has AI enabled */}
+              {isAIEnabled &&
+                prismaDocument.type !== "notion" &&
+                prismaDocument.type !== "sheet" &&
+                prismaDocument.type !== "zip" &&
+                primaryVersion.type !== "video" && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setAiDialogOpen(true);
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <Bot className="mr-2 h-4 w-4" />
+                    {prismaDocument.agentsEnabled
+                      ? "AI Agents Settings"
+                      : "Enable AI Agents"}
+                  </DropdownMenuItem>
+                )}
+
               {primaryVersion.type !== "notion" &&
                 primaryVersion.type !== "zip" &&
                 primaryVersion.type !== "map" &&
@@ -982,6 +1006,16 @@ export default function DocumentHeader({
           onClose={() => setExportModalOpen(false)}
         />
       )}
+
+      {/* AI Agents Dialog */}
+      <DocumentAIDialog
+        open={aiDialogOpen}
+        onOpenChange={setAiDialogOpen}
+        documentId={prismaDocument.id}
+        teamId={teamId}
+        agentsEnabled={prismaDocument.agentsEnabled}
+        vectorStoreFileId={primaryVersion.vectorStoreFileId}
+      />
     </header>
   );
 }

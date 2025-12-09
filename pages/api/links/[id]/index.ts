@@ -136,7 +136,7 @@ export default async function handle(
           });
           brand = teamBrand;
         }
-        
+
         return res.status(200).json({ linkType, brand });
       }
 
@@ -399,6 +399,7 @@ export default async function handle(
           permissionGroupId: linkData.permissionGroupId || null,
           audienceType: linkData.audienceType || LinkAudienceType.GENERAL,
           enableConversation: linkData.enableConversation || false,
+          enableAIAgents: linkData.enableAIAgents || false,
           enableUpload: linkData.enableUpload || false,
           isFileRequestOnly: linkData.isFileRequestOnly || false,
           uploadFolderId: linkData.uploadFolderId || null,

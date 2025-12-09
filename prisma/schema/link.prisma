@@ -73,6 +73,10 @@ model Link {
   // FAQ system
   dataroomFaqItems DataroomFaqItem[]
 
+  // AI chats
+  enableAIAgents Boolean? @default(false) // Enable AI agents for this link
+  chats          Chat[]
+
   // upload
   enableUpload      Boolean? @default(false) // Optional give user a option to enable the upload document function
   isFileRequestOnly Boolean? @default(false) // Optional give user a option to enable the file request only

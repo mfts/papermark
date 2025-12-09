@@ -2,14 +2,12 @@ import { NextRouter } from "next/router";
 
 import slugify from "@sindresorhus/slugify";
 import { upload } from "@vercel/blob/client";
-import { Message } from "ai";
 import bcrypt from "bcryptjs";
 import * as chrono from "chrono-node";
 import { type ClassValue, clsx } from "clsx";
 import crypto from "crypto";
 import ms from "ms";
 import { customAlphabet } from "nanoid";
-import { ThreadMessage } from "openai/resources/beta/threads/messages/messages";
 import { rgb } from "pdf-lib";
 import { ParsedUrlQuery } from "querystring";
 import { toast } from "sonner";
@@ -60,6 +58,32 @@ export async function fetcher<JSON = any>(
 
   return res.json();
 }
+
+export const logStore = async ({ object }: { object: any }) => {
+  /* If in development or env variable not set, log to the console */
+  if (
+    process.env.NODE_ENV === "development" ||
+    !process.env.PPMK_STORE_WEBHOOK_URL
+  ) {
+    console.log(object);
+    return;
+  }
+
+  try {
+    if (process.env.PPMK_STORE_WEBHOOK_URL) {
+      return await fetch(process.env.PPMK_STORE_WEBHOOK_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(object),
+      });
+    }
+  } catch (e) {
+    console.error("Error logging store:", e);
+    return;
+  }
+};
 
 export const log = async ({
   message,
@@ -341,53 +365,6 @@ export const calculateDaysLeft = (accountCreationDate: Date): number => {
     maxDays = 14;
   }
   return daysLeft(accountCreationDate, maxDays);
-};
-
-// helper function to convert ThreadMessages (an OpenAI type for messages) to Messages (an vercel/ai type for messages)
-export const convertThreadMessagesToMessages = (
-  threadMessages: ThreadMessage[],
-): Message[] => {
-  // Filter out messages with metaData.intitialMessage == 'True'
-  const filteredMessages = threadMessages.filter((threadMessage) => {
-    if (
-      typeof threadMessage.metadata === "object" &&
-      threadMessage.metadata !== null
-    ) {
-      // Safely typecast metadata to an object with the expected structure
-      const metadata = threadMessage.metadata as { intitialMessage?: string };
-      return metadata.intitialMessage !== "True";
-    }
-    return true; // Include messages where metadata is not an object or is null
-  });
-
-  return filteredMessages.map((threadMessage) => {
-    const {
-      id,
-      created_at,
-      content,
-      role,
-      // other fields you might need from ThreadMessage
-    } = threadMessage;
-
-    // Assuming content is an array and you want to convert it into a string or JSX element
-    const messageContent = content.map((item) => {
-      if (item.type === "text") {
-        return item.text.value;
-      } else {
-        return "";
-      }
-    });
-
-    return {
-      id,
-      createdAt: new Date(created_at * 1000), // converting Unix timestamp to Date object
-      content: messageContent[0],
-      role: role === "assistant" ? "assistant" : "user", // Adjust according to your needs
-      // Set other properties as required by Message interface
-      ui: null, // example, set based on your UI requirements
-      // name, function_call, and other fields as needed
-    };
-  });
 };
 
 export function constructMetadata({

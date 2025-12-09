@@ -132,6 +132,7 @@ export async function POST(request: NextRequest) {
           select: {
             plan: true,
             globalBlockList: true,
+            agentsEnabled: true,
           },
         },
         customFields: {
@@ -141,6 +142,12 @@ export async function POST(request: NextRequest) {
           },
         },
         enableUpload: true,
+        dataroom: {
+          select: {
+            agentsEnabled: true,
+            name: true,
+          },
+        },
       },
     });
 
@@ -703,6 +710,8 @@ export async function POST(request: NextRequest) {
           viewerId: viewer?.id,
           conversationsEnabled: link.enableConversation,
           enableVisitorUpload: link.enableUpload,
+          agentsEnabled: link.dataroom?.agentsEnabled ?? false,
+          dataroomName: link.dataroom?.name,
           ...(isTeamMember && { isTeamMember: true }),
         };
 
@@ -1014,6 +1023,8 @@ export async function POST(request: NextRequest) {
         canDownload: canDownload,
         viewerId: viewer?.id,
         conversationsEnabled: link.enableConversation,
+        agentsEnabled: link.dataroom?.agentsEnabled ?? false,
+        dataroomName: link.dataroom?.name,
         ...(isTeamMember && { isTeamMember: true }),
       };
 

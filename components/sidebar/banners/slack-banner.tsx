@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import { Dispatch, SetStateAction } from "react";
 
 import Cookies from "js-cookie";
-import { usePlausible } from "next-plausible";
 
 import { useAnalytics } from "@/lib/analytics";
 
@@ -17,19 +16,16 @@ export default function SlackBanner({
   setShowSlackBanner: Dispatch<SetStateAction<boolean | null>>;
 }) {
   const router = useRouter();
-  const plausible = usePlausible();
   const analytics = useAnalytics();
 
   const handleHideBanner = () => {
     setShowSlackBanner(false);
-    plausible("clickedHideSlackBanner");
     Cookies.set("hideSlackBanner", "slack-banner", {
       expires: 30, // Hide for 30 days
     });
   };
 
   const handleConnectSlack = () => {
-    plausible("clickedSlackBanner");
     analytics.capture("Slack Connect Button Clicked", {
       source: "slack_banner",
       location: "sidebar",

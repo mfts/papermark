@@ -250,6 +250,7 @@ export default function LinksTable({
       enableIndexFile: link.enableIndexFile ?? false,
       permissionGroupId: link.permissionGroupId ?? null,
       welcomeMessage: link.welcomeMessage ?? null,
+      enableAIAgents: link.enableAIAgents ?? false,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

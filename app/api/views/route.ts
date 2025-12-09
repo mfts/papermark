@@ -108,12 +108,18 @@ export async function POST(request: NextRequest) {
           select: {
             plan: true,
             globalBlockList: true,
+            agentsEnabled: true,
           },
         },
         customFields: {
           select: {
             identifier: true,
             label: true,
+          },
+        },
+        document: {
+          select: {
+            agentsEnabled: true,
           },
         },
       },
@@ -469,52 +475,36 @@ export async function POST(request: NextRequest) {
 
     try {
       let viewer: { id: string; verified: boolean } | null = null;
-      if (!isPreview) {
-        if (email) {
-          // find or create a viewer with email
-          console.time("find-viewer");
-          viewer = await prisma.viewer.findUnique({
-            where: {
-              teamId_email: {
-                teamId: link.teamId!,
-                email: email,
-              },
+      if (email && !isPreview) {
+        // find or create a viewer
+        console.time("find-viewer");
+        viewer = await prisma.viewer.findUnique({
+          where: {
+            teamId_email: {
+              teamId: link.teamId!,
+              email: email,
             },
-            select: { id: true, verified: true },
-          });
-          console.timeEnd("find-viewer");
+          },
+          select: { id: true, verified: true },
+        });
+        console.timeEnd("find-viewer");
 
-          if (!viewer) {
-            console.time("create-viewer");
-            viewer = await prisma.viewer.create({
-              data: {
-                email: email,
-                verified: isEmailVerified,
-                teamId: link.teamId!,
-              },
-              select: { id: true, verified: true },
-            });
-            console.timeEnd("create-viewer");
-          } else if (!viewer.verified && isEmailVerified) {
-            await prisma.viewer.update({
-              where: { id: viewer.id },
-              data: { verified: isEmailVerified },
-            });
-          }
-        } else {
-          // For anonymous viewers, create with a generated email based on IP and user agent
-          // This allows anonymous users to participate in conversations
-          const anonymousEmail = `anonymous-${ipAddress?.replace(/\./g, '-') || 'unknown'}-${Date.now()}@anonymous.papermark.com`;
-          console.time("create-anonymous-viewer");
+        if (!viewer) {
+          console.time("create-viewer");
           viewer = await prisma.viewer.create({
             data: {
-              email: anonymousEmail,
-              verified: false,
+              email: email,
+              verified: isEmailVerified,
               teamId: link.teamId!,
             },
             select: { id: true, verified: true },
           });
-          console.timeEnd("create-anonymous-viewer");
+          console.timeEnd("create-viewer");
+        } else if (!viewer.verified && isEmailVerified) {
+          await prisma.viewer.update({
+            where: { id: viewer.id },
+            data: { verified: isEmailVerified },
+          });
         }
       }
 
@@ -676,10 +666,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Determine if AI agents should be enabled (requires both team and document level)
+      const agentsEnabled =
+        link.team?.agentsEnabled && link.document?.agentsEnabled;
+
       const returnObject = {
         message: "View recorded",
         viewId: !isPreview && newView ? newView.id : undefined,
-        viewerId: viewer?.id || undefined,
+        viewerId: viewer?.id ?? undefined,
         isPreview: isPreview ? true : undefined,
         file:
           (documentVersion &&
@@ -717,6 +711,7 @@ export async function POST(request: NextRequest) {
             : undefined,
         verificationToken: hashedVerificationToken ?? undefined,
         ...(isTeamMember && { isTeamMember: true }),
+        ...(agentsEnabled && { agentsEnabled: true }),
       };
 
       return NextResponse.json(returnObject);
