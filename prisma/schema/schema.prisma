@@ -112,7 +112,7 @@ model Domain {
 
 model View {
   id                  String               @id @default(cuid())
-  link                Link                 @relation(fields: [linkId], references: [id])
+  link                Link                 @relation(fields: [linkId], references: [id], onDelete: Cascade)
   linkId              String
   document            Document?            @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId          String?
