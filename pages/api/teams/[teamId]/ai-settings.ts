@@ -42,11 +42,6 @@ export default async function handle(
 
   // Check if AI feature is enabled for this team
   const features = await getFeatureFlags({ teamId });
-  if (!features.ai) {
-    return res
-      .status(403)
-      .json({ error: "AI feature is not available for this team" });
-  }
 
   if (req.method === "GET") {
     // GET /api/teams/:teamId/ai-settings
@@ -63,15 +58,26 @@ export default async function handle(
         return res.status(404).json({ error: "Team not found" });
       }
 
+      const isAdmin = teamAccess.role === "ADMIN";
+
       return res.status(200).json({
         agentsEnabled: team.agentsEnabled,
         vectorStoreId: team.vectorStoreId,
+        isAdmin,
+        isAIFeatureEnabled: features.ai,
       });
     } catch (error) {
       errorhandler(error, res);
     }
   } else if (req.method === "PATCH") {
     // PATCH /api/teams/:teamId/ai-settings
+    // AI feature must be enabled for this team
+    if (!features.ai) {
+      return res
+        .status(403)
+        .json({ error: "AI feature is not available for this team" });
+    }
+
     // Only admins can update AI settings
     if (teamAccess.role !== "ADMIN") {
       return res.status(403).json({

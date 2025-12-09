@@ -1,82 +1,50 @@
 import { useTeam } from "@/context/team-context";
-import { useSession } from "next-auth/react";
 import useSWR from "swr";
 
-import { BetaFeatures } from "@/lib/featureFlags";
-import { TeamDetail, CustomUser } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
 
 interface TeamAISettings {
   agentsEnabled: boolean;
+  vectorStoreId: string | null;
+  isAdmin: boolean;
+  isAIFeatureEnabled: boolean;
 }
 
 /**
  * Hook to check team AI settings and user permissions
- * Returns whether AI is feature-flagged for the team, 
+ * Returns whether AI is feature-flagged for the team,
  * whether it's enabled, and if the current user is an admin
  */
 export function useTeamAI() {
-  const { data: session } = useSession();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  // Fetch feature flags to check if AI is enabled for this team
-  const { data: features, isLoading: featuresLoading } = useSWR<
-    Record<BetaFeatures, boolean>
-  >(teamId ? `/api/feature-flags?teamId=${teamId}` : null, fetcher, {
-    dedupingInterval: 60000,
-  });
-
-  // Fetch team details to get agentsEnabled and user role
-  const { data: team, isLoading: teamLoading } = useSWR<TeamDetail>(
-    teamId ? `/api/teams/${teamId}` : null,
-    fetcher,
-    {
-      dedupingInterval: 20000,
-    },
-  );
-
-  // Fetch team AI settings
-  const {
-    data: aiSettings,
-    isLoading: aiSettingsLoading,
-    mutate: mutateAISettings,
-  } = useSWR<TeamAISettings>(
+  const { data, isLoading, mutate } = useSWR<TeamAISettings>(
     teamId ? `/api/teams/${teamId}/ai-settings` : null,
     fetcher,
     {
-      dedupingInterval: 10000,
+      dedupingInterval: 30000,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
     },
   );
 
-  const userId = (session?.user as CustomUser)?.id;
-
-  // Check if current user is admin
-  const isAdmin = team?.users.some(
-    (user) => user.role === "ADMIN" && user.userId === userId,
-  );
-
-  // Check if AI feature is available for this team (via feature flags)
-  const isAIFeatureEnabled = features?.ai ?? false;
-
-  // Check if AI is enabled for this team (team setting)
-  const isAIEnabled = aiSettings?.agentsEnabled ?? false;
-
   return {
     // Feature flag - is AI available for this team?
-    isAIFeatureEnabled,
+    isAIFeatureEnabled: data?.isAIFeatureEnabled ?? false,
     // Team setting - is AI enabled for this team?
-    isAIEnabled,
+    isAIEnabled: data?.agentsEnabled ?? false,
     // Is the current user an admin?
-    isAdmin,
+    isAdmin: data?.isAdmin ?? false,
     // Can the user manage AI settings? (admin + feature enabled)
-    canManageAI: isAdmin && isAIFeatureEnabled,
+    canManageAI: (data?.isAdmin && data?.isAIFeatureEnabled) ?? false,
     // Is the feature ready to use? (feature enabled + team enabled)
-    canUseAI: isAIFeatureEnabled && isAIEnabled,
-    // Loading states
-    isLoading: featuresLoading || teamLoading || aiSettingsLoading,
+    canUseAI: (data?.isAIFeatureEnabled && data?.agentsEnabled) ?? false,
+    // Vector store ID
+    vectorStoreId: data?.vectorStoreId ?? null,
+    // Loading state
+    isLoading,
     // Mutate function to refresh AI settings
-    mutateAISettings,
+    mutateAISettings: mutate,
   };
 }
-

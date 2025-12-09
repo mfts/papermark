@@ -159,7 +159,7 @@ export default function LinkSheet({
     groupId?: string;
   };
 
-  const { domains } = useDomains();
+  const { domains } = useDomains({ enabled: isOpen });
 
   const {
     viewerGroups,
