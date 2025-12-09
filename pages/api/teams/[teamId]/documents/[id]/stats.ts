@@ -9,9 +9,11 @@ import prisma from "@/lib/prisma";
 import {
   getTotalAvgPageDuration,
   getTotalDocumentDuration,
-  getViewPageDuration,
 } from "@/lib/tinybird";
-import { getVideoEventsByDocument } from "@/lib/tinybird/pipes";
+import {
+  getVideoEventsByDocument,
+  getViewCompletionStats,
+} from "@/lib/tinybird/pipes";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(
@@ -187,24 +189,34 @@ export default async function handle(
             completionRates.reduce((sum, rate) => sum + rate, 0) /
             completionRates.length;
         } else {
-          // For document (PDF) type, calculate based on pages viewed
-          const completionRates = await Promise.all(
-            filteredViews.map(async (view) => {
-              const pageData = await getViewPageDuration({
-                documentId: docId,
-                viewId: view.id,
-                since: 0,
-              });
+          // For document type, calculate based on pages viewed
+          const completionStats = await getViewCompletionStats({
+            documentId: docId,
+            excludedViewIds: allExcludedViews.map((v) => v.id).join(","),
+            since: 0,
+          });
 
-              const relevantVersion = document.versions.find(
-                (version) => version.createdAt <= view.viewedAt,
-              );
-              const numPages =
-                relevantVersion?.numPages || document.numPages || 0;
-
-              return numPages > 0 ? (pageData.data.length / numPages) * 100 : 0;
-            }),
+          // Build lookup map for O(1) access: viewId -> { versionNumber, pages_viewed }
+          const statsMap = new Map(
+            completionStats.data.map((s) => [
+              s.viewId,
+              { versionNumber: s.versionNumber, pagesViewed: s.pages_viewed },
+            ]),
           );
+
+          const completionRates = filteredViews.map((view) => {
+            const viewStats = statsMap.get(view.id);
+            if (!viewStats) return 0;
+
+            // Find the version that matches the versionNumber from Tinybird
+            const relevantVersion = document.versions.find(
+              (version) => version.versionNumber === viewStats.versionNumber,
+            );
+            const numPages =
+              relevantVersion?.numPages || document.numPages || 0;
+
+            return numPages > 0 ? (viewStats.pagesViewed / numPages) * 100 : 0;
+          });
 
           avgCompletionRate =
             completionRates.reduce((sum, rate) => sum + rate, 0) /
