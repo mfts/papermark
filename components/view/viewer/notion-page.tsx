@@ -41,6 +41,70 @@ const Code = dynamic(() =>
   import("react-notion-x/build/third-party/code").then((m) => m.Code),
 );
 
+// Obfuscate Notion block IDs in the DOM to hide the original Notion page IDs
+const obfuscateNotionIds = (container: HTMLElement) => {
+  // Pattern to match Notion-style UUIDs (with or without hyphens)
+  const uuidPattern =
+    /[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}/gi;
+
+  // Create a map to consistently replace the same ID with the same obfuscated value
+  const idMap = new Map<string, string>();
+  let counter = 0;
+
+  const getObfuscatedId = (originalId: string): string => {
+    const normalizedId = originalId.toLowerCase().replace(/-/g, "");
+    if (!idMap.has(normalizedId)) {
+      idMap.set(normalizedId, `block-${counter++}`);
+    }
+    return idMap.get(normalizedId)!;
+  };
+
+  // Obfuscate element IDs
+  const elementsWithId = container.querySelectorAll("[id]");
+  elementsWithId.forEach((el) => {
+    const id = el.getAttribute("id");
+    if (id && uuidPattern.test(id)) {
+      const newId = id.replace(uuidPattern, (match) => getObfuscatedId(match));
+      el.setAttribute("id", newId);
+    }
+    // Reset the pattern lastIndex
+    uuidPattern.lastIndex = 0;
+  });
+
+  // Obfuscate data-block-id attributes
+  const elementsWithBlockId = container.querySelectorAll("[data-block-id]");
+  elementsWithBlockId.forEach((el) => {
+    const blockId = el.getAttribute("data-block-id");
+    if (blockId && uuidPattern.test(blockId)) {
+      el.setAttribute("data-block-id", getObfuscatedId(blockId));
+    }
+    uuidPattern.lastIndex = 0;
+  });
+
+  // Obfuscate data-id attributes
+  const elementsWithDataId = container.querySelectorAll("[data-id]");
+  elementsWithDataId.forEach((el) => {
+    const dataId = el.getAttribute("data-id");
+    if (dataId && uuidPattern.test(dataId)) {
+      el.setAttribute("data-id", getObfuscatedId(dataId));
+    }
+    uuidPattern.lastIndex = 0;
+  });
+
+  // Obfuscate class names that contain Notion IDs
+  const allElements = container.querySelectorAll("*");
+  allElements.forEach((el) => {
+    const classList = el.className;
+    if (typeof classList === "string" && uuidPattern.test(classList)) {
+      const newClassList = classList.replace(uuidPattern, (match) =>
+        getObfuscatedId(match),
+      );
+      el.className = newClassList;
+    }
+    uuidPattern.lastIndex = 0;
+  });
+};
+
 export const NotionPage = ({
   recordMap,
   versionNumber,
@@ -68,6 +132,8 @@ export const NotionPage = ({
 
   const [recordMapState, setRecordMapState] =
     useState<ExtendedRecordMap>(recordMap);
+
+  const notionContainerRef = useRef<HTMLDivElement>(null);
 
   // Create a cache object to store fetched recordMaps
   const recordMapCache = useRef<{ [key: string]: ExtendedRecordMap }>({});
@@ -376,6 +442,37 @@ export const NotionPage = ({
     };
   }, [scrollToHashElement]);
 
+  // Obfuscate Notion IDs in the DOM after rendering
+  useEffect(() => {
+    if (!notionContainerRef.current) return;
+
+    // Initial obfuscation
+    const timeoutId = setTimeout(() => {
+      if (notionContainerRef.current) {
+        obfuscateNotionIds(notionContainerRef.current);
+      }
+    }, 100);
+
+    // Set up MutationObserver to handle dynamically loaded content
+    const observer = new MutationObserver((mutations) => {
+      // Debounce the obfuscation to avoid excessive processing
+      if (notionContainerRef.current) {
+        obfuscateNotionIds(notionContainerRef.current);
+      }
+    });
+
+    observer.observe(notionContainerRef.current, {
+      childList: true,
+      subtree: true,
+      attributes: false,
+    });
+
+    return () => {
+      clearTimeout(timeoutId);
+      observer.disconnect();
+    };
+  }, [recordMapState]);
+
   if (!recordMap) {
     return null;
   }
@@ -423,6 +520,7 @@ export const NotionPage = ({
       {loading && <div>Loading...</div>}
 
       <div
+        ref={notionContainerRef}
         className={cn(
           !isWindowFocused &&
             screenshotProtectionEnabled &&
