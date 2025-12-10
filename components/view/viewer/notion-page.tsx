@@ -81,6 +81,16 @@ const obfuscateNotionIds = (container: HTMLElement) => {
     uuidPattern.lastIndex = 0;
   });
 
+  // Obfuscate data-id attributes
+  const elementsWithDataId = container.querySelectorAll("[data-id]");
+  elementsWithDataId.forEach((el) => {
+    const dataId = el.getAttribute("data-id");
+    if (dataId && uuidPattern.test(dataId)) {
+      el.setAttribute("data-id", getObfuscatedId(dataId));
+    }
+    uuidPattern.lastIndex = 0;
+  });
+
   // Obfuscate class names that contain Notion IDs
   const allElements = container.querySelectorAll("*");
   allElements.forEach((el) => {
