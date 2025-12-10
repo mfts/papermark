@@ -5,6 +5,7 @@ import React from "react";
 
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
+import { useSecurePageUrls } from "@/lib/hooks/use-secure-page-urls";
 import { useViewerAnnotations } from "@/lib/swr/use-annotations";
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { getTrackingOptions } from "@/lib/tracking/tracking-config";
@@ -71,6 +72,7 @@ export default function PagesVerticalViewer({
   ipAddress,
   linkName,
   navData,
+  documentVersionId,
 }: {
   pages: {
     file: string;
@@ -93,8 +95,20 @@ export default function PagesVerticalViewer({
   ipAddress?: string;
   linkName?: string;
   navData: TNavData;
+  documentVersionId?: string;
 }) {
   const { linkId, documentId, viewId, isPreview, dataroomId, brand } = navData;
+
+  // Use secure page URLs for enhanced security
+  const { getPageUrl, prefetchPages, isPageReady } = useSecurePageUrls({
+    viewId,
+    linkId,
+    documentVersionId: documentVersionId ?? "",
+    totalPages: pages.length,
+    isPreview,
+    pages,
+    enabled: !!documentVersionId,
+  });
 
   const router = useRouter();
 
@@ -487,6 +501,13 @@ export default function PagesVerticalViewer({
       setLoadedImages(newLoadedImages);
     }
   };
+
+  // Prefetch secure URLs when page changes
+  useEffect(() => {
+    if (documentVersionId) {
+      prefetchPages(pageNumber);
+    }
+  }, [pageNumber, documentVersionId, prefetchPages]);
 
   const goToPreviousPage = () => {
     if (pageNumber <= 1) return;
@@ -903,7 +924,7 @@ export default function PagesVerticalViewer({
                                 useMap={`#page-map-${index + 1}`}
                                 src={
                                   loadedImages[index]
-                                    ? page.file
+                                    ? getPageUrl(index + 1)
                                     : "https://www.papermark.com/_static/blank.gif"
                                 }
                                 alt={`Page ${index + 1}`}

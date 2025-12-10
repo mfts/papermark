@@ -196,6 +196,7 @@ export default function ViewData({
             ipAddress={viewData.ipAddress}
             linkName={link.name ?? `Link #${link.id.slice(-5)}`}
             navData={navData}
+            documentVersionId={document.versions[0].id}
           />
         ) : viewData.pages && document.versions[0].isVertical ? (
           <PagesVerticalViewer
@@ -215,6 +216,7 @@ export default function ViewData({
             ipAddress={viewData.ipAddress}
             linkName={link.name ?? `Link #${link.id.slice(-5)}`}
             navData={navData}
+            documentVersionId={document.versions[0].id}
           />
         ) : viewData.fileType === "video" ? (
           <VideoViewer

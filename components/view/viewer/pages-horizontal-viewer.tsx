@@ -7,6 +7,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import useSWR from "swr";
 
+import { useSecurePageUrls } from "@/lib/hooks/use-secure-page-urls";
 import { useViewerAnnotations } from "@/lib/swr/use-annotations";
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { getTrackingOptions } from "@/lib/tracking/tracking-config";
@@ -47,6 +48,7 @@ export default function PagesHorizontalViewer({
   ipAddress,
   linkName,
   navData,
+  documentVersionId,
 }: {
   pages: {
     file: string;
@@ -70,9 +72,21 @@ export default function PagesHorizontalViewer({
   ipAddress?: string;
   linkName?: string;
   navData: TNavData;
+  documentVersionId?: string;
 }) {
   const { isMobile, isPreview, linkId, documentId, viewId, dataroomId, brand } =
     navData;
+
+  // Use secure page URLs for enhanced security
+  const { getPageUrl, prefetchPages, isPageReady } = useSecurePageUrls({
+    viewId,
+    linkId,
+    documentVersionId: documentVersionId ?? "",
+    totalPages: pages.length,
+    isPreview,
+    pages,
+    enabled: !!documentVersionId,
+  });
 
   const router = useRouter();
   const { status: sessionStatus } = useSession();
@@ -394,6 +408,13 @@ export default function PagesHorizontalViewer({
     }
   };
 
+  // Prefetch secure URLs when page changes
+  useEffect(() => {
+    if (documentVersionId) {
+      prefetchPages(pageNumber);
+    }
+  }, [pageNumber, documentVersionId, prefetchPages]);
+
   const goToPreviousPage = () => {
     if (pageNumber <= 1) return;
     if (enableQuestion && feedback && pageNumber === numPagesWithFeedback) {
@@ -706,7 +727,7 @@ export default function PagesHorizontalViewer({
                                 useMap={`#page-map-${index + 1}`}
                                 src={
                                   loadedImages[index]
-                                    ? page.file
+                                    ? getPageUrl(index + 1)
                                     : "https://www.papermark.com/_static/blank.gif"
                                 }
                                 alt={`Page ${index + 1}`}
