@@ -449,12 +449,14 @@ export async function getYearInReviewStats(
   const countryCodes = Array.from(allCountries);
 
   // Determine origin point from user's IP location or use default
+  const parsedLat =
+    userGeo?.latitude !== undefined ? Number(userGeo.latitude) : NaN;
+  const parsedLng =
+    userGeo?.longitude !== undefined ? Number(userGeo.longitude) : NaN;
+
   const origin =
-    userGeo?.latitude && userGeo?.longitude
-      ? {
-          lat: parseFloat(userGeo.latitude),
-          lng: parseFloat(userGeo.longitude),
-        }
+    Number.isFinite(parsedLat) && Number.isFinite(parsedLng)
+      ? { lat: parsedLat, lng: parsedLng }
       : DEFAULT_ORIGIN;
 
   // Calculate total distance traveled based on IP locations
