@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 
+import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { ChevronRight, CrownIcon, type LucideIcon } from "lucide-react";
 
+import { useAnalytics } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 import { Shimmer } from "@/components/ai-elements/shimmer";
@@ -45,6 +47,18 @@ export interface NavItem {
 }
 
 export function NavMain({ items }: { items: NavItem[] }) {
+  const analytics = useAnalytics();
+  const teamInfo = useTeam();
+
+  const handleItemClick = (title: string) => {
+    if (title === "2025 Recap") {
+      analytics.capture("YIR: Banner Opened", {
+        source: "sidebar",
+        teamId: teamInfo?.currentTeam?.id,
+      });
+    }
+  };
+
   return (
     <SidebarGroup>
       <SidebarMenu className="space-y-0.5 text-foreground">
@@ -82,7 +96,11 @@ export function NavMain({ items }: { items: NavItem[] }) {
                     </div>
                   </UpgradePlanModal>
                 ) : (
-                  <Link href={item.url} className="p-2">
+                  <Link
+                    href={item.url}
+                    className="p-2"
+                    onClick={() => handleItemClick(item.title)}
+                  >
                     <item.icon
                       className={cn(
                         item.title === "2025 Recap" &&
