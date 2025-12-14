@@ -1,16 +1,31 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { getServerSession } from "next-auth/next";
-
 import {
   getDataroomSystemPrompt,
   getDataroomUserPrompt,
 } from "@/ee/features/templates/lib/prompts";
-import { openai } from "@/lib/openai";
+import { openai } from "@ai-sdk/openai";
+import { generateObject } from "ai";
+import { getServerSession } from "next-auth/next";
+import { z } from "zod";
+
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";
+
+// Zod schema for folder structure validation
+const folderSchema: z.ZodType<any> = z.lazy(() =>
+  z.object({
+    name: z.string().min(1).max(255),
+    subfolders: z.array(folderSchema).optional(),
+  }),
+);
+
+const dataroomStructureSchema = z.object({
+  name: z.string().min(1).max(255),
+  folders: z.array(folderSchema).min(1),
+});
 
 export default async function handle(
   req: NextApiRequest,
@@ -28,7 +43,11 @@ export default async function handle(
     const { teamId } = req.query as { teamId: string };
     const { description } = req.body as { description: string };
 
-    if (!description || typeof description !== "string" || description.trim().length === 0) {
+    if (
+      !description ||
+      typeof description !== "string" ||
+      description.trim().length === 0
+    ) {
       return res.status(400).json({
         message: "Description is required",
       });
@@ -37,7 +56,8 @@ export default async function handle(
     // Validate description length and content
     if (description.length > 2000) {
       return res.status(400).json({
-        message: "Description is too long. Please keep it under 2000 characters.",
+        message:
+          "Description is too long. Please keep it under 2000 characters.",
       });
     }
 
@@ -54,83 +74,58 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      // Use GPT to generate folder structure
+      // Use AI SDK with structured outputs to generate folder structure
+      // This automatically validates the response format and reduces parsing errors
       const [systemPrompt, userPrompt] = await Promise.all([
         getDataroomSystemPrompt(),
         getDataroomUserPrompt(description),
       ]);
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+      const result = await generateObject({
+        model: openai("gpt-4o-mini"),
+        schema: dataroomStructureSchema,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 3000,
-        response_format: { type: "json_object" },
+        providerOptions: {
+          openai: {
+            maxOutputTokens: 3000,
+          },
+        },
       });
 
-      const responseContent = completion.choices[0]?.message?.content;
-      if (!responseContent) {
-        return res.status(500).json({
-          message: "Failed to generate folder structure",
-        });
-      }
-
-      // Parse the JSON response
-      let parsedResponse;
-      try {
-        parsedResponse = JSON.parse(responseContent);
-      } catch (parseError) {
-        return res.status(500).json({
-          message: "Invalid response format from AI",
-        });
-      }
-
-      // Extract name and folders
-      const suggestedName = parsedResponse.name;
-      const folders = parsedResponse.folders;
-
-      if (!suggestedName || typeof suggestedName !== "string") {
-        return res.status(500).json({
-          message: "Invalid response: name is missing or invalid",
-        });
-      }
-
-      if (!Array.isArray(folders)) {
-        return res.status(500).json({
-          message: "Invalid folder structure format",
-        });
-      }
-
-      // Validate folder structure
-      const validateFolder = (folder: any, depth = 0): boolean => {
-        if (depth > 5) return false; // Max depth
-        if (!folder.name || typeof folder.name !== "string") return false;
-        if (folder.name.length > 255) return false;
+      // Validate folder depth (max 5 levels)
+      const validateFolderDepth = (folder: any, depth = 0): boolean => {
+        if (depth >= 5) return false;
         if (folder.subfolders) {
-          if (!Array.isArray(folder.subfolders)) return false;
-          return folder.subfolders.every((sub: any) => validateFolder(sub, depth + 1));
+          return folder.subfolders.every((sub: any) =>
+            validateFolderDepth(sub, depth + 1),
+          );
         }
         return true;
       };
 
-      if (!folders.every((folder) => validateFolder(folder))) {
+      if (
+        !result.object.folders.every((folder) => validateFolderDepth(folder))
+      ) {
         return res.status(500).json({
-          message: "Generated folder structure is invalid",
+          message:
+            "Generated folder structure exceeds maximum depth (5 levels)",
         });
       }
 
       res.status(200).json({
-        name: suggestedName.trim(),
-        folders: folders,
+        name: result.object.name.trim(),
+        folders: result.object.folders,
         message: "Folder structure generated successfully",
       });
     } catch (error) {
-      const errorMessage = process.env.NODE_ENV === "production" 
-       ? "An unexpected error occurred"
-       : (error as Error).message;
+      const errorMessage =
+        process.env.NODE_ENV === "production"
+          ? "An unexpected error occurred"
+          : (error as Error).message;
 
       return res.status(500).json({
         message: "Error generating folder structure",
@@ -143,4 +138,3 @@ export default async function handle(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
-
