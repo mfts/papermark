@@ -107,7 +107,7 @@
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.556.0",
     "mime-types": "^3.0.2",
-    "motion": "^12.23.25",
+    "motion": "^12.23.26",
     "ms": "^2.1.3",
     "mupdf": "^1.26.4",
     "nanoid": "^5.1.6",

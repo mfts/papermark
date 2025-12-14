@@ -134,7 +134,7 @@ export function YearlyRecapBanner() {
       {/* Banner - always shown */}
       <div className="mx-2 my-2 mb-2">
         <div
-          className="relative overflow-hidden rounded-xl p-6"
+          className="relative overflow-hidden rounded-xl p-4 sm:p-6"
           style={{
             background:
               "linear-gradient(to right, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 25%, #EEEFEB 50%, rgba(16, 185, 129, 0.1) 75%, rgba(16, 185, 129, 0.2) 100%)",
@@ -145,26 +145,26 @@ export function YearlyRecapBanner() {
           {/* <PeachPaperSVG className="absolute bottom-2 left-2 w-16 h-16" /> */}
           <ScatterDotsSVG className="absolute left-1/4 top-2 h-20 w-20" />
 
-          <div className="relative z-10 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="relative h-12 w-12 shrink-0">
+          <div className="relative z-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="relative h-10 w-10 shrink-0 sm:h-12 sm:w-12">
                 {/* <PeachPaperSVG className="absolute inset-0 w-full h-full opacity-60" /> */}
-                <div className="absolute inset-0 flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/20">
-                  <Sparkles className="h-6 w-6 text-orange-500" />
+                <div className="absolute inset-0 flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/20 sm:h-12 sm:w-12">
+                  <Sparkles className="h-5 w-5 text-orange-500 sm:h-6 sm:w-6" />
                 </div>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">
                   Papermark Wrapped {currentYear}
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs text-gray-600 sm:text-sm">
                   Your year in document sharing
                 </p>
               </div>
             </div>
             <Button
               onClick={handleOpenModal}
-              className="shrink-0 gap-2 bg-gray-900 text-white hover:bg-black"
+              className="w-full shrink-0 gap-2 bg-gray-900 text-white hover:bg-black sm:w-auto"
             >
               See your Wrapped
               <ArrowRight className="h-4 w-4" />
