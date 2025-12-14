@@ -428,7 +428,7 @@ export async function getYearInReviewStats(
         documentIds: batch.join(","),
         since: yearStart.getTime(),
         until: yearEnd.getTime(),
-      }),
+      }).catch(() => ({ data: [] })),
     ),
   );
 
