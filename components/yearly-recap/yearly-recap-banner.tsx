@@ -111,7 +111,7 @@ export function YearlyRecapBanner() {
   }, [router.isReady, router.query.openRecap, teamInfo?.currentTeam?.id]);
 
   const handleOpenModal = () => {
-    analytics.capture("Yearly Recap Opened", {
+    analytics.capture("YIR: Banner Opened", {
       teamId: teamInfo?.currentTeam?.id,
     });
     setShowModal(true);

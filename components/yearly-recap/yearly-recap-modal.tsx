@@ -240,8 +240,8 @@ export function YearlyRecapModal({
   useHotkeys(
     "enter, space",
     (e) => {
-      e.preventDefault();
       if (!showShareView && currentSlide < slides.length - 1) {
+        e.preventDefault();
         setCurrentSlide((prev) => prev + 1);
       }
     },
@@ -275,7 +275,7 @@ export function YearlyRecapModal({
   };
 
   const handleShare = () => {
-    analytics.capture("Yearly Recap Share Clicked", { teamId });
+    analytics.capture("YIR: Share Clicked", { teamId });
     setShowShareView(true);
   };
 
@@ -303,7 +303,7 @@ export function YearlyRecapModal({
   }, []);
 
   const handleDownload = async () => {
-    analytics.capture("Yearly Recap Share Platform Clicked", {
+    analytics.capture("YIR: Share Platform Clicked", {
       teamId,
       platform: "download",
     });
@@ -345,7 +345,7 @@ My Papermark Wrapped ${stats?.year}!
   };
 
   const handleShareLinkedIn = async () => {
-    analytics.capture("Yearly Recap Share Platform Clicked", {
+    analytics.capture("YIR: Share Platform Clicked", {
       teamId,
       platform: "linkedin",
     });
@@ -357,7 +357,7 @@ My Papermark Wrapped ${stats?.year}!
   };
 
   const handleShareTwitter = async () => {
-    analytics.capture("Yearly Recap Share Platform Clicked", {
+    analytics.capture("YIR: Share Platform Clicked", {
       teamId,
       platform: "twitter",
     });
