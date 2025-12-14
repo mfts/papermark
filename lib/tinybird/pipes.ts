@@ -212,3 +212,16 @@ export const getClickEventsByView = tb.buildPipe({
     href: z.string(),
   }),
 });
+
+export const getTotalTeamDuration = tb.buildPipe({
+  pipe: "get_total_team_duration__v1",
+  parameters: z.object({
+    documentIds: z.string().describe("Comma separated documentIds"),
+    since: z.number(),
+    until: z.number(),
+  }),
+  data: z.object({
+    total_duration: z.number(),
+    unique_countries: z.array(z.string()),
+  }),
+});

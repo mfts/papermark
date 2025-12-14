@@ -299,6 +299,7 @@ export async function fetchDataroomDocumentLinkData({
           id: true,
           name: true,
           description: true,
+          teamId: true,
           allowBulkDownload: true,
           showLastUpdated: true,
           documents: {
@@ -339,7 +340,7 @@ export async function fetchDataroomDocumentLinkData({
     throw new Error("Dataroom not found");
   }
 
-  const brand = await prisma.dataroomBrand.findFirst({
+  const dataroomBrand = await prisma.dataroomBrand.findFirst({
     where: {
       dataroomId: linkData.dataroom.id,
     },
@@ -351,6 +352,27 @@ export async function fetchDataroomDocumentLinkData({
       welcomeMessage: true,
     },
   });
+
+  const teamBrand = await prisma.brand.findFirst({
+    where: {
+      teamId: linkData.dataroom.teamId,
+    },
+    select: {
+      logo: true,
+      banner: true,
+      brandColor: true,
+      accentColor: true,
+      welcomeMessage: true,
+    },
+  });
+
+  const brand = {
+    logo: dataroomBrand?.logo || teamBrand?.logo,
+    banner: dataroomBrand?.banner || teamBrand?.banner || null,
+    brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
+    accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
+    welcomeMessage: dataroomBrand?.welcomeMessage || teamBrand?.welcomeMessage,
+  };
 
   return { linkData, brand };
 }
