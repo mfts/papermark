@@ -7,6 +7,7 @@ import { ChevronRight, CrownIcon, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+import { Shimmer } from "@/components/ai-elements/shimmer";
 import {
   Collapsible,
   CollapsibleContent,
@@ -82,8 +83,25 @@ export function NavMain({ items }: { items: NavItem[] }) {
                   </UpgradePlanModal>
                 ) : (
                   <Link href={item.url} className="p-2">
-                    <item.icon />
-                    <span>{item.title}</span>
+                    <item.icon
+                      className={cn(
+                        item.title === "2025 Recap" &&
+                          "text-orange-500 dark:text-orange-400",
+                      )}
+                    />
+                    {item.title === "2025 Recap" ? (
+                      <Shimmer
+                        as="span"
+                        className="[--background:theme(colors.yellow.300)] [--muted-foreground:theme(colors.orange.500)] dark:[--background:theme(colors.yellow.200)] dark:[--muted-foreground:theme(colors.orange.400)]"
+                        duration={0.5}
+                        spread={3}
+                        hoverOnly
+                      >
+                        {item.title}
+                      </Shimmer>
+                    ) : (
+                      <span>{item.title}</span>
+                    )}
                   </Link>
                 )}
               </SidebarMenuButton>
