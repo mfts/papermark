@@ -1,14 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { getServerSession } from "next-auth/next";
-import { z } from "zod";
-
 import {
   getDataroomSystemPrompt,
   getDataroomUserPrompt,
 } from "@/ee/features/templates/lib/prompts";
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
+import { getServerSession } from "next-auth/next";
+import { z } from "zod";
+
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -43,7 +43,11 @@ export default async function handle(
     const { teamId } = req.query as { teamId: string };
     const { description } = req.body as { description: string };
 
-    if (!description || typeof description !== "string" || description.trim().length === 0) {
+    if (
+      !description ||
+      typeof description !== "string" ||
+      description.trim().length === 0
+    ) {
       return res.status(400).json({
         message: "Description is required",
       });
@@ -52,7 +56,8 @@ export default async function handle(
     // Validate description length and content
     if (description.length > 2000) {
       return res.status(400).json({
-        message: "Description is too long. Please keep it under 2000 characters.",
+        message:
+          "Description is too long. Please keep it under 2000 characters.",
       });
     }
 
@@ -93,7 +98,7 @@ export default async function handle(
 
       // Validate folder depth (max 5 levels)
       const validateFolderDepth = (folder: any, depth = 0): boolean => {
-        if (depth > 5) return false;
+        if (depth >= 5) return false;
         if (folder.subfolders) {
           return folder.subfolders.every((sub: any) =>
             validateFolderDepth(sub, depth + 1),
@@ -102,9 +107,12 @@ export default async function handle(
         return true;
       };
 
-      if (!result.object.folders.every((folder) => validateFolderDepth(folder))) {
+      if (
+        !result.object.folders.every((folder) => validateFolderDepth(folder))
+      ) {
         return res.status(500).json({
-          message: "Generated folder structure exceeds maximum depth (5 levels)",
+          message:
+            "Generated folder structure exceeds maximum depth (5 levels)",
         });
       }
 
@@ -114,9 +122,10 @@ export default async function handle(
         message: "Folder structure generated successfully",
       });
     } catch (error) {
-      const errorMessage = process.env.NODE_ENV === "production" 
-       ? "An unexpected error occurred"
-       : (error as Error).message;
+      const errorMessage =
+        process.env.NODE_ENV === "production"
+          ? "An unexpected error occurred"
+          : (error as Error).message;
 
       return res.status(500).json({
         message: "Error generating folder structure",
@@ -129,4 +138,3 @@ export default async function handle(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
-
