@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { AlertTriangleIcon } from "lucide-react";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -32,12 +34,12 @@ export default function LinksVisitors({
                 subscription was paused and{" "}
                 {hiddenFromPause !== 1 ? "are" : "is"} hidden.
               </span>
-              <a
+              <Link
                 href="/settings/billing"
                 className="font-medium text-orange-600 underline hover:text-orange-700"
               >
                 Unpause subscription to see all visits
-              </a>
+              </Link>
             </div>
           </TableCell>
         </TableRow>
