@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -106,12 +108,12 @@ export default function DataroomVisitorsTable({
                         team was paused and{" "}
                         {hiddenFromPause !== 1 ? "are" : "is"} hidden.{" "}
                       </span>
-                      <a
+                      <Link
                         href="/settings/billing"
                         className="font-medium text-orange-600 underline hover:text-orange-700"
                       >
                         Unpause subscription to see all visits
-                      </a>
+                      </Link>
                     </div>
                   </TableCell>
                 </TableRow>
