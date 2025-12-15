@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPaused } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import getSubscriptionItem, {
   SubscriptionDiscount,
 } from "@/ee/stripe/functions/get-subscription-item";
@@ -8,7 +9,6 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { isTeamPaused } from "@/lib/team/is-team-paused";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";

@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { LinkPreset } from "@prisma/client";
 import slugify from "@sindresorhus/slugify";
 import { put } from "@vercel/blob";
@@ -13,7 +14,6 @@ import { newId } from "@/lib/id-helper";
 import { extractTeamId, isValidWebhookId } from "@/lib/incoming-webhooks";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
-import { isTeamPausedById } from "@/lib/team/is-team-paused";
 import {
   convertDataUrlToBuffer,
   generateEncrpytedPassword,

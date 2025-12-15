@@ -1,5 +1,6 @@
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+
 import prisma from "@/lib/prisma";
-import { isTeamPausedById } from "@/lib/team/is-team-paused";
 import { log } from "@/lib/utils";
 import { sendWebhooks } from "@/lib/webhook/send-webhooks";
 

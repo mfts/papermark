@@ -658,7 +658,7 @@ export async function POST(request: NextRequest) {
             isPaused,
           }),
         );
-        if (!isPreview && !isPaused) {
+        if (!isPreview) {
           waitUntil(
             notifyDocumentView({
               teamId: link.teamId!,
@@ -666,6 +666,7 @@ export async function POST(request: NextRequest) {
               linkId,
               viewerEmail: email ?? undefined,
               viewerId: viewer?.id ?? undefined,
+              teamIsPaused: isPaused,
             }).catch((error) => {
               console.error("Error sending Slack notification:", error);
             }),

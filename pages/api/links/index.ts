@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { LinkAudienceType, Tag } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { isTeamPausedById } from "@/lib/team/is-team-paused";
 import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import {
   decryptEncrpytedPassword,

@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import {
@@ -172,6 +173,15 @@ export default async function handle(
         return res.status(403).json({
           message:
             "You've reached the limit of datarooms. Consider upgrading your plan.",
+        });
+      }
+
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. Duplicating dataroom is not available.",
         });
       }
 

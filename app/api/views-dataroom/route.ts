@@ -684,7 +684,7 @@ export async function POST(request: NextRequest) {
             }),
           );
 
-          if (link.teamId && !isPreview && !isPaused) {
+          if (link.teamId && !isPreview) {
             waitUntil(
               (async () => {
                 try {
@@ -694,6 +694,7 @@ export async function POST(request: NextRequest) {
                     linkId,
                     viewerEmail: verifiedEmail ?? email,
                     viewerId: viewer?.id,
+                    teamIsPaused: isPaused,
                   });
                 } catch (error) {
                   console.error("Error sending Slack notification:", error);
@@ -816,7 +817,7 @@ export async function POST(request: NextRequest) {
         });
         console.timeEnd("create-view");
         // Only send Slack notifications for non-preview views
-        if (link.teamId && !isPreview && !isPaused) {
+        if (link.teamId && !isPreview) {
           waitUntil(
             (async () => {
               try {
@@ -827,6 +828,7 @@ export async function POST(request: NextRequest) {
                   linkId,
                   viewerEmail: verifiedEmail ?? email,
                   viewerId: viewer?.id,
+                  teamIsPaused: isPaused,
                 });
               } catch (error) {
                 console.error("Error sending Slack notification:", error);

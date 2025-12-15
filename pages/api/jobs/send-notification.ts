@@ -1,11 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+
 import { sendViewedDataroomEmail } from "@/lib/emails/send-viewed-dataroom";
 import { sendViewedDataroomPausedEmail } from "@/lib/emails/send-viewed-dataroom-paused";
 import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
 import { sendViewedDocumentPausedEmail } from "@/lib/emails/send-viewed-document-paused";
 import prisma from "@/lib/prisma";
-import { isTeamPausedById } from "@/lib/team/is-team-paused";
 import { log } from "@/lib/utils";
 
 export const config = {

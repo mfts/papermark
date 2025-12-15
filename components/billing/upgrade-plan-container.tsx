@@ -206,24 +206,6 @@ export default function UpgradePlanContainer() {
             useModal={false}
             onClick={() => router.push("/settings/upgrade")}
           />
-          {isCustomer && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-9 w-9 p-0">
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">More options</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => manageSubscription({ type: "invoices" })}
-                >
-                  <ReceiptTextIcon className="h-4 w-4" />
-                  View invoices
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
         </div>
       );
     } else if (isCancelled) {
@@ -292,12 +274,6 @@ export default function UpgradePlanContainer() {
                   >
                     <CreditCardIcon className="h-4 w-4" />
                     Change billing information
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => router.push("/settings/billing/invoices")}
-                  >
-                    <ReceiptTextIcon className="h-4 w-4" />
-                    View invoices
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
