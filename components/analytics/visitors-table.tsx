@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { useState } from "react";
@@ -308,12 +309,12 @@ export default function VisitorsTable({
             after your team was paused and{" "}
             {hiddenFromPause !== 1 ? "are" : "is"} hidden.{" "}
           </span>
-          <a
+          <Link
             href="/settings/billing"
             className="text-sm font-medium text-orange-600 underline hover:text-orange-700"
           >
             Unpause subscription to see all views
-          </a>
+          </Link>
         </div>
       )}
       <div className="flex justify-end">
