@@ -92,14 +92,13 @@ export default async function handle(
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        temperature: 0.7,
+        temperature: 0.5,
         providerOptions: {
           openai: {
-            maxOutputTokens: 3000,
+            maxOutputTokens: 1000,
           },
         },
       });
-
       // Validate folder depth (max 5 levels)
       const validateFolderDepth = (folder: any, depth = 0): boolean => {
         if (depth >= 5) return false;
