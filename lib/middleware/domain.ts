@@ -26,6 +26,12 @@ export default async function DomainMiddleware(req: NextRequest) {
       );
     }
 
+    if (host === "partners.braxtech.net") {
+      return NextResponse.redirect(
+        new URL("https://partners.braxtech.net/investors", req.url),
+      );
+    }
+
     return NextResponse.redirect(
       new URL("https://www.papermark.com/home", req.url),
     );
@@ -47,7 +53,7 @@ export default async function DomainMiddleware(req: NextRequest) {
     headers: {
       "X-Robots-Tag": "noindex",
       "X-Powered-By":
-        "Papermark.io - Document sharing infrastructure for the modern web",
+        "Papermark - Secure Data Room Infrastructure for the modern web",
     },
   });
 }

@@ -12,12 +12,12 @@ import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
+
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
-
-import { useAnalytics } from "@/lib/analytics";
 
 function DeleteItemsModal({
   showDeleteItemsModal,
@@ -75,9 +75,7 @@ function DeleteItemsModal({
           ).then(async (res) => {
             if (!res.ok) {
               const error = await res.json();
-              throw new Error(
-                `Failed to delete document ${documentId}: ${error.message}`,
-              );
+              throw new Error(error.message || "Failed to delete document");
             }
             analytics.capture("Document Deleted", {
               team: teamInfo?.currentTeam?.id,
@@ -96,9 +94,7 @@ function DeleteItemsModal({
           ).then(async (res) => {
             if (!res.ok) {
               const error = await res.json();
-              throw new Error(
-                `Failed to delete folder ${folderId}: ${error.message}`,
-              );
+              throw new Error(error.message || "Failed to delete folder");
             }
             analytics.capture("Folder Deleted", {
               team: teamInfo?.currentTeam?.id,

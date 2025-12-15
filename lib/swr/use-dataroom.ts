@@ -33,7 +33,17 @@ export function useDataroom() {
   const shouldFetch = teamId && id && isDataroomPage;
 
   const { data: dataroom, error } = useSWR<
-    Dataroom & { _count?: { viewerGroups: number; permissionGroups: number } }
+    Dataroom & {
+      _count?: { viewerGroups: number; permissionGroups: number };
+      tags?: {
+        tag: {
+          id: string;
+          name: string;
+          color: string;
+          description: string | null;
+        };
+      }[];
+    }
   >(shouldFetch ? `/api/teams/${teamId}/datarooms/${id}` : null, fetcher, {
     dedupingInterval: 10000,
     onError: (err) => {
@@ -373,6 +383,17 @@ type DataroomDocumentViewHistory = {
   id: string;
   downloadedAt: string;
   viewedAt: string;
+  downloadType?: "SINGLE" | "BULK" | "FOLDER";
+  downloadMetadata?: {
+    folderName?: string;
+    folderPath?: string;
+    dataroomName?: string;
+    documentCount?: number;
+    documents?: {
+      id: string;
+      name: string;
+    }[];
+  };
   document: {
     id: string;
     name: string;

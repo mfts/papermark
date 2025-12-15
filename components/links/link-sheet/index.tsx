@@ -49,7 +49,7 @@ import { LinkOptions } from "./link-options";
 import TagSection from "./tags/tag-section";
 
 export const DEFAULT_LINK_PROPS = (
-  linkType: LinkType,
+  linkType: Omit<LinkType, "WORKFLOW_LINK">,
   groupId: string | null = null,
   showBanner: boolean = true,
 ) => ({
@@ -72,7 +72,8 @@ export const DEFAULT_LINK_PROPS = (
   metaDescription: null,
   metaImage: null,
   metaFavicon: null,
-  enabledQuestion: false,
+  welcomeMessage: null,
+  enableQuestion: false,
   questionText: null,
   questionType: null,
   enableAgreement: false,
@@ -85,6 +86,7 @@ export const DEFAULT_LINK_PROPS = (
   customFields: [],
   tags: [],
   enableConversation: false,
+  enableAIAgents: false,
   enableUpload: false,
   isFileRequestOnly: false,
   uploadFolderId: null,
@@ -114,6 +116,7 @@ export type DEFAULT_LINK_TYPE = {
   metaDescription: string | null; // metatags
   metaImage: string | null; // metatags
   metaFavicon: string | null; // metaFavicon
+  welcomeMessage: string | null; // custom welcome message
   enableQuestion?: boolean; // feedback question
   questionText: string | null;
   questionType: string | null;
@@ -127,6 +130,7 @@ export type DEFAULT_LINK_TYPE = {
   customFields: CustomFieldData[];
   tags: string[];
   enableConversation: boolean;
+  enableAIAgents: boolean;
   enableUpload: boolean;
   isFileRequestOnly: boolean;
   uploadFolderId: string | null;
@@ -145,7 +149,7 @@ export default function LinkSheet({
 }: {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  linkType: LinkType;
+  linkType: Omit<LinkType, "WORKFLOW_LINK">;
   currentLink?: DEFAULT_LINK_TYPE;
   existingLinks?: LinkWithViews[];
 }) {
@@ -155,7 +159,7 @@ export default function LinkSheet({
     groupId?: string;
   };
 
-  const { domains } = useDomains();
+  const { domains } = useDomains({ enabled: isOpen });
 
   const {
     viewerGroups,
@@ -259,12 +263,14 @@ export default function LinkSheet({
         metaDescription: preset.metaDescription || prev.metaDescription,
         metaImage: preset.metaImage || prev.metaImage,
         metaFavicon: preset.metaFavicon || prev.metaFavicon,
+        welcomeMessage: preset.welcomeMessage || prev.welcomeMessage,
         allowDownload: preset.allowDownload || prev.allowDownload,
         enableAgreement: preset.enableAgreement || prev.enableAgreement,
         agreementId: preset.agreementId || prev.agreementId,
         enableScreenshotProtection:
           preset.enableScreenshotProtection || prev.enableScreenshotProtection,
         enableNotification: !!preset.enableNotification,
+        showBanner: preset.showBanner ?? prev.showBanner,
       };
     });
 

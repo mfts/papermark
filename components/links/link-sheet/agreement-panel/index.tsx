@@ -407,10 +407,16 @@ export default function AgreementSheet({
                       }
                       disabled={isOnlyView}
                       rows={6}
+                      maxLength={1500}
                     />
-                    <p className="text-xs text-muted-foreground">
-                      This text will be displayed to users as a compliance agreement before they can access the content.
-                    </p>
+                    <div className="flex justify-between text-xs">
+                      <p className="text-muted-foreground">
+                        This text will be displayed to users as a compliance agreement before they can access the content.
+                      </p>
+                      <p className={`${data.textContent.length > 1400 ? 'text-orange-500' : 'text-muted-foreground'} ${data.textContent.length >= 1500 ? 'text-red-500 font-semibold' : ''}`}>
+                        {data.textContent.length}/1500
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>

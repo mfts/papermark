@@ -17,7 +17,7 @@ export const STAGGER_CHILD_VARIANTS = {
 export const PAPERMARK_HEADERS = {
   headers: {
     "x-powered-by":
-      "Papermark.io - Document sharing infrastructure for the modern web",
+      "Papermark - Secure Data Room Infrastructure for the modern web",
   },
 };
 
@@ -75,6 +75,8 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "application/vnd.ms-powerpoint", // .ppt
   "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
   "application/vnd.oasis.opendocument.presentation", // .odp
+  "application/vnd.apple.keynote", // .key
+  "application/x-iwork-keynote-sffkey", // .key (older format)
   "application/msword", // .doc
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
   "application/vnd.oasis.opendocument.text", // .odt
@@ -126,6 +128,8 @@ export const FULL_PLAN_ACCEPTED_FILE_TYPES = {
   "application/vnd.openxmlformats-officedocument.presentationml.presentation":
     [], // ".pptx"
   "application/vnd.oasis.opendocument.presentation": [], // ".odp"
+  "application/vnd.apple.keynote": [".key"], // ".key"
+  "application/x-iwork-keynote-sffkey": [".key"], // ".key"
   "application/msword": [], // ".doc"
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [], // ".docx"
   "application/vnd.oasis.opendocument.text": [], // ".odt"
@@ -139,15 +143,15 @@ export const FULL_PLAN_ACCEPTED_FILE_TYPES = {
   "image/jpg": [], // ".jpg"
   "application/zip": [], // ".zip"
   "application/x-zip-compressed": [], // ".zip"
-  "video/mp4": [], // ".mp4"
-  "video/quicktime": [], // ".mov"
-  "video/x-msvideo": [], // ".avi"
-  "video/webm": [], // ".webm"
-  "video/ogg": [], // ".ogg"
-  "audio/mp4": [], // ".m4a"
-  "audio/x-m4a": [], // ".m4a"
-  "audio/m4a": [], // ".m4a"
-  "audio/mpeg": [], // ".mp3"
+  "video/mp4": [".mp4"], // ".mp4"
+  "video/quicktime": [".mov"], // ".mov"
+  "video/x-msvideo": [".avi"], // ".avi"
+  "video/webm": [".webm"], // ".webm"
+  "video/ogg": [".ogg"], // ".ogg"
+  "audio/mp4": [".m4a"], // ".m4a"
+  "audio/x-m4a": [".m4a"], // ".m4a"
+  "audio/m4a": [".m4a"], // ".m4a"
+  "audio/mpeg": [".mp3"], // ".mp3"
   "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
   "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
   "application/vnd.ms-outlook": [".msg"], // ".msg"

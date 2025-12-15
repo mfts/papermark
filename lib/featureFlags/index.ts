@@ -11,7 +11,10 @@ export type BetaFeatures =
   | "usStorage"
   | "dataroomIndex"
   | "slack"
-  | "annotations";
+  | "annotations"
+  | "dataroomInvitations"
+  | "workflows"
+  | "ai";
 
 type BetaFeaturesRecord = Record<BetaFeatures, string[]>;
 
@@ -28,12 +31,15 @@ export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
     dataroomIndex: false,
     slack: false,
     annotations: false,
+    dataroomInvitations: false,
+    workflows: false,
+    ai: false,
   };
 
-  // Return all features as true if edge config is not available
+  // Return all features as false if edge config is not available
   if (!process.env.EDGE_CONFIG) {
     return Object.fromEntries(
-      Object.entries(teamFeatures).map(([key, _v]) => [key, true]),
+      Object.entries(teamFeatures).map(([key, _v]) => [key, false]),
     );
   } else if (!teamId) {
     return teamFeatures;

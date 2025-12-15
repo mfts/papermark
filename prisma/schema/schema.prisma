@@ -73,6 +73,7 @@ model User {
 model Brand {
   id             String  @id @default(cuid())
   logo           String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  banner         String? // Banner image for dataroom view (fallback)
   brandColor     String? // This should be a reference to the brand color
   accentColor    String? // This should be a reference to the accent color
   welcomeMessage String? // This should be a reference to the welcome message
@@ -111,7 +112,7 @@ model Domain {
 
 model View {
   id                  String               @id @default(cuid())
-  link                Link                 @relation(fields: [linkId], references: [id])
+  link                Link                 @relation(fields: [linkId], references: [id], onDelete: Cascade)
   linkId              String
   document            Document?            @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId          String?
@@ -123,6 +124,8 @@ model View {
   verified            Boolean              @default(false) // Whether the viewer email has been verified
   viewedAt            DateTime             @default(now())
   downloadedAt        DateTime? // This is the time the document was downloaded
+  downloadType        DownloadType? // Type of download: SINGLE, BULK, or FOLDER
+  downloadMetadata    Json? // Metadata about the download (folder name, document list, etc.)
   reactions           Reaction[]
   viewType            ViewType             @default(DOCUMENT_VIEW)
   viewerId            String? // This is the viewer ID from the dataroom
@@ -141,6 +144,9 @@ model View {
   initialConversations Conversation[]     @relation("initialView")
 
   uploadedDocuments DocumentUpload[] // uploaded documents by this view
+
+  // AI chats
+  chats Chat[]
 
   teamId String?
   team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -164,6 +170,12 @@ enum ViewType {
   DATAROOM_VIEW
 }
 
+enum DownloadType {
+  SINGLE  // Individual document download
+  BULK    // Full dataroom bulk download
+  FOLDER  // Folder download
+}
+
 model Viewer {
   id                      String    @id @default(cuid())
   email                   String
@@ -178,10 +190,14 @@ model Viewer {
 
   views                     View[]
   groups                    ViewerGroupMembership[]
+  invitations               ViewerInvitation[]
   participatedConversations ConversationParticipant[]
   messages                  Message[]
 
   uploadedDocuments DocumentUpload[] // uploaded documents by this viewer
+
+  // AI chats
+  chats Chat[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -236,18 +252,66 @@ model SentEmail {
 }
 
 model Chat {
-  id            String    @id @default(cuid())
-  threadId      String    @unique // This is the thread ID from OpenAI Assistant API
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String
-  document      Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId    String
-  createdAt     DateTime  @default(now())
-  lastMessageAt DateTime? // This is the last time a message was sent in the thread
+  id        String   @id @default(cuid())
+  title     String? // Generated title from first message
 
-  @@unique([userId, documentId])
-  @@unique([threadId, documentId])
-  @@index([threadId])
+  // Context associations
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  dataroomId String?
+  dataroom   Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+
+  linkId String?
+  link   Link?   @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  viewId String?
+  view   View?   @relation(fields: [viewId], references: [id], onDelete: Cascade)
+
+  // User associations (internal or external)
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  viewerId String?
+  viewer   Viewer? @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+
+  // OpenAI references
+  vectorStoreId String? // The vector store used for this chat
+
+  messages ChatMessage[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastMessageAt DateTime? // Track latest activity
+
+  @@index([teamId])
+  @@index([documentId])
+  @@index([dataroomId])
+  @@index([linkId])
+  @@index([userId])
+  @@index([viewerId])
+  @@index([viewId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model ChatMessage {
+  id     String @id @default(cuid())
+  chatId String
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  role    String // "user" | "assistant" | "system"
+  content String @db.Text
+
+  // Optional structured data
+  metadata Json? // Store sources, page numbers, confidence scores, etc.
+
+  createdAt DateTime @default(now())
+
+  @@index([chatId])
+  @@index([chatId, createdAt])
 }
 
 model Feedback {
@@ -440,4 +504,30 @@ model TagItem {
   @@index([tagId, linkId])
   @@index([tagId, documentId])
   @@index([tagId, dataroomId])
+}
+
+model ViewerInvitation {
+  id            String             @id @default(cuid())
+  viewerId      String
+  viewer        Viewer             @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  linkId        String
+  link          Link               @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  groupId       String?
+  group         ViewerGroup?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  invitedBy     String
+  customMessage String?
+  sentAt        DateTime           @default(now())
+  status        InvitationStatus   @default(SENT)
+
+  createdAt DateTime @default(now())
+
+  @@index([viewerId])
+  @@index([linkId])
+  @@index([groupId])
+}
+
+enum InvitationStatus {
+  SENT
+  FAILED
+  BOUNCED
 }

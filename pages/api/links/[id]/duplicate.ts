@@ -68,6 +68,10 @@ export default async function handle(
         return res.status(404).json({ error: "Link not found" });
       }
 
+      if (link.deletedAt) {
+        return res.status(404).json({ error: "Link has been deleted" });
+      }
+
       const { tags, permissionGroup, permissionGroupId, ...rest } = link;
       const linkTags = tags.map((t) => t.tag.id);
 

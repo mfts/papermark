@@ -6,7 +6,6 @@ import { useTeam } from "@/context/team-context";
 import { LinkType } from "@prisma/client";
 import Cookies from "js-cookie";
 import { motion } from "motion/react";
-import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 
 import { useAnalytics } from "@/lib/analytics";
@@ -39,7 +38,6 @@ export default function DeckGeneratorUpload() {
     id: string;
     groupId?: string;
   };
-  const plausible = usePlausible();
   const analytics = useAnalytics();
   const [uploading, setUploading] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -125,7 +123,6 @@ export default function DeckGeneratorUpload() {
         const linkId = document.links[0].id;
 
         // track the event
-        plausible("documentUploaded");
         analytics.capture("Document Added", {
           documentId: document.id,
           name: document.name,

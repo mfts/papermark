@@ -1,6 +1,7 @@
 enum LinkType {
   DOCUMENT_LINK
   DATAROOM_LINK
+  WORKFLOW_LINK
 }
 
 enum LinkAudienceType {
@@ -27,6 +28,7 @@ model Link {
   emailAuthenticated         Boolean    @default(false) // Optional email authentication flag
   allowDownload              Boolean?   @default(false) // Optional give user a option to allow to download the document
   isArchived                 Boolean    @default(false) // Indicates if the link is archived
+  deletedAt                  DateTime? // Soft delete timestamp
   views                      View[]
   domain                     Domain?    @relation(fields: [domainId], references: [id], onDelete: SetNull)
   domainId                   String? // This can be nullable, representing links without custom domains
@@ -61,12 +63,19 @@ model Link {
   metaFavicon         String? // This will be the meta favicon of the link
   enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
 
+  // custom welcome message (overrides brand welcome message)
+  welcomeMessage String? // Custom welcome message for this specific link
+
   // conversation
   enableConversation Boolean        @default(false) // Controls if conversations are allowed on this link
   conversations      Conversation[]
 
   // FAQ system
   dataroomFaqItems DataroomFaqItem[]
+
+  // AI chats
+  enableAIAgents Boolean? @default(false) // Enable AI agents for this link
+  chats          Chat[]
 
   // upload
   enableUpload      Boolean? @default(false) // Optional give user a option to enable the upload document function
@@ -82,12 +91,17 @@ model Link {
   customFields CustomField[]
 
   tags TagItem[]
+  viewerInvitations ViewerInvitation[]
+
+  // workflow entry link
+  workflow Workflow?
 
   @@unique([domainSlug, slug])
   @@index([documentId])
   @@index([teamId])
   @@index([documentId, isArchived]) // Performance optimization for active links filtering
   @@index([permissionGroupId]) // Performance optimization for permission group queries
+  @@index([deletedAt]) // Performance optimization for filtering deleted links
 }
 
 model LinkPreset {
@@ -124,6 +138,10 @@ model LinkPreset {
 
   enableCustomFields Boolean? @default(false)
   customFields       Json? //[{type: "SHORT_TEXT", identifier: "name", label: "Name", required: true}]
+
+  showBanner Boolean? @default(false) // Optional give user a option to show the "Powered by Papermark" banner
+
+  welcomeMessage String? // Custom welcome message for links created from this preset
 
   isDefault Boolean @default(false)
 

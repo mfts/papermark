@@ -4,11 +4,13 @@ import useSWR from "swr";
 
 import { fetcher } from "@/lib/utils";
 
-export function useDomains() {
+export function useDomains({ enabled = false }: { enabled?: boolean } = {}) {
   const teamInfo = useTeam();
 
   const { data: domains, error } = useSWR<Domain[]>(
-    teamInfo?.currentTeam?.id ? `/api/teams/${teamInfo.currentTeam.id}/domains` : null,
+    enabled && teamInfo?.currentTeam?.id
+      ? `/api/teams/${teamInfo.currentTeam.id}/domains`
+      : null,
     fetcher,
     {
       dedupingInterval: 60000,

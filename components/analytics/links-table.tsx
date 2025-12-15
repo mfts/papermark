@@ -27,6 +27,11 @@ import {
 import { toast } from "sonner";
 import useSWR from "swr";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import { cn, timeAgo } from "@/lib/utils";
+import { fetcher } from "@/lib/utils";
+import { downloadCSV } from "@/lib/utils/csv";
+
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -36,12 +41,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { DataTablePagination } from "@/components/visitors/data-table-pagination";
-
-import { usePlan } from "@/lib/swr/use-billing";
-import { cn, timeAgo } from "@/lib/utils";
-import { fetcher } from "@/lib/utils";
-import { downloadCSV } from "@/lib/utils/csv";
 
 import { UpgradeButton } from "../ui/upgrade-button";
 
@@ -213,11 +214,20 @@ const columns: ColumnDef<Link>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => (
-      <div className="text-sm text-muted-foreground">
-        {row.original.lastViewed ? timeAgo(row.original.lastViewed) : "-"}
-      </div>
-    ),
+    cell: ({ row }) =>
+      row.original.lastViewed ? (
+        <TimestampTooltip
+          timestamp={row.original.lastViewed}
+          side="right"
+          rows={["local", "utc", "unix"]}
+        >
+          <div className="select-none text-sm text-muted-foreground">
+            {timeAgo(row.original.lastViewed)}
+          </div>
+        </TimestampTooltip>
+      ) : (
+        <div className="text-sm text-muted-foreground">-</div>
+      ),
   },
 ];
 

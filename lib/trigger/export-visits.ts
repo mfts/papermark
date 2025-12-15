@@ -54,8 +54,7 @@ export type ExportVisitsPayload = {
 
 export const exportVisitsTask = task({
   id: "export-visits",
-  retry: { maxAttempts: 3 },
-  maxDuration: 900, // 15 minutes to handle large datasets
+  retry: { maxAttempts: 2 },
   run: async (payload: ExportVisitsPayload) => {
     const { type, teamId, resourceId, groupId, userId, exportId } = payload;
 
@@ -257,7 +256,7 @@ async function exportDocumentVisits(
     "Name",
     "Email",
     "Link Name",
-    "Total Visit Duration (s)",
+    "Total View Duration (s)",
     "Total Document Completion (%)",
     "Document version",
     "Downloaded at",

@@ -4,6 +4,8 @@ import { useState } from "react";
 
 import { CircleHelpIcon } from "lucide-react";
 
+import { useDataroom, useDataroomLinks } from "@/lib/swr/use-dataroom";
+
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import AppLayout from "@/components/layouts/app";
@@ -12,8 +14,6 @@ import LinksTable from "@/components/links/links-table";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-
-import { useDataroom, useDataroomLinks } from "@/lib/swr/use-dataroom";
 
 export default function DataroomAnalyticsPage() {
   const { dataroom } = useDataroom();
@@ -68,7 +68,11 @@ export default function DataroomAnalyticsPage() {
                 </p>
               </div>
             </div>
-            <LinksTable links={links} targetType={"DATAROOM"} />
+            <LinksTable
+              links={links}
+              targetType={"DATAROOM"}
+              dataroomName={dataroom.name}
+            />
             <LinkSheet
               linkType={"DATAROOM_LINK"}
               isOpen={isLinkSheetOpen}

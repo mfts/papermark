@@ -49,6 +49,7 @@ export default async function handle(
           allowDownload: true,
           password: true,
           isArchived: true,
+          deletedAt: true,
           enableCustomMetatag: true,
           enableFeedback: true,
           enableScreenshotProtection: true,
@@ -57,6 +58,7 @@ export default async function handle(
           metaDescription: true,
           metaImage: true,
           metaFavicon: true,
+          welcomeMessage: true,
           enableQuestion: true,
           dataroomId: true,
           linkType: true,
@@ -120,6 +122,13 @@ export default async function handle(
         });
       }
 
+      if (link.deletedAt) {
+        return res.status(404).json({
+          error: "Link has been deleted",
+          message: "This link has been deleted",
+        });
+      }
+
       const { email } = req.query as { email?: string };
       const globalBlockCheck = checkGlobalBlockList(
         email,
@@ -148,6 +157,26 @@ export default async function handle(
       }
 
       const linkType = link.linkType;
+
+      // Handle workflow links separately
+      if (linkType === "WORKFLOW_LINK") {
+        // For workflow links, fetch brand if available
+        let brand: Partial<Brand> | null = null;
+        if (link.teamId) {
+          const teamBrand = await prisma.brand.findUnique({
+            where: { teamId: link.teamId },
+            select: {
+              logo: true,
+              brandColor: true,
+              accentColor: true,
+            },
+          });
+          brand = teamBrand;
+        }
+        
+        return res.status(200).json({ linkType, brand, linkId: link.id });
+      }
+
       let brand: Partial<Brand> | Partial<DataroomBrand> | null = null;
       let linkData: any;
 

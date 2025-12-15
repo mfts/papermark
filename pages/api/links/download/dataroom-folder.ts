@@ -46,12 +46,15 @@ export default async function handler(
         id: true,
         viewedAt: true,
         viewerEmail: true,
+        viewerId: true,
+        verified: true,
         link: {
           select: {
             teamId: true,
             allowDownload: true,
             expiresAt: true,
             isArchived: true,
+            deletedAt: true,
             enableWatermark: true,
             watermarkConfig: true,
             name: true,
@@ -74,6 +77,11 @@ export default async function handler(
 
     // if link is archived, we should not allow the download
     if (view.link.isArchived) {
+      return res.status(403).json({ error: "Error downloading" });
+    }
+
+    // if link is deleted, we should not allow the download
+    if (view.link.deletedAt) {
       return res.status(403).json({ error: "Error downloading" });
     }
 
@@ -123,6 +131,7 @@ export default async function handler(
         folderId: true,
         document: {
           select: {
+            id: true,
             name: true,
             versions: {
               where: { isPrimary: true },
@@ -296,6 +305,45 @@ export default async function handler(
       };
     }
 
+    // Don't update the DATAROOM_VIEW with downloadedAt for folder downloads
+    // Only bulk downloads should update the DATAROOM_VIEW
+
+    // Create individual document views for each document in the folder
+    const downloadableDocuments = allDocuments.filter(
+      (doc) =>
+        doc.document.versions[0] &&
+        doc.document.versions[0].type !== "notion" &&
+        doc.document.versions[0].storageType !== "VERCEL_BLOB",
+    );
+
+    // Prepare metadata with folder name and document list
+    const downloadMetadata = {
+      folderName: rootFolder.name,
+      folderPath: rootFolder.path,
+      documents: downloadableDocuments.map((doc) => ({
+        id: doc.document.id,
+        name: doc.document.name,
+      })),
+    };
+
+    await prisma.view.createMany({
+      data: downloadableDocuments.map((doc) => ({
+        viewType: "DOCUMENT_VIEW",
+        documentId: doc.document.id,
+        linkId: linkId,
+        dataroomId: dataroomId,
+        groupId: view.groupId,
+        dataroomViewId: view.id,
+        viewerEmail: view.viewerEmail,
+        downloadedAt: new Date(),
+        downloadType: "FOLDER",
+        downloadMetadata: downloadMetadata,
+        viewerId: view.viewerId,
+        verified: view.verified,
+      })),
+      skipDuplicates: true,
+    });
+
     if (view.link.teamId) {
       void notifyDocumentDownload({
         teamId: view.link.teamId,
@@ -303,7 +351,7 @@ export default async function handler(
         dataroomId,
         linkId,
         viewerEmail: view.viewerEmail ?? undefined,
-        viewerId: undefined,
+        viewerId: view.viewerId ?? undefined,
         metadata: {
           folderName: rootFolder.name,
           documentCount: allDocuments.length,

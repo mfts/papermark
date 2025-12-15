@@ -36,6 +36,8 @@ export function fileIcon({
     case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
     case "application/vnd.ms-powerpoint":
     case "application/vnd.oasis.opendocument.presentation":
+    case "application/vnd.apple.keynote":
+    case "application/x-iwork-keynote-sffkey":
     case "slides":
       return <SlidesIcon className={className} isLight={isLight} />;
     case "application/vnd.ms-excel":

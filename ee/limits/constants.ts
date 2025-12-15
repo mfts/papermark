@@ -79,6 +79,22 @@ export const DATAROOMS_PLUS_PLAN_LIMITS = {
   },
 };
 
+export const DATAROOMS_PREMIUM_PLAN_LIMITS = {
+  users: 10,
+  links: null,
+  documents: null,
+  domains: 1000,
+  datarooms: 1000,
+  customDomainOnPro: true,
+  customDomainInDataroom: true,
+  conversationsInDataroom: true,
+  advancedLinkControlsOnPro: false,
+  fileSizeLimits: {
+    maxFiles: 5000,
+    maxPages: 1000,
+  },
+};
+
 export const PAUSED_PLAN_LIMITS = {
   // During pause: keep all data accessible but restrict new creations and views
   canCreateLinks: false,

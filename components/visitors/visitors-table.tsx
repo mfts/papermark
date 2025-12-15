@@ -40,6 +40,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
@@ -138,8 +139,8 @@ export default function VisitorsTable({
           <TableHeader>
             <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
               <TableHead>Name</TableHead>
-              <TableHead>Visit Duration</TableHead>
-              <TableHead>Visit Completion</TableHead>
+              <TableHead>View Duration</TableHead>
+              <TableHead>View Completion</TableHead>
               <TableHead>Last Viewed</TableHead>
               <TableHead className="text-center sm:text-right"></TableHead>
             </TableRow>
@@ -150,7 +151,7 @@ export default function VisitorsTable({
                 <TableRow>
                   <TableCell colSpan={5}>
                     <div className="flex h-40 w-full items-center justify-center">
-                      <p>No visits yet. Try sharing a link.</p>
+                      <p>No views yet. Try sharing a link.</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -163,29 +164,38 @@ export default function VisitorsTable({
                       key={view.id}
                       className="group/row opacity-50 grayscale"
                     >
-                      {/* Name */}
-                      <TableCell>
-                        <div className="flex items-center overflow-visible sm:space-x-3">
-                          <VisitorAvatar
-                            viewerEmail={view.viewerEmail}
-                            isArchived
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="focus:outline-none">
-                              <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
-                                {view.viewerEmail ? (
-                                  <>{view.viewerEmail}</>
-                                ) : (
-                                  "Anonymous"
-                                )}
-                              </p>
-                              <p className="text-xs text-muted-foreground/60 sm:text-sm">
-                                {view.link.name ? view.link.name : view.linkId}
-                              </p>
+                          {/* Name */}
+                          <TableCell>
+                            <div className="flex items-center overflow-visible sm:space-x-3">
+                              <VisitorAvatar
+                                viewerEmail={view.viewerEmail}
+                                isArchived
+                              />
+                              <div className="min-w-0 flex-1">
+                                <div className="focus:outline-none">
+                                  <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
+                                    {view.viewerEmail ? (
+                                      <>
+                                        {view.viewerName || view.viewerEmail}
+                                      </>
+                                    ) : (
+                                      "Anonymous"
+                                    )}
+                                  </p>
+                                  {view.viewerName && view.viewerEmail && (
+                                    <p className="text-xs text-muted-foreground/60">
+                                      {view.viewerEmail}
+                                    </p>
+                                  )}
+                                  <p className="text-xs text-muted-foreground/60 sm:text-sm">
+                                    {view.link && view.link.name
+                                      ? view.link.name
+                                      : view.linkId}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      </TableCell>
+                          </TableCell>
                       {/* Duration */}
                       <TableCell className="">
                         <div className="text-sm text-muted-foreground">
@@ -204,9 +214,18 @@ export default function VisitorsTable({
                       </TableCell>
                       {/* Last Viewed */}
                       <TableCell className="text-sm text-muted-foreground">
-                        <time dateTime={new Date(view.viewedAt).toISOString()}>
-                          {timeAgo(view.viewedAt)}
-                        </time>
+                        <TimestampTooltip
+                          timestamp={view.viewedAt}
+                          side="right"
+                          rows={["local", "utc", "unix"]}
+                        >
+                          <time
+                            className="select-none"
+                            dateTime={new Date(view.viewedAt).toISOString()}
+                          >
+                            {timeAgo(view.viewedAt)}
+                          </time>
+                        </TimestampTooltip>
                       </TableCell>
 
                       {/* Actions */}
@@ -265,7 +284,7 @@ export default function VisitorsTable({
                                   <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
                                     {view.viewerEmail ? (
                                       <>
-                                        {view.viewerEmail}{" "}
+                                        {view.viewerName || view.viewerEmail}{" "}
                                         {view.verified && (
                                           <BadgeTooltip
                                             content="Verified visitor"
@@ -324,8 +343,13 @@ export default function VisitorsTable({
                                       "Anonymous"
                                     )}
                                   </p>
+                                  {view.viewerName && view.viewerEmail && (
+                                    <p className="text-xs text-muted-foreground/60">
+                                      {view.viewerEmail}
+                                    </p>
+                                  )}
                                   <p className="text-xs text-muted-foreground/60 sm:text-sm">
-                                    {view.link.name
+                                    {view.link && view.link.name
                                       ? view.link.name
                                       : view.linkId}
                                   </p>
@@ -351,11 +375,18 @@ export default function VisitorsTable({
                           </TableCell>
                           {/* Last Viewed */}
                           <TableCell className="text-sm text-muted-foreground">
-                            <time
-                              dateTime={new Date(view.viewedAt).toISOString()}
+                            <TimestampTooltip
+                              timestamp={view.viewedAt}
+                              side="right"
+                              rows={["local", "utc", "unix"]}
                             >
-                              {timeAgo(view.viewedAt)}
-                            </time>
+                              <time
+                                className="select-none"
+                                dateTime={new Date(view.viewedAt).toISOString()}
+                              >
+                                {timeAgo(view.viewedAt)}
+                              </time>
+                            </TimestampTooltip>
                           </TableCell>
 
                           {/* Actions */}
@@ -436,6 +467,8 @@ export default function VisitorsTable({
                                   viewId={view.id}
                                   totalPages={view.versionNumPages}
                                   versionNumber={view.versionNumber}
+                                  downloadType={view.downloadType}
+                                  downloadMetadata={view.downloadMetadata as any}
                                 />
                               )}
                               {!isFreePlan && primaryVersion.type === "pdf" ? (
@@ -476,7 +509,7 @@ export default function VisitorsTable({
                     <div className="flex flex-col items-start justify-center gap-1 sm:flex-row sm:items-center">
                       <span className="flex items-center gap-x-1">
                         <AlertTriangleIcon className="inline-block h-4 w-4 text-yellow-500" />
-                        Some older visits may not be shown because your document
+                        Some older views may not be shown because your document
                         has more than 20 views.{" "}
                       </span>
                       <UpgradePlanModal

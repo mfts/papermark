@@ -15,7 +15,7 @@ type JWTPayload = {
  */
 export function generateJWT(
   payload: JWTPayload,
-  expiresInSeconds: number = 60 * 60 * 24,
+  expiresInSeconds: number = 60 * 60 * 24, // 24 hours
 ): string {
   const tokenPayload = {
     ...payload,

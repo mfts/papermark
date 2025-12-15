@@ -25,6 +25,7 @@ import {
 } from "@/lib/folders/create-folder";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
+import { useTeamSettings } from "@/lib/swr/use-team-settings";
 import { CustomUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
@@ -103,6 +104,11 @@ export default function UploadZone({
     ? limits?.documents - limits?.usage?.documents
     : 0;
 
+  // Fetch team settings with proper revalidation - ensures settings stay fresh across tabs
+  const { settings: teamSettings } = useTeamSettings(teamInfo?.currentTeam?.id);
+  const replicateDataroomFolders =
+    teamSettings?.replicateDataroomFolders ?? true;
+
   // Track if we've created the dataroom folder in "All Documents" for non-replication mode
   // Using promise-lock pattern to prevent race conditions during concurrent folder creation
   const dataroomFolderPathRef = useRef<string | null>(null);
@@ -113,7 +119,7 @@ export default function UploadZone({
   useEffect(() => {
     dataroomFolderPathRef.current = null;
     dataroomFolderCreationPromiseRef.current = null;
-  }, [teamInfo?.currentTeam?.replicateDataroomFolders]);
+  }, [replicateDataroomFolders, dataroomId]);
 
   const fileSizeLimits = useMemo(
     () =>
@@ -618,10 +624,6 @@ export default function UploadZone({
                 isFirstLevelFolder,
               });
 
-              // Get team's replication setting, default to true if not set
-              const replicateDataroomFolders =
-                teamInfo.currentTeam?.replicateDataroomFolders ?? true;
-
               // If replication is disabled, ensure the dataroom folder exists in "All Documents"
               // Uses promise-lock pattern to prevent race conditions
               if (!replicateDataroomFolders && dataroomName) {
@@ -730,9 +732,6 @@ export default function UploadZone({
             : entry.fullPath;
 
           // Determine where to upload in "All Documents"
-          const replicateDataroomFolders =
-            teamInfo.currentTeam?.replicateDataroomFolders ?? true;
-
           if (!replicateDataroomFolders && dataroomId && dataroomName) {
             // If replication is disabled, ensure the dataroom folder exists and use it
             // This await is safe because getOrCreateDataroomFolder uses a promise-lock

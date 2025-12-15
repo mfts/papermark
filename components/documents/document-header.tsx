@@ -9,6 +9,7 @@ import { Document, DocumentVersion } from "@prisma/client";
 import {
   ArrowRightIcon,
   BetweenHorizontalStartIcon,
+  Bot,
   ChevronRight,
   CloudDownloadIcon,
   DownloadIcon,
@@ -21,14 +22,15 @@ import {
   TrashIcon,
   ViewIcon,
 } from "lucide-react";
-import { usePlausible } from "next-plausible";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { DocumentAIDialog } from "@/ee/features/ai/components/document-ai-dialog";
 import { getFile } from "@/lib/files/get-file";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
+import { useTeamAI } from "@/lib/swr/use-team-ai";
 import {
   DocumentWithLinksAndLinkCountAndViewCount,
   DocumentWithVersion,
@@ -39,7 +41,6 @@ import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import FileUp from "@/components/shared/icons/file-up";
 import MoreVertical from "@/components/shared/icons/more-vertical";
-import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -85,6 +86,7 @@ export default function DocumentHeader({
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
   const { isPro, isFree, isTrial, isBusiness, isDatarooms } = usePlan();
+  const { canUseAI, isAIEnabled } = useTeamAI();
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
@@ -96,6 +98,7 @@ export default function DocumentHeader({
   const [planModalTrigger, setPlanModalTrigger] = useState<string>("");
   const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
   const [exportModalOpen, setExportModalOpen] = useState<boolean>(false);
+  const [aiDialogOpen, setAiDialogOpen] = useState<boolean>(false);
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -136,8 +139,6 @@ export default function DocumentHeader({
     "-" +
     String(currentTime.getMinutes()).padStart(2, "0");
   "-" + String(currentTime.getSeconds()).padStart(2, "0");
-
-  const plausible = usePlausible();
 
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
@@ -210,9 +211,6 @@ export default function DocumentHeader({
             documentId: document.id,
           }),
         }).then(() => {
-          // Once the assistant is activated, redirect to the chat
-          plausible("assistantEnabled", { props: { documentId: document.id } }); // track the event
-
           // refetch to fix the UI delay
           mutate(`/api/teams/${teamId}/documents/${document.id}`);
 
@@ -289,29 +287,34 @@ export default function DocumentHeader({
     }
   };
 
-  const enableAdvancedExcel = async (document: Document) => {
+  const toggleAdvancedExcel = async (document: Document, enabled: boolean) => {
     toast.promise(
       fetch(`/api/teams/${teamId}/documents/${document.id}/advanced-mode`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled }),
       }).then(async (response) => {
         if (!response.ok) {
           const { message } = await response.json();
           throw new Error(message);
         }
         const { message } = await response.json();
-        plausible("advancedExcelEnabled", {
-          props: { documentId: document.id },
-        }); // track the event
         mutate(`/api/teams/${teamId}/documents/${document.id}`);
-        handleCloseAlert("enable-advanced-excel-alert");
+        if (enabled) {
+          handleCloseAlert("enable-advanced-excel-alert");
+        }
         return message;
       }),
       {
-        loading: "Enabling advanced Excel mode...",
+        loading: enabled
+          ? "Enabling advanced Excel mode..."
+          : "Disabling advanced Excel mode...",
         success: (message) => message,
         error: (error) =>
-          error.message || "Failed to enable advanced Excel mode",
+          error.message ||
+          (enabled
+            ? "Failed to enable advanced Excel mode"
+            : "Failed to disable advanced Excel mode"),
       },
     );
   };
@@ -406,7 +409,11 @@ export default function DocumentHeader({
     toast.promise(
       fetch(`/api/teams/${teamId}/documents/${documentId}`, {
         method: "DELETE",
-      }).then(() => {
+      }).then(async (res) => {
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.message || "Failed to delete document");
+        }
         mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`, null, {
           populateCache: (_, docs) => {
             return docs.filter(
@@ -423,7 +430,7 @@ export default function DocumentHeader({
       {
         loading: "Deleting document...",
         success: "Document deleted successfully.",
-        error: "Failed to delete document. Try again.",
+        error: (err) => err.message || "Failed to delete document. Try again.",
       },
     );
   };
@@ -710,14 +717,20 @@ export default function DocumentHeader({
                   </DropdownMenuItem>
                 ))} */}
               {prismaDocument.type === "sheet" &&
-                !prismaDocument.advancedExcelEnabled &&
                 supportsAdvancedExcelMode(primaryVersion.contentType) &&
                 (isPro || isBusiness || isDatarooms || isTrial) && (
                   <DropdownMenuItem
-                    onClick={() => enableAdvancedExcel(prismaDocument)}
+                    onClick={() =>
+                      toggleAdvancedExcel(
+                        prismaDocument,
+                        !prismaDocument.advancedExcelEnabled,
+                      )
+                    }
                   >
                     <SheetIcon className="mr-2 h-4 w-4" />
-                    Enable Advanced Mode
+                    {prismaDocument.advancedExcelEnabled
+                      ? "Disable Advanced Mode"
+                      : "Enable Advanced Mode"}
                   </DropdownMenuItem>
                 )}
               {datarooms && datarooms.length !== 0 && (
@@ -726,6 +739,25 @@ export default function DocumentHeader({
                   Add to dataroom
                 </DropdownMenuItem>
               )}
+
+              {/* AI Agents - only show when team has AI enabled */}
+              {isAIEnabled &&
+                prismaDocument.type !== "notion" &&
+                prismaDocument.type !== "sheet" &&
+                prismaDocument.type !== "zip" &&
+                primaryVersion.type !== "video" && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setAiDialogOpen(true);
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <Bot className="mr-2 h-4 w-4" />
+                    {prismaDocument.agentsEnabled
+                      ? "AI Agents Settings"
+                      : "Enable AI Agents"}
+                  </DropdownMenuItem>
+                )}
 
               {primaryVersion.type !== "notion" &&
                 primaryVersion.type !== "zip" &&
@@ -787,7 +819,7 @@ export default function DocumentHeader({
                 }
               >
                 <FileDownIcon className="mr-2 h-4 w-4" />
-                Export visits{" "}
+                Export views{" "}
                 {isFree && <PlanBadge className="ml-2" plan="pro" />}
               </DropdownMenuItem>
 
@@ -974,6 +1006,16 @@ export default function DocumentHeader({
           onClose={() => setExportModalOpen(false)}
         />
       )}
+
+      {/* AI Agents Dialog */}
+      <DocumentAIDialog
+        open={aiDialogOpen}
+        onOpenChange={setAiDialogOpen}
+        documentId={prismaDocument.id}
+        teamId={teamId}
+        agentsEnabled={prismaDocument.agentsEnabled}
+        vectorStoreFileId={primaryVersion.vectorStoreFileId}
+      />
     </header>
   );
 }

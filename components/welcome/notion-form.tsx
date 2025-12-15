@@ -5,7 +5,6 @@ import { type FormEvent, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { LinkType } from "@prisma/client";
 import { motion } from "motion/react";
-import { usePlausible } from "next-plausible";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
 
@@ -35,7 +34,6 @@ import Skeleton from "../Skeleton";
 
 export default function NotionForm() {
   const router = useRouter();
-  const plausible = usePlausible();
   const analytics = useAnalytics();
   const [uploading, setUploading] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -101,8 +99,6 @@ export default function NotionForm() {
         const linkId = document.links[0].id;
 
         // track the event
-        plausible("documentUploaded");
-        plausible("notionDocumentUploaded");
         analytics.capture("Document Added", {
           documentId: document.id,
           name: document.name,

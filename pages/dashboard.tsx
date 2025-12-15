@@ -8,6 +8,9 @@ import { BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import { fetcher } from "@/lib/utils";
+
 import { AnalyticsCard } from "@/components/analytics/analytics-card";
 import DashboardViewsChart from "@/components/analytics/dashboard-views-chart";
 import DocumentsTable from "@/components/analytics/documents-table";
@@ -20,9 +23,7 @@ import ViewsTable from "@/components/analytics/views-table";
 import VisitorsTable from "@/components/analytics/visitors-table";
 import AppLayout from "@/components/layouts/app";
 import { TabMenu } from "@/components/tab-menu";
-
-import { usePlan } from "@/lib/swr/use-billing";
-import { fetcher } from "@/lib/utils";
+import { YearlyRecapBanner } from "@/components/yearly-recap/yearly-recap-banner";
 
 interface OverviewData {
   counts: {
@@ -123,6 +124,7 @@ export default function DashboardPage() {
   return (
     <AppLayout>
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+        <YearlyRecapBanner />
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
           <TimeRangeSelect
@@ -174,7 +176,7 @@ export default function DashboardPage() {
                 count: overview?.counts.visitors,
               },
               {
-                label: "Recent Visits",
+                label: "Recent Views",
                 href: `/dashboard?interval=${interval}&type=views`,
                 value: "views",
                 currentValue: type,

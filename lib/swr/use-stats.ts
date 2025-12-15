@@ -9,7 +9,7 @@ import { fetcher } from "@/lib/utils";
 
 export type TStatsData = {
   views: View[];
-  groupedReactions: { type: string; _count: { type: number } }[];
+  avgCompletionRate: number;
   duration: {
     data: { versionNumber: number; pageNumber: string; avg_duration: number }[];
   };

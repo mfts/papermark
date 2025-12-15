@@ -8,6 +8,11 @@ import prisma from "@/lib/prisma";
 import { getFileNameWithPdfExtension } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
 
+// This function can run for a maximum of 300 seconds
+export const config = {
+  maxDuration: 300,
+};
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -32,6 +37,7 @@ export default async function handle(
               allowDownload: true,
               expiresAt: true,
               isArchived: true,
+              deletedAt: true,
               enableWatermark: true,
               watermarkConfig: true,
               name: true,
@@ -72,6 +78,11 @@ export default async function handle(
 
       // if link is archived, we should not allow the download
       if (view.link.isArchived) {
+        return res.status(403).json({ error: "Error downloading" });
+      }
+
+      // if link is deleted, we should not allow the download
+      if (view.link.deletedAt) {
         return res.status(403).json({ error: "Error downloading" });
       }
 
@@ -117,10 +128,12 @@ export default async function handle(
       }
 
       // get the file to be downloaded, if watermark is enabled and document is not pdf, then get the pdf file, otherwise return the original file
-      // if watermark is enabled and document version is pdf, then get the file
+      // if watermark is enabled and watermark config is present and document version is pdf, then get the file
       // if watermark is not enabled, then get the original file
       const file =
-        view.link.enableWatermark && view.document!.versions[0].type === "pdf"
+        view.link.enableWatermark &&
+        view.link.watermarkConfig &&
+        view.document!.versions[0].type === "pdf"
           ? view.document!.versions[0].file
           : (view.document!.versions[0].originalFile ??
             view.document!.versions[0].file);
@@ -133,7 +146,8 @@ export default async function handle(
 
       if (
         view.document!.versions[0].type === "pdf" &&
-        view.link.enableWatermark
+        view.link.enableWatermark &&
+        view.link.watermarkConfig
       ) {
         const response = await fetch(
           `${process.env.NEXTAUTH_URL}/api/mupdf/annotate-document`,

@@ -1,15 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import { TeamError, errorhandler } from "@/lib/errorHandler";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import { deleteFile } from "@/lib/files/delete-file-server";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { CustomUser } from "@/lib/types";
 import { serializeFileSize } from "@/lib/utils";
-
-import { authOptions } from "../../../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
@@ -19,7 +19,7 @@ export default async function handle(
     // GET /api/teams/:teamId/documents/:id
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
-      return res.status(401).end("Unauthorized");
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
@@ -53,7 +53,7 @@ export default async function handle(
       });
 
       if (!teamAccess) {
-        return res.status(401).end("Unauthorized");
+        return res.status(401).json({ message: "Unauthorized" });
       }
 
       // Then fetch the specific document with its relationships (targeted query)
@@ -139,8 +139,7 @@ export default async function handle(
     // PUT /api/teams/:teamId/document/:id
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
+      return res.status(401).json({ message: "Unauthorized" });
     }
     const userId = (session.user as CustomUser).id;
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
@@ -175,7 +174,7 @@ export default async function handle(
     });
 
     if (!document) {
-      return res.status(404).end("Document not found");
+      return res.status(404).json({ message: "Document not found" });
     }
 
     return res.status(200).json({
@@ -183,12 +182,81 @@ export default async function handle(
       newPath: document.folder?.path,
       oldPath: currentPathName,
     });
+  } else if (req.method === "PATCH") {
+    // PATCH /api/teams/:teamId/documents/:id
+    // Update document settings (e.g., agentsEnabled)
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { teamId, id: docId } = req.query as { teamId: string; id: string };
+    const userId = (session.user as CustomUser).id;
+
+    try {
+      // Verify user has access to the team
+      const teamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
+          },
+        },
+        select: { role: true },
+      });
+
+      if (!teamAccess) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Extract allowed fields from request body
+      const { agentsEnabled } = req.body as {
+        agentsEnabled?: boolean;
+      };
+
+      if (agentsEnabled !== undefined) {
+        const features = await getFeatureFlags({ teamId });
+        if (!features.ai) {
+          return res
+            .status(403)
+            .json({ message: "AI feature is not available" });
+        }
+      }
+
+      // Build update data object with only provided fields
+      const updateData: { agentsEnabled?: boolean } = {};
+
+      if (typeof agentsEnabled === "boolean") {
+        updateData.agentsEnabled = agentsEnabled;
+      }
+
+      // Check if there's anything to update
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ message: "No valid fields to update" });
+      }
+
+      // Update the document
+      const document = await prisma.document.update({
+        where: {
+          id: docId,
+          teamId: teamId,
+        },
+        data: updateData,
+        select: {
+          id: true,
+          agentsEnabled: true,
+        },
+      });
+
+      return res.status(200).json(document);
+    } catch (error) {
+      errorhandler(error, res);
+    }
   } else if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId/document/:id
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
@@ -196,18 +264,32 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
+      const teamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
+          },
+        },
+        select: {
+          role: true,
+        },
+      });
+      if (!teamAccess) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (teamAccess.role !== "ADMIN" && teamAccess.role !== "MANAGER") {
+        return res.status(403).json({
+          message:
+            "You are not permitted to perform this action. Only admin and managers can delete documents.",
+        });
+      }
+
       const documentVersions = await prisma.document.findUnique({
         where: {
           id: docId,
           teamId: teamId,
-          team: {
-            users: {
-              some: {
-                // role: { in: ["ADMIN", "MANAGER"] },
-                userId: userId,
-              },
-            },
-          },
         },
         include: {
           versions: {
@@ -222,7 +304,7 @@ export default async function handle(
       });
 
       if (!documentVersions) {
-        return res.status(404).end("Document not found");
+        return res.status(404).json({ message: "Document not found" });
       }
 
       //if it is not notion document then only delete the document from storage
@@ -249,8 +331,10 @@ export default async function handle(
       errorhandler(error, res);
     }
   } else {
-    // We only allow GET, PUT and DELETE requests
-    res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    // We only allow GET, PUT, PATCH and DELETE requests
+    res.setHeader("Allow", ["GET", "PUT", "PATCH", "DELETE"]);
+    return res
+      .status(405)
+      .json({ message: `Method ${req.method} Not Allowed` });
   }
 }

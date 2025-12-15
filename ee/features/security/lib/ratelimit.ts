@@ -9,7 +9,7 @@ export const rateLimiters = {
   // 3 auth attempts per hour per IP
   auth: new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(3, "20 m"),
+    limiter: Ratelimit.slidingWindow(10, "20 m"),
     prefix: "rl:auth",
     enableProtection: true,
     analytics: true,
@@ -18,7 +18,7 @@ export const rateLimiters = {
   // 5 billing operations per hour per IP
   billing: new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(3, "30 m"),
+    limiter: Ratelimit.slidingWindow(10, "20 m"),
     prefix: "rl:billing",
     enableProtection: true,
     analytics: true,

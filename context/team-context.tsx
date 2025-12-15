@@ -36,6 +36,7 @@ export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
   const { teams, loading } = useTeams();
   const [currentTeam, setCurrentTeamState] = useState<Team | null>(null);
 
+  // Effect to set initial currentTeam on mount
   useEffect(() => {
     if (!teams || teams.length === 0 || currentTeam) return;
 

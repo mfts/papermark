@@ -55,6 +55,7 @@ export default async function handle(
             updatedAt: true,
             teamId: true,
             isArchived: true,
+            deletedAt: true,
             domainId: true,
             domainSlug: true,
             groupId: true,
@@ -112,6 +113,10 @@ export default async function handle(
 
     if (link.isArchived) {
       return res.status(404).json({ error: "Link archived" });
+    }
+
+    if (link.deletedAt) {
+      return res.status(404).json({ error: "Link deleted" });
     }
 
     // Check if the link is a group link and remove the folder/documents from the dataroom if not part of the group permissions

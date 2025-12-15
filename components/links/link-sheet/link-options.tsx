@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/collapsible";
 
 import AgreementSection from "./agreement-section";
+import AIAgentsSection from "./ai-agents-section";
 import ConversationSection from "./conversation-section";
 import CustomFieldsSection from "./custom-fields-section";
 import IndexFileSection from "./index-file-section";
@@ -36,6 +37,7 @@ import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
 import UploadSection from "./upload-section";
 import WatermarkSection from "./watermark-section";
+import { WelcomeMessageSection } from "./welcome-message-section";
 
 export type LinkUpgradeOptions = {
   state: boolean;
@@ -85,7 +87,7 @@ export const LinkOptions = ({
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   targetId?: string;
-  linkType: LinkType;
+  linkType: Omit<LinkType, "WORKFLOW_LINK">;
   editLink?: boolean;
   currentPreset?: LinkPreset | null;
 }) => {
@@ -170,21 +172,6 @@ export const LinkOptions = ({
         </>
       ) : null}
 
-      {/* OG Section */}
-      <OGSection
-        {...{ data, setData }}
-        isAllowed={
-          isTrial ||
-          (isPro && allowAdvancedLinkControls) ||
-          isBusiness ||
-          isDatarooms ||
-          isDataroomsPlus
-        }
-        handleUpgradeStateChange={handleUpgradeStateChange}
-        editLink={editLink ?? false}
-        presets={currentPreset}
-      />
-
       {/* Security Section */}
       <CollapsibleSection title="Security Controls" defaultOpen={true}>
         <div>
@@ -222,63 +209,6 @@ export const LinkOptions = ({
             }
             handleUpgradeStateChange={handleUpgradeStateChange}
           />
-        </div>
-      </CollapsibleSection>
-
-      {/* Advanced Section */}
-      <CollapsibleSection title="Advanced Controls" defaultOpen={true}>
-        <div>
-          {linkType === LinkType.DATAROOM_LINK && targetId ? (
-            <UploadSection
-              {...{ data, setData }}
-              isAllowed={
-                isTrial ||
-                isDataroomsPlus ||
-                (isDatarooms && limits?.dataroomUpload === true)
-              }
-              handleUpgradeStateChange={handleUpgradeStateChange}
-              targetId={targetId}
-            />
-          ) : null}
-
-          {linkType === LinkType.DATAROOM_LINK ? (
-            <IndexFileSection
-              {...{ data, setData }}
-              isAllowed={isTrial || isDataroomsPlus}
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-          ) : null}
-
-          {linkType === LinkType.DATAROOM_LINK &&
-          limits?.conversationsInDataroom ? (
-            <ConversationSection
-              {...{ data, setData }}
-              isAllowed={
-                isDataroomsPlus ||
-                ((isBusiness || isDatarooms) && limits?.conversationsInDataroom)
-              }
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-          ) : null}
-
-          {linkType === LinkType.DOCUMENT_LINK ? (
-            <FeedbackSection {...{ data, setData }} />
-          ) : null}
-
-          {linkType === LinkType.DOCUMENT_LINK ? (
-            <QuestionSection
-              {...{ data, setData }}
-              isAllowed={
-                isTrial ||
-                (isPro && allowAdvancedLinkControls) ||
-                isBusiness ||
-                isDatarooms ||
-                isDataroomsPlus
-              }
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-          ) : null}
-
           <CustomFieldsSection
             {...{ data, setData }}
             isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
@@ -288,20 +218,85 @@ export const LinkOptions = ({
         </div>
       </CollapsibleSection>
 
-      {linkType === LinkType.DOCUMENT_LINK ? (
-        <ProBannerSection
-          {...{ data, setData }}
-          isAllowed={
-            isTrial ||
-            isPro ||
-            isBusiness ||
-            isDatarooms ||
-            isDataroomsPlus ||
-            isStarter
-          }
-          handleUpgradeStateChange={handleUpgradeStateChange}
-        />
-      ) : null}
+      {/* Custom Branding Section */}
+      <CollapsibleSection title="Custom Branding" defaultOpen={true}>
+        <div>
+          <WelcomeMessageSection {...{ data, setData }} />
+          <OGSection
+            {...{ data, setData }}
+            isAllowed={
+              isTrial ||
+              (isPro && allowAdvancedLinkControls) ||
+              isBusiness ||
+              isDatarooms ||
+              isDataroomsPlus
+            }
+            handleUpgradeStateChange={handleUpgradeStateChange}
+            editLink={editLink ?? false}
+            presets={currentPreset}
+          />
+          <ProBannerSection
+            {...{ data, setData }}
+            isAllowed={
+              isTrial ||
+              isPro ||
+              isBusiness ||
+              isDatarooms ||
+              isDataroomsPlus ||
+              isStarter
+            }
+            handleUpgradeStateChange={handleUpgradeStateChange}
+          />
+        </div>
+      </CollapsibleSection>
+
+      {/* Advanced Section */}
+      <CollapsibleSection title="Advanced Controls" defaultOpen={true}>
+        <div>
+          {/* AI Agents - Available for both document and dataroom links */}
+          <AIAgentsSection
+            {...{ data, setData }}
+            isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
+            handleUpgradeStateChange={handleUpgradeStateChange}
+          />
+
+          {/* Dataroom-specific options */}
+          {linkType === LinkType.DATAROOM_LINK ? (
+            <>
+              {targetId ? (
+                <UploadSection
+                  {...{ data, setData }}
+                  isAllowed={
+                    isTrial ||
+                    isDataroomsPlus ||
+                    (isDatarooms && limits?.dataroomUpload === true)
+                  }
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                  targetId={targetId}
+                />
+              ) : null}
+
+              <IndexFileSection
+                {...{ data, setData }}
+                isAllowed={isTrial || isDataroomsPlus}
+                handleUpgradeStateChange={handleUpgradeStateChange}
+              />
+
+              {limits?.conversationsInDataroom ? (
+                <ConversationSection
+                  {...{ data, setData }}
+                  isAllowed={
+                    isDataroomsPlus ||
+                    ((isBusiness || isDatarooms) &&
+                      limits?.conversationsInDataroom)
+                  }
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                />
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      </CollapsibleSection>
 
       <UpgradePlanModal
         clickedPlan={upgradePlan}

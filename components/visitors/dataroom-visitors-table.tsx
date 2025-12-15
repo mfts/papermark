@@ -31,6 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { ExportVisitsModal } from "../datarooms/export-visits-modal";
@@ -83,7 +84,7 @@ export default function DataroomVisitorsTable({
               <TableRow>
                 <TableCell colSpan={5}>
                   <div className="flex h-40 w-full items-center justify-center">
-                    <p>No visits yet. Try sharing a link.</p>
+                    <p>No views yet. Try sharing a link.</p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -102,7 +103,7 @@ export default function DataroomVisitorsTable({
                               <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
                                 {view.viewerEmail ? (
                                   <>
-                                    {view.viewerEmail}{" "}
+                                    {view.viewerName || view.viewerEmail}{" "}
                                     {view.verified && (
                                       <BadgeTooltip
                                         content="Verified visitor"
@@ -140,6 +141,11 @@ export default function DataroomVisitorsTable({
                                   "Anonymous"
                                 )}
                               </p>
+                              {view.viewerName && view.viewerEmail && (
+                                <p className="text-xs text-muted-foreground/60">
+                                  {view.viewerEmail}
+                                </p>
+                              )}
                               <p className="text-xs text-muted-foreground/60 sm:text-sm">
                                 {view.link.name ? view.link.name : view.linkId}
                               </p>
@@ -165,9 +171,18 @@ export default function DataroomVisitorsTable({
                       </TableCell> */}
                       {/* Last Viewed */}
                       <TableCell className="text-sm text-muted-foreground">
-                        <time dateTime={new Date(view.viewedAt).toISOString()}>
-                          {timeAgo(view.viewedAt)}
-                        </time>
+                        <TimestampTooltip
+                          timestamp={view.viewedAt}
+                          side="right"
+                          rows={["local", "utc", "unix"]}
+                        >
+                          <time
+                            className="select-none"
+                            dateTime={new Date(view.viewedAt).toISOString()}
+                          >
+                            {timeAgo(view.viewedAt)}
+                          </time>
+                        </TimestampTooltip>
                       </TableCell>
                       {/* Actions */}
                       <TableCell className="cursor-pointer p-0 text-center sm:text-right">
@@ -200,17 +215,18 @@ export default function DataroomVisitorsTable({
                           </TableCell>
 
                           <TableCell>
-                            <div>
+                            <TimestampTooltip
+                              timestamp={view.viewedAt}
+                              side="right"
+                              rows={["local", "utc", "unix"]}
+                            >
                               <time
-                                className="truncate text-sm text-muted-foreground"
-                                dateTime={new Date(
-                                  view.viewedAt,
-                                ).toLocaleString()}
-                                title={new Date(view.viewedAt).toLocaleString()}
+                                className="select-none truncate text-sm text-muted-foreground"
+                                dateTime={new Date(view.viewedAt).toISOString()}
                               >
                                 {timeAgo(view.viewedAt)}
                               </time>
-                            </div>
+                            </TimestampTooltip>
                           </TableCell>
                           <TableCell className="table-cell"></TableCell>
                         </TableRow>
@@ -225,19 +241,20 @@ export default function DataroomVisitorsTable({
                             </TableCell>
 
                             <TableCell>
-                              <div>
+                              <TimestampTooltip
+                                timestamp={view.downloadedAt}
+                                side="right"
+                                rows={["local", "utc", "unix"]}
+                              >
                                 <time
-                                  className="truncate text-sm text-muted-foreground"
+                                  className="select-none truncate text-sm text-muted-foreground"
                                   dateTime={new Date(
                                     view.downloadedAt,
-                                  ).toLocaleString()}
-                                  title={new Date(
-                                    view.downloadedAt,
-                                  ).toLocaleString()}
+                                  ).toISOString()}
                                 >
                                   {timeAgo(view.downloadedAt)}
                                 </time>
-                              </div>
+                              </TimestampTooltip>
                             </TableCell>
                             <TableCell className="table-cell"></TableCell>
                           </TableRow>

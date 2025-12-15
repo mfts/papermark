@@ -93,7 +93,7 @@ export function DataroomLinkSheet({
     groupId?: string;
   };
 
-  const { domains } = useDomains();
+  const { domains } = useDomains({ enabled: isOpen });
 
   const {
     viewerGroups,
@@ -217,6 +217,7 @@ export function DataroomLinkSheet({
         enableScreenshotProtection:
           preset.enableScreenshotProtection || prev.enableScreenshotProtection,
         enableNotification: !!preset.enableNotification,
+        showBanner: preset.showBanner ?? prev.showBanner,
       };
     });
 
@@ -985,7 +986,7 @@ export function DataroomLinkSheet({
                       variant="default"
                       onClick={(e) => handleSubmit(e, false, true)}
                     >
-                      Manage Permissions
+                      Manage File Permissions
                     </Button>
                   )}
                 <Button

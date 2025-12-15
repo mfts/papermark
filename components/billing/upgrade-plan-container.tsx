@@ -45,6 +45,7 @@ export default function UpgradePlanContainer() {
     plan,
     isFree,
     isDataroomsPlus,
+    isDataroomsPremium,
     isPaused,
     isCancelled,
     isCustomer,
@@ -271,7 +272,7 @@ export default function UpgradePlanContainer() {
                     Change billing information
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => manageSubscription({ type: "invoices" })}
+                    onClick={() => router.push("/settings/billing/invoices")}
                   >
                     <ReceiptTextIcon className="h-4 w-4" />
                     View invoices
@@ -291,9 +292,11 @@ export default function UpgradePlanContainer() {
         <Card className="bg-transparent">
           <CardHeader>
             <CardTitle>
-              {isDataroomsPlus
-                ? "Datarooms+"
-                : plan.charAt(0).toUpperCase() + plan.slice(1)}{" "}
+              {isDataroomsPremium
+                ? "Premium"
+                : isDataroomsPlus
+                  ? "Datarooms+"
+                  : plan.charAt(0).toUpperCase() + plan.slice(1)}{" "}
               Plan
             </CardTitle>
             {!isCancelled && startsAt && endsAt && isBillingCycleCurrent() && (

@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
         password: true,
         domainSlug: true,
         isArchived: true,
+        deletedAt: true,
         slug: true,
         domainId: true,
         allowList: true,
@@ -131,6 +132,7 @@ export async function POST(request: NextRequest) {
           select: {
             plan: true,
             globalBlockList: true,
+            agentsEnabled: true,
           },
         },
         customFields: {
@@ -140,6 +142,12 @@ export async function POST(request: NextRequest) {
           },
         },
         enableUpload: true,
+        dataroom: {
+          select: {
+            agentsEnabled: true,
+            name: true,
+          },
+        },
       },
     });
 
@@ -150,6 +158,13 @@ export async function POST(request: NextRequest) {
     if (link.isArchived) {
       return NextResponse.json(
         { message: "Link is no longer available." },
+        { status: 404 },
+      );
+    }
+
+    if (link.deletedAt) {
+      return NextResponse.json(
+        { message: "Link has been deleted." },
         { status: 404 },
       );
     }
@@ -695,6 +710,8 @@ export async function POST(request: NextRequest) {
           viewerId: viewer?.id,
           conversationsEnabled: link.enableConversation,
           enableVisitorUpload: link.enableUpload,
+          agentsEnabled: link.dataroom?.agentsEnabled ?? false,
+          dataroomName: link.dataroom?.name,
           ...(isTeamMember && { isTeamMember: true }),
         };
 
@@ -1006,6 +1023,8 @@ export async function POST(request: NextRequest) {
         canDownload: canDownload,
         viewerId: viewer?.id,
         conversationsEnabled: link.enableConversation,
+        agentsEnabled: link.dataroom?.agentsEnabled ?? false,
+        dataroomName: link.dataroom?.name,
         ...(isTeamMember && { isTeamMember: true }),
       };
 

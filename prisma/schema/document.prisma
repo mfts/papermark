@@ -14,6 +14,7 @@ model Document {
   ownerId              String? // This field holds the foreign key.
   assistantEnabled     Boolean             @default(false) // This indicates if assistant is enabled for this document
   advancedExcelEnabled Boolean             @default(false) // This indicates if advanced Excel is enabled for this document
+  agentsEnabled        Boolean             @default(false) // This indicates if AI agents are enabled for this document
   downloadOnly         Boolean             @default(false) // Indicates if the document is download only
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
@@ -52,11 +53,12 @@ model DocumentVersion {
   fileSize      BigInt? // This should be the size of the file in bytes
   storageType   DocumentStorageType @default(VERCEL_BLOB)
   numPages      Int? // This should be a reference to the number of pages in the document
-  isPrimary     Boolean             @default(false) // Indicates if this is the primary version
-  isVertical    Boolean             @default(false) // Indicates if the document is vertical (portrait) or not (landscape)
-  fileId        String? // This is the file ID of the OpenAI File API
-  pages         DocumentPage[]
-  hasPages      Boolean             @default(false) // Indicates if the document has pages
+  isPrimary        Boolean @default(false) // Indicates if this is the primary version
+  isVertical       Boolean @default(false) // Indicates if the document is vertical (portrait) or not (landscape)
+  fileId           String? // This is the file ID of the OpenAI File API
+  vectorStoreFileId String? // OpenAI vector store file ID for AI search
+  pages            DocumentPage[]
+  hasPages         Boolean @default(false) // Indicates if the document has pages
   length        Int? // This is the length of the video in seconds
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt

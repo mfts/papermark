@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
 
 import { Skeleton } from "../ui/skeleton";
@@ -38,6 +39,7 @@ type Viewer = {
   updatedAt: Date;
   totalVisits: number;
   lastViewed: Date | null;
+  viewerName?: string | null;
 };
 
 export function ContactsTable({
@@ -148,8 +150,13 @@ export function ContactsTable({
             <div className="min-w-0 flex-1">
               <div className="focus:outline-none">
                 <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
-                  {row.original.email}
+                  {row.original.viewerName || row.original.email}
                 </p>
+                {row.original.viewerName && row.original.email && (
+                  <p className="text-xs text-muted-foreground/60">
+                    {row.original.email}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -172,12 +179,18 @@ export function ContactsTable({
         cell: ({ row }) => {
           const lastView = row.original.lastViewed;
           return lastView ? (
-            <time
-              dateTime={new Date(lastView).toISOString()}
-              className="text-sm text-muted-foreground"
+            <TimestampTooltip
+              timestamp={lastView}
+              side="right"
+              rows={["local", "utc", "unix"]}
             >
-              {timeAgo(lastView)}
-            </time>
+              <time
+                className="select-none text-sm text-muted-foreground"
+                dateTime={new Date(lastView).toISOString()}
+              >
+                {timeAgo(lastView)}
+              </time>
+            </TimestampTooltip>
           ) : (
             <div className="text-sm text-muted-foreground">-</div>
           );
@@ -192,7 +205,7 @@ export function ContactsTable({
               onClick={() => handleSort("totalVisits")}
               className={getSortClass("totalVisits")}
             >
-              Total Visits
+              Total Views
               {getSortIcon("totalVisits")}
             </Button>
           );
@@ -222,7 +235,7 @@ export function ContactsTable({
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Last Viewed</TableHead>
-              <TableHead>Total Visits</TableHead>
+              <TableHead>Total Views</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

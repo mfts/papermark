@@ -4,6 +4,7 @@ import { stripeInstance } from "@/ee/stripe";
 import { checkoutSessionCompleted } from "@/ee/stripe/webhooks/checkout-session-completed";
 import { customerSubscriptionDeleted } from "@/ee/stripe/webhooks/customer-subscription-deleted";
 import { customerSubsciptionUpdated } from "@/ee/stripe/webhooks/customer-subscription-updated";
+import { invoiceUpcoming } from "@/ee/stripe/webhooks/invoice-upcoming";
 import { Readable } from "node:stream";
 import type Stripe from "stripe";
 
@@ -63,6 +64,9 @@ export default async function webhookHandler(
           break;
         case "customer.subscription.deleted":
           await customerSubscriptionDeleted(event, res);
+          break;
+        case "invoice.upcoming":
+          await invoiceUpcoming(event, res, true);
           break;
       }
     } catch (error) {

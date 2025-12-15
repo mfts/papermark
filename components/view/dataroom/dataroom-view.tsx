@@ -43,6 +43,8 @@ export type DEFAULT_DATAROOM_VIEW_TYPE = {
   conversationsEnabled?: boolean;
   enableVisitorUpload?: boolean;
   isTeamMember?: boolean;
+  agentsEnabled?: boolean;
+  dataroomName?: string;
 };
 
 export default function DataroomView({
@@ -146,6 +148,8 @@ export default function DataroomView({
           conversationsEnabled,
           enableVisitorUpload,
           isTeamMember,
+          agentsEnabled,
+          dataroomName,
         } = fetchData as DEFAULT_DATAROOM_VIEW_TYPE;
 
         analytics.identify(
@@ -181,6 +185,8 @@ export default function DataroomView({
           conversationsEnabled,
           enableVisitorUpload,
           isTeamMember,
+          agentsEnabled,
+          dataroomName,
         });
         setSubmitted(true);
         setVerificationRequested(false);
@@ -231,6 +237,7 @@ export default function DataroomView({
         setCode={setCode}
         isInvalidCode={isInvalidCode}
         setIsInvalidCode={setIsInvalidCode}
+        brand={brand}
       />
     );
   }
@@ -256,6 +263,7 @@ export default function DataroomView({
         brand={brand}
         customFields={link.customFields}
         logoOnAccessForm={logoOnAccessForm}
+        linkWelcomeMessage={link.welcomeMessage}
       />
     );
   }

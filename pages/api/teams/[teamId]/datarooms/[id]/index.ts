@@ -28,19 +28,15 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
           },
         },
       });
-
-      if (!team) {
+      if (!teamAccess) {  
         return res.status(401).end("Unauthorized");
       }
 
@@ -51,6 +47,18 @@ export default async function handle(
         },
         include: {
           _count: { select: { viewerGroups: true, permissionGroups: true } },
+          tags: {
+            include: {
+              tag: {
+                select: {
+                  id: true,
+                  name: true,
+                  color: true,
+                  description: true,
+                },
+              },
+            },
+          },
         },
       });
 
@@ -100,13 +108,23 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      const { name, enableChangeNotifications, defaultPermissionStrategy, allowBulkDownload } =
-        req.body as {
-          name?: string;
-          enableChangeNotifications?: boolean;
-          defaultPermissionStrategy?: DefaultPermissionStrategy;
-          allowBulkDownload?: boolean;
-        };
+      const {
+        name,
+        enableChangeNotifications,
+        defaultPermissionStrategy,
+        allowBulkDownload,
+        showLastUpdated,
+        tags,
+        agentsEnabled,
+      } = req.body as {
+        name?: string;
+        enableChangeNotifications?: boolean;
+        defaultPermissionStrategy?: DefaultPermissionStrategy;
+        allowBulkDownload?: boolean;
+        showLastUpdated?: boolean;
+        tags?: string[];
+        agentsEnabled?: boolean;
+      };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
       const isDataroomsPlus = team.plan.includes("datarooms-plus");
@@ -123,23 +141,93 @@ export default async function handle(
         });
       }
 
-      const dataroom = await prisma.dataroom.update({
-        where: {
-          id: dataroomId,
-        },
-        data: {
-          ...(name && { name }),
-          ...(typeof enableChangeNotifications === "boolean" && {
-            enableChangeNotifications,
-          }),
-          ...(defaultPermissionStrategy && { defaultPermissionStrategy }),
-          ...(typeof allowBulkDownload === "boolean" && {
-            allowBulkDownload,
-          }),
-        },
+      if (agentsEnabled !== undefined && !featureFlags.ai) {
+        return res.status(403).json({
+          message: "This feature is not available in your plan",
+        });
+      }
+
+      const updatedDataroom = await prisma.$transaction(async (tx) => {
+        const dataroom = await tx.dataroom.update({
+          where: {
+            id: dataroomId,
+          },
+          data: {
+            ...(name && { name }),
+            ...(typeof enableChangeNotifications === "boolean" && {
+              enableChangeNotifications,
+            }),
+            ...(defaultPermissionStrategy && { defaultPermissionStrategy }),
+            ...(typeof allowBulkDownload === "boolean" && {
+              allowBulkDownload,
+            }),
+            ...(typeof showLastUpdated === "boolean" && {
+              showLastUpdated,
+            }),
+            ...(typeof agentsEnabled === "boolean" && {
+              agentsEnabled,
+            }),
+          },
+        });
+
+        // Handle tags if provided
+        if (tags !== undefined) {
+          // Validate that all tags exist and belong to the same team
+          if (tags.length > 0) {
+            const validTags = await tx.tag.findMany({
+              where: {
+                id: { in: tags },
+                teamId: teamId,
+              },
+              select: { id: true },
+            });
+            const validTagIds = new Set(validTags.map((t) => t.id));
+            const invalidTags = tags.filter((id) => !validTagIds.has(id));
+            if (invalidTags.length > 0) {
+              throw new Error(`Invalid tag IDs: ${invalidTags.join(", ")}`);
+            }
+          }
+
+          // First, delete all existing tags for this dataroom
+          await tx.tagItem.deleteMany({
+            where: {
+              dataroomId: dataroomId,
+              itemType: "DATAROOM_TAG",
+            },
+          });
+
+          // Then create the new tags (if any)
+          if (tags.length > 0) {
+            await tx.tagItem.createMany({
+              data: tags.map((tagId: string) => ({
+                tagId,
+                itemType: "DATAROOM_TAG",
+                dataroomId: dataroomId,
+                taggedBy: userId,
+              })),
+            });
+          }
+        }
+
+        // Fetch the updated dataroom with tags
+        const dataroomTags = await tx.tag.findMany({
+          where: {
+            items: {
+              some: { dataroomId: dataroom.id },
+            },
+          },
+          select: {
+            id: true,
+            name: true,
+            color: true,
+            description: true,
+          },
+        });
+
+        return { ...dataroom, tags: dataroomTags };
       });
 
-      return res.status(200).json(dataroom);
+      return res.status(200).json(updatedDataroom);
     } catch (error) {
       errorhandler(error, res);
     }
@@ -150,36 +238,30 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
+    const userId = (session.user as CustomUser).id;
     const { teamId, id: dataroomId } = req.query as {
       teamId: string;
       id: string;
     };
 
     try {
-      // Check if the user is part of the team
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          datarooms: {
-            some: {
-              id: dataroomId,
-            },
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
           },
         },
-        include: { users: true },
+        select: {
+          role: true,
+        },
       });
 
-      if (!team) {
+      if (!teamAccess) {
         return res.status(401).end("Unauthorized");
       }
 
-      // check if current user is admin of the team
-      const isUserAdmin = team.users.some(
-        (user) =>
-          (user.role === "ADMIN" || user.role === "MANAGER") &&
-          user.userId === (session.user as CustomUser).id,
-      );
-      if (!isUserAdmin) {
+      if (teamAccess.role !== "ADMIN" && teamAccess.role !== "MANAGER") {
         return res.status(403).json({
           message:
             "You are not permitted to perform this action. Only admin and managers can delete datarooms.",

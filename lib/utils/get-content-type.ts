@@ -19,6 +19,8 @@ export function getSupportedContentType(contentType: string): string | null {
     case "application/vnd.ms-powerpoint":
     case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
     case "application/vnd.oasis.opendocument.presentation":
+    case "application/vnd.apple.keynote":
+    case "application/x-iwork-keynote-sffkey":
       return "slides";
     case "image/vnd.dwg":
     case "image/vnd.dxf":
@@ -78,6 +80,9 @@ export function getExtensionFromContentType(
       return "odp";
     case "application/vnd.ms-powerpoint":
       return "ppt";
+    case "application/vnd.apple.keynote":
+    case "application/x-iwork-keynote-sffkey":
+      return "key";
     case "application/msword":
       return "doc";
     case "application/rtf":

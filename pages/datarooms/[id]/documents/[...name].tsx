@@ -9,12 +9,12 @@ import { useDataroom, useDataroomItems } from "@/lib/swr/use-dataroom";
 
 import DownloadDataroomButton from "@/components/datarooms/actions/download-dataroom";
 import GenerateIndexButton from "@/components/datarooms/actions/generate-index-button";
+import RebuildIndexButton from "@/components/datarooms/actions/rebuild-index-button";
 import { BreadcrumbComponent } from "@/components/datarooms/dataroom-breadcrumb";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomItemsList } from "@/components/datarooms/dataroom-items-list";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import { SidebarFolderTree } from "@/components/datarooms/folders";
-import RebuildIndexButton from "@/components/datarooms/rebuild-index-button";
 import { DataroomSortableList } from "@/components/datarooms/sortable/sortable-list";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { LoadingDocuments } from "@/components/documents/loading-document";

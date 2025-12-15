@@ -247,6 +247,41 @@ export const PLANS = [
       },
     },
   },
+  {
+    name: "Data Rooms Premium",
+    slug: "datarooms-premium",
+    minQuantity: 10,
+    price: {
+      monthly: {
+        amount: 699,
+        unitPrice: 6990,
+        priceIds: {
+          test: {
+            old: "price_placeholder_test_old",
+            new: "price_1SUWeXBYvhH6u7U7u7CJgsRE",
+          },
+          production: {
+            old: "price_placeholder_prod_old",
+            new: "price_1SUWXqBYvhH6u7U7SJKKOCKU",
+          },
+        },
+      },
+      yearly: {
+        amount: 549,
+        unitPrice: 5490,
+        priceIds: {
+          test: {
+            old: "price_placeholder_test_yearly_old",
+            new: "price_1SUWhQBYvhH6u7U7BE6vVLcf",
+          },
+          production: {
+            old: "price_placeholder_prod_yearly_old",
+            new: "price_1SUWWqBYvhH6u7U7I5MpZ43K",
+          },
+        },
+      },
+    },
+  },
 ];
 
 export const isOldAccount = (plan: string) => {

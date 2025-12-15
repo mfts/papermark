@@ -4,22 +4,32 @@ import { OTPInput, OTPInputContext } from "input-otp";
 import { Dot } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { determineTextColor } from "@/lib/utils/determine-text-color";
+
+// Create a context to pass accentColor to InputOTPSlot components
+const AccentColorContext = React.createContext<string | null | undefined>(
+  undefined,
+);
 
 const InputOTP = React.forwardRef<
   React.ElementRef<typeof OTPInput>,
-  React.ComponentPropsWithoutRef<typeof OTPInput>
->(({ className, containerClassName, ...props }, ref) => (
-  <OTPInput
-    ref={ref}
-    data-1p-ignore
-    translate="no"
-    containerClassName={cn(
-      "flex items-center gap-2 has-[:disabled]:opacity-50 notranslate",
-      containerClassName,
-    )}
-    className={cn("disabled:cursor-not-allowed", className)}
-    {...props}
-  />
+  React.ComponentPropsWithoutRef<typeof OTPInput> & {
+    accentColor?: string | null;
+  }
+>(({ className, containerClassName, accentColor, ...props }, ref) => (
+  <AccentColorContext.Provider value={accentColor}>
+    <OTPInput
+      ref={ref}
+      data-1p-ignore
+      translate="no"
+      containerClassName={cn(
+        "flex items-center gap-2 has-[:disabled]:opacity-50 notranslate",
+        containerClassName,
+      )}
+      className={cn("disabled:cursor-not-allowed", className)}
+      {...props}
+    />
+  </AccentColorContext.Provider>
 ));
 InputOTP.displayName = "InputOTP";
 
@@ -33,25 +43,37 @@ InputOTPGroup.displayName = "InputOTPGroup";
 
 const InputOTPSlot = React.forwardRef<
   React.ElementRef<"div">,
-  React.ComponentPropsWithoutRef<"div"> & { index: number }
+  React.ComponentPropsWithoutRef<"div"> & {
+    index: number;
+  }
 >(({ index, className, ...props }, ref) => {
   const inputOTPContext = React.useContext(OTPInputContext);
   const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index];
+  const accentColor = React.useContext(AccentColorContext);
+  const textColor = determineTextColor(accentColor);
 
   return (
     <div
       ref={ref}
       className={cn(
-        "relative flex h-10 w-10 items-center justify-center border-y border-r border-input text-sm text-white transition-all first:rounded-l-md first:border-l last:rounded-r-md",
-        isActive && "z-10 text-white ring-2 ring-ring ring-offset-white",
+        "relative flex h-10 w-10 items-center justify-center border-y border-r border-input text-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md",
+        isActive && "z-10 ring-2 ring-ring",
         className,
       )}
+      style={{
+        color: textColor,
+        borderColor: textColor,
+        caretColor: textColor,
+      }}
       {...props}
     >
       {char}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-4 w-px animate-caret-blink bg-white duration-1000" />
+          <div
+            className="h-4 w-px animate-caret-blink duration-1000"
+            style={{ backgroundColor: textColor }}
+          />
         </div>
       )}
     </div>

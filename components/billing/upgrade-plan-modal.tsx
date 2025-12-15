@@ -39,7 +39,7 @@ const StartDataRoomTrialButton = ({ teamId }: { teamId?: string }) => {
       onClick={handleStartTrial}
       className="cursor-pointer underline underline-offset-4 hover:text-foreground"
     >
-      Start free Data Room trial
+      Start free data room trial
     </span>
   );
 };
@@ -96,37 +96,48 @@ const FeatureItem = ({ feature }: { feature: Feature }) => {
   );
 };
 
-// Segmented control component for Base/Plus selection
+// Segmented control component for Base/Plus/Premium selection
 const PlanSelector = ({
   value,
   onChange,
 }: {
-  value: boolean;
-  onChange: (value: boolean) => void;
+  value: "base" | "plus" | "premium";
+  onChange: (value: "base" | "plus" | "premium") => void;
 }) => {
   return (
-    <div className="mt-1 flex w-1/2 rounded-lg border border-gray-200 p-1">
+    <div className="mt-1 flex w-full rounded-lg border border-gray-200 p-1">
       <button
         className={cn(
           "flex-1 rounded-md px-3 py-1 text-sm transition-colors",
-          !value
+          value === "base"
             ? "bg-gray-300 text-foreground dark:bg-gray-600 dark:text-white"
             : "text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white",
         )}
-        onClick={() => onChange(false)}
+        onClick={() => onChange("base")}
       >
         Base
       </button>
       <button
         className={cn(
           "flex-1 rounded-md px-3 py-1 text-sm transition-colors",
-          value
+          value === "plus"
+            ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900"
+            : "text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white",
+        )}
+        onClick={() => onChange("plus")}
+      >
+        Plus
+      </button>
+      <button
+        className={cn(
+          "flex-1 rounded-md px-3 py-1 text-sm transition-colors",
+          value === "premium"
             ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
             : "text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white",
         )}
-        onClick={() => onChange(true)}
+        onClick={() => onChange("premium")}
       >
-        Plus
+        Premium
       </button>
     </div>
   );
@@ -154,7 +165,9 @@ export function UpgradePlanModal({
   const teamId = teamInfo?.currentTeam?.id;
   const { plan: teamPlan, isCustomer, isOldAccount, isTrial } = usePlan();
   const analytics = useAnalytics();
-  const [showDataRoomsPlus, setShowDataRoomsPlus] = useState(false);
+  const [dataRoomsPlanSelection, setDataRoomsPlanSelection] = useState<
+    "base" | "plus" | "premium"
+  >("base");
 
   const plansToShow = useMemo(() => {
     switch (clickedPlan) {
@@ -165,7 +178,9 @@ export function UpgradePlanModal({
       case PlanEnum.DataRooms:
         return [PlanEnum.DataRooms, PlanEnum.DataRoomsPlus];
       case PlanEnum.DataRoomsPlus:
-        return [PlanEnum.DataRooms, PlanEnum.DataRoomsPlus];
+        return [PlanEnum.DataRoomsPlus, PlanEnum.DataRoomsPremium];
+      case PlanEnum.DataRoomsPremium:
+        return [PlanEnum.DataRoomsPlus, PlanEnum.DataRoomsPremium];
       default:
         return [PlanEnum.Pro, PlanEnum.Business];
     }
@@ -179,7 +194,7 @@ export function UpgradePlanModal({
         teamId,
       });
     } else {
-      setShowDataRoomsPlus(false);
+      setDataRoomsPlanSelection("base");
     }
   }, [open, trigger]);
 
@@ -222,19 +237,25 @@ export function UpgradePlanModal({
 
         <div className="isolate grid grid-cols-1 gap-4 overflow-hidden rounded-xl p-4 md:grid-cols-2">
           {plansToShow.map((planOption) => {
-            const planFeatures = getPlanFeatures(planOption, {
-              period,
-              showDataRoomsPlus:
-                planOption === PlanEnum.DataRooms && showDataRoomsPlus,
-            });
-
-            // Get the effective plan name for display
-            const displayPlanName =
-              planOption === PlanEnum.DataRooms && showDataRoomsPlus
-                ? PlanEnum.DataRoomsPlus
-                : planOption;
-
             const isDataRoomsUpgrade = plansToShow.includes(PlanEnum.DataRooms);
+
+            // Determine which plan to show based on selection for Data Rooms
+            let effectivePlan = planOption;
+            let displayPlanName = planOption;
+
+            if (planOption === PlanEnum.DataRooms && isDataRoomsUpgrade) {
+              if (dataRoomsPlanSelection === "plus") {
+                effectivePlan = PlanEnum.DataRoomsPlus;
+                displayPlanName = PlanEnum.DataRoomsPlus;
+              } else if (dataRoomsPlanSelection === "premium") {
+                effectivePlan = PlanEnum.DataRoomsPremium;
+                displayPlanName = PlanEnum.DataRoomsPremium;
+              }
+            }
+
+            const planFeatures = getPlanFeatures(effectivePlan, {
+              period,
+            });
 
             return (
               <div
@@ -251,7 +272,7 @@ export function UpgradePlanModal({
                 <div className="mb-4 border-b border-gray-200 pb-2">
                   <div className="flex items-center justify-between">
                     <h3 className="text-balance text-xl font-medium text-gray-900 dark:text-white">
-                      Papermark {displayPlanName}
+                      {displayPlanName}
                     </h3>
                   </div>
                   <span
@@ -259,7 +280,7 @@ export function UpgradePlanModal({
                       "absolute right-2 top-2 rounded px-2 py-1 text-xs text-white",
                       planOption === PlanEnum.Business && "bg-[#fb7a00]",
                       displayPlanName === PlanEnum.DataRoomsPlus &&
-                        "bg-gray-900 dark:bg-gray-100 dark:text-gray-900",
+                        "bg-gray-800 dark:bg-gray-200 dark:text-gray-900",
                     )}
                   >
                     {planOption === PlanEnum.Business && "Most popular"}
@@ -285,8 +306,8 @@ export function UpgradePlanModal({
                   isDataRoomsUpgrade &&
                   !plansToShow.includes(PlanEnum.DataRoomsPlus) && (
                     <PlanSelector
-                      value={showDataRoomsPlus}
-                      onChange={setShowDataRoomsPlus}
+                      value={dataRoomsPlanSelection}
+                      onChange={setDataRoomsPlanSelection}
                     />
                   )}
 
@@ -381,11 +402,17 @@ export function UpgradePlanModal({
           })}
         </div>
         <div className="flex flex-col items-center text-center text-sm text-muted-foreground">
-          All plans include unlimited viewers and page by page document
+          All plans include unlimited visitors and page by page document
           analytics.
           <div className="flex items-center gap-2">
             <Link
-              href="/settings/upgrade"
+              href={`/settings/upgrade${
+                clickedPlan === PlanEnum.Pro
+                  ? "?view=documents"
+                  : clickedPlan === PlanEnum.Business
+                    ? "?view=business-datarooms"
+                    : ""
+              }`}
               className="underline underline-offset-4 hover:text-foreground"
             >
               See all plans

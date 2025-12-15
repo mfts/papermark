@@ -4,6 +4,7 @@ import { E164Number } from "libphonenumber-js";
 import { cn } from "@/lib/utils";
 import { determineTextColor } from "@/lib/utils/determine-text-color";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +31,10 @@ export default function CustomFieldsSection({
     setData({ ...data, [identifier]: value || "" });
   };
 
+  const handleCheckboxChange = (checked: boolean, identifier: string) => {
+    setData({ ...data, [identifier]: String(checked) });
+  };
+
   if (!fields?.length) return null;
 
   return (
@@ -40,19 +45,53 @@ export default function CustomFieldsSection({
         const value = data[field.identifier] || "";
         const isLongText = field.type === "LONG_TEXT";
         const isPhoneNumber = field.type === "PHONE_NUMBER";
+        const isCheckbox = field.type === "CHECKBOX";
 
         return (
           <div key={field.identifier} className="relative space-y-2">
-            <label
-              htmlFor={field.identifier}
-              className="block text-sm font-medium leading-6 text-white"
-              style={{
-                color: determineTextColor(brand?.accentColor),
-              }}
-            >
-              {field.label}
-            </label>
-            {isPhoneNumber ? (
+            {!isCheckbox && (
+              <label
+                htmlFor={field.identifier}
+                className="block text-sm font-medium leading-6 text-white"
+                style={{
+                  color: determineTextColor(brand?.accentColor),
+                }}
+              >
+                {field.label}
+              </label>
+            )}
+            {isCheckbox ? (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id={field.identifier}
+                  checked={value === "true"}
+                  onCheckedChange={(checked) =>
+                    handleCheckboxChange(!!checked, field.identifier!)
+                  }
+                  disabled={field.disabled}
+                  className={cn(
+                    "border-gray-600 data-[state=checked]:bg-gray-300 data-[state=checked]:text-black",
+                  )}
+                  style={{
+                    borderColor: brand?.accentColor
+                      ? determineTextColor(brand.accentColor)
+                      : undefined,
+                  }}
+                />
+                <label
+                  htmlFor={field.identifier}
+                  className="cursor-pointer text-sm font-medium leading-none text-white peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  style={{
+                    color: determineTextColor(brand?.accentColor),
+                  }}
+                >
+                  {field.label}
+                  {field.required && (
+                    <span className="ml-1 text-red-500">*</span>
+                  )}
+                </label>
+              </div>
+            ) : isPhoneNumber ? (
               <PhoneInput
                 id={field.identifier}
                 value={value as E164Number}

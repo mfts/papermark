@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 
 import NotFound from "@/pages/404";
 
+import { useAnalytics } from "@/lib/analytics";
+
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
-
-import { useAnalytics } from "@/lib/analytics";
 
 import { ViewPageProps } from "./index";
 
@@ -71,10 +71,11 @@ export default function EmbedPage(props: ViewPageProps) {
     d: string;
     previewToken?: string;
   };
-  const { linkType, link, brand } = props.linkData;
+  const { linkType, brand } = props.linkData;
 
   // Render the document view for DOCUMENT_LINK
   if (linkType === "DOCUMENT_LINK") {
+    const { link } = props.linkData;
     if (!props.linkData || router.isFallback) {
       return (
         <div className="flex h-screen items-center justify-center">
@@ -129,6 +130,7 @@ export default function EmbedPage(props: ViewPageProps) {
 
   // Render the dataroom view for DATAROOM_LINK
   if (linkType === "DATAROOM_LINK") {
+    const { link } = props.linkData;
     if (!link || router.isFallback) {
       return (
         <div className="flex h-screen items-center justify-center">

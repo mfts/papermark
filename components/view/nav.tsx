@@ -3,11 +3,13 @@ import { useRouter } from "next/router";
 
 import React, { useEffect, useState } from "react";
 
+import { useViewerChatSafe } from "@/ee/features/ai/components/viewer-chat-provider";
 import { Brand, DataroomBrand } from "@prisma/client";
 import {
   ArrowUpRight,
   BadgeInfoIcon,
   Download,
+  Maximize,
   MessageCircle,
   Slash,
   ZoomInIcon,
@@ -76,6 +78,7 @@ export default function Nav({
   hasWatermark,
   handleZoomIn,
   handleZoomOut,
+  handleFullscreen,
 }: {
   navData: TNavData;
   type?: "pdf" | "notion" | "sheet";
@@ -85,10 +88,15 @@ export default function Nav({
   hasWatermark?: boolean;
   handleZoomIn?: () => void;
   handleZoomOut?: () => void;
+  handleFullscreen?: () => void;
 }) {
   const router = useRouter();
   const asPath = router.asPath;
   const { previewToken, preview } = router.query;
+
+  // Get chat context to adjust navbar when chat is open
+  const chatContext = useViewerChatSafe();
+  const isChatOpen = chatContext?.isOpen && chatContext?.isEnabled;
 
   const {
     linkId,
@@ -123,7 +131,8 @@ export default function Nav({
       return;
     }
     if (!allowDownload || type === "notion") return;
-    try {
+
+    const downloadPromise = (async () => {
       const response = await fetch(`/api/links/download`, {
         method: "POST",
         headers: {
@@ -133,8 +142,9 @@ export default function Nav({
       });
 
       if (!response.ok) {
-        toast.error("Error downloading file");
-        return;
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || "Failed to download file";
+        throw new Error(errorMessage);
       }
 
       // Check if the response is a PDF file (for watermarked PDFs)
@@ -183,10 +193,17 @@ export default function Nav({
           document.body.removeChild(link);
         }, 100);
       }
-    } catch (error) {
-      console.error("Error downloading file:", error);
-      toast.error("Error downloading file");
-    }
+
+      return "File downloaded successfully";
+    })();
+
+    toast.promise(downloadPromise, {
+      loading: hasWatermark
+        ? "Preparing download with watermark..."
+        : "Preparing download...",
+      success: (message) => message,
+      error: (err) => err.message || "Failed to download file",
+    });
   };
 
   useEffect(() => {
@@ -220,6 +237,9 @@ export default function Nav({
       className="bg-black"
       style={{
         backgroundColor: brand && brand.brandColor ? brand.brandColor : "black",
+        // Extend navbar to full width when chat panel is open (counteract parent padding)
+        marginRight: isChatOpen ? "-400px" : undefined,
+        // paddingRight: isChatOpen ? "400px" : undefined,
       }}
     >
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
@@ -412,6 +432,28 @@ export default function Nav({
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+
+                {handleFullscreen && (
+                  <TooltipProvider delayDuration={50}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={handleFullscreen}
+                          className="bg-gray-900 text-white hover:bg-gray-900/80"
+                          size="icon"
+                        >
+                          <Maximize className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span className="mr-2 text-xs">Fullscreen</span>
+                        <span className="ml-auto rounded-sm border bg-muted p-0.5 text-xs tracking-widest text-muted-foreground">
+                          F
+                        </span>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
               </div>
             )}
 

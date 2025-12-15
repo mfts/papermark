@@ -1,0 +1,89 @@
+// Workflow models for routing visitors based on email/domain rules
+
+enum WorkflowStepType {
+  ROUTER // Route to different links based on conditions
+}
+
+enum ExecutionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  BLOCKED
+}
+
+model Workflow {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  entryLinkId String   @unique
+  teamId      String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  entryLink  Link               @relation(fields: [entryLinkId], references: [id], onDelete: Cascade)
+  team       Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  steps      WorkflowStep[]
+  executions WorkflowExecution[]
+
+  @@index([entryLinkId])
+  @@index([teamId])
+  @@index([isActive])
+}
+
+model WorkflowStep {
+  id         String           @id @default(cuid())
+  workflowId String
+  name       String
+  stepOrder  Int              // Execution order (priority-based routing)
+  stepType   WorkflowStepType @default(ROUTER)
+  conditions Json             // JSON array of conditions to evaluate
+  actions    Json             // JSON array of actions to execute
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  workflow      Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  executionLogs WorkflowStepLog[]
+
+  @@unique([workflowId, stepOrder])
+  @@index([workflowId])
+}
+
+model WorkflowExecution {
+  id           String          @id @default(cuid())
+  workflowId   String
+  visitorEmail String?
+  visitorIp    String?
+  status       ExecutionStatus
+  startedAt    DateTime        @default(now())
+  completedAt  DateTime?
+  result       Json?           // Final result/output (routing target)
+  metadata     Json?           // Context data (referrer, user agent, etc.)
+
+  workflow Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  stepLogs WorkflowStepLog[]
+
+  @@index([workflowId, startedAt])
+  @@index([visitorEmail])
+  @@index([status])
+}
+
+model WorkflowStepLog {
+  id                String    @id @default(cuid())
+  executionId       String
+  workflowStepId    String
+  conditionsMatched Boolean
+  conditionResults  Json?     // Which conditions passed/failed
+  actionsExecuted   Json?     // Which actions ran
+  executedAt        DateTime  @default(now())
+  duration          Int?      // Execution time in ms
+  error             String?
+
+  execution WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  step      WorkflowStep      @relation(fields: [workflowStepId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+  @@index([workflowStepId])
+}
+

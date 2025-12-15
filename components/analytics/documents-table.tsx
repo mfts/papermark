@@ -34,6 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { DataTablePagination } from "@/components/visitors/data-table-pagination";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -151,11 +152,20 @@ const columns: ColumnDef<Document>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => (
-      <div className="text-sm text-muted-foreground">
-        {row.original.lastViewed ? timeAgo(row.original.lastViewed) : "-"}
-      </div>
-    ),
+    cell: ({ row }) =>
+      row.original.lastViewed ? (
+        <TimestampTooltip
+          timestamp={row.original.lastViewed}
+          side="right"
+          rows={["local", "utc", "unix"]}
+        >
+          <div className="select-none text-sm text-muted-foreground">
+            {timeAgo(row.original.lastViewed)}
+          </div>
+        </TimestampTooltip>
+      ) : (
+        <div className="text-sm text-muted-foreground">-</div>
+      ),
   },
 ];
 

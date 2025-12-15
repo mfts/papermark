@@ -1,7 +1,10 @@
+import { useCallback, useMemo } from "react";
+
 import { CustomField, CustomFieldType } from "@prisma/client";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { useCallback, useMemo } from "react";
+
+import { usePlan } from "@/lib/swr/use-billing";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,18 +17,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-import { usePlan } from "@/lib/swr/use-billing";
-
 import CustomFieldComponent from "./custom-field";
 
 export type CustomFieldData = Omit<
   CustomField,
   "id" | "createdAt" | "updatedAt" | "linkId"
 > & {
-  type: Omit<
-    CustomFieldType,
-    "CHECKBOX" | "SELECT" | "MULTI_SELECT"
-  >;
+  type: Omit<CustomFieldType, "CHECKBOX" | "SELECT" | "MULTI_SELECT">;
 };
 
 export default function CustomFieldsPanel({
@@ -42,7 +40,7 @@ export default function CustomFieldsPanel({
   const { isDatarooms, isDataroomsPlus, isBusiness } = usePlan();
 
   const fieldLimit = useMemo(() => {
-    if (isDatarooms || isDataroomsPlus) return 3;
+    if (isDatarooms || isDataroomsPlus) return 5;
     if (isBusiness) return 1;
     return 0;
   }, [isDatarooms, isDataroomsPlus, isBusiness]);
@@ -67,48 +65,57 @@ export default function CustomFieldsPanel({
     onChange([...fields, newField]);
   }, [fields, fieldLimit, isDatarooms, onChange]);
 
-  const updateField = useCallback((index: number, updatedField: CustomFieldData) => {
-    const newFields = [...fields];
-    newFields[index] = updatedField;
-    onChange(newFields);
-  }, [fields, onChange]);
+  const updateField = useCallback(
+    (index: number, updatedField: CustomFieldData) => {
+      const newFields = [...fields];
+      newFields[index] = updatedField;
+      onChange(newFields);
+    },
+    [fields, onChange],
+  );
 
-  const removeField = useCallback((index: number) => {
-    const newFields = fields.filter((_, i) => i !== index);
-    // Update orderIndex for remaining fields
-    newFields.forEach((field, i) => {
-      field.orderIndex = i;
-    });
-    onChange(newFields);
-  }, [fields, onChange]);
+  const removeField = useCallback(
+    (index: number) => {
+      const newFields = fields.filter((_, i) => i !== index);
+      // Update orderIndex for remaining fields
+      newFields.forEach((field, i) => {
+        field.orderIndex = i;
+      });
+      onChange(newFields);
+    },
+    [fields, onChange],
+  );
 
-  const moveField = useCallback((index: number, direction: "up" | "down") => {
-    if (
-      (direction === "up" && index === 0) ||
-      (direction === "down" && index === fields.length - 1)
-    )
-      return;
+  const moveField = useCallback(
+    (index: number, direction: "up" | "down") => {
+      if (
+        (direction === "up" && index === 0) ||
+        (direction === "down" && index === fields.length - 1)
+      )
+        return;
 
-    const newFields = [...fields];
-    const newIndex = direction === "up" ? index - 1 : index + 1;
-    [newFields[index], newFields[newIndex]] = [
-      newFields[newIndex],
-      newFields[index],
-    ];
+      const newFields = [...fields];
+      const newIndex = direction === "up" ? index - 1 : index + 1;
+      [newFields[index], newFields[newIndex]] = [
+        newFields[newIndex],
+        newFields[index],
+      ];
 
-    // Update orderIndex for all fields
-    newFields.forEach((field, i) => {
-      field.orderIndex = i;
-    });
+      // Update orderIndex for all fields
+      newFields.forEach((field, i) => {
+        field.orderIndex = i;
+      });
 
-    onChange(newFields);
-  }, [fields, onChange]);
+      onChange(newFields);
+    },
+    [fields, onChange],
+  );
 
   return (
     <Sheet open={isConfigOpen} onOpenChange={setIsConfigOpen}>
       <SheetContent className="flex h-full flex-col">
         <SheetHeader>
-          <SheetTitle>Configure Custom Fields</SheetTitle>
+          <SheetTitle>Configure Custom Form Fields</SheetTitle>
           <SheetDescription>
             Configure the custom fields that will be shown to viewers.
             {fieldLimit > 0 && (

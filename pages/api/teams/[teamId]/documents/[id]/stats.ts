@@ -10,6 +10,10 @@ import {
   getTotalAvgPageDuration,
   getTotalDocumentDuration,
 } from "@/lib/tinybird";
+import {
+  getVideoEventsByDocument,
+  getViewCompletionStats,
+} from "@/lib/tinybird/pipes";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(
@@ -53,6 +57,18 @@ export default async function handle(
         select: {
           id: true,
           teamId: true,
+          numPages: true,
+          type: true,
+          versions: {
+            orderBy: { createdAt: "desc" },
+            select: {
+              versionNumber: true,
+              createdAt: true,
+              numPages: true,
+              type: true,
+              length: true,
+            },
+          },
           _count: {
             select: {
               views: { where: { isArchived: false } },
@@ -71,7 +87,7 @@ export default async function handle(
           views: [],
           duration: { data: [] },
           total_duration: 0,
-          groupedReactions: [],
+          avgCompletionRate: 0,
           totalViews: 0,
         });
       }
@@ -118,31 +134,95 @@ export default async function handle(
         (view) => !allExcludedViews.map((view) => view.id).includes(view.id),
       );
 
-      // get the reactions for the filtered views
-      const groupedReactions = await prisma.reaction.groupBy({
-        by: ["type"],
-        where: {
-          view: {
+      const [duration, totalDocumentDuration] = await Promise.all([
+        getTotalAvgPageDuration({
+          documentId: docId,
+          excludedLinkIds: "",
+          excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
+          since: 0,
+        }),
+        getTotalDocumentDuration({
+          documentId: docId,
+          excludedLinkIds: "",
+          excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
+          since: 0,
+        }),
+      ]);
+
+      // Calculate average completion rate for all filtered views
+      let avgCompletionRate = 0;
+      if (filteredViews.length > 0) {
+        if (document.type === "video") {
+          // For video documents, calculate based on unique watch time
+          const videoEvents = await getVideoEventsByDocument({
+            document_id: docId,
+          });
+
+          const completionRates = await Promise.all(
+            filteredViews.map(async (view) => {
+              const viewEvents =
+                videoEvents?.data.filter(
+                  (event: any) =>
+                    event.view_id === view.id &&
+                    ["played", "muted", "unmuted", "rate_changed"].includes(
+                      event.event_type,
+                    ) &&
+                    event.end_time > event.start_time &&
+                    event.end_time - event.start_time >= 1,
+                ) || [];
+
+              const uniqueTimestamps = new Set<number>();
+              viewEvents.forEach((event: any) => {
+                for (let t = event.start_time; t < event.end_time; t++) {
+                  uniqueTimestamps.add(Math.floor(t));
+                }
+              });
+
+              const videoLength = document.versions[0]?.length || 0;
+              return videoLength > 0
+                ? Math.min(100, (uniqueTimestamps.size / videoLength) * 100)
+                : 0;
+            }),
+          );
+
+          avgCompletionRate =
+            completionRates.reduce((sum, rate) => sum + rate, 0) /
+            completionRates.length;
+        } else {
+          // For document type, calculate based on pages viewed
+          const completionStats = await getViewCompletionStats({
             documentId: docId,
-            id: { notIn: allExcludedViews.map((view) => view.id) },
-          },
-        },
-        _count: { type: true },
-      });
+            excludedViewIds: allExcludedViews.map((v) => v.id).join(","),
+            since: 0,
+          });
 
-      const duration = await getTotalAvgPageDuration({
-        documentId: docId,
-        excludedLinkIds: "",
-        excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
-        since: 0,
-      });
+          // Build lookup map for O(1) access: viewId -> { versionNumber, pages_viewed }
+          const statsMap = new Map(
+            completionStats.data.map((s) => [
+              s.viewId,
+              { versionNumber: s.versionNumber, pagesViewed: s.pages_viewed },
+            ]),
+          );
 
-      const totalDocumentDuration = await getTotalDocumentDuration({
-        documentId: docId,
-        excludedLinkIds: "",
-        excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
-        since: 0,
-      });
+          const completionRates = filteredViews.map((view) => {
+            const viewStats = statsMap.get(view.id);
+            if (!viewStats) return 0;
+
+            // Find the version that matches the versionNumber from Tinybird
+            const relevantVersion = document.versions.find(
+              (version) => version.versionNumber === viewStats.versionNumber,
+            );
+            const numPages =
+              relevantVersion?.numPages || document.numPages || 0;
+
+            return numPages > 0 ? (viewStats.pagesViewed / numPages) * 100 : 0;
+          });
+
+          avgCompletionRate =
+            completionRates.reduce((sum, rate) => sum + rate, 0) /
+            completionRates.length;
+        }
+      }
 
       const stats = {
         views: filteredViews,
@@ -150,7 +230,7 @@ export default async function handle(
         total_duration:
           (totalDocumentDuration.data[0].sum_duration * 1.0) /
           filteredViews.length,
-        groupedReactions,
+        avgCompletionRate: Math.round(avgCompletionRate),
         totalViews: filteredViews.length,
       };
 

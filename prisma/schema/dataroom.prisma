@@ -22,6 +22,11 @@ model Dataroom {
   // FAQ system
   faqItems DataroomFaqItem[]
 
+  // AI agents
+  agentsEnabled Boolean @default(false) // Enable AI agents for this dataroom
+  vectorStoreId String? // OpenAI vector store ID for AI search
+  chats         Chat[]
+
   // upload external documents
   uploadedDocuments DocumentUpload[]
 
@@ -36,6 +41,9 @@ model Dataroom {
 
   // bulk download setting
   allowBulkDownload Boolean @default(true) // Allow bulk download of entire dataroom
+
+  // display settings
+  showLastUpdated Boolean @default(true) // Show/hide last updated date in dataroom view
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -60,6 +68,8 @@ model DataroomDocument {
   dataroomFAQs DataroomFaqItem[]
 
   uploadedDocuments DocumentUpload[]
+
+  vectorStoreFileId String? // vector store file ID for AI search
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -121,6 +131,7 @@ model ViewerGroup {
 
   views         View[]
   conversations Conversation[]
+  invitations   ViewerInvitation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -632,7 +632,7 @@ export function DataroomItemsList({
             </Portal>
             {mixedItems.length === 0 && (
               <div className="flex h-full justify-center">
-                <EmptyDocuments />
+                <EmptyDocuments isDataroom={true} />
               </div>
             )}
           </div>
@@ -701,7 +701,7 @@ export function DataroomItemsList({
 
               {mixedItems.length === 0 && (
                 <div className="flex h-full justify-center">
-                  <EmptyDocuments />
+                  <EmptyDocuments isDataroom={true} />
                 </div>
               )}
             </DndContext>

@@ -101,7 +101,8 @@ export default function DocumentCard({
       toast.error("You cannot download dataroom document in preview mode.");
       return;
     }
-    try {
+
+    const downloadPromise = (async () => {
       const response = await fetch(`/api/links/download/dataroom-document`, {
         method: "POST",
         headers: {
@@ -115,8 +116,9 @@ export default function DocumentCard({
       });
 
       if (!response.ok) {
-        toast.error("Error downloading file");
-        return;
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || "Failed to download file";
+        throw new Error(errorMessage);
       }
 
       // Check if the response is JSON (for direct downloads) or binary (for buffered files)
@@ -144,8 +146,7 @@ export default function DocumentCard({
           window.document.body.removeChild(link);
         }, 100);
 
-        toast.success("File downloaded successfully");
-        return;
+        return "File downloaded successfully";
       }
 
       // For all other files, use the iframe method
@@ -168,15 +169,17 @@ export default function DocumentCard({
           }
         }, 5000);
 
-        toast.success("Download started");
-        return;
+        return "Download started";
       }
 
-      toast.error("Unexpected response format");
-    } catch (error) {
-      console.error("Error downloading file:", error);
-      toast.error("Error downloading file");
-    }
+      throw new Error("Unexpected response format");
+    })();
+
+    toast.promise(downloadPromise, {
+      loading: "Preparing download...",
+      success: (message) => message,
+      error: (err) => err.message || "Failed to download file",
+    });
   };
 
   return (
