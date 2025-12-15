@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import {
+  AlertTriangleIcon,
   BadgeCheckIcon,
   BadgeInfoIcon,
   Download,
@@ -9,8 +10,8 @@ import {
   FileBadgeIcon,
   MailOpenIcon,
 } from "lucide-react";
-import { toast } from "sonner";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { useDataroomVisits } from "@/lib/swr/use-dataroom";
 import { timeAgo } from "@/lib/utils";
@@ -51,8 +52,12 @@ export default function DataroomVisitorsTable({
 }) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const { views } = useDataroomVisits({ dataroomId, groupId });
+  const { views, hiddenFromPause } = useDataroomVisits({
+    dataroomId,
+    groupId,
+  });
   const { dataroom } = useDataroom();
+  const { isPaused } = usePlan();
   const [exportModalOpen, setExportModalOpen] = useState(false);
 
   const exportVisitCounts = () => {
@@ -80,7 +85,7 @@ export default function DataroomVisitorsTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {views?.length === 0 && (
+            {views?.length === 0 && hiddenFromPause === 0 && (
               <TableRow>
                 <TableCell colSpan={5}>
                   <div className="flex h-40 w-full items-center justify-center">
@@ -88,6 +93,32 @@ export default function DataroomVisitorsTable({
                   </div>
                 </TableCell>
               </TableRow>
+            )}
+            {isPaused && hiddenFromPause > 0 && (
+              <>
+                <TableRow>
+                  <TableCell colSpan={3} className="text-left sm:text-center">
+                    <div className="flex flex-col items-start justify-center gap-2 sm:flex-row sm:items-center">
+                      <span className="flex items-center gap-x-1">
+                        <AlertTriangleIcon className="inline-block h-4 w-4 text-orange-500" />
+                        {hiddenFromPause} visit
+                        {hiddenFromPause !== 1 ? "s" : ""} occurred after your
+                        team was paused and{" "}
+                        {hiddenFromPause !== 1 ? "are" : "is"} hidden.{" "}
+                      </span>
+                      <a
+                        href="/settings/billing"
+                        className="font-medium text-orange-600 underline hover:text-orange-700"
+                      >
+                        Unpause subscription to see all visits
+                      </a>
+                    </div>
+                  </TableCell>
+                </TableRow>
+                {Array.from({ length: hiddenFromPause }).map((_, i) => (
+                  <VisitorBlurred key={i} />
+                ))}
+              </>
             )}
             {views ? (
               views.map((view) => (
@@ -302,3 +333,42 @@ export default function DataroomVisitorsTable({
     </div>
   );
 }
+
+// create a component for a blurred view of the visitor
+const VisitorBlurred = () => {
+  return (
+    <TableRow className="blur-sm">
+      <TableCell className="">
+        <div className="flex items-center overflow-visible sm:space-x-3">
+          <VisitorAvatar viewerEmail={"abc@example.org"} />
+          <div className="min-w-0 flex-1">
+            <div className="focus:outline-none">
+              <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
+                Anonymous
+              </p>
+              <p className="text-xs text-muted-foreground/60 sm:text-sm">
+                Demo link
+              </p>
+            </div>
+          </div>
+        </div>
+      </TableCell>
+      {/* Last Viewed */}
+      <TableCell className="text-sm text-muted-foreground">
+        <time
+          dateTime={new Date(
+            new Date().getTime() - 30 * 24 * 60 * 60 * 1000,
+          ).toISOString()}
+        >
+          {timeAgo(new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000))}
+        </time>
+      </TableCell>
+      {/* Actions */}
+      <TableCell className="cursor-pointer p-0 text-center sm:text-right">
+        <div className="flex justify-end space-x-1 p-5 [&[data-state=open]>svg.chevron]:rotate-180">
+          <ChevronDown className="chevron h-4 w-4 shrink-0 transition-transform duration-200" />
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+};

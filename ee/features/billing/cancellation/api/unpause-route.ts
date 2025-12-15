@@ -82,10 +82,19 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
       const isOldPauseMethod = subscription.pause_collection !== null;
 
       if (isOldPauseMethod) {
-        // Handle old pause_collection method
-        await stripe.subscriptions.update(team.subscriptionId, {
-          pause_collection: "", // Remove pause_collection (unpause)
-        });
+        if (isInOriginalBillingCycle) {
+          await stripe.subscriptions.update(team.subscriptionId, {
+            pause_collection: "", // Remove pause_collection (unpause)
+          });
+        } else {
+          await stripe.subscriptions.update(team.subscriptionId, {
+            pause_collection: "", // Remove pause_collection (unpause)
+          });
+          await stripe.subscriptions.update(team.subscriptionId, {
+            proration_behavior: "create_prorations", // Create prorations for immediate billing
+            billing_cycle_anchor: "now", // Reset billing cycle to start immediately
+          });
+        }
       } else {
         // Handle new coupon-based method
         if (isInOriginalBillingCycle) {

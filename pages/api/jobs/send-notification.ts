@@ -1,8 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { sendViewedDataroomEmail } from "@/lib/emails/send-viewed-dataroom";
+import { sendViewedDataroomPausedEmail } from "@/lib/emails/send-viewed-dataroom-paused";
 import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
+import { sendViewedDocumentPausedEmail } from "@/lib/emails/send-viewed-document-paused";
 import prisma from "@/lib/prisma";
+import { isTeamPausedById } from "@/lib/team/is-team-paused";
 import { log } from "@/lib/utils";
 
 export const config = {
@@ -58,6 +61,7 @@ export default async function handle(
     team: {
       plan: string | null;
       ignoredDomains: string[] | null;
+      pauseStartsAt: Date | null;
     } | null;
   } | null;
 
@@ -191,6 +195,9 @@ export default async function handle(
   try {
     const adminEmail = users.find((user) => user.role === "ADMIN")?.user.email;
 
+    // Check if team is paused
+    const teamIsPaused = await isTeamPausedById(teamId);
+
     if (view.viewType === "DOCUMENT_VIEW") {
       const teamMembers = users
         .map((user) => user.user.email!)
@@ -205,29 +212,49 @@ export default async function handle(
         teamMembers.push(ownerEmail);
       }
 
-      // send email to document owner that document
-      await sendViewedDocumentEmail({
-        ownerEmail: adminEmail!,
-        documentId: view.document!.id,
-        documentName: view.document!.name,
-        linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
-        viewerEmail: view.viewerEmail,
-        teamMembers,
-        locationString: includeLocation ? locationString : undefined,
-      });
+      // send appropriate email based on team pause status
+      if (teamIsPaused) {
+        await sendViewedDocumentPausedEmail({
+          ownerEmail: adminEmail!,
+          documentName: view.document!.name,
+          linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
+          teamMembers,
+        });
+      } else {
+        await sendViewedDocumentEmail({
+          ownerEmail: adminEmail!,
+          documentId: view.document!.id,
+          documentName: view.document!.name,
+          linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
+          viewerEmail: view.viewerEmail,
+          teamMembers,
+          locationString: includeLocation ? locationString : undefined,
+        });
+      }
     } else {
-      // send email to dataroom owner that dataroom
-      await sendViewedDataroomEmail({
-        ownerEmail: adminEmail!,
-        dataroomId: view.dataroom!.id,
-        dataroomName: view.dataroom!.name,
-        viewerEmail: view.viewerEmail,
-        linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
-        teamMembers: users
-          .map((user) => user.user.email!)
-          .filter((email) => email !== adminEmail),
-        locationString: includeLocation ? locationString : undefined,
-      });
+      // send appropriate email based on team pause status
+      if (teamIsPaused) {
+        await sendViewedDataroomPausedEmail({
+          ownerEmail: adminEmail!,
+          dataroomName: view.dataroom!.name,
+          linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
+          teamMembers: users
+            .map((user) => user.user.email!)
+            .filter((email) => email !== adminEmail),
+        });
+      } else {
+        await sendViewedDataroomEmail({
+          ownerEmail: adminEmail!,
+          dataroomId: view.dataroom!.id,
+          dataroomName: view.dataroom!.name,
+          viewerEmail: view.viewerEmail,
+          linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
+          teamMembers: users
+            .map((user) => user.user.email!)
+            .filter((email) => email !== adminEmail),
+          locationString: includeLocation ? locationString : undefined,
+        });
+      }
     }
 
     res.status(200).json({ message: "Successfully sent notification", viewId });

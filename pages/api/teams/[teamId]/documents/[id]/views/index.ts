@@ -8,6 +8,7 @@ import { getServerSession } from "next-auth/next";
 import { LIMITS } from "@/lib/constants";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { isTeamPaused } from "@/lib/team/is-team-paused";
 import { getViewPageDuration } from "@/lib/tinybird";
 import { getVideoEventsByDocument } from "@/lib/tinybird/pipes";
 import { CustomUser } from "@/lib/types";
@@ -178,16 +179,17 @@ export default async function handle(
     }
 
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
-    
+
     // Parse and validate pagination parameters
     const rawPage = Number.parseInt((req.query.page as string) || "1", 10);
     const rawLimit = Number.parseInt((req.query.limit as string) || "10", 10);
 
     // Apply defaults for invalid values and enforce constraints
     const page = Number.isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
-    const limit = Number.isNaN(rawLimit) || rawLimit < 1 
-      ? 10 
-      : Math.min(Math.max(rawLimit, 1), 100); // Min 1, Max 100
+    const limit =
+      Number.isNaN(rawLimit) || rawLimit < 1
+        ? 10
+        : Math.min(Math.max(rawLimit, 1), 100); // Min 1, Max 100
     const offset = (page - 1) * limit;
 
     const userId = (session.user as CustomUser).id;
@@ -202,7 +204,12 @@ export default async function handle(
             },
           },
         },
-        select: { plan: true },
+        select: {
+          plan: true,
+          pausedAt: true,
+          pauseStartsAt: true,
+          pauseEndsAt: true,
+        },
       });
 
       if (!team) {
@@ -238,12 +245,22 @@ export default async function handle(
         return res.status(404).end("Document not found");
       }
 
+      const pauseStartedAt = team.pauseStartsAt;
+
+      // Build where clause for views - if team is paused, only show views before pause date
+      const viewsWhereClause = {
+        documentId: docId,
+        isArchived: false,
+        ...(pauseStartedAt && {
+          viewedAt: {
+            lt: pauseStartedAt,
+          },
+        }),
+      };
+
       // Check if document has any views first to avoid expensive query
       const viewCount = await prisma.view.count({
-        where: {
-          documentId: docId,
-          isArchived: false,
-        },
+        where: viewsWhereClause,
       });
 
       if (viewCount === 0) {
@@ -259,6 +276,11 @@ export default async function handle(
         take: limit,
         where: {
           documentId: docId,
+          ...(pauseStartedAt && {
+            viewedAt: {
+              lt: pauseStartedAt,
+            },
+          }),
         },
         orderBy: {
           viewedAt: "desc",
@@ -306,7 +328,28 @@ export default async function handle(
         },
       });
 
-      // filter the last 20 views
+      // Get total view count (including views after pause date for accurate count)
+      const totalViewCount = await prisma.view.count({
+        where: {
+          documentId: docId,
+          isArchived: false,
+        },
+      });
+
+      // Calculate hidden views due to pause (views after pause date)
+      const hiddenViewsFromPause = pauseStartedAt
+        ? await prisma.view.count({
+            where: {
+              documentId: docId,
+              isArchived: false,
+              viewedAt: {
+                gte: pauseStartedAt,
+              },
+            },
+          })
+        : 0;
+
+      // filter the last 20 views for free plan
       const limitedViews =
         team.plan === "free" && offset >= LIMITS.views ? [] : views;
 
@@ -330,10 +373,15 @@ export default async function handle(
         internal: users.some((user) => user.email === view.viewerEmail),
       }));
 
+      // Calculate total hidden views (free plan limits + paused team filtering)
+      const hiddenFromFreePlan = views.length - limitedViews.length;
+      const totalHiddenViews = hiddenFromFreePlan + hiddenViewsFromPause;
+
       return res.status(200).json({
         viewsWithDuration,
-        hiddenViewCount: views.length - limitedViews.length,
-        totalViews: document._count.views || 0,
+        hiddenViewCount: totalHiddenViews,
+        totalViews: totalViewCount,
+        hiddenFromPause: hiddenViewsFromPause, // Optional: to show specific pause-related hidden count
       });
     } catch (error) {
       log({

@@ -133,6 +133,7 @@ export async function POST(request: NextRequest) {
             plan: true,
             globalBlockList: true,
             agentsEnabled: true,
+            pauseStartsAt: true,
           },
         },
         customFields: {
@@ -646,6 +647,11 @@ export async function POST(request: NextRequest) {
         }),
     };
 
+    const isPaused =
+      link.team?.pauseStartsAt && link.team?.pauseStartsAt <= new Date()
+        ? true
+        : false;
+
     // ** DATAROOM_VIEW **
     if (viewType === "DATAROOM_VIEW") {
       console.log("viewType is DATAROOM_VIEW");
@@ -674,10 +680,11 @@ export async function POST(request: NextRequest) {
               dataroomId,
               teamId: link.teamId!,
               enableNotification: link.enableNotification,
+              isPaused,
             }),
           );
 
-          if (link.teamId && !isPreview) {
+          if (link.teamId && !isPreview && !isPaused) {
             waitUntil(
               (async () => {
                 try {
@@ -791,6 +798,7 @@ export async function POST(request: NextRequest) {
               dataroomId,
               teamId: link.teamId!,
               enableNotification: link.enableNotification,
+              isPaused,
             }),
           );
         }
@@ -808,7 +816,7 @@ export async function POST(request: NextRequest) {
         });
         console.timeEnd("create-view");
         // Only send Slack notifications for non-preview views
-        if (link.teamId && !isPreview) {
+        if (link.teamId && !isPreview && !isPaused) {
           waitUntil(
             (async () => {
               try {

@@ -8,6 +8,7 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { isTeamPaused } from "@/lib/team/is-team-paused";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";
@@ -43,7 +44,9 @@ export default async function handle(
           subscriptionId: true,
           startsAt: true,
           endsAt: true,
+          pausedAt: true,
           pauseStartsAt: true,
+          pauseEndsAt: true,
           cancelledAt: true,
         },
       });
@@ -86,13 +89,19 @@ export default async function handle(
         }
       }
 
+      // Calculate if team is currently paused
+      const isPaused = isTeamPaused(team);
+
       return res.status(200).json({
         plan: team.plan,
         startsAt: team.startsAt,
         endsAt: team.endsAt,
         isCustomer,
         subscriptionCycle,
+        pausedAt: team.pausedAt,
         pauseStartsAt: team.pauseStartsAt,
+        pauseEndsAt: team.pauseEndsAt,
+        isPaused,
         cancelledAt: team.cancelledAt,
         discount,
       });

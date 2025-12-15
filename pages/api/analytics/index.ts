@@ -69,11 +69,19 @@ export default async function handler(
           },
         },
       },
+      select: {
+        id: true,
+        plan: true,
+        pauseStartsAt: true,
+      },
     });
 
     if (!team) {
       return res.status(401).json({ error: "Unauthorized" });
     }
+
+    // Get pause date filter if team is paused
+    const pauseStartsAt = team.pauseStartsAt;
 
     // Check if free plan user is trying to access data beyond 30 days
     if (interval === "custom" && team.plan.includes("free")) {
@@ -428,12 +436,19 @@ export default async function handler(
       }
 
       case "visitors": {
+        // Build interval filter that respects pause date
+        const visitorsIntervalFilter: any = {
+          gte: startDate,
+          lte: endDate,
+          ...(pauseStartsAt && { lt: pauseStartsAt }),
+        };
+
         const viewers = await prisma.viewer.findMany({
           where: {
             teamId,
             views: {
               some: {
-                viewedAt: intervalFilter,
+                viewedAt: visitorsIntervalFilter,
                 isArchived: false,
                 viewType: "DOCUMENT_VIEW",
               },
@@ -446,12 +461,27 @@ export default async function handler(
               },
               where: {
                 viewType: "DOCUMENT_VIEW",
-                viewedAt: intervalFilter,
+                viewedAt: visitorsIntervalFilter,
                 isArchived: false,
               },
             },
           },
         });
+
+        // Count hidden views from pause
+        const hiddenFromPause = pauseStartsAt
+          ? await prisma.view.count({
+              where: {
+                teamId,
+                viewedAt: {
+                  gte: pauseStartsAt,
+                  lte: endDate,
+                },
+                isArchived: false,
+                viewType: "DOCUMENT_VIEW",
+              },
+            })
+          : 0;
 
         // Transform the data to match the table requirements
         const transformedVisitors = await Promise.all(
@@ -480,8 +510,10 @@ export default async function handler(
             }
 
             // Get the name from the most recent view that has a name
-            const viewerName = viewer.views.find((v) => v.viewerName)?.viewerName;
-            
+            const viewerName = viewer.views.find(
+              (v) => v.viewerName,
+            )?.viewerName;
+
             return {
               email: viewer.email,
               viewerId: viewer.id,
@@ -495,14 +527,24 @@ export default async function handler(
           }),
         );
 
-        return res.status(200).json(transformedVisitors);
+        return res.status(200).json({
+          visitors: transformedVisitors,
+          hiddenFromPause,
+        });
       }
 
       case "views": {
+        // Build interval filter that respects pause date
+        const viewsIntervalFilter: any = {
+          gte: startDate,
+          lte: endDate,
+          ...(pauseStartsAt && { lt: pauseStartsAt }),
+        };
+
         const views = await prisma.view.findMany({
           where: {
             teamId,
-            viewedAt: intervalFilter,
+            viewedAt: viewsIntervalFilter,
             isArchived: false,
             viewType: "DOCUMENT_VIEW",
           },
@@ -534,6 +576,21 @@ export default async function handler(
             viewedAt: "desc",
           },
         });
+
+        // Count hidden views from pause
+        const hiddenFromPause = pauseStartsAt
+          ? await prisma.view.count({
+              where: {
+                teamId,
+                viewedAt: {
+                  gte: pauseStartsAt,
+                  lte: endDate,
+                },
+                isArchived: false,
+                viewType: "DOCUMENT_VIEW",
+              },
+            })
+          : 0;
 
         // Transform the data to match the table requirements
         const transformedViews = await Promise.all(
@@ -587,7 +644,10 @@ export default async function handler(
           }),
         );
 
-        return res.status(200).json(transformedViews);
+        return res.status(200).json({
+          views: transformedViews,
+          hiddenFromPause,
+        });
       }
 
       default: {
