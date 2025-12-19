@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { usePlan } from "@/lib/swr/use-billing";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -150,13 +150,13 @@ export default function RebuildIndexButton({
               </Button>
             </>
           ) : (
-            <UpgradePlanModal
+            <UpgradePlanModalWithDiscount
               clickedPlan={PlanEnum.DataRoomsPlus}
               trigger="datarooms_rebuild_index_button"
               highlightItem={["indexing"]}
             >
               <Button>Upgrade to rebuild index</Button>
-            </UpgradePlanModal>
+            </UpgradePlanModalWithDiscount>
           )}
         </DialogFooter>
       </DialogContent>

@@ -69,7 +69,7 @@ export default function DocumentUpload({
             description: "Upgrade to a paid plan to increase the limit",
             action: {
               label: "Upgrade",
-              onClick: () => router.push("/settings/upgrade"),
+              onClick: () => router.push("/settings/upgrade-holiday-offer"),
             },
             duration: 10000,
           });
@@ -112,7 +112,7 @@ export default function DocumentUpload({
             description: "Upgrade to a paid plan to increase the limit",
             action: {
               label: "Upgrade",
-              onClick: () => router.push("/settings/upgrade"),
+              onClick: () => router.push("/settings/upgrade-holiday-offer"),
             },
             duration: 10000,
           });
@@ -126,7 +126,7 @@ export default function DocumentUpload({
             description: `Upgrade to a paid plan to upload ${file.type} files`,
             action: {
               label: "Upgrade",
-              onClick: () => router.push("/settings/upgrade"),
+              onClick: () => router.push("/settings/upgrade-holiday-offer"),
             },
             duration: 10000,
           });

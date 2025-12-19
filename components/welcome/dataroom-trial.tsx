@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "../billing/upgrade-plan-modal-with-discount";
 import { Input } from "../ui/input";
 
 export default function DataroomTrial() {
@@ -324,18 +324,18 @@ export default function DataroomTrial() {
 
             <div className="text-xs text-muted-foreground">
               {/* Data rooms are available on our{" "}
-              <UpgradePlanModal clickedPlan={PlanEnum.Business}>
+              <UpgradePlanModalWithDiscount clickedPlan={PlanEnum.Business}>
                 <button className="underline">Business</button>
-              </UpgradePlanModal>{" "}
+              </UpgradePlanModalWithDiscount>{" "}
               plan. <br /> */}
               No credit card is required. After the trial, upgrade to{" "}
-              <UpgradePlanModal
+              <UpgradePlanModalWithDiscount
                 clickedPlan={PlanEnum.Business}
                 highlightItem={["datarooms"]}
                 trigger="dataroom_trial_form"
               >
                 <button className="underline">Papermark Data Rooms</button>
-              </UpgradePlanModal>{" "}
+              </UpgradePlanModalWithDiscount>{" "}
               to continue using data rooms.
             </div>
           </div>

@@ -10,7 +10,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { useTeamSettings } from "@/lib/swr/use-team-settings";
 import { validateContent } from "@/lib/utils/sanitize-html";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import AppLayout from "@/components/layouts/app";
 import DeleteTeam from "@/components/settings/delete-team";
 import GlobalBlockListForm from "@/components/settings/global-block-list-form";
@@ -228,7 +228,7 @@ export default function General() {
         </div>
 
         {planModalOpen ? (
-          <UpgradePlanModal
+          <UpgradePlanModalWithDiscount
             clickedPlan={selectedPlan}
             trigger={planModalTrigger}
             open={planModalOpen}

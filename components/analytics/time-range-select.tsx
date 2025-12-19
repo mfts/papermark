@@ -16,7 +16,7 @@ import {
 
 import { cn } from "@/lib/utils";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 
 const TIME_RANGES = [
   { value: "24h", label: "Last 24 hours", shortcut: "D" },
@@ -215,7 +215,7 @@ const UpgradeButton = () => {
       >
         Custom Date <CrownIcon className="!size-4" />
       </Button>
-      <UpgradePlanModal
+      <UpgradePlanModalWithDiscount
         clickedPlan={PlanEnum.Pro}
         trigger="dashboard_time_range_custom_select"
         open={open}

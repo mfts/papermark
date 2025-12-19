@@ -9,7 +9,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { cn } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
 import AllowListSection from "@/components/links/link-sheet/allow-list-section";
@@ -298,7 +298,7 @@ export const LinkOptions = ({
         </div>
       </CollapsibleSection>
 
-      <UpgradePlanModal
+      <UpgradePlanModalWithDiscount
         clickedPlan={upgradePlan}
         open={openUpgradeModal}
         setOpen={setOpenUpgradeModal}
