@@ -41,7 +41,10 @@ export default function DomainSection({
 }) {
   const [isModalOpen, setModalOpen] = useState(false);
   const [isUpgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [displayValue, setDisplayValue] = useState<string>("papermark.com");
+  // Initialize displayValue from data.domain when editing, otherwise "papermark.com"
+  const [displayValue, setDisplayValue] = useState<string>(
+    editLink && data.domain ? data.domain : "papermark.com",
+  );
   const teamInfo = useTeam();
   const { limits } = useLimits();
 
