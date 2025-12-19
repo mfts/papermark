@@ -100,6 +100,7 @@ export default async function handle(
           select: {
             plan: true,
             ignoredDomains: true,
+            pauseStartsAt: true,
           },
         },
       },
