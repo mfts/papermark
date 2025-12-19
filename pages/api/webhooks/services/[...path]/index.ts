@@ -850,6 +850,15 @@ async function handleDataroomCreate(
 ) {
   const { name, description, createLink, link, folders } = data;
 
+  // Check if team is paused
+  const teamIsPaused = await isTeamPausedById(teamId);
+  if (teamIsPaused) {
+    return res.status(403).json({
+      error:
+        "Team is currently paused. New dataroom creation is not available.",
+    });
+  }
+
   // If custom domain and slug are provided for link, validate them
   let domainId = null;
   if (createLink && link?.domain && link?.slug) {
