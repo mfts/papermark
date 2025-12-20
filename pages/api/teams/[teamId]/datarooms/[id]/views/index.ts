@@ -45,8 +45,6 @@ export default async function handle(
         return res.status(403).end("Unauthorized to access this team");
       }
 
-      console.log("pauseStartsAt", team.pauseStartsAt);
-
       const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: dataroomId,
@@ -117,9 +115,6 @@ export default async function handle(
         : 0;
 
       const views = dataroom?.views || [];
-
-      console.log("views", views);
-      console.log("hiddenViewsFromPause", hiddenViewsFromPause);
 
       const returnViews = views.map((view) => {
         return {
