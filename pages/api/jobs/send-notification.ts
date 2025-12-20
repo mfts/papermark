@@ -197,6 +197,15 @@ export default async function handle(
   try {
     const adminEmail = users.find((user) => user.role === "ADMIN")?.user.email;
 
+    // Guard: ensure we have an admin email to send notifications to
+    if (!adminEmail) {
+      log({
+        message: `No admin email found for team when sending notification. \n\n*Metadata*: \`{teamId: ${teamId}, viewId: ${viewId}}\``,
+        type: "error",
+      });
+      return res.status(400).json({ message: "No admin email found for team" });
+    }
+
     // Check if team is paused
     const teamIsPaused = await isTeamPausedById(teamId);
 
@@ -217,14 +226,14 @@ export default async function handle(
       // send appropriate email based on team pause status
       if (teamIsPaused) {
         await sendViewedDocumentPausedEmail({
-          ownerEmail: adminEmail!,
+          ownerEmail: adminEmail,
           documentName: view.document!.name,
           linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
           teamMembers,
         });
       } else {
         await sendViewedDocumentEmail({
-          ownerEmail: adminEmail!,
+          ownerEmail: adminEmail,
           documentId: view.document!.id,
           documentName: view.document!.name,
           linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
@@ -237,7 +246,7 @@ export default async function handle(
       // send appropriate email based on team pause status
       if (teamIsPaused) {
         await sendViewedDataroomPausedEmail({
-          ownerEmail: adminEmail!,
+          ownerEmail: adminEmail,
           dataroomName: view.dataroom!.name,
           linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
           teamMembers: users
@@ -246,7 +255,7 @@ export default async function handle(
         });
       } else {
         await sendViewedDataroomEmail({
-          ownerEmail: adminEmail!,
+          ownerEmail: adminEmail,
           dataroomId: view.dataroom!.id,
           dataroomName: view.dataroom!.name,
           viewerEmail: view.viewerEmail,
