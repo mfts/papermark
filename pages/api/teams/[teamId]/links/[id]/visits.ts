@@ -71,9 +71,9 @@ export default async function handle(
         },
       });
 
-      // If link doesn't exist (deleted), return empty array
+      // If link doesn't exist (deleted), return empty response
       if (!result || !result.document || result.deletedAt) {
-        return res.status(200).json([]);
+        return res.status(200).json({ views: [], hiddenFromPause: 0 });
       }
 
       const docId = result.document.id;
