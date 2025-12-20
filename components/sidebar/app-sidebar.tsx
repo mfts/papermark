@@ -41,7 +41,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-import ProAnnualBanner from "../billing/pro-annual-banner";
 import ProBanner from "../billing/pro-banner";
 import { Progress } from "../ui/progress";
 import { BadgeTooltip } from "../ui/tooltip";
@@ -50,9 +49,6 @@ import SlackBanner from "./banners/slack-banner";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
-  const [showProAnnualBanner, setShowProAnnualBanner] = useState<
-    boolean | null
-  >(null);
   const [showSlackBanner, setShowSlackBanner] = useState<boolean | null>(null);
   const { currentTeam, teams, setCurrentTeam, isLoading }: TeamContextType =
     useTeam() || initialState;
@@ -89,11 +85,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       setShowProBanner(true);
     } else {
       setShowProBanner(false);
-    }
-    if (Cookies.get("hideProAnnualBanner") !== "pro-annual-banner") {
-      setShowProAnnualBanner(true);
-    } else {
-      setShowProAnnualBanner(false);
     }
     if (Cookies.get("hideSlackBanner") !== "slack-banner") {
       setShowSlackBanner(true);
@@ -316,14 +307,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                */}
               {isFree && showProBanner ? (
                 <ProBanner setShowProBanner={setShowProBanner} />
-              ) : null}
-              {/*
-               * if user is pro and showProAnnualBanner is true show pro annual banner
-               */}
-              {isPro && !isAnnualPlan && showProAnnualBanner ? (
-                <ProAnnualBanner
-                  setShowProAnnualBanner={setShowProAnnualBanner}
-                />
               ) : null}
 
               <div className="mb-2">

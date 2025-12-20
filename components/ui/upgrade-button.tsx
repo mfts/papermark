@@ -5,7 +5,7 @@ import { CrownIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import { Button } from "@/components/ui/button";
 
 interface UpgradeButtonProps {
@@ -68,7 +68,7 @@ export function UpgradeButton({
   return (
     <>
       {buttonContent}
-      <UpgradePlanModal
+      <UpgradePlanModalWithDiscount
         clickedPlan={clickedPlan}
         trigger={trigger}
         open={open}

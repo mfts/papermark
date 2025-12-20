@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { AddSeatModal } from "../billing/add-seat-modal";
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "../billing/upgrade-plan-modal-with-discount";
 import { AddTeamMembers } from "../teams/add-team-member-modal";
 import { AddTeamModal } from "../teams/add-team-modal";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -119,7 +119,7 @@ export function TeamSwitcher({
                 </DropdownMenuItem>
               </AddTeamModal>
             ) : (
-              <UpgradePlanModal
+              <UpgradePlanModalWithDiscount
                 clickedPlan={PlanEnum.DataRoomsPremium}
                 trigger="add_new_team"
                 highlightItem={["teams"]}
@@ -133,14 +133,14 @@ export function TeamSwitcher({
                   </div>
                   <div className="font-medium text-muted-foreground">Add new team</div>
                 </DropdownMenuItem>
-              </UpgradePlanModal>
+              </UpgradePlanModalWithDiscount>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
       <SidebarMenuItem>
         {showUpgradePlanModal ? (
-          <UpgradePlanModal
+          <UpgradePlanModalWithDiscount
             clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
             trigger={"invite_team_members"}
           >
@@ -150,7 +150,7 @@ export function TeamSwitcher({
             >
               <UserRoundPlusIcon className="!size-5" strokeWidth={1.5} />
             </SidebarMenuButton>
-          </UpgradePlanModal>
+          </UpgradePlanModalWithDiscount>
         ) : canAddUsers ? (
           <AddTeamMembers
             open={isTeamMemberInviteModalOpen}

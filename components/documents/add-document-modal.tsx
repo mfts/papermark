@@ -45,7 +45,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "../billing/upgrade-plan-modal-with-discount";
 
 interface DataroomDocument {
   id: string;
@@ -562,21 +562,21 @@ export function AddDocumentModal({
   if (!canAddDocuments && children) {
     if (newVersion) {
       return (
-        <UpgradePlanModal
+        <UpgradePlanModalWithDiscount
           clickedPlan={PlanEnum.Pro}
           trigger={"limit_upload_document_version"}
         >
           {children}
-        </UpgradePlanModal>
+        </UpgradePlanModalWithDiscount>
       );
     }
     return (
-      <UpgradePlanModal
+      <UpgradePlanModalWithDiscount
         clickedPlan={PlanEnum.Pro}
         trigger={"limit_upload_documents"}
       >
         <Button>Upgrade to Add Documents</Button>
-      </UpgradePlanModal>
+      </UpgradePlanModalWithDiscount>
     );
   }
 

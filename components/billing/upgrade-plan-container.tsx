@@ -204,7 +204,7 @@ export default function UpgradePlanContainer() {
             clickedPlan={PlanEnum.Business}
             trigger="upgrade_plan"
             useModal={false}
-            onClick={() => router.push("/settings/upgrade")}
+            onClick={() => router.push("/settings/upgrade-holiday-offer")}
           />
         </div>
       );

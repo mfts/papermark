@@ -31,7 +31,7 @@ import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -524,12 +524,12 @@ export default function LinksTable({
   const AddLinkButton = () => {
     if (!canAddLinks) {
       return (
-        <UpgradePlanModal
+        <UpgradePlanModalWithDiscount
           clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
           trigger={"limit_add_link"}
         >
           <Button>Upgrade to Create Link</Button>
-        </UpgradePlanModal>
+        </UpgradePlanModalWithDiscount>
       );
     } else {
       return (

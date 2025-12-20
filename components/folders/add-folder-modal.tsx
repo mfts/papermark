@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "../billing/upgrade-plan-modal-with-discount";
 
 export function AddFolderModal({
   // open,
@@ -139,13 +139,13 @@ export function AddFolderModal({
   if (isFree && !isTrial) {
     if (children) {
       return (
-        <UpgradePlanModal
+        <UpgradePlanModalWithDiscount
           clickedPlan={PlanEnum.Pro}
           trigger={"add_folder_button"}
           highlightItem={["folder", "multi-file"]}
         >
           {children}
-        </UpgradePlanModal>
+        </UpgradePlanModalWithDiscount>
       );
     }
   }

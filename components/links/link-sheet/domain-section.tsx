@@ -12,7 +12,7 @@ import { BasePlan, usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { cn } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import { AddDomainModal } from "@/components/domains/add-domain-modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -316,7 +316,7 @@ export default function DomainSection({
       />
 
       {/* Upgrade plan modal when trying to use custom domains without the right plan */}
-      <UpgradePlanModal
+      <UpgradePlanModalWithDiscount
         clickedPlan={
           linkType === "DATAROOM_LINK" ? PlanEnum.DataRooms : PlanEnum.Business
         }

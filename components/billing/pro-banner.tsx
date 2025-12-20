@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 import X from "@/components/shared/icons/x";
 import { Button } from "@/components/ui/button";
 
-import { UpgradePlanModal } from "./upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "./upgrade-plan-modal-with-discount";
 
 export default function ProBanner({
   setShowProBanner,
@@ -37,14 +37,14 @@ export default function ProBanner({
         Upgrade to unlock custom branding, team members, domains and data rooms.
       </p>
       <div className="flex">
-        <UpgradePlanModal
+        <UpgradePlanModalWithDiscount
           clickedPlan={PlanEnum.Business}
           trigger={"pro_banner"}
         >
           <Button type="button" className="grow">
             Upgrade
           </Button>
-        </UpgradePlanModal>
+        </UpgradePlanModalWithDiscount>
       </div>
     </aside>
   );

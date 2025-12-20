@@ -27,7 +27,7 @@ import { cn, getBreadcrumbPath, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
 import { AddToDataroomModal } from "@/components/documents/add-document-to-dataroom-modal";
 import { DocumentPreviewModal } from "@/components/documents/document-preview-modal";
@@ -421,7 +421,7 @@ export default function DocumentsCard({
         />
       ) : null}
       {planModalOpen ? (
-        <UpgradePlanModal
+        <UpgradePlanModalWithDiscount
           clickedPlan={PlanEnum.DataRooms}
           trigger="datarooms"
           open={planModalOpen}

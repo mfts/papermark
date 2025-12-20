@@ -339,14 +339,14 @@ export default function Settings() {
                         </Button>
                       ) : null}
                       {isNotBusiness ? (
-                        <UpgradePlanModal
+                        <UpgradePlanModalWithDiscount
                           clickedPlan={"Business"}
                           trigger={"feedback_question"}
                         >
                           <Button type="submit" loading={loading}>
                             {feedback ? "Update question" : "Create question"}
                           </Button>
-                        </UpgradePlanModal>
+                        </UpgradePlanModalWithDiscount>
                       ) : (
                         <Button type="submit" loading={loading}>
                           {feedback ? "Update question" : "Create question"}

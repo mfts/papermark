@@ -58,7 +58,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import PlanBadge from "../billing/plan-badge";
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "../billing/upgrade-plan-modal-with-discount";
 import AdvancedSheet from "../shared/icons/advanced-sheet";
 import PortraitLandscape from "../shared/icons/portrait-landscape";
 import LoadingSpinner from "../ui/loading-spinner";
@@ -991,7 +991,7 @@ export default function DocumentHeader({
       ) : null}
 
       {planModalOpen ? (
-        <UpgradePlanModal
+        <UpgradePlanModalWithDiscount
           clickedPlan={selectedPlan}
           trigger={planModalTrigger}
           open={planModalOpen}
