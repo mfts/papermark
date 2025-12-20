@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
             plan: true,
             globalBlockList: true,
             agentsEnabled: true,
+            pauseStartsAt: true,
           },
         },
         customFields: {
@@ -637,6 +638,11 @@ export async function POST(request: NextRequest) {
         console.timeEnd("get-file");
       }
 
+      const isPaused =
+        link.team?.pauseStartsAt && link.team?.pauseStartsAt <= new Date()
+          ? true
+          : false;
+
       if (newView) {
         // Record view in the background to avoid blocking the response
         waitUntil(
@@ -649,6 +655,7 @@ export async function POST(request: NextRequest) {
             documentId,
             teamId: link.teamId!,
             enableNotification: link.enableNotification,
+            isPaused,
           }),
         );
         if (!isPreview) {
@@ -659,6 +666,7 @@ export async function POST(request: NextRequest) {
               linkId,
               viewerEmail: email ?? undefined,
               viewerId: viewer?.id ?? undefined,
+              teamIsPaused: isPaused,
             }).catch((error) => {
               console.error("Error sending Slack notification:", error);
             }),

@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
@@ -189,6 +190,7 @@ export default async function handle(
               "datarooms+drtrial",
               "business+drtrial",
               "datarooms-plus+drtrial",
+              "datarooms-premium",
             ],
           },
           users: {
@@ -201,6 +203,15 @@ export default async function handle(
 
       if (!team) {
         return res.status(401).end("Unauthorized");
+      }
+
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. New dataroom creation is not available.",
+        });
       }
 
       // Limits: Check if the user has reached the limit of datarooms in the team

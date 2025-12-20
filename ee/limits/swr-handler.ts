@@ -18,7 +18,7 @@ export type LimitProps = z.infer<typeof configSchema> & {
 
 export function useLimits() {
   const teamInfo = useTeam();
-  const { isFree, isTrial } = usePlan();
+  const { isFree, isTrial, isPaused } = usePlan();
   const teamId = teamInfo?.currentTeam?.id;
 
   const { data, error } = useSWR<LimitProps | null>(
@@ -43,6 +43,7 @@ export function useLimits() {
     canAddDocuments,
     canAddLinks,
     canAddUsers,
+    isPaused,
     error,
     loading: !data && !error,
   };

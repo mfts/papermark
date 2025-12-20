@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { LinkPreset } from "@prisma/client";
 import slugify from "@sindresorhus/slugify";
 import { put } from "@vercel/blob";
@@ -252,6 +253,15 @@ async function handleDocumentCreate(
     folderId,
     dataroomFolderId,
   } = data;
+
+  // Check if team is paused
+  const teamIsPaused = await isTeamPausedById(teamId);
+  if (teamIsPaused) {
+    return res.status(403).json({
+      error:
+        "Team is currently paused. New document uploads are not available.",
+    });
+  }
 
   // Check if the content type is supported
   const supportedContentType = getSupportedContentType(contentType);
@@ -594,6 +604,14 @@ async function handleLinkCreate(
 ) {
   const { targetId, linkType, link } = data;
 
+  // Check if team is paused
+  const teamIsPaused = await isTeamPausedById(teamId);
+  if (teamIsPaused) {
+    return res.status(403).json({
+      error: "Team is currently paused. New link creation is not available.",
+    });
+  }
+
   // Validate target exists and belongs to the team
   if (linkType === "DOCUMENT_LINK") {
     const document = await prisma.document.findUnique({
@@ -831,6 +849,15 @@ async function handleDataroomCreate(
   res: NextApiResponse,
 ) {
   const { name, description, createLink, link, folders } = data;
+
+  // Check if team is paused
+  const teamIsPaused = await isTeamPausedById(teamId);
+  if (teamIsPaused) {
+    return res.status(403).json({
+      error:
+        "Team is currently paused. New dataroom creation is not available.",
+    });
+  }
 
   // If custom domain and slug are provided for link, validate them
   let domainId = null;

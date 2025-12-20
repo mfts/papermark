@@ -42,12 +42,15 @@ export default async function handle(
         },
         select: {
           id: true,
+          pauseStartsAt: true,
         },
       });
 
       if (!team) {
         return res.status(403).end("Unauthorized to access this team");
       }
+
+      const pauseStartedAt = team.pauseStartsAt;
 
       const dataroom = await prisma.dataroom.findUnique({
         where: {
@@ -62,6 +65,11 @@ export default async function handle(
             where: {
               viewType: "DATAROOM_VIEW",
               groupId: groupId,
+              ...(pauseStartedAt && {
+                viewedAt: {
+                  lt: pauseStartedAt,
+                },
+              }),
             },
             orderBy: {
               viewedAt: "desc",
@@ -101,6 +109,20 @@ export default async function handle(
         },
       });
 
+      // Calculate hidden views due to pause (views after pause date)
+      const hiddenViewsFromPause = pauseStartedAt
+        ? await prisma.view.count({
+            where: {
+              dataroomId: dataroomId,
+              viewType: "DATAROOM_VIEW",
+              groupId: groupId,
+              viewedAt: {
+                gte: pauseStartedAt,
+              },
+            },
+          })
+        : 0;
+
       const views = dataroom?.views || [];
 
       const returnViews = views.map((view) => {
@@ -111,7 +133,10 @@ export default async function handle(
         };
       });
 
-      return res.status(200).json(returnViews);
+      return res.status(200).json({
+        views: returnViews,
+        hiddenFromPause: hiddenViewsFromPause,
+      });
     } catch (error) {
       log({
         message: `Failed to get views for dataroom: _${dataroomId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
