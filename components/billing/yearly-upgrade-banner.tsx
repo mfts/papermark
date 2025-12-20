@@ -27,9 +27,7 @@ export default function YearlyUpgradeBanner({
   setShowBanner,
 }: YearlyUpgradeBannerProps) {
   const router = useRouter();
-  const teamInfo = useTeam();
-  const { plan: teamPlan, isAnnualPlan, isCustomer, isOldAccount } = usePlan();
-  const [isLoading, setIsLoading] = useState(false);
+  const { plan: teamPlan } = usePlan();
 
   const handleHideBanner = () => {
     setShowBanner(false);
@@ -55,58 +53,6 @@ export default function YearlyUpgradeBanner({
   const nextPlan = getNextPlan();
 
   if (!nextPlan) return null; // Don't show banner if no next plan
-
-  const handleUpgradeToYearly = (planName: string) => {
-    if (!isCustomer) return;
-
-    const planData = PLANS.find((p) => p.name === planName);
-    if (!planData) return;
-
-    setIsLoading(true);
-    fetch(`/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        priceId: getPriceIdFromPlan({
-          planSlug: planData.slug,
-          isOld: isOldAccount,
-          period: "yearly",
-        }),
-        upgradePlan: true,
-        applyYearlyDiscount: true, // Apply 30% discount
-        yearlyUpgradeBanner: true,
-      }),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => null);
-          const errorMessage =
-            errorData?.error ||
-            errorData?.message ||
-            res.statusText ||
-            "Failed to upgrade plan";
-          console.error("Upgrade failed:", errorMessage);
-          alert(errorMessage);
-          return;
-        }
-        const url = await res.json();
-        if (typeof url === "string" && url.startsWith("/")) {
-          router.push(url);
-        } else {
-          console.error("Invalid redirect URL received:", url);
-          alert("Something went wrong. Please try again.");
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        alert(err.message || "Network error. Please try again.");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
 
   return (
     <AnimatePresence>
