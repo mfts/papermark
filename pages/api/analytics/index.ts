@@ -437,10 +437,14 @@ export default async function handler(
 
       case "visitors": {
         // Build interval filter that respects pause date
+        // Use the earlier of endDate or pauseStartsAt as the effective upper bound
+        const effectiveVisitorsEndDate =
+          pauseStartsAt && pauseStartsAt < endDate ? pauseStartsAt : endDate;
         const visitorsIntervalFilter: any = {
           gte: startDate,
-          lte: endDate,
-          ...(pauseStartsAt && { lt: pauseStartsAt }),
+          ...(pauseStartsAt && pauseStartsAt < endDate
+            ? { lt: effectiveVisitorsEndDate }
+            : { lte: effectiveVisitorsEndDate }),
         };
 
         const viewers = await prisma.viewer.findMany({
@@ -535,10 +539,14 @@ export default async function handler(
 
       case "views": {
         // Build interval filter that respects pause date
+        // Use the earlier of endDate or pauseStartsAt as the effective upper bound
+        const effectiveViewsEndDate =
+          pauseStartsAt && pauseStartsAt < endDate ? pauseStartsAt : endDate;
         const viewsIntervalFilter: any = {
           gte: startDate,
-          lte: endDate,
-          ...(pauseStartsAt && { lt: pauseStartsAt }),
+          ...(pauseStartsAt && pauseStartsAt < endDate
+            ? { lt: effectiveViewsEndDate }
+            : { lte: effectiveViewsEndDate }),
         };
 
         const views = await prisma.view.findMany({
