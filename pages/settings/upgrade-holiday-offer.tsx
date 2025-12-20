@@ -150,7 +150,9 @@ export default function UpgradeHolidayOfferPage() {
     if (router.query.view === "business-datarooms") return "business-datarooms";
     return "datarooms";
   };
-  const [planType, setPlanType] = useState<"documents" | "datarooms" | "business-datarooms">(getInitialView());
+  const [planType, setPlanType] = useState<
+    "documents" | "datarooms" | "business-datarooms"
+  >(getInitialView());
 
   // Update planType when query param changes
   useEffect(() => {
@@ -173,13 +175,16 @@ export default function UpgradeHolidayOfferPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-900">
       <h1 className="mb-8 text-center text-3xl font-bold">
-        Select best plan for your business. 
+        Select best plan for your business.
       </h1>
-      <p className="mb-8 text-center text-sm text-gray-500 dark:text-gray-400">Additional 30% off on annual plans. Limited time offer. Ends Dec 31 2025</p>
+      <p className="mb-8 text-center text-sm text-gray-500 dark:text-gray-400">
+        Additional 30% off on annual plans. Limited time offer. Ends Dec 31 2025
+      </p>
 
       <div className="mb-8 flex items-center justify-center">
         <span className="mr-2 text-sm">
-          Monthly {period === "monthly" && <span className="text-[#fb7a00]"></span>}
+          Monthly{" "}
+          {period === "monthly" && <span className="text-[#fb7a00]"></span>}
         </span>
         <Switch
           checked={period === "yearly"}
@@ -194,250 +199,71 @@ export default function UpgradeHolidayOfferPage() {
 
       {/* Plan Type Selector */}
       <div className="mb-8 flex justify-center">
-        <PlanTypeSelector 
-          value={planType} 
-          onChange={(value) => setPlanType(value)} 
+        <PlanTypeSelector
+          value={planType}
+          onChange={(value) => setPlanType(value)}
         />
       </div>
 
       {/* Document Sharing Plans (3 in a row) */}
       {planType === "documents" && (
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-3 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-2 md:grid-cols-3">
           {documentSharingPlans.map((planOption) => {
-          const planFeatures = getPlanFeatures(planOption, { period });
-          const planData = PLANS.find((p) => p.name === planOption);
-          if (!planData) return null;
-
-          const monthlyPrice = planData.price.monthly.amount;
-          const yearlyPrice = planData.price.yearly.amount;
-          const discountedYearlyPrice = period === "yearly" ? getDiscountedYearlyPrice(yearlyPrice) : yearlyPrice;
-          const savings = period === "yearly" ? calculateSavings(monthlyPrice, yearlyPrice) : 0;
-
-          return (
-            <div
-              key={planOption}
-              className={`relative flex flex-col rounded-lg border ${
-                planOption === PlanEnum.Business || planOption === PlanEnum.DataRoomsPlus
-                  ? "border-[#fb7a00]"
-                  : planOption === PlanEnum.DataRoomsPremium
-                    ? "border-gray-900 dark:border-gray-200"
-                    : "border-gray-400"
-              } bg-white p-6 shadow-sm dark:bg-gray-900`}
-            >
-              <div className="mb-4 border-b border-gray-200 pb-2">
-                <h3 className="text-balance text-xl font-medium text-foreground text-gray-900 dark:text-white">
-                  {planOption}
-                </h3>
-                {period === "yearly" && savings > 0 && (
-                  <span className="absolute right-2 top-2 rounded px-2 py-1 text-xs font-medium text-[#fb7a00] bg-[#fb7a00]/10">
-                    Save €{savings}/year
-                  </span>
-                )}
-                {period === "monthly" && (planOption === PlanEnum.Business ||
-                  planOption === PlanEnum.DataRoomsPlus) && (
-                  <span
-                    className={`absolute -top-3 right-4 rounded px-2 py-1 text-xs text-white ${
-                      planOption === PlanEnum.DataRoomsPlus
-                        ? "bg-gray-800 dark:bg-gray-200 dark:text-black"
-                        : "bg-[#fb7a00]"
-                    }`}
-                  >
-                    {planOption === PlanEnum.DataRoomsPlus
-                      ? "Best offer"
-                      : "Most popular"}
-                  </span>
-                )}
-              </div>
-
-              <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
-                €
-                {period === "yearly" ? discountedYearlyPrice : monthlyPrice}
-                <span className="text-base font-normal dark:text-white/75">
-                  /month
-                </span>
-              </div>
-              {period === "yearly" && (
-                <>
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="text-sm text-gray-500 line-through">
-                      €{yearlyPrice}/month
-                    </span>
-                    <span className="rounded bg-[#fb7a00]/10 px-2 py-0.5 text-xs font-medium text-[#fb7a00]">
-                      30% OFF
-                    </span>
-                  </div>
-                </>
-              )}
-              <p className="mt-4 text-sm text-gray-600 dark:text-white">
-                {planFeatures.featureIntro}
-              </p>
-
-              <ul
-                role="list"
-                className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600"
-              >
-                {planFeatures.features.map((feature, i) => (
-                  <li key={i}>
-                    <FeatureItem feature={feature} period={period} />
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-auto">
-                <Button
-                  variant={
-                    planOption === PlanEnum.Business ? "default" : "default"
-                  }
-                  className={`w-full py-2 text-sm ${
-                    planOption === PlanEnum.Business
-                      ? "bg-[#fb7a00]/90 text-white hover:bg-[#fb7a00]"
-                      : planOption === PlanEnum.DataRoomsPremium
-                        ? "bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
-                        : "bg-gray-800 text-white hover:bg-gray-900 dark:hover:bg-gray-700/80"
-                  }`}
-                  loading={selectedPlan === planOption}
-                  disabled={selectedPlan !== null}
-                  onClick={() => {
-    setSelectedPlan(planOption);
-                    const priceId = period === "yearly" 
-                      ? PLANS.find((p) => p.name === planOption)!.price[period].priceIds[
-                          process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
-                            ? "production"
-                            : "test"
-                        ][isOldAccount ? "old" : "new"]
-                      : PLANS.find((p) => p.name === planOption)!.price[period].priceIds[
-                          process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
-                            ? "production"
-                            : "test"
-                        ][isOldAccount ? "old" : "new"];
-
-    if (isCustomer && teamPlan !== "free") {
-                      fetch(
-                        `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
-                        {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          priceId,
-          upgradePlan: true,
-                            applyYearlyDiscount: period === "yearly",
-        }),
-                        },
-                      )
-        .then(async (res) => {
-                          if (res.status === 429) {
-                            toast.error(
-                              "Rate limit exceeded. Please try again later.",
-                            );
-                            setSelectedPlan(null);
-                            return;
-                          }
-
-          const url = await res.json();
-          router.push(url);
-        })
-        .catch((err) => {
-          alert(err);
-          setSelectedPlan(null);
-        });
-    } else {
-      fetch(
-                        `/api/teams/${
-                          teamInfo?.currentTeam?.id
-                        }/billing/upgrade?priceId=${priceId}&applyYearlyDiscount=${period === "yearly"}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      )
-        .then(async (res) => {
-                          if (res.status === 429) {
-                            toast.error(
-                              "Rate limit exceeded. Please try again later.",
-                            );
-                            setSelectedPlan(null);
-                            return;
-                          }
-
-          const data = await res.json();
-          const { id: sessionId } = data;
-          const stripe = await getStripe(isOldAccount);
-          stripe?.redirectToCheckout({ sessionId });
-        })
-        .catch((err) => {
-          alert(err);
-          setSelectedPlan(null);
-        });
-    }
-                  }}
-                >
-                  {selectedPlan === planOption
-                    ? "Redirecting to Stripe..."
-                    : `Upgrade to ${planOption} ${capitalize(period)}`}
-                </Button>
-              </div>
-            </div>
-          );
-          })}
-        </div>
-      )}
-
-      {/* Business + Data Rooms Plans (4 in a row) */}
-      {planType === "business-datarooms" && (
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
-          {[
-            PlanEnum.Business,
-            PlanEnum.DataRooms,
-            PlanEnum.DataRoomsPlus,
-            PlanEnum.DataRoomsPremium,
-          ].map((planOption) => {
             const planFeatures = getPlanFeatures(planOption, { period });
             const planData = PLANS.find((p) => p.name === planOption);
             if (!planData) return null;
 
             const monthlyPrice = planData.price.monthly.amount;
             const yearlyPrice = planData.price.yearly.amount;
-            const discountedYearlyPrice = period === "yearly" ? getDiscountedYearlyPrice(yearlyPrice) : yearlyPrice;
-            const savings = period === "yearly" ? calculateSavings(monthlyPrice, yearlyPrice) : 0;
+            const discountedYearlyPrice =
+              period === "yearly"
+                ? getDiscountedYearlyPrice(yearlyPrice)
+                : yearlyPrice;
+            const savings =
+              period === "yearly"
+                ? calculateSavings(monthlyPrice, yearlyPrice)
+                : 0;
 
-  return (
+            return (
               <div
                 key={planOption}
                 className={`relative flex flex-col rounded-lg border ${
-                  planOption === PlanEnum.Business
+                  planOption === PlanEnum.Business ||
+                  planOption === PlanEnum.DataRoomsPlus
                     ? "border-[#fb7a00]"
                     : planOption === PlanEnum.DataRoomsPremium
                       ? "border-gray-900 dark:border-gray-200"
-                      : planOption === PlanEnum.DataRoomsPlus
-                        ? "border-gray-800 dark:border-gray-300"
-                        : "border-gray-400"
+                      : "border-gray-400"
                 } bg-white p-6 shadow-sm dark:bg-gray-900`}
               >
                 <div className="mb-4 border-b border-gray-200 pb-2">
                   <h3 className="text-balance text-xl font-medium text-foreground text-gray-900 dark:text-white">
                     {planOption}
                   </h3>
-                  {period === "monthly" && (planOption === PlanEnum.Business ||
-                    planOption === PlanEnum.DataRoomsPlus) && (
-                    <span className="absolute -top-3 right-4 rounded px-2 py-1 text-xs text-white bg-[#fb7a00]">
-                      {planOption === PlanEnum.Business
-                        ? "Most popular"
-                        : "Best offer"}
-                    </span>
-                  )}
                   {period === "yearly" && savings > 0 && (
-                    <span className="absolute right-2 top-2 rounded px-2 py-1 text-xs font-medium text-[#fb7a00] bg-[#fb7a00]/10">
+                    <span className="absolute right-2 top-2 rounded bg-[#fb7a00]/10 px-2 py-1 text-xs font-medium text-[#fb7a00]">
                       Save €{savings}/year
                     </span>
                   )}
+                  {period === "monthly" &&
+                    (planOption === PlanEnum.Business ||
+                      planOption === PlanEnum.DataRoomsPlus) && (
+                      <span
+                        className={`absolute -top-3 right-4 rounded px-2 py-1 text-xs text-white ${
+                          planOption === PlanEnum.DataRoomsPlus
+                            ? "bg-gray-800 dark:bg-gray-200 dark:text-black"
+                            : "bg-[#fb7a00]"
+                        }`}
+                      >
+                        {planOption === PlanEnum.DataRoomsPlus
+                          ? "Best offer"
+                          : "Most popular"}
+                      </span>
+                    )}
                 </div>
 
                 <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
-                  €
-                  {period === "yearly" ? discountedYearlyPrice : monthlyPrice}
+                  €{period === "yearly" ? discountedYearlyPrice : monthlyPrice}
                   <span className="text-base font-normal dark:text-white/75">
                     /month
                   </span>
@@ -484,9 +310,207 @@ export default function UpgradeHolidayOfferPage() {
                     disabled={selectedPlan !== null}
                     onClick={() => {
                       setSelectedPlan(planOption);
-                      const priceId = PLANS.find((p) => p.name === planOption)!.price[
-                        period
-                      ].priceIds[
+                      const priceId =
+                        period === "yearly"
+                          ? PLANS.find((p) => p.name === planOption)!.price[
+                              period
+                            ].priceIds[
+                              process.env.NEXT_PUBLIC_VERCEL_ENV ===
+                              "production"
+                                ? "production"
+                                : "test"
+                            ][isOldAccount ? "old" : "new"]
+                          : PLANS.find((p) => p.name === planOption)!.price[
+                              period
+                            ].priceIds[
+                              process.env.NEXT_PUBLIC_VERCEL_ENV ===
+                              "production"
+                                ? "production"
+                                : "test"
+                            ][isOldAccount ? "old" : "new"];
+
+                      if (isCustomer && teamPlan !== "free") {
+                        fetch(
+                          `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                              priceId,
+                              upgradePlan: true,
+                              applyYearlyDiscount: period === "yearly",
+                            }),
+                          },
+                        )
+                          .then(async (res) => {
+                            if (res.status === 429) {
+                              toast.error(
+                                "Rate limit exceeded. Please try again later.",
+                              );
+                              setSelectedPlan(null);
+                              return;
+                            }
+
+                            const url = await res.json();
+                            router.push(url);
+                          })
+                          .catch((err) => {
+                            alert(err);
+                            setSelectedPlan(null);
+                          });
+                      } else {
+                        fetch(
+                          `/api/teams/${
+                            teamInfo?.currentTeam?.id
+                          }/billing/upgrade?priceId=${priceId}&applyYearlyDiscount=${period === "yearly"}`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                          },
+                        )
+                          .then(async (res) => {
+                            if (res.status === 429) {
+                              toast.error(
+                                "Rate limit exceeded. Please try again later.",
+                              );
+                              setSelectedPlan(null);
+                              return;
+                            }
+
+                            const data = await res.json();
+                            const { id: sessionId } = data;
+                            const stripe = await getStripe(isOldAccount);
+                            stripe?.redirectToCheckout({ sessionId });
+                          })
+                          .catch((err) => {
+                            alert(err);
+                            setSelectedPlan(null);
+                          });
+                      }
+                    }}
+                  >
+                    {selectedPlan === planOption
+                      ? "Redirecting to Stripe..."
+                      : `Upgrade to ${planOption} ${capitalize(period)}`}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Business + Data Rooms Plans (4 in a row) */}
+      {planType === "business-datarooms" && (
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
+          {[
+            PlanEnum.Business,
+            PlanEnum.DataRooms,
+            PlanEnum.DataRoomsPlus,
+            PlanEnum.DataRoomsPremium,
+          ].map((planOption) => {
+            const planFeatures = getPlanFeatures(planOption, { period });
+            const planData = PLANS.find((p) => p.name === planOption);
+            if (!planData) return null;
+
+            const monthlyPrice = planData.price.monthly.amount;
+            const yearlyPrice = planData.price.yearly.amount;
+            const discountedYearlyPrice =
+              period === "yearly"
+                ? getDiscountedYearlyPrice(yearlyPrice)
+                : yearlyPrice;
+            const savings =
+              period === "yearly"
+                ? calculateSavings(monthlyPrice, yearlyPrice)
+                : 0;
+
+            return (
+              <div
+                key={planOption}
+                className={`relative flex flex-col rounded-lg border ${
+                  planOption === PlanEnum.Business
+                    ? "border-[#fb7a00]"
+                    : planOption === PlanEnum.DataRoomsPremium
+                      ? "border-gray-900 dark:border-gray-200"
+                      : planOption === PlanEnum.DataRoomsPlus
+                        ? "border-gray-800 dark:border-gray-300"
+                        : "border-gray-400"
+                } bg-white p-6 shadow-sm dark:bg-gray-900`}
+              >
+                <div className="mb-4 border-b border-gray-200 pb-2">
+                  <h3 className="text-balance text-xl font-medium text-foreground text-gray-900 dark:text-white">
+                    {planOption}
+                  </h3>
+                  {period === "monthly" &&
+                    (planOption === PlanEnum.Business ||
+                      planOption === PlanEnum.DataRoomsPlus) && (
+                      <span className="absolute -top-3 right-4 rounded bg-[#fb7a00] px-2 py-1 text-xs text-white">
+                        {planOption === PlanEnum.Business
+                          ? "Most popular"
+                          : "Best offer"}
+                      </span>
+                    )}
+                  {period === "yearly" && savings > 0 && (
+                    <span className="absolute right-2 top-2 rounded bg-[#fb7a00]/10 px-2 py-1 text-xs font-medium text-[#fb7a00]">
+                      Save €{savings}/year
+                    </span>
+                  )}
+                </div>
+
+                <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
+                  €{period === "yearly" ? discountedYearlyPrice : monthlyPrice}
+                  <span className="text-base font-normal dark:text-white/75">
+                    /month
+                  </span>
+                </div>
+                {period === "yearly" && (
+                  <>
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="text-sm text-gray-500 line-through">
+                        €{yearlyPrice}/month
+                      </span>
+                      <span className="rounded bg-[#fb7a00]/10 px-2 py-0.5 text-xs font-medium text-[#fb7a00]">
+                        30% OFF
+                      </span>
+                    </div>
+                  </>
+                )}
+                <p className="mt-4 text-sm text-gray-600 dark:text-white">
+                  {planFeatures.featureIntro}
+                </p>
+
+                <ul
+                  role="list"
+                  className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600"
+                >
+                  {planFeatures.features.map((feature, i) => (
+                    <li key={i}>
+                      <FeatureItem feature={feature} period={period} />
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-auto">
+                  <Button
+                    variant={
+                      planOption === PlanEnum.Business ? "default" : "default"
+                    }
+                    className={`w-full py-2 text-sm ${
+                      planOption === PlanEnum.Business
+                        ? "bg-[#fb7a00]/90 text-white hover:bg-[#fb7a00]"
+                        : planOption === PlanEnum.DataRoomsPremium
+                          ? "bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
+                          : "bg-gray-800 text-white hover:bg-gray-900 dark:hover:bg-gray-700/80"
+                    }`}
+                    loading={selectedPlan === planOption}
+                    disabled={selectedPlan !== null}
+                    onClick={() => {
+                      setSelectedPlan(planOption);
+                      const priceId = PLANS.find((p) => p.name === planOption)!
+                        .price[period].priceIds[
                         process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
                           ? "production"
                           : "test"
@@ -564,7 +588,7 @@ export default function UpgradeHolidayOfferPage() {
               </div>
             );
           })}
-          </div>
+        </div>
       )}
 
       {/* Data Rooms Plans (3 in a row) */}
@@ -576,186 +600,189 @@ export default function UpgradeHolidayOfferPage() {
             PlanEnum.DataRoomsPremium,
           ].map((planOption) => {
             const planFeatures = getPlanFeatures(planOption, { period });
-              const planData = PLANS.find((p) => p.name === planOption);
-              if (!planData) return null;
+            const planData = PLANS.find((p) => p.name === planOption);
+            if (!planData) return null;
 
             const monthlyPrice = planData.price.monthly.amount;
-              const yearlyPrice = planData.price.yearly.amount;
-            const discountedYearlyPrice = period === "yearly" ? getDiscountedYearlyPrice(yearlyPrice) : yearlyPrice;
-            const savings = period === "yearly" ? calculateSavings(monthlyPrice, yearlyPrice) : 0;
+            const yearlyPrice = planData.price.yearly.amount;
+            const discountedYearlyPrice =
+              period === "yearly"
+                ? getDiscountedYearlyPrice(yearlyPrice)
+                : yearlyPrice;
+            const savings =
+              period === "yearly"
+                ? calculateSavings(monthlyPrice, yearlyPrice)
+                : 0;
 
-              return (
-                <div
-                  key={planOption}
-                  className={`relative flex flex-col rounded-lg border ${
-                    planOption === PlanEnum.Business
-                      ? "border-[#fb7a00]"
-                      : planOption === PlanEnum.DataRoomsPremium
-                        ? "border-gray-900 dark:border-gray-200"
-                        : planOption === PlanEnum.DataRoomsPlus
-                          ? "border-gray-800 dark:border-gray-300"
-                          : "border-gray-400"
-                  } bg-white p-6 shadow-sm dark:bg-gray-900`}
-                >
-                  <div className="mb-4 border-b border-gray-200 pb-2">
-                    <h3 className="text-balance text-xl font-medium text-foreground text-gray-900 dark:text-white">
-                      {planOption}
-                    </h3>
-                    {period === "yearly" && savings > 0 && (
-                      <span className="absolute right-2 top-2 rounded px-2 py-1 text-xs font-medium text-[#fb7a00] bg-[#fb7a00]/10">
-                        Save €{savings}/year
-                      </span>
-                    )}
-                    {period === "monthly" && (planOption === PlanEnum.Business ||
+            return (
+              <div
+                key={planOption}
+                className={`relative flex flex-col rounded-lg border ${
+                  planOption === PlanEnum.Business
+                    ? "border-[#fb7a00]"
+                    : planOption === PlanEnum.DataRoomsPremium
+                      ? "border-gray-900 dark:border-gray-200"
+                      : planOption === PlanEnum.DataRoomsPlus
+                        ? "border-gray-800 dark:border-gray-300"
+                        : "border-gray-400"
+                } bg-white p-6 shadow-sm dark:bg-gray-900`}
+              >
+                <div className="mb-4 border-b border-gray-200 pb-2">
+                  <h3 className="text-balance text-xl font-medium text-foreground text-gray-900 dark:text-white">
+                    {planOption}
+                  </h3>
+                  {period === "yearly" && savings > 0 && (
+                    <span className="absolute right-2 top-2 rounded bg-[#fb7a00]/10 px-2 py-1 text-xs font-medium text-[#fb7a00]">
+                      Save €{savings}/year
+                    </span>
+                  )}
+                  {period === "monthly" &&
+                    (planOption === PlanEnum.Business ||
                       planOption === PlanEnum.DataRoomsPlus) && (
-                      <span className="absolute -top-3 right-4 rounded px-2 py-1 text-xs text-white bg-[#fb7a00]">
+                      <span className="absolute -top-3 right-4 rounded bg-[#fb7a00] px-2 py-1 text-xs text-white">
                         {planOption === PlanEnum.Business
                           ? "Most popular"
                           : "Best offer"}
                       </span>
                     )}
-                    </div>
+                </div>
 
-                  <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
-                    €
-                    {period === "yearly" ? discountedYearlyPrice : monthlyPrice}
-                    <span className="text-base font-normal dark:text-white/75">
-                        /month
-                    </span>
-                  </div>
-                  {period === "yearly" && (
-                    <>
-                      <div className="mb-2 flex items-center gap-2">
-                        <span className="text-sm text-gray-500 line-through">
-                          €{yearlyPrice}/month
+                <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
+                  €{period === "yearly" ? discountedYearlyPrice : monthlyPrice}
+                  <span className="text-base font-normal dark:text-white/75">
+                    /month
+                  </span>
+                </div>
+                {period === "yearly" && (
+                  <>
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="text-sm text-gray-500 line-through">
+                        €{yearlyPrice}/month
                       </span>
                       <span className="rounded bg-[#fb7a00]/10 px-2 py-0.5 text-xs font-medium text-[#fb7a00]">
                         30% OFF
                       </span>
                     </div>
-                    </>
-                  )}
-                  <p className="mt-4 text-sm text-gray-600 dark:text-white">
-                    {planFeatures.featureIntro}
-                  </p>
+                  </>
+                )}
+                <p className="mt-4 text-sm text-gray-600 dark:text-white">
+                  {planFeatures.featureIntro}
+                </p>
 
-                  <ul
-                    role="list"
-                    className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600"
-                  >
-                    {planFeatures.features.map((feature, i) => (
-                      <li key={i}>
-                        <FeatureItem feature={feature} period={period} />
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-auto">
-                    <Button
-                      variant={
-                        planOption === PlanEnum.Business ? "default" : "default"
+                <ul
+                  role="list"
+                  className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600"
+                >
+                  {planFeatures.features.map((feature, i) => (
+                    <li key={i}>
+                      <FeatureItem feature={feature} period={period} />
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-auto">
+                  <Button
+                    variant={
+                      planOption === PlanEnum.Business ? "default" : "default"
+                    }
+                    className={`w-full py-2 text-sm ${
+                      planOption === PlanEnum.Business ||
+                      planOption === PlanEnum.DataRoomsPlus
+                        ? "bg-[#fb7a00]/90 text-white hover:bg-[#fb7a00]"
+                        : planOption === PlanEnum.DataRoomsPremium
+                          ? "bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
+                          : "bg-gray-800 text-white hover:bg-gray-900 dark:hover:bg-gray-700/80"
+                    }`}
+                    loading={selectedPlan === planOption}
+                    disabled={selectedPlan !== null}
+                    onClick={() => {
+                      setSelectedPlan(planOption);
+                      const priceId = PLANS.find((p) => p.name === planOption)!
+                        .price[period].priceIds[
+                        process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
+                          ? "production"
+                          : "test"
+                      ][isOldAccount ? "old" : "new"];
+
+                      if (isCustomer && teamPlan !== "free") {
+                        fetch(
+                          `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                              priceId,
+                              upgradePlan: true,
+                              applyYearlyDiscount: period === "yearly",
+                            }),
+                          },
+                        )
+                          .then(async (res) => {
+                            if (res.status === 429) {
+                              toast.error(
+                                "Rate limit exceeded. Please try again later.",
+                              );
+                              setSelectedPlan(null);
+                              return;
+                            }
+
+                            const url = await res.json();
+                            router.push(url);
+                          })
+                          .catch((err) => {
+                            alert(err);
+                            setSelectedPlan(null);
+                          });
+                      } else {
+                        fetch(
+                          `/api/teams/${
+                            teamInfo?.currentTeam?.id
+                          }/billing/upgrade?priceId=${priceId}&applyYearlyDiscount=${period === "yearly"}`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                          },
+                        )
+                          .then(async (res) => {
+                            if (res.status === 429) {
+                              toast.error(
+                                "Rate limit exceeded. Please try again later.",
+                              );
+                              setSelectedPlan(null);
+                              return;
+                            }
+
+                            const data = await res.json();
+                            const { id: sessionId } = data;
+                            const stripe = await getStripe(isOldAccount);
+                            stripe?.redirectToCheckout({ sessionId });
+                          })
+                          .catch((err) => {
+                            alert(err);
+                            setSelectedPlan(null);
+                          });
                       }
-                      className={`w-full py-2 text-sm ${
-                        planOption === PlanEnum.Business || planOption === PlanEnum.DataRoomsPlus
-                          ? "bg-[#fb7a00]/90 text-white hover:bg-[#fb7a00]"
-                          : planOption === PlanEnum.DataRoomsPremium
-                            ? "bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
-                            : "bg-gray-800 text-white hover:bg-gray-900 dark:hover:bg-gray-700/80"
-                      }`}
-                      loading={selectedPlan === planOption}
-                      disabled={selectedPlan !== null}
-                      onClick={() => {
-                        setSelectedPlan(planOption);
-                        const priceId = PLANS.find((p) => p.name === planOption)!.price[
-                          period
-                        ].priceIds[
-                          process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
-                            ? "production"
-                            : "test"
-                        ][isOldAccount ? "old" : "new"];
-
-                        if (isCustomer && teamPlan !== "free") {
-                          fetch(
-                            `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
-                            {
-                              method: "POST",
-                              headers: {
-                                "Content-Type": "application/json",
-                              },
-                              body: JSON.stringify({
-                                priceId,
-                                upgradePlan: true,
-                                applyYearlyDiscount: period === "yearly",
-                              }),
-                            },
-                          )
-                            .then(async (res) => {
-                              if (res.status === 429) {
-                                toast.error(
-                                  "Rate limit exceeded. Please try again later.",
-                                );
-                                setSelectedPlan(null);
-                                return;
-                              }
-
-                              const url = await res.json();
-                              router.push(url);
-                            })
-                            .catch((err) => {
-                              alert(err);
-                              setSelectedPlan(null);
-                            });
-                        } else {
-                          fetch(
-                            `/api/teams/${
-                              teamInfo?.currentTeam?.id
-                            }/billing/upgrade?priceId=${priceId}&applyYearlyDiscount=${period === "yearly"}`,
-                            {
-                              method: "POST",
-                              headers: {
-                                "Content-Type": "application/json",
-                              },
-                            },
-                          )
-                            .then(async (res) => {
-                              if (res.status === 429) {
-                                toast.error(
-                                  "Rate limit exceeded. Please try again later.",
-                                );
-                                setSelectedPlan(null);
-                                return;
-                              }
-
-                              const data = await res.json();
-                              const { id: sessionId } = data;
-                              const stripe = await getStripe(isOldAccount);
-                              stripe?.redirectToCheckout({ sessionId });
-                            })
-                            .catch((err) => {
-                              alert(err);
-                              setSelectedPlan(null);
-                            });
-                        }
-                      }}
-                    >
-                      {selectedPlan === planOption
-                          ? "Redirecting to Stripe..."
-                        : `Upgrade to ${planOption} ${capitalize(period)}`}
-                    </Button>
-                  </div>
+                    }}
+                  >
+                    {selectedPlan === planOption
+                      ? "Redirecting to Stripe..."
+                      : `Upgrade to ${planOption} ${capitalize(period)}`}
+                  </Button>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       <div className="mt-8 flex flex-col items-center space-y-2">
-        <a
-          target="_blank"
-          className="text-sm text-muted-foreground underline-offset-4"
-        >
+        <p className="text-sm text-muted-foreground">
           All plans include unlimited viewers and page by page document
           analytics.
-        </a>
+        </p>
         <a
           href="https://cal.com/marcseitz/papermark"
           target="_blank"
@@ -764,6 +791,6 @@ export default function UpgradeHolidayOfferPage() {
           Looking for Papermark Enterprise?
         </a>
       </div>
-        </div>
+    </div>
   );
 }
