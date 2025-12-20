@@ -310,24 +310,16 @@ export default function UpgradeHolidayOfferPage() {
                     disabled={selectedPlan !== null}
                     onClick={() => {
                       setSelectedPlan(planOption);
+                      const envKey =
+                        process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
+                          ? "production"
+                          : "test";
+                      const plan = PLANS.find((p) => p.name === planOption);
+                      if (!plan) return;
                       const priceId =
-                        period === "yearly"
-                          ? PLANS.find((p) => p.name === planOption)!.price[
-                              period
-                            ].priceIds[
-                              process.env.NEXT_PUBLIC_VERCEL_ENV ===
-                              "production"
-                                ? "production"
-                                : "test"
-                            ][isOldAccount ? "old" : "new"]
-                          : PLANS.find((p) => p.name === planOption)!.price[
-                              period
-                            ].priceIds[
-                              process.env.NEXT_PUBLIC_VERCEL_ENV ===
-                              "production"
-                                ? "production"
-                                : "test"
-                            ][isOldAccount ? "old" : "new"];
+                        plan.price[period].priceIds[envKey][
+                          isOldAccount ? "old" : "new"
+                        ];
 
                       if (isCustomer && teamPlan !== "free") {
                         fetch(
@@ -509,12 +501,16 @@ export default function UpgradeHolidayOfferPage() {
                     disabled={selectedPlan !== null}
                     onClick={() => {
                       setSelectedPlan(planOption);
-                      const priceId = PLANS.find((p) => p.name === planOption)!
-                        .price[period].priceIds[
+                      const envKey =
                         process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
                           ? "production"
-                          : "test"
-                      ][isOldAccount ? "old" : "new"];
+                          : "test";
+                      const plan = PLANS.find((p) => p.name === planOption);
+                      if (!plan) return;
+                      const priceId =
+                        plan.price[period].priceIds[envKey][
+                          isOldAccount ? "old" : "new"
+                        ];
 
                       if (isCustomer && teamPlan !== "free") {
                         fetch(
@@ -696,12 +692,16 @@ export default function UpgradeHolidayOfferPage() {
                     disabled={selectedPlan !== null}
                     onClick={() => {
                       setSelectedPlan(planOption);
-                      const priceId = PLANS.find((p) => p.name === planOption)!
-                        .price[period].priceIds[
+                      const envKey =
                         process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
                           ? "production"
-                          : "test"
-                      ][isOldAccount ? "old" : "new"];
+                          : "test";
+                      const plan = PLANS.find((p) => p.name === planOption);
+                      if (!plan) return;
+                      const priceId =
+                        plan.price[period].priceIds[envKey][
+                          isOldAccount ? "old" : "new"
+                        ];
 
                       if (isCustomer && teamPlan !== "free") {
                         fetch(
