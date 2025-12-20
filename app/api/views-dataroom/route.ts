@@ -133,6 +133,7 @@ export async function POST(request: NextRequest) {
             plan: true,
             globalBlockList: true,
             agentsEnabled: true,
+            pauseStartsAt: true,
           },
         },
         customFields: {
@@ -646,6 +647,11 @@ export async function POST(request: NextRequest) {
         }),
     };
 
+    const isPaused =
+      link.team?.pauseStartsAt && link.team?.pauseStartsAt <= new Date()
+        ? true
+        : false;
+
     // ** DATAROOM_VIEW **
     if (viewType === "DATAROOM_VIEW") {
       console.log("viewType is DATAROOM_VIEW");
@@ -674,6 +680,7 @@ export async function POST(request: NextRequest) {
               dataroomId,
               teamId: link.teamId!,
               enableNotification: link.enableNotification,
+              isPaused,
             }),
           );
 
@@ -687,6 +694,7 @@ export async function POST(request: NextRequest) {
                     linkId,
                     viewerEmail: verifiedEmail ?? email,
                     viewerId: viewer?.id,
+                    teamIsPaused: isPaused,
                   });
                 } catch (error) {
                   console.error("Error sending Slack notification:", error);
@@ -791,6 +799,7 @@ export async function POST(request: NextRequest) {
               dataroomId,
               teamId: link.teamId!,
               enableNotification: link.enableNotification,
+              isPaused,
             }),
           );
         }
@@ -819,6 +828,7 @@ export async function POST(request: NextRequest) {
                   linkId,
                   viewerEmail: verifiedEmail ?? email,
                   viewerId: viewer?.id,
+                  teamIsPaused: isPaused,
                 });
               } catch (error) {
                 console.error("Error sending Slack notification:", error);

@@ -1,3 +1,5 @@
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { sendWebhooks } from "@/lib/webhook/send-webhooks";
@@ -33,6 +35,13 @@ export async function sendLinkViewWebhook({
       team?.plan.includes("trial")
     ) {
       // team is not on paid plan, so we don't need to send webhooks
+      return;
+    }
+
+    // check if team is paused
+    const teamIsPaused = await isTeamPausedById(teamId);
+    if (teamIsPaused) {
+      // team is paused, so we don't send webhooks
       return;
     }
 

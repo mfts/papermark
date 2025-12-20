@@ -16,6 +16,7 @@ import {
 } from "@tanstack/react-table";
 import { format } from "date-fns";
 import {
+  AlertTriangleIcon,
   BadgeCheckIcon,
   BadgeInfoIcon,
   ChevronDownIcon,
@@ -32,12 +33,7 @@ import { toast } from "sonner";
 import useSWR from "swr";
 
 import { usePlan } from "@/lib/swr/use-billing";
-import {
-  cn,
-  durationFormat,
-  fetcher,
-  timeAgo,
-} from "@/lib/utils";
+import { cn, durationFormat, fetcher, timeAgo } from "@/lib/utils";
 import { downloadCSV } from "@/lib/utils/csv";
 
 import { Button } from "@/components/ui/button";
@@ -287,13 +283,13 @@ export default function ViewsTable({
 }) {
   const router = useRouter();
   const teamInfo = useTeam();
-  const { isTrial, isFree } = usePlan();
+  const { isTrial, isFree, isPaused } = usePlan();
   const { interval = "7d" } = router.query;
   const [sorting, setSorting] = useState<SortingState>([
     { id: "viewedAt", desc: true },
   ]);
 
-  const { data: views } = useSWR<View[]>(
+  const { data } = useSWR<{ views: View[]; hiddenFromPause: number }>(
     teamInfo?.currentTeam?.id
       ? `/api/analytics?type=views&interval=${interval}&teamId=${teamInfo.currentTeam.id}${interval === "custom" ? `&startDate=${format(startDate, "MM-dd-yyyy")}&endDate=${format(endDate, "MM-dd-yyyy")}` : ""}`
       : null,
@@ -303,6 +299,9 @@ export default function ViewsTable({
       revalidateOnFocus: false,
     },
   );
+
+  const views = data?.views;
+  const hiddenFromPause = data?.hiddenFromPause ?? 0;
 
   const table = useReactTable({
     data: views || [],
@@ -363,6 +362,22 @@ export default function ViewsTable({
 
   return (
     <div className="space-y-4">
+      {isPaused && hiddenFromPause > 0 && (
+        <div className="flex flex-col items-start justify-center gap-2 rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950 sm:flex-row sm:items-center">
+          <span className="flex items-center gap-x-1 text-sm">
+            <AlertTriangleIcon className="inline-block h-4 w-4 text-orange-500" />
+            {hiddenFromPause} view{hiddenFromPause !== 1 ? "s" : ""} occurred
+            after your team was paused and{" "}
+            {hiddenFromPause !== 1 ? "are" : "is"} hidden.{" "}
+          </span>
+          <Link
+            href="/settings/billing"
+            className="text-sm font-medium text-orange-600 underline hover:text-orange-700"
+          >
+            Unpause subscription to see all views
+          </Link>
+        </div>
+      )}
       <div className="flex justify-end">
         <UpgradeOrExportButton />
       </div>

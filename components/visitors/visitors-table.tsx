@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -78,7 +80,7 @@ export default function VisitorsTable({
     currentPage,
     pageSize,
   );
-  const { plan, isTrial } = usePlan();
+  const { plan, isTrial, isPaused } = usePlan();
   const isFreePlan = plan === "free";
 
   const [isLoading, setIsLoading] = useState(false);
@@ -156,6 +158,57 @@ export default function VisitorsTable({
                   </TableCell>
                 </TableRow>
               )}
+            {views?.hiddenViewCount! > 0 && (
+              <>
+                <TableRow className="">
+                  <TableCell colSpan={5} className="text-left sm:text-center">
+                    {isPaused &&
+                    views?.hiddenFromPause &&
+                    views.hiddenFromPause > 0 ? (
+                      // Show pause-specific message if team is paused and has hidden views from pause
+                      <div className="flex flex-col items-start justify-center gap-2 sm:flex-row sm:items-center">
+                        <span className="flex items-center gap-x-1">
+                          <AlertTriangleIcon className="inline-block h-4 w-4 text-orange-500" />
+                          {views.hiddenFromPause} visit
+                          {views.hiddenFromPause !== 1 ? "s" : ""} occurred
+                          after your team was paused and{" "}
+                          {views.hiddenFromPause !== 1 ? "are" : "is"}{" "}
+                          hidden.{" "}
+                        </span>
+                        <Link
+                          href="/settings/billing"
+                          className="font-medium text-orange-600 underline hover:text-orange-700"
+                        >
+                          Unpause subscription to see all visits
+                        </Link>
+                      </div>
+                    ) : (
+                      // Show regular free plan message
+                      <div className="flex flex-col items-start justify-center gap-1 sm:flex-row sm:items-center">
+                        <span className="flex items-center gap-x-1">
+                          <AlertTriangleIcon className="inline-block h-4 w-4 text-yellow-500" />
+                          Some older visits may not be shown because your
+                          document has more than 20 views.{" "}
+                        </span>
+                        <UpgradePlanModalWithDiscount
+                          clickedPlan={
+                            isTrial ? PlanEnum.Business : PlanEnum.Pro
+                          }
+                          trigger=""
+                        >
+                          <button className="underline hover:text-gray-800">
+                            Upgrade to see full history
+                          </button>
+                        </UpgradePlanModalWithDiscount>
+                      </div>
+                    )}
+                  </TableCell>
+                </TableRow>
+                {Array.from({ length: views?.hiddenViewCount! }).map((_, i) => (
+                  <VisitorBlurred key={i} />
+                ))}
+              </>
+            )}
             {views?.viewsWithDuration ? (
               views.viewsWithDuration.map((view) => {
                 if (view.isArchived) {
@@ -164,38 +217,36 @@ export default function VisitorsTable({
                       key={view.id}
                       className="group/row opacity-50 grayscale"
                     >
-                          {/* Name */}
-                          <TableCell>
-                            <div className="flex items-center overflow-visible sm:space-x-3">
-                              <VisitorAvatar
-                                viewerEmail={view.viewerEmail}
-                                isArchived
-                              />
-                              <div className="min-w-0 flex-1">
-                                <div className="focus:outline-none">
-                                  <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
-                                    {view.viewerEmail ? (
-                                      <>
-                                        {view.viewerName || view.viewerEmail}
-                                      </>
-                                    ) : (
-                                      "Anonymous"
-                                    )}
-                                  </p>
-                                  {view.viewerName && view.viewerEmail && (
-                                    <p className="text-xs text-muted-foreground/60">
-                                      {view.viewerEmail}
-                                    </p>
-                                  )}
-                                  <p className="text-xs text-muted-foreground/60 sm:text-sm">
-                                    {view.link && view.link.name
-                                      ? view.link.name
-                                      : view.linkId}
-                                  </p>
-                                </div>
-                              </div>
+                      {/* Name */}
+                      <TableCell>
+                        <div className="flex items-center overflow-visible sm:space-x-3">
+                          <VisitorAvatar
+                            viewerEmail={view.viewerEmail}
+                            isArchived
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="focus:outline-none">
+                              <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
+                                {view.viewerEmail ? (
+                                  <>{view.viewerName || view.viewerEmail}</>
+                                ) : (
+                                  "Anonymous"
+                                )}
+                              </p>
+                              {view.viewerName && view.viewerEmail && (
+                                <p className="text-xs text-muted-foreground/60">
+                                  {view.viewerEmail}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground/60 sm:text-sm">
+                                {view.link && view.link.name
+                                  ? view.link.name
+                                  : view.linkId}
+                              </p>
                             </div>
-                          </TableCell>
+                          </div>
+                        </div>
+                      </TableCell>
                       {/* Duration */}
                       <TableCell className="">
                         <div className="text-sm text-muted-foreground">
@@ -468,7 +519,9 @@ export default function VisitorsTable({
                                   totalPages={view.versionNumPages}
                                   versionNumber={view.versionNumber}
                                   downloadType={view.downloadType}
-                                  downloadMetadata={view.downloadMetadata as any}
+                                  downloadMetadata={
+                                    view.downloadMetadata as any
+                                  }
                                 />
                               )}
                               {!isFreePlan && primaryVersion.type === "pdf" ? (

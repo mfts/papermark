@@ -57,7 +57,8 @@ export default async function handle(
         | "manage"
         | "invoices"
         | "subscription_update"
-        | "payment_method_update";
+        | "payment_method_update"
+        | "cancellation";
     };
     try {
       const team = await prisma.team.findUnique({
@@ -167,6 +168,22 @@ export default async function handle(
             type: "subscription_update",
             subscription_update: {
               subscription: team.subscriptionId,
+            },
+          },
+        }),
+        ...(type === "cancellation" && {
+          flow_data: {
+            type: "subscription_cancel",
+            subscription_cancel: {
+              subscription: team.subscriptionId,
+            },
+            after_completion: {
+              type: "redirect",
+              redirect: {
+                return_url:
+                  return_url ??
+                  `${process.env.NEXTAUTH_URL}/settings/billing?cancellation=true`,
+              },
             },
           },
         }),

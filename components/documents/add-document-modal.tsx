@@ -84,7 +84,7 @@ export function AddDocumentModal({
   >([]);
   const teamInfo = useTeam();
   const { canAddDocuments } = useLimits();
-  const { plan, isFree, isTrial } = usePlan();
+  const { plan, isFree, isTrial, isPaused } = usePlan();
   const { dataroom } = useDataroom();
   const teamId = teamInfo?.currentTeam?.id as string;
 
@@ -205,6 +205,20 @@ export function AddDocumentModal({
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
+
+    // Check if team is paused
+    if (isPaused) {
+      toast.error(
+        "Your subscription is paused. Resume your subscription to upload documents.",
+        {
+          action: {
+            label: "Go to Billing",
+            onClick: () => router.push("/settings/billing"),
+          },
+        },
+      );
+      return;
+    }
 
     // Check if the file is chosen
     if (!currentFile) {
@@ -383,6 +397,20 @@ export function AddDocumentModal({
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
+
+    // Check if team is paused
+    if (isPaused) {
+      toast.error(
+        "Your subscription is paused. Resume your subscription to upload documents.",
+        {
+          action: {
+            label: "Go to Billing",
+            onClick: () => router.push("/settings/billing"),
+          },
+        },
+      );
+      return;
+    }
 
     if (!canAddDocuments) {
       toast.error("You have reached the maximum number of documents.");
