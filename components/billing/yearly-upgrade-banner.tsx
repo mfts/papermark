@@ -1,20 +1,22 @@
 "use client";
 
-import { Dispatch, SetStateAction, useState } from "react";
 import { useRouter } from "next/router";
 
+import { Dispatch, SetStateAction, useState } from "react";
+
 import { useTeam } from "@/context/team-context";
-import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
 import { PlanEnum, getPlanFeatures } from "@/ee/stripe/constants";
+import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
 import { PLANS } from "@/ee/stripe/utils";
 import Cookies from "js-cookie";
-import { X, Sparkles, CheckIcon } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { CheckIcon, Sparkles, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
+
 import { UpgradePlanModalWithDiscount } from "./upgrade-plan-modal-with-discount";
 
 interface YearlyUpgradeBannerProps {
@@ -51,7 +53,7 @@ export default function YearlyUpgradeBanner({
   };
 
   const nextPlan = getNextPlan();
-  
+
   if (!nextPlan) return null; // Don't show banner if no next plan
 
   const handleUpgradeToYearly = (planName: string) => {
@@ -78,11 +80,28 @@ export default function YearlyUpgradeBanner({
       }),
     })
       .then(async (res) => {
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => null);
+          const errorMessage =
+            errorData?.error ||
+            errorData?.message ||
+            res.statusText ||
+            "Failed to upgrade plan";
+          console.error("Upgrade failed:", errorMessage);
+          alert(errorMessage);
+          return;
+        }
         const url = await res.json();
-        router.push(url);
+        if (typeof url === "string" && url.startsWith("/")) {
+          router.push(url);
+        } else {
+          console.error("Invalid redirect URL received:", url);
+          alert("Something went wrong. Please try again.");
+        }
       })
       .catch((err) => {
         console.error(err);
+        alert(err.message || "Network error. Please try again.");
       })
       .finally(() => {
         setIsLoading(false);
@@ -97,7 +116,7 @@ export default function YearlyUpgradeBanner({
         exit={{ x: 400, opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
         className={cn(
-          "fixed right-0 top-1/2 z-50 w-80 -translate-y-1/2 rounded-l-lg border-l border-t border-b border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900",
+          "fixed right-0 top-1/2 z-50 w-80 -translate-y-1/2 rounded-l-lg border-b border-l border-t border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900",
         )}
       >
         <button
@@ -110,8 +129,10 @@ export default function YearlyUpgradeBanner({
         </button>
 
         <div className="mb-4 flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-black]" />
-          <span className="text-lg font-bold text-black">LIMITED TIME OFFER</span>
+          <Sparkles className="text-black] h-5 w-5" />
+          <span className="text-lg font-bold text-black">
+            LIMITED TIME OFFER
+          </span>
         </div>
 
         <div className="mb-2">
@@ -131,7 +152,10 @@ export default function YearlyUpgradeBanner({
           const monthlyForYear = monthlyPrice * 12;
           const yearlyWithDiscount = Math.round(yearlyPrice * 12 * 0.7);
           const savings = monthlyForYear - yearlyWithDiscount;
-          const planFeatures = getPlanFeatures(nextPlan, { period: "yearly", maxFeatures: 4 });
+          const planFeatures = getPlanFeatures(nextPlan, {
+            period: "yearly",
+            maxFeatures: 4,
+          });
 
           return (
             <div className="rounded-lg border-2 border-[#fb7a00] bg-orange-50 p-3 dark:bg-orange-900/20">
@@ -159,7 +183,7 @@ export default function YearlyUpgradeBanner({
                   /mo
                 </span>
               </div>
-              
+
               {/* Features */}
               <ul className="mb-3 space-y-1.5 text-xs text-gray-700 dark:text-gray-300">
                 {planFeatures.features.slice(0, 4).map((feature, i) => (
@@ -170,11 +194,14 @@ export default function YearlyUpgradeBanner({
                 ))}
               </ul>
 
-              <UpgradePlanModalWithDiscount clickedPlan={nextPlan} trigger="yearly_upgrade_banner">
+              <UpgradePlanModalWithDiscount
+                clickedPlan={nextPlan}
+                trigger="yearly_upgrade_banner"
+              >
                 <Button
                   type="button"
                   size="sm"
-                  className="w-full bg-[#fb7a00] text-white hover:bg-[#fb7a00]/90 py-3 leading-tight"
+                  className="w-full bg-[#fb7a00] py-3 leading-tight text-white hover:bg-[#fb7a00]/90"
                 >
                   Upgrade to {nextPlan} Yearly
                 </Button>
@@ -183,9 +210,9 @@ export default function YearlyUpgradeBanner({
           );
         })()}
 
-        <p 
+        <p
           onClick={() => router.push("/settings/upgrade-holiday-offer")}
-          className="mt-4 cursor-pointer text-center text-xs text-gray-500 dark:text-gray-400 underline hover:text-gray-600 dark:hover:text-gray-300"
+          className="mt-4 cursor-pointer text-center text-xs text-gray-500 underline hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300"
         >
           Compare all plans
         </p>
@@ -196,4 +223,3 @@ export default function YearlyUpgradeBanner({
     </AnimatePresence>
   );
 }
-
