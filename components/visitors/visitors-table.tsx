@@ -555,32 +555,6 @@ export default function VisitorsTable({
                 </TableCell>
               </TableRow>
             )}
-            {views?.hiddenViewCount! > 0 && (
-              <>
-                <TableRow className="">
-                  <TableCell colSpan={5} className="text-left sm:text-center">
-                    <div className="flex flex-col items-start justify-center gap-1 sm:flex-row sm:items-center">
-                      <span className="flex items-center gap-x-1">
-                        <AlertTriangleIcon className="inline-block h-4 w-4 text-yellow-500" />
-                        Some older views may not be shown because your document
-                        has more than 20 views.{" "}
-                      </span>
-                      <UpgradePlanModalWithDiscount
-                        clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
-                        trigger=""
-                      >
-                        <button className="underline hover:text-gray-800">
-                          Upgrade to see full history
-                        </button>
-                      </UpgradePlanModalWithDiscount>
-                    </div>
-                  </TableCell>
-                </TableRow>
-                {Array.from({ length: views?.hiddenViewCount! }).map((_, i) => (
-                  <VisitorBlurred key={i} />
-                ))}
-              </>
-            )}
           </TableBody>
         </Table>
       </div>
