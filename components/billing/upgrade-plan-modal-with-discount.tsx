@@ -9,7 +9,13 @@ import { getStripe } from "@/ee/stripe/client";
 import { Feature, PlanEnum, getPlanFeatures } from "@/ee/stripe/constants";
 import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
 import { PLANS } from "@/ee/stripe/utils";
-import { CheckIcon, CircleHelpIcon, Users2Icon, XIcon, Sparkles } from "lucide-react";
+import {
+  CheckIcon,
+  CircleHelpIcon,
+  Sparkles,
+  Users2Icon,
+  XIcon,
+} from "lucide-react";
 
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
@@ -163,7 +169,13 @@ export function UpgradePlanModalWithDiscount({
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const { plan: teamPlan, isCustomer, isOldAccount, isTrial, isFree } = usePlan();
+  const {
+    plan: teamPlan,
+    isCustomer,
+    isOldAccount,
+    isTrial,
+    isFree,
+  } = usePlan();
   const analytics = useAnalytics();
   const [dataRoomsPlanSelection, setDataRoomsPlanSelection] = useState<
     "base" | "plus" | "premium"
@@ -238,7 +250,7 @@ export function UpgradePlanModalWithDiscount({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{buttonChild}</DialogTrigger>
       <DialogContent
-        className="max-h-[90vh] min-h-fit overflow-y-auto bg-white text-foreground dark:bg-gray-900 p-0"
+        className="max-h-[90vh] min-h-fit overflow-y-auto bg-white p-0 text-foreground dark:bg-gray-900"
         style={{
           width: "95vw",
           maxWidth: "1200px",
@@ -246,12 +258,15 @@ export function UpgradePlanModalWithDiscount({
       >
         <div className="flex flex-col lg:flex-row">
           {/* Left Sidebar - Discount Information */}
-          <div className="flex h-full flex-col w-full border-b border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900 lg:w-64 lg:border-b-0 lg:border-r">
+          <div className="flex h-full w-full flex-col border-b border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900 lg:w-64 lg:border-b-0 lg:border-r">
             <div className="mb-2">
-              <h2 className="text-sm font-bold uppercase text-[#fb7a00]">SWITCH TO YEARLY</h2>
+              <h2 className="text-sm font-bold uppercase text-[#fb7a00]">
+                SWITCH TO YEARLY
+              </h2>
             </div>
             <p className="mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
-              Save <span className="font-bold text-[#fb7a00]">30%</span> on yearly plans
+              Save <span className="font-bold text-[#fb7a00]">30%</span> on
+              yearly plans
             </p>
 
             {/* Decorative elements - Holiday section - Centered vertically */}
@@ -282,7 +297,10 @@ export function UpgradePlanModalWithDiscount({
             {/* Monthly/Yearly Toggle */}
             <div className="mb-6 flex items-center justify-center">
               <span className="mr-2 text-sm">
-                Monthly {period === "monthly" && <span className="text-[#fb7a00]"></span>}
+                Monthly{" "}
+                {period === "monthly" && (
+                  <span className="text-[#fb7a00]"></span>
+                )}
               </span>
               <Switch
                 checked={period === "yearly"}
@@ -290,14 +308,14 @@ export function UpgradePlanModalWithDiscount({
                   setPeriod(period === "monthly" ? "yearly" : "monthly")
                 }
               />
-              <span className="ml-2 text-sm">
-                Annually
-              </span>
+              <span className="ml-2 text-sm">Annually</span>
             </div>
 
             <div className="isolate grid grid-cols-1 gap-4 overflow-hidden rounded-xl p-4 md:grid-cols-2">
               {plansToShow.map((planOption) => {
-                const isDataRoomsUpgrade = plansToShow.includes(PlanEnum.DataRooms);
+                const isDataRoomsUpgrade = plansToShow.includes(
+                  PlanEnum.DataRooms,
+                );
 
                 // Determine which plan to show based on selection for Data Rooms
                 let effectivePlan = planOption;
@@ -320,13 +338,14 @@ export function UpgradePlanModalWithDiscount({
                 const planData = PLANS.find((p) => p.name === displayPlanName);
                 const monthlyPrice = planData?.price.monthly.amount || 0;
                 const yearlyPrice = planData?.price.yearly.amount || 0;
-                const discountedYearlyPrice = getDiscountedYearlyPrice(yearlyPrice);
+                const discountedYearlyPrice =
+                  getDiscountedYearlyPrice(yearlyPrice);
 
                 // Determine if this plan should have orange styling
-                const isOrangePlan = 
-                  isFree 
-                    ? (displayPlanName === PlanEnum.Business || displayPlanName === PlanEnum.DataRoomsPlus)
-                    : (displayPlanName === nextHigherPlan);
+                const isOrangePlan = isFree
+                  ? displayPlanName === PlanEnum.Business ||
+                    displayPlanName === PlanEnum.DataRoomsPlus
+                  : displayPlanName === nextHigherPlan;
 
                 return (
                   <div
@@ -335,8 +354,8 @@ export function UpgradePlanModalWithDiscount({
                       isOrangePlan
                         ? "border-[#fb7a00]"
                         : displayPlanName === PlanEnum.DataRoomsPremium
-                        ? "border-gray-900"
-                        : "border-gray-200"
+                          ? "border-gray-900"
+                          : "border-gray-200"
                     } bg-white p-6 shadow-sm dark:bg-gray-900`}
                   >
                     <div className="mb-4 border-b border-gray-200 pb-2">
@@ -345,20 +364,25 @@ export function UpgradePlanModalWithDiscount({
                           {displayPlanName}
                         </h3>
                       </div>
-                      {period === "yearly" && (() => {
-                        const monthlyForYear = monthlyPrice * 12;
-                        const yearlyWithDiscount = Math.round(yearlyPrice * 12 * 0.7);
-                        const savings = monthlyForYear - yearlyWithDiscount;
-                        return savings > 0 ? (
-                          <span className="absolute right-2 top-2 rounded px-2 py-1 text-xs font-medium text-[#fb7a00] bg-[#fb7a00]/10">
-                            Save €{savings}/year
-                          </span>
-                        ) : null;
-                      })()}
+                      {period === "yearly" &&
+                        (() => {
+                          const monthlyForYear = monthlyPrice * 12;
+                          const yearlyWithDiscount = Math.round(
+                            yearlyPrice * 12 * 0.7,
+                          );
+                          const savings = monthlyForYear - yearlyWithDiscount;
+                          return savings > 0 ? (
+                            <span className="absolute right-2 top-2 rounded bg-[#fb7a00]/10 px-2 py-1 text-xs font-medium text-[#fb7a00]">
+                              Save €{savings}/year
+                            </span>
+                          ) : null;
+                        })()}
                       {period === "monthly" && isOrangePlan && (
-                        <span className="absolute right-2 top-2 rounded px-2 py-1 text-xs text-white bg-[#fb7a00]">
-                          {displayPlanName === PlanEnum.Business && "Most popular"}
-                          {displayPlanName === PlanEnum.DataRoomsPlus && "Best deal"}
+                        <span className="absolute right-2 top-2 rounded bg-[#fb7a00] px-2 py-1 text-xs text-white">
+                          {displayPlanName === PlanEnum.Business &&
+                            "Most popular"}
+                          {displayPlanName === PlanEnum.DataRoomsPlus &&
+                            "Best deal"}
                         </span>
                       )}
                     </div>
@@ -413,7 +437,9 @@ export function UpgradePlanModalWithDiscount({
                           <FeatureItem
                             feature={{
                               ...feature,
-                              isHighlighted: highlightItem?.includes(feature.id),
+                              isHighlighted: highlightItem?.includes(
+                                feature.id,
+                              ),
                             }}
                           />
                         </li>
@@ -437,53 +463,75 @@ export function UpgradePlanModalWithDiscount({
                             isOld: isOldAccount,
                           });
 
-                      setSelectedPlan(planOption);
-                      // Apply 30% coupon only for yearly plans
-                      // Uses same logic as retention flow: getCouponFromPlan() in API routes
-                      const applyDiscount = period === "yearly";
-                      if (isCustomer && teamPlan !== "free") {
-                        // For existing customers: Apply coupon directly to subscription (same as retention flow)
-                        fetch(`/api/teams/${teamId}/billing/manage`, {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                            priceId,
-                            upgradePlan: true,
-                            applyYearlyDiscount: applyDiscount, // Only true for yearly plans
-                          }),
-                        })
-                          .then(async (res) => {
-                            const url = await res.json();
-                            router.push(url);
-                          })
-                          .catch((err) => {
-                            alert(err);
-                            setSelectedPlan(null);
-                          });
-                      } else {
-                        // For new customers: Add coupon to Stripe checkout session
-                        fetch(
-                          `/api/teams/${teamId}/billing/upgrade?priceId=${priceId}${applyDiscount ? "&applyYearlyDiscount=true" : ""}`,
-                          {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                            },
-                          },
-                        )
-                          .then(async (res) => {
-                            const data = await res.json();
-                            const { id: sessionId } = data;
-                            const stripe = await getStripe(isOldAccount);
-                            stripe?.redirectToCheckout({ sessionId });
-                          })
-                          .catch((err) => {
-                            alert(err);
-                            setSelectedPlan(null);
-                          });
-                      }
+                          setSelectedPlan(planOption);
+                          // Apply 30% coupon only for yearly plans
+                          // Uses same logic as retention flow: getCouponFromPlan() in API routes
+                          const applyDiscount = period === "yearly";
+                          if (isCustomer && teamPlan !== "free") {
+                            // For existing customers: Apply coupon directly to subscription (same as retention flow)
+                            fetch(`/api/teams/${teamId}/billing/manage`, {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({
+                                priceId,
+                                upgradePlan: true,
+                                applyYearlyDiscount: applyDiscount, // Only true for yearly plans
+                              }),
+                            })
+                              .then(async (res) => {
+                                if (!res.ok) {
+                                  const errorData = await res
+                                    .json()
+                                    .catch(() => null);
+                                  const errorMessage =
+                                    errorData?.error ||
+                                    errorData?.message ||
+                                    res.statusText ||
+                                    "Failed to upgrade plan";
+                                  throw new Error(errorMessage);
+                                }
+                                const url = await res.json();
+                                router.push(url);
+                              })
+                              .catch((err) => {
+                                alert(err.message || err);
+                                setSelectedPlan(null);
+                              });
+                          } else {
+                            // For new customers: Add coupon to Stripe checkout session
+                            fetch(
+                              `/api/teams/${teamId}/billing/upgrade?priceId=${priceId}${applyDiscount ? "&applyYearlyDiscount=true" : ""}`,
+                              {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                },
+                              },
+                            )
+                              .then(async (res) => {
+                                if (!res.ok) {
+                                  const errorData = await res
+                                    .json()
+                                    .catch(() => null);
+                                  const errorMessage =
+                                    errorData?.error ||
+                                    errorData?.message ||
+                                    res.statusText ||
+                                    "Failed to start checkout";
+                                  throw new Error(errorMessage);
+                                }
+                                const data = await res.json();
+                                const { id: sessionId } = data;
+                                const stripe = await getStripe(isOldAccount);
+                                stripe?.redirectToCheckout({ sessionId });
+                              })
+                              .catch((err) => {
+                                alert(err.message || err);
+                                setSelectedPlan(null);
+                              });
+                          }
                         }}
                       >
                         {selectedPlan === planOption
@@ -520,4 +568,3 @@ export function UpgradePlanModalWithDiscount({
     </Dialog>
   );
 }
-
