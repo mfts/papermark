@@ -472,13 +472,13 @@ export default async function handler(
           },
         });
 
-        // Count hidden views from pause
+        // Count hidden views from pause (clamp pauseStartsAt to startDate if it's earlier)
         const hiddenFromPause = pauseStartsAt
           ? await prisma.view.count({
               where: {
                 teamId,
                 viewedAt: {
-                  gte: pauseStartsAt,
+                  gte: pauseStartsAt < startDate ? startDate : pauseStartsAt,
                   lte: endDate,
                 },
                 isArchived: false,
@@ -585,13 +585,13 @@ export default async function handler(
           },
         });
 
-        // Count hidden views from pause
+        // Count hidden views from pause (clamp pauseStartsAt to startDate if it's earlier)
         const hiddenFromPause = pauseStartsAt
           ? await prisma.view.count({
               where: {
                 teamId,
                 viewedAt: {
-                  gte: pauseStartsAt,
+                  gte: pauseStartsAt < startDate ? startDate : pauseStartsAt,
                   lte: endDate,
                 },
                 isArchived: false,
