@@ -75,7 +75,7 @@ export default function YearlyUpgradeBanner({
         </button>
 
         <div className="mb-4 flex items-center gap-2">
-          <Sparkles className="text-black] h-5 w-5" />
+          <Sparkles className="h-5 w-5 text-black" />
           <span className="text-lg font-bold text-black">
             LIMITED TIME OFFER
           </span>
