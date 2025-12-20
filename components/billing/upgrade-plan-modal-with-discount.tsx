@@ -236,11 +236,6 @@ export function UpgradePlanModalWithDiscount({
     ? React.cloneElement(children, { onClick: handleUpgradeClick })
     : children;
 
-  // Calculate discount percentages
-  const calculateDiscount = (monthlyPrice: number, yearlyPrice: number) => {
-    return Math.round(((monthlyPrice - yearlyPrice) / monthlyPrice) * 100);
-  };
-
   // Calculate 30% discounted yearly price
   const getDiscountedYearlyPrice = (yearlyPrice: number) => {
     return Math.round(yearlyPrice * 0.7); // Round to whole number
