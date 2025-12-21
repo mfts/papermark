@@ -19,7 +19,7 @@ import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { convertDataUrlToFile, fetcher, uploadImage } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -73,7 +73,7 @@ export const DEFAULT_LINK_PROPS = (
   metaImage: null,
   metaFavicon: null,
   welcomeMessage: null,
-  enabledQuestion: false,
+  enableQuestion: false,
   questionText: null,
   questionType: null,
   enableAgreement: false,
@@ -86,6 +86,7 @@ export const DEFAULT_LINK_PROPS = (
   customFields: [],
   tags: [],
   enableConversation: false,
+  enableAIAgents: false,
   enableUpload: false,
   isFileRequestOnly: false,
   uploadFolderId: null,
@@ -129,6 +130,7 @@ export type DEFAULT_LINK_TYPE = {
   customFields: CustomFieldData[];
   tags: string[];
   enableConversation: boolean;
+  enableAIAgents: boolean;
   enableUpload: boolean;
   isFileRequestOnly: boolean;
   uploadFolderId: string | null;
@@ -157,7 +159,7 @@ export default function LinkSheet({
     groupId?: string;
   };
 
-  const { domains } = useDomains();
+  const { domains } = useDomains({ enabled: isOpen });
 
   const {
     viewerGroups,
@@ -494,14 +496,14 @@ export default function LinkSheet({
                             Group
                           </TabsTrigger>
                         ) : (
-                          <UpgradePlanModal
+                          <UpgradePlanModalWithDiscount
                             clickedPlan={PlanEnum.DataRooms}
                             trigger="add_group_link"
                           >
                             <div className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all">
                               Group
                             </div>
-                          </UpgradePlanModal>
+                          </UpgradePlanModalWithDiscount>
                         )}
                       </TabsList>
                     ) : null}

@@ -112,7 +112,7 @@ model Domain {
 
 model View {
   id                  String               @id @default(cuid())
-  link                Link                 @relation(fields: [linkId], references: [id])
+  link                Link                 @relation(fields: [linkId], references: [id], onDelete: Cascade)
   linkId              String
   document            Document?            @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId          String?
@@ -144,6 +144,9 @@ model View {
   initialConversations Conversation[]     @relation("initialView")
 
   uploadedDocuments DocumentUpload[] // uploaded documents by this view
+
+  // AI chats
+  chats Chat[]
 
   teamId String?
   team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -192,6 +195,9 @@ model Viewer {
   messages                  Message[]
 
   uploadedDocuments DocumentUpload[] // uploaded documents by this viewer
+
+  // AI chats
+  chats Chat[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -246,18 +252,66 @@ model SentEmail {
 }
 
 model Chat {
-  id            String    @id @default(cuid())
-  threadId      String    @unique // This is the thread ID from OpenAI Assistant API
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String
-  document      Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId    String
-  createdAt     DateTime  @default(now())
-  lastMessageAt DateTime? // This is the last time a message was sent in the thread
+  id        String   @id @default(cuid())
+  title     String? // Generated title from first message
 
-  @@unique([userId, documentId])
-  @@unique([threadId, documentId])
-  @@index([threadId])
+  // Context associations
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  dataroomId String?
+  dataroom   Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+
+  linkId String?
+  link   Link?   @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  viewId String?
+  view   View?   @relation(fields: [viewId], references: [id], onDelete: Cascade)
+
+  // User associations (internal or external)
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  viewerId String?
+  viewer   Viewer? @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+
+  // OpenAI references
+  vectorStoreId String? // The vector store used for this chat
+
+  messages ChatMessage[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastMessageAt DateTime? // Track latest activity
+
+  @@index([teamId])
+  @@index([documentId])
+  @@index([dataroomId])
+  @@index([linkId])
+  @@index([userId])
+  @@index([viewerId])
+  @@index([viewId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model ChatMessage {
+  id     String @id @default(cuid())
+  chatId String
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  role    String // "user" | "assistant" | "system"
+  content String @db.Text
+
+  // Optional structured data
+  metadata Json? // Store sources, page numbers, confidence scores, etc.
+
+  createdAt DateTime @default(now())
+
+  @@index([chatId])
+  @@index([chatId, createdAt])
 }
 
 model Feedback {

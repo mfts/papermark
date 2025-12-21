@@ -1,8 +1,9 @@
+import { useMemo } from "react";
+
 import { useTeam } from "@/context/team-context";
 import { PLAN_NAME_MAP } from "@/ee/stripe/constants";
 import { SubscriptionDiscount } from "@/ee/stripe/functions/get-subscription-item";
 import useSWR from "swr";
-import { useMemo } from "react";
 
 import { fetcher } from "@/lib/utils";
 
@@ -52,7 +53,10 @@ type PlanResponse = {
   plan: BasePlan | PlanWithTrial | PlanWithOld;
   startsAt: Date | null;
   endsAt: Date | null;
+  pausedAt: Date | null;
   pauseStartsAt: Date | null;
+  pauseEndsAt: Date | null;
+  isPaused: boolean;
   cancelledAt: Date | null;
   isCustomer: boolean;
   subscriptionCycle: "monthly" | "yearly";
@@ -66,7 +70,7 @@ interface PlanDetails {
 }
 
 function parsePlan(plan: BasePlan | PlanWithTrial | PlanWithOld): PlanDetails {
-  if (!plan || typeof plan !== 'string') {
+  if (!plan || typeof plan !== "string") {
     return { plan: null, trial: null, old: false };
   }
 
@@ -95,7 +99,9 @@ export function usePlan({
     error,
     mutate,
   } = useSWR<PlanResponse>(
-    teamId ? `/api/teams/${teamId}/billing/plan${withDiscount ? "?withDiscount=true" : ""}` : null,
+    teamId
+      ? `/api/teams/${teamId}/billing/plan${withDiscount ? "?withDiscount=true" : ""}`
+      : null,
     fetcher,
   );
 
@@ -119,9 +125,11 @@ export function usePlan({
     startsAt: plan?.startsAt,
     endsAt: plan?.endsAt,
     cancelledAt: plan?.cancelledAt,
-    isPaused: !!plan?.pauseStartsAt,
+    pausedAt: plan?.pausedAt,
+    isPaused: plan?.isPaused ?? false,
     isCancelled: !!plan?.cancelledAt,
     pauseStartsAt: plan?.pauseStartsAt,
+    pauseEndsAt: plan?.pauseEndsAt,
     discount: plan?.discount || null,
     isFree: parsedPlan.plan === "free",
     isStarter: parsedPlan.plan === "starter",

@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { FolderIcon, SparklesIcon } from "lucide-react";
+import { FileTextIcon, FolderIcon, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
@@ -38,7 +38,7 @@ export default function DataroomChoice({ dataroomId }: { dataroomId: string }) {
       </motion.div>
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="grid w-full max-w-2xl grid-cols-1 divide-y divide-border rounded-md border border-border text-foreground md:grid-cols-2 md:divide-x"
+        className="grid w-full max-w-3xl grid-cols-1 divide-y divide-border rounded-md border border-border text-foreground md:grid-cols-3 md:divide-x md:divide-y-0"
       >
         <button
           onClick={() =>
@@ -70,10 +70,30 @@ export default function DataroomChoice({ dataroomId }: { dataroomId: string }) {
           }
           className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
         >
-          <SparklesIcon className="pointer-events-none h-auto w-12 sm:w-12" />
+          <FileTextIcon className="pointer-events-none h-auto w-12 sm:w-12" />
           <p className="text-lg font-medium">Use a Template</p>
           <p className="text-sm text-muted-foreground">
             Start with pre-configured folders for your use case
+          </p>
+        </button>
+        <button
+          onClick={() =>
+            router.push({
+              pathname: "/welcome",
+              query: {
+                type: "dataroom-ai-generate",
+                dataroomId,
+              },
+            })
+          }
+          className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-orange-50 hover:dark:bg-orange-900/20 md:p-10"
+        >
+          <Sparkles className="pointer-events-none h-auto w-12 sm:w-12 text-orange-500" />
+          <p className="text-lg font-medium text-orange-600 dark:text-orange-400">
+            Generate with AI
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Let AI create a unique data room structure
           </p>
         </button>
       </motion.div>

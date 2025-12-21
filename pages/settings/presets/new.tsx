@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import AppLayout from "@/components/layouts/app";
 import {
   DEFAULT_LINK_PROPS,
@@ -361,7 +361,7 @@ export default function NewPreset() {
           </div>
         </form>
       </main>
-      <UpgradePlanModal
+      <UpgradePlanModalWithDiscount
         clickedPlan={upgradePlan}
         open={openUpgradeModal}
         setOpen={setOpenUpgradeModal}

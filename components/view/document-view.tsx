@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { Brand } from "@prisma/client";
 import Cookies from "js-cookie";
-import { usePlausible } from "next-plausible";
 import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
 
@@ -48,6 +47,8 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   ipAddress?: string;
   verificationToken?: string;
   isTeamMember?: boolean;
+  agentsEnabled?: boolean;
+  viewerId?: string;
 };
 
 export default function DocumentView({
@@ -99,7 +100,6 @@ export default function DocumentView({
     enableAgreement,
   } = link;
 
-  const plausible = usePlausible();
   const analytics = useAnalytics();
   const router = useRouter();
 
@@ -124,9 +124,7 @@ export default function DocumentView({
   // Check if this is a link document
   const isLinkDocument = document.type === "link";
   // For link documents, get URL from viewData.file (from API) or fallback to document.file
-  const linkUrl = isLinkDocument 
-    ? (viewData.file || document.file) 
-    : null;
+  const linkUrl = isLinkDocument ? viewData.file || document.file : null;
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
@@ -169,12 +167,13 @@ export default function DocumentView({
           isPreview,
           ipAddress,
           verificationToken,
+          agentsEnabled,
           isTeamMember,
+          viewerId,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
 
         // For link documents, we don't track views here - only when the link is opened
         if (!isLinkDocument) {
-          plausible("documentViewed"); // track the event
           analytics.identify(
             userEmail ?? verifiedEmail ?? data.email ?? undefined,
           );
@@ -210,6 +209,8 @@ export default function DocumentView({
           isPreview,
           ipAddress,
           isTeamMember,
+          agentsEnabled,
+          viewerId,
         });
         setSubmitted(true);
         setVerificationRequested(false);
@@ -295,7 +296,11 @@ export default function DocumentView({
     // Use viewData.file or fallback to document.file
     const finalLinkUrl = linkUrl || document.file;
     if (!finalLinkUrl) {
-      console.error("Link URL not available", { linkUrl, documentFile: document.file, viewDataFile: viewData.file });
+      console.error("Link URL not available", {
+        linkUrl,
+        documentFile: document.file,
+        viewDataFile: viewData.file,
+      });
       return;
     }
 
@@ -338,7 +343,6 @@ export default function DocumentView({
         console.error("Failed to track link open:", error);
       });
 
-      plausible("linkOpened");
       analytics.capture("Link Opened", {
         linkId: link.id,
         documentId: document.id,
@@ -351,7 +355,11 @@ export default function DocumentView({
 
     // Open link in new window/tab immediately
     setLinkOpened(true);
-    const newWindow = window.open(finalLinkUrl, "_blank", "noopener,noreferrer");
+    const newWindow = window.open(
+      finalLinkUrl,
+      "_blank",
+      "noopener,noreferrer",
+    );
     if (!newWindow) {
       // If popup blocked, fallback to current window
       window.location.href = finalLinkUrl;

@@ -108,12 +108,19 @@ export async function POST(request: NextRequest) {
           select: {
             plan: true,
             globalBlockList: true,
+            agentsEnabled: true,
+            pauseStartsAt: true,
           },
         },
         customFields: {
           select: {
             identifier: true,
             label: true,
+          },
+        },
+        document: {
+          select: {
+            agentsEnabled: true,
           },
         },
       },
@@ -631,6 +638,11 @@ export async function POST(request: NextRequest) {
         console.timeEnd("get-file");
       }
 
+      const isPaused =
+        link.team?.pauseStartsAt && link.team?.pauseStartsAt <= new Date()
+          ? true
+          : false;
+
       if (newView) {
         // Record view in the background to avoid blocking the response
         waitUntil(
@@ -643,6 +655,7 @@ export async function POST(request: NextRequest) {
             documentId,
             teamId: link.teamId!,
             enableNotification: link.enableNotification,
+            isPaused,
           }),
         );
         if (!isPreview) {
@@ -653,6 +666,7 @@ export async function POST(request: NextRequest) {
               linkId,
               viewerEmail: email ?? undefined,
               viewerId: viewer?.id ?? undefined,
+              teamIsPaused: isPaused,
             }).catch((error) => {
               console.error("Error sending Slack notification:", error);
             }),
@@ -660,9 +674,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Determine if AI agents should be enabled (requires both team and document level)
+      const agentsEnabled =
+        link.team?.agentsEnabled && link.document?.agentsEnabled;
+
       const returnObject = {
         message: "View recorded",
         viewId: !isPreview && newView ? newView.id : undefined,
+        viewerId: viewer?.id ?? undefined,
         isPreview: isPreview ? true : undefined,
         file:
           (documentVersion &&
@@ -701,6 +720,7 @@ export async function POST(request: NextRequest) {
             : undefined,
         verificationToken: hashedVerificationToken ?? undefined,
         ...(isTeamMember && { isTeamMember: true }),
+        ...(agentsEnabled && { agentsEnabled: true }),
       };
 
       return NextResponse.json(returnObject);

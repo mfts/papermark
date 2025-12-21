@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 
+import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { ChevronRight, CrownIcon, type LucideIcon } from "lucide-react";
 
+import { useAnalytics } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
+import { Shimmer } from "@/components/ai-elements/shimmer";
 import {
   Collapsible,
   CollapsibleContent,
@@ -24,7 +27,7 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "../billing/upgrade-plan-modal-with-discount";
 
 export interface NavItem {
   title: string;
@@ -44,6 +47,18 @@ export interface NavItem {
 }
 
 export function NavMain({ items }: { items: NavItem[] }) {
+  const analytics = useAnalytics();
+  const teamInfo = useTeam();
+
+  const handleItemClick = (title: string) => {
+    if (title === "2025 Recap") {
+      analytics.capture("YIR: Banner Opened", {
+        source: "sidebar",
+        teamId: teamInfo?.currentTeam?.id,
+      });
+    }
+  };
+
   return (
     <SidebarGroup>
       <SidebarMenu className="space-y-0.5 text-foreground">
@@ -63,7 +78,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                 )}
               >
                 {item.disabled ? (
-                  <UpgradePlanModal
+                  <UpgradePlanModalWithDiscount
                     key={item.title}
                     clickedPlan={item.plan as PlanEnum}
                     trigger={item.trigger}
@@ -79,11 +94,32 @@ export function NavMain({ items }: { items: NavItem[] }) {
                         <CrownIcon className="!size-4" />
                       </span>
                     </div>
-                  </UpgradePlanModal>
+                  </UpgradePlanModalWithDiscount>
                 ) : (
-                  <Link href={item.url} className="p-2">
-                    <item.icon />
-                    <span>{item.title}</span>
+                  <Link
+                    href={item.url}
+                    className="p-2"
+                    onClick={() => handleItemClick(item.title)}
+                  >
+                    <item.icon
+                      className={cn(
+                        item.title === "2025 Recap" &&
+                          "text-orange-500 dark:text-orange-400",
+                      )}
+                    />
+                    {item.title === "2025 Recap" ? (
+                      <Shimmer
+                        as="span"
+                        className="[--background:theme(colors.yellow.300)] [--muted-foreground:theme(colors.orange.500)] dark:[--background:theme(colors.yellow.200)] dark:[--muted-foreground:theme(colors.orange.400)]"
+                        duration={0.5}
+                        spread={3}
+                        hoverOnly
+                      >
+                        {item.title}
+                      </Shimmer>
+                    ) : (
+                      <span>{item.title}</span>
+                    )}
                   </Link>
                 )}
               </SidebarMenuButton>

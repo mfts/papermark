@@ -4,13 +4,12 @@ import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import Cookies from "js-cookie";
 import { CrownIcon } from "lucide-react";
-import { usePlausible } from "next-plausible";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
 import { daysLeft } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import {
   Alert,
   AlertClose,
@@ -44,11 +43,9 @@ function TrialBannerComponent({
   setShowTrialBanner: Dispatch<SetStateAction<boolean | null>>;
 }) {
   const teamInfo = useTeam();
-  const plausible = usePlausible();
 
   const handleHideBanner = () => {
     setShowTrialBanner(false);
-    plausible("clickedHideTrialBanner");
     Cookies.set("hideTrialBanner", "trial-banner", {
       expires: 1,
     });
@@ -86,17 +83,14 @@ function TrialBannerComponent({
         <AlertDescription>
           {isExpired ? (
             <>
-              <UpgradePlanModal
+              <UpgradePlanModalWithDiscount
                 clickedPlan={PlanEnum.DataRooms}
                 trigger={"trial_navbar"}
               >
-                <span
-                  className="cursor-pointer font-bold text-black underline underline-offset-4 hover:text-gray-700 dark:text-white dark:hover:text-gray-300"
-                  onClick={() => plausible("clickedUpgradeTrialNavbar")}
-                >
+                <span className="cursor-pointer font-bold text-black underline underline-offset-4 hover:text-gray-700 dark:text-white dark:hover:text-gray-300">
                   Upgrade to keep access
                 </span>
-              </UpgradePlanModal>{" "}
+              </UpgradePlanModalWithDiscount>{" "}
               to unlimited data rooms, custom domains, advanced access controls,
               and granular file permissions ✨
             </>
@@ -105,17 +99,14 @@ function TrialBannerComponent({
               You are on the <span className="font-bold">Data Rooms</span> plan
               trial, you have access to advanced access controls, granular file
               permissions, and data room. <br />
-              <UpgradePlanModal
+              <UpgradePlanModalWithDiscount
                 clickedPlan={PlanEnum.DataRooms}
                 trigger={"trial_navbar"}
               >
-                <span
-                  className="cursor-pointer font-bold text-orange-500 underline underline-offset-4 hover:text-orange-600"
-                  onClick={() => plausible("clickedUpgradeTrialNavbar")}
-                >
+                <span className="cursor-pointer font-bold text-orange-500 underline underline-offset-4 hover:text-orange-600">
                   Upgrade to keep access
                 </span>
-              </UpgradePlanModal>
+              </UpgradePlanModalWithDiscount>
               , unlock unlimited data rooms and custom domains ✨
             </>
           )}

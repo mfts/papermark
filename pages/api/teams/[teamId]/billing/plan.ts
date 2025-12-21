@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPaused } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import getSubscriptionItem, {
   SubscriptionDiscount,
 } from "@/ee/stripe/functions/get-subscription-item";
@@ -43,7 +44,9 @@ export default async function handle(
           subscriptionId: true,
           startsAt: true,
           endsAt: true,
+          pausedAt: true,
           pauseStartsAt: true,
+          pauseEndsAt: true,
           cancelledAt: true,
         },
       });
@@ -86,13 +89,19 @@ export default async function handle(
         }
       }
 
+      // Calculate if team is currently paused
+      const isPaused = isTeamPaused(team);
+
       return res.status(200).json({
         plan: team.plan,
         startsAt: team.startsAt,
         endsAt: team.endsAt,
         isCustomer,
         subscriptionCycle,
+        pausedAt: team.pausedAt,
         pauseStartsAt: team.pauseStartsAt,
+        pauseEndsAt: team.pauseEndsAt,
+        isPaused,
         cancelledAt: team.cancelledAt,
         discount,
       });

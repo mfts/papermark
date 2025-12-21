@@ -45,7 +45,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "../billing/upgrade-plan-modal-with-discount";
 
 interface DataroomDocument {
   id: string;
@@ -86,7 +86,7 @@ export function AddDocumentModal({
   >([]);
   const teamInfo = useTeam();
   const { canAddDocuments } = useLimits();
-  const { plan, isFree, isTrial } = usePlan();
+  const { plan, isFree, isTrial, isPaused } = usePlan();
   const { dataroom } = useDataroom();
   const teamId = teamInfo?.currentTeam?.id as string;
 
@@ -207,6 +207,20 @@ export function AddDocumentModal({
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
+
+    // Check if team is paused
+    if (isPaused) {
+      toast.error(
+        "Your subscription is paused. Resume your subscription to upload documents.",
+        {
+          action: {
+            label: "Go to Billing",
+            onClick: () => router.push("/settings/billing"),
+          },
+        },
+      );
+      return;
+    }
 
     // Check if the file is chosen
     if (!currentFile) {
@@ -385,6 +399,20 @@ export function AddDocumentModal({
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
+
+    // Check if team is paused
+    if (isPaused) {
+      toast.error(
+        "Your subscription is paused. Resume your subscription to upload documents.",
+        {
+          action: {
+            label: "Go to Billing",
+            onClick: () => router.push("/settings/billing"),
+          },
+        },
+      );
+      return;
+    }
 
     if (!canAddDocuments) {
       toast.error("You have reached the maximum number of documents.");
@@ -671,21 +699,21 @@ export function AddDocumentModal({
   if (!canAddDocuments && children) {
     if (newVersion) {
       return (
-        <UpgradePlanModal
+        <UpgradePlanModalWithDiscount
           clickedPlan={PlanEnum.Pro}
           trigger={"limit_upload_document_version"}
         >
           {children}
-        </UpgradePlanModal>
+        </UpgradePlanModalWithDiscount>
       );
     }
     return (
-      <UpgradePlanModal
+      <UpgradePlanModalWithDiscount
         clickedPlan={PlanEnum.Pro}
         trigger={"limit_upload_documents"}
       >
         <Button>Upgrade to Add Documents</Button>
-      </UpgradePlanModal>
+      </UpgradePlanModalWithDiscount>
     );
   }
 

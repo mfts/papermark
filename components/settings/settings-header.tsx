@@ -1,21 +1,9 @@
-import { useTeam } from "@/context/team-context";
-import useSWR from "swr";
-
-import { fetcher } from "@/lib/utils";
+import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 
 import { NavMenu } from "../navigation-menu";
 
 export function SettingsHeader() {
-  const teamInfo = useTeam();
-  const { data: features } = useSWR<{
-    tokens: boolean;
-    incomingWebhooks: boolean;
-  }>(
-    teamInfo?.currentTeam?.id
-      ? `/api/feature-flags?teamId=${teamInfo.currentTeam.id}`
-      : null,
-    fetcher,
-  );
+  const { features } = useFeatureFlags();
 
   return (
     <header>
@@ -71,6 +59,12 @@ export function SettingsHeader() {
             label: "Slack",
             href: `/settings/slack`,
             segment: "slack",
+          },
+          {
+            label: "AI",
+            href: `/settings/ai`,
+            segment: "ai",
+            disabled: !features?.ai,
           },
           {
             label: "Tokens",

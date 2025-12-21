@@ -59,6 +59,8 @@ export type DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE = {
   viewerId?: string;
   conversationsEnabled?: boolean;
   isTeamMember?: boolean;
+  agentsEnabled?: boolean;
+  dataroomName?: string;
 };
 
 export default function DataroomDocumentView({
@@ -180,6 +182,8 @@ export default function DataroomDocumentView({
           viewerId,
           conversationsEnabled,
           isTeamMember,
+          agentsEnabled,
+          dataroomName,
         } = fetchData as DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE;
         analytics.identify(
           userEmail ?? viewerEmail ?? verifiedEmail ?? data.email ?? undefined,
@@ -224,6 +228,8 @@ export default function DataroomDocumentView({
           viewerId,
           conversationsEnabled,
           isTeamMember,
+          agentsEnabled,
+          dataroomName,
         }));
         setSubmitted(true);
         setVerificationRequested(false);

@@ -12,7 +12,7 @@ import { BasePlan, usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { cn } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import { AddDomainModal } from "@/components/domains/add-domain-modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,7 +41,10 @@ export default function DomainSection({
 }) {
   const [isModalOpen, setModalOpen] = useState(false);
   const [isUpgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [displayValue, setDisplayValue] = useState<string>("papermark.com");
+  // Initialize displayValue from data.domain when editing, otherwise "papermark.com"
+  const [displayValue, setDisplayValue] = useState<string>(
+    editLink && data.domain ? data.domain : "papermark.com",
+  );
   const teamInfo = useTeam();
   const { limits } = useLimits();
 
@@ -313,7 +316,7 @@ export default function DomainSection({
       />
 
       {/* Upgrade plan modal when trying to use custom domains without the right plan */}
-      <UpgradePlanModal
+      <UpgradePlanModalWithDiscount
         clickedPlan={
           linkType === "DATAROOM_LINK" ? PlanEnum.DataRooms : PlanEnum.Business
         }

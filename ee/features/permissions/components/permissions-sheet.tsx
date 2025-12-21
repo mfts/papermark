@@ -35,7 +35,7 @@ import {
 } from "@/lib/utils/hierarchical-display";
 
 import PlanBadge from "@/components/billing/plan-badge";
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import CloudDownloadOff from "@/components/shared/icons/cloud-download-off";
 import { Button } from "@/components/ui/button";
 import {
@@ -964,7 +964,7 @@ export function PermissionsSheet({
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-medium">Share Entire Dataroom</h4>
                   {!canSetCustomPermissions && (
-                    <UpgradePlanModal
+                    <UpgradePlanModalWithDiscount
                       clickedPlan={PlanEnum.DataRooms}
                       trigger="dataroom_permissions_sheet_toggle"
                     >
@@ -974,7 +974,7 @@ export function PermissionsSheet({
                       >
                         <PlanBadge plan={PlanEnum.DataRooms} />
                       </button>
-                    </UpgradePlanModal>
+                    </UpgradePlanModalWithDiscount>
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground">

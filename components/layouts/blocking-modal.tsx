@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "../billing/upgrade-plan-modal-with-discount";
 import { AddTeamModal } from "../teams/add-team-modal";
 
 export const BlockingModal = () => {
@@ -129,14 +129,14 @@ export const BlockingModal = () => {
                 plan.
               </p>
             </div>
-            <UpgradePlanModal
+            <UpgradePlanModalWithDiscount
               clickedPlan={PlanEnum.Pro}
               trigger="trial_end_blocking_modal"
             >
               <Button type="button" variant="orange">
                 Upgrade
               </Button>
-            </UpgradePlanModal>
+            </UpgradePlanModalWithDiscount>
             <Button type="button" variant="outline">
               Dismiss
             </Button>
@@ -181,14 +181,14 @@ export const BlockingModal = () => {
             >
               Log out
             </Button>
-            <UpgradePlanModal
+            <UpgradePlanModalWithDiscount
               clickedPlan={PlanEnum.Business}
               trigger="trial_end_blocking_modal_for_team_member"
             >
               <Button className="w-full sm:w-auto" type="button">
                 Upgrade
               </Button>
-            </UpgradePlanModal>
+            </UpgradePlanModalWithDiscount>
             {userTeam ? (
               <Button
                 variant="outline"

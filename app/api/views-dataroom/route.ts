@@ -132,6 +132,8 @@ export async function POST(request: NextRequest) {
           select: {
             plan: true,
             globalBlockList: true,
+            agentsEnabled: true,
+            pauseStartsAt: true,
           },
         },
         customFields: {
@@ -141,6 +143,12 @@ export async function POST(request: NextRequest) {
           },
         },
         enableUpload: true,
+        dataroom: {
+          select: {
+            agentsEnabled: true,
+            name: true,
+          },
+        },
       },
     });
 
@@ -639,6 +647,11 @@ export async function POST(request: NextRequest) {
         }),
     };
 
+    const isPaused =
+      link.team?.pauseStartsAt && link.team?.pauseStartsAt <= new Date()
+        ? true
+        : false;
+
     // ** DATAROOM_VIEW **
     if (viewType === "DATAROOM_VIEW") {
       console.log("viewType is DATAROOM_VIEW");
@@ -667,6 +680,7 @@ export async function POST(request: NextRequest) {
               dataroomId,
               teamId: link.teamId!,
               enableNotification: link.enableNotification,
+              isPaused,
             }),
           );
 
@@ -680,6 +694,7 @@ export async function POST(request: NextRequest) {
                     linkId,
                     viewerEmail: verifiedEmail ?? email,
                     viewerId: viewer?.id,
+                    teamIsPaused: isPaused,
                   });
                 } catch (error) {
                   console.error("Error sending Slack notification:", error);
@@ -703,6 +718,8 @@ export async function POST(request: NextRequest) {
           viewerId: viewer?.id,
           conversationsEnabled: link.enableConversation,
           enableVisitorUpload: link.enableUpload,
+          agentsEnabled: link.dataroom?.agentsEnabled ?? false,
+          dataroomName: link.dataroom?.name,
           ...(isTeamMember && { isTeamMember: true }),
         };
 
@@ -782,6 +799,7 @@ export async function POST(request: NextRequest) {
               dataroomId,
               teamId: link.teamId!,
               enableNotification: link.enableNotification,
+              isPaused,
             }),
           );
         }
@@ -810,6 +828,7 @@ export async function POST(request: NextRequest) {
                   linkId,
                   viewerEmail: verifiedEmail ?? email,
                   viewerId: viewer?.id,
+                  teamIsPaused: isPaused,
                 });
               } catch (error) {
                 console.error("Error sending Slack notification:", error);
@@ -1016,6 +1035,8 @@ export async function POST(request: NextRequest) {
         canDownload: canDownload,
         viewerId: viewer?.id,
         conversationsEnabled: link.enableConversation,
+        agentsEnabled: link.dataroom?.agentsEnabled ?? false,
+        dataroomName: link.dataroom?.name,
         ...(isTeamMember && { isTeamMember: true }),
       };
 

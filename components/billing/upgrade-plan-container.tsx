@@ -6,6 +6,7 @@ import { useTeam } from "@/context/team-context";
 import { CancellationModal } from "@/ee/features/billing/cancellation/components";
 import { PlanEnum } from "@/ee/stripe/constants";
 import {
+  BanIcon,
   CirclePauseIcon,
   CreditCardIcon,
   MoreVertical,
@@ -52,6 +53,7 @@ export default function UpgradePlanContainer() {
     startsAt,
     endsAt,
     pauseStartsAt,
+    pauseEndsAt,
     discount,
     mutate: mutatePlan,
   } = usePlan({ withDiscount: true });
@@ -64,7 +66,8 @@ export default function UpgradePlanContainer() {
       | "manage"
       | "invoices"
       | "subscription_update"
-      | "payment_method_update";
+      | "payment_method_update"
+      | "cancellation";
   }) => {
     if (!currentTeamId) return;
 
@@ -201,26 +204,8 @@ export default function UpgradePlanContainer() {
             clickedPlan={PlanEnum.Business}
             trigger="upgrade_plan"
             useModal={false}
-            onClick={() => router.push("/settings/upgrade")}
+            onClick={() => router.push("/settings/upgrade-holiday-offer")}
           />
-          {isCustomer && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-9 w-9 p-0">
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">More options</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => manageSubscription({ type: "invoices" })}
-                >
-                  <ReceiptTextIcon className="h-4 w-4" />
-                  View invoices
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
         </div>
       );
     } else if (isCancelled) {
@@ -233,12 +218,31 @@ export default function UpgradePlanContainer() {
       return (
         <div className="flex items-center gap-3">
           {isPaused ? (
-            <Button
-              onClick={handleUnpauseSubscription}
-              loading={unpauseLoading}
-            >
-              Unpause subscription
-            </Button>
+            <>
+              <Button
+                onClick={handleUnpauseSubscription}
+                loading={unpauseLoading}
+              >
+                Unpause subscription
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 w-9 p-0">
+                    <MoreVertical className="h-4 w-4" />
+                    <span className="sr-only">More options</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => manageSubscription({ type: "cancellation" })}
+                    className="text-red-500"
+                  >
+                    <BanIcon className="h-4 w-4" />
+                    Cancel subscription
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           ) : (
             <>
               <Button
@@ -270,12 +274,6 @@ export default function UpgradePlanContainer() {
                   >
                     <CreditCardIcon className="h-4 w-4" />
                     Change billing information
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => router.push("/settings/billing/invoices")}
-                  >
-                    <ReceiptTextIcon className="h-4 w-4" />
-                    View invoices
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -323,7 +321,9 @@ export default function UpgradePlanContainer() {
               <CardDescription>
                 <span className="font-medium text-foreground">
                   Subscription{" "}
-                  {pauseStartsAt > new Date() ? "will pause on" : "paused on"}
+                  {new Date(pauseStartsAt) > new Date()
+                    ? "will pause on"
+                    : "paused on"}
                   :{" "}
                 </span>
                 <span className="text-foreground">

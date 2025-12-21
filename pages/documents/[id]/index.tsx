@@ -10,7 +10,7 @@ import { PlanEnum } from "@/ee/stripe/constants";
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { useDocumentOverview } from "@/lib/swr/use-document-overview";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import { AnnotationSheet } from "@/components/documents/annotations/annotation-sheet";
 import DocumentHeader from "@/components/documents/document-header";
 import { DocumentPreviewButton } from "@/components/documents/document-preview-button";
@@ -98,14 +98,14 @@ export default function DocumentPage() {
   const AddLinkButton = () => {
     if (!limits?.canAddLinks) {
       return (
-        <UpgradePlanModal
+        <UpgradePlanModalWithDiscount
           clickedPlan={team?.isTrial ? PlanEnum.Business : PlanEnum.Pro}
           trigger={"limit_add_link"}
         >
           <Button className="flex h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm">
             Upgrade to Create Link
           </Button>
-        </UpgradePlanModal>
+        </UpgradePlanModalWithDiscount>
       );
     } else {
       return (
