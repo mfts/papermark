@@ -59,7 +59,11 @@ export default async function handle(
         id: true,
         file: true,
         type: true,
-        versions: { select: { id: true, file: true, type: true } },
+        versions: {
+          select: { id: true, file: true, type: true },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
       },
     });
 
@@ -71,6 +75,10 @@ export default async function handle(
       return res
         .status(400)
         .json({ message: "Document is not a link document" });
+    }
+
+    if (!document.versions[0]) {
+      return res.status(400).json({ message: "Document has no versions" });
     }
 
     // Check if URL contains blocked keywords
