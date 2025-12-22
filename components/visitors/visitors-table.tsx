@@ -524,7 +524,8 @@ export default function VisitorsTable({
                                   }
                                 />
                               )}
-                              {!isFreePlan && primaryVersion.type === "pdf" ? (
+                              {(!isFreePlan && primaryVersion.type === "pdf") ||
+                              primaryVersion.type === "link" ? (
                                 <VisitorClicks
                                   teamId={view.teamId!}
                                   documentId={view.documentId!}

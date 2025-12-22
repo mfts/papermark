@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { DocumentAIDialog } from "@/ee/features/ai/components/document-ai-dialog";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { Document, DocumentVersion } from "@prisma/client";
 import {
@@ -26,7 +27,6 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { DocumentAIDialog } from "@/ee/features/ai/components/document-ai-dialog";
 import { getFile } from "@/lib/files/get-file";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
@@ -545,6 +545,7 @@ export default function DocumentHeader({
 
         <div className="flex items-center gap-x-4 md:gap-x-2">
           {primaryVersion.type !== "notion" &&
+            primaryVersion.type !== "link" &&
             primaryVersion.type !== "sheet" &&
             primaryVersion.type !== "zip" &&
             primaryVersion.type !== "video" &&
@@ -571,27 +572,28 @@ export default function DocumentHeader({
               </div>
             ))}
 
-          {primaryVersion.type !== "notion" && (
-            <AddDocumentModal
-              newVersion
-              openModal={openAddDocModal}
-              setAddDocumentModalOpen={setOpenAddDocModal}
-            >
-              <ButtonTooltip content="Upload new version">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenAddDocModal(true);
-                  }}
-                  className="hidden size-8 md:flex lg:size-9"
-                >
-                  <FileUp className="h-6 w-6" />
-                </Button>
-              </ButtonTooltip>
-            </AddDocumentModal>
-          )}
+          {primaryVersion.type !== "notion" &&
+            primaryVersion.type !== "link" && (
+              <AddDocumentModal
+                newVersion
+                openModal={openAddDocModal}
+                setAddDocumentModalOpen={setOpenAddDocModal}
+              >
+                <ButtonTooltip content="Upload new version">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenAddDocModal(true);
+                    }}
+                    className="hidden size-8 md:flex lg:size-9"
+                  >
+                    <FileUp className="h-6 w-6" />
+                  </Button>
+                </ButtonTooltip>
+              </AddDocumentModal>
+            )}
 
           {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
           {/* {prismaDocument.type !== "notion" &&
@@ -743,6 +745,7 @@ export default function DocumentHeader({
               {/* AI Agents - only show when team has AI enabled */}
               {isAIEnabled &&
                 prismaDocument.type !== "notion" &&
+                primaryVersion.type !== "link" &&
                 prismaDocument.type !== "sheet" &&
                 prismaDocument.type !== "zip" &&
                 primaryVersion.type !== "video" && (
@@ -760,6 +763,7 @@ export default function DocumentHeader({
                 )}
 
               {primaryVersion.type !== "notion" &&
+                primaryVersion.type !== "link" &&
                 primaryVersion.type !== "zip" &&
                 primaryVersion.type !== "map" &&
                 primaryVersion.type !== "email" && (
@@ -825,6 +829,7 @@ export default function DocumentHeader({
 
               {/* Download latest version */}
               {primaryVersion.type !== "notion" &&
+                primaryVersion.type !== "link" &&
                 primaryVersion.type !== "video" && (
                   <DropdownMenuItem
                     onClick={() => downloadDocument(primaryVersion)}

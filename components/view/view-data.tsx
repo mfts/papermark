@@ -27,6 +27,7 @@ import { NotionPage } from "@/components/view/viewer/notion-page";
 import PDFViewer from "@/components/view/viewer/pdf-default-viewer";
 
 import { DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE } from "./dataroom/dataroom-document-view";
+import LinkPreview from "./link-preview";
 import { TNavData } from "./nav";
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "./viewer/download-only-viewer";
@@ -108,8 +109,6 @@ export default function ViewData({
     annotationsFeatureEnabled: annotationsEnabled,
   };
 
-  // Calculate allowDownload once for all components
-
   // Check if agents are enabled (returned from views API after access is granted)
   const agentsEnabled =
     "agentsEnabled" in viewData ? viewData.agentsEnabled : false;
@@ -130,8 +129,6 @@ export default function ViewData({
       linkId={link.id}
       viewId={viewData.viewId}
       viewerId={"viewerId" in viewData ? viewData.viewerId : undefined}
-      // focusedDocumentId={dataroomId ? document.id : undefined}
-      // focusedDocumentName={dataroomId ? document.name : undefined}
     >
       <ViewerChatLayout>
         {notionData?.recordMap ? (
@@ -140,6 +137,13 @@ export default function ViewData({
             versionNumber={document.versions[0].versionNumber}
             theme={notionData.theme}
             screenshotProtectionEnabled={link.enableScreenshotProtection!}
+            navData={navData}
+          />
+        ) : viewData.fileType === "link" ? (
+          <LinkPreview
+            linkUrl={viewData.file || document.versions[0]?.file || ""}
+            linkName={document.name}
+            versionNumber={document.versions[0]?.versionNumber || 1}
             navData={navData}
           />
         ) : document.downloadOnly ? (

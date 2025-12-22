@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 import { useAnalytics } from "@/lib/analytics";
 import { useDisablePrint } from "@/lib/hooks/use-disable-print";
-import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
+import { LinkWithDocument, NotionTheme } from "@/lib/types";
 
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
@@ -163,6 +163,7 @@ export default function DocumentView({
           isTeamMember,
           viewerId,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
+
         analytics.identify(
           userEmail ?? verifiedEmail ?? data.email ?? undefined,
         );
@@ -287,6 +288,7 @@ export default function DocumentView({
       </div>
     );
   }
+
   return (
     <div
       className="bg-gray-950"

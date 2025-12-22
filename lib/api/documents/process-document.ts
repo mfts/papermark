@@ -1,3 +1,4 @@
+import { get } from "@vercel/edge-config";
 import { parsePageId } from "notion-utils";
 
 import { DocumentData } from "@/lib/documents/create-document";
@@ -12,7 +13,7 @@ import {
 } from "@/lib/trigger/convert-files";
 import { processVideo } from "@/lib/trigger/optimize-video-files";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
-import { getExtension } from "@/lib/utils";
+import { getExtension, log } from "@/lib/utils";
 import { conversionQueue } from "@/lib/utils/trigger-utils";
 import { sendDocumentCreatedWebhook } from "@/lib/webhook/triggers/document-created";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
@@ -72,6 +73,31 @@ export const processDocument = async ({
       await notion.getPage(pageId);
     } catch (error) {
       throw new Error("This Notion page isn't publically available.");
+    }
+  }
+
+  // For link type, validate URL format
+  if (type === "link") {
+    try {
+      new URL(key);
+
+      const keywords = await get("keywords");
+      if (Array.isArray(keywords) && keywords.length > 0) {
+        const matchedKeyword = keywords.find(
+          (keyword) => typeof keyword === "string" && key.includes(keyword),
+        );
+
+        if (matchedKeyword) {
+          log({
+            message: `Link document creation blocked: ${matchedKeyword} \n\n \`Metadata: {teamId: ${teamId}, url: ${key}}\``,
+            type: "error",
+            mention: true,
+          });
+          throw new Error("This URL is not allowed");
+        }
+      }
+    } catch (error) {
+      throw new Error("Invalid URL format for link document.");
     }
   }
 
