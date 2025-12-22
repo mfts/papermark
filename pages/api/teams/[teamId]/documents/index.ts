@@ -3,7 +3,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { Prisma } from "@prisma/client";
-import { get } from "@vercel/edge-config";
 import { getServerSession } from "next-auth/next";
 
 import { hashToken } from "@/lib/api/auth/token";
@@ -346,29 +345,6 @@ export default async function handle(
           error:
             "Team is currently paused. New document uploads are not available.",
         });
-      }
-
-      // Check if URL contains blocked keywords (for link type documents)
-      if (fileType === "link") {
-        const keywords = await get("keywords");
-        if (Array.isArray(keywords) && keywords.length > 0) {
-          const matchedKeyword = keywords.find(
-            (keyword) =>
-              typeof keyword === "string" && fileUrl.includes(keyword),
-          );
-
-          if (matchedKeyword) {
-            log({
-              message: `Link document creation blocked: ${matchedKeyword} \n\n \`Metadata: {teamId: ${teamId}, url: ${fileUrl}}\``,
-              type: "error",
-              mention: true,
-            });
-            return res.status(400).json({
-              error: "This URL is not allowed",
-              matchedKeyword: matchedKeyword,
-            });
-          }
-        }
       }
 
       // For link documents, storageType is optional but processDocument requires it
