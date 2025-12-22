@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentVersion } from "@prisma/client";
 import { Edit, ExternalLink, LinkIcon } from "lucide-react";
 import { toast } from "sonner";
+
+import { useAnalytics } from "@/lib/analytics";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -32,12 +34,19 @@ export default function LinkDocumentIndicator({
   onUrlUpdate,
 }: LinkDocumentIndicatorProps) {
   const teamInfo = useTeam();
+  const analytics = useAnalytics();
   const [isMainDialogOpen, setIsMainDialogOpen] = useState(false);
   const [isUrlDialogOpen, setIsUrlDialogOpen] = useState(false);
   const [newUrl, setNewUrl] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const currentUrl = primaryVersion.file;
+  // Local state for immediate UI updates
+  const [currentUrl, setCurrentUrl] = useState(primaryVersion.file);
+
+  // Sync with prop changes (e.g., when SWR revalidates)
+  useEffect(() => {
+    setCurrentUrl(primaryVersion.file);
+  }, [primaryVersion.file]);
 
   const updateLinkUrl = async () => {
     if (!teamInfo?.currentTeam?.id || !newUrl.trim()) return;
@@ -58,9 +67,23 @@ export default function LinkDocumentIndicator({
       const data = await response.json();
 
       if (response.ok) {
+        // Immediately update local state for instant UI feedback
+        setCurrentUrl(newUrl.trim());
         toast.success("Link URL updated successfully");
         setIsUrlDialogOpen(false);
         setNewUrl("");
+
+        // Track analytics event
+        analytics.capture("Document Updated", {
+          documentId: documentId,
+          url: newUrl.trim(),
+          type: "link",
+          teamId: teamInfo.currentTeam.id,
+          $set: {
+            teamId: teamInfo.currentTeam.id,
+          },
+        });
+
         // Trigger parent component update if provided
         if (onUrlUpdate) {
           onUrlUpdate();
@@ -79,15 +102,6 @@ export default function LinkDocumentIndicator({
   const openLinkInNewTab = () => {
     if (currentUrl) {
       window.open(currentUrl, "_blank");
-    }
-  };
-
-  const getDisplayUrl = () => {
-    try {
-      const urlObj = new URL(currentUrl);
-      return urlObj.hostname + (urlObj.pathname !== "/" ? urlObj.pathname : "");
-    } catch {
-      return currentUrl;
     }
   };
 
@@ -210,4 +224,3 @@ export default function LinkDocumentIndicator({
     </>
   );
 }
-
