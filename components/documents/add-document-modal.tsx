@@ -559,6 +559,12 @@ export function AddDocumentModal({
   ): Promise<void> => {
     event.preventDefault();
 
+    // Check if user is on a free plan (not trial)
+    if (isFree && !isTrial) {
+      toast.error("Web links are available on Pro plan and above.");
+      return;
+    }
+
     if (!canAddDocuments) {
       toast.error("You have reached the maximum number of documents.");
       return;
@@ -677,10 +683,7 @@ export function AddDocumentModal({
     } catch (error) {
       setUploading(false);
       toast.error("An error occurred while processing the web link.");
-      console.error(
-        "An error occurred while processing the web link: ",
-        error,
-      );
+      console.error("An error occurred while processing the web link: ", error);
     } finally {
       setUploading(false);
       setIsOpen(false);
@@ -814,17 +817,30 @@ export function AddDocumentModal({
                               upload multiple files
                             </button>{" "}
                             or{" "}
-                            <button
-                              type="button"
-                              className="inline-flex items-center gap-1 underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setUploadMode("link");
-                              }}
-                            >
-                              share link as a document
-                            
-                            </button>
+                            {isFree && !isTrial ? (
+                              <UpgradePlanModalWithDiscount
+                                clickedPlan={PlanEnum.Pro}
+                                trigger={"add_web_link_document"}
+                              >
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1 underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
+                                >
+                                  share link as a document
+                                </button>
+                              </UpgradePlanModalWithDiscount>
+                            ) : (
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-1 underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setUploadMode("link");
+                                }}
+                              >
+                                share link as a document
+                              </button>
+                            )}
                             ?
                           </p>
                         </div>
