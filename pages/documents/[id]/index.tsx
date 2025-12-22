@@ -16,6 +16,7 @@ import DocumentHeader from "@/components/documents/document-header";
 import { DocumentPreviewButton } from "@/components/documents/document-preview-button";
 // Import placeholder components
 import DocumentStatsPlaceholder from "@/components/documents/document-stats-placeholder";
+import LinkDocumentIndicator from "@/components/documents/link-document-indicator";
 import NotionAccessibilityIndicator from "@/components/documents/notion-accessibility-indicator";
 import VideoStatsPlaceholder from "@/components/documents/video-stats-placeholder";
 import AppLayout from "@/components/layouts/app";
@@ -155,6 +156,12 @@ export default function DocumentPage() {
           actions={[
             <NotionAccessibilityIndicator
               key={"notion-status"}
+              documentId={prismaDocument.id}
+              primaryVersion={primaryVersion}
+              onUrlUpdate={mutateDocument}
+            />,
+            <LinkDocumentIndicator
+              key={"link-status"}
               documentId={prismaDocument.id}
               primaryVersion={primaryVersion}
               onUrlUpdate={mutateDocument}

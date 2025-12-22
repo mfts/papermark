@@ -388,6 +388,23 @@ export const documentUploadSchema = z
     },
   );
 
+// Link URL update validation schema
+export const linkUrlUpdateSchema = z
+  .string()
+  .url("Invalid URL format")
+  .refine((url) => url.startsWith("https://"), {
+    message: "Link URL must use HTTPS",
+  })
+  .refine(
+    (url) => {
+      // Security validation including SSRF protection
+      return validateUrlSecurity(url);
+    },
+    {
+      message: "URL contains invalid characters or targets internal resources",
+    },
+  );
+
 // Webhook file URL validator - only allows trusted external sources for webhooks
 export const webhookFileUrlSchema = z
   .string()
