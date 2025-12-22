@@ -101,7 +101,7 @@ export default function LinkDocumentIndicator({
 
   const openLinkInNewTab = () => {
     if (currentUrl) {
-      window.open(currentUrl, "_blank");
+      window.open(currentUrl, "_blank", "noopener,noreferrer");
     }
   };
 
