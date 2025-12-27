@@ -16,7 +16,7 @@ import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import hanko from "@/lib/hanko";
 import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
-import { subscribe } from "@/lib/unsend";
+import { subscribe } from "@/lib/resend";
 import { log } from "@/lib/utils";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 import { getIpAddress } from "@/lib/utils/ip";

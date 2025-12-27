@@ -3,6 +3,7 @@ import { JSXElementConstructor, ReactElement } from "react";
 import { render, toPlainText } from "@react-email/render";
 import { Resend } from "resend";
 
+import prisma from "@/lib/prisma";
 import { log, nanoid } from "@/lib/utils";
 
 export const resend = process.env.RESEND_API_KEY
@@ -93,4 +94,54 @@ export const sendEmail = async ({
     });
     throw exception; // Rethrow the caught exception
   }
+};
+
+export const subscribe = async (email: string): Promise<void> => {
+  if (!resend) {
+    console.error("RESEND_API_KEY is not set in the .env. Skipping.");
+    return;
+  }
+
+  const { data, error } = await resend.contacts.create({
+    email,
+  });
+
+  if (error || !data?.id) {
+    console.error("Failed to create contact:", error);
+    return;
+  }
+
+  await prisma.user.update({
+    where: {
+      email,
+    },
+    data: {
+      contactId: data.id,
+    },
+  });
+};
+
+export const unsubscribe = async (email: string): Promise<void> => {
+  if (!resend) {
+    console.error("RESEND_API_KEY is not set in the .env. Skipping.");
+    return;
+  }
+
+  if (!email || email === "") {
+    return;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { contactId: true, email: true },
+  });
+
+  if (!user?.contactId || !user.email) {
+    return;
+  }
+
+  await resend.contacts.update({
+    email: user.email,
+    unsubscribed: true,
+  });
 };
