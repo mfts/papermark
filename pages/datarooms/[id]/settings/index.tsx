@@ -132,8 +132,7 @@ export default function Settings() {
 
             {/* AI Agents Settings */}
             <AgentsSettingsCard
-              type="dataroom"
-              entityId={dataroom.id}
+              dataroomId={dataroom.id}
               teamId={teamId!}
               agentsEnabled={dataroom.agentsEnabled}
               vectorStoreId={dataroom.vectorStoreId}
