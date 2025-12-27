@@ -9,14 +9,13 @@ import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import { qstash } from "@/lib/cron";
 import { dub } from "@/lib/dub";
 import { isBlacklistedEmail } from "@/lib/edge-config/blacklist";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
-import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import hanko from "@/lib/hanko";
 import prisma from "@/lib/prisma";
-import { CreateUserEmailProps, CustomUser } from "@/lib/types";
-import { subscribe } from "@/lib/unsend";
+import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 import { getIpAddress } from "@/lib/utils/ip";
@@ -170,13 +169,6 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async createUser(message) {
-      const params: CreateUserEmailProps = {
-        user: {
-          name: message.user.name,
-          email: message.user.email,
-        },
-      };
-
       await identifyUser(message.user.email ?? message.user.id);
       await trackAnalytics({
         event: "User Signed Up",
@@ -184,11 +176,13 @@ export const authOptions: NextAuthOptions = {
         userId: message.user.id,
       });
 
-      await sendWelcomeEmail(params);
-
-      if (message.user.email) {
-        await subscribe(message.user.email);
-      }
+      await qstash.publishJSON({
+        url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/cron/welcome-user`,
+        body: {
+          userId: message.user.id,
+        },
+        delay: 15 * 60, // 15 minutes
+      });
     },
   },
 };
