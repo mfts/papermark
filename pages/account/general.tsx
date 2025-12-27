@@ -5,10 +5,11 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
 import { AccountHeader } from "@/components/account/account-header";
+import { UpdateMailSubscribe } from "@/components/account/update-subscription";
 import UploadAvatar from "@/components/account/upload-avatar";
+import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import AppLayout from "@/components/layouts/app";
 import { Form } from "@/components/ui/form";
-import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
 import { PlanEnum } from "@/ee/stripe/constants";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -78,7 +79,7 @@ const ProfilePage: NextPage = () => {
           />
           <Form
             title="Your Email"
-            description="This will be the email you use to log in to Papermark and receive notification. A confirmation is required for changes."
+            description="This will be the email you use to log in to Papermark and receive notifications. A confirmation is required for changes."
             inputAttrs={{
               name: "email",
               placeholder: "name@example.com",
@@ -86,10 +87,8 @@ const ProfilePage: NextPage = () => {
               type: "email",
             }}
             defaultValue={session?.user?.email ?? ""}
-            // TODO: MAIL SUBSCRIPTION
-            // helpText={<UpdateMailSubscribe />}
             validate={validateEmail}
-            helpText=""
+            helpText={<UpdateMailSubscribe />}
             handleSubmit={(data) =>
               fetch("/api/account", {
                 method: "PATCH",
