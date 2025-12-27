@@ -110,6 +110,16 @@ export const subscribe = async (email: string): Promise<void> => {
     console.error("Failed to create contact:", error);
     return;
   }
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.RESEND_MARKETING_SEGMENT_ID
+  ) {
+    await resend.contacts.segments.add({
+      contactId: data.id,
+      segmentId: process.env.RESEND_MARKETING_SEGMENT_ID as string,
+    });
+  }
 };
 
 export const unsubscribe = async (email: string): Promise<void> => {
