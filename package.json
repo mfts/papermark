@@ -20,6 +20,7 @@
     "dev:prisma": "npx prisma generate && npx prisma migrate deploy"
   },
   "dependencies": {
+    "@ai-sdk/google-vertex": "^4.0.1",
     "@ai-sdk/openai": "^3.0.1",
     "@ai-sdk/react": "^3.0.3",
     "@aws-sdk/client-lambda": "^3.958.0",

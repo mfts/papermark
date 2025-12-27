@@ -83,6 +83,7 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "application/rtf", // .rtf
   "text/rtf", // .rtf
   "text/plain", // .txt
+  "text/markdown", // .md
   "image/vnd.dwg", // .dwg
   "image/vnd.dxf", // .dxf
   "image/png", // .png
