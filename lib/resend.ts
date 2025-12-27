@@ -110,15 +110,6 @@ export const subscribe = async (email: string): Promise<void> => {
     console.error("Failed to create contact:", error);
     return;
   }
-
-  await prisma.user.update({
-    where: {
-      email,
-    },
-    data: {
-      contactId: data.id,
-    },
-  });
 };
 
 export const unsubscribe = async (email: string): Promise<void> => {
@@ -127,16 +118,16 @@ export const unsubscribe = async (email: string): Promise<void> => {
     return;
   }
 
-  if (!email || email === "") {
+  if (!email) {
     return;
   }
 
   const user = await prisma.user.findUnique({
     where: { email },
-    select: { contactId: true, email: true },
+    select: { email: true },
   });
 
-  if (!user?.contactId || !user.email) {
+  if (!user || !user.email) {
     return;
   }
 
