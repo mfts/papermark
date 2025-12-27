@@ -166,15 +166,15 @@ export default function DocumentPage() {
               primaryVersion={primaryVersion}
               onUrlUpdate={mutateDocument}
             />,
-            <>
-              {featureFlags?.annotations && (
-                <AnnotationSheet
-                  documentId={prismaDocument.id}
-                  teamId={teamId}
-                  numPages={primaryVersion.numPages || 1}
-                />
-              )}
-            </>,
+            // <>
+            //   {featureFlags?.annotations && (
+            //     <AnnotationSheet
+            //       documentId={prismaDocument.id}
+            //       teamId={teamId}
+            //       numPages={primaryVersion.numPages || 1}
+            //     />
+            //   )}
+            // </>,
             <DocumentPreviewButton
               key={"preview"}
               documentId={prismaDocument.id}
