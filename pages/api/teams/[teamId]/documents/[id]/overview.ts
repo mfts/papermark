@@ -68,7 +68,7 @@ export default async function handle(
           numPages: true,
           ownerId: true,
           teamId: true,
-          assistantEnabled: true,
+          agentsEnabled: true,
           advancedExcelEnabled: true,
           downloadOnly: true,
           createdAt: true,

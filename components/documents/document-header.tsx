@@ -10,7 +10,6 @@ import { Document, DocumentVersion } from "@prisma/client";
 import {
   ArrowRightIcon,
   BetweenHorizontalStartIcon,
-  Bot,
   ChevronRight,
   CloudDownloadIcon,
   DownloadIcon,
@@ -41,6 +40,7 @@ import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import FileUp from "@/components/shared/icons/file-up";
 import MoreVertical from "@/components/shared/icons/more-vertical";
+import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -197,56 +197,63 @@ export default function DocumentHeader({
     }
   };
 
-  const activateOrRedirectAssistant = async (document: Document) => {
-    if (document.assistantEnabled) {
-      router.push(`/documents/${document.id}/chat`);
-    } else {
-      toast.promise(
-        fetch("/api/assistants", {
-          method: "POST",
+  const [enablingAI, setEnablingAI] = useState<boolean>(false);
+
+  // Enable AI agents and automatically index the document
+  const enableAIAgents = async () => {
+    if (!canUseAI) {
+      toast.error(
+        "AI agents are not available. Please enable them in team settings first.",
+      );
+      return;
+    }
+
+    setEnablingAI(true);
+
+    try {
+      // Step 1: Enable AI agents on the document
+      const enableResponse = await fetch(
+        `/api/teams/${teamId}/documents/${prismaDocument.id}`,
+        {
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            documentId: document.id,
-          }),
-        }).then(() => {
-          // refetch to fix the UI delay
-          mutate(`/api/teams/${teamId}/documents/${document.id}`);
-
-          router.push(`/documents/${document.id}/chat`);
-        }),
-        {
-          loading: "Activating Assistant...",
-          success: "Papermark Assistant successfully activated.",
-          error: "Activation failed. Please try again.",
+          body: JSON.stringify({ agentsEnabled: true }),
         },
       );
+
+      if (!enableResponse.ok) {
+        throw new Error("Failed to enable AI agents");
+      }
+
+      // Step 2: Index the document automatically
+      const indexResponse = await fetch(
+        `/api/ai/store/teams/${teamId}/documents/${prismaDocument.id}`,
+        {
+          method: "POST",
+        },
+      );
+
+      if (!indexResponse.ok) {
+        const error = await indexResponse.json();
+        // If indexing fails, still keep AI enabled but show warning
+        toast.warning(
+          error.error ||
+            "AI enabled, but document indexing failed. You can re-index from settings.",
+        );
+      } else {
+        toast.success("AI agents enabled and document indexed successfully");
+      }
+
+      // Refresh document data
+      mutate(`/api/teams/${teamId}/documents/${prismaDocument.id}`);
+    } catch (error) {
+      console.error("Error enabling AI agents:", error);
+      toast.error("Failed to enable AI agents. Please try again.");
+    } finally {
+      setEnablingAI(false);
     }
-  };
-
-  const activateOrDeactivateAssistant = async (
-    active: boolean,
-    prismaDocumentId: string,
-  ) => {
-    const fetchPromise = fetch("/api/assistants", {
-      method: active ? "POST" : "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        documentId: prismaDocumentId,
-      }),
-    }).then(() => {
-      // refetch to fix the UI delay
-      mutate(`/api/teams/${teamId}/documents/${prismaDocumentId}`);
-    });
-
-    toast.promise(fetchPromise, {
-      loading: `${active ? "Activating" : "Deactivating"} Assistant...`,
-      success: `Papermark Assistant successfully ${active ? "activated" : "deactivated"}.`,
-      error: `${active ? "Activation" : "Deactivation"} failed. Please try again.`,
-    });
   };
 
   const changeDocumentOrientation = async () => {
@@ -496,6 +503,8 @@ export default function DocumentHeader({
     );
   };
 
+  console.log("prismaDocument", prismaDocument);
+
   return (
     <header className="flex flex-col gap-y-4">
       <div className="flex items-center justify-between gap-x-8">
@@ -595,23 +604,40 @@ export default function DocumentHeader({
               </AddDocumentModal>
             )}
 
-          {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
-          {/* {prismaDocument.type !== "notion" &&
-            prismaDocument.type !== "sheet" &&
+          {/* AI Agents Button */}
+          {isAIEnabled &&
+            prismaDocument.type !== "notion" &&
+            primaryVersion.type !== "link" &&
             prismaDocument.type !== "zip" &&
-            prismaDocument.type !== "video" &&
-            prismaDocument.assistantEnabled && (
-              <Button
-                className="group hidden h-8 space-x-1 whitespace-nowrap bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] text-xs duration-200 ease-linear hover:bg-right md:flex lg:h-9 lg:text-sm"
-                variant={"special"}
-                size={"icon"}
-                style={{ backgroundSize: "200% auto" }}
-                onClick={() => activateOrRedirectAssistant(prismaDocument)}
-                title="Open AI Assistant"
-              >
-                <PapermarkSparkle className="h-5 w-5" />
-              </Button>
-            )} */}
+            primaryVersion.type !== "video" &&
+            (prismaDocument.agentsEnabled ? (
+              <ButtonTooltip content="AI Agents Settings">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="hidden size-8 md:flex lg:size-9"
+                  onClick={() => setAiDialogOpen(true)}
+                >
+                  <PapermarkSparkle className="h-5 w-5 text-emerald-500" />
+                </Button>
+              </ButtonTooltip>
+            ) : (
+              <ButtonTooltip content="Enable AI Agents">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="hidden size-8 md:flex lg:size-9"
+                  onClick={enableAIAgents}
+                  disabled={enablingAI}
+                >
+                  {enablingAI ? (
+                    <LoadingSpinner className="h-5 w-5" />
+                  ) : (
+                    <PapermarkSparkle className="h-5 w-5" />
+                  )}
+                </Button>
+              </ButtonTooltip>
+            ))}
 
           <div className="flex items-center gap-x-1">
             {actionRows.map((row, i) => (
@@ -664,60 +690,8 @@ export default function DocumentHeader({
                     </DropdownMenuItem>
                   )}
 
-                {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
-                {/* {prismaDocument.type !== "notion" &&
-                  prismaDocument.type !== "sheet" &&
-                  prismaDocument.type !== "zip" &&
-                  primaryVersion.type !== "video" && (
-                    <>
-                      <DropdownMenuItem
-                        onClick={() => changeDocumentOrientation()}
-                      >
-                        <PortraitLandscape
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            !primaryVersion.isVertical &&
-                              "-rotate-90 transform",
-                          )}
-                        />
-                        Change orientation
-                      </DropdownMenuItem>
-
-                      <DropdownMenuItem
-                        onClick={() =>
-                          activateOrRedirectAssistant(prismaDocument)
-                        }
-                      >
-                        <PapermarkSparkle className="mr-2 h-4 w-4" />
-                        Open AI Assistant
-                      </DropdownMenuItem>
-                    </>
-                  )} */}
-
                 <DropdownMenuSeparator />
               </DropdownMenuGroup>
-              {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
-              {/* {primaryVersion.type !== "notion" &&
-                primaryVersion.type !== "sheet" &&
-                primaryVersion.type !== "zip" &&
-                primaryVersion.type !== "video" &&
-                (!prismaDocument.assistantEnabled ? (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      activateOrDeactivateAssistant(true, prismaDocument.id)
-                    }
-                  >
-                    <Sparkles className="mr-2 h-4 w-4" /> Activate Assistant
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      activateOrDeactivateAssistant(false, prismaDocument.id)
-                    }
-                  >
-                    <Sparkles className="mr-2 h-4 w-4" /> Disable Assistant
-                  </DropdownMenuItem>
-                ))} */}
               {prismaDocument.type === "sheet" &&
                 supportsAdvancedExcelMode(primaryVersion.contentType) &&
                 (isPro || isBusiness || isDatarooms || isTrial) && (
@@ -746,21 +720,30 @@ export default function DocumentHeader({
               {isAIEnabled &&
                 prismaDocument.type !== "notion" &&
                 primaryVersion.type !== "link" &&
-                prismaDocument.type !== "sheet" &&
                 prismaDocument.type !== "zip" &&
-                primaryVersion.type !== "video" && (
+                primaryVersion.type !== "video" &&
+                (prismaDocument.agentsEnabled ? (
                   <DropdownMenuItem
                     onClick={() => {
                       setAiDialogOpen(true);
                       setMenuOpen(false);
                     }}
                   >
-                    <Bot className="mr-2 h-4 w-4" />
-                    {prismaDocument.agentsEnabled
-                      ? "AI Agents Settings"
-                      : "Enable AI Agents"}
+                    <PapermarkSparkle className="mr-2 h-4 w-4 text-emerald-500" />
+                    AI Agents Settings
                   </DropdownMenuItem>
-                )}
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      enableAIAgents();
+                      setMenuOpen(false);
+                    }}
+                    disabled={enablingAI}
+                  >
+                    <PapermarkSparkle className="mr-2 h-4 w-4" />
+                    {enablingAI ? "Enabling AI..." : "Enable AI Agents"}
+                  </DropdownMenuItem>
+                ))}
 
               {primaryVersion.type !== "notion" &&
                 primaryVersion.type !== "link" &&

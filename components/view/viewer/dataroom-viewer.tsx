@@ -373,6 +373,14 @@ export default function DataroomViewer({
     );
   };
 
+  // Prepare documents for chat context
+  const documentsForChat = documents.map((doc) => ({
+    dataroomDocumentId: doc.dataroomDocumentId,
+    id: doc.id,
+    name: doc.name,
+    folderId: doc.folderId,
+  }));
+
   return (
     <ViewerChatProvider
       enabled={viewData.agentsEnabled}
@@ -381,6 +389,8 @@ export default function DataroomViewer({
       linkId={linkId}
       viewId={viewId}
       viewerId={viewerId}
+      documents={documentsForChat}
+      folders={folders}
     >
       <DataroomNav
         brand={brand}

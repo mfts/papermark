@@ -19,6 +19,8 @@ export const sendMessageSchema = z.object({
   content: z.string().min(1).max(10000),
   /** Optional document ID to filter file_search results to a specific document */
   filterDocumentId: z.string().cuid().optional(),
+  /** Optional array of dataroom document IDs to filter file_search results */
+  filterDataroomDocumentIds: z.array(z.string().cuid()).optional(),
 });
 
 /**

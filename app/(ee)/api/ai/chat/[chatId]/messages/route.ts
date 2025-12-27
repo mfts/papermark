@@ -35,7 +35,8 @@ export async function POST(
       );
     }
 
-    const { content, filterDocumentId } = validation.data;
+    const { content, filterDocumentId, filterDataroomDocumentIds } =
+      validation.data;
 
     const session = await getServerSession(authOptions);
     const searchParams = req.nextUrl.searchParams;
@@ -124,6 +125,7 @@ export async function POST(
       vectorStoreId: chat.vectorStoreId,
       filteredDataroomDocumentIds,
       filterDocumentId,
+      userSelectedDataroomDocumentIds: filterDataroomDocumentIds,
     });
 
     return result.toTextStreamResponse();
