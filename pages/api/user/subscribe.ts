@@ -3,7 +3,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 
 import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
 import { resend, subscribe, unsubscribe } from "@/lib/resend";
 import { CustomUser } from "@/lib/types";
 
@@ -27,19 +26,14 @@ export default async function handle(
   try {
     if (req.method === "GET") {
       // Get subscription status
-      const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { email: true },
-      });
-
-      if (!dbUser || !dbUser.email || !resend) {
-        // No contact created yet, default to subscribed (opt-out model)
+      if (!resend) {
+        // Resend unavailable, default to subscribed (opt-out model)
         return res.status(200).json({ subscribed: true });
       }
 
       // Fetch contact from Resend to get actual subscription status
       const { data: contact, error } = await resend.contacts.get({
-        email: dbUser.email,
+        email: user.email,
       });
 
       if (error || !contact?.unsubscribed) {
@@ -51,31 +45,13 @@ export default async function handle(
     }
 
     if (req.method === "POST") {
-      const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { email: true },
-      });
-
-      if (!dbUser || !dbUser?.email) {
-        return res.status(400).json({ error: "User email not found" });
-      }
-
-      await subscribe(dbUser.email);
+      await subscribe(user.email);
 
       return res.status(200).json({ subscribed: true });
     }
 
     if (req.method === "DELETE") {
-      const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { email: true },
-      });
-
-      if (!dbUser || !dbUser?.email) {
-        return res.status(400).json({ error: "User email not found" });
-      }
-
-      await unsubscribe(dbUser.email);
+      await unsubscribe(user.email);
 
       return res.status(200).json({ subscribed: false });
     }
