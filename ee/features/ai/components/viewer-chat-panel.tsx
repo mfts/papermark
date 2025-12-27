@@ -1,8 +1,16 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
-import { FileTextIcon, Loader2, Plus, SparklesIcon, XIcon } from "lucide-react";
+import {
+  AtSignIcon,
+  FileTextIcon,
+  Loader2,
+  Plus,
+  PlusIcon,
+  SparklesIcon,
+  XIcon,
+} from "lucide-react";
 
 import {
   Conversation,
@@ -12,11 +20,13 @@ import {
 } from "@/components/ai-elements/conversation";
 import {
   PromptInput,
+  PromptInputButton,
   PromptInputFooter,
   PromptInputHeader,
   type PromptInputMessage,
   PromptInputSubmit,
   PromptInputTextarea,
+  PromptInputTools,
 } from "@/components/ai-elements/prompt-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +38,12 @@ import {
 
 import { parseTextStream } from "../lib/stream/parse-text-stream";
 import ChatMessage from "./chat-message";
+import {
+  DocumentContextSelector,
+  SelectedContextItem,
+  SelectedContextItems,
+  getDocumentsInFolder,
+} from "./document-context-selector";
 import { useViewerChatSafe } from "./viewer-chat-provider";
 import { ViewerThreadSelector } from "./viewer-thread-selector";
 
@@ -71,6 +87,8 @@ export function ViewerChatPanel({ className }: ViewerChatPanelProps) {
         linkId={context.config.linkId}
         viewId={context.config.viewId}
         viewerId={context.config.viewerId}
+        documents={context.documents}
+        folders={context.folders}
       />
     </div>
   );
@@ -89,6 +107,23 @@ interface ViewerChatPanelContentProps {
   linkId?: string;
   viewId?: string;
   viewerId?: string;
+  documents?: Array<{
+    dataroomDocumentId: string;
+    id: string;
+    name: string;
+    folderId: string | null;
+  }>;
+  folders?: Array<{
+    id: string;
+    name: string;
+    parentId: string | null;
+    path: string;
+    orderIndex: number | null;
+    dataroomId: string;
+    createdAt: Date;
+    updatedAt: Date;
+    hierarchicalIndex: string | null;
+  }>;
 }
 
 function ViewerChatPanelContent({
@@ -100,13 +135,70 @@ function ViewerChatPanelContent({
   linkId,
   viewId,
   viewerId,
+  documents = [],
+  folders = [],
 }: ViewerChatPanelContentProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [chatId, setChatId] = useState<string | null>(null);
   const [chatTitle, setChatTitle] = useState<string | undefined>();
+  const [selectedContextItems, setSelectedContextItems] = useState<
+    SelectedContextItem[]
+  >([]);
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const contextName = dataroomName || documentName || "Document";
+
+  // Handle abort/stop
+  const handleAbort = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsLoading(false);
+    // Mark any streaming message as complete
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.isStreaming
+          ? {
+              ...m,
+              isStreaming: false,
+              content: m.content || "Message cancelled.",
+            }
+          : m,
+      ),
+    );
+  }, []);
+
+  // Calculate selected document IDs from context items (expanding folders)
+  const getSelectedDocumentIds = useCallback((): string[] => {
+    if (selectedContextItems.length === 0) return [];
+
+    const docIds = new Set<string>();
+
+    for (const item of selectedContextItems) {
+      if (item.type === "document") {
+        docIds.add(item.id);
+      } else {
+        // For folders, get all documents in the folder
+        const docsInFolder = getDocumentsInFolder(item.id, documents, folders);
+        docsInFolder.forEach((doc) => docIds.add(doc.dataroomDocumentId));
+      }
+    }
+
+    return Array.from(docIds);
+  }, [selectedContextItems, documents, folders]);
+
+  // Handle removing a context item
+  const handleRemoveContextItem = useCallback(
+    (type: "document" | "folder", id: string) => {
+      setSelectedContextItems((prev) =>
+        prev.filter((item) => !(item.type === type && item.id === id)),
+      );
+    },
+    [],
+  );
 
   // Create chat session
   const createChat = async () => {
@@ -208,6 +300,9 @@ function ViewerChatPanelContent({
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
+    // Create abort controller for this request
+    abortControllerRef.current = new AbortController();
+
     try {
       // Create chat if needed
       let currentChatId = chatId;
@@ -221,6 +316,9 @@ function ViewerChatPanelContent({
 
       const queryParams = viewerId ? `?viewerId=${viewerId}` : "";
 
+      // Get selected document IDs for filtering
+      const filterDataroomDocumentIds = getSelectedDocumentIds();
+
       const response = await fetch(
         `/api/ai/chat/${currentChatId}/messages${queryParams}`,
         {
@@ -230,7 +328,12 @@ function ViewerChatPanelContent({
             content: userMessage.content,
             // When viewing a specific document in a dataroom, filter search to that document
             filterDocumentId: documentId,
+            // User-selected context filter (only if items are selected)
+            ...(filterDataroomDocumentIds.length > 0 && {
+              filterDataroomDocumentIds,
+            }),
           }),
+          signal: abortControllerRef.current.signal,
         },
       );
 
@@ -285,6 +388,10 @@ function ViewerChatPanelContent({
         },
       });
     } catch (error) {
+      // Don't show error if aborted
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
       console.error("Error sending message:", error);
       setMessages((prev) => [
         ...prev,
@@ -296,6 +403,7 @@ function ViewerChatPanelContent({
       ]);
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -388,27 +496,85 @@ function ViewerChatPanelContent({
       </Conversation>
 
       {/* Input */}
-      <div className="border-t border-gray-200 p-3">
+      <div className="relative border-t border-gray-200 p-3">
+        {/* Document Context Selector (@ mention popover) */}
+        {dataroomId && documents.length > 0 && (
+          <DocumentContextSelector
+            documents={documents}
+            folders={folders}
+            selectedItems={selectedContextItems}
+            onSelectionChange={setSelectedContextItems}
+            open={selectorOpen}
+            onOpenChange={setSelectorOpen}
+          />
+        )}
+
         <PromptInput onSubmit={handleSubmit}>
-          {/* Show focused document as an attachment when in dataroom */}
-          {documentId && documentName && (
+          {/* Show focused document or selected context items */}
+          {(documentId && documentName) || selectedContextItems.length > 0 ? (
             <PromptInputHeader>
-              <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
-                <FileTextIcon className="size-3" />
-                <span className="max-w-[200px] truncate">{documentName}</span>
-              </div>
+              {documentId && documentName ? (
+                <TooltipProvider>
+                  <Tooltip delayDuration={300}>
+                    <TooltipTrigger asChild>
+                      <div className="relative flex h-8 select-none items-center gap-1.5 rounded-md border border-border bg-muted/50 px-1.5 text-sm font-medium text-muted-foreground transition-all dark:hover:bg-accent/50">
+                        <div className="relative size-5 shrink-0">
+                          <div className="absolute inset-0 flex size-5 items-center justify-center overflow-hidden rounded bg-background">
+                            <FileTextIcon className="size-4 text-muted-foreground" />
+                          </div>
+                        </div>
+                        <span className="max-w-[150px] flex-1 truncate">
+                          {documentName}
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[300px]">
+                      <p className="break-all">{documentName}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <SelectedContextItems
+                  items={selectedContextItems}
+                  onRemove={handleRemoveContextItem}
+                />
+              )}
             </PromptInputHeader>
-          )}
+          ) : null}
           <PromptInputTextarea
-            placeholder="Ask a question..."
+            placeholder={
+              dataroomId && documents.length > 0
+                ? "Ask a question... (click + to add context)"
+                : "Ask a question..."
+            }
             disabled={isLoading}
             className="min-h-12"
           />
-          <PromptInputFooter className="justify-end pt-2">
-            <PromptInputSubmit
-              disabled={isLoading}
-              status={isLoading ? "streaming" : "ready"}
-            />
+          <PromptInputFooter className="pt-2">
+            {/* @ button to open document selector */}
+            {dataroomId && documents.length > 0 && (
+              <PromptInputTools>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <PromptInputButton
+                        onClick={() => setSelectorOpen(true)}
+                        disabled={isLoading}
+                      >
+                        <PlusIcon className="size-4" />
+                      </PromptInputButton>
+                    </TooltipTrigger>
+                    <TooltipContent>Add document context</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </PromptInputTools>
+            )}
+            <div className="flex-1" />
+            {isLoading ? (
+              <PromptInputSubmit onClick={handleAbort} status="streaming" />
+            ) : (
+              <PromptInputSubmit status="ready" />
+            )}
           </PromptInputFooter>
         </PromptInput>
       </div>
