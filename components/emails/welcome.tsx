@@ -101,7 +101,7 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
               >
                 page-by-page analytics
               </Link>{" "}
-              in real-time to see who's viewing your documents.
+              in real-time to see who&apos;s viewing your documents.
             </Text>
 
             <Text className="mb-8 text-sm leading-6 text-gray-600">
