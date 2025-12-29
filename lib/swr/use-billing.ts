@@ -137,7 +137,7 @@ export function usePlan({
     isBusiness: parsedPlan.plan === "business",
     isDatarooms:
       parsedPlan.plan === "datarooms" || parsedPlan.plan === "datarooms-plus" || parsedPlan.plan === "datarooms-premium",
-    isDataroomsPlus: parsedPlan.plan === "datarooms-plus",
+    isDataroomsPlus: parsedPlan.plan === "datarooms-plus" || parsedPlan.plan === "datarooms-premium",
     isDataroomsPremium: parsedPlan.plan === "datarooms-premium",
     loading: !plan && !error && !!teamId, // Only show loading if we have a teamId but no data
     error,
