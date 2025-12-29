@@ -391,7 +391,6 @@ export async function fetchDocumentLinkData({
         select: {
           id: true,
           name: true,
-          assistantEnabled: true,
           advancedExcelEnabled: true,
           downloadOnly: true,
           teamId: true,

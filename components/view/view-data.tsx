@@ -101,7 +101,6 @@ export default function ViewData({
       ("conversationsEnabled" in viewData
         ? viewData.conversationsEnabled
         : false),
-    assistantEnabled: document.assistantEnabled,
     allowDownload:
       document.downloadOnly ||
       isDownloadAllowed(canDownload, link.allowDownload ?? false),

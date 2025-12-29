@@ -96,7 +96,6 @@ export default async function handle(
           id: undefined,
           teamId: teamId,
           ownerId: userId,
-          assistantEnabled: false,
           createdAt: undefined,
           updatedAt: undefined,
           file: document.file.replace(data?.fromLocation!, data?.toLocation!),
