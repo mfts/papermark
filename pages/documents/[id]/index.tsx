@@ -11,7 +11,6 @@ import { useDocumentLinks } from "@/lib/swr/use-document";
 import { useDocumentOverview } from "@/lib/swr/use-document-overview";
 
 import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
-import { AnnotationSheet } from "@/components/documents/annotations/annotation-sheet";
 import DocumentHeader from "@/components/documents/document-header";
 import { DocumentPreviewButton } from "@/components/documents/document-preview-button";
 // Import placeholder components
@@ -70,9 +69,7 @@ export default function DocumentPage() {
     document: prismaDocument,
     primaryVersion,
     limits,
-    featureFlags,
     team,
-    counts,
     isEmpty,
     loading: overviewLoading,
     error,
@@ -166,15 +163,6 @@ export default function DocumentPage() {
               primaryVersion={primaryVersion}
               onUrlUpdate={mutateDocument}
             />,
-            // <>
-            //   {featureFlags?.annotations && (
-            //     <AnnotationSheet
-            //       documentId={prismaDocument.id}
-            //       teamId={teamId}
-            //       numPages={primaryVersion.numPages || 1}
-            //     />
-            //   )}
-            // </>,
             <DocumentPreviewButton
               key={"preview"}
               documentId={prismaDocument.id}
