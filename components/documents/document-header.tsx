@@ -236,12 +236,26 @@ export default function DocumentHeader({
       );
 
       if (!indexResponse.ok) {
-        const error = await indexResponse.json();
         // If indexing fails, still keep AI enabled but show warning
-        toast.warning(
-          error.error ||
-            "AI enabled, but document indexing failed. You can re-index from settings.",
-        );
+        let errorMessage =
+          "AI enabled, but document indexing failed. You can re-index from settings.";
+        try {
+          const error = await indexResponse.json();
+          if (error.error) {
+            errorMessage = error.error;
+          }
+        } catch {
+          // JSON parsing failed, try to get raw text
+          try {
+            const text = await indexResponse.text();
+            if (text) {
+              errorMessage = text;
+            }
+          } catch {
+            // Ignore text parsing errors, use default message
+          }
+        }
+        toast.warning(errorMessage);
       } else {
         toast.success("AI agents enabled and document indexed successfully");
       }
@@ -502,8 +516,6 @@ export default function DocumentHeader({
       },
     );
   };
-
-  console.log("prismaDocument", prismaDocument);
 
   return (
     <header className="flex flex-col gap-y-4">
