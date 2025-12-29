@@ -99,6 +99,20 @@ export async function POST(
       );
     }
 
+    if (
+      filterDataroomDocumentIds &&
+      filterDataroomDocumentIds.length > 0 &&
+      !chat.dataroomId
+    ) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Dataroom document filters are only allowed for dataroom chats",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
     // Generate title from first message if not set
     if (!chat.title && chat.messages.length === 0) {
       const title = await generateChatTitle(content);
