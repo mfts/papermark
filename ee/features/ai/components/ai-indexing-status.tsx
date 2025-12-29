@@ -61,7 +61,9 @@ export function AIIndexingStatus({
         <div className="flex items-center gap-3">
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
           <div className="flex flex-1 flex-col gap-1">
-            <span className="text-sm text-muted-foreground">{step || "Processing..."}</span>
+            <span className="text-sm text-muted-foreground">
+              {step || "Processing..."}
+            </span>
             <Progress value={progress} className="h-1.5" />
           </div>
           <span className="text-xs text-muted-foreground">{progress}%</span>
@@ -83,47 +85,6 @@ export function AIIndexingStatus({
           </span>
         </div>
       )}
-    </div>
-  );
-}
-
-interface AIIndexingBatchStatusProps {
-  runs: Array<{
-    documentId: string;
-    documentName: string;
-    runId: string;
-  }>;
-  onAllComplete?: () => void;
-  className?: string;
-}
-
-/**
- * Status display for batch AI indexing (multiple documents)
- */
-export function AIIndexingBatchStatus({
-  runs,
-  onAllComplete,
-  className,
-}: AIIndexingBatchStatusProps) {
-  if (runs.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className={cn("space-y-3", className)}>
-      <div className="text-sm font-medium">
-        Indexing {runs.length} document{runs.length > 1 ? "s" : ""}...
-      </div>
-      <div className="max-h-60 space-y-2 overflow-y-auto">
-        {runs.map((run) => (
-          <div key={run.documentId} className="rounded border p-2">
-            <div className="mb-1 text-xs font-medium truncate">
-              {run.documentName}
-            </div>
-            <AIIndexingStatus runId={run.runId} />
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
