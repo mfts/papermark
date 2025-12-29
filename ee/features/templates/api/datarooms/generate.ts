@@ -48,17 +48,20 @@ export default async function handle(
         where: {
           id: teamId,
           plan: {
-            // exclude all teams not on `business`, `datarooms`, `datarooms-plus`, `business+old`, `datarooms+old`, `datarooms-plus+old` plan
+            // exclude all teams not on `business`, `datarooms`, `datarooms-plus`, `datarooms-premium`, `business+old`, `datarooms+old`, `datarooms-plus+old`, `datarooms-premium+old` plan
             in: [
               "business",
               "datarooms",
               "datarooms-plus",
+              "datarooms-premium",
               "business+old",
               "datarooms+old",
               "datarooms-plus+old",
+              "datarooms-premium+old",
               "datarooms+drtrial",
               "business+drtrial",
               "datarooms-plus+drtrial",
+              "datarooms-premium+drtrial",
             ],
           },
           users: {
