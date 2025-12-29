@@ -78,6 +78,11 @@ If you cannot find the answer in the documents, say so clearly.`,
       effectiveIds = userSelectedDataroomDocumentIds.filter((id) =>
         filteredDataroomDocumentIds.includes(id),
       );
+      // Security: If intersection is empty (user sent unauthorized IDs),
+      // fall back to the permission-based filter to prevent searching all documents
+      if (effectiveIds.length === 0) {
+        effectiveIds = filteredDataroomDocumentIds;
+      }
     }
     if (effectiveIds.length > 0) {
       fileSearchOptions.filters = {
