@@ -1,10 +1,11 @@
-import { runs } from "@trigger.dev/sdk/v3";
 import { NextRequest, NextResponse } from "next/server";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { runs } from "@trigger.dev/sdk/v3";
+import { getServerSession } from "next-auth";
+
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { getServerSession } from "next-auth";
 
 /**
  * GET /api/ai/store/runs/[runId]
