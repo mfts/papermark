@@ -61,7 +61,6 @@ export type TNavData = {
   isPreview?: boolean;
   dataroomId?: string;
   conversationsEnabled?: boolean;
-  assistantEnabled?: boolean;
   isTeamMember?: boolean;
   annotationsEnabled?: boolean;
   hasAnnotations?: boolean;
@@ -110,7 +109,6 @@ export default function Nav({
     documentId,
     dataroomId,
     conversationsEnabled,
-    assistantEnabled,
     isTeamMember,
     annotationsEnabled,
     hasAnnotations,
@@ -365,21 +363,7 @@ export default function Nav({
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : null}
-            {assistantEnabled ? (
-              <Link href={`/view/${linkId}/chat`}>
-                <Button
-                  className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
-                  variant={"special"}
-                  size={"icon"}
-                  style={{
-                    backgroundSize: "200% auto",
-                  }}
-                  title="Open AI Document Assistant"
-                >
-                  <PapermarkSparkle className="h-5 w-5" />
-                </Button>
-              </Link>
-            ) : null}
+
             {allowDownload ? (
               <Button
                 onClick={downloadFile}

@@ -10,6 +10,8 @@ interface SendMessageOptions {
   filteredDataroomDocumentIds?: string[];
   /** Filter file_search results to a specific document by its ID */
   filterDocumentId?: string;
+  /** User-selected dataroom document IDs to filter file_search results */
+  userSelectedDataroomDocumentIds?: string[];
 }
 
 /**
@@ -22,6 +24,7 @@ export async function sendMessage({
   vectorStoreId,
   filteredDataroomDocumentIds,
   filterDocumentId,
+  userSelectedDataroomDocumentIds,
 }: SendMessageOptions) {
   // Get conversation history from database
   const history = await prisma.chatMessage.findMany({
@@ -63,7 +66,37 @@ If you cannot find the answer in the documents, say so clearly.`,
       key: "documentId",
       value: filterDocumentId,
     };
-  } else if (filteredDataroomDocumentIds) {
+  } else if (
+    userSelectedDataroomDocumentIds &&
+    userSelectedDataroomDocumentIds.length > 0
+  ) {
+    // User explicitly selected documents to filter to
+    // Intersect with permission-based filter if it exists
+    let effectiveIds = userSelectedDataroomDocumentIds;
+    if (filteredDataroomDocumentIds && filteredDataroomDocumentIds.length > 0) {
+      // Only include user-selected IDs that are also in the permission-filtered list
+      effectiveIds = userSelectedDataroomDocumentIds.filter((id) =>
+        filteredDataroomDocumentIds.includes(id),
+      );
+      // Security: If intersection is empty (user sent unauthorized IDs),
+      // fall back to the permission-based filter to prevent searching all documents
+      if (effectiveIds.length === 0) {
+        effectiveIds = filteredDataroomDocumentIds;
+      }
+    }
+    if (effectiveIds.length > 0) {
+      fileSearchOptions.filters = {
+        type: "in",
+        key: "dataroomDocumentId",
+        value: effectiveIds,
+      };
+    }
+  } else if (
+    filteredDataroomDocumentIds &&
+    filteredDataroomDocumentIds.length > 0
+  ) {
+    // Only apply filter if there are specific documents to filter to
+    // An empty array would filter out ALL documents
     fileSearchOptions.filters = {
       type: "in",
       key: "dataroomDocumentId",

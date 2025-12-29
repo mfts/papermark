@@ -8,11 +8,20 @@ import {
   useState,
 } from "react";
 
+import { DataroomFolder } from "@prisma/client";
+
 import { cn } from "@/lib/utils";
 
 // ============================================================================
 // Types
 // ============================================================================
+
+export interface DataroomDocumentForChat {
+  dataroomDocumentId: string;
+  id: string;
+  name: string;
+  folderId: string | null;
+}
 
 interface ViewerChatConfig {
   dataroomId?: string;
@@ -24,23 +33,18 @@ interface ViewerChatConfig {
   viewerId?: string;
 }
 
-// interface FocusedDocument {
-//   id: string;
-//   name: string;
-// }
-
 interface ViewerChatContextType {
   // State
   isOpen: boolean;
   isEnabled: boolean;
   config: ViewerChatConfig;
-  // focusedDocument: FocusedDocument | null;
+  documents: DataroomDocumentForChat[];
+  folders: DataroomFolder[];
 
   // Actions
   open: () => void;
   close: () => void;
   toggle: () => void;
-  // setFocusedDocument: (doc: FocusedDocument | null) => void;
 }
 
 // ============================================================================
@@ -83,9 +87,8 @@ interface ViewerChatProviderProps {
   linkId?: string;
   viewId?: string;
   viewerId?: string;
-  // /** For dataroom document views - the currently focused document */
-  // focusedDocumentId?: string;
-  // focusedDocumentName?: string;
+  documents?: DataroomDocumentForChat[];
+  folders?: DataroomFolder[];
 }
 
 export function ViewerChatProvider({
@@ -98,24 +101,14 @@ export function ViewerChatProvider({
   linkId,
   viewId,
   viewerId,
-  // focusedDocumentId,
-  // focusedDocumentName,
+  documents = [],
+  folders = [],
 }: ViewerChatProviderProps) {
   const [isOpen, setIsOpen] = useState(false);
-  // const [focusedDocument, setFocusedDocumentState] =
-  // useState<FocusedDocument | null>(
-  //   focusedDocumentId && focusedDocumentName
-  //     ? { id: focusedDocumentId, name: focusedDocumentName }
-  //     : null,
-  // );
 
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
   const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
-  // const setFocusedDocument = useCallback(
-  //   (doc: FocusedDocument | null) => setFocusedDocumentState(doc),
-  //   [],
-  // );
 
   const config: ViewerChatConfig = {
     dataroomId,
@@ -131,11 +124,11 @@ export function ViewerChatProvider({
     isOpen,
     isEnabled: enabled,
     config,
-    // focusedDocument,
+    documents,
+    folders,
     open,
     close,
     toggle,
-    // setFocusedDocument,
   };
 
   return (
