@@ -16,6 +16,7 @@ import DeleteTeam from "@/components/settings/delete-team";
 import GlobalBlockListForm from "@/components/settings/global-block-list-form";
 import IgnoredDomainsForm from "@/components/settings/ignored-domains-form";
 import { SettingsHeader } from "@/components/settings/settings-header";
+import { TimezoneSelector } from "@/components/settings/timezone-selector";
 import { Form } from "@/components/ui/form";
 
 export default function General() {
@@ -221,6 +222,7 @@ export default function General() {
             helpText="When enabled, folders uploaded to datarooms will be created in 'All Documents' with the same structure. When disabled, all documents will be placed in a single folder named after the dataroom in 'All Documents'."
             handleSubmit={handleReplicateFoldersChange}
           />
+          <TimezoneSelector />
           <IgnoredDomainsForm />
           <GlobalBlockListForm />
 
