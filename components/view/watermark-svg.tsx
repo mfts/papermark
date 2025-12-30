@@ -20,10 +20,11 @@ export const SVGWatermark = ({
 
   const { width, height } = documentDimensions;
 
-  // Calculate a responsive font size
+  // Calculate a responsive font size that scales proportionally with document size
+  // This ensures watermarks appear the same relative size regardless of resolution
   const calculateFontSize = () => {
     const baseFontSize = Math.min(width, height) * (config.fontSize / 1000);
-    return Math.max(8, Math.min(baseFontSize, config.fontSize)); // Clamp between 8px and config.fontSize
+    return Math.max(8, baseFontSize); // Only clamp minimum for readability
   };
 
   const fontSize = calculateFontSize();

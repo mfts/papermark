@@ -124,8 +124,12 @@ export default function DocumentCard({
       // Check if the response is JSON (for direct downloads) or binary (for buffered files)
       const contentType = response.headers.get("content-type");
 
-      // If it's a watermarked PDF, handle it with the buffer method
-      if (contentType?.includes("application/pdf")) {
+      // If it's a watermarked file (PDF or image), handle it with the buffer method
+      const isBinaryDownload =
+        contentType?.includes("application/pdf") ||
+        contentType?.startsWith("image/");
+
+      if (isBinaryDownload) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
 
