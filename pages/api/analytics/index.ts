@@ -73,6 +73,7 @@ export default async function handler(
         id: true,
         plan: true,
         pauseStartsAt: true,
+        timezone: true,
       },
     });
 
@@ -82,6 +83,8 @@ export default async function handler(
 
     // Get pause date filter if team is paused
     const pauseStartsAt = team.pauseStartsAt;
+    // Get team timezone for analytics display (defaults to UTC)
+    const timezone = team.timezone || "Etc/UTC";
 
     // Check if free plan user is trying to access data beyond 30 days
     if (interval === "custom" && team.plan.includes("free")) {
@@ -174,10 +177,12 @@ export default async function handler(
             },
           }),
           // Get views data for graph grouped by day
+          // Note: We use timezone-aware date truncation to ensure dates are grouped
+          // correctly based on the team's timezone setting, avoiding one-day offset issues
           interval === "24h"
             ? prisma.$queryRaw`
                 SELECT 
-                  DATE_TRUNC('hour', "viewedAt") as date,
+                  DATE_TRUNC('hour', "viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE ${timezone}) as date,
                   COUNT(*) as views
                 FROM "View"
                 WHERE 
@@ -185,13 +190,13 @@ export default async function handler(
                   AND "viewedAt" >= ${startDate}
                   AND "isArchived" = false
                   AND "viewType" = 'DOCUMENT_VIEW'
-                GROUP BY DATE_TRUNC('hour', "viewedAt")
+                GROUP BY 1
                 ORDER BY date ASC
               `
             : interval === "custom"
               ? prisma.$queryRaw`
                 SELECT 
-                  DATE_TRUNC('day', "viewedAt") as date,
+                  DATE_TRUNC('day', "viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE ${timezone}) as date,
                   COUNT(*) as views
                 FROM "View"
                 WHERE 
@@ -200,12 +205,12 @@ export default async function handler(
                   AND "viewedAt" <= ${endDate}
                   AND "isArchived" = false
                   AND "viewType" = 'DOCUMENT_VIEW'
-                GROUP BY DATE_TRUNC('day', "viewedAt")
+                GROUP BY 1
                 ORDER BY date ASC
               `
               : prisma.$queryRaw`
                 SELECT 
-                  DATE_TRUNC('day', "viewedAt") as date,
+                  DATE_TRUNC('day', "viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE ${timezone}) as date,
                   COUNT(*) as views
                 FROM "View"
                 WHERE 
@@ -213,7 +218,7 @@ export default async function handler(
                   AND "viewedAt" >= ${startDate}
                   AND "isArchived" = false
                   AND "viewType" = 'DOCUMENT_VIEW'
-                GROUP BY DATE_TRUNC('day', "viewedAt")
+                GROUP BY 1
                 ORDER BY date ASC
               `,
         ]);
@@ -238,6 +243,7 @@ export default async function handler(
               views: Number(point.views),
             }),
           ),
+          timezone, // Include timezone for frontend reference
         });
       }
 

@@ -45,6 +45,7 @@ model Team {
   // team settings
   enableExcelAdvancedMode Boolean @default(false) // Enable Excel advanced mode for all documents in the team
   replicateDataroomFolders Boolean @default(true) // Replicate dataroom folder structure in "All Documents"
+  timezone               String  @default("Etc/UTC") // Team-wide timezone for analytics display (IANA timezone identifier)
 
   // AI agents
   agentsEnabled Boolean @default(false) // Enable AI agents for the team
