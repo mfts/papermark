@@ -9,8 +9,23 @@ import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
 
+// Validate IANA timezone by attempting to use it with Intl.DateTimeFormat
+const isValidIANATimezone = (tz: string): boolean => {
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const updateSettingsSchema = z.object({
-  timezone: z.string().optional(),
+  timezone: z
+    .string()
+    .refine(isValidIANATimezone, (tz) => ({
+      message: `Invalid timezone: "${tz}" is not a valid IANA timezone identifier. Examples of valid timezones: "America/New_York", "Europe/London", "Asia/Tokyo".`,
+    }))
+    .optional(),
   replicateDataroomFolders: z.boolean().optional(),
   enableExcelAdvancedMode: z.boolean().optional(),
 });
