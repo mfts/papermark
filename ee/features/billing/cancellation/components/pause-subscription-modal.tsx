@@ -54,16 +54,14 @@ export function PauseSubscriptionModal({
         throw new Error("Failed to pause subscription");
       }
 
-      const pauseStartsAt = endsAt ? new Date(endsAt) : new Date();
-      const pauseEndsAt = new Date(pauseStartsAt);
-      pauseEndsAt.setDate(pauseStartsAt.getDate() + 90);
+      const data = await response.json();
 
-      // Track the pause event for analytics
+      // Track the pause event for analytics using actual dates from API
       analytics.capture("Subscription Paused", {
         teamId: currentTeamId,
         plan: plan,
-        pauseStartsAt: pauseStartsAt.toISOString(),
-        pauseEndsAt: pauseEndsAt.toISOString(),
+        pauseStartsAt: data.pauseStartsAt,
+        pauseEndsAt: data.pauseEndsAt,
         pauseDurationDays: 90,
       });
 
@@ -79,7 +77,10 @@ export function PauseSubscriptionModal({
     }
   };
 
-  const pauseStartsAt = endsAt ? new Date(endsAt) : new Date();
+  // Ensure pauseStartsAt is never in the past - pause should start at next billing cycle
+  const now = new Date();
+  const endsAtDate = endsAt ? new Date(endsAt) : now;
+  const pauseStartsAt = endsAtDate > now ? endsAtDate : now;
   const pauseEndsAt = new Date(pauseStartsAt);
   pauseEndsAt.setDate(pauseStartsAt.getDate() + 90);
 
