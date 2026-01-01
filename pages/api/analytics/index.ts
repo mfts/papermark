@@ -190,7 +190,7 @@ export default async function handler(
                   AND "viewedAt" >= ${startDate}
                   AND "isArchived" = false
                   AND "viewType" = 'DOCUMENT_VIEW'
-                GROUP BY DATE_TRUNC('hour', "viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE ${timezone})
+                GROUP BY 1
                 ORDER BY date ASC
               `
             : interval === "custom"
@@ -205,7 +205,7 @@ export default async function handler(
                   AND "viewedAt" <= ${endDate}
                   AND "isArchived" = false
                   AND "viewType" = 'DOCUMENT_VIEW'
-                GROUP BY DATE_TRUNC('day', "viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE ${timezone})
+                GROUP BY 1
                 ORDER BY date ASC
               `
               : prisma.$queryRaw`
@@ -218,7 +218,7 @@ export default async function handler(
                   AND "viewedAt" >= ${startDate}
                   AND "isArchived" = false
                   AND "viewType" = 'DOCUMENT_VIEW'
-                GROUP BY DATE_TRUNC('day', "viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE ${timezone})
+                GROUP BY 1
                 ORDER BY date ASC
               `,
         ]);
