@@ -64,7 +64,18 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
       const isOldAccount = team.plan.includes("+old");
       const stripe = stripeInstance(isOldAccount);
 
-      const pauseStartsAt = team.endsAt ? new Date(team.endsAt) : new Date();
+      // Fetch the subscription from Stripe to get the actual current_period_end
+      // This ensures we don't use stale data from the database
+      const subscription = await stripe.subscriptions.retrieve(
+        team.subscriptionId,
+      );
+
+      // Use the actual current_period_end from Stripe, ensuring pause starts at next billing cycle
+      // Never allow retroactive pausing - pauseStartsAt must be in the future
+      const now = new Date();
+      const stripePeriodEnd = new Date(subscription.current_period_end * 1000);
+      const pauseStartsAt = stripePeriodEnd > now ? stripePeriodEnd : now;
+
       const pauseEndsAt = new Date(pauseStartsAt);
       pauseEndsAt.setDate(pauseStartsAt.getDate() + 90);
       const reminderAt = new Date(pauseEndsAt);
@@ -132,6 +143,8 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
       res.status(200).json({
         success: true,
         message: "Subscription paused successfully",
+        pauseStartsAt: pauseStartsAt.toISOString(),
+        pauseEndsAt: pauseEndsAt.toISOString(),
       });
     } catch (error) {
       console.error("Error pausing subscription:", error);
