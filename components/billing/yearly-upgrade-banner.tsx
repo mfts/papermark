@@ -163,7 +163,7 @@ export default function YearlyUpgradeBanner({
           Compare all plans
         </p>
         <p className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
-          Limited time offer • Ends Dec 31
+          New Year&apos;s offer • Ends Jan 15
         </p>
       </motion.aside>
     </AnimatePresence>

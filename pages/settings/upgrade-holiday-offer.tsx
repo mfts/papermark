@@ -178,7 +178,7 @@ export default function UpgradeHolidayOfferPage() {
         Select best plan for your business.
       </h1>
       <p className="mb-8 text-center text-sm text-gray-500 dark:text-gray-400">
-        Additional 30% off on annual plans. Limited time offer. Ends Dec 31 2025
+        Additional 30% off on annual plans. New Year&apos;s offer. Ends Jan 15 2026
       </p>
 
       <div className="mb-8 flex items-center justify-center">
