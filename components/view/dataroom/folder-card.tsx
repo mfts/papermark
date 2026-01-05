@@ -112,13 +112,13 @@ export default function FolderCard({
               className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg"
               style={HIERARCHICAL_DISPLAY_STYLE}
             >
-              <div
+              <span
                 onClick={() => setFolderId(folder.id)}
-                className="w-full truncate"
+                className="cursor-pointer"
               >
-                <span>{displayName}</span>
+                {displayName}
                 <span className="absolute inset-0" />
-              </div>
+              </span>
             </h2>
           </div>
           <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">

@@ -206,10 +206,10 @@ export default function DocumentCard({
             >
               <button
                 onClick={handleDocumentClick}
-                className="w-full truncate"
+                className="cursor-pointer text-left"
                 disabled={isProcessing}
               >
-                <span>{displayName}</span>
+                {displayName}
                 {isProcessing && (
                   <span className="ml-2 text-xs text-muted-foreground">
                     (Processing...)
