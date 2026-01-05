@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import {
   getDataroomSystemPrompt,
   getDataroomUserPrompt,
@@ -76,6 +77,15 @@ export default async function handle(
       });
       if (!teamAccess) {
         return res.status(401).end("Unauthorized");
+      }
+
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. New dataroom creation is not available.",
+        });
       }
 
       // Use AI SDK with structured outputs to generate folder structure
