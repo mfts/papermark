@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import {
   DATAROOM_TEMPLATES,
   FolderTemplate,
@@ -74,6 +75,15 @@ export default async function handle(
 
       if (!team) {
         return res.status(401).end("Unauthorized");
+      }
+
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. New dataroom creation is not available.",
+        });
       }
 
       // Limits: Check if the user has reached the limit of datarooms in the team
