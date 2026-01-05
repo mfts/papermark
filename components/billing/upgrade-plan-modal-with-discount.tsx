@@ -271,11 +271,11 @@ export function UpgradePlanModalWithDiscount({
               </div>
               <div className="flex w-full items-center gap-2">
                 <div className="h-px flex-1 bg-[#fb7a00]"></div>
-                <p className="text-sm font-semibold text-[#fb7a00]">NEW YEAR'S</p>
+                <p className="text-sm font-semibold text-[#fb7a00]">NEW YEAR&apos;S</p>
                 <div className="h-px flex-1 bg-[#fb7a00]"></div>
               </div>
               <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                New Year's offer
+                New Year&apos;s offer
               </p>
               {/* <div className="absolute bottom-0 h-12 w-12 text-[#fb7a00] opacity-20">
                 <Sparkles className="h-full w-full" />
