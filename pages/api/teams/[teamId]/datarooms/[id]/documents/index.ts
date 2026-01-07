@@ -1,18 +1,18 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import {
+  SUPPORTED_AI_CONTENT_TYPES,
   addFileToVectorStoreTask,
   processDocumentForAITask,
-  SUPPORTED_AI_CONTENT_TYPES,
 } from "@/ee/features/ai/lib/trigger";
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { runs } from "@trigger.dev/sdk/v3";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
-import { getFeatureFlags } from "@/lib/featureFlags";
 import { errorhandler } from "@/lib/errorHandler";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { sendDataroomChangeNotificationTask } from "@/lib/trigger/dataroom-change-notification";
 import { CustomUser } from "@/lib/types";
@@ -216,7 +216,11 @@ export default async function handle(
         // Check if AI feature is enabled for the team
         const features = await getFeatureFlags({ teamId });
 
-        if (features.ai && primaryVersion && SUPPORTED_AI_CONTENT_TYPES.includes(contentType)) {
+        if (
+          features.ai &&
+          primaryVersion &&
+          SUPPORTED_AI_CONTENT_TYPES.includes(contentType)
+        ) {
           const filePath =
             primaryVersion.originalFile && contentType !== "application/pdf"
               ? primaryVersion.originalFile
