@@ -16,7 +16,7 @@ import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { sendDataroomChangeNotificationTask } from "@/lib/trigger/dataroom-change-notification";
 import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { log, serializeFileSize } from "@/lib/utils";
 import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 
 export const config = {
@@ -310,7 +310,7 @@ export default async function handle(
         );
       }
 
-      return res.status(201).json(dataroomDocument);
+      return res.status(201).json(serializeFileSize(dataroomDocument));
     } catch (error) {
       log({
         message: `Failed to create dataroom document. \n\n*teamId*: _${teamId}_, \n\n*dataroomId*: ${dataroomId} \n\n ${error}`,
