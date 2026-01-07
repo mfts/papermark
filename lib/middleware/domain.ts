@@ -32,6 +32,12 @@ export default async function DomainMiddleware(req: NextRequest) {
       );
     }
 
+    if (host === "research.elazaradvisors.com") {
+      return NextResponse.redirect(
+        new URL("https://research.elazaradvisors.com/root", req.url),
+      );
+    }
+
     return NextResponse.redirect(
       new URL("https://www.papermark.com/home", req.url),
     );
