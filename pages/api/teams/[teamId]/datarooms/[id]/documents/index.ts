@@ -1,22 +1,22 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import {
+  SUPPORTED_AI_CONTENT_TYPES,
   addFileToVectorStoreTask,
   processDocumentForAITask,
-  SUPPORTED_AI_CONTENT_TYPES,
 } from "@/ee/features/ai/lib/trigger";
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { runs } from "@trigger.dev/sdk/v3";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
-import { getFeatureFlags } from "@/lib/featureFlags";
 import { errorhandler } from "@/lib/errorHandler";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { sendDataroomChangeNotificationTask } from "@/lib/trigger/dataroom-change-notification";
 import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { log, serializeFileSize } from "@/lib/utils";
 import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 
 export const config = {
@@ -216,7 +216,11 @@ export default async function handle(
         // Check if AI feature is enabled for the team
         const features = await getFeatureFlags({ teamId });
 
-        if (features.ai && primaryVersion && SUPPORTED_AI_CONTENT_TYPES.includes(contentType)) {
+        if (
+          features.ai &&
+          primaryVersion &&
+          SUPPORTED_AI_CONTENT_TYPES.includes(contentType)
+        ) {
           const filePath =
             primaryVersion.originalFile && contentType !== "application/pdf"
               ? primaryVersion.originalFile
@@ -310,7 +314,7 @@ export default async function handle(
         );
       }
 
-      return res.status(201).json(dataroomDocument);
+      return res.status(201).json(serializeFileSize(dataroomDocument));
     } catch (error) {
       log({
         message: `Failed to create dataroom document. \n\n*teamId*: _${teamId}_, \n\n*dataroomId*: ${dataroomId} \n\n ${error}`,
