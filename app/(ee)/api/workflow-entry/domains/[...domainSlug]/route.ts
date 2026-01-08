@@ -125,7 +125,21 @@ async function handleVerify(req: NextRequest, link: any) {
 
   const { email } = validation.data;
 
-  // Rate limiting
+  // Rate limit per email/link combination (1 per 30 seconds) to prevent OTP flooding
+  const { success: emailLimitSuccess } = await ratelimit(1, "30 s").limit(
+    `workflow-otp:${link.id}:${email}`,
+  );
+  if (!emailLimitSuccess) {
+    return NextResponse.json(
+      {
+        error:
+          "Please wait before requesting another code. Try again in 30 seconds.",
+      },
+      { status: 429 },
+    );
+  }
+
+  // Additional IP-based rate limit (10 per minute) to prevent abuse across different emails
   const ipAddressValue = ipAddress(req);
   const { success } = await ratelimit(10, "1 m").limit(
     `workflow-otp:${ipAddressValue}`,
