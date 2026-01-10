@@ -76,7 +76,21 @@ export async function POST(
       );
     }
 
-    // Rate limiting
+    // Rate limit per email/entryLink combination (1 per 30 seconds) to prevent OTP flooding
+    const { success: emailLimitSuccess } = await ratelimit(1, "30 s").limit(
+      `workflow-otp:${entryLinkId}:${email}`,
+    );
+    if (!emailLimitSuccess) {
+      return NextResponse.json(
+        {
+          error:
+            "Please wait before requesting another code. Try again in 30 seconds.",
+        },
+        { status: 429 },
+      );
+    }
+
+    // Additional IP-based rate limit (10 per minute) to prevent abuse across different emails
     const ipAddressValue = ipAddress(req);
     const { success } = await ratelimit(10, "1 m").limit(
       `workflow-otp:${ipAddressValue}`,

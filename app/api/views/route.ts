@@ -288,6 +288,21 @@ export async function POST(request: NextRequest) {
       if (link.emailAuthenticated && !code && !token) {
         const ipAddressValue = ipAddress(request);
 
+        // Rate limit per email/link combination (1 per 30 seconds) to prevent OTP flooding
+        const { success: emailLimitSuccess } = await ratelimit(1, "30 s").limit(
+          `send-otp:${linkId}:${email}`,
+        );
+        if (!emailLimitSuccess) {
+          return NextResponse.json(
+            {
+              message:
+                "Please wait before requesting another code. Try again in 30 seconds.",
+            },
+            { status: 429 },
+          );
+        }
+
+        // Additional IP-based rate limit (10 per minute) to prevent abuse across different emails
         const { success } = await ratelimit(10, "1 m").limit(
           `send-otp:${ipAddressValue}`,
         );
