@@ -16,6 +16,14 @@ export const config = {
 };
 
 /**
+ * @deprecated This endpoint is deprecated. Use /api/mupdf/watermark instead.
+ * The new endpoint provides secure pixel-burned watermarks that cannot be removed.
+ * This endpoint creates text layer watermarks that can be removed with PDF editing tools.
+ *
+ * This endpoint is kept for backwards compatibility but will be removed in a future version.
+ */
+
+/**
  * Validates a URL to prevent SSRF attacks.
  * Only allows HTTPS requests to the configured distribution hosts.
  */
