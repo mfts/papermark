@@ -40,6 +40,7 @@ type DataroomTag = {
 type DataroomWithDetails = {
   id: string;
   name: string;
+  internalName?: string | null;
   _count: {
     documents: number;
     views: number;
@@ -87,7 +88,16 @@ export default function DataroomCard({ dataroom }: DataroomCardProps) {
       <Link href={`/datarooms/${dataroom.id}/documents`}>
         <CardHeader>
           <div className="flex items-start justify-between gap-2">
-            <CardTitle className="truncate text-lg">{dataroom.name}</CardTitle>
+            <div className="flex-1 min-w-0">
+              <CardTitle className="truncate text-lg">
+                {dataroom.internalName || dataroom.name}
+              </CardTitle>
+              {dataroom.internalName && (
+                <p className="truncate text-sm text-muted-foreground mt-0.5">
+                  {dataroom.name}
+                </p>
+              )}
+            </div>
             <div className="flex shrink-0 items-center gap-2">
               <TooltipProvider>
                 <Tooltip>
