@@ -9,6 +9,7 @@ import {
   BetweenHorizontalStartIcon,
   ChevronRight,
   EyeIcon,
+  EyeOffIcon,
   FileIcon,
   FolderIcon,
   FolderInputIcon,
@@ -231,6 +232,77 @@ export default function DocumentsCard({
     );
   };
 
+  const handleHideDocument = async (event: any) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    const page = Number(queryParams["page"]) || 1;
+    const pageSize = Number(queryParams["limit"]) || 10;
+
+    const queryParts = [];
+    if (searchQuery) queryParts.push(`query=${searchQuery}`);
+    if (sortQuery) queryParts.push(`sort=${sortQuery}`);
+
+    const paginationParams =
+      searchQuery || sortQuery ? `&page=${page}&limit=${pageSize}` : "";
+    if (paginationParams) queryParts.push(paginationParams.substring(1));
+    const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+
+    const endpoint = currentFolderPath
+      ? `/folders/documents/${currentFolderPath.join("/")}`
+      : `/documents${queryString}`;
+
+    toast.promise(
+      fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/hide`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          documentIds: [prismaDocument.id],
+          hidden: true,
+        }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.message || "Failed to hide document");
+        }
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}${endpoint}`,
+          (currentData: any) => {
+            if (!currentData) return currentData;
+
+            if (Array.isArray(currentData)) {
+              return currentData.filter(
+                (doc: DocumentWithLinksAndLinkCountAndViewCount) =>
+                  doc.id !== prismaDocument.id,
+              );
+            } else if (currentData.documents) {
+              return {
+                ...currentData,
+                documents: currentData.documents.filter(
+                  (doc: DocumentWithLinksAndLinkCountAndViewCount) =>
+                    doc.id !== prismaDocument.id,
+                ),
+              };
+            }
+            return currentData;
+          },
+          {
+            revalidate: false,
+          },
+        );
+        setMenuOpen(false);
+      }),
+      {
+        loading: "Hiding document from All Documents...",
+        success: "Document hidden from All Documents.",
+        error: (err) =>
+          err.message || "Failed to hide document. Try again.",
+      },
+    );
+  };
+
   return (
     <>
       <div
@@ -378,6 +450,10 @@ export default function DocumentsCard({
                   Add to dataroom
                 </DropdownMenuItem>
               )}
+              <DropdownMenuItem onClick={handleHideDocument}>
+                <EyeOffIcon className="mr-2 h-4 w-4" />
+                Hide from All Documents
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={(event) => handleButtonClick(event, prismaDocument.id)}

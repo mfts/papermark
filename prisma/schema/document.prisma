@@ -16,6 +16,7 @@ model Document {
   advancedExcelEnabled Boolean             @default(false) // This indicates if advanced Excel is enabled for this document
   agentsEnabled        Boolean             @default(false) // This indicates if AI agents are enabled for this document
   downloadOnly         Boolean             @default(false) // Indicates if the document is download only
+  hiddenInAllDocuments Boolean             @default(false) // Indicates if the document is hidden from All Documents view
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
   links                Link[]
@@ -39,6 +40,7 @@ model Document {
   @@index([folderId])
   @@index([teamId, folderId]) // Performance optimization for document filtering by team and folder
   @@index([teamId, name]) // Performance optimization for document search by name
+  @@index([teamId, hiddenInAllDocuments]) // Performance optimization for filtering hidden documents
 }
 
 model DocumentVersion {
@@ -93,21 +95,23 @@ enum DocumentStorageType {
 }
 
 model Folder {
-  id           String     @id @default(cuid())
-  name         String
-  path         String // the materialized path to the folder; starts always with "/"
-  parentId     String?
-  documents    Document[]
-  childFolders Folder[]   @relation("SubFolders")
-  parentFolder Folder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: SetNull)
-  teamId       String
-  team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  id                   String     @id @default(cuid())
+  name                 String
+  path                 String // the materialized path to the folder; starts always with "/"
+  parentId             String?
+  hiddenInAllDocuments Boolean    @default(false) // Indicates if the folder is hidden from All Documents view
+  documents            Document[]
+  childFolders         Folder[]   @relation("SubFolders")
+  parentFolder         Folder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: SetNull)
+  teamId               String
+  team                 Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([teamId, path])
   @@index([parentId])
+  @@index([teamId, hiddenInAllDocuments]) // Performance optimization for filtering hidden folders
 }
 
 model DocumentUpload {

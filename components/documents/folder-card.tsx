@@ -7,6 +7,7 @@ import {
   BetweenHorizontalStartIcon,
   ClipboardCopyIcon,
   CopyIcon,
+  EyeOffIcon,
   FolderIcon,
   FolderInputIcon,
   FolderPenIcon,
@@ -153,6 +154,42 @@ export default function FolderCard({
     router.push(folderPath);
   };
 
+  const handleHideFolder = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    toast.promise(
+      fetch(`/api/teams/${teamInfo?.currentTeam?.id}/folders/hide`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          folderIds: [folder.id],
+          hidden: true,
+        }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.message || "Failed to hide folder");
+        }
+        // Revalidate the folders and documents
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders?root=true`);
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders`);
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/folders${parentFolderPath}`,
+        );
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`);
+        setMenuOpen(false);
+      }),
+      {
+        loading: "Hiding folder from All Documents...",
+        success: "Folder hidden from All Documents.",
+        error: (err) => err.message || "Failed to hide folder. Try again.",
+      },
+    );
+  };
+
   return (
     <>
       <div
@@ -278,6 +315,12 @@ export default function FolderCard({
                   {folder.id}
                 </span>
               </DropdownMenuItem>
+              {!isDataroom && (
+                <DropdownMenuItem onClick={handleHideFolder}>
+                  <EyeOffIcon className="mr-2 h-4 w-4" />
+                  Hide from All Documents
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
 
               <DropdownMenuItem

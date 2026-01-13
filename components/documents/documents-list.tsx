@@ -17,6 +17,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import {
+  EyeOffIcon,
   FileIcon,
   FolderIcon,
   FolderInputIcon,
@@ -25,6 +26,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
+import { mutate } from "swr";
 
 import { moveDocumentToFolder } from "@/lib/documents/move-documents";
 import { moveFolderToFolder } from "@/lib/documents/move-folder";
@@ -347,6 +349,88 @@ export function DocumentsList({
     setSelectedFolders([]);
   };
 
+  const [isHiding, setIsHiding] = useState(false);
+
+  const handleBulkHide = useCallback(async () => {
+    if (selectedDocuments.length === 0 && selectedFolders.length === 0) return;
+
+    setIsHiding(true);
+
+    try {
+      const promises: Promise<Response>[] = [];
+
+      // Hide documents
+      if (selectedDocuments.length > 0) {
+        promises.push(
+          fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/hide`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              documentIds: selectedDocuments,
+              hidden: true,
+            }),
+          }),
+        );
+      }
+
+      // Hide folders (cascades to children)
+      if (selectedFolders.length > 0) {
+        promises.push(
+          fetch(`/api/teams/${teamInfo?.currentTeam?.id}/folders/hide`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              folderIds: selectedFolders,
+              hidden: true,
+            }),
+          }),
+        );
+      }
+
+      const results = await Promise.all(promises);
+
+      // Check for errors
+      for (const res of results) {
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.message || "Failed to hide items");
+        }
+      }
+
+      // Revalidate data
+      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders?root=true`);
+      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders`);
+      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`);
+
+      if (folderPathName && folderPathName.length > 0) {
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/folders/${folderPathName.join("/")}`,
+        );
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${folderPathName.join("/")}`,
+        );
+      }
+
+      // Reset selection
+      setSelectedDocuments([]);
+      setSelectedFolders([]);
+
+      toast.success(
+        `Successfully hidden ${selectedDocuments.length > 0 ? `${selectedDocuments.length} document${selectedDocuments.length > 1 ? "s" : ""}` : ""}${selectedDocuments.length > 0 && selectedFolders.length > 0 ? " and " : ""}${selectedFolders.length > 0 ? `${selectedFolders.length} folder${selectedFolders.length > 1 ? "s" : ""}` : ""} from All Documents`,
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to hide items",
+      );
+    } finally {
+      setIsHiding(false);
+    }
+  }, [selectedDocuments, selectedFolders, teamInfo?.currentTeam?.id, folderPathName]);
+
   const HeaderContent = memo(() => {
     if (selectedDocumentsLength > 0 || selectedFoldersLength > 0) {
       const totalItems = (documents?.length || 0) + (folders?.length || 0);
@@ -409,6 +493,17 @@ export function DocumentsList({
               size="icon"
             >
               <FolderInputIcon className="h-5 w-5" />
+            </Button>
+          </ButtonTooltip>
+          <ButtonTooltip content="Hide from All Documents">
+            <Button
+              onClick={handleBulkHide}
+              disabled={isHiding}
+              className="mx-1.5 my-1 size-8 rounded-full hover:bg-gray-200 hover:dark:bg-gray-700"
+              variant="ghost"
+              size="icon"
+            >
+              <EyeOffIcon className="h-5 w-5" />
             </Button>
           </ButtonTooltip>
           <ButtonTooltip content="Delete">
