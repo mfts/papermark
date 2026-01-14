@@ -10,6 +10,10 @@ import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
+export const config = {
+  maxDuration: 180,
+};
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
