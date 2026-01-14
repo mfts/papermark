@@ -68,7 +68,6 @@ export function AddDataroomModal({
 }) {
   const router = useRouter();
   const [dataroomName, setDataroomName] = useState<string>("");
-  const [dataroomInternalName, setDataroomInternalName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(openModal);
   const [activeTab, setActiveTab] = useState<string>("create");
@@ -300,10 +299,7 @@ export function AddDataroomModal({
             type: dataroomType,
             // Name will be taken from template
           }
-        : { 
-            name: dataroomName.trim(),
-            ...(dataroomInternalName.trim() && { internalName: dataroomInternalName.trim() }),
-          };
+        : { name: dataroomName.trim() };
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -366,7 +362,6 @@ export function AddDataroomModal({
     if (!open) {
       setOpen(false);
       setDataroomName("");
-      setDataroomInternalName("");
       setActiveTab("create");
       setDataroomType("");
       setAiDescription("");
@@ -661,24 +656,6 @@ export function AddDataroomModal({
                       value={dataroomName}
                       onChange={(e) => setDataroomName(e.target.value)}
                     />
-                    <p className="text-xs text-muted-foreground">
-                      This name is visible to everyone viewing the dataroom.
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="dataroom-internal-name-create">
-                      Internal Name{" "}
-                      <span className="text-xs text-muted-foreground font-normal">(optional)</span>
-                    </Label>
-                    <Input
-                      id="dataroom-internal-name-create"
-                      placeholder="Friends & Family Round"
-                      value={dataroomInternalName}
-                      onChange={(e) => setDataroomInternalName(e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      A private name only visible to you. Useful for distinguishing multiple datarooms with the same public name.
-                    </p>
                   </div>
                   <Button type="submit" className="w-full" loading={loading}>
                     Add new dataroom
