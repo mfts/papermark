@@ -250,22 +250,29 @@ export default function Billing() {
                   clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
                   trigger="invite_team_members"
                 />
-              ) : showInvite ? (
-                <AddTeamMembers
-                  open={isTeamMemberInviteModalOpen}
-                  setOpen={setTeamMemberInviteModalOpen}
-                >
-                  <Button>Invite</Button>
-                </AddTeamMembers>
               ) : (
-                <AddSeatModal
-                  open={isAddSeatModalOpen}
-                  setOpen={setAddSeatModalOpen}
-                >
-                  <Button className="whitespace-nowrap px-1 text-xs sm:px-4 sm:text-sm">
-                    Add a seat to invite member
-                  </Button>
-                </AddSeatModal>
+                <div className="flex items-center gap-2">
+                  <AddSeatModal
+                    open={isAddSeatModalOpen}
+                    setOpen={setAddSeatModalOpen}
+                  >
+                    <Button variant="outline" className="whitespace-nowrap">
+                      Add Seat
+                    </Button>
+                  </AddSeatModal>
+                  {showInvite ? (
+                    <AddTeamMembers
+                      open={isTeamMemberInviteModalOpen}
+                      setOpen={setTeamMemberInviteModalOpen}
+                    >
+                      <Button>Invite</Button>
+                    </AddTeamMembers>
+                  ) : (
+                    <Button disabled title="Add a seat to invite more members">
+                      Invite
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           </div>
