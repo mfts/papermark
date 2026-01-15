@@ -17,17 +17,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-type DataroomLink = {
-  id: string;
-  isArchived: boolean;
-  expiresAt: Date | null;
-  createdAt: Date;
-};
-
-type DataroomView = {
-  viewedAt: Date;
-};
-
 type DataroomTag = {
   tag: {
     id: string;
@@ -44,8 +33,8 @@ type DataroomWithDetails = {
     documents: number;
     views: number;
   };
-  links: DataroomLink[];
-  views: DataroomView[];
+  activeLinkCount: number;
+  lastViewedAt: Date | null;
   createdAt: Date;
   tags?: DataroomTag[];
 };
@@ -57,16 +46,9 @@ interface DataroomCardProps {
 export default function DataroomCard({ dataroom }: DataroomCardProps) {
   const router = useRouter();
 
-  // Calculate active links
-  const activeLinks = dataroom.links.filter((link) => {
-    if (link.isArchived) return false;
-    if (link.expiresAt && new Date(link.expiresAt) < new Date()) return false;
-    return true;
-  });
-
-  const isActive = activeLinks.length > 0;
-  const activeLinkCount = activeLinks.length;
-  const lastViewedAt = dataroom.views[0]?.viewedAt;
+  const isActive = dataroom.activeLinkCount > 0;
+  const activeLinkCount = dataroom.activeLinkCount;
+  const lastViewedAt = dataroom.lastViewedAt;
   const hasDocuments = dataroom._count.documents > 0;
 
   const handleButtonClick = (e: React.MouseEvent) => {
