@@ -97,7 +97,7 @@ export default function Settings() {
               description="A private name only visible to you. Useful for distinguishing multiple data rooms with the same public name."
               inputAttrs={{
                 name: "internalName",
-                placeholder: "Friends & Family Round",
+                placeholder: "e.g., Series A - Sequoia, Buyer Group A",
                 maxLength: 156,
               }}
               defaultValue={dataroom.internalName ?? ""}
