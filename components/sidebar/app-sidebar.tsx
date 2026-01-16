@@ -24,7 +24,7 @@ import {
 
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { usePlan } from "@/lib/swr/use-billing";
-import useDatarooms from "@/lib/swr/use-datarooms";
+import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
 import useLimits from "@/lib/swr/use-limits";
 import { useSlackIntegration } from "@/lib/swr/use-slack-integration";
 import { nFormatter } from "@/lib/utils";
@@ -77,8 +77,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Check feature flags
   const { features } = useFeatureFlags();
 
-  // Fetch datarooms for the current team
-  const { datarooms } = useDatarooms();
+  // Fetch datarooms for the current team (simple mode - no filters or extra data)
+  const { datarooms } = useDataroomsSimple();
 
   useEffect(() => {
     if (Cookies.get("hideProBanner") !== "pro-banner") {

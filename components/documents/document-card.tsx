@@ -21,7 +21,7 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import useDatarooms from "@/lib/swr/use-datarooms";
+import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
 import useLimits from "@/lib/swr/use-limits";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, getBreadcrumbPath, nFormatter, timeAgo } from "@/lib/utils";
@@ -76,7 +76,7 @@ export default function DocumentsCard({
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const [previewOpen, setPreviewOpen] = useState<boolean>(false);
 
-  const { datarooms } = useDatarooms();
+  const { datarooms } = useDataroomsSimple();
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const { canAddDocuments } = useLimits();

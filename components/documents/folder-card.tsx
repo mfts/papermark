@@ -128,6 +128,7 @@ export default function FolderCard({
           toast.dismiss();
           setMenuOpen(false);
           mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+          mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms?simple=true`);
           toast.success(`Successfully created!`, {
             description: `${folder.name} → ${data.name}`,
             action: {

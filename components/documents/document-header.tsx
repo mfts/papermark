@@ -28,7 +28,7 @@ import { mutate } from "swr";
 
 import { getFile } from "@/lib/files/get-file";
 import { usePlan } from "@/lib/swr/use-billing";
-import useDatarooms from "@/lib/swr/use-datarooms";
+import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
 import { useTeamAI } from "@/lib/swr/use-team-ai";
 import {
   DocumentWithLinksAndLinkCountAndViewCount,
@@ -81,7 +81,7 @@ export default function DocumentHeader({
 }) {
   const router = useRouter();
   const teamInfo = useTeam();
-  const { datarooms: datarooms } = useDatarooms();
+  const { datarooms } = useDataroomsSimple();
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");

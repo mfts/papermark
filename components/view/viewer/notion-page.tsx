@@ -103,6 +103,24 @@ const obfuscateNotionIds = (container: HTMLElement) => {
     }
     uuidPattern.lastIndex = 0;
   });
+
+  // Obfuscate anchor href attributes that contain hash references to Notion IDs
+  // This is important for table of contents links to work after ID obfuscation
+  const anchorsWithHash = container.querySelectorAll('a[href^="#"]');
+  anchorsWithHash.forEach((anchor) => {
+    const href = anchor.getAttribute("href");
+    if (href) {
+      // Extract the hash part (remove the leading #)
+      const hashId = href.slice(1);
+      if (uuidPattern.test(hashId)) {
+        const newHashId = hashId.replace(uuidPattern, (match) =>
+          getObfuscatedId(match),
+        );
+        anchor.setAttribute("href", `#${newHashId}`);
+      }
+      uuidPattern.lastIndex = 0;
+    }
+  });
 };
 
 export const NotionPage = ({

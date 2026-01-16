@@ -3,12 +3,16 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import slugify from "@sindresorhus/slugify";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+
+export const config = {
+  maxDuration: 180,
+};
 
 export default async function handle(
   req: NextApiRequest,
@@ -22,12 +26,16 @@ export default async function handle(
     }
 
     const userId = (session.user as CustomUser).id;
-    const { teamId, search, status, tags } = req.query as {
+    const { teamId, search, status, tags, simple } = req.query as {
       teamId: string;
       search?: string;
       status?: string;
       tags?: string;
+      simple?: string;
     };
+
+    // Simple mode: return minimal data without filters, tags, or aggregations
+    const isSimpleMode = simple === "true";
 
     try {
       const teamAccess = await prisma.userTeam.findUnique({
@@ -46,24 +54,54 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      // Get total unfiltered count first
-      const totalCount = await prisma.dataroom.count({
-        where: {
-          teamId: teamId,
-        },
-      });
+      // Simple mode: return minimal data without filters, tags, or aggregations
+      if (isSimpleMode) {
+        const datarooms = await prisma.dataroom.findMany({
+          where: {
+            teamId: teamId,
+          },
+          select: {
+            id: true,
+            name: true,
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+
+        return res.status(200).json({ datarooms });
+      }
+
+      const now = new Date();
+      const activeLinkFilter: Prisma.LinkWhereInput = {
+        linkType: "DATAROOM_LINK",
+        deletedAt: null,
+        isArchived: false,
+        OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
+      };
 
       // Build where clause based on filters
-      const whereClause: any = {
+      const whereClause: Prisma.DataroomWhereInput = {
         teamId: teamId,
       };
 
-      // Search filter
+      // Search filter - search both name and internalName
       if (search) {
-        whereClause.name = {
-          contains: search,
-          mode: "insensitive",
-        };
+        whereClause.OR = [
+          {
+            name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            internalName: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        ];
       }
 
       // Tags filter
@@ -82,78 +120,89 @@ export default async function handle(
         }
       }
 
-      // Check if the user is part of the team
-      const datarooms = await prisma.dataroom.findMany({
-        where: whereClause,
-        include: {
-          _count: {
-            select: { documents: true, views: true },
+      // if (status === "active") {
+      //   whereClause.links = { some: activeLinkFilter };
+      // } else if (status === "inactive") {
+      //   whereClause.links = { none: activeLinkFilter };
+      // }
+
+      const [totalCount, datarooms] = await Promise.all([
+        prisma.dataroom.count({
+          where: {
+            teamId: teamId,
           },
-          links: {
-            where: {
-              linkType: "DATAROOM_LINK",
-              deletedAt: null,
+        }),
+        prisma.dataroom.findMany({
+          where: whereClause,
+          select: {
+            id: true,
+            name: true,
+            createdAt: true,
+            _count: {
+              select: { documents: true, views: true },
             },
-            orderBy: {
-              createdAt: "desc",
-            },
-            select: {
-              id: true,
-              isArchived: true,
-              expiresAt: true,
-              createdAt: true,
-            },
-          },
-          views: {
-            orderBy: {
-              viewedAt: "desc",
-            },
-            take: 1,
-            select: {
-              viewedAt: true,
-            },
-          },
-          tags: {
-            include: {
-              tag: {
-                select: {
-                  id: true,
-                  name: true,
-                  color: true,
-                  description: true,
+            tags: {
+              include: {
+                tag: {
+                  select: {
+                    id: true,
+                    name: true,
+                    color: true,
+                    description: true,
+                  },
                 },
               },
             },
           },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
+          orderBy: {
+            createdAt: "desc",
+          },
+        }),
+      ]);
 
-      // Status filter (applied after fetching since it's computed)
-      let filteredDatarooms = datarooms;
-      if (status) {
-        filteredDatarooms = datarooms.filter((dataroom) => {
-          const activeLinks = dataroom.links.filter((link) => {
-            if (link.isArchived) return false;
-            if (link.expiresAt && new Date(link.expiresAt) < new Date())
-              return false;
-            return true;
-          });
-          const isActive = activeLinks.length > 0;
+      const dataroomIds = datarooms.map((dataroom) => dataroom.id);
+      const [activeLinkCounts, lastViewedAtByDataroom] = dataroomIds.length
+        ? await Promise.all([
+            prisma.link.groupBy({
+              by: ["dataroomId"],
+              where: {
+                dataroomId: { in: dataroomIds },
+                ...activeLinkFilter,
+              },
+              _count: {
+                _all: true,
+              },
+            }),
+            prisma.view.groupBy({
+              by: ["dataroomId"],
+              where: {
+                dataroomId: { in: dataroomIds },
+              },
+              _max: {
+                viewedAt: true,
+              },
+            }),
+          ])
+        : [[], []];
 
-          if (status === "active") {
-            return isActive;
-          } else if (status === "inactive") {
-            return !isActive;
-          }
-          return true;
-        });
-      }
+      const activeLinkCountMap = new Map(
+        activeLinkCounts.map((entry) => [entry.dataroomId, entry._count._all]),
+      );
+      const lastViewedAtMap = new Map(
+        lastViewedAtByDataroom.map((entry) => [
+          entry.dataroomId,
+          entry._max.viewedAt,
+        ]),
+      );
+
+      const dataroomsWithStats = datarooms.map((dataroom) => ({
+        ...dataroom,
+        activeLinkCount: activeLinkCountMap.get(dataroom.id) ?? 0,
+        lastViewedAt: lastViewedAtMap.get(dataroom.id) ?? null,
+      }));
 
       return res.status(200).json({
-        datarooms: filteredDatarooms,
+        datarooms: dataroomsWithStats,
         totalCount,
       });
     } catch (error) {
@@ -171,7 +220,7 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     const { teamId } = req.query as { teamId: string };
-    const { name } = req.body as { name: string };
+    const { name, internalName } = req.body as { name: string; internalName?: string };
 
     try {
       // Check if the user is part of the team
@@ -238,6 +287,7 @@ export default async function handle(
           name: name,
           teamId: teamId,
           pId: pId,
+          ...(internalName && { internalName: internalName.trim() }),
         },
       });
 

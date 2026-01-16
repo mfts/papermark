@@ -121,7 +121,10 @@ export function DataroomTrialModal({
       });
       toast.success("Dataroom successfully created! 🎉");
 
-      await mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+      await Promise.all([
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`),
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms?simple=true`),
+      ]);
       router.push("/datarooms");
     } catch (error) {
       setLoading(false);
