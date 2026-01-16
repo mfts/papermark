@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 import { CrownIcon } from "lucide-react";
 
 import { usePlan } from "@/lib/swr/use-billing";
-import useDatarooms from "@/lib/swr/use-datarooms";
+import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
 import { daysLeft } from "@/lib/utils";
 
 import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
@@ -51,7 +51,7 @@ function TrialBannerComponent({
     });
   };
 
-  const { datarooms } = useDatarooms();
+  const { datarooms } = useDataroomsSimple();
 
   const trialDaysLeft = datarooms
     ? daysLeft(
