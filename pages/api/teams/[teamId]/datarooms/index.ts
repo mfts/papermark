@@ -4,7 +4,6 @@ import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { Prisma } from "@prisma/client";
-import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
 import { newId } from "@/lib/id-helper";
@@ -27,12 +26,16 @@ export default async function handle(
     }
 
     const userId = (session.user as CustomUser).id;
-    const { teamId, search, status, tags } = req.query as {
+    const { teamId, search, status, tags, simple } = req.query as {
       teamId: string;
       search?: string;
       status?: string;
       tags?: string;
+      simple?: string;
     };
+
+    // Simple mode: return minimal data without filters, tags, or aggregations
+    const isSimpleMode = simple === "true";
 
     try {
       const teamAccess = await prisma.userTeam.findUnique({
@@ -49,6 +52,25 @@ export default async function handle(
 
       if (!teamAccess) {
         return res.status(401).end("Unauthorized");
+      }
+
+      // Simple mode: return minimal data without filters, tags, or aggregations
+      if (isSimpleMode) {
+        const datarooms = await prisma.dataroom.findMany({
+          where: {
+            teamId: teamId,
+          },
+          select: {
+            id: true,
+            name: true,
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+
+        return res.status(200).json({ datarooms });
       }
 
       const now = new Date();
@@ -88,11 +110,11 @@ export default async function handle(
         }
       }
 
-      if (status === "active") {
-        whereClause.links = { some: activeLinkFilter };
-      } else if (status === "inactive") {
-        whereClause.links = { none: activeLinkFilter };
-      }
+      // if (status === "active") {
+      //   whereClause.links = { some: activeLinkFilter };
+      // } else if (status === "inactive") {
+      //   whereClause.links = { none: activeLinkFilter };
+      // }
 
       const [totalCount, datarooms] = await Promise.all([
         prisma.dataroom.count({
