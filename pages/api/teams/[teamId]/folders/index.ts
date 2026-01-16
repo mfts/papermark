@@ -42,13 +42,21 @@ export default async function handle(
           where: {
             teamId: teamId,
             parentId: null,
+            hiddenInAllDocuments: false, // Exclude hidden folders from All Documents view
           },
           orderBy: {
             name: "asc",
           },
           include: {
             _count: {
-              select: { documents: true, childFolders: true },
+              select: {
+                documents: {
+                  where: { hiddenInAllDocuments: false },
+                },
+                childFolders: {
+                  where: { hiddenInAllDocuments: false },
+                },
+              },
             },
           },
         });
