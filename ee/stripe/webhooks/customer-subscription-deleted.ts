@@ -32,6 +32,7 @@ export async function customerSubscriptionDeleted(
         endsAt: null,
         startsAt: null,
         limits: freePlanLimits,
+        cancelledAt: null, // Clear cancellation status since the plan is now downgraded
       },
       select: { id: true },
     });
