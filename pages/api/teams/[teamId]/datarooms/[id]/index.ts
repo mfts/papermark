@@ -110,6 +110,7 @@ export default async function handle(
 
       const {
         name,
+        internalName,
         enableChangeNotifications,
         defaultPermissionStrategy,
         allowBulkDownload,
@@ -118,6 +119,7 @@ export default async function handle(
         agentsEnabled,
       } = req.body as {
         name?: string;
+        internalName?: string | null;
         enableChangeNotifications?: boolean;
         defaultPermissionStrategy?: DefaultPermissionStrategy;
         allowBulkDownload?: boolean;
@@ -154,6 +156,9 @@ export default async function handle(
           },
           data: {
             ...(name && { name }),
+            ...(internalName !== undefined && { 
+              internalName: internalName === null || internalName === "" ? null : internalName.trim() 
+            }),
             ...(typeof enableChangeNotifications === "boolean" && {
               enableChangeNotifications,
             }),

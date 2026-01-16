@@ -43,6 +43,7 @@ export default function Documents() {
           <DataroomHeader
             title={dataroom?.name ?? ""}
             description={dataroom?.pId ?? ""}
+            internalName={dataroom?.internalName}
             actions={[]}
           />
 

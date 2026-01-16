@@ -47,6 +47,7 @@ export default function Settings() {
           <DataroomHeader
             title={dataroom.name}
             description={dataroom.pId}
+            internalName={dataroom.internalName}
             actions={[]}
           />
 
@@ -62,7 +63,7 @@ export default function Settings() {
           <div className="grid gap-6">
             <Form
               title="Dataroom Name"
-              description="This is the name of your data room on Papermark."
+              description="This is the public name of your data room visible to all viewers."
               inputAttrs={{
                 name: "name",
                 placeholder: "My Dataroom",
@@ -84,6 +85,39 @@ export default function Settings() {
                       mutate(`/api/teams/${teamId}/datarooms/${dataroom.id}`),
                     ]);
                     toast.success("Successfully updated dataroom name!");
+                  } else {
+                    const { error } = await res.json();
+                    toast.error(error.message);
+                  }
+                })
+              }
+            />
+            <Form
+              title="Internal Name"
+              description="A private name only visible to you. Useful for distinguishing multiple data rooms with the same public name."
+              inputAttrs={{
+                name: "internalName",
+                placeholder: "e.g., Series A - Sequoia, Buyer Group A",
+                maxLength: 156,
+              }}
+              defaultValue={dataroom.internalName ?? ""}
+              helpText="Max 156 characters. Leave empty to remove."
+              handleSubmit={(updateData) =>
+                fetch(`/api/teams/${teamId}/datarooms/${dataroom.id}`, {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    internalName: updateData.internalName || null,
+                  }),
+                }).then(async (res) => {
+                  if (res.status === 200) {
+                    await Promise.all([
+                      mutate(`/api/teams/${teamId}/datarooms`),
+                      mutate(`/api/teams/${teamId}/datarooms/${dataroom.id}`),
+                    ]);
+                    toast.success("Successfully updated internal name!");
                   } else {
                     const { error } = await res.json();
                     toast.error(error.message);

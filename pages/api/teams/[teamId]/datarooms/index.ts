@@ -62,12 +62,22 @@ export default async function handle(
         teamId: teamId,
       };
 
-      // Search filter
+      // Search filter - search both name and internalName
       if (search) {
-        whereClause.name = {
-          contains: search,
-          mode: "insensitive",
-        };
+        whereClause.OR = [
+          {
+            name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            internalName: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        ];
       }
 
       // Tags filter
@@ -175,7 +185,7 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     const { teamId } = req.query as { teamId: string };
-    const { name } = req.body as { name: string };
+    const { name, internalName } = req.body as { name: string; internalName?: string };
 
     try {
       // Check if the user is part of the team
@@ -242,6 +252,7 @@ export default async function handle(
           name: name,
           teamId: teamId,
           pId: pId,
+          ...(internalName && { internalName: internalName.trim() }),
         },
       });
 

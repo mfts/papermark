@@ -20,6 +20,7 @@ export default function Notifications() {
           <DataroomHeader
             title={dataroom.name}
             description={dataroom.pId}
+            internalName={dataroom.internalName}
             actions={[]}
           />
 
