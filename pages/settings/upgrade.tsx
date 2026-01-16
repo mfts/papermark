@@ -232,7 +232,7 @@ export default function UpgradePage() {
                 €
                 {PLANS.find((p) => p.name === planOption)!.price[period].amount}
                 <span className="text-base font-normal dark:text-white/75">
-                  /month
+                  /month{period === "yearly" && ", billed annually"}
                 </span>
               </div>
               <p className="mt-4 text-sm text-gray-600 dark:text-white">
@@ -389,7 +389,7 @@ export default function UpgradePage() {
                   {PLANS.find((p) => p.name === planOption)!.price[period]
                     .amount}
                   <span className="text-base font-normal dark:text-white/75">
-                    /month
+                    /month{period === "yearly" && ", billed annually"}
                   </span>
                 </div>
                 <p className="mt-4 text-sm text-gray-600 dark:text-white">
@@ -546,7 +546,7 @@ export default function UpgradePage() {
                     {PLANS.find((p) => p.name === planOption)!.price[period]
                       .amount}
                     <span className="text-base font-normal dark:text-white/75">
-                      /month
+                      /month{period === "yearly" && ", billed annually"}
                     </span>
                   </div>
                   <p className="mt-4 text-sm text-gray-600 dark:text-white">

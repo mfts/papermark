@@ -298,7 +298,7 @@ export function UpgradePlanModal({
                     }
                   </span>
                   <span className="text-gray-500 dark:text-white/75">
-                    /month
+                    /month{period === "yearly" && ", billed annually"}
                   </span>
                 </div>
 

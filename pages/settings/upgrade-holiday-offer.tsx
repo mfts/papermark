@@ -265,7 +265,7 @@ export default function UpgradeHolidayOfferPage() {
                 <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
                   €{period === "yearly" ? discountedYearlyPrice : monthlyPrice}
                   <span className="text-base font-normal dark:text-white/75">
-                    /month
+                    /month{period === "yearly" && ", billed annually"}
                   </span>
                 </div>
                 {period === "yearly" && (
@@ -456,7 +456,7 @@ export default function UpgradeHolidayOfferPage() {
                 <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
                   €{period === "yearly" ? discountedYearlyPrice : monthlyPrice}
                   <span className="text-base font-normal dark:text-white/75">
-                    /month
+                    /month{period === "yearly" && ", billed annually"}
                   </span>
                 </div>
                 {period === "yearly" && (
@@ -646,7 +646,7 @@ export default function UpgradeHolidayOfferPage() {
                 <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
                   €{period === "yearly" ? discountedYearlyPrice : monthlyPrice}
                   <span className="text-base font-normal dark:text-white/75">
-                    /month
+                    /month{period === "yearly" && ", billed annually"}
                   </span>
                 </div>
                 {period === "yearly" && (
