@@ -261,6 +261,7 @@ export function AddDataroomModal({
         });
 
         mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms?simple=true`);
         toast.success("Dataroom successfully generated! 🎉");
         router.push(`/datarooms/${dataroom.id}/documents`);
       } catch (error) {
@@ -327,6 +328,7 @@ export function AddDataroomModal({
       );
 
       mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms?simple=true`);
       toast.success(
         useTemplate
           ? "Dataroom successfully created! 🎉"
