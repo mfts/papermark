@@ -14,7 +14,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroomLinks } from "@/lib/swr/use-dataroom";
 import { IndexFileFormat } from "@/lib/types/index-file";
 
-import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -224,12 +224,12 @@ export default function GenerateIndexDialog({
               {isLoading ? "Generating..." : "Generate"}
             </Button>
           ) : (
-            <UpgradePlanModalWithDiscount
+            <UpgradePlanModal
               clickedPlan={PlanEnum.DataRooms}
               trigger="datarooms_generate_index_button"
             >
               <Button>Upgrade to generate</Button>
-            </UpgradePlanModalWithDiscount>
+            </UpgradePlanModal>
           )}
         </DialogFooter>
       </DialogContent>

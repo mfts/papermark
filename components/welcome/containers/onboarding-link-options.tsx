@@ -7,7 +7,7 @@ import { LinkPreset } from "@prisma/client";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 
-import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 import AgreementSection from "@/components/links/link-sheet/agreement-section";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
@@ -262,7 +262,7 @@ export const OnboardingLinkOptions = ({
     <div>
       {basicSettings}
       {showAdvancedSettings && advancedSettings}
-      <UpgradePlanModalWithDiscount
+      <UpgradePlanModal
         clickedPlan={upgradePlan}
         open={openUpgradeModal}
         setOpen={setOpenUpgradeModal}

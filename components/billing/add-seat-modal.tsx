@@ -186,7 +186,7 @@ export function AddSeatModal({
             {loading ? "Redirecting..." : "Proceed to checkout"}
           </Button>
           <Link
-            href="/settings/upgrade-holiday-offer"
+            href="/settings/upgrade"
             className="block w-full text-center text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
             onClick={() => setOpen(false)}
           >

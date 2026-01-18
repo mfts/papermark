@@ -9,7 +9,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
 import { daysLeft } from "@/lib/utils";
 
-import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import {
   Alert,
   AlertClose,
@@ -83,14 +83,14 @@ function TrialBannerComponent({
         <AlertDescription>
           {isExpired ? (
             <>
-              <UpgradePlanModalWithDiscount
+              <UpgradePlanModal
                 clickedPlan={PlanEnum.DataRooms}
                 trigger={"trial_navbar"}
               >
                 <span className="cursor-pointer font-bold text-black underline underline-offset-4 hover:text-gray-700 dark:text-white dark:hover:text-gray-300">
                   Upgrade to keep access
                 </span>
-              </UpgradePlanModalWithDiscount>{" "}
+              </UpgradePlanModal>{" "}
               to unlimited data rooms, custom domains, advanced access controls,
               and granular file permissions ✨
             </>
@@ -99,14 +99,14 @@ function TrialBannerComponent({
               You are on the <span className="font-bold">Data Rooms</span> plan
               trial, you have access to advanced access controls, granular file
               permissions, and data room. <br />
-              <UpgradePlanModalWithDiscount
+              <UpgradePlanModal
                 clickedPlan={PlanEnum.DataRooms}
                 trigger={"trial_navbar"}
               >
                 <span className="cursor-pointer font-bold text-orange-500 underline underline-offset-4 hover:text-orange-600">
                   Upgrade to keep access
                 </span>
-              </UpgradePlanModalWithDiscount>
+              </UpgradePlanModal>
               , unlock unlimited data rooms and custom domains ✨
             </>
           )}
