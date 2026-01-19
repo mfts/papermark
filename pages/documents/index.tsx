@@ -1,7 +1,9 @@
 import { useRouter } from "next/router";
 
+import Link from "next/link";
+
 import { useTeam } from "@/context/team-context";
-import { FolderPlusIcon, PlusIcon } from "lucide-react";
+import { EyeOffIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
 
 import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
 import { handleInvitationStatus } from "@/lib/utils";
@@ -91,6 +93,16 @@ export default function Documents() {
             <SearchBoxPersisted loading={isValidating} inputClassName="h-10" />
           </div>
           <SortButton />
+          <Link href="/documents/hidden">
+            <Button
+              variant="outline"
+              size="icon"
+              className="border-gray-500 bg-gray-50 hover:bg-gray-200 dark:bg-black hover:dark:bg-muted"
+              title="View hidden documents"
+            >
+              <EyeOffIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+            </Button>
+          </Link>
         </div>
 
         <section id="documents-header-count" />
