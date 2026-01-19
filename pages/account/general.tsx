@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { AccountHeader } from "@/components/account/account-header";
 import { UpdateMailSubscribe } from "@/components/account/update-subscription";
 import UploadAvatar from "@/components/account/upload-avatar";
-import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { Form } from "@/components/ui/form";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -40,7 +40,7 @@ const ProfilePage: NextPage = () => {
 
   return (
     <AppLayout>
-      <UpgradePlanModalWithDiscount
+      <UpgradePlanModal
         clickedPlan={nextPlan}
         trigger="account_page"
         open={showUpgradeModal}

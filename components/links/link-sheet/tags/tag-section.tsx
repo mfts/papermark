@@ -11,7 +11,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { useTags } from "@/lib/swr/use-tags";
 import { TagProps } from "@/lib/types";
 
-import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select-v2";
 import { BadgeTooltip } from "@/components/ui/tooltip";
@@ -145,7 +145,7 @@ export default function TagSection({
         />
       </div>
       {showUpgradeModal && (
-        <UpgradePlanModalWithDiscount
+        <UpgradePlanModal
           clickedPlan={PlanEnum.Pro}
           trigger="create_tag"
           open={showUpgradeModal}

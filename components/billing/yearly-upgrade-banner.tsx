@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 
-import { UpgradePlanModalWithDiscount } from "./upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "./upgrade-plan-modal";
 
 interface YearlyUpgradeBannerProps {
   setShowBanner: Dispatch<SetStateAction<boolean | null>>;
@@ -34,11 +34,6 @@ export default function YearlyUpgradeBanner({
     Cookies.set("hideYearlyUpgradeBanner", "yearly-upgrade-banner", {
       expires: 7,
     });
-  };
-
-  // Calculate 30% discounted yearly price (same as modal)
-  const getDiscountedYearlyPrice = (yearlyPrice: number) => {
-    return Math.round(yearlyPrice * 0.7); // Round to whole number
   };
 
   // Get next higher plan
@@ -75,15 +70,15 @@ export default function YearlyUpgradeBanner({
         </button>
 
         <div className="mb-4 flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-black" />
-          <span className="text-lg font-bold text-black">
-            LIMITED TIME OFFER
+          <Sparkles className="h-5 w-5 text-[#fb7a00]" />
+          <span className="text-lg font-bold text-black dark:text-white">
+            UPGRADE YOUR PLAN
           </span>
         </div>
 
         <div className="mb-2">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Extra 30% off on yearly plans
+            Save up to 35% with yearly plans
           </p>
         </div>
 
@@ -93,11 +88,10 @@ export default function YearlyUpgradeBanner({
           if (!planData) return null;
 
           const yearlyPrice = planData.price.yearly.amount;
-          const discountedYearlyPrice = getDiscountedYearlyPrice(yearlyPrice);
           const monthlyPrice = planData.price.monthly.amount;
           const monthlyForYear = monthlyPrice * 12;
-          const yearlyWithDiscount = Math.round(yearlyPrice * 12 * 0.7);
-          const savings = monthlyForYear - yearlyWithDiscount;
+          const yearlyForYear = yearlyPrice * 12;
+          const savings = monthlyForYear - yearlyForYear;
           const planFeatures = getPlanFeatures(nextPlan, {
             period: "yearly",
             maxFeatures: 4,
@@ -120,13 +114,10 @@ export default function YearlyUpgradeBanner({
               </p>
               <div className="mb-3 flex items-baseline gap-2">
                 <span className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  €{discountedYearlyPrice}
-                </span>
-                <span className="text-sm text-gray-500 line-through">
                   €{yearlyPrice}
                 </span>
                 <span className="text-xs text-gray-600 dark:text-gray-400">
-                  /mo
+                  /mo, billed annually
                 </span>
               </div>
 
@@ -140,7 +131,7 @@ export default function YearlyUpgradeBanner({
                 ))}
               </ul>
 
-              <UpgradePlanModalWithDiscount
+              <UpgradePlanModal
                 clickedPlan={nextPlan}
                 trigger="yearly_upgrade_banner"
               >
@@ -151,19 +142,16 @@ export default function YearlyUpgradeBanner({
                 >
                   Upgrade to {nextPlan} Yearly
                 </Button>
-              </UpgradePlanModalWithDiscount>
+              </UpgradePlanModal>
             </div>
           );
         })()}
 
         <p
-          onClick={() => router.push("/settings/upgrade-holiday-offer")}
+          onClick={() => router.push("/settings/upgrade")}
           className="mt-4 cursor-pointer text-center text-xs text-gray-500 underline hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300"
         >
           Compare all plans
-        </p>
-        <p className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
-          New Year&apos;s offer • Ends Jan 15
         </p>
       </motion.aside>
     </AnimatePresence>

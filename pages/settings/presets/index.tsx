@@ -13,7 +13,7 @@ import useSWR from "swr";
 import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher, formatExpirationTime } from "@/lib/utils";
 
-import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Badge } from "@/components/ui/badge";
@@ -131,7 +131,7 @@ export default function Presets() {
           )}
         </div>
       </main>
-      <UpgradePlanModalWithDiscount
+      <UpgradePlanModal
         clickedPlan={PlanEnum.Business}
         trigger="presets_page"
         open={showUpgradeModal}

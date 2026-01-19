@@ -15,7 +15,7 @@ import useLimits from "@/lib/swr/use-limits";
 import { WatermarkConfig } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
 
-import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 import AgreementSection from "@/components/links/link-sheet/agreement-section";
@@ -525,7 +525,7 @@ export default function EditPreset() {
           </div>
         </form>
       </main>
-      <UpgradePlanModalWithDiscount
+      <UpgradePlanModal
         clickedPlan={upgradePlan}
         open={openUpgradeModal}
         setOpen={setOpenUpgradeModal}

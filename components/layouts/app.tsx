@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { usePlan } from "@/lib/swr/use-billing";
-import YearlyUpgradeBanner from "@/components/billing/yearly-upgrade-banner";
+// import YearlyUpgradeBanner from "@/components/billing/yearly-upgrade-banner";
 
 import { BlockingModal } from "./blocking-modal";
 
@@ -23,24 +23,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isSidebarOpen =
     cookieValue === undefined ? true : cookieValue === "true";
 
-  const { isAnnualPlan, isFree } = usePlan();
-  const [showYearlyBanner, setShowYearlyBanner] = useState<boolean | null>(null);
+  // const { isAnnualPlan, isFree } = usePlan();
+  // const [showYearlyBanner, setShowYearlyBanner] = useState<boolean | null>(null);
 
   // Show banner only for paid monthly subscribers (not free, not yearly)
-  useEffect(() => {
-    // Hide banner for free users or yearly subscribers
-    if (isFree || isAnnualPlan) {
-      setShowYearlyBanner(false);
-      return;
-    }
+  // useEffect(() => {
+  //   // Hide banner for free users or yearly subscribers
+  //   if (isFree || isAnnualPlan) {
+  //     setShowYearlyBanner(false);
+  //     return;
+  //   }
 
-    // Show banner for monthly paid users (if not dismissed)
-    if (Cookies.get("hideYearlyUpgradeBanner") !== "yearly-upgrade-banner") {
-      setShowYearlyBanner(true);
-    } else {
-      setShowYearlyBanner(false);
-    }
-  }, [isFree, isAnnualPlan]);
+  //   // Show banner for monthly paid users (if not dismissed)
+  //   if (Cookies.get("hideYearlyUpgradeBanner") !== "yearly-upgrade-banner") {
+  //     setShowYearlyBanner(true);
+  //   } else {
+  //     setShowYearlyBanner(false);
+  //   }
+  // }, [isFree, isAnnualPlan]);
 
   return (
     <SidebarProvider defaultOpen={isSidebarOpen}>
@@ -59,9 +59,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <main className="flex-1">{children}</main>
         </SidebarInset>
       </div>
-      {showYearlyBanner && (
+      {/* {showYearlyBanner && (
         <YearlyUpgradeBanner setShowBanner={setShowYearlyBanner} />
-      )}
+      )} */}
     </SidebarProvider>
   );
 }

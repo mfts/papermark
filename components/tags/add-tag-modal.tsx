@@ -6,7 +6,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { TagColorProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -75,12 +75,12 @@ export function AddTagsModal({
   if (isFree && tagCount >= 5) {
     if (children) {
       return (
-        <UpgradePlanModalWithDiscount
+        <UpgradePlanModal
           clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
           trigger={"create_tag"}
         >
           <Button>Upgrade to Create Tags</Button>
-        </UpgradePlanModalWithDiscount>
+        </UpgradePlanModal>
       );
     }
   }
