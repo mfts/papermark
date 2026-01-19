@@ -63,6 +63,7 @@ export default async function handle(
           select: {
             id: true,
             name: true,
+            internalName: true,
             createdAt: true,
           },
           orderBy: {
