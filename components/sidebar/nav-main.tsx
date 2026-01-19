@@ -27,7 +27,7 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export interface NavItem {
   title: string;

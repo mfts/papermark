@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { AddSeatModal } from "../billing/add-seat-modal";
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { AddTeamMembers } from "../teams/add-team-member-modal";
 import { AddTeamModal } from "../teams/add-team-modal";
 import { Avatar, AvatarFallback } from "../ui/avatar";
