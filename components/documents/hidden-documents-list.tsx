@@ -308,15 +308,12 @@ export function HiddenDocumentsList({
                   key={i}
                   className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
                 >
-                  <Skeleton key={i} className="h-9 w-9" />
+                  <Skeleton className="h-9 w-9" />
                   <div>
-                    <Skeleton key={i} className="h-4 w-32" />
-                    <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="mt-2 h-3 w-12" />
                   </div>
-                  <Skeleton
-                    key={i + 1}
-                    className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
-                  />
+                  <Skeleton className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform" />
                 </li>
               ))}
         </ul>
@@ -343,15 +340,12 @@ export function HiddenDocumentsList({
                   key={i}
                   className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
                 >
-                  <Skeleton key={i} className="h-9 w-9" />
+                  <Skeleton className="h-9 w-9" />
                   <div>
-                    <Skeleton key={i} className="h-4 w-32" />
-                    <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="mt-2 h-3 w-12" />
                   </div>
-                  <Skeleton
-                    key={i + 1}
-                    className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
-                  />
+                  <Skeleton className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform" />
                 </li>
               ))}
         </ul>

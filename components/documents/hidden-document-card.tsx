@@ -86,15 +86,21 @@ export function HiddenDocumentCard({
       return;
     }
 
+    const teamId = teamInfo?.currentTeam?.id;
+    if (!teamId) {
+      toast.error("Team information is missing. Please try again.");
+      return;
+    }
+
     toast.promise(
-      fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`, {
+      fetch(`/api/teams/${teamId}/documents/${documentId}`, {
         method: "DELETE",
       }).then(async (res) => {
         if (!res.ok) {
           const error = await res.json();
           throw new Error(error.message || "Failed to delete document");
         }
-        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents/hidden`);
+        mutate(`/api/teams/${teamId}/documents/hidden`);
       }),
       {
         loading: "Deleting document...",
@@ -124,8 +130,14 @@ export function HiddenDocumentCard({
     event.stopPropagation();
     event.preventDefault();
 
+    const teamId = teamInfo?.currentTeam?.id;
+    if (!teamId) {
+      toast.error("Team information is missing. Please try again.");
+      return;
+    }
+
     toast.promise(
-      fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/hide`, {
+      fetch(`/api/teams/${teamId}/documents/hide`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -139,9 +151,9 @@ export function HiddenDocumentCard({
           const error = await res.json();
           throw new Error(error.message || "Failed to unhide document");
         }
-        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents/hidden`);
-        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`);
-        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders?root=true`);
+        mutate(`/api/teams/${teamId}/documents/hidden`);
+        mutate(`/api/teams/${teamId}/documents`);
+        mutate(`/api/teams/${teamId}/folders?root=true`);
         setMenuOpen(false);
       }),
       {
