@@ -27,7 +27,7 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
-import { UpgradePlanModalWithDiscount } from "../billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal-with-discount";
 
 export interface NavItem {
   title: string;
@@ -78,7 +78,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                 )}
               >
                 {item.disabled ? (
-                  <UpgradePlanModalWithDiscount
+                  <UpgradePlanModal
                     key={item.title}
                     clickedPlan={item.plan as PlanEnum}
                     trigger={item.trigger}
@@ -94,7 +94,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                         <CrownIcon className="!size-4" />
                       </span>
                     </div>
-                  </UpgradePlanModalWithDiscount>
+                  </UpgradePlanModal>
                 ) : (
                   <Link
                     href={item.url}

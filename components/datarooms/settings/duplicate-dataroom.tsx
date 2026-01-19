@@ -7,7 +7,7 @@ import { PlanEnum } from "@/ee/stripe/constants";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -130,7 +130,7 @@ export default function DuplicateDataroom({
         </CardFooter>
       </Card>
       {planModalOpen ? (
-        <UpgradePlanModalWithDiscount
+        <UpgradePlanModal
           clickedPlan={PlanEnum.DataRooms}
           trigger="datarooms"
           open={planModalOpen}

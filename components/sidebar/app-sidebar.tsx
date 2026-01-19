@@ -208,12 +208,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ],
       },
-      {
-        title: "2025 Recap",
-        url: "/dashboard?openRecap=true",
-        icon: SparklesIcon,
-        current: false,
-      },
+      // {
+      //   title: "2025 Recap",
+      //   url: "/dashboard?openRecap=true",
+      //   icon: SparklesIcon,
+      //   current: false,
+      // },
     ],
   };
 

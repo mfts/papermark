@@ -45,7 +45,7 @@ import {
 import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
-import { UpgradePlanModalWithDiscount } from "../billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Pagination } from "../documents/pagination";
 import { Button } from "../ui/button";
 import {
@@ -190,7 +190,7 @@ export default function VisitorsTable({
                           Some older visits may not be shown because your
                           document has more than 20 views.{" "}
                         </span>
-                        <UpgradePlanModalWithDiscount
+                        <UpgradePlanModal
                           clickedPlan={
                             isTrial ? PlanEnum.Business : PlanEnum.Pro
                           }
@@ -199,7 +199,7 @@ export default function VisitorsTable({
                           <button className="underline hover:text-gray-800">
                             Upgrade to see full history
                           </button>
-                        </UpgradePlanModalWithDiscount>
+                        </UpgradePlanModal>
                       </div>
                     )}
                   </TableCell>

@@ -55,7 +55,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { UpgradePlanModalWithDiscount } from "../billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDataroomModal({
   children,
@@ -350,12 +350,12 @@ export function AddDataroomModal({
   if (isFree || isPro) {
     if (children) {
       return (
-        <UpgradePlanModalWithDiscount
+        <UpgradePlanModal
           clickedPlan={PlanEnum.DataRooms}
           trigger={"add_dataroom_overview"}
         >
           {children}
-        </UpgradePlanModalWithDiscount>
+        </UpgradePlanModal>
       );
     }
   }

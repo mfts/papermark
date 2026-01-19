@@ -19,7 +19,7 @@ import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { convertDataUrlToFile, fetcher, uploadImage } from "@/lib/utils";
 
-import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -496,14 +496,14 @@ export default function LinkSheet({
                             Group
                           </TabsTrigger>
                         ) : (
-                          <UpgradePlanModalWithDiscount
+                          <UpgradePlanModal
                             clickedPlan={PlanEnum.DataRooms}
                             trigger="add_group_link"
                           >
                             <div className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all">
                               Group
                             </div>
-                          </UpgradePlanModalWithDiscount>
+                          </UpgradePlanModal>
                         )}
                       </TabsList>
                     ) : null}

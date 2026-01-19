@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 import { Separator } from "@/components/ui/separator";
 
-import { UpgradePlanModalWithDiscount } from "./billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "./billing/upgrade-plan-modal";
 
 type Props = {
   navigation: {
@@ -99,7 +99,7 @@ const NavItem: React.FC<Props["navigation"][0]> = ({
       )}
     >
       {limited ? (
-        <UpgradePlanModalWithDiscount
+        <UpgradePlanModal
           key={label}
           clickedPlan={PlanEnum.DataRoomsPlus}
           trigger={label}
@@ -109,7 +109,7 @@ const NavItem: React.FC<Props["navigation"][0]> = ({
             {label}
             <CrownIcon className="h-4 w-4 text-muted-foreground" />
           </div>
-        </UpgradePlanModalWithDiscount>
+        </UpgradePlanModal>
       ) : (
         <Link
           href={href}

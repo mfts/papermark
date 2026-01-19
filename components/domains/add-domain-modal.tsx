@@ -23,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { UpgradePlanModalWithDiscount } from "../billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { UpgradeButton } from "../ui/upgrade-button";
 
 export function AddDomainModal({
@@ -131,7 +131,7 @@ export function AddDomainModal({
       );
     } else {
       return (
-        <UpgradePlanModalWithDiscount
+        <UpgradePlanModal
           clickedPlan={
             linkType === "DATAROOM_LINK"
               ? PlanEnum.DataRooms

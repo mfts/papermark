@@ -11,7 +11,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { useTags } from "@/lib/swr/use-tags";
 import { TagColorProps } from "@/lib/types";
 
-import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -226,7 +226,7 @@ export default function DataroomTagSection({
         </CardFooter>
       </Card>
       {showUpgradeModal && (
-        <UpgradePlanModalWithDiscount
+        <UpgradePlanModal
           clickedPlan={PlanEnum.Pro}
           trigger="create_tag"
           open={showUpgradeModal}

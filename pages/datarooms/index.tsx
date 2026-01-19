@@ -14,7 +14,7 @@ import useLimits from "@/lib/swr/use-limits";
 import { useTags } from "@/lib/swr/use-tags";
 import { daysLeft } from "@/lib/utils";
 
-import { UpgradePlanModalWithDiscount } from "@/components/billing/upgrade-plan-modal-with-discount";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { AddDataroomModal } from "@/components/datarooms/add-dataroom-modal";
 import DataroomCard from "@/components/datarooms/dataroom-card";
 import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
@@ -101,7 +101,7 @@ export default function DataroomsPage() {
           </div>
           <div className="flex items-center gap-x-1">
             {isBusiness && !canCreateUnlimitedDatarooms ? (
-              <UpgradePlanModalWithDiscount
+              <UpgradePlanModal
                 clickedPlan={PlanEnum.DataRooms}
                 trigger="datarooms"
               >
@@ -111,7 +111,7 @@ export default function DataroomsPage() {
                 >
                   <span>Upgrade to Add Data Room</span>
                 </Button>
-              </UpgradePlanModalWithDiscount>
+              </UpgradePlanModal>
             ) : isTrial &&
               datarooms &&
               !isBusiness &&
@@ -135,7 +135,7 @@ export default function DataroomsPage() {
                     })()}
                   </span>
                 </div>
-                <UpgradePlanModalWithDiscount
+                <UpgradePlanModal
                   clickedPlan={PlanEnum.DataRooms}
                   trigger="datarooms"
                 >
@@ -145,7 +145,7 @@ export default function DataroomsPage() {
                   >
                     <span>Upgrade to Add Data Room</span>
                   </Button>
-                </UpgradePlanModalWithDiscount>
+                </UpgradePlanModal>
               </div>
             ) : isBusiness || isDatarooms || isDataroomsPlus ? (
               <AddDataroomModal>
