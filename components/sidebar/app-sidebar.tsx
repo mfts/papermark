@@ -97,7 +97,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const dataroomItems =
     datarooms && datarooms.length > 0
       ? datarooms.slice(0, 5).map((dataroom) => ({
-          title: dataroom.name,
+          title: dataroom.internalName || dataroom.name,
           url: `/datarooms/${dataroom.id}/documents`,
           current:
             router.pathname.includes("/datarooms/[id]") &&
