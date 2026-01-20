@@ -36,20 +36,30 @@ export function FolderColorPicker({ value, onChange }: FolderColorPickerProps) {
             )}
             style={
               isSelected
-                ? {
-                    ringColor: `var(--${colorOption.id === "gray" ? "slate" : colorOption.id}-500)`,
-                  }
+                ? ({
+                    "--tw-ring-color":
+                      colorOption.id === "gray"
+                        ? "#6b7280"
+                        : colorOption.id === "red"
+                          ? "#ef4444"
+                          : colorOption.id === "orange"
+                            ? "#f97316"
+                            : colorOption.id === "yellow"
+                              ? "#eab308"
+                              : colorOption.id === "green"
+                                ? "#10b981"
+                                : colorOption.id === "blue"
+                                  ? "#3b82f6"
+                                  : colorOption.id === "black"
+                                    ? "#000000"
+                                    : "#6b7280",
+                  } as React.CSSProperties)
                 : undefined
             }
             title={colorOption.label}
           >
             <span
-              className={cn(
-                "h-3 w-3 rounded-full",
-                colorOption.id === "gray"
-                  ? "bg-gray-500"
-                  : `bg-${colorOption.id}-500`,
-              )}
+              className="h-3 w-3 rounded-full"
               style={{
                 backgroundColor:
                   colorOption.id === "gray"
@@ -64,11 +74,9 @@ export function FolderColorPicker({ value, onChange }: FolderColorPickerProps) {
                             ? "#10b981"
                             : colorOption.id === "blue"
                               ? "#3b82f6"
-                              : colorOption.id === "purple"
-                                ? "#a855f7"
-                                : colorOption.id === "pink"
-                                  ? "#ec4899"
-                                  : "#6b7280",
+                              : colorOption.id === "black"
+                                ? "#000000"
+                                : "#6b7280",
               }}
             />
             {colorOption.label}
@@ -101,11 +109,9 @@ export function FolderColorDot({ colorId, className }: FolderColorDotProps) {
               ? "#10b981"
               : colorId === "blue"
                 ? "#3b82f6"
-                : colorId === "purple"
-                  ? "#a855f7"
-                  : colorId === "pink"
-                    ? "#ec4899"
-                    : "#6b7280";
+                : colorId === "black"
+                  ? "#000000"
+                  : "#6b7280";
 
   return (
     <span
