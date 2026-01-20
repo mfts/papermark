@@ -100,16 +100,16 @@ export default function Documents() {
           </div>
           <SortButton />
           {hasHiddenItems && (
-            <Link href="/documents/hidden">
-              <Button
-                variant="outline"
-                size="icon"
-                className="border-gray-500 bg-gray-50 hover:bg-gray-200 dark:bg-black hover:dark:bg-muted"
-                title="View hidden documents"
-              >
+            <Button
+              variant="outline"
+              size="icon"
+              className="border-gray-500 bg-gray-50 hover:bg-gray-200 dark:bg-black hover:dark:bg-muted"
+              asChild
+            >
+              <Link href="/documents/hidden" aria-label="View hidden documents">
                 <EyeOffIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
         </div>
 
