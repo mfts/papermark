@@ -267,6 +267,8 @@ export default async function handle(
             dataroomId: true,
             orderIndex: true,
             hierarchicalIndex: true,
+            icon: true,
+            color: true,
             createdAt: true,
             updatedAt: true,
             _count: {
@@ -309,6 +311,8 @@ export default async function handle(
                 dataroomId: true,
                 orderIndex: true,
                 hierarchicalIndex: true,
+                icon: true,
+                color: true,
                 createdAt: true,
                 updatedAt: true,
                 documents: {
@@ -361,6 +365,8 @@ export default async function handle(
           dataroomId: true,
           orderIndex: true,
           hierarchicalIndex: true,
+          icon: true,
+          color: true,
           createdAt: true,
           updatedAt: true,
           documents: {

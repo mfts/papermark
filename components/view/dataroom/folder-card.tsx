@@ -1,9 +1,10 @@
 import { useState } from "react";
 
 import { DataroomFolder } from "@prisma/client";
-import { Download, FolderIcon, MoreVerticalIcon } from "lucide-react";
+import { Download, MoreVerticalIcon } from "lucide-react";
 import { toast } from "sonner";
 
+import { getFolderColorClasses, getFolderIcon } from "@/lib/constants/folder-constants";
 import { timeAgo } from "@/lib/utils";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
@@ -103,7 +104,16 @@ export default function FolderCard({
     <div className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-400 transition-all hover:bg-secondary hover:ring-gray-500 dark:bg-secondary dark:ring-gray-500 hover:dark:ring-gray-400 sm:p-4">
       <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
         <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-          <FolderIcon className="h-8 w-8" strokeWidth={1} />
+          {(() => {
+            const FolderIconComponent = getFolderIcon(folder.icon);
+            const colorClasses = getFolderColorClasses(folder.color);
+            return (
+              <FolderIconComponent
+                className={`h-8 w-8 ${colorClasses.iconClass}`}
+                strokeWidth={1}
+              />
+            );
+          })()}
         </div>
 
         <div className="flex-col">

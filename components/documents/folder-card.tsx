@@ -8,7 +8,6 @@ import {
   ClipboardCopyIcon,
   CopyIcon,
   EyeOffIcon,
-  FolderIcon,
   FolderInputIcon,
   FolderPenIcon,
   MoreVertical,
@@ -18,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { getFolderColorClasses, getFolderIcon } from "@/lib/constants/folder-constants";
 import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { timeAgo } from "@/lib/utils";
@@ -200,7 +200,16 @@ export default function FolderCard({
         <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
           {!isSelected && !isHovered ? (
             <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-              <FolderIcon className="h-8 w-8" strokeWidth={1} />
+              {(() => {
+                const FolderIconComponent = getFolderIcon(folder.icon);
+                const colorClasses = getFolderColorClasses(folder.color);
+                return (
+                  <FolderIconComponent
+                    className={`h-8 w-8 ${colorClasses.iconClass}`}
+                    strokeWidth={1}
+                  />
+                );
+              })()}
             </div>
           ) : (
             <div className="mx-0.5 w-8 sm:mx-1"></div>
@@ -355,6 +364,8 @@ export default function FolderCard({
           setOpen={setOpenFolder}
           folderId={folder.id}
           name={folder.name}
+          icon={folder.icon}
+          color={folder.color}
           isDataroom={isDataroom}
           dataroomId={dataroomId}
         />
