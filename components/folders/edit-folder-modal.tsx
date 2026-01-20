@@ -10,7 +10,6 @@ import {
   DEFAULT_FOLDER_ICON,
   FolderColorId,
   FolderIconId,
-  getFolderColorClasses,
 } from "@/lib/constants/folder-constants";
 import { useAnalytics } from "@/lib/analytics";
 
@@ -27,8 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { FolderColorPicker } from "./folder-color-picker";
-import { FolderIconPicker, FolderIconPreview } from "./folder-icon-picker";
+import { FolderIconColorPicker } from "./folder-icon-picker";
 
 export function EditFolderModal({
   open,
@@ -80,12 +78,10 @@ export function EditFolderModal({
       .min(3, {
         message: "Please provide a folder name with at least 3 characters.",
       })
-      .max(60, {
-        message: "Folder name must be 60 characters or less.",
+      .max(256, {
+        message: "Folder name must be 256 characters or less.",
       }),
   });
-
-  const colorClasses = getFolderColorClasses(folderColor);
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
@@ -164,69 +160,37 @@ export function EditFolderModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-start">
           <DialogTitle>Edit Folder</DialogTitle>
           <DialogDescription>
-            Customize your folder name, icon, and color.
+            Update your folder name, icon, and color.
           </DialogDescription>
         </DialogHeader>
 
-        {/* Live Preview */}
-        <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-background shadow-sm">
-            <FolderIconPreview
-              iconId={folderIcon}
-              colorClass={colorClasses.iconClass}
-              size="lg"
+        <form onSubmit={handleSubmit}>
+          <Label htmlFor="folder-name-update" className="opacity-80">
+            Folder Name
+          </Label>
+          <div className="mb-1 mt-1 flex items-center gap-2">
+            <FolderIconColorPicker
+              iconValue={folderIcon}
+              colorValue={folderColor}
+              onIconChange={setFolderIcon}
+              onColorChange={setFolderColor}
             />
-          </div>
-          <div className="flex-1 truncate">
-            <p className="truncate font-medium">
-              {folderName.trim() || "Folder name"}
-            </p>
-            <p className="text-xs text-muted-foreground">Preview</p>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Folder Name */}
-          <div>
-            <Label htmlFor="folder-name-update" className="text-sm font-medium">
-              Folder Name
-            </Label>
             <Input
               id="folder-name-update"
               value={folderName}
-              placeholder="My folder"
-              className="mt-1.5 w-full"
-              maxLength={60}
+              placeholder="Choose a helpful name"
+              className="flex-1"
+              maxLength={256}
               onChange={(e) => setFolderName(e.target.value)}
             />
-            <p className="mt-1 text-xs text-muted-foreground">
-              {folderName.length}/60 characters
-            </p>
           </div>
-
-          {/* Folder Color */}
-          <div>
-            <Label className="text-sm font-medium">Folder Color</Label>
-            <div className="mt-1.5">
-              <FolderColorPicker value={folderColor} onChange={setFolderColor} />
-            </div>
-          </div>
-
-          {/* Folder Icon */}
-          <div>
-            <Label className="text-sm font-medium">Folder Icon</Label>
-            <div className="mt-1.5">
-              <FolderIconPicker
-                value={folderIcon}
-                onChange={setFolderIcon}
-                colorClass={colorClasses.iconClass}
-              />
-            </div>
-          </div>
+          <p className="mb-4 text-xs text-muted-foreground">
+            {folderName.length}/256 characters
+          </p>
 
           <DialogFooter>
             <Button type="submit" className="h-9 w-full" loading={loading}>

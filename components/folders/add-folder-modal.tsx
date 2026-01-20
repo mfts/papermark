@@ -9,6 +9,15 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 import { z } from "zod";
 
+import {
+  DEFAULT_FOLDER_COLOR,
+  DEFAULT_FOLDER_ICON,
+  FolderColorId,
+  FolderIconId,
+} from "@/lib/constants/folder-constants";
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,10 +31,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
-
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { FolderIconColorPicker } from "./folder-icon-picker";
 
 export function AddFolderModal({
   // open,
@@ -44,6 +51,8 @@ export function AddFolderModal({
 }) {
   const router = useRouter();
   const [folderName, setFolderName] = useState<string>("");
+  const [folderIcon, setFolderIcon] = useState<FolderIconId>(DEFAULT_FOLDER_ICON);
+  const [folderColor, setFolderColor] = useState<FolderColorId>(DEFAULT_FOLDER_COLOR);
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
 
@@ -60,9 +69,14 @@ export function AddFolderModal({
       : `/documents/tree/${currentFolderPath ? currentFolderPath?.join("/") : ""}${"/" + slugify(folderName.trim())}`;
 
   const addFolderSchema = z.object({
-    name: z.string().min(3, {
-      message: "Please provide a folder name with at least 3 characters.",
-    }),
+    name: z
+      .string()
+      .min(3, {
+        message: "Please provide a folder name with at least 3 characters.",
+      })
+      .max(256, {
+        message: "Folder name must be 256 characters or less.",
+      }),
   });
 
   const validation = addFolderSchema.safeParse({ name: folderName });
@@ -91,6 +105,8 @@ export function AddFolderModal({
           body: JSON.stringify({
             name: folderName.trim(),
             path: currentFolderPath?.join("/"),
+            icon: folderIcon,
+            color: folderColor,
           }),
         },
       );
@@ -106,6 +122,8 @@ export function AddFolderModal({
 
       analytics.capture("Folder Added", {
         folderName: folderName.trim(),
+        icon: folderIcon,
+        color: folderColor,
         dataroomId,
       });
       toast.success(`Folder added successfully!`, {
@@ -130,6 +148,8 @@ export function AddFolderModal({
       return;
     } finally {
       setFolderName("");
+      setFolderIcon(DEFAULT_FOLDER_ICON);
+      setFolderColor(DEFAULT_FOLDER_COLOR);
       setLoading(false);
       setOpen(false);
     }
@@ -156,18 +176,29 @@ export function AddFolderModal({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-start">
           <DialogTitle>Add Folder</DialogTitle>
-          <DialogDescription>You can easily add a folder.</DialogDescription>
+          <DialogDescription>
+            Create a new folder with a custom icon and color.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <Label htmlFor="folder-name" className="opacity-80">
             Folder Name
           </Label>
-          <Input
-            id="folder-name"
-            placeholder="folder-123"
-            className="mb-4 mt-1 w-full"
-            onChange={(e) => setFolderName(e.target.value)}
-          />
+          <div className="mb-4 mt-1 flex items-center gap-2">
+            <FolderIconColorPicker
+              iconValue={folderIcon}
+              colorValue={folderColor}
+              onIconChange={setFolderIcon}
+              onColorChange={setFolderColor}
+            />
+            <Input
+              id="folder-name"
+              placeholder="Choose a helpful name"
+              className="flex-1"
+              value={folderName}
+              onChange={(e) => setFolderName(e.target.value)}
+            />
+          </div>
           <DialogFooter>
             <Button
               type="submit"
@@ -175,7 +206,7 @@ export function AddFolderModal({
               disabled={!validation.success}
               loading={loading}
             >
-              Add new folder
+              Create
             </Button>
           </DialogFooter>
         </form>

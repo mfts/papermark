@@ -440,7 +440,12 @@ export default async function handle(
       id: string;
     };
 
-    const { name, path } = req.body as { name: string; path?: string };
+    const { name, path, icon, color } = req.body as {
+      name: string;
+      path?: string;
+      icon?: string;
+      color?: string;
+    };
 
     const parentFolderPath = path ? "/" + path : "/";
 
@@ -516,6 +521,8 @@ export default async function handle(
           path: childFolderPath,
           parentId: parentFolder?.id ?? null,
           dataroomId: dataroomId,
+          icon: icon ?? null,
+          color: color ?? null,
         },
       });
 
