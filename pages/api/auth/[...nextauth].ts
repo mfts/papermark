@@ -17,7 +17,6 @@ import hanko from "@/lib/hanko";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
-import { generateChecksum } from "@/lib/utils/generate-checksum";
 import { getIpAddress } from "@/lib/utils/ip";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
@@ -80,20 +79,13 @@ export const authOptions: NextAuthOptions = {
           finalUrl = urlObj.toString();
         }
 
+        // In development, send the email but also log the URL
         if (process.env.NODE_ENV === "development") {
-          const checksum = generateChecksum(finalUrl);
-          const verificationUrlParams = new URLSearchParams({
-            verification_url: finalUrl,
-            checksum,
+          await sendVerificationRequestEmail({
+            url: finalUrl,
+            email: identifier,
           });
-
-          const baseUrl = hasValidNextAuthUrl
-            ? process.env.NEXTAUTH_URL
-            : getMainDomainUrl();
-
-          const verificationUrl = `${baseUrl}/verify?${verificationUrlParams}`;
-          console.log("[Login URL]", verificationUrl);
-          return;
+          console.log("[Login Email Sent] Check your inbox for:", identifier);
         } else {
           await sendVerificationRequestEmail({
             url: finalUrl,
