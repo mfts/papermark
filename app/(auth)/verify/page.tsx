@@ -66,14 +66,15 @@ export default async function VerifyPage({
 }) {
   const { token, verification_url, checksum } = searchParams;
 
-  let callbackUrl: string | null = null;
+  let verifyUrl: string | null = null;
   let isExpired = false;
 
   // New flow: token-based verification (stored in Redis)
   if (token) {
     const magicLinkData = await getMagicLinkData(token);
     if (magicLinkData) {
-      callbackUrl = magicLinkData.callbackUrl;
+      // Use the API route that will delete the token and redirect
+      verifyUrl = `/api/verify/login-link?token=${token}`;
     } else {
       // Token not found or expired (Redis TTL handles expiration automatically)
       isExpired = true;
@@ -82,12 +83,12 @@ export default async function VerifyPage({
   // Legacy flow: verification_url with checksum (backward compatibility)
   else if (verification_url && checksum) {
     if (isValidVerificationUrl(verification_url, checksum)) {
-      callbackUrl = verification_url;
+      verifyUrl = verification_url;
     }
   }
 
-  // If no valid callback URL found, show appropriate error
-  if (!callbackUrl) {
+  // If no valid verify URL found, show appropriate error
+  if (!verifyUrl) {
     if (isExpired) {
       return (
         <div className="flex h-screen w-full flex-wrap">
@@ -195,7 +196,7 @@ export default async function VerifyPage({
           </div>
           <div className="flex flex-col gap-4 px-4 pt-8 sm:px-12">
             <div className="relative">
-              <Link href={callbackUrl}>
+              <Link href={verifyUrl}>
                 <Button className="focus:shadow-outline w-full transform rounded bg-gray-800 px-4 py-2 text-white transition-colors duration-300 ease-in-out hover:bg-gray-900 focus:outline-none">
                   Verify email
                 </Button>

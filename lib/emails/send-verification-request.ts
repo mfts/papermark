@@ -90,3 +90,17 @@ export const getMagicLinkData = async (
     return null;
   }
 };
+
+/**
+ * Delete magic link data from Redis after successful use
+ * This prevents the link from being reused
+ */
+export const deleteMagicLinkData = async (token: string): Promise<boolean> => {
+  try {
+    const result = await redis.del(`${MAGIC_LINK_PREFIX}${token}`);
+    return result === 1;
+  } catch (error) {
+    console.error("Error deleting magic link data:", error);
+    return false;
+  }
+};
