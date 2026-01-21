@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import NotFound from "@/pages/404";
 
+import prisma from "@/lib/prisma";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 
 import { LogoCloud } from "@/components/shared/logo-cloud";
@@ -42,30 +43,156 @@ export const metadata: Metadata = {
   },
 };
 
-export default function VerifyPage({
+// Validate legacy verification URL with checksum
+const isValidVerificationUrl = (url: string, checksum: string): boolean => {
+  try {
+    const urlObj = new URL(url);
+    if (urlObj.origin !== process.env.NEXTAUTH_URL) return false;
+    const expectedChecksum = generateChecksum(url);
+    return checksum === expectedChecksum;
+  } catch {
+    return false;
+  }
+};
+
+// Look up magic link token from database
+async function getMagicLinkToken(token: string) {
+  try {
+    const magicLinkToken = await prisma.magicLinkToken.findUnique({
+      where: { token },
+    });
+
+    if (!magicLinkToken) {
+      return null;
+    }
+
+    // Check if token has expired
+    if (new Date() > magicLinkToken.expires) {
+      // Clean up expired token
+      await prisma.magicLinkToken.delete({
+        where: { token },
+      });
+      return null;
+    }
+
+    return magicLinkToken;
+  } catch (error) {
+    console.error("Error fetching magic link token:", error);
+    return null;
+  }
+}
+
+export default async function VerifyPage({
   searchParams,
 }: {
-  searchParams: { verification_url?: string; checksum?: string };
+  searchParams: {
+    token?: string;
+    verification_url?: string;
+    checksum?: string;
+  };
 }) {
-  const { verification_url, checksum } = searchParams;
+  const { token, verification_url, checksum } = searchParams;
 
-  if (!verification_url || !checksum) {
-    return <NotFound />;
+  let callbackUrl: string | null = null;
+  let isExpired = false;
+
+  // New flow: token-based verification
+  if (token) {
+    const magicLinkToken = await getMagicLinkToken(token);
+    if (magicLinkToken) {
+      callbackUrl = magicLinkToken.callbackUrl;
+    } else {
+      // Token not found or expired
+      isExpired = true;
+    }
+  }
+  // Legacy flow: verification_url with checksum (backward compatibility)
+  else if (verification_url && checksum) {
+    if (isValidVerificationUrl(verification_url, checksum)) {
+      callbackUrl = verification_url;
+    }
   }
 
-  // Server-side validation
-  const isValidVerificationUrl = (url: string, checksum: string): boolean => {
-    try {
-      const urlObj = new URL(url);
-      if (urlObj.origin !== process.env.NEXTAUTH_URL) return false;
-      const expectedChecksum = generateChecksum(url);
-      return checksum === expectedChecksum;
-    } catch {
-      return false;
+  // If no valid callback URL found, show appropriate error
+  if (!callbackUrl) {
+    if (isExpired) {
+      return (
+        <div className="flex h-screen w-full flex-wrap">
+          <div className="flex w-full justify-center bg-gray-50 md:w-1/2 lg:w-1/2">
+            <div className="z-10 mx-5 mt-[calc(1vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0 sm:mt-[calc(2vh)] md:mt-[calc(3vh)]">
+              <div className="items-left flex flex-col space-y-3 px-4 py-6 pt-8 sm:px-12">
+                <img
+                  src="/_static/papermark-logo.svg"
+                  alt="Papermark Logo"
+                  className="-mt-8 mb-36 h-7 w-auto self-start sm:mb-32 md:mb-48"
+                />
+                <span className="text-balance text-3xl font-semibold text-gray-900">
+                  Link Expired
+                </span>
+                <h3 className="text-balance text-sm text-gray-800">
+                  This login link has expired or has already been used.
+                </h3>
+              </div>
+              <div className="flex flex-col gap-4 px-4 pt-8 sm:px-12">
+                <div className="relative">
+                  <Link href="/login">
+                    <Button className="focus:shadow-outline w-full transform rounded bg-gray-800 px-4 py-2 text-white transition-colors duration-300 ease-in-out hover:bg-gray-900 focus:outline-none">
+                      Request a new link
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="relative hidden w-full justify-center overflow-hidden bg-black md:flex md:w-1/2 lg:w-1/2">
+            <div className="relative m-0 flex h-full min-h-[700px] w-full p-0">
+              <div
+                className="relative flex h-full w-full flex-col justify-between"
+                id="features"
+              >
+                <div
+                  className="flex w-full flex-col items-center justify-center"
+                  style={{ height: "66.6666%" }}
+                >
+                  <div className="mb-4 h-64 w-80">
+                    <img
+                      className="h-full w-full rounded-2xl object-cover shadow-2xl"
+                      src="/_static/testimonials/backtrace.jpeg"
+                      alt="Backtrace Capital"
+                    />
+                  </div>
+                  <div className="max-w-xl text-center">
+                    <blockquote className="text-balance font-normal leading-8 text-white sm:text-xl sm:leading-9">
+                      <p>
+                        &quot;We raised our €30M Fund with Papermark Data Rooms.
+                        Love the customization, security and ease of use.&quot;
+                      </p>
+                    </blockquote>
+                    <figcaption className="mt-4">
+                      <div className="text-balance font-normal text-white">
+                        Michael Münnix
+                      </div>
+                      <div className="text-balance font-light text-gray-400">
+                        Partner, Backtrace Capital
+                      </div>
+                    </figcaption>
+                  </div>
+                </div>
+                <div
+                  className="absolute bottom-0 left-0 flex w-full flex-col items-center justify-center bg-white"
+                  style={{ height: "33.3333%" }}
+                >
+                  <div className="mb-4 max-w-xl text-balance text-center font-semibold text-gray-900">
+                    Trusted by teams at
+                  </div>
+                  <LogoCloud />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
     }
-  };
-
-  if (!isValidVerificationUrl(verification_url, checksum)) {
     return <NotFound />;
   }
 
@@ -95,7 +222,7 @@ export default function VerifyPage({
           </div>
           <div className="flex flex-col gap-4 px-4 pt-8 sm:px-12">
             <div className="relative">
-              <Link href={verification_url}>
+              <Link href={callbackUrl}>
                 <Button className="focus:shadow-outline w-full transform rounded bg-gray-800 px-4 py-2 text-white transition-colors duration-300 ease-in-out hover:bg-gray-900 focus:outline-none">
                   Verify email
                 </Button>

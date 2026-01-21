@@ -92,6 +92,19 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model MagicLinkToken {
+  id          String   @id @default(cuid())
+  token       String   @unique // Short unique token for the simplified URL
+  email       String // The user's email address
+  callbackUrl String   @db.Text // The original NextAuth callback URL
+  expires     DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([token])
+  @@index([expires])
+  @@index([email])
+}
+
 model Domain {
   id          String   @id @default(cuid())
   slug        String   @unique
