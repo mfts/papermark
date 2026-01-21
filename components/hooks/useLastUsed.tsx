@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { localStorage } from "@/lib/webstorage";
 
-type LoginType = "passkey" | "google" | "credentials" | "linkedin";
+type LoginType = "passkey" | "google" | "credentials" | "linkedin" | "password";
 
 export function useLastUsed() {
   const [lastUsed, setLastUsed] = useState<LoginType>();

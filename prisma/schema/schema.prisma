@@ -43,6 +43,7 @@ model User {
   email          String?    @unique
   emailVerified  DateTime?
   image          String?
+  passwordHash   String?    // Hashed password for email+password auth
   createdAt      DateTime   @default(now())
   accounts       Account[]
   sessions       Session[]
@@ -68,6 +69,40 @@ model User {
   createdAnnotations DocumentAnnotation[] // Annotations created by this user
 
   installedIntegrations InstalledIntegration[]
+
+  // Password auth tokens
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+}
+
+// Token for email verification during signup
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique // Hashed token
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime? // When the token was used (verified)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// Token for password reset flow
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique // Hashed token
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime? // When the token was used
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
 }
 
 model Brand {
