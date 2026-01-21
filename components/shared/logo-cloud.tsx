@@ -6,7 +6,7 @@ export const LogoCloud = () => {
           <a
             target="_blank"
             rel="noopener noreferrer"
-            className="group col-span-1 flex items-center justify-center bg-white p-8 font-bold text-[#249edc] transition-colors"
+            className="group col-span-1 flex items-center justify-center bg-white p-4 lg:p-8 font-bold text-[#249edc] transition-colors"
             href="https://snowflake.com"
           >
             <svg
@@ -27,7 +27,7 @@ export const LogoCloud = () => {
           <a
             target="_blank"
             rel="noopener noreferrer"
-            className="group col-span-1 flex items-center justify-center bg-white p-8 text-black transition-colors"
+            className="group col-span-1 flex items-center justify-center bg-white p-4 lg:p-8 text-black transition-colors"
             href="https://vercel.com"
           >
             <svg
@@ -70,7 +70,7 @@ export const LogoCloud = () => {
           <a
             target="_blank"
             rel="noopener noreferrer"
-            className="group col-span-1 flex items-center justify-center bg-white p-12 transition-colors"
+            className="group col-span-1 flex items-center justify-center bg-white p-4 lg:p-8 transition-colors"
             href="https://www.foundamental.com" // Correct URL format
           >
             {/* SVG with updated CSS class */}
@@ -101,7 +101,7 @@ export const LogoCloud = () => {
           {/* <a
             target="_blank"
             rel="noopener noreferrer"
-            className="group col-span-1 flex items-center justify-center bg-white p-8 text-[#d82227] transition-colors"
+            className="group col-span-1 flex items-center justify-center bg-white p-4 lg:p-8 text-[#d82227] transition-colors"
             href="https://realtor.com"
           >
             <svg
@@ -172,7 +172,7 @@ export const LogoCloud = () => {
           <a
             target="_blank"
             rel="noopener noreferrer"
-            className="group col-span-1 flex items-center justify-center bg-white p-8 text-black transition-colors"
+            className="group col-span-1 flex items-center justify-center bg-white p-4 lg:p-8 text-black transition-colors"
             href="https://www.doordash.com"
           >
             <svg
@@ -191,7 +191,7 @@ export const LogoCloud = () => {
           {/* <a
             target="_blank"
             rel="noopener noreferrer"
-            className="group col-span-1 flex h-[100px] items-center justify-center bg-white p-8 text-[#8C1515] transition-colors"
+            className="group col-span-1 flex h-[100px] items-center justify-center bg-white p-4 lg:p-8 text-[#8C1515] transition-colors"
             href="https://www.stanford.edu"
           >
             <svg
@@ -306,7 +306,7 @@ export const LogoCloud = () => {
           <a
             target="_blank"
             rel="noopener noreferrer"
-            className="group col-span-1 flex items-center justify-center bg-white p-8 text-black transition-colors"
+            className="group col-span-1 flex items-center justify-center bg-white p-4 lg:p-8 text-black transition-colors"
             href="https://www.coinweb.com/"
           >
             <svg
@@ -427,7 +427,7 @@ export const LogoCloud = () => {
           <a
             target="_blank"
             rel="noopener noreferrer"
-            className="group col-span-1 flex items-center justify-center bg-white p-8 text-green-700 transition-colors"
+            className="group col-span-1 flex items-center justify-center bg-white p-4 lg:p-8 text-green-700 transition-colors"
             href="https://bcg.com"
           >
             <svg
