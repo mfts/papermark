@@ -4,11 +4,16 @@ import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import PasskeyProvider from "@teamhanko/passkeys-next-auth-provider";
 import NextAuth, { type NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import EmailProvider from "next-auth/providers/email";
 import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import {
+  authenticateWithPassword,
+  signinSchema,
+} from "@/lib/auth/password-auth";
 import { qstash } from "@/lib/cron";
 import { dub } from "@/lib/dub";
 import { isBlacklistedEmail } from "@/lib/edge-config/blacklist";
@@ -38,6 +43,51 @@ export const authOptions: NextAuthOptions = {
     error: "/login",
   },
   providers: [
+    CredentialsProvider({
+      id: "credentials",
+      name: "Email",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        try {
+          // Validate input
+          const validatedFields = signinSchema.safeParse(credentials);
+          if (!validatedFields.success) {
+            return null;
+          }
+
+          const { email, password } = validatedFields.data;
+
+          // Authenticate with password
+          const result = await authenticateWithPassword(email, password);
+
+          if (result.error) {
+            // If needs verification, throw specific error
+            if (result.needsVerification) {
+              throw new Error("EMAIL_NOT_VERIFIED");
+            }
+            return null;
+          }
+
+          // Return user object
+          return {
+            id: result.user!.id,
+            email: result.user!.email,
+            name: result.user!.name,
+            image: result.user!.image,
+          };
+        } catch (error) {
+          // Re-throw specific errors for handling in the client
+          if (error instanceof Error && error.message === "EMAIL_NOT_VERIFIED") {
+            throw error;
+          }
+          console.error("Credentials auth error:", error);
+          return null;
+        }
+      },
+    }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,

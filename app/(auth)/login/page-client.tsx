@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import { useState } from "react";
 
@@ -21,16 +21,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+type LoginMode = "magic-link" | "password";
+
 export default function Login() {
   const { next } = useParams as { next?: string };
+  const router = useRouter();
 
   const [lastUsed, setLastUsed] = useLastUsed();
-  const authMethods = ["google", "email", "linkedin", "passkey"] as const;
+  const authMethods = ["google", "email", "linkedin", "passkey", "password"] as const;
   type AuthMethod = (typeof authMethods)[number];
   const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>(
     undefined,
   );
+  const [loginMode, setLoginMode] = useState<LoginMode>("magic-link");
   const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [emailButtonText, setEmailButtonText] = useState<string>(
     "Continue with Email",
   );
@@ -43,6 +48,73 @@ export default function Login() {
     .email({ message: "Please enter a valid email." });
 
   const emailValidation = emailSchema.safeParse(email);
+
+  const handleMagicLinkSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailValidation.success) {
+      toast.error(emailValidation.error.errors[0].message);
+      return;
+    }
+
+    setClickedMethod("email");
+    signIn("email", {
+      email: emailValidation.data,
+      redirect: false,
+      ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+    }).then((res) => {
+      if (res?.ok && !res?.error) {
+        setEmail("");
+        setLastUsed("credentials");
+        setEmailButtonText("Email sent - check your inbox!");
+        toast.success("Email sent - check your inbox!");
+      } else {
+        setEmailButtonText("Error sending email - try again?");
+        toast.error("Error sending email - try again?");
+      }
+      setClickedMethod(undefined);
+    });
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailValidation.success) {
+      toast.error(emailValidation.error.errors[0].message);
+      return;
+    }
+
+    if (!password) {
+      toast.error("Please enter your password");
+      return;
+    }
+
+    setClickedMethod("password");
+
+    try {
+      const result = await signIn("credentials", {
+        email: emailValidation.data,
+        password,
+        redirect: false,
+        ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+      });
+
+      if (result?.error) {
+        if (result.error === "EMAIL_NOT_VERIFIED") {
+          toast.error("Please verify your email before signing in");
+          router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+          return;
+        }
+        toast.error("Invalid email or password");
+      } else if (result?.ok) {
+        setLastUsed("password");
+        toast.success("Signed in successfully!");
+        router.push(next || "/documents");
+      }
+    } catch (error) {
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setClickedMethod(undefined);
+    }
+  };
 
   return (
     <div className="flex h-screen w-full flex-wrap">
@@ -68,73 +140,142 @@ export default function Login() {
               Share documents. Not attachments.
             </h3>
           </div>
-          <form
-            className="flex flex-col gap-4 px-4 pt-8 sm:px-12"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!emailValidation.success) {
-                toast.error(emailValidation.error.errors[0].message);
-                return;
-              }
 
-              setClickedMethod("email");
-              signIn("email", {
-                email: emailValidation.data,
-                redirect: false,
-                ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-              }).then((res) => {
-                if (res?.ok && !res?.error) {
-                  setEmail("");
-                  setLastUsed("credentials");
-                  setEmailButtonText("Email sent - check your inbox!");
-                  toast.success("Email sent - check your inbox!");
-                } else {
-                  setEmailButtonText("Error sending email - try again?");
-                  toast.error("Error sending email - try again?");
-                }
-                setClickedMethod(undefined);
-              });
-            }}
-          >
-            <Label className="sr-only" htmlFor="email">
-              Email
-            </Label>
-            <Input
-              id="email"
-              placeholder="name@example.com"
-              type="email"
-              autoCapitalize="none"
-              autoComplete="email"
-              autoCorrect="off"
-              disabled={clickedMethod === "email"}
-              // pattern={patternSimpleEmailRegex}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+          {/* Login mode tabs */}
+          <div className="mb-4 flex gap-2 px-4 sm:px-12">
+            <button
+              type="button"
+              onClick={() => setLoginMode("magic-link")}
               className={cn(
-                "flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white",
-                email.length > 0 && !emailValidation.success
-                  ? "ring-red-500"
-                  : "ring-gray-200",
+                "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                loginMode === "magic-link"
+                  ? "bg-gray-900 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200",
               )}
-            />
-            <div className="relative">
-              <Button
-                type="submit"
-                loading={clickedMethod === "email"}
-                disabled={!emailValidation.success || !!clickedMethod}
+            >
+              Magic Link
+            </button>
+            <button
+              type="button"
+              onClick={() => setLoginMode("password")}
+              className={cn(
+                "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                loginMode === "password"
+                  ? "bg-gray-900 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200",
+              )}
+            >
+              Password
+            </button>
+          </div>
+
+          {loginMode === "magic-link" ? (
+            <form
+              className="flex flex-col gap-4 px-4 pt-4 sm:px-12"
+              onSubmit={handleMagicLinkSubmit}
+            >
+              <Label className="sr-only" htmlFor="email">
+                Email
+              </Label>
+              <Input
+                id="email"
+                placeholder="name@example.com"
+                type="email"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect="off"
+                disabled={clickedMethod === "email"}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className={cn(
-                  "focus:shadow-outline w-full transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none",
-                  clickedMethod === "email"
-                    ? "bg-black"
-                    : "bg-gray-800 hover:bg-gray-900",
+                  "flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white",
+                  email.length > 0 && !emailValidation.success
+                    ? "ring-red-500"
+                    : "ring-gray-200",
                 )}
-              >
-                {emailButtonText}
-              </Button>
-              {lastUsed === "credentials" && <LastUsed />}
-            </div>
-          </form>
-          <p className="py-4 text-center">or</p>
+              />
+              <div className="relative">
+                <Button
+                  type="submit"
+                  loading={clickedMethod === "email"}
+                  disabled={!emailValidation.success || !!clickedMethod}
+                  className={cn(
+                    "focus:shadow-outline w-full transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none",
+                    clickedMethod === "email"
+                      ? "bg-black"
+                      : "bg-gray-800 hover:bg-gray-900",
+                  )}
+                >
+                  {emailButtonText}
+                </Button>
+                {lastUsed === "credentials" && <LastUsed />}
+              </div>
+            </form>
+          ) : (
+            <form
+              className="flex flex-col gap-4 px-4 pt-4 sm:px-12"
+              onSubmit={handlePasswordSubmit}
+            >
+              <div className="space-y-1">
+                <Label htmlFor="email-password" className="text-sm text-gray-700">
+                  Email
+                </Label>
+                <Input
+                  id="email-password"
+                  placeholder="name@example.com"
+                  type="email"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  autoCorrect="off"
+                  disabled={clickedMethod === "password"}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={cn(
+                    "flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white",
+                    email.length > 0 && !emailValidation.success
+                      ? "ring-red-500"
+                      : "ring-gray-200",
+                  )}
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-sm text-gray-700">
+                    Password
+                  </Label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <Input
+                  id="password"
+                  placeholder="Enter your password"
+                  type="password"
+                  autoComplete="current-password"
+                  disabled={clickedMethod === "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white"
+                />
+              </div>
+              <div className="relative">
+                <Button
+                  type="submit"
+                  loading={clickedMethod === "password"}
+                  disabled={!emailValidation.success || !password || !!clickedMethod}
+                  className="focus:shadow-outline w-full transform rounded bg-gray-800 px-4 py-2 text-white transition-colors duration-300 ease-in-out hover:bg-gray-900 focus:outline-none"
+                >
+                  Sign in
+                </Button>
+                {lastUsed === "password" && <LastUsed />}
+              </div>
+            </form>
+          )}
+
+          <p className="py-4 text-center text-sm text-gray-500">or</p>
           <div className="flex flex-col space-y-2 px-4 sm:px-12">
             <div className="relative">
               <Button
@@ -202,7 +343,15 @@ export default function Login() {
               </Button>
             </div>
           </div>
-          <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-12">
+
+          <p className="mt-6 px-4 text-center text-sm text-gray-600 sm:px-12">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="font-medium text-gray-900 underline">
+              Sign up
+            </Link>
+          </p>
+
+          <p className="mt-6 w-full max-w-md px-4 pb-8 text-xs text-muted-foreground sm:px-12">
             By clicking continue, you acknowledge that you have read and agree
             to Papermark&apos;s{" "}
             <a
@@ -270,12 +419,6 @@ export default function Login() {
                 Trusted by teams at
               </div>
               <LogoCloud />
-              {/* <img
-                src="https://assets.papermark.io/upload/file_7JEGY7zM9ZTfmxu8pe7vWj-Screenshot-2025-05-09-at-18.09.13.png"
-                alt="Trusted teams illustration"
-                className="mt-4 max-w-full h-auto object-contain"
-                style={{maxHeight: '120px'}}
-              /> */}
             </div>
           </div>
         </div>
