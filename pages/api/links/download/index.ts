@@ -7,6 +7,12 @@ import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { getFileNameWithPdfExtension } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
+import {
+  getFileNameWithExtension,
+  getOutputFormat,
+  getWatermarkedContentType,
+  isImageType,
+} from "@/lib/watermark/helpers";
 
 // This function can run for a maximum of 300 seconds
 export const config = {
@@ -52,6 +58,7 @@ export default async function handle(
               versions: {
                 where: { isPrimary: true },
                 select: {
+                  id: true,
                   type: true,
                   file: true,
                   storageType: true,
@@ -127,13 +134,19 @@ export default async function handle(
         }
       }
 
-      // get the file to be downloaded, if watermark is enabled and document is not pdf, then get the pdf file, otherwise return the original file
-      // if watermark is enabled and watermark config is present and document version is pdf, then get the file
-      // if watermark is not enabled, then get the original file
-      const file =
+      const docType = view.document!.versions[0].type;
+      const isImage = isImageType(docType);
+
+      // Determine if watermarking is needed and supported
+      const shouldWatermark =
         view.link.enableWatermark &&
         view.link.watermarkConfig &&
-        view.document!.versions[0].type === "pdf"
+        (docType === "pdf" || isImage);
+
+      // Get the appropriate file to download
+      // For watermarked PDFs, use the converted file; otherwise use original
+      const file =
+        shouldWatermark && docType === "pdf"
           ? view.document!.versions[0].file
           : (view.document!.versions[0].originalFile ??
             view.document!.versions[0].file);
@@ -144,69 +157,115 @@ export default async function handle(
         isDownload: true,
       });
 
-      if (
-        view.document!.versions[0].type === "pdf" &&
-        view.link.enableWatermark &&
-        view.link.watermarkConfig
-      ) {
-        const response = await fetch(
-          `${process.env.NEXTAUTH_URL}/api/mupdf/annotate-document`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
-            },
-            body: JSON.stringify({
-              url: downloadUrl,
-              numPages: view.document!.versions[0].numPages,
-              watermarkConfig: view.link.watermarkConfig,
-              originalFileName: view.document!.name,
-              viewerData: {
-                email: view.viewerEmail,
-                date: new Date(
-                  view.viewedAt ? view.viewedAt : new Date(),
-                ).toLocaleDateString(),
-                ipAddress: getIpAddress(req.headers),
-                link: view.link.name,
-                time: new Date(
-                  view.viewedAt ? view.viewedAt : new Date(),
-                ).toLocaleTimeString(),
-              },
-            }),
-          },
-        );
+      // Handle watermarking for PDFs and images
+      if (shouldWatermark) {
+        const viewerData = {
+          email: view.viewerEmail,
+          date: new Date(
+            view.viewedAt ? view.viewedAt : new Date(),
+          ).toLocaleDateString(),
+          ipAddress: getIpAddress(req.headers),
+          link: view.link.name,
+          time: new Date(
+            view.viewedAt ? view.viewedAt : new Date(),
+          ).toLocaleTimeString(),
+        };
 
-        if (!response.ok) {
-          // Try to get the specific error details from the watermarking API
-          let errorMessage = "Error downloading";
-          try {
-            const errorData = await response.json();
-            if (errorData.error && errorData.details) {
-              errorMessage = `${errorData.error}: ${errorData.details}`;
-            } else if (errorData.error) {
-              errorMessage = errorData.error;
+        if (docType === "pdf") {
+          // PDF watermarking - use flattened approach via page images
+          const response = await fetch(
+            `${process.env.NEXTAUTH_URL}/api/mupdf/watermark`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+              },
+              body: JSON.stringify({
+                documentVersionId: view.document!.versions[0].id,
+                numPages: view.document!.versions[0].numPages,
+                watermarkConfig: view.link.watermarkConfig,
+                originalFileName: view.document!.name,
+                viewerData,
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            let errorMessage = "Error downloading";
+            try {
+              const errorData = await response.json();
+              if (errorData.error && errorData.details) {
+                errorMessage = `${errorData.error}: ${errorData.details}`;
+              } else if (errorData.error) {
+                errorMessage = errorData.error;
+              }
+            } catch {
+              errorMessage = "Error downloading";
             }
-          } catch {
-            // If we can't parse the error response, use generic message
-            errorMessage = "Error downloading";
+            return res.status(500).json({ error: errorMessage });
           }
 
-          return res.status(500).json({ error: errorMessage });
+          const pdfBuffer = await response.arrayBuffer();
+
+          res.setHeader("Content-Type", "application/pdf");
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${encodeURIComponent(getFileNameWithPdfExtension(view.document!.name))}"`,
+          );
+          res.setHeader("Content-Length", Buffer.from(pdfBuffer).length);
+
+          return res.send(Buffer.from(pdfBuffer));
+        } else if (isImage) {
+          // Image watermarking - burn watermark into pixels
+          const outputFormat = getOutputFormat(
+            view.document!.versions[0].contentType,
+          );
+
+          const response = await fetch(
+            `${process.env.NEXTAUTH_URL}/api/mupdf/watermark`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+              },
+              body: JSON.stringify({
+                url: downloadUrl,
+                outputFormat,
+                watermarkConfig: view.link.watermarkConfig,
+                originalFileName: view.document!.name,
+                viewerData,
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            let errorMessage = "Error downloading";
+            try {
+              const errorData = await response.json();
+              if (errorData.error && errorData.details) {
+                errorMessage = `${errorData.error}: ${errorData.details}`;
+              } else if (errorData.error) {
+                errorMessage = errorData.error;
+              }
+            } catch {
+              errorMessage = "Error downloading";
+            }
+            return res.status(500).json({ error: errorMessage });
+          }
+
+          const imageBuffer = await response.arrayBuffer();
+
+          res.setHeader("Content-Type", getWatermarkedContentType(outputFormat));
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${encodeURIComponent(getFileNameWithExtension(view.document!.name, outputFormat))}"`,
+          );
+          res.setHeader("Content-Length", Buffer.from(imageBuffer).length);
+
+          return res.send(Buffer.from(imageBuffer));
         }
-
-        const pdfBuffer = await response.arrayBuffer();
-
-        // Set appropriate headers
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader(
-          "Content-Disposition",
-          `attachment; filename="${encodeURIComponent(getFileNameWithPdfExtension(view.document!.name))}"`,
-        );
-        res.setHeader("Content-Length", Buffer.from(pdfBuffer).length);
-
-        // Send the watermarked buffer directly
-        return res.send(Buffer.from(pdfBuffer));
       }
 
       return res.status(200).json({ downloadUrl });

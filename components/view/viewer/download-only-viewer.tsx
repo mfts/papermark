@@ -212,16 +212,34 @@ export default function DownloadOnlyViewer({
         throw new Error(errorMessage);
       }
 
-      // Check if the response is a PDF file (for watermarked PDFs)
+      // Check if the response is a binary file (watermarked PDFs or images)
       const contentType = response.headers.get("content-type");
-      if (contentType === "application/pdf") {
-        // Handle direct PDF download (watermarked PDFs)
-        const pdfBlob = await response.blob();
-        const url = URL.createObjectURL(pdfBlob);
+      const isBinaryDownload =
+        contentType === "application/pdf" ||
+        contentType?.startsWith("image/");
+
+      if (isBinaryDownload) {
+        // Handle direct binary download (watermarked PDFs and images)
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        // Extract filename from Content-Disposition header or use default
+        const contentDisposition = response.headers.get("content-disposition");
+        let filename = documentName || (contentType === "application/pdf" ? "document.pdf" : "image.png");
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(
+            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
+          );
+          if (filenameMatch && filenameMatch[1]) {
+            filename = decodeURIComponent(
+              filenameMatch[1].replace(/['"]/g, ""),
+            );
+          }
+        }
 
         const a = document.createElement("a");
         a.href = url;
-        a.download = `${documentName || "document"}.pdf`;
+        a.download = filename;
         a.rel = "noopener noreferrer";
         document.body.appendChild(a);
         a.click();

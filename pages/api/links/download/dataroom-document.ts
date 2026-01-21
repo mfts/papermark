@@ -8,6 +8,12 @@ import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { getFileNameWithPdfExtension } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
+import {
+  getFileNameWithExtension,
+  getOutputFormat,
+  getWatermarkedContentType,
+  isImageType,
+} from "@/lib/watermark/helpers";
 
 export const config = {
   maxDuration: 300,
@@ -190,9 +196,18 @@ export default async function handle(
         console.log("No teamId found, skipping Slack notification");
       }
 
-      const file =
+      const docType = downloadDocuments[0].document!.versions[0].type;
+      const isImage = isImageType(docType);
+
+      // Determine if watermarking is needed and supported
+      const shouldWatermark =
         view.link.enableWatermark &&
-        downloadDocuments[0].document!.versions[0].type === "pdf"
+        view.link.watermarkConfig &&
+        (docType === "pdf" || isImage);
+
+      // Get the appropriate file to download
+      const file =
+        shouldWatermark && docType === "pdf"
           ? downloadDocuments[0].document!.versions[0].file
           : (downloadDocuments[0].document!.versions[0].originalFile ??
             downloadDocuments[0].document!.versions[0].file);
@@ -203,58 +218,117 @@ export default async function handle(
         isDownload: true,
       });
 
-      // For PDF files with watermark, always buffer and process
-      if (
-        downloadDocuments[0].document!.versions[0].type === "pdf" &&
-        view.link.enableWatermark &&
-        view.link.watermarkConfig
-      ) {
-        const response = await fetch(
-          `${process.env.NEXTAUTH_URL}/api/mupdf/annotate-document`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
-            },
-            body: JSON.stringify({
-              url: downloadUrl,
-              numPages: downloadDocuments[0].document!.versions[0].numPages,
-              watermarkConfig: view.link.watermarkConfig,
-              originalFileName: downloadDocuments[0].document!.name,
-              viewerData: {
-                email: view.viewerEmail,
-                date: (view.viewedAt
-                  ? new Date(view.viewedAt)
-                  : new Date()
-                ).toLocaleDateString(),
-                ipAddress: getIpAddress(req.headers),
-                link: view.link.name,
-                time: (view.viewedAt
-                  ? new Date(view.viewedAt)
-                  : new Date()
-                ).toLocaleTimeString(),
+      // Handle watermarking for PDFs and images
+      if (shouldWatermark) {
+        const viewerData = {
+          email: view.viewerEmail,
+          date: (view.viewedAt
+            ? new Date(view.viewedAt)
+            : new Date()
+          ).toLocaleDateString(),
+          ipAddress: getIpAddress(req.headers),
+          link: view.link.name,
+          time: (view.viewedAt
+            ? new Date(view.viewedAt)
+            : new Date()
+          ).toLocaleTimeString(),
+        };
+
+        if (docType === "pdf") {
+          // PDF watermarking - use flattened approach via page images
+          const response = await fetch(
+            `${process.env.NEXTAUTH_URL}/api/mupdf/watermark`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
               },
-            }),
-          },
-        );
+              body: JSON.stringify({
+                documentVersionId: downloadDocuments[0].document!.versions[0].id,
+                numPages: downloadDocuments[0].document!.versions[0].numPages,
+                watermarkConfig: view.link.watermarkConfig,
+                originalFileName: downloadDocuments[0].document!.name,
+                viewerData,
+              }),
+            },
+          );
 
-        if (!response.ok) {
-          return res.status(500).json({ error: "Error downloading" });
+          if (!response.ok) {
+            let errorMessage = "Error downloading";
+            try {
+              const errorData = await response.json();
+              if (errorData.error && errorData.details) {
+                errorMessage = `${errorData.error}: ${errorData.details}`;
+              } else if (errorData.error) {
+                errorMessage = errorData.error;
+              }
+            } catch {
+              errorMessage = "Error downloading";
+            }
+            return res.status(500).json({ error: errorMessage });
+          }
+
+          const pdfBuffer = await response.arrayBuffer();
+
+          res.setHeader("Content-Type", "application/pdf");
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${encodeURIComponent(getFileNameWithPdfExtension(downloadDocuments[0].document!.name))}"`,
+          );
+          res.setHeader("Content-Length", Buffer.from(pdfBuffer).length);
+
+          return res.send(Buffer.from(pdfBuffer));
+        } else if (isImage) {
+          // Image watermarking - burn watermark into pixels
+          const outputFormat = getOutputFormat(
+            downloadDocuments[0].document!.versions[0].contentType,
+          );
+
+          const response = await fetch(
+            `${process.env.NEXTAUTH_URL}/api/mupdf/watermark`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+              },
+              body: JSON.stringify({
+                url: downloadUrl,
+                outputFormat,
+                watermarkConfig: view.link.watermarkConfig,
+                originalFileName: downloadDocuments[0].document!.name,
+                viewerData,
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            let errorMessage = "Error downloading";
+            try {
+              const errorData = await response.json();
+              if (errorData.error && errorData.details) {
+                errorMessage = `${errorData.error}: ${errorData.details}`;
+              } else if (errorData.error) {
+                errorMessage = errorData.error;
+              }
+            } catch {
+              errorMessage = "Error downloading";
+            }
+            return res.status(500).json({ error: errorMessage });
+          }
+
+          const imageBuffer = await response.arrayBuffer();
+
+          res.setHeader("Content-Type", getWatermarkedContentType(outputFormat));
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${encodeURIComponent(getFileNameWithExtension(downloadDocuments[0].document!.name, outputFormat))}"`,
+          );
+          res.setHeader("Content-Length", Buffer.from(imageBuffer).length);
+
+          return res.send(Buffer.from(imageBuffer));
         }
-
-        const pdfBuffer = await response.arrayBuffer();
-
-        // Set appropriate headers for watermarked PDF
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader(
-          "Content-Disposition",
-          `attachment; filename="${encodeURIComponent(getFileNameWithPdfExtension(downloadDocuments[0].document!.name))}"`,
-        );
-        res.setHeader("Content-Length", Buffer.from(pdfBuffer).length);
-
-        // Send the watermarked buffer directly
-        return res.send(Buffer.from(pdfBuffer));
       }
 
       // For non-watermarked PDFs, we need to buffer and set proper headers
