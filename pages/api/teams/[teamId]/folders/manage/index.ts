@@ -48,8 +48,8 @@ export default async function handle(
         return res.status(400).json({ message: "Folder name is required" });
       }
 
-      if (name.trim().length > 60) {
-        return res.status(400).json({ message: "Folder name must be 60 characters or less" });
+      if (name.trim().length > 256) {
+        return res.status(400).json({ message: "Folder name must be 256 characters or less" });
       }
 
       const team = await prisma.team.findUnique({
