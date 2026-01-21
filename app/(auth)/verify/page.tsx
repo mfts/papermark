@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import NotFound from "@/pages/404";
 
-import prisma from "@/lib/prisma";
+import { getMagicLinkData } from "@/lib/emails/send-verification-request";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 
 import { LogoCloud } from "@/components/shared/logo-cloud";
@@ -55,33 +55,6 @@ const isValidVerificationUrl = (url: string, checksum: string): boolean => {
   }
 };
 
-// Look up magic link token from database
-async function getMagicLinkToken(token: string) {
-  try {
-    const magicLinkToken = await prisma.magicLinkToken.findUnique({
-      where: { token },
-    });
-
-    if (!magicLinkToken) {
-      return null;
-    }
-
-    // Check if token has expired
-    if (new Date() > magicLinkToken.expires) {
-      // Clean up expired token
-      await prisma.magicLinkToken.delete({
-        where: { token },
-      });
-      return null;
-    }
-
-    return magicLinkToken;
-  } catch (error) {
-    console.error("Error fetching magic link token:", error);
-    return null;
-  }
-}
-
 export default async function VerifyPage({
   searchParams,
 }: {
@@ -96,13 +69,13 @@ export default async function VerifyPage({
   let callbackUrl: string | null = null;
   let isExpired = false;
 
-  // New flow: token-based verification
+  // New flow: token-based verification (stored in Redis)
   if (token) {
-    const magicLinkToken = await getMagicLinkToken(token);
-    if (magicLinkToken) {
-      callbackUrl = magicLinkToken.callbackUrl;
+    const magicLinkData = await getMagicLinkData(token);
+    if (magicLinkData) {
+      callbackUrl = magicLinkData.callbackUrl;
     } else {
-      // Token not found or expired
+      // Token not found or expired (Redis TTL handles expiration automatically)
       isExpired = true;
     }
   }
