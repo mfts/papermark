@@ -1,7 +1,7 @@
 // components/view/dataroom/document-upload-button.tsx
 import { useState } from "react";
 
-import { PlusIcon } from "lucide-react";
+import { CheckCircle2, PlusIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,23 @@ export function DocumentUploadModal({
   folderId?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+
+  const handleUploadSuccess = () => {
+    setUploadSuccess(true);
+    // Auto-close the dialog after a short delay to show success message
+    setTimeout(() => {
+      setIsOpen(false);
+      setUploadSuccess(false);
+    }, 1500);
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      setUploadSuccess(false);
+    }
+  };
 
   return (
     <>
@@ -39,25 +56,39 @@ export function DocumentUploadModal({
         <span>Add Document</span>
       </Button>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Upload Document to Dataroom</DialogTitle>
             <DialogDescription>
-              The data room manager will receive a notification when the
-              document is uploaded and approve the document. Only then, it will
-              be visible to all visitors.
+              Your document will appear immediately in the dataroom and will be
+              processed in the background. The data room manager will be
+              notified of your upload.
             </DialogDescription>
           </DialogHeader>
-          <ViewerUploadComponent
-            viewerData={{
-              id: viewerId,
-              linkId,
-              dataroomId,
-            }}
-            teamId="visitor-upload"
-            folderId={folderId}
-          />
+
+          {uploadSuccess ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <CheckCircle2 className="h-12 w-12 text-green-500" />
+              <p className="mt-3 text-sm font-medium text-foreground">
+                Document uploaded successfully!
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Your document is now visible and being processed.
+              </p>
+            </div>
+          ) : (
+            <ViewerUploadComponent
+              viewerData={{
+                id: viewerId,
+                linkId,
+                dataroomId,
+              }}
+              teamId="visitor-upload"
+              folderId={folderId}
+              onUploadSuccess={handleUploadSuccess}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>
