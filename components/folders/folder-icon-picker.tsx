@@ -164,8 +164,8 @@ export function FolderIconColorPicker({
                   )}
                   style={{
                     backgroundColor: hex,
-                    ...(isSelected && { ringColor: hex }),
-                  }}
+                    ...(isSelected && { '--tw-ring-color': hex }),
+                  } as React.CSSProperties}
                   title={colorOption.label}
                   aria-label={`Select ${colorOption.label} color`}
                 />
