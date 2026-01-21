@@ -130,10 +130,10 @@ export const FOLDER_COLORS = [
   {
     id: "black",
     label: "Black",
-    text: "text-purple-600",
-    bg: "bg-black-100",
-    border: "border-black-300",
-    iconClass: "text-black-500 dark:text-black-400",
+    text: "text-neutral-900",
+    bg: "bg-neutral-100",
+    border: "border-neutral-300",
+    iconClass: "text-neutral-700 dark:text-neutral-400",
   },
 ] as const;
 
