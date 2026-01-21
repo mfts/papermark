@@ -1,5 +1,6 @@
 import { logger, task } from "@trigger.dev/sdk/v3";
 
+import { setVersionAsPrimary } from "@/lib/documents/set-version-as-primary";
 import { getFile } from "@/lib/files/get-file";
 import prisma from "@/lib/prisma";
 import { updateStatus } from "@/lib/utils/generate-trigger-status";
@@ -195,14 +196,14 @@ export const convertPdfToImageRoute = task({
       data: {
         numPages: numPages,
         hasPages: true,
-        isPrimary: true,
       },
       select: {
         id: true,
         hasPages: true,
-        isPrimary: true,
       },
     });
+
+    await setVersionAsPrimary(documentId, documentVersionId);
 
     logger.info("Enabling pages");
     updateStatus({
