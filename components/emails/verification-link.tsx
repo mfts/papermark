@@ -51,15 +51,13 @@ const VerificationLinkEmail = ({
               </Text>
             </Section>
             <Heading className="mx-0 my-7 p-0 text-lg font-medium text-black">
-              Sign in to Papermark
+              Your secure login link
             </Heading>
+            <Text className="text-sm leading-6 text-black">Hi there,</Text>
             <Text className="text-sm leading-6 text-black">
-              Hi there,
-            </Text>
-            <Text className="text-sm leading-6 text-black">
-              We received a request to sign in to your Papermark account
-              associated with <strong>{email}</strong>. Click the button below
-              to securely sign in.
+              You’re receiving this email because a secure sign-in was requested
+              for your <strong>Papermark</strong> account associated with{" "}
+              <strong>{email}</strong>.
             </Text>
             <Section className="my-8 text-center">
               <Link
@@ -70,7 +68,8 @@ const VerificationLinkEmail = ({
               </Link>
             </Section>
             <Text className="text-sm leading-6 text-black">
-              Or copy and paste this URL into your browser:
+              If the button doesn’t work, copy and paste this link into your
+              browser:
             </Text>
             <Text className="max-w-sm flex-wrap break-words font-medium text-purple-600 no-underline">
               {url}
@@ -102,7 +101,7 @@ const VerificationLinkEmail = ({
             </Section>
             <Footer
               withAddress={true}
-              footerText="This is an automated security email from Papermark. If you have any questions, simply reply to this email."
+              footerText="This is a security email from Papermark. If you have any questions, simply reply to this email."
             />
           </Container>
         </Body>
