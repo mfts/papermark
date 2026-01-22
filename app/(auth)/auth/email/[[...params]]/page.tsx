@@ -36,22 +36,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function EmailVerificationPage({
-  params,
-}: {
-  params: { params?: string[] };
-}) {
-  // Extract email, code, and uuid from params
-  // URL format: /auth/email/{email}/{code}/{uuid}
-  const [encodedEmail, code, uuid] = params.params || [];
-  const email = encodedEmail ? decodeURIComponent(encodedEmail) : undefined;
-
-  return (
-    <EmailVerificationClient
-      email={email}
-      code={code}
-      uuid={uuid}
-      autoVerify={!!(email && code && uuid)}
-    />
-  );
+export default async function EmailVerificationPage() {
+  return <EmailVerificationClient />;
 }

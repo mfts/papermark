@@ -3,78 +3,43 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { LogoCloud } from "@/components/shared/logo-cloud";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface EmailVerificationClientProps {
-  email?: string;
-  code?: string;
-  uuid?: string;
-  autoVerify?: boolean;
-}
-
-export default function EmailVerificationClient({
-  email: initialEmail,
-  code: initialCode,
-  uuid,
-  autoVerify = false,
-}: EmailVerificationClientProps) {
+export default function EmailVerificationClient() {
   const router = useRouter();
-  const [email, setEmail] = useState(initialEmail || "");
+  const codeInputRef = useRef<HTMLInputElement>(null);
+  const [email, setEmail] = useState("");
+  const [emailLocked, setEmailLocked] = useState(false);
   const [code, setCode] = useState("");
-  const [isLoading, setIsLoading] = useState(autoVerify);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExpired, setIsExpired] = useState(false);
 
-  // Auto-verify when coming from email link
-  const verifyWithLink = useCallback(async () => {
-    if (!uuid || !initialCode || !initialEmail) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(
-        `/api/auth/verify-code?uuid=${encodeURIComponent(uuid)}`,
-      );
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 410 || data.error?.includes("expired")) {
-          setIsExpired(true);
-          setError("This code has expired or is invalid.");
-        } else if (response.status === 429) {
-          setError(
-            data.error || "Too many attempts. Please wait before trying again.",
-          );
-        } else {
-          setError(data.error || "Verification failed. Please try again.");
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      // Redirect to the callback URL
-      if (data.callbackUrl) {
-        router.push(data.callbackUrl);
-      }
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-      setIsLoading(false);
-    }
-  }, [uuid, initialCode, initialEmail, router]);
-
+  // Check sessionStorage for pending verification email on mount
   useEffect(() => {
-    if (autoVerify) {
-      verifyWithLink();
+    try {
+      const pendingEmail = sessionStorage.getItem("pendingVerificationEmail");
+      if (pendingEmail) {
+        setEmail(pendingEmail);
+        setEmailLocked(true);
+        // Clear the stored email after reading
+        sessionStorage.removeItem("pendingVerificationEmail");
+        // Focus the code input
+        setTimeout(() => {
+          codeInputRef.current?.focus();
+        }, 100);
+      }
+    } catch {
+      // sessionStorage not available, user will need to enter email manually
     }
-  }, [autoVerify, verifyWithLink]);
+  }, []);
 
-  // Manual code verification
+  // Code verification
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -169,33 +134,27 @@ export default function EmailVerificationClient({
             />
             <Link href="/">
               <span className="text-balance text-3xl font-semibold text-gray-900">
-                {autoVerify && isLoading
-                  ? "Verifying..."
-                  : "Enter verification code"}
+                Check your email
               </span>
             </Link>
             <h3 className="text-balance text-sm text-gray-800">
-              {autoVerify && isLoading
-                ? "Please wait while we verify your login."
-                : "Enter the code sent to your email."}
+              {emailLocked ? (
+                <>
+                  We sent a login code to{" "}
+                  <span className="font-medium">{email}</span>
+                </>
+              ) : (
+                "Enter your email and the code we sent you"
+              )}
             </h3>
           </div>
 
-          {/* Loading state for auto-verify */}
-          {autoVerify && isLoading && (
-            <div className="flex flex-col gap-4 px-4 pt-8 sm:px-12">
-              <div className="flex items-center justify-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-800"></div>
-              </div>
-            </div>
-          )}
-
-          {/* Manual entry form */}
-          {(!autoVerify || !isLoading) && (
-            <form
-              className="flex flex-col gap-4 px-4 pt-8 sm:px-12"
-              onSubmit={handleSubmit}
-            >
+          <form
+            className="flex flex-col gap-4 px-4 pt-8 sm:px-12"
+            onSubmit={handleSubmit}
+          >
+            {/* Only show email field if not locked from sessionStorage */}
+            {!emailLocked && (
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -205,45 +164,46 @@ export default function EmailVerificationClient({
                   autoCapitalize="none"
                   autoComplete="email"
                   autoCorrect="off"
-                  disabled={isLoading || !!initialEmail}
+                  disabled={isLoading}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="code">Verification Code</Label>
-                <Input
-                  id="code"
-                  placeholder="Enter 10-character code"
-                  type="text"
-                  autoCapitalize="characters"
-                  autoComplete="one-time-code"
-                  autoCorrect="off"
-                  disabled={isLoading}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  maxLength={10}
-                  className="flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 font-mono text-lg tracking-widest text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground placeholder:font-sans placeholder:text-sm placeholder:tracking-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                />
-              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="code">Verification Code</Label>
+              <Input
+                ref={codeInputRef}
+                id="code"
+                placeholder="Enter 10-character code"
+                type="text"
+                autoCapitalize="characters"
+                autoComplete="one-time-code"
+                autoCorrect="off"
+                disabled={isLoading}
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                maxLength={10}
+                className="flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 font-mono text-lg tracking-widest text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground placeholder:font-sans placeholder:text-sm placeholder:tracking-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
 
-              {error && (
-                <p className="text-sm text-red-600" role="alert">
-                  {error}
-                </p>
-              )}
+            {error && (
+              <p className="text-sm text-red-600" role="alert">
+                {error}
+              </p>
+            )}
 
-              <Button
-                type="submit"
-                loading={isLoading}
-                disabled={isLoading || !email || code.length < 10}
-                className="focus:shadow-outline w-full transform rounded bg-gray-800 px-4 py-2 text-white transition-colors duration-300 ease-in-out hover:bg-gray-900 focus:outline-none"
-              >
-                Verify
-              </Button>
-            </form>
-          )}
+            <Button
+              type="submit"
+              loading={isLoading}
+              disabled={isLoading || !email || code.length < 10}
+              className="focus:shadow-outline w-full transform rounded bg-gray-800 px-4 py-2 text-white transition-colors duration-300 ease-in-out hover:bg-gray-900 focus:outline-none"
+            >
+              Verify
+            </Button>
+          </form>
 
           <p className="mt-6 px-4 text-center text-sm text-muted-foreground sm:px-12">
             Didn&apos;t receive a code?{" "}

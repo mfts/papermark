@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
-  deleteMagicLinkData,
-  getMagicLinkData,
-  getMagicLinkDataByCode,
+  deleteLoginCodeData,
+  getLoginCodeData,
 } from "@/lib/emails/send-verification-request";
 import { ratelimit } from "@/lib/redis";
 
@@ -17,55 +16,7 @@ function getClientIp(request: NextRequest): string {
   return forwarded?.split(",")[0]?.trim() || realIp || "unknown";
 }
 
-// GET: Verify via UUID (from email link)
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const uuid = searchParams.get("uuid");
-
-  if (!uuid) {
-    return NextResponse.json({ error: "Missing UUID parameter" }, { status: 400 });
-  }
-
-  const ip = getClientIp(request);
-
-  // Check IP rate limit
-  const ipLimit = await ipRateLimit.limit(`verify_code:ip:${ip}`);
-  if (!ipLimit.success) {
-    return NextResponse.json(
-      {
-        error: "Too many attempts. Please wait before trying again.",
-        retryAfter: Math.ceil((ipLimit.reset - Date.now()) / 1000),
-      },
-      { status: 429 },
-    );
-  }
-
-  try {
-    const magicLinkData = await getMagicLinkData(uuid);
-
-    if (!magicLinkData) {
-      return NextResponse.json(
-        { error: "This code has expired or is invalid." },
-        { status: 410 },
-      );
-    }
-
-    const { callbackUrl, email, code } = magicLinkData;
-
-    // Delete both Redis keys to prevent reuse
-    await deleteMagicLinkData(uuid, email, code);
-
-    return NextResponse.json({ callbackUrl });
-  } catch (error) {
-    console.error("Error verifying code:", error);
-    return NextResponse.json(
-      { error: "Verification failed. Please try again." },
-      { status: 500 },
-    );
-  }
-}
-
-// POST: Verify via email + code (manual entry)
+// POST: Verify via email + code
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -111,12 +62,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const magicLinkData = await getMagicLinkDataByCode(
+    const loginCodeData = await getLoginCodeData(
       normalizedEmail,
       normalizedCode,
     );
 
-    if (!magicLinkData) {
+    if (!loginCodeData) {
       return NextResponse.json(
         {
           error: "Invalid code. Please check your email and try again.",
@@ -126,10 +77,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { callbackUrl, uuid } = magicLinkData;
+    const { callbackUrl } = loginCodeData;
 
-    // Delete both Redis keys to prevent reuse
-    await deleteMagicLinkData(uuid, normalizedEmail, normalizedCode);
+    // Delete the Redis key to prevent reuse
+    await deleteLoginCodeData(normalizedEmail, normalizedCode);
 
     return NextResponse.json({ callbackUrl });
   } catch (error) {
