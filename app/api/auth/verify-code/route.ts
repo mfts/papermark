@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import {
-  deleteLoginCodeData,
-  getLoginCodeData,
-} from "@/lib/emails/send-verification-request";
+import { fetchAndDeleteLoginCodeData } from "@/lib/emails/send-verification-request";
 import { ratelimit } from "@/lib/redis";
 
 // Rate limiters
@@ -62,7 +59,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const loginCodeData = await getLoginCodeData(
+    // Atomically fetch and delete to prevent TOCTOU race condition
+    const loginCodeData = await fetchAndDeleteLoginCodeData(
       normalizedEmail,
       normalizedCode,
     );
@@ -78,9 +76,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { callbackUrl } = loginCodeData;
-
-    // Delete the Redis key to prevent reuse
-    await deleteLoginCodeData(normalizedEmail, normalizedCode);
 
     return NextResponse.json({ callbackUrl });
   } catch (error) {

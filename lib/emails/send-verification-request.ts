@@ -70,17 +70,20 @@ export const sendVerificationRequestEmail = async (params: {
 };
 
 /**
- * Retrieve login code data from Redis by email and code
+ * Atomically fetch and delete login code data from Redis
+ * Uses GETDEL to prevent TOCTOU race conditions where the same code could be used twice
  * Returns null if not found or expired
  */
-export const getLoginCodeData = async (
+export const fetchAndDeleteLoginCodeData = async (
   email: string,
   code: string,
 ): Promise<LoginCodeData | null> => {
   try {
-    const data = await redis.get(
-      `${LOGIN_CODE_EMAIL_PREFIX}${email.toLowerCase()}:${code.toUpperCase()}`,
-    );
+    const key = `${LOGIN_CODE_EMAIL_PREFIX}${email.toLowerCase()}:${code.toUpperCase()}`;
+
+    // Use GETDEL for atomic get-and-delete operation
+    // This prevents race conditions where two requests could use the same code
+    const data = await redis.getdel(key);
     if (!data) return null;
 
     // Handle both string and already-parsed object (Redis client behavior)
@@ -89,26 +92,7 @@ export const getLoginCodeData = async (
     }
     return data as LoginCodeData;
   } catch (error) {
-    console.error("Error fetching login code data:", error);
+    console.error("Error fetching and deleting login code data:", error);
     return null;
-  }
-};
-
-/**
- * Delete login code data from Redis after successful use
- * This prevents the code from being reused
- */
-export const deleteLoginCodeData = async (
-  email: string,
-  code: string,
-): Promise<boolean> => {
-  try {
-    const result = await redis.del(
-      `${LOGIN_CODE_EMAIL_PREFIX}${email.toLowerCase()}:${code.toUpperCase()}`,
-    );
-    return result === 1;
-  } catch (error) {
-    console.error("Error deleting login code data:", error);
-    return false;
   }
 };
