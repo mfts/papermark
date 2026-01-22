@@ -12,6 +12,7 @@ import { z } from "zod";
 
 import { cn } from "@/lib/utils";
 
+import { OutlookQuarantineNotice } from "@/components/auth/outlook-quarantine-notice";
 import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
 import Google from "@/components/shared/icons/google";
 import LinkedIn from "@/components/shared/icons/linkedin";
@@ -34,6 +35,10 @@ export default function Login() {
   const [emailButtonText, setEmailButtonText] = useState<string>(
     "Continue with Email",
   );
+  const [emailProvider, setEmailProvider] = useState<
+    "outlook" | "secureserver" | null
+  >(null);
+  const [emailSent, setEmailSent] = useState(false);
 
   const emailSchema = z
     .string()
@@ -77,17 +82,34 @@ export default function Login() {
                 return;
               }
 
+              const submittedEmail = emailValidation.data;
               setClickedMethod("email");
               signIn("email", {
-                email: emailValidation.data,
+                email: submittedEmail,
                 redirect: false,
                 ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-              }).then((res) => {
+              }).then(async (res) => {
                 if (res?.ok && !res?.error) {
                   setEmail("");
                   setLastUsed("credentials");
                   setEmailButtonText("Email sent - check your inbox!");
                   toast.success("Email sent - check your inbox!");
+                  setEmailSent(true);
+
+                  // Check if the email domain uses Outlook/secureserver MX records
+                  try {
+                    const mxResponse = await fetch("/api/auth/check-email-mx", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ email: submittedEmail }),
+                    });
+                    const mxData = await mxResponse.json();
+                    if (mxData.hasQuarantineRisk && mxData.provider) {
+                      setEmailProvider(mxData.provider);
+                    }
+                  } catch {
+                    // Silently fail - this is just a helpful notice
+                  }
                 } else {
                   setEmailButtonText("Error sending email - try again?");
                   toast.error("Error sending email - try again?");
@@ -133,6 +155,11 @@ export default function Login() {
               </Button>
               {lastUsed === "credentials" && <LastUsed />}
             </div>
+
+            {/* Outlook/secureserver quarantine notice - shown after email is sent */}
+            {emailSent && emailProvider && (
+              <OutlookQuarantineNotice provider={emailProvider} />
+            )}
           </form>
           <p className="py-4 text-center">or</p>
           <div className="flex flex-col space-y-2 px-4 sm:px-12">
