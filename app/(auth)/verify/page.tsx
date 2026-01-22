@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-
-import NotFound from "@/pages/404";
+import { redirect } from "next/navigation";
 
 import { getMagicLinkData } from "@/lib/emails/send-verification-request";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
@@ -66,15 +65,20 @@ export default async function VerifyPage({
 }) {
   const { token, verification_url, checksum } = searchParams;
 
+  // If no params at all, redirect to the new auth email page for manual code entry
+  if (!token && !verification_url && !checksum) {
+    redirect("/auth/email");
+  }
+
   let verifyUrl: string | null = null;
   let isExpired = false;
 
-  // New flow: token-based verification (stored in Redis)
+  // New flow: token-based verification (now UUID-based, stored in Redis)
   if (token) {
     const magicLinkData = await getMagicLinkData(token);
     if (magicLinkData) {
-      // Use the API route that will delete the token and redirect
-      verifyUrl = `/api/verify/login-link?token=${token}`;
+      // Redirect to the new verify-code API
+      verifyUrl = `/api/auth/verify-code?uuid=${token}`;
     } else {
       // Token not found or expired (Redis TTL handles expiration automatically)
       isExpired = true;
@@ -87,87 +91,89 @@ export default async function VerifyPage({
     }
   }
 
-  // If no valid verify URL found, show appropriate error
-  if (!verifyUrl) {
-    if (isExpired) {
-      return (
-        <div className="flex h-screen w-full flex-wrap">
-          <div className="flex w-full justify-center bg-gray-50 md:w-1/2 lg:w-1/2">
-            <div className="z-10 mx-5 mt-[calc(1vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0 sm:mt-[calc(2vh)] md:mt-[calc(3vh)]">
-              <div className="items-left flex flex-col space-y-3 px-4 py-6 pt-8 sm:px-12">
-                <img
-                  src="/_static/papermark-logo.svg"
-                  alt="Papermark Logo"
-                  className="-mt-8 mb-36 h-7 w-auto self-start sm:mb-32 md:mb-48"
-                />
-                <span className="text-balance text-3xl font-semibold text-gray-900">
-                  Link Expired
-                </span>
-                <h3 className="text-balance text-sm text-gray-800">
-                  This login link has expired or has already been used.
-                </h3>
-              </div>
-              <div className="flex flex-col gap-4 px-4 pt-8 sm:px-12">
-                <div className="relative">
-                  <Link href="/login">
-                    <Button className="focus:shadow-outline w-full transform rounded bg-gray-800 px-4 py-2 text-white transition-colors duration-300 ease-in-out hover:bg-gray-900 focus:outline-none">
-                      Request a new link
-                    </Button>
-                  </Link>
-                </div>
-              </div>
+  // If expired, show expired page with option to request new code
+  if (isExpired) {
+    return (
+      <div className="flex h-screen w-full flex-wrap">
+        <div className="flex w-full justify-center bg-gray-50 md:w-1/2 lg:w-1/2">
+          <div className="z-10 mx-5 mt-[calc(1vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0 sm:mt-[calc(2vh)] md:mt-[calc(3vh)]">
+            <div className="items-left flex flex-col space-y-3 px-4 py-6 pt-8 sm:px-12">
+              <img
+                src="/_static/papermark-logo.svg"
+                alt="Papermark Logo"
+                className="-mt-8 mb-36 h-7 w-auto self-start sm:mb-32 md:mb-48"
+              />
+              <span className="text-balance text-3xl font-semibold text-gray-900">
+                Link Expired
+              </span>
+              <h3 className="text-balance text-sm text-gray-800">
+                This login link has expired or has already been used.
+              </h3>
             </div>
-          </div>
-          <div className="relative hidden w-full justify-center overflow-hidden bg-black md:flex md:w-1/2 lg:w-1/2">
-            <div className="relative m-0 flex h-full min-h-[700px] w-full p-0">
-              <div
-                className="relative flex h-full w-full flex-col justify-between"
-                id="features"
-              >
-                <div
-                  className="flex w-full flex-col items-center justify-center"
-                  style={{ height: "66.6666%" }}
-                >
-                  <div className="mb-4 h-64 w-80">
-                    <img
-                      className="h-full w-full rounded-2xl object-cover shadow-2xl"
-                      src="/_static/testimonials/backtrace.jpeg"
-                      alt="Backtrace Capital"
-                    />
-                  </div>
-                  <div className="max-w-xl text-center">
-                    <blockquote className="text-balance font-normal leading-8 text-white sm:text-xl sm:leading-9">
-                      <p>
-                        &quot;We raised our €30M Fund with Papermark Data Rooms.
-                        Love the customization, security and ease of use.&quot;
-                      </p>
-                    </blockquote>
-                    <figcaption className="mt-4">
-                      <div className="text-balance font-normal text-white">
-                        Michael Münnix
-                      </div>
-                      <div className="text-balance font-light text-gray-400">
-                        Partner, Backtrace Capital
-                      </div>
-                    </figcaption>
-                  </div>
-                </div>
-                <div
-                  className="absolute bottom-0 left-0 flex w-full flex-col items-center justify-center bg-white"
-                  style={{ height: "33.3333%" }}
-                >
-                  <div className="mb-4 max-w-xl text-balance text-center font-semibold text-gray-900">
-                    Trusted by teams at
-                  </div>
-                  <LogoCloud />
-                </div>
+            <div className="flex flex-col gap-4 px-4 pt-8 sm:px-12">
+              <div className="relative">
+                <Link href="/login">
+                  <Button className="focus:shadow-outline w-full transform rounded bg-gray-800 px-4 py-2 text-white transition-colors duration-300 ease-in-out hover:bg-gray-900 focus:outline-none">
+                    Request a new link
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
         </div>
-      );
-    }
-    return <NotFound />;
+        <div className="relative hidden w-full justify-center overflow-hidden bg-black md:flex md:w-1/2 lg:w-1/2">
+          <div className="relative m-0 flex h-full min-h-[700px] w-full p-0">
+            <div
+              className="relative flex h-full w-full flex-col justify-between"
+              id="features"
+            >
+              <div
+                className="flex w-full flex-col items-center justify-center"
+                style={{ height: "66.6666%" }}
+              >
+                <div className="mb-4 h-64 w-80">
+                  <img
+                    className="h-full w-full rounded-2xl object-cover shadow-2xl"
+                    src="/_static/testimonials/backtrace.jpeg"
+                    alt="Backtrace Capital"
+                  />
+                </div>
+                <div className="max-w-xl text-center">
+                  <blockquote className="text-balance font-normal leading-8 text-white sm:text-xl sm:leading-9">
+                    <p>
+                      &quot;We raised our €30M Fund with Papermark Data Rooms.
+                      Love the customization, security and ease of use.&quot;
+                    </p>
+                  </blockquote>
+                  <figcaption className="mt-4">
+                    <div className="text-balance font-normal text-white">
+                      Michael Münnix
+                    </div>
+                    <div className="text-balance font-light text-gray-400">
+                      Partner, Backtrace Capital
+                    </div>
+                  </figcaption>
+                </div>
+              </div>
+              <div
+                className="absolute bottom-0 left-0 flex w-full flex-col items-center justify-center bg-white"
+                style={{ height: "33.3333%" }}
+              >
+                <div className="mb-4 max-w-xl text-balance text-center font-semibold text-gray-900">
+                  Trusted by teams at
+                </div>
+                <LogoCloud />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If no valid verify URL found, redirect to auth email page for manual entry
+  if (!verifyUrl) {
+    redirect("/auth/email");
   }
 
   return (
