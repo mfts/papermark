@@ -77,6 +77,10 @@ export default function EmailVerificationClient() {
       // Redirect to the callback URL
       if (data.callbackUrl) {
         router.push(data.callbackUrl);
+      } else {
+        // No callback URL in response - stop loading and show error
+        setIsLoading(false);
+        setError("Unable to complete sign-in: missing callback URL. Please try again.");
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
