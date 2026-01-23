@@ -19,15 +19,25 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, code } = body;
 
-    if (!email || !code) {
+    // Type checks first to prevent calling .trim() on non-strings
+    if (typeof email !== "string" || typeof code !== "string") {
       return NextResponse.json(
         { error: "Email and code are required." },
         { status: 400 },
       );
     }
 
+    // Normalize after type check
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedCode = code.trim().toUpperCase();
+
+    // Validate non-empty email and exact code length
+    if (!normalizedEmail || normalizedCode.length !== 10) {
+      return NextResponse.json(
+        { error: "Invalid email or code format." },
+        { status: 400 },
+      );
+    }
 
     const ip = getClientIp(request);
 
