@@ -5,43 +5,25 @@ import {
   Container,
   Head,
   Heading,
+  Hr,
   Html,
-  Link,
   Preview,
   Section,
   Tailwind,
   Text,
 } from "@react-email/components";
 
-import { Footer } from "./shared/footer";
-
-const formatExpirationTime = (expiresAt: Date): string => {
-  return expiresAt.toLocaleString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
-};
-
-const VerificationLinkEmail = ({
-  url = "https://app.papermark.com/verify?token=example",
+const VerificationCodeEmail = ({
   email = "user@example.com",
-  expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000),
+  code = "45PFSNUDYW",
 }: {
-  url: string;
   email?: string;
-  expiresAt?: Date;
+  code?: string;
 }) => {
-  const requestedAt = new Date();
-
   return (
     <Html>
       <Head />
-      <Preview>Your Papermark Login Link - Sign in to your account</Preview>
+      <Preview>Your login code for Papermark: {code}</Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 max-w-[600px] rounded border border-solid border-neutral-200 px-10 py-5">
@@ -50,59 +32,37 @@ const VerificationLinkEmail = ({
                 Papermark
               </Text>
             </Section>
-            <Heading className="mx-0 my-7 p-0 text-lg font-medium text-black">
-              Your secure login link
+            <Heading className="mx-0 my-7 p-0 text-xl font-semibold text-black">
+              Your login code
             </Heading>
-            <Text className="text-sm leading-6 text-black">Hi there,</Text>
-            <Text className="text-sm leading-6 text-black">
-              You’re receiving this email because a secure sign-in was requested
-              for your <strong>Papermark</strong> account associated with{" "}
-              <strong>{email}</strong>.
+            <Text className="text-sm leading-6 text-neutral-600">
+              Enter this code to sign in to your Papermark account:
             </Text>
-            <Section className="my-8 text-center">
-              <Link
-                className="rounded-lg bg-black px-6 py-3 text-center text-[12px] font-semibold text-white no-underline"
-                href={url}
+            <Section className="my-6">
+              <Text
+                className="m-0 rounded-lg bg-neutral-100 px-4 py-3 text-center text-2xl font-bold tracking-[0.3em] text-black"
+                style={{ fontFamily: "monospace", letterSpacing: "0.3em" }}
               >
-                Sign in to Papermark
-              </Link>
-            </Section>
-            <Text className="text-sm leading-6 text-black">
-              If the button doesn’t work, copy and paste this link into your
-              browser:
-            </Text>
-            <Text className="max-w-sm flex-wrap break-words font-medium text-purple-600 no-underline">
-              {url}
-            </Text>
-            <Section className="mt-8 rounded-lg bg-neutral-50 p-4">
-              <Text className="m-0 text-xs leading-5 text-neutral-600">
-                <strong>Security Information:</strong>
-              </Text>
-              <Text className="m-0 mt-2 text-xs leading-5 text-neutral-600">
-                • This link was requested on{" "}
-                {requestedAt.toLocaleString("en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                  timeZoneName: "short",
-                })}
-              </Text>
-              <Text className="m-0 mt-1 text-xs leading-5 text-neutral-600">
-                • This link expires in 24 hours (
-                {formatExpirationTime(expiresAt)})
-              </Text>
-              <Text className="m-0 mt-1 text-xs leading-5 text-neutral-600">
-                • If you didn&apos;t request this link, you can safely ignore
-                this email. Your account remains secure.
+                {code}
               </Text>
             </Section>
-            <Footer
-              withAddress={true}
-              footerText="This is a security email from Papermark. If you have any questions, simply reply to this email."
-            />
+            <Text className="text-sm leading-6 text-neutral-600">
+              This code will expire in 15 minutes.
+            </Text>
+            <Text className="mt-4 text-sm leading-5 text-neutral-500">
+              If you didn&apos;t request this code, you can safely ignore this
+              email.
+            </Text>
+            <Hr className="my-6" />
+            <Section className="text-gray-400">
+              <Text className="text-xs text-neutral-500">
+                Papermark, Inc.
+                <br />
+                1111B S Governors Ave #28117
+                <br />
+                Dover, DE 19904
+              </Text>
+            </Section>
           </Container>
         </Body>
       </Tailwind>
@@ -110,4 +70,4 @@ const VerificationLinkEmail = ({
   );
 };
 
-export default VerificationLinkEmail;
+export default VerificationCodeEmail;

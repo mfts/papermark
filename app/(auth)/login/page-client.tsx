@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import { useState } from "react";
 
@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 
 export default function Login() {
   const { next } = useParams as { next?: string };
+  const router = useRouter();
 
   const [lastUsed, setLastUsed] = useLastUsed();
   const authMethods = ["google", "email", "linkedin", "passkey"] as const;
@@ -84,15 +85,22 @@ export default function Login() {
                 ...(next && next.length > 0 ? { callbackUrl: next } : {}),
               }).then((res) => {
                 if (res?.ok && !res?.error) {
-                  setEmail("");
                   setLastUsed("credentials");
-                  setEmailButtonText("Email sent - check your inbox!");
-                  toast.success("Email sent - check your inbox!");
+                  // Store email in sessionStorage for the verification page
+                  try {
+                    sessionStorage.setItem(
+                      "pendingVerificationEmail",
+                      emailValidation.data,
+                    );
+                  } catch {
+                    // sessionStorage not available, verification page will show email input
+                  }
+                  router.push("/auth/email");
                 } else {
                   setEmailButtonText("Error sending email - try again?");
                   toast.error("Error sending email - try again?");
+                  setClickedMethod(undefined);
                 }
-                setClickedMethod(undefined);
               });
             }}
           >
