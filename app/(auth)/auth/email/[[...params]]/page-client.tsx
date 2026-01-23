@@ -60,7 +60,12 @@ export default function EmailVerificationClient() {
       const data = await response.json();
 
       if (!response.ok) {
-        if (response.status === 410 || data.error?.includes("expired")) {
+        if (
+          response.status === 410 ||
+          response.status === 401 ||
+          data.error?.includes("expired") ||
+          data.error?.includes("Invalid code")
+        ) {
           setIsExpired(true);
           setError("This code has expired or is invalid.");
         } else if (response.status === 429) {
