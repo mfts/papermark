@@ -77,7 +77,8 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
       const pauseStartsAt = stripePeriodEnd > now ? stripePeriodEnd : now;
 
       const pauseEndsAt = new Date(pauseStartsAt);
-      pauseEndsAt.setDate(pauseStartsAt.getDate() + 90);
+      // Use 3 calendar months instead of 90 days to properly align with billing cycles
+      pauseEndsAt.setMonth(pauseStartsAt.getMonth() + 3);
       const reminderAt = new Date(pauseEndsAt);
       reminderAt.setDate(pauseEndsAt.getDate() - 3);
 

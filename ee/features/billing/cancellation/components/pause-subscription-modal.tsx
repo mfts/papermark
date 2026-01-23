@@ -82,7 +82,8 @@ export function PauseSubscriptionModal({
   const endsAtDate = endsAt ? new Date(endsAt) : now;
   const pauseStartsAt = endsAtDate > now ? endsAtDate : now;
   const pauseEndsAt = new Date(pauseStartsAt);
-  pauseEndsAt.setDate(pauseStartsAt.getDate() + 90);
+  // Use 3 calendar months instead of 90 days to properly align with billing cycles
+  pauseEndsAt.setMonth(pauseStartsAt.getMonth() + 3);
 
   const pauseStartsAtString = new Date(pauseStartsAt).toLocaleDateString(
     "en-US",
