@@ -42,7 +42,10 @@ export default function EmailVerificationClient() {
 
   // Show email delivery notice after 5 seconds when waiting for verification
   useEffect(() => {
-    if (!emailLocked) return;
+    if (!emailLocked) {
+      setShowEmailDeliveryNotice(false);
+      return;
+    }
 
     const timer = setTimeout(() => {
       setShowEmailDeliveryNotice(true);
