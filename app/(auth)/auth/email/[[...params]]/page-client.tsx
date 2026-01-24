@@ -174,8 +174,8 @@ export default function EmailVerificationClient() {
           {showEmailDeliveryNotice && emailLocked && (
             <div className="mx-4 mt-4 rounded-lg border border-orange-200 bg-orange-50 p-4 sm:mx-12">
               <p className="text-sm text-orange-800">
-                We are experiencing delivery issues with some email providers
-                and are working to resolve this.
+                Due to a recent Microsoft outage, we are experiencing delivery
+                issues with Outlook and Microsoft email accounts.
               </p>
               <p className="mt-2 text-sm text-orange-800">
                 Check your junk/spam and quarantine folders and ensure that{" "}
