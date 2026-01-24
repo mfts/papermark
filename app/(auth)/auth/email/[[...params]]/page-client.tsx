@@ -49,7 +49,7 @@ export default function EmailVerificationClient() {
 
     const timer = setTimeout(() => {
       setShowEmailDeliveryNotice(true);
-    }, 5000);
+    }, 10000);
 
     return () => clearTimeout(timer);
   }, [emailLocked]);
