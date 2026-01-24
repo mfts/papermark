@@ -19,17 +19,36 @@ export const config = {
   maxDuration: 120,
 };
 
-// Zod schema for folder structure validation
-const folderSchema: z.ZodType<any> = z.lazy(() =>
-  z.object({
-    name: z.string().min(1).max(255),
-    subfolders: z.array(folderSchema).optional(),
-  }),
-);
+// Non-recursive folder schema with fixed depth (max 5 levels)
+// This avoids the "Recursive reference detected" error from the AI SDK
+// which cannot convert z.lazy() recursive schemas to JSON Schema properly
+const folderLevel5Schema = z.object({
+  name: z.string().min(1).max(255),
+});
+
+const folderLevel4Schema = z.object({
+  name: z.string().min(1).max(255),
+  subfolders: z.array(folderLevel5Schema).optional(),
+});
+
+const folderLevel3Schema = z.object({
+  name: z.string().min(1).max(255),
+  subfolders: z.array(folderLevel4Schema).optional(),
+});
+
+const folderLevel2Schema = z.object({
+  name: z.string().min(1).max(255),
+  subfolders: z.array(folderLevel3Schema).optional(),
+});
+
+const folderLevel1Schema = z.object({
+  name: z.string().min(1).max(255),
+  subfolders: z.array(folderLevel2Schema).optional(),
+});
 
 const dataroomStructureSchema = z.object({
   name: z.string().min(1).max(255),
-  folders: z.array(folderSchema).min(1),
+  folders: z.array(folderLevel1Schema).min(1),
 });
 
 export default async function handle(
