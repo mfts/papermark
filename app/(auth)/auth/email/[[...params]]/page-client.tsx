@@ -19,6 +19,7 @@ export default function EmailVerificationClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExpired, setIsExpired] = useState(false);
+  const [showEmailDeliveryNotice, setShowEmailDeliveryNotice] = useState(false);
 
   // Check sessionStorage for pending verification email on mount
   useEffect(() => {
@@ -38,6 +39,17 @@ export default function EmailVerificationClient() {
       // sessionStorage not available, user will need to enter email manually
     }
   }, []);
+
+  // Show email delivery notice after 5 seconds when waiting for verification
+  useEffect(() => {
+    if (!emailLocked) return;
+
+    const timer = setTimeout(() => {
+      setShowEmailDeliveryNotice(true);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [emailLocked]);
 
   // Code verification
   const handleSubmit = async (e: React.FormEvent) => {
@@ -157,6 +169,26 @@ export default function EmailVerificationClient() {
               )}
             </h3>
           </div>
+
+          {/* Delayed email delivery notice */}
+          {showEmailDeliveryNotice && emailLocked && (
+            <div className="mx-4 mt-4 rounded-lg border border-red-300 bg-red-50 p-4 sm:mx-12">
+              <p className="text-sm text-red-800">
+                We are experiencing delivery issues with some email providers
+                and are working to resolve this.
+              </p>
+              <p className="mt-2 text-sm text-red-800">
+                Check your junk/spam and quarantine folders and ensure that{" "}
+                <a
+                  href="mailto:system@papermark.com"
+                  className="font-medium underline"
+                >
+                  system@papermark.com
+                </a>{" "}
+                is on your allowed senders list.
+              </p>
+            </div>
+          )}
 
           <form
             className="flex flex-col gap-4 px-4 pt-8 sm:px-12"
