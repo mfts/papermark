@@ -172,16 +172,16 @@ export default function EmailVerificationClient() {
 
           {/* Delayed email delivery notice */}
           {showEmailDeliveryNotice && emailLocked && (
-            <div className="mx-4 mt-4 rounded-lg border border-red-300 bg-red-50 p-4 sm:mx-12">
-              <p className="text-sm text-red-800">
+            <div className="mx-4 mt-4 rounded-lg border border-orange-200 bg-orange-50 p-4 sm:mx-12">
+              <p className="text-sm text-orange-800">
                 We are experiencing delivery issues with some email providers
                 and are working to resolve this.
               </p>
-              <p className="mt-2 text-sm text-red-800">
+              <p className="mt-2 text-sm text-orange-800">
                 Check your junk/spam and quarantine folders and ensure that{" "}
                 <a
                   href="mailto:system@papermark.com"
-                  className="font-medium underline"
+                  className="font-medium text-orange-600 underline hover:text-orange-700"
                 >
                   system@papermark.com
                 </a>{" "}
