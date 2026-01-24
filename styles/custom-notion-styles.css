@@ -71,12 +71,89 @@ textarea,
   cursor: pointer !important;
 }
 
-.notion-simple-table {
+/* Prevent page-level horizontal overflow */
+.notion-page,
+.notion-frame {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.notion-page-content {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Table overflow handling - make tables horizontally scrollable */
+.notion-simple-table,
+.notion-table {
   width: 100%;
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+/* Ensure table content can scroll */
+.notion-simple-table > table,
+.notion-table > table {
+  min-width: max-content;
 }
 
 .notion-simple-table-row td {
   vertical-align: top;
+}
+
+/* Collection/Database table wrapper for horizontal scroll */
+.notion-collection {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.notion-collection-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+.notion-collection-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+/* Ensure the table body allows scrolling */
+.notion-collection-table-body {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile-specific table overflow handling */
+@media (max-width: 768px) {
+  .notion-simple-table,
+  .notion-table,
+  .notion-collection,
+  .notion-collection-table,
+  .notion-collection-table-wrapper {
+    max-width: calc(100vw - 2rem);
+    overflow-x: auto;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* Ensure full-width tables on mobile have proper containment */
+  .notion-page-content-inner {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  /* Prevent body/html from scrolling horizontally */
+  .notion-app,
+  .notion-frame,
+  .notion-page {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
 }
 
 .notion-hr {
