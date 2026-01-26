@@ -56,7 +56,9 @@ export default function DataroomDocumentViewPage({
   useAdvancedExcelViewer,
   useCustomAccessForm,
   logoOnAccessForm,
-}: DataroomDocumentProps) {
+  error,
+  accessDenied,
+}: DataroomDocumentProps & { error?: boolean; accessDenied?: boolean }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [storedToken, setStoredToken] = useState<string | undefined>(undefined);
@@ -80,6 +82,18 @@ export default function DataroomDocumentViewPage({
       <div className="flex h-screen items-center justify-center bg-black">
         <LoadingSpinner className="h-20 w-20" />
       </div>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <NotFound message="Sorry, you don't have permission to view this link." />
+    );
+  }
+
+  if (error) {
+    return (
+      <NotFound message="Sorry, we had trouble loading this link. Please try refreshing." />
     );
   }
 
@@ -204,6 +218,18 @@ export async function getStaticProps(context: GetStaticPropsContext) {
       )}/${encodeURIComponent(slug)}/documents/${documentId}`,
     );
     if (!res.ok) {
+      // Handle specific HTTP status codes
+      if (res.status === 403) {
+        return {
+          props: { accessDenied: true },
+          revalidate: 30,
+        };
+      }
+      if (res.status === 404) {
+        return {
+          notFound: true,
+        };
+      }
       throw new Error(`Failed to fetch: ${res.status}`);
     }
 

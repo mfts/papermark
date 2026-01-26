@@ -68,6 +68,18 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       )}/${encodeURIComponent(slug)}`,
     );
     if (!res.ok) {
+      // Handle specific HTTP status codes
+      if (res.status === 403) {
+        return {
+          props: { accessDenied: true },
+          revalidate: 30,
+        };
+      }
+      if (res.status === 404) {
+        return {
+          notFound: true,
+        };
+      }
       throw new Error(`Failed to fetch: ${res.status}`);
     }
     const responseData = (await res.json()) as any;
@@ -291,6 +303,7 @@ export default function ViewPage({
   logoOnAccessForm,
   dataroomIndexEnabled,
   error,
+  accessDenied,
 }: {
   linkData: DocumentLinkData | DataroomLinkData | WorkflowLinkData;
   notionData: {
@@ -312,6 +325,7 @@ export default function ViewPage({
   logoOnAccessForm: boolean;
   dataroomIndexEnabled?: boolean;
   error?: boolean;
+  accessDenied?: boolean;
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -336,6 +350,12 @@ export default function ViewPage({
       <div className="flex h-screen items-center justify-center bg-black">
         <LoadingSpinner className="h-20 w-20" />
       </div>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <NotFound message="Sorry, you don't have permission to view this link." />
     );
   }
 
