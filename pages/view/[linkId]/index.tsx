@@ -14,7 +14,10 @@ import z from "zod";
 
 import { getFeatureFlags } from "@/lib/featureFlags";
 import notion from "@/lib/notion";
-import { addSignedUrls } from "@/lib/notion/utils";
+import {
+  addSignedUrls,
+  fetchMissingPageReferences,
+} from "@/lib/notion/utils";
 import {
   CustomUser,
   LinkWithDataroom,
@@ -144,6 +147,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 
           pageId = notionPageId;
           recordMap = await notion.getPage(pageId, { signFileUrls: false });
+          // Fetch missing page references that are embedded in rich text (e.g., table cells with multiple page links)
+          await fetchMissingPageReferences(recordMap);
           await addSignedUrls({ recordMap });
         } catch (notionError) {
           console.error("Notion API error:", notionError);
