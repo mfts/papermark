@@ -12,7 +12,10 @@ import { parsePageId } from "notion-utils";
 import z from "zod";
 
 import notion from "@/lib/notion";
-import { addSignedUrls } from "@/lib/notion/utils";
+import {
+  addSignedUrls,
+  fetchMissingPageReferences,
+} from "@/lib/notion/utils";
 import { CustomUser, LinkWithDataroomDocument, NotionTheme } from "@/lib/types";
 
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -217,6 +220,8 @@ export async function getStaticProps(context: GetStaticPropsContext) {
 
       pageId = notionPageId;
       recordMap = await notion.getPage(pageId, { signFileUrls: false });
+      // Fetch missing page references that are embedded in rich text (e.g., table cells with multiple page links)
+      await fetchMissingPageReferences(recordMap);
       // TODO: separately sign the file urls until PR merged and published; ref: https://github.com/NotionX/react-notion-x/issues/580#issuecomment-2542823817
       await addSignedUrls({ recordMap });
     }

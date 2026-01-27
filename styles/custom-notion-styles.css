@@ -1,5 +1,75 @@
+/* 
+ * Notion layout:
+ * - Regular content (text, headings, lists): 708px max
+ * - Tables and wide elements: up to 990px on desktop
+ */
+:root {
+  --notion-max-width: 990px;
+}
+
 .dark-mode {
   --bg-color: rgb(25, 25, 25);
+}
+
+/* 
+ * Constrain regular content blocks to 708px (Notion's default text width).
+ * Tables and collections will use the full 990px container width.
+ */
+.notion-text,
+.notion-h1,
+.notion-h2,
+.notion-h3,
+.notion-hr,
+.notion-quote,
+.notion-callout,
+.notion-toggle,
+.notion-bulleted_list,
+.notion-numbered_list,
+.notion-to_do,
+.notion-list,
+.notion-code,
+.notion-bookmark,
+.notion-column_list {
+  max-width: 708px;
+}
+
+/* Tables size to content, scroll horizontally if needed */
+.notion-simple-table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.notion-simple-table > table {
+  table-layout: auto;
+  width: auto; /* Size to content, don't force full width */
+}
+
+/* Give table cells proper spacing */
+.notion-simple-table td {
+  padding: 8px 10px;
+}
+
+/* On mobile, everything uses full width */
+@media (max-width: 768px) {
+  .notion-text,
+  .notion-h1,
+  .notion-h2,
+  .notion-h3,
+  .notion-hr,
+  .notion-quote,
+  .notion-callout,
+  .notion-toggle,
+  .notion-bulleted_list,
+  .notion-numbered_list,
+  .notion-to_do,
+  .notion-list,
+  .notion-code,
+  .notion-bookmark,
+  .notion-column_list {
+    max-width: 100%;
+  }
 }
 
 /* Disable user selection for all text content */
@@ -88,7 +158,6 @@ textarea,
 }
 
 /* Table overflow handling - make tables horizontally scrollable */
-.notion-simple-table,
 .notion-table {
   width: 100%;
   display: block;
@@ -97,8 +166,7 @@ textarea,
   max-width: 100%;
 }
 
-/* Ensure table content can scroll */
-.notion-simple-table > table,
+/* Ensure table content can scroll when needed */
 .notion-table > table {
   min-width: max-content;
 }
@@ -134,7 +202,6 @@ textarea,
 
 /* Mobile-specific table overflow handling */
 @media (max-width: 768px) {
-  .notion-simple-table,
   .notion-table,
   .notion-collection,
   .notion-collection-table,
@@ -145,19 +212,25 @@ textarea,
     margin-right: 0;
   }
 
+  /* Simple tables on mobile - contained width with scroll */
+  .notion-simple-table {
+    max-width: calc(100vw - 2rem);
+    overflow-x: auto;
+  }
+
   /* Ensure full-width tables on mobile have proper containment */
   .notion-page-content-inner {
     max-width: 100%;
     overflow-x: hidden;
   }
-  
+
   /* Prevent body/html from scrolling horizontally */
   .notion-app,
   .notion-frame {
     max-width: 100vw;
     overflow-x: hidden;
   }
-  
+
   .notion-page {
     max-width: 100vw;
   }
