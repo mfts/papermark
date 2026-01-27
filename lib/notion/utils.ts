@@ -9,7 +9,6 @@ import notion from "./index";
  * This handles the "p" decorator which is used for page mentions/links.
  */
 function extractPageReferencesFromRichText(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any[] | undefined,
 ): string[] {
   if (!value || !Array.isArray(value)) return [];
