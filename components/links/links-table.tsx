@@ -10,6 +10,7 @@ import { DocumentVersion, LinkAudienceType } from "@prisma/client";
 import { isWithinInterval, subMinutes } from "date-fns";
 import {
   BoxesIcon,
+  ClockFadingIcon,
   Code2Icon,
   CopyPlusIcon,
   EyeIcon,
@@ -682,10 +683,11 @@ export default function LinksTable({
                                   timestamp={link.expiresAt}
                                   side="right"
                                   rows={["local", "utc"]}
+                                  title="Expired at"
+                                  fullLabels
                                 >
-                                  <span className="flex cursor-default items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive ring-1 ring-destructive/20">
+                                  <span className="flex cursor-default items-center rounded-full bg-destructive/10 p-1 text-destructive ring-1 ring-destructive/20">
                                     <TimerOffIcon className="h-3 w-3" />
-                                    Expired
                                   </span>
                                 </TimestampTooltip>
                               ) : (
@@ -693,10 +695,11 @@ export default function LinksTable({
                                   timestamp={link.expiresAt}
                                   side="right"
                                   rows={["local", "utc"]}
+                                  title="Expires at"
+                                  fullLabels
                                 >
-                                  <span className="flex cursor-default items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-700 ring-1 ring-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:ring-orange-800">
-                                    <HourglassIcon className="h-3 w-3" />
-                                    Expires
+                                  <span className="flex cursor-default items-center rounded-full bg-orange-100 p-1 text-orange-700 ring-1 ring-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:ring-orange-800">
+                                    <ClockFadingIcon className="h-3 w-3" />
                                   </span>
                                 </TimestampTooltip>
                               ))}
