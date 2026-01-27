@@ -10,14 +10,15 @@ import { DocumentVersion, LinkAudienceType } from "@prisma/client";
 import { isWithinInterval, subMinutes } from "date-fns";
 import {
   BoxesIcon,
-  ClockIcon,
   Code2Icon,
   CopyPlusIcon,
   EyeIcon,
   FileSlidersIcon,
+  HourglassIcon,
   LinkIcon,
   SendIcon,
   Settings2Icon,
+  TimerOffIcon,
   Trash2Icon,
 } from "lucide-react";
 import { useQueryState } from "nuqs";
@@ -676,18 +677,29 @@ export default function LinksTable({
                               </Badge>
                             )}
                             {link.expiresAt &&
-                              new Date(link.expiresAt) < new Date() && (
+                              (new Date(link.expiresAt) < new Date() ? (
                                 <TimestampTooltip
                                   timestamp={link.expiresAt}
                                   side="right"
                                   rows={["local", "utc"]}
                                 >
                                   <span className="flex cursor-default items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive ring-1 ring-destructive/20">
-                                    <ClockIcon className="h-3 w-3" />
+                                    <TimerOffIcon className="h-3 w-3" />
                                     Expired
                                   </span>
                                 </TimestampTooltip>
-                              )}
+                              ) : (
+                                <TimestampTooltip
+                                  timestamp={link.expiresAt}
+                                  side="right"
+                                  rows={["local", "utc"]}
+                                >
+                                  <span className="flex cursor-default items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-700 ring-1 ring-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:ring-orange-800">
+                                    <HourglassIcon className="h-3 w-3" />
+                                    Expires
+                                  </span>
+                                </TimestampTooltip>
+                              ))}
                             {link.domainId && isFree ? (
                               <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
                                 Inactive
