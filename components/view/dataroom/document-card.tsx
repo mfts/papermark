@@ -43,6 +43,7 @@ type DocumentsCardProps = {
   allowDownload: boolean;
   isProcessing?: boolean;
   dataroomIndexEnabled?: boolean;
+  showLastUpdated?: boolean;
 };
 
 export default function DocumentCard({
@@ -53,6 +54,7 @@ export default function DocumentCard({
   allowDownload,
   isProcessing = false,
   dataroomIndexEnabled,
+  showLastUpdated = true,
 }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
   const canDownload = document.canDownload && allowDownload;
@@ -219,11 +221,13 @@ export default function DocumentCard({
               </button>
             </h2>
           </div>
-          <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
-            <p className="truncate">
-              Updated {timeAgo(document.versions[0].updatedAt)}
-            </p>
-          </div>
+          {showLastUpdated && (
+            <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+              <p className="truncate">
+                Updated {timeAgo(document.versions[0].updatedAt)}
+              </p>
+            </div>
+          )}
         </div>
       </div>
       {canDownload && !isProcessing && (

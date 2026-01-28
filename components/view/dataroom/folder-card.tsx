@@ -28,6 +28,7 @@ type FolderCardProps = {
   viewId?: string;
   allowDownload: boolean;
   dataroomIndexEnabled?: boolean;
+  showLastUpdated?: boolean;
 };
 export default function FolderCard({
   folder,
@@ -38,6 +39,7 @@ export default function FolderCard({
   viewId,
   allowDownload,
   dataroomIndexEnabled,
+  showLastUpdated = true,
 }: FolderCardProps) {
   const [open, setOpen] = useState(false);
 
@@ -121,9 +123,11 @@ export default function FolderCard({
               </span>
             </h2>
           </div>
-          <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
-            <p className="truncate">Updated {timeAgo(folder.updatedAt)}</p>
-          </div>
+          {showLastUpdated && (
+            <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+              <p className="truncate">Updated {timeAgo(folder.updatedAt)}</p>
+            </div>
+          )}
         </div>
       </div>
       {allowDownload ? (
