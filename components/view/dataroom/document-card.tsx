@@ -189,7 +189,14 @@ export default function DocumentCard({
         isProcessing && "cursor-not-allowed opacity-60",
       )}
     >
-      <div className="z-0 flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
+      {/* Click target - outside of text hierarchy to fix Safari truncation issue */}
+      <button
+        onClick={handleDocumentClick}
+        className="absolute inset-0 z-0 cursor-pointer"
+        disabled={isProcessing}
+        aria-hidden="true"
+      />
+      <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
         <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
           {fileIcon({
             fileType: document.versions[0].type ?? "",
@@ -198,25 +205,18 @@ export default function DocumentCard({
           })}
         </div>
 
-        <div className="flex-col">
+        <div className="min-w-0 flex-1 flex-col">
           <div className="flex items-center">
             <h2
-              className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg"
+              className="truncate text-sm font-semibold leading-6 text-foreground"
               style={HIERARCHICAL_DISPLAY_STYLE}
             >
-              <button
-                onClick={handleDocumentClick}
-                className="cursor-pointer text-left"
-                disabled={isProcessing}
-              >
-                {displayName}
-                {isProcessing && (
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    (Processing...)
-                  </span>
-                )}
-                <span className="absolute inset-0" />
-              </button>
+              {displayName}
+              {isProcessing && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  (Processing...)
+                </span>
+              )}
             </h2>
           </div>
           <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
