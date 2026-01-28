@@ -84,20 +84,22 @@ export default async function handle(
       const viewersWithStats = (await prisma.$queryRaw`
         WITH view_stats AS (
           SELECT 
-            "viewerId",
+            vw."viewerId",
             COUNT(*)::int as total_visits,
-            MAX("viewedAt") as last_viewed
-          FROM "View"
-          WHERE "documentId" IS NOT NULL
-          GROUP BY "viewerId"
+            MAX(vw."viewedAt") as last_viewed
+          FROM "View" vw
+          JOIN "Viewer" vr ON vr.id = vw."viewerId" AND vr."teamId" = ${teamId}
+          WHERE vw."documentId" IS NOT NULL
+          GROUP BY vw."viewerId"
         ),
         latest_viewer_names AS (
-          SELECT DISTINCT ON ("viewerId")
-            "viewerId",
-            "viewerName"
-          FROM "View"
-          WHERE "viewerName" IS NOT NULL
-          ORDER BY "viewerId", "viewedAt" DESC
+          SELECT DISTINCT ON (vw."viewerId")
+            vw."viewerId",
+            vw."viewerName"
+          FROM "View" vw
+          JOIN "Viewer" vr ON vr.id = vw."viewerId" AND vr."teamId" = ${teamId}
+          WHERE vw."viewerName" IS NOT NULL
+          ORDER BY vw."viewerId", vw."viewedAt" DESC
         ),
         viewer_stats AS (
           SELECT 
