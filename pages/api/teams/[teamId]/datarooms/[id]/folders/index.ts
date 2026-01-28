@@ -267,6 +267,8 @@ export default async function handle(
             dataroomId: true,
             orderIndex: true,
             hierarchicalIndex: true,
+            icon: true,
+            color: true,
             createdAt: true,
             updatedAt: true,
             _count: {
@@ -309,6 +311,8 @@ export default async function handle(
                 dataroomId: true,
                 orderIndex: true,
                 hierarchicalIndex: true,
+                icon: true,
+                color: true,
                 createdAt: true,
                 updatedAt: true,
                 documents: {
@@ -361,6 +365,8 @@ export default async function handle(
           dataroomId: true,
           orderIndex: true,
           hierarchicalIndex: true,
+          icon: true,
+          color: true,
           createdAt: true,
           updatedAt: true,
           documents: {
@@ -434,7 +440,12 @@ export default async function handle(
       id: string;
     };
 
-    const { name, path } = req.body as { name: string; path?: string };
+    const { name, path, icon, color } = req.body as {
+      name: string;
+      path?: string;
+      icon?: string;
+      color?: string;
+    };
 
     const parentFolderPath = path ? "/" + path : "/";
 
@@ -510,6 +521,8 @@ export default async function handle(
           path: childFolderPath,
           parentId: parentFolder?.id ?? null,
           dataroomId: dataroomId,
+          icon: icon ?? null,
+          color: color ?? null,
         },
       });
 

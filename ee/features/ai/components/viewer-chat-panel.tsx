@@ -123,6 +123,8 @@ interface ViewerChatPanelContentProps {
     createdAt: Date;
     updatedAt: Date;
     hierarchicalIndex: string | null;
+    icon: string | null;
+    color: string | null;
   }>;
 }
 
