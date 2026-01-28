@@ -287,6 +287,11 @@ export default async function handler(
         }),
       );
 
+      // Revalidate the view page to pre-generate it
+      await fetch(
+        `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${linkWithView.id}&hasDomain=${linkWithView.domainId ? "true" : "false"}`,
+      );
+
       // Decrypt the password for the new link
       if (linkWithView.password !== null) {
         linkWithView.password = decryptEncrpytedPassword(linkWithView.password);
