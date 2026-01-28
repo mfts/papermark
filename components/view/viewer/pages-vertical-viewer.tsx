@@ -5,7 +5,6 @@ import React from "react";
 
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
-import { useViewerAnnotations } from "@/lib/swr/use-annotations";
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 import { WatermarkConfig } from "@/lib/types";
@@ -13,13 +12,11 @@ import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import {
-  ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
 import { ScreenProtector } from "../ScreenProtection";
-import { AnnotationPanel } from "../annotations/annotation-panel";
 import Nav, { TNavData } from "../nav";
 import { PoweredBy } from "../powered-by";
 import Question from "../question";
@@ -117,11 +114,6 @@ export default function PagesVerticalViewer({
   const [submittedFeedback, setSubmittedFeedback] = useState<boolean>(false);
   const [accountCreated, setAccountCreated] = useState<boolean>(false);
   const [scale, setScale] = useState<number>(1);
-  const [annotationsEnabled, setAnnotationsEnabled] = useState(false);
-
-  // Fetch annotations for this link
-  const { annotations } = useViewerAnnotations(linkId, documentId, viewId);
-  const hasAnnotations = annotations && annotations.length > 0;
 
   const initialViewedPages = Array.from({ length: numPages }, (_, index) => ({
     pageNumber: index + 1,
@@ -773,17 +765,6 @@ export default function PagesVerticalViewer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const handleToggleAnnotations = (enabled: boolean) => {
-    setAnnotationsEnabled(enabled);
-  };
-
-  const navDataWithAnnotations = {
-    ...navData,
-    annotationsEnabled,
-    hasAnnotations,
-    onToggleAnnotations: handleToggleAnnotations,
-  };
-
   return (
     <>
       <Nav
@@ -794,7 +775,7 @@ export default function PagesVerticalViewer({
         handleZoomIn={handleZoomIn}
         handleZoomOut={handleZoomOut}
         handleFullscreen={handleFullscreen}
-        navData={navDataWithAnnotations}
+        navData={navData}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
@@ -802,9 +783,7 @@ export default function PagesVerticalViewer({
       >
         <ResizablePanelGroup direction="horizontal">
           {/* Document Content */}
-          <ResizablePanel
-            defaultSize={annotationsEnabled && hasAnnotations ? 75 : 100}
-          >
+          <ResizablePanel defaultSize={100}>
             <div
               className={cn(
                 "h-full w-full",
@@ -1082,24 +1061,6 @@ export default function PagesVerticalViewer({
             {/* </div> */}
           </ResizablePanel>
 
-          {/* Annotation Panel - Right Side */}
-          {navData.annotationsFeatureEnabled &&
-            annotationsEnabled &&
-            hasAnnotations && (
-              <>
-                <ResizableHandle className="w-1 bg-transparent transition-colors hover:bg-white/10" />
-                <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
-                  <AnnotationPanel
-                    brand={brand}
-                    linkId={linkId}
-                    documentId={documentId}
-                    viewId={viewId}
-                    currentPage={pageNumber}
-                    isVisible={true}
-                  />
-                </ResizablePanel>
-              </>
-            )}
         </ResizablePanelGroup>
       </div>
     </>
