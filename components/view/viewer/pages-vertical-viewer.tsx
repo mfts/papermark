@@ -24,6 +24,7 @@ import { AwayPoster } from "./away-poster";
 import "@/styles/custom-viewer-styles.css";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 5;
+const JUMP_WINDOW_SIZE = 3; // Number of pages to load before and after target when jumping
 
 const calculateOptimalWidth = (
   containerWidth: number,
@@ -623,14 +624,18 @@ export default function PagesVerticalViewer({
           isPreview,
         });
 
-        // Load all pages from start to target + buffer to ensure proper scroll height
-        // This is necessary because unloaded pages don't take up space in the DOM
-        const endPage = Math.min(numPages - 1, targetPage + 2 - 1);
+        // Only load a bounded window around the target page to avoid unbounded downloads
+        // Unloaded pages will render as placeholders with correct height from metadata
+        const startPage = Math.max(0, targetPage - 1 - JUMP_WINDOW_SIZE);
+        const endPage = Math.min(
+          numPages - 1,
+          targetPage - 1 + JUMP_WINDOW_SIZE,
+        );
 
         setLoadedImages((prev) => {
           const newLoadedImages = [...prev];
-          // Load all pages from 0 to endPage to create proper scroll height
-          for (let i = 0; i <= endPage; i++) {
+          // Only load pages within the window around targetPage
+          for (let i = startPage; i <= endPage; i++) {
             newLoadedImages[i] = true;
           }
           return newLoadedImages;
@@ -852,15 +857,49 @@ export default function PagesVerticalViewer({
                         e.stopPropagation();
                       }}
                     >
-                      {pages.map((page, index) =>
-                        loadedImages[index] ? (
+                      {pages.map((page, index) => {
+                        const optimalWidth = containerWidth
+                          ? calculateOptimalWidth(
+                              containerWidth,
+                              page.metadata,
+                              isMobile,
+                              isTablet,
+                            )
+                          : 800;
+
+                        // Calculate placeholder height from metadata aspect ratio
+                        const placeholderHeight =
+                          page.metadata && page.metadata.width > 0
+                            ? (optimalWidth * page.metadata.height) /
+                              page.metadata.width
+                            : 600; // fallback height
+
+                        if (!loadedImages[index]) {
+                          // Render a placeholder div with correct dimensions to preserve scroll height
+                          return (
+                            <div
+                              key={index}
+                              className="relative w-full px-4 md:px-8"
+                              style={{
+                                width: `${optimalWidth}px`,
+                              }}
+                            >
+                              <div
+                                className="viewer-container relative border-b border-t border-gray-100 bg-gray-50"
+                                style={{
+                                  height: `${placeholderHeight}px`,
+                                }}
+                              />
+                            </div>
+                          );
+                        }
+
+                        return (
                           <div
                             key={index}
                             className="relative w-full px-4 md:px-8"
                             style={{
-                              width: containerWidth
-                                ? `${calculateOptimalWidth(containerWidth, page.metadata, isMobile, isTablet)}px`
-                                : undefined,
+                              width: `${optimalWidth}px`,
                             }}
                           >
                             <div className="viewer-container relative border-b border-t border-gray-100">
@@ -916,11 +955,7 @@ export default function PagesVerticalViewer({
                                   }
                                 }}
                                 useMap={`#page-map-${index + 1}`}
-                                src={
-                                  loadedImages[index]
-                                    ? page.file
-                                    : "https://www.papermark.com/_static/blank.gif"
-                                }
+                                src={page.file}
                                 alt={`Page ${index + 1}`}
                               />
 
@@ -1015,8 +1050,8 @@ export default function PagesVerticalViewer({
                                   })
                               : null}
                           </div>
-                        ) : null,
-                      )}
+                        );
+                      })}
 
                       {enableQuestion &&
                         feedback &&
