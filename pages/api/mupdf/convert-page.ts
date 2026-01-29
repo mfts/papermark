@@ -142,7 +142,30 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     // get links
     const links = page.getLinks();
     const embeddedLinks = links.map((link) => {
-      return { href: link.getURI(), coords: link.getBounds().join(",") };
+      const coords = link.getBounds().join(",");
+
+      // Check if this is an internal link (GoTo action for TOC, etc.)
+      if (!link.isExternal()) {
+        try {
+          // Resolve internal link to page number (0-indexed from mupdf)
+          const targetPage = doc.resolveLink(link);
+          if (targetPage >= 0) {
+            return {
+              href: `#page=${targetPage + 1}`, // Convert to 1-indexed for frontend
+              coords,
+              isInternal: true,
+              targetPage: targetPage + 1,
+            };
+          }
+        } catch (e) {
+          console.log("Failed to resolve internal link:", e);
+        }
+        // Fallback for unresolvable internal links
+        return { href: "", coords, isInternal: true };
+      }
+
+      // External URI link
+      return { href: link.getURI(), coords, isInternal: false };
     });
 
     // Check embedded links for blocked keywords

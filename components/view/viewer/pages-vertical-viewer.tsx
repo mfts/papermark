@@ -11,10 +11,7 @@ import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
-import {
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 import { ScreenProtector } from "../ScreenProtection";
 import Nav, { TNavData } from "../nav";
@@ -73,7 +70,12 @@ export default function PagesVerticalViewer({
     file: string;
     pageNumber: string;
     embeddedLinks: string[];
-    pageLinks: { href: string; coords: string }[];
+    pageLinks: {
+      href: string;
+      coords: string;
+      isInternal?: boolean;
+      targetPage?: number;
+    }[];
     metadata: { width: number; height: number; scaleFactor: number };
   }[];
   feedbackEnabled: boolean;
@@ -621,13 +623,14 @@ export default function PagesVerticalViewer({
           isPreview,
         });
 
-        // Preload target page and 2 pages on either side
-        const startPage = Math.max(0, targetPage - 2 - 1);
+        // Load all pages from start to target + buffer to ensure proper scroll height
+        // This is necessary because unloaded pages don't take up space in the DOM
         const endPage = Math.min(numPages - 1, targetPage + 2 - 1);
 
         setLoadedImages((prev) => {
           const newLoadedImages = [...prev];
-          for (let i = startPage; i <= endPage; i++) {
+          // Load all pages from 0 to endPage to create proper scroll height
+          for (let i = 0; i <= endPage; i++) {
             newLoadedImages[i] = true;
           }
           return newLoadedImages;
@@ -635,16 +638,49 @@ export default function PagesVerticalViewer({
 
         setPageNumber(targetPage);
         pageNumberRef.current = targetPage;
-        if (containerRef.current) {
-          scrollActionRef.current = true;
-          const newScrollPosition =
-            ((targetPage - 1) * containerRef.current.scrollHeight) /
-            numPagesWithAccountCreation;
-          containerRef.current.scrollTo({
-            top: newScrollPosition,
-            behavior: "smooth",
-          });
-        }
+
+        // Wait for images to load before scrolling
+        const waitForImageAndScroll = () => {
+          const targetImg = imageRefs.current[targetPage - 1];
+
+          // Check if target image exists and is loaded
+          if (targetImg && targetImg.complete && targetImg.naturalHeight > 0) {
+            scrollActionRef.current = true;
+            targetImg.scrollIntoView({ behavior: "smooth", block: "start" });
+            return;
+          }
+
+          // If image element exists but not loaded, wait for it
+          if (targetImg) {
+            const handleLoad = () => {
+              scrollActionRef.current = true;
+              targetImg.scrollIntoView({ behavior: "smooth", block: "start" });
+              targetImg.removeEventListener("load", handleLoad);
+            };
+            targetImg.addEventListener("load", handleLoad);
+
+            // Timeout fallback in case image is already cached but complete wasn't set
+            setTimeout(() => {
+              targetImg.removeEventListener("load", handleLoad);
+              if (targetImg) {
+                scrollActionRef.current = true;
+                targetImg.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }
+            }, 500);
+            return;
+          }
+
+          // Image ref not available yet, wait for React to render
+          requestAnimationFrame(waitForImageAndScroll);
+        };
+
+        // Start checking after React processes the state update
+        requestAnimationFrame(() => {
+          requestAnimationFrame(waitForImageAndScroll);
+        });
 
         // Reset the start time for the new page
         startTimeRef.current = Date.now();
@@ -1060,7 +1096,6 @@ export default function PagesVerticalViewer({
             {/* </div> */}
             {/* </div> */}
           </ResizablePanel>
-
         </ResizablePanelGroup>
       </div>
     </>

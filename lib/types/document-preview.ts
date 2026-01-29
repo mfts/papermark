@@ -9,7 +9,12 @@ export interface DocumentPreviewData {
     file: string;
     pageNumber: string;
     embeddedLinks: string[];
-    pageLinks: { href: string; coords: string }[];
+    pageLinks: {
+      href: string;
+      coords: string;
+      isInternal?: boolean;
+      targetPage?: number;
+    }[];
     metadata: { width: number; height: number; scaleFactor: number };
   }[];
   file?: string;
