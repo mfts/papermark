@@ -5,7 +5,6 @@ export const getPagesCount = async (arrayBuffer: ArrayBuffer) => {
   try {
     const bytes = new Uint8Array(arrayBuffer);
     const pdf = await PDF.load(bytes);
-    console.log("PDF page count:", pdf.getPageCount());
     return pdf.getPageCount();
   } catch (error) {
     if (error instanceof SecurityError) {
