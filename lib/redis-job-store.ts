@@ -6,7 +6,7 @@ export type ExportJobStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
 export interface ExportJob {
   id: string;
-  type: "document" | "dataroom" | "dataroom-group";
+  type: "document" | "dataroom" | "dataroom-group" | "visitors";
   status: ExportJobStatus;
   resourceId: string;
   resourceName?: string;
@@ -257,7 +257,7 @@ export class RedisJobStore {
   async getResourceJobs(
     resourceId: string,
     teamId: string,
-    type?: "document" | "dataroom" | "dataroom-group",
+    type?: "document" | "dataroom" | "dataroom-group" | "visitors",
     groupId?: string,
     limit: number = 10,
   ): Promise<ExportJob[]> {
