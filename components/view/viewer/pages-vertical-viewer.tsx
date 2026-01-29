@@ -11,10 +11,7 @@ import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
-import {
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 import { ScreenProtector } from "../ScreenProtection";
 import Nav, { TNavData } from "../nav";
@@ -27,6 +24,7 @@ import { AwayPoster } from "./away-poster";
 import "@/styles/custom-viewer-styles.css";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 5;
+const JUMP_WINDOW_SIZE = 3; // Number of pages to load before and after target when jumping
 
 const calculateOptimalWidth = (
   containerWidth: number,
@@ -73,7 +71,12 @@ export default function PagesVerticalViewer({
     file: string;
     pageNumber: string;
     embeddedLinks: string[];
-    pageLinks: { href: string; coords: string }[];
+    pageLinks: {
+      href: string;
+      coords: string;
+      isInternal?: boolean;
+      targetPage?: number;
+    }[];
     metadata: { width: number; height: number; scaleFactor: number };
   }[];
   feedbackEnabled: boolean;
@@ -621,12 +624,17 @@ export default function PagesVerticalViewer({
           isPreview,
         });
 
-        // Preload target page and 2 pages on either side
-        const startPage = Math.max(0, targetPage - 2 - 1);
-        const endPage = Math.min(numPages - 1, targetPage + 2 - 1);
+        // Only load a bounded window around the target page to avoid unbounded downloads
+        // Unloaded pages will render as placeholders with correct height from metadata
+        const startPage = Math.max(0, targetPage - 1 - JUMP_WINDOW_SIZE);
+        const endPage = Math.min(
+          numPages - 1,
+          targetPage - 1 + JUMP_WINDOW_SIZE,
+        );
 
         setLoadedImages((prev) => {
           const newLoadedImages = [...prev];
+          // Only load pages within the window around targetPage
           for (let i = startPage; i <= endPage; i++) {
             newLoadedImages[i] = true;
           }
@@ -635,16 +643,49 @@ export default function PagesVerticalViewer({
 
         setPageNumber(targetPage);
         pageNumberRef.current = targetPage;
-        if (containerRef.current) {
-          scrollActionRef.current = true;
-          const newScrollPosition =
-            ((targetPage - 1) * containerRef.current.scrollHeight) /
-            numPagesWithAccountCreation;
-          containerRef.current.scrollTo({
-            top: newScrollPosition,
-            behavior: "smooth",
-          });
-        }
+
+        // Wait for images to load before scrolling
+        const waitForImageAndScroll = () => {
+          const targetImg = imageRefs.current[targetPage - 1];
+
+          // Check if target image exists and is loaded
+          if (targetImg && targetImg.complete && targetImg.naturalHeight > 0) {
+            scrollActionRef.current = true;
+            targetImg.scrollIntoView({ behavior: "smooth", block: "start" });
+            return;
+          }
+
+          // If image element exists but not loaded, wait for it
+          if (targetImg) {
+            const handleLoad = () => {
+              scrollActionRef.current = true;
+              targetImg.scrollIntoView({ behavior: "smooth", block: "start" });
+              targetImg.removeEventListener("load", handleLoad);
+            };
+            targetImg.addEventListener("load", handleLoad);
+
+            // Timeout fallback in case image is already cached but complete wasn't set
+            setTimeout(() => {
+              targetImg.removeEventListener("load", handleLoad);
+              if (targetImg) {
+                scrollActionRef.current = true;
+                targetImg.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }
+            }, 500);
+            return;
+          }
+
+          // Image ref not available yet, wait for React to render
+          requestAnimationFrame(waitForImageAndScroll);
+        };
+
+        // Start checking after React processes the state update
+        requestAnimationFrame(() => {
+          requestAnimationFrame(waitForImageAndScroll);
+        });
 
         // Reset the start time for the new page
         startTimeRef.current = Date.now();
@@ -816,15 +857,49 @@ export default function PagesVerticalViewer({
                         e.stopPropagation();
                       }}
                     >
-                      {pages.map((page, index) =>
-                        loadedImages[index] ? (
+                      {pages.map((page, index) => {
+                        const optimalWidth = containerWidth
+                          ? calculateOptimalWidth(
+                              containerWidth,
+                              page.metadata,
+                              isMobile,
+                              isTablet,
+                            )
+                          : 800;
+
+                        // Calculate placeholder height from metadata aspect ratio
+                        const placeholderHeight =
+                          page.metadata && page.metadata.width > 0
+                            ? (optimalWidth * page.metadata.height) /
+                              page.metadata.width
+                            : 600; // fallback height
+
+                        if (!loadedImages[index]) {
+                          // Render a placeholder div with correct dimensions to preserve scroll height
+                          return (
+                            <div
+                              key={index}
+                              className="relative w-full px-4 md:px-8"
+                              style={{
+                                width: `${optimalWidth}px`,
+                              }}
+                            >
+                              <div
+                                className="viewer-container relative border-b border-t border-gray-100 bg-gray-50"
+                                style={{
+                                  height: `${placeholderHeight}px`,
+                                }}
+                              />
+                            </div>
+                          );
+                        }
+
+                        return (
                           <div
                             key={index}
                             className="relative w-full px-4 md:px-8"
                             style={{
-                              width: containerWidth
-                                ? `${calculateOptimalWidth(containerWidth, page.metadata, isMobile, isTablet)}px`
-                                : undefined,
+                              width: `${optimalWidth}px`,
                             }}
                           >
                             <div className="viewer-container relative border-b border-t border-gray-100">
@@ -880,11 +955,7 @@ export default function PagesVerticalViewer({
                                   }
                                 }}
                                 useMap={`#page-map-${index + 1}`}
-                                src={
-                                  loadedImages[index]
-                                    ? page.file
-                                    : "https://www.papermark.com/_static/blank.gif"
-                                }
+                                src={page.file}
                                 alt={`Page ${index + 1}`}
                               />
 
@@ -979,8 +1050,8 @@ export default function PagesVerticalViewer({
                                   })
                               : null}
                           </div>
-                        ) : null,
-                      )}
+                        );
+                      })}
 
                       {enableQuestion &&
                         feedback &&
@@ -1060,7 +1131,6 @@ export default function PagesVerticalViewer({
             {/* </div> */}
             {/* </div> */}
           </ResizablePanel>
-
         </ResizablePanelGroup>
       </div>
     </>
