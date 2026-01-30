@@ -22,10 +22,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const isDataroom = router.pathname.startsWith("/datarooms/[id]");
 
-  const cookieValue = Cookies.get(SIDEBAR_COOKIE_NAME);
-  const defaultOpen = cookieValue === undefined ? true : cookieValue === "true";
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const [sidebarOpen, setSidebarOpen] = useState(defaultOpen);
+  // Sync with cookie on mount (client-side only)
+  useEffect(() => {
+    const cookieValue = Cookies.get(SIDEBAR_COOKIE_NAME);
+    if (cookieValue !== undefined) {
+      setSidebarOpen(cookieValue === "true");
+    }
+  }, []);
 
   // Close sidebar when entering a dataroom
   useEffect(() => {
