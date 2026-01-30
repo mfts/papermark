@@ -1,4 +1,5 @@
 import Cookies from "js-cookie";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { AppBreadcrumb } from "@/components/layouts/breadcrumb";
@@ -12,16 +13,31 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-import { usePlan } from "@/lib/swr/use-billing";
+// import { usePlan } from "@/lib/swr/use-billing";
 // import YearlyUpgradeBanner from "@/components/billing/yearly-upgrade-banner";
 
 import { BlockingModal } from "./blocking-modal";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  // Default to open (true) if no cookie exists, otherwise use the stored preference
-  const cookieValue = Cookies.get(SIDEBAR_COOKIE_NAME);
-  const isSidebarOpen =
-    cookieValue === undefined ? true : cookieValue === "true";
+  const router = useRouter();
+  const isDataroom = router.pathname.startsWith("/datarooms/[id]");
+
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Sync with cookie on mount (client-side only)
+  useEffect(() => {
+    const cookieValue = Cookies.get(SIDEBAR_COOKIE_NAME);
+    if (cookieValue !== undefined) {
+      setSidebarOpen(cookieValue === "true");
+    }
+  }, []);
+
+  // Close sidebar when entering a dataroom
+  useEffect(() => {
+    if (isDataroom) {
+      setSidebarOpen(false);
+    }
+  }, [isDataroom]);
 
   // const { isAnnualPlan, isFree } = usePlan();
   // const [showYearlyBanner, setShowYearlyBanner] = useState<boolean | null>(null);
@@ -43,7 +59,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // }, [isFree, isAnnualPlan]);
 
   return (
-    <SidebarProvider defaultOpen={isSidebarOpen}>
+    <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
       <div className="flex flex-1 flex-col gap-x-1 bg-gray-50 dark:bg-black md:flex-row">
         <AppSidebar />
         <SidebarInset className="ring-1 ring-gray-200 dark:ring-gray-800">

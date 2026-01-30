@@ -2,7 +2,6 @@ import * as React from "react";
 
 import { Slot } from "@radix-ui/react-slot";
 import { VariantProps, cva } from "class-variance-authority";
-import { PanelLeft } from "lucide-react";
 
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -18,6 +17,53 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+// Custom PanelLeft icon with filled state support
+const PanelLeftIcon = ({ filled = false }: { filled?: boolean }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {filled ? (
+      <>
+        {/* Filled left panel background */}
+        <path
+          d="M10 3 H5 a2 2 0 0 0 -2 2 V19 a2 2 0 0 0 2 2 H10 Z"
+          fill="currentColor"
+          stroke="none"
+        />
+        {/* Menu item lines (centered in sidebar panel) */}
+        <path d="M5.25 8h2.5" className="stroke-background" strokeWidth="1.5" />
+        <path
+          d="M5.25 12h2.5"
+          className="stroke-background"
+          strokeWidth="1.5"
+        />
+        <path
+          d="M5.25 16h2.5"
+          className="stroke-background"
+          strokeWidth="1.5"
+        />
+      </>
+    ) : (
+      <>
+        {/* Menu item lines (centered in sidebar panel) */}
+        <path d="M5.25 8h2.5" strokeWidth="1.5" />
+        <path d="M5.25 12h2.5" strokeWidth="1.5" />
+        <path d="M5.25 16h2.5" strokeWidth="1.5" />
+      </>
+    )}
+    <rect width="18" height="18" x="3" y="3" rx="2" />
+    <path d="M10 3v18" />
+  </svg>
+);
 
 export const SIDEBAR_COOKIE_NAME = "sidebar:state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -286,12 +332,13 @@ const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar();
+  const { toggleSidebar, open } = useSidebar();
 
   return (
     <Button
       ref={ref}
       data-sidebar="trigger"
+      data-state={open ? "open" : "closed"}
       variant="ghost"
       size="icon"
       className={cn("h-7 w-7", className)}
@@ -301,7 +348,7 @@ const SidebarTrigger = React.forwardRef<
       }}
       {...props}
     >
-      <PanelLeft />
+      <PanelLeftIcon filled={open} />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );
