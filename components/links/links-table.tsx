@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { InviteViewersModal } from "@/ee/features/dataroom-invitations/components/invite-viewers-modal";
@@ -12,13 +12,18 @@ import {
   BoxesIcon,
   ClockFadingIcon,
   Code2Icon,
+  CopyCheckIcon,
+  CopyIcon,
   CopyPlusIcon,
   EyeIcon,
+  EyeOffIcon,
   FileSlidersIcon,
-  HourglassIcon,
   LinkIcon,
   SendIcon,
   Settings2Icon,
+  Square,
+  SquareArrowOutUpRightIcon,
+  SquareDashedIcon,
   TimerOffIcon,
   Trash2Icon,
 } from "lucide-react";
@@ -85,13 +90,157 @@ import { DataroomLinkSheet } from "./link-sheet/dataroom-link-sheet";
 import { PermissionsSheet } from "./link-sheet/permissions-sheet";
 import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
-import { PreviewButton } from "./preview-button";
 
 const isDocumentProcessing = (version?: DocumentVersion) => {
   if (!version) return false;
   return (
     !version.hasPages &&
     ["pdf", "slides", "docs", "cad"].includes(version.type!)
+  );
+};
+
+// Full URL helper
+const getFullUrl = (link: LinkWithViews) => {
+  if (link.domainId) {
+    return `https://${link.domainSlug}/${link.slug}`;
+  }
+  return `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`;
+};
+
+// Display URL helper - shows the path portion that fits the cell
+const getDisplayUrl = (link: LinkWithViews) => {
+  if (link.domainId) {
+    return `${link.domainSlug}/${link.slug}`;
+  }
+  return `papermark.com/view/${link.id}`;
+};
+
+// Link URL cell component - displays URL with click-to-copy hover overlay
+const LinkUrlCell = ({
+  link,
+  isFree,
+  onCopy,
+  isProcessing,
+  primaryVersion,
+  mutateDocument,
+  isPopoverOpen,
+}: {
+  link: LinkWithViews;
+  isFree: boolean;
+  onCopy: (url: string) => void;
+  isProcessing: boolean;
+  primaryVersion?: DocumentVersion;
+  mutateDocument?: () => void;
+  isPopoverOpen?: boolean;
+}) => {
+  const fullUrl = getFullUrl(link);
+  const displayUrl = getDisplayUrl(link);
+
+  return (
+    <div
+      className={cn(
+        "group/url relative min-w-0 flex-1 cursor-pointer overflow-hidden rounded-md px-3 py-1.5 text-sm transition-all group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100",
+        link.domainId && isFree
+          ? "bg-destructive/10 text-destructive hover:bg-red-700 hover:dark:bg-red-200"
+          : "bg-secondary text-secondary-foreground hover:bg-emerald-700 hover:dark:bg-emerald-200",
+        isPopoverOpen && "ring-1 ring-gray-400 dark:ring-gray-100",
+      )}
+      onClick={() => onCopy(fullUrl)}
+    >
+      {/* Progress bar for document processing */}
+      {isProcessing && primaryVersion && (
+        <FileProcessStatusBar
+          documentVersionId={primaryVersion.id}
+          className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
+          // @ts-ignore: mutateDocument is not present on datarooms but on document pages
+          mutateDocument={mutateDocument}
+        />
+      )}
+
+      {/* URL text - hidden on hover */}
+      <span
+        className="block overflow-hidden text-ellipsis whitespace-nowrap group-hover/url:opacity-0"
+        style={{ direction: "rtl", textAlign: "left" }}
+      >
+        {displayUrl}
+      </span>
+      {/* Copy & Share overlay */}
+      <span className="absolute inset-0 z-10 hidden items-center justify-center whitespace-nowrap text-center text-sm text-primary-foreground group-hover/url:flex">
+        Copy & Share
+      </span>
+    </div>
+  );
+};
+
+// Link actions cell component - copy, preview, edit buttons
+const LinkActionsCell = ({
+  link,
+  onCopy,
+  onPreview,
+  isProcessing,
+}: {
+  link: LinkWithViews;
+  onCopy: (url: string) => void;
+  onPreview: (link: LinkWithViews) => void;
+  isProcessing: boolean;
+}) => {
+  const [copied, setCopied] = useState(false);
+  const fullUrl = getFullUrl(link);
+
+  useEffect(() => {
+    if (copied) {
+      const timeout = setTimeout(() => setCopied(false), 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [copied]);
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onCopy(fullUrl);
+    setCopied(true);
+  };
+
+  const handlePreview = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onPreview(link);
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      <ButtonTooltip content={copied ? "Copied!" : "Copy link"}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 transition-colors hover:text-foreground group-hover/link:bg-emerald-500/10 group-hover/link:hover:bg-emerald-500/20"
+          onClick={handleCopy}
+        >
+          {copied ? (
+            <CopyCheckIcon className="h-4 w-4 text-emerald-500" />
+          ) : (
+            <CopyIcon className="h-4 w-4 text-muted-foreground transition-colors hover:text-foreground group-hover/link:text-emerald-500" />
+          )}
+        </Button>
+      </ButtonTooltip>
+      <ButtonTooltip
+        content={isProcessing ? "Preparing preview" : "Preview link"}
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 hover:text-foreground"
+          onClick={handlePreview}
+          disabled={isProcessing}
+        >
+          {isProcessing ? (
+            <SquareDashedIcon className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <SquareArrowOutUpRightIcon className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+          )}
+        </Button>
+      </ButtonTooltip>
+    </div>
   );
 };
 
@@ -627,9 +776,8 @@ export default function LinksTable({
             <TableHeader>
               <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
                 <TableHead>Name</TableHead>
-                <TableHead className="w-[150px] sm:w-[200px] md:w-[250px]">
-                  Link
-                </TableHead>
+                <TableHead>Link</TableHead>
+                {/* <TableHead className="w-fit !pl-1"></TableHead> */}
                 {hasAnyTags ? (
                   <TableHead className="w-[250px] 2xl:w-auto">Tags</TableHead>
                 ) : null}
@@ -653,14 +801,22 @@ export default function LinksTable({
                             "bg-gray-50 opacity-50 dark:bg-gray-700",
                         )}
                       >
-                        <TableCell className="w-[250px] truncate font-medium">
+                        <TableCell className="w-[200px] truncate font-medium md:w-[220px] lg:w-[250px] xl:w-[280px] 2xl:w-[350px]">
                           <div className="flex items-center gap-x-2">
                             {link.groupId ? (
                               <ButtonTooltip content="Group Link">
-                                <BoxesIcon className="size-4" />
+                                <BoxesIcon className="size-4 shrink-0" />
                               </ButtonTooltip>
                             ) : null}
-                            {link.name || `Link #${link.id.slice(-5)}`}
+                            <ButtonTooltip
+                              content={
+                                link.name || `Link #${link.id.slice(-5)}`
+                              }
+                            >
+                              <span className="max-w-[150px] truncate md:max-w-[170px] lg:max-w-[200px] xl:max-w-[230px] 2xl:max-w-[300px]">
+                                {link.name || `Link #${link.id.slice(-5)}`}
+                              </span>
+                            </ButtonTooltip>
                             {link.isNew && !link.isUpdated && (
                               <Badge
                                 variant="outline"
@@ -710,157 +866,125 @@ export default function LinksTable({
                             ) : null}
                           </div>
                         </TableCell>
-                        <TableCell className="flex items-center gap-x-2 sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
-                          <div
-                            className={cn(
-                              `group/cell relative flex w-full items-center gap-x-4 overflow-hidden truncate rounded-sm px-3 py-1.5 text-center text-secondary-foreground transition-all group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 md:py-1`,
-                              link.domainId && isFree
-                                ? "bg-destructive hover:bg-red-700 hover:dark:bg-red-200"
-                                : "bg-secondary hover:bg-emerald-700 hover:dark:bg-emerald-200",
-                              popoverOpen === link.id &&
-                                "ring-1 ring-gray-400 dark:ring-gray-100",
-                            )}
-                          >
-                            {/* Progress bar */}
-                            {isDocumentProcessing(primaryVersion) &&
-                              primaryVersion && (
-                                <FileProcessStatusBar
-                                  documentVersionId={primaryVersion.id}
-                                  className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
-                                  // @ts-ignore: mutateDocument is not present on datarooms but on document pages
-                                  mutateDocument={mutateDocument}
-                                />
+                        {/* Link URL Cell */}
+                        <TableCell className="group/link max-w-[250px] pr-1 md:max-w-[300px] lg:max-w-[350px] xl:max-w-[400px] 2xl:max-w-[450px]">
+                          <div className="flex flex-row gap-x-1">
+                            <LinkUrlCell
+                              link={link}
+                              isFree={isFree}
+                              onCopy={handleCopyToClipboard}
+                              isProcessing={isDocumentProcessing(
+                                primaryVersion,
                               )}
-
-                            <div className="flex w-full whitespace-nowrap text-sm group-hover/cell:opacity-0">
-                              {link.domainId
-                                ? `https://${link.domainSlug}/${link.slug}`
-                                : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`}
-                            </div>
-
-                            {link.domainId && isFree ? (
-                              <button
-                                className="absolute bottom-0 left-0 right-0 top-0 z-10 hidden w-full whitespace-nowrap text-center text-sm group-hover/cell:block group-hover/cell:text-primary-foreground"
-                                onClick={() => router.push("/settings/billing")}
-                                title="Upgrade to activate link"
-                              >
-                                Upgrade to activate link
-                              </button>
-                            ) : (
-                              <button
-                                className="absolute bottom-0 left-0 right-0 top-0 z-10 hidden w-full whitespace-nowrap text-center text-xs group-hover/cell:block group-hover/cell:text-primary-foreground sm:text-sm"
-                                onClick={() =>
-                                  handleCopyToClipboard(
-                                    link.domainId
-                                      ? `https://${link.domainSlug}/${link.slug}`
-                                      : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`,
-                                  )
-                                }
-                                title="Copy & Share"
-                              >
-                                Copy & Share
-                              </button>
-                            )}
-                          </div>
-                          <PreviewButton
-                            link={link}
-                            isProcessing={isDocumentProcessing(primaryVersion)}
-                            onPreview={handlePreviewLink}
-                          />
-                          {targetType === "DATAROOM" &&
-                            link.permissionGroupId && (
-                              <ButtonTooltip content="Limited File Access">
-                                <FileSlidersIcon className="text-gray-400 group-hover:text-gray-500" />
-                              </ButtonTooltip>
-                            )}
-                          {isMobile ? (
-                            <ButtonTooltip content="Edit link">
-                              <Button
-                                variant={"link"}
-                                size={"icon"}
-                                className="group h-7 w-8"
-                                onClick={() => handleEditLink(link)}
-                              >
-                                <span className="sr-only">Edit link</span>
-                                <Settings2Icon className="text-gray-400 group-hover:text-gray-500" />
-                              </Button>
-                            </ButtonTooltip>
-                          ) : (
-                            <Popover
-                              open={popoverOpen === link.id}
-                              onOpenChange={() => {}}
-                            >
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="link"
-                                  className={cn(
-                                    "h-7 font-normal hover:no-underline focus-visible:ring-0 focus-visible:ring-offset-0",
-                                    popoverOpen === link.id
-                                      ? "text-foreground"
-                                      : "text-muted-foreground hover:text-foreground",
-                                  )}
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    handleEditLink(link);
-                                  }}
-                                  onMouseDown={(e) => e.preventDefault()}
-                                  onMouseEnter={() => {
-                                    hoverTimeout.current = setTimeout(
-                                      () => setPopoverOpen(link.id),
-                                      250,
-                                    );
-                                  }}
-                                  onMouseLeave={() => {
-                                    if (hoverTimeout.current)
-                                      clearTimeout(hoverTimeout.current);
-
-                                    // Add delay before closing to prevent flickering
-                                    hoverTimeout.current = setTimeout(
-                                      () => setPopoverOpen(null),
-                                      100,
-                                    );
-                                  }}
+                              primaryVersion={primaryVersion}
+                              mutateDocument={mutateDocument}
+                              isPopoverOpen={popoverOpen === link.id}
+                            />
+                            <div className="flex shrink-0 items-center">
+                              <LinkActionsCell
+                                link={link}
+                                onCopy={handleCopyToClipboard}
+                                onPreview={handlePreviewLink}
+                                isProcessing={isDocumentProcessing(
+                                  primaryVersion,
+                                )}
+                              />
+                              {isMobile ? (
+                                <ButtonTooltip content="Edit link">
+                                  <Button
+                                    variant="link"
+                                    size="icon"
+                                    className="group h-8 w-8"
+                                    onClick={() => handleEditLink(link)}
+                                  >
+                                    <span className="sr-only">Edit link</span>
+                                    <Settings2Icon className="text-gray-400 group-hover:text-gray-500" />
+                                  </Button>
+                                </ButtonTooltip>
+                              ) : (
+                                <Popover
+                                  open={popoverOpen === link.id}
+                                  onOpenChange={() => {}}
                                 >
-                                  <Settings2Icon strokeWidth={1.75} />
-                                  <span className="whitespace-nowrap">
-                                    {countActiveSettings(link)}{" "}
-                                    {countActiveSettings(link) === 1
-                                      ? "control"
-                                      : "controls"}
-                                  </span>
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                side="top"
-                                align="start"
-                                className="w-56 p-0"
-                                onMouseEnter={() => {
-                                  if (hoverTimeout.current)
-                                    clearTimeout(hoverTimeout.current);
-                                  setPopoverOpen(link.id);
-                                }}
-                                onMouseLeave={() => {
-                                  if (hoverTimeout.current)
-                                    clearTimeout(hoverTimeout.current);
-
-                                  // Add delay before closing to prevent flickering
-                                  hoverTimeout.current = setTimeout(
-                                    () => setPopoverOpen(null),
-                                    100,
-                                  );
-                                }}
-                              >
-                                <LinkActiveControls
-                                  link={link}
-                                  onEditClick={(e) => {
-                                    e.preventDefault();
-                                    handleEditLink(link);
-                                  }}
-                                />
-                              </PopoverContent>
-                            </Popover>
-                          )}
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="link"
+                                      className={cn(
+                                        "h-8 w-8 font-normal hover:no-underline focus-visible:ring-0 focus-visible:ring-offset-0",
+                                        popoverOpen === link.id
+                                          ? "text-foreground"
+                                          : "text-muted-foreground hover:text-foreground",
+                                      )}
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        handleEditLink(link);
+                                      }}
+                                      onMouseDown={(e) => e.preventDefault()}
+                                      onMouseEnter={() => {
+                                        hoverTimeout.current = setTimeout(
+                                          () => setPopoverOpen(link.id),
+                                          250,
+                                        );
+                                      }}
+                                      onMouseLeave={() => {
+                                        if (hoverTimeout.current)
+                                          clearTimeout(hoverTimeout.current);
+                                        hoverTimeout.current = setTimeout(
+                                          () => setPopoverOpen(null),
+                                          100,
+                                        );
+                                      }}
+                                    >
+                                      <Settings2Icon />
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent
+                                    side="top"
+                                    align="start"
+                                    className="w-56 p-0"
+                                    onMouseEnter={() => {
+                                      if (hoverTimeout.current)
+                                        clearTimeout(hoverTimeout.current);
+                                      setPopoverOpen(link.id);
+                                    }}
+                                    onMouseLeave={() => {
+                                      if (hoverTimeout.current)
+                                        clearTimeout(hoverTimeout.current);
+                                      hoverTimeout.current = setTimeout(
+                                        () => setPopoverOpen(null),
+                                        100,
+                                      );
+                                    }}
+                                  >
+                                    <LinkActiveControls
+                                      link={link}
+                                      onEditClick={(e) => {
+                                        e.preventDefault();
+                                        handleEditLink(link);
+                                      }}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              )}
+                              {/* Reserve space for file permissions icon in dataroom */}
+                              {targetType === "DATAROOM" && (
+                                <div className="flex w-8 items-center justify-center">
+                                  {link.permissionGroupId && (
+                                    <ButtonTooltip content="Limited File Access">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 cursor-default"
+                                      >
+                                        <FileSlidersIcon className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                      </Button>
+                                    </ButtonTooltip>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </TableCell>
                         {hasAnyTags ? (
                           <TableCell className="w-[250px] 2xl:w-auto">
