@@ -44,9 +44,9 @@ const tinybirdLimiter = new Bottleneck({
 });
 
 export type ExportVisitsPayload = {
-  type: "document" | "dataroom" | "dataroom-group";
+  type: "document" | "dataroom" | "dataroom-group" | "visitors";
   teamId: string;
-  resourceId: string; // document ID or dataroom ID
+  resourceId: string; // document ID, dataroom ID, or teamId for visitors
   groupId?: string; // for dataroom groups
   userId: string;
   exportId: string; // unique identifier for this export job
@@ -99,6 +99,8 @@ export const exportVisitsTask = task({
           teamId,
           groupId,
         ));
+      } else if (type === "visitors") {
+        ({ csvData, resourceName } = await exportTeamVisitors(teamId));
       } else {
         throw new Error("Invalid export type");
       }
@@ -820,5 +822,244 @@ async function exportDataroomVisits(
   return {
     csvData: csvRows.join("\n"),
     resourceName: dataroom.name,
+  };
+}
+
+async function exportTeamVisitors(teamId: string): Promise<{
+  csvData: string;
+  resourceName: string;
+}> {
+  // Fetch Team with pause information
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    select: {
+      id: true,
+      name: true,
+      pauseStartsAt: true,
+      pauseEndsAt: true,
+    },
+  });
+
+  if (!team) {
+    throw new Error("Team not found");
+  }
+
+  const { pauseStartsAt, pauseEndsAt } = team;
+
+  // Fetch all viewers for the team with their views
+  const viewers = await prisma.viewer.findMany({
+    where: { teamId },
+    include: {
+      views: {
+        where: {
+          viewType: "DOCUMENT_VIEW",
+          documentId: { not: null },
+        },
+        include: {
+          document: {
+            select: {
+              id: true,
+              name: true,
+              numPages: true,
+              versions: {
+                orderBy: { createdAt: "desc" },
+                select: {
+                  versionNumber: true,
+                  createdAt: true,
+                  numPages: true,
+                },
+              },
+            },
+          },
+          link: { select: { name: true } },
+          agreementResponse: {
+            include: {
+              agreement: {
+                select: {
+                  name: true,
+                  content: true,
+                },
+              },
+            },
+          },
+          customFieldResponse: {
+            select: {
+              data: true,
+            },
+          },
+        },
+        orderBy: {
+          viewedAt: "desc",
+        },
+      },
+    },
+  });
+
+  if (!viewers || viewers.length === 0) {
+    throw new Error("No visitors found for this team");
+  }
+
+  // Filter out views that occurred during the pause period
+  const viewersWithFilteredViews = viewers.map((viewer) => ({
+    ...viewer,
+    views: viewer.views.filter(
+      (view) => !isViewDuringPause(view.viewedAt, pauseStartsAt, pauseEndsAt),
+    ),
+  }));
+
+  // Filter out viewers with no views after filtering
+  const activeViewers = viewersWithFilteredViews.filter(
+    (viewer) => viewer.views.length > 0,
+  );
+
+  if (activeViewers.length === 0) {
+    throw new Error("No visitor data to export");
+  }
+
+  // Collect all unique custom fields from all views
+  const allViews = activeViewers.flatMap((viewer) => viewer.views);
+  const uniqueCustomFields = collectUniqueCustomFields(allViews);
+
+  // Create CSV rows array starting with headers
+  const csvRows: string[] = [];
+  const headers = [
+    "Visitor Email",
+    "Visitor Name",
+    "Verified",
+    "First Seen",
+    "Last Active",
+    "Total Views",
+    "Unique Documents",
+    "Document Name",
+    "Viewed At",
+    "Link Name",
+    "Total View Duration (s)",
+    "Total Document Completion (%)",
+    "Document Version",
+    "Downloaded At",
+    "Agreement Accepted",
+    "Agreement Name",
+    "Agreement Content",
+    "Agreement Accepted At",
+    "Viewed from Dataroom",
+    "Browser",
+    "OS",
+    "Device",
+    "Country",
+    "City",
+  ];
+
+  // Add dynamic custom field headers
+  headers.push(...generateCustomFieldHeaders(uniqueCustomFields));
+
+  csvRows.push(createCsvRow(headers));
+
+  // Process viewers with rate limiting
+  logger.info("Processing team visitors with rate limiting", {
+    viewerCount: activeViewers.length,
+  });
+
+  for (let i = 0; i < activeViewers.length; i++) {
+    const viewer = activeViewers[i];
+    const uniqueDocuments = new Set(
+      viewer.views.map((view) => view.documentId),
+    );
+
+    logger.info(`Processing viewer ${i + 1}/${activeViewers.length}`, {
+      viewerEmail: viewer.email,
+      viewCount: viewer.views.length,
+    });
+
+    // Process each view for this viewer
+    for (let j = 0; j < viewer.views.length; j++) {
+      const view = viewer.views[j];
+
+      logger.info(
+        `Processing view ${j + 1}/${viewer.views.length} for viewer ${i + 1}`,
+        {
+          viewId: view.id,
+        },
+      );
+
+      // Rate-limited calls to tinybird
+      const [duration, userAgentData] = await Promise.all([
+        tinybirdLimiter.schedule(() =>
+          getViewPageDuration({
+            documentId: view.document?.id || "null",
+            viewId: view.id,
+            since: 0,
+          }),
+        ),
+        tinybirdLimiter.schedule(async () => {
+          const result = await getViewUserAgent({
+            viewId: view.id,
+          });
+
+          if (!result || result.rows === 0) {
+            return getViewUserAgent_v2({
+              documentId: view.document?.id || "null",
+              viewId: view.id,
+              since: 0,
+            });
+          }
+
+          return result;
+        }),
+      ]);
+
+      const relevantDocumentVersion = view.document?.versions.find(
+        (version) => version.createdAt <= view.viewedAt,
+      );
+
+      const numPages =
+        relevantDocumentVersion?.numPages || view.document?.numPages || 0;
+      const completionRate = numPages
+        ? (duration.data.length / numPages) * 100
+        : 0;
+
+      const totalDuration = duration.data.reduce(
+        (total, data) => total + data.sum_duration,
+        0,
+      );
+
+      const rowData = [
+        viewer.email,
+        view.viewerName || "NaN",
+        viewer.verified ? "Yes" : "No",
+        viewer.createdAt.toISOString(),
+        viewer.views[0]?.viewedAt.toISOString() || "NaN", // Last active (views are sorted desc)
+        viewer.views.length.toString(),
+        uniqueDocuments.size.toString(),
+        view.document?.name || "NaN",
+        view.viewedAt.toISOString(),
+        view.link?.name || "NaN",
+        (totalDuration / 1000.0).toFixed(1),
+        completionRate.toFixed(2) + "%",
+        relevantDocumentVersion?.versionNumber ||
+          view.document?.versions[0]?.versionNumber ||
+          "NaN",
+        view.downloadedAt ? view.downloadedAt.toISOString() : "NaN",
+        view.agreementResponse ? "Yes" : "NaN",
+        view.agreementResponse?.agreement.name || "NaN",
+        view.agreementResponse?.agreement.content || "NaN",
+        view.agreementResponse?.createdAt.toISOString() || "NaN",
+        view.dataroomId ? "Yes" : "No",
+        userAgentData?.data[0]?.browser || "NaN",
+        userAgentData?.data[0]?.os || "NaN",
+        userAgentData?.data[0]?.device || "NaN",
+        userAgentData?.data[0]?.country || "NaN",
+        userAgentData?.data[0]?.city || "NaN",
+      ];
+
+      // Add custom field values for this view
+      rowData.push(...extractCustomFieldValues(view, uniqueCustomFields));
+
+      csvRows.push(createCsvRow(rowData));
+    }
+  }
+
+  return {
+    csvData: csvRows.join("\n"),
+    resourceName: `${team.name || "Team"}_visitors`,
   };
 }
