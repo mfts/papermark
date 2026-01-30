@@ -153,6 +153,16 @@ const nextConfig = {
     },
     missingSuspenseWithCSRBailout: false,
   },
+  webpack: (config) => {
+    // Stub out @google-cloud/kms - it's an optional dependency of @libpdf/core
+    // that we don't use (only needed for KMS-based PDF encryption)
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@google-cloud/kms": false,
+      "@google-cloud/secret-manager": false,
+    };
+    return config;
+  },
 };
 
 function prepareRemotePatterns() {
