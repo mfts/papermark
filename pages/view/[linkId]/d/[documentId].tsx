@@ -267,7 +267,9 @@ export async function getStaticProps(context: GetStaticPropsContext) {
         useCustomAccessForm:
           teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
           teamId === "clup33by90000oewh4rfvp2eg" ||
-          teamId === "cm76hfyvy0002q623hmen99pf",
+          teamId === "cm76hfyvy0002q623hmen99pf" ||
+          teamId === "cm9ztf0s70005js04i689gefn" ||
+          teamId === "cmk2hnmqh0000k304zcoezt6n",
         logoOnAccessForm: teamId === "cm7nlkrhm0000qgh0nvyrrywr",
       },
       revalidate: brand || recordMap ? 10 : 60,
