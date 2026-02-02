@@ -14,10 +14,7 @@ import z from "zod";
 
 import { getFeatureFlags } from "@/lib/featureFlags";
 import notion from "@/lib/notion";
-import {
-  addSignedUrls,
-  fetchMissingPageReferences,
-} from "@/lib/notion/utils";
+import { addSignedUrls, fetchMissingPageReferences } from "@/lib/notion/utils";
 import {
   CustomUser,
   LinkWithDataroom,
@@ -276,7 +273,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       };
     }
   } catch (error) {
-    console.error("Fetching error:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Fetching error:", message);
     return { props: { error: true }, revalidate: 30 };
   }
 };
