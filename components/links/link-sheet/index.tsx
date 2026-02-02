@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -177,6 +184,7 @@ export default function LinkSheet({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [currentPreset, setCurrentPreset] = useState<LinkPreset | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const isPresetsAllowed =
     isTrial ||
@@ -199,6 +207,28 @@ export default function LinkSheet({
   useEffect(() => {
     setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms));
   }, [currentLink]);
+
+  // Handle Command+Enter (Mac) or Ctrl+Enter (Windows/Linux) to submit the form
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        event.preventDefault();
+        if (!isSaving && formRef.current) {
+          formRef.current.requestSubmit();
+        }
+      }
+    },
+    [isSaving],
+  );
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [isOpen, handleKeyDown]);
 
   const handlePreviewLink = async (link: LinkWithViews) => {
     if (link.domainId && isFree) {
@@ -470,6 +500,7 @@ export default function LinkSheet({
         </SheetHeader>
 
         <form
+          ref={formRef}
           className="flex grow flex-col"
           onSubmit={(e) => handleSubmit(e, false)}
         >
