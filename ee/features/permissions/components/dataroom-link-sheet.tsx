@@ -1,14 +1,9 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import {
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+
+import { useHotkeys } from "react-hotkeys-hook";
 
 import { useTeam } from "@/context/team-context";
 import {
@@ -149,26 +144,17 @@ export function DataroomLinkSheet({
   }, [currentLink]);
 
   // Handle Command+Enter (Mac) or Ctrl+Enter (Windows/Linux) to submit the form
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-        event.preventDefault();
-        if (!isSaving && formRef.current) {
-          formRef.current.requestSubmit();
-        }
+  useHotkeys(
+    "mod+enter",
+    (e) => {
+      e.preventDefault();
+      if (!isSaving && formRef.current) {
+        formRef.current.requestSubmit();
       }
     },
+    { enabled: isOpen, enableOnFormTags: true },
     [isSaving],
   );
-
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-      return () => {
-        document.removeEventListener("keydown", handleKeyDown);
-      };
-    }
-  }, [isOpen, handleKeyDown]);
 
   const handlePreviewLink = async (link: LinkWithViews) => {
     if (link.domainId && isFree) {
