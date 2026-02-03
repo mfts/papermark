@@ -692,7 +692,7 @@ export async function POST(request: NextRequest) {
               clickId: newId("linkView"),
               viewId: newDataroomView.id,
               linkId,
-              dataroomId,
+              dataroomId: link.dataroomId!,
               teamId: link.teamId!,
               enableNotification: link.enableNotification,
               isPaused,
@@ -705,7 +705,7 @@ export async function POST(request: NextRequest) {
                 try {
                   await notifyDataroomAccess({
                     teamId: link.teamId!,
-                    dataroomId,
+                    dataroomId: link.dataroomId!,
                     linkId,
                     viewerEmail: verifiedEmail ?? email,
                     viewerId: viewer?.id,
@@ -743,7 +743,7 @@ export async function POST(request: NextRequest) {
         // Create a dataroom session token if a dataroom session doesn't exist yet
         if (!dataroomSession && !isPreview) {
           const newDataroomSession = await createDataroomSession(
-            dataroomId,
+            link.dataroomId!,
             linkId,
             newDataroomView?.id!,
             ipAddress(request) ?? LOCALHOST_IP,
@@ -811,7 +811,7 @@ export async function POST(request: NextRequest) {
               clickId: newId("linkView"),
               viewId: dataroomView.id,
               linkId,
-              dataroomId,
+              dataroomId: link.dataroomId!,
               teamId: link.teamId!,
               enableNotification: link.enableNotification,
               isPaused,
@@ -839,7 +839,7 @@ export async function POST(request: NextRequest) {
                 await notifyDocumentView({
                   teamId: link.teamId!,
                   documentId,
-                  dataroomId,
+                  dataroomId: link.dataroomId!,
                   linkId,
                   viewerEmail: verifiedEmail ?? email,
                   viewerId: viewer?.id,
@@ -955,12 +955,12 @@ export async function POST(request: NextRequest) {
           link.permissionGroupId) &&
         effectiveGroupId &&
         documentId &&
-        dataroomId
+        link.dataroomId
       ) {
         const dataroomDocument = await prisma.dataroomDocument.findUnique({
           where: {
             dataroomId_documentId: {
-              dataroomId: dataroomId,
+              dataroomId: link.dataroomId,
               documentId: documentId,
             },
           },
@@ -1060,7 +1060,7 @@ export async function POST(request: NextRequest) {
       // Create a dataroom session token if a dataroom session doesn't exist yet
       if (!dataroomSession && !isPreview) {
         const newDataroomSession = await createDataroomSession(
-          dataroomId,
+          link.dataroomId!,
           linkId,
           dataroomView?.id!,
           ipAddress(request) ?? LOCALHOST_IP,
