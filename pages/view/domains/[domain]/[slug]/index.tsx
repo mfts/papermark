@@ -12,6 +12,7 @@ import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 import z from "zod";
 
+import { fetchLinkDataByDomainSlug } from "@/lib/api/links/link-data";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import notion from "@/lib/notion";
 import { addSignedUrls, fetchMissingPageReferences } from "@/lib/notion/utils";
@@ -63,16 +64,14 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       .regex(/^[a-zA-Z0-9_-]+$/, "Invalid path parameter")
       .parse(slugParam);
 
-    const res = await fetch(
-      `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
-        domain,
-      )}/${encodeURIComponent(slug)}`,
-    );
-    if (!res.ok) {
-      throw new Error(`Failed to fetch: ${res.status}`);
+    const result = await fetchLinkDataByDomainSlug({ domain, slug });
+    if (result.status !== "ok") {
+      return {
+        notFound: true,
+      };
     }
-    const responseData = (await res.json()) as any;
-    const { linkType, link, brand, linkId } = responseData;
+
+    const { linkType, link, brand, linkId } = result;
 
     if (!linkType) {
       return {

@@ -12,6 +12,7 @@ import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 import z from "zod";
 
+import { fetchLinkDataById } from "@/lib/api/links/link-data";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import notion from "@/lib/notion";
 import { addSignedUrls, fetchMissingPageReferences } from "@/lib/notion/utils";
@@ -74,12 +75,18 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 
   try {
     const linkId = z.string().cuid().parse(linkIdParam);
-    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/links/${linkId}`);
-    if (!res.ok) {
-      throw new Error(`Failed to fetch: ${res.status}`);
+
+    // Fetch link data directly from database to avoid internal HTTP fetch
+    // which can be blocked by Vercel's edge protection (403 errors)
+    const result = await fetchLinkDataById({ linkId });
+
+    if (result.status !== "ok") {
+      return {
+        notFound: true,
+      };
     }
 
-    const { linkType, link, brand } = (await res.json()) as any;
+    const { linkType, link, brand } = result;
 
     if (!linkType) {
       return {
