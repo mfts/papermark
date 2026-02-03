@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Download,
   FileArchive,
   Loader2,
@@ -66,6 +68,9 @@ export function DownloadProgressModal({
   const [loading, setLoading] = useState(true);
   const [showNewDownload, setShowNewDownload] = useState(false);
   const [isStartingDownload, setIsStartingDownload] = useState(false);
+  const [expandedDownloadId, setExpandedDownloadId] = useState<string | null>(
+    null,
+  );
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup interval on component unmount
@@ -270,6 +275,7 @@ export function DownloadProgressModal({
     setIsPolling(false);
     setShowNewDownload(false);
     setExistingDownloads([]);
+    setExpandedDownloadId(null);
     setLoading(true);
     onClose();
   };
@@ -508,67 +514,123 @@ export function DownloadProgressModal({
                 <h4 className="text-sm font-medium">Recent Downloads</h4>
                 <div className="max-h-64 space-y-2 overflow-y-auto">
                   {existingDownloads.map((download) => (
-                    <div
-                      key={download.id}
-                      className="flex items-center justify-between rounded-md border p-3"
-                    >
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(download.status)}
-                          <span
-                            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(download.status)}`}
-                          >
-                            {download.status}
-                          </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {formatDate(download.createdAt)}
-                        </div>
-                        {download.totalFiles > 0 && (
+                    <div key={download.id} className="space-y-2">
+                      <div className="flex items-center justify-between rounded-md border p-3">
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(download.status)}
+                            <span
+                              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(download.status)}`}
+                            >
+                              {download.status}
+                            </span>
+                          </div>
                           <div className="text-xs text-muted-foreground">
-                            {download.totalFiles} files
-                            {download.downloadUrls &&
-                              download.downloadUrls.length > 1 &&
-                              ` (${download.downloadUrls.length} ZIPs)`}
+                            {formatDate(download.createdAt)}
                           </div>
-                        )}
-                        {download.expiresAt && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <AlertCircle className="h-3 w-3" />
-                            Expires in{" "}
-                            {formatExpirationTime(download.expiresAt)}
+                          {download.totalFiles > 0 && (
+                            <div className="text-xs text-muted-foreground">
+                              {download.totalFiles} files
+                              {download.downloadUrls &&
+                                download.downloadUrls.length > 1 &&
+                                ` (${download.downloadUrls.length} ZIPs)`}
+                            </div>
+                          )}
+                          {download.expiresAt && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <AlertCircle className="h-3 w-3" />
+                              Expires in{" "}
+                              {formatExpirationTime(download.expiresAt)}
+                            </div>
+                          )}
+                          {download.error && (
+                            <p className="text-xs text-destructive">
+                              {download.error}
+                            </p>
+                          )}
+                        </div>
+                        {download.status === "COMPLETED" &&
+                          download.downloadUrls &&
+                          download.downloadUrls.length > 0 &&
+                          (download.downloadUrls.length === 1 ? (
+                            <Button
+                              size="sm"
+                              onClick={() =>
+                                handleDownload(download.downloadUrls![0])
+                              }
+                            >
+                              <Download className="mr-1 h-3 w-3" />
+                              Download
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                setExpandedDownloadId(
+                                  expandedDownloadId === download.id
+                                    ? null
+                                    : download.id,
+                                )
+                              }
+                            >
+                              {expandedDownloadId === download.id ? (
+                                <>
+                                  <ChevronUp className="mr-1 h-3 w-3" />
+                                  Hide
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="mr-1 h-3 w-3" />
+                                  Show Downloads
+                                </>
+                              )}
+                            </Button>
+                          ))}
+                        {(download.status === "PENDING" ||
+                          download.status === "PROCESSING") && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            {download.progress}%
                           </div>
-                        )}
-                        {download.error && (
-                          <p className="text-xs text-destructive">
-                            {download.error}
-                          </p>
                         )}
                       </div>
-                      {download.status === "COMPLETED" &&
+                      {/* Expanded download parts */}
+                      {expandedDownloadId === download.id &&
                         download.downloadUrls &&
-                        download.downloadUrls.length > 0 && (
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              download.downloadUrls!.length === 1
-                                ? handleDownload(download.downloadUrls![0])
-                                : handleDownloadAll(download.downloadUrls!)
-                            }
-                          >
-                            <Download className="mr-1 h-3 w-3" />
-                            {download.downloadUrls.length === 1
-                              ? "Download"
-                              : `Download (${download.downloadUrls.length})`}
-                          </Button>
+                        download.downloadUrls.length > 1 && (
+                          <div className="space-y-2 rounded-md border bg-muted/30 p-3">
+                            <Button
+                              size="sm"
+                              className="w-full"
+                              onClick={() =>
+                                handleDownloadAll(download.downloadUrls!)
+                              }
+                            >
+                              <Download className="mr-2 h-3 w-3" />
+                              Download All ({download.downloadUrls.length}{" "}
+                              parts)
+                            </Button>
+                            <p className="text-xs text-muted-foreground">
+                              Or download individually:
+                            </p>
+                            <div className="max-h-32 space-y-1 overflow-y-auto">
+                              {download.downloadUrls.map((url, index) => (
+                                <Button
+                                  key={index}
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full justify-start"
+                                  onClick={() => handleDownload(url)}
+                                >
+                                  <FileArchive className="mr-2 h-3 w-3" />
+                                  Part {index + 1} of{" "}
+                                  {download.downloadUrls!.length}
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
                         )}
-                      {(download.status === "PENDING" ||
-                        download.status === "PROCESSING") && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          {download.progress}%
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
