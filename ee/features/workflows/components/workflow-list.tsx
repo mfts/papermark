@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+
 import { timeAgo } from "@/lib/utils";
+
+import { Badge } from "@/components/ui/badge";
 
 interface Workflow {
   id: string;
@@ -28,7 +30,7 @@ export function WorkflowList({ workflows }: WorkflowListProps) {
     if (workflow.entryLink.domainSlug && workflow.entryLink.slug) {
       return `https://${workflow.entryLink.domainSlug}/${workflow.entryLink.slug}`;
     }
-    return `${process.env.NEXT_PUBLIC_MARKETING_URL || "https://www.papermark.io"}/view/${workflow.entryLink.id}`;
+    return `${process.env.NEXT_PUBLIC_MARKETING_URL || "https://www.papermark.com"}/view/${workflow.entryLink.id}`;
   };
 
   return (
@@ -72,4 +74,3 @@ export function WorkflowList({ workflows }: WorkflowListProps) {
     </div>
   );
 }
-

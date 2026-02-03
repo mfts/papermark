@@ -55,7 +55,7 @@ export const sendEmail = async ({
           ? "Papermark <system@verify.papermark.com>"
           : !!scheduledAt
             ? "Marc Seitz <marc@papermark.com>"
-            : "Marc from Papermark <marc@papermark.io>");
+            : "Marc from Papermark <marc@papermark.com>");
 
   try {
     const { data, error } = await resend.emails.send({
