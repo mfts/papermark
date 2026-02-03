@@ -762,12 +762,12 @@ export async function fetchLinkDataByDomainSlug({
     return { status: "not_found" };
   }
 
-  if (link.isArchived) {
-    return { status: "archived" };
-  }
-
   if (link.deletedAt) {
     return { status: "deleted" };
+  }
+
+  if (link.isArchived) {
+    return { status: "archived" };
   }
 
   return processLinkData(link, { dataroomDocumentId, isCustomDomain: true });
