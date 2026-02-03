@@ -178,8 +178,6 @@ export default async function handle(
         );
       }
 
-      // Don't update DATAROOM_VIEW downloadedAt - we'll show the grouped bulk download entry instead
-
       // Create individual document views for each document being downloaded
       const downloadableDocuments = downloadDocuments.filter(
         (doc) =>
@@ -189,7 +187,6 @@ export default async function handle(
       );
 
       // For bulk downloads, only store metadata if there are less than 100 documents
-      // to avoid storing huge JSON objects
       const downloadMetadata =
         downloadableDocuments.length < 100
           ? {
@@ -353,11 +350,12 @@ export default async function handle(
         return res.status(404).json({ error: "No files to download" });
       }
 
+      // Send Slack notification
       if (view.dataroom?.teamId) {
         try {
           await notifyDocumentDownload({
             teamId: view.dataroom.teamId,
-            documentId: undefined, // Bulk download, no specific document
+            documentId: undefined,
             dataroomId: view.dataroom.id,
             linkId,
             viewerEmail: view.viewerEmail ?? undefined,
@@ -379,6 +377,14 @@ export default async function handle(
         getTeamStorageConfigById(teamId),
       ]);
 
+      // Generate zip filename: "Dataroom Name-20260203T143813Z"
+      const now = new Date();
+      const timestamp = now
+        .toISOString()
+        .replace(/[-:]/g, "")
+        .replace(/\.\d{3}/, ""); // Results in: 20260203T143813Z
+      const zipFileName = `${view.dataroom!.name}-${timestamp}`;
+
       const params = {
         FunctionName: storageConfig.lambdaFunctionName,
         InvocationType: InvocationType.RequestResponse,
@@ -386,6 +392,8 @@ export default async function handle(
           sourceBucket: storageConfig.bucket,
           fileKeys: fileKeys,
           folderStructure: folderStructure,
+          dataroomName: view.dataroom!.name,
+          zipFileName,
           watermarkConfig: view.link.enableWatermark
             ? {
                 enabled: true,
@@ -414,7 +422,6 @@ export default async function handle(
 
         if (response.Payload) {
           const decodedPayload = new TextDecoder().decode(response.Payload);
-
           const payload = JSON.parse(decodedPayload);
           const { downloadUrl } = JSON.parse(payload.body);
 
@@ -430,6 +437,7 @@ export default async function handle(
         });
       }
     } catch (error) {
+      console.error("Error starting bulk download:", error);
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
