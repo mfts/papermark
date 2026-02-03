@@ -588,12 +588,16 @@ async function processLinkData(
       return { status: "not_found" };
     }
 
-    const data = await fetchDocumentLinkData({
-      linkId: link.id,
-      teamId: link.teamId,
-    });
-    linkData = data.linkData;
-    brand = data.brand;
+    try {
+      const data = await fetchDocumentLinkData({
+        linkId: link.id,
+        teamId: link.teamId,
+      });
+      linkData = data.linkData;
+      brand = data.brand;
+    } catch {
+      return { status: "not_found" };
+    }
   }
   // Handle DATAROOM_LINK
   else if (linkType === "DATAROOM_LINK") {
@@ -622,19 +626,23 @@ async function processLinkData(
       }
     } else {
       // Fetching full dataroom
-      const data = await fetchDataroomLinkData({
-        linkId: link.id,
-        dataroomId: link.dataroomId,
-        teamId: link.teamId,
-        permissionGroupId: link.permissionGroupId || undefined,
-        ...(link.audienceType === LinkAudienceType.GROUP &&
-          link.groupId && {
-            groupId: link.groupId,
-          }),
-      });
-      linkData = data.linkData;
-      brand = data.brand;
-      linkData.accessControls = data.accessControls;
+      try {
+        const data = await fetchDataroomLinkData({
+          linkId: link.id,
+          dataroomId: link.dataroomId,
+          teamId: link.teamId,
+          permissionGroupId: link.permissionGroupId || undefined,
+          ...(link.audienceType === LinkAudienceType.GROUP &&
+            link.groupId && {
+              groupId: link.groupId,
+            }),
+        });
+        linkData = data.linkData;
+        brand = data.brand;
+        linkData.accessControls = data.accessControls;
+      } catch {
+        return { status: "not_found" };
+      }
     }
   }
 
