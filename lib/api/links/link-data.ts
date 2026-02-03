@@ -696,8 +696,12 @@ async function processLinkData(
     ...linkData,
     // Override with sanitized document
     document: sanitizedDocument,
-    // Remove internal IDs
-    dataroomId: undefined,
+    // Keep dataroomId for DATAROOM_LINK types (needed for session verification and API calls)
+    // For DOCUMENT_LINK types, set to undefined
+    dataroomId:
+      linkType === "DATAROOM_LINK"
+        ? link.dataroomId || linkData?.dataroom?.id
+        : undefined,
     dataroomDocument: linkData?.dataroom?.documents?.[0] || undefined,
   };
 
