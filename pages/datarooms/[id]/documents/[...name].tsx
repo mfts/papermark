@@ -63,6 +63,7 @@ export default function Documents() {
             <DownloadDataroomButton
               teamId={teamInfo?.currentTeam?.id!}
               dataroomId={dataroom?.id!}
+              dataroomName={dataroom?.name}
             />
           </div>
           <div className="flex items-center justify-end gap-x-2">
