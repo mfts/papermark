@@ -583,21 +583,31 @@ async function processLinkData(
 
   // Handle DOCUMENT_LINK
   if (linkType === "DOCUMENT_LINK") {
+    // Guard: teamId is required for document links
+    if (!link.teamId) {
+      return { status: "not_found" };
+    }
+
     const data = await fetchDocumentLinkData({
       linkId: link.id,
-      teamId: link.teamId!,
+      teamId: link.teamId,
     });
     linkData = data.linkData;
     brand = data.brand;
   }
   // Handle DATAROOM_LINK
   else if (linkType === "DATAROOM_LINK") {
+    // Guard: teamId is required for dataroom links
+    if (!link.teamId) {
+      return { status: "not_found" };
+    }
+
     if (dataroomDocumentId) {
       // Fetching specific document within dataroom
       try {
         const data = await fetchDataroomDocumentLinkData({
           linkId: link.id,
-          teamId: link.teamId!,
+          teamId: link.teamId,
           dataroomDocumentId: dataroomDocumentId,
           permissionGroupId: link.permissionGroupId || undefined,
           ...(link.audienceType === LinkAudienceType.GROUP &&
@@ -615,7 +625,7 @@ async function processLinkData(
       const data = await fetchDataroomLinkData({
         linkId: link.id,
         dataroomId: link.dataroomId,
-        teamId: link.teamId!,
+        teamId: link.teamId,
         permissionGroupId: link.permissionGroupId || undefined,
         ...(link.audienceType === LinkAudienceType.GROUP &&
           link.groupId && {
