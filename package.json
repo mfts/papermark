@@ -124,6 +124,7 @@
     "pdf-lib": "^1.17.1",
     "postcss": "^8.5.6",
     "posthog-js": "^1.336.1",
+    "posthog-node": "^5.21.2",
     "react": "^18.3.1",
     "react-colorful": "^5.6.1",
     "react-day-picker": "^8.10.1",

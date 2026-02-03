@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { errorhandler } from "@/lib/errorHandler";
+import { capturePostHogEvent } from "@/lib/posthog-server";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -118,6 +119,16 @@ export default async function handle(
       await trackAnalytics({
         event: "Team Member Invitation Accepted",
         teamId: teamId,
+      });
+
+      // Track in PostHog
+      await capturePostHogEvent({
+        distinctId: invitation.email,
+        event: "Team Member Invitation Accepted",
+        properties: {
+          teamId: teamId,
+          userId: userId,
+        },
       });
 
       // delete the invitation record after user is successfully added to the team
