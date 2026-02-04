@@ -504,6 +504,7 @@ export default function IntroductionSettings({
   const isFeatureAvailable = isDataroomsPlus || isTrial;
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasInitialLoadRef = useRef(false);
+  const skipNextAutosaveRef = useRef(false);
 
   // Fetch current introduction settings from dataroom
   useEffect(() => {
@@ -562,6 +563,7 @@ export default function IntroductionSettings({
       } finally {
         setIsFetching(false);
         hasInitialLoadRef.current = true;
+        skipNextAutosaveRef.current = true;
       }
     };
 
@@ -607,6 +609,12 @@ export default function IntroductionSettings({
   // Debounced auto-save on content change
   useEffect(() => {
     if (!hasInitialLoadRef.current) return;
+
+    // Skip the first auto-save pass after initial load
+    if (skipNextAutosaveRef.current) {
+      skipNextAutosaveRef.current = false;
+      return;
+    }
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
