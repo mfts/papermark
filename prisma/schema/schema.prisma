@@ -57,6 +57,9 @@ model User {
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
 
+  // Session management - used to invalidate all sessions when incremented
+  sessionVersion Int        @default(0)
+
   restrictedTokens RestrictedToken[]
 
   // conversation

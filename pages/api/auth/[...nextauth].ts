@@ -126,7 +126,26 @@ export const authOptions: NextAuthOptions = {
       }
       if (user) {
         token.user = user;
+        // Store sessionVersion in token for later validation
+        token.sessionVersion = (user as CustomUser).sessionVersion ?? 0;
       }
+
+      // Validate sessionVersion on every request (except initial sign-in)
+      if (!user && token.sub) {
+        const currentUser = await prisma.user.findUnique({
+          where: { id: token.sub },
+          select: { sessionVersion: true },
+        });
+
+        // If user doesn't exist or sessionVersion has been incremented, invalidate token
+        if (
+          !currentUser ||
+          currentUser.sessionVersion !== (token.sessionVersion ?? 0)
+        ) {
+          return {}; // This will force a re-login
+        }
+      }
+
       // refresh the user data
       if (trigger === "update") {
         const user = token?.user as CustomUser;
@@ -135,6 +154,7 @@ export const authOptions: NextAuthOptions = {
         });
         if (refreshedUser) {
           token.user = refreshedUser;
+          token.sessionVersion = refreshedUser.sessionVersion;
         } else {
           return {};
         }
