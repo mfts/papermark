@@ -3,7 +3,14 @@ import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { CircleHelpIcon, Hash, Settings, XCircleIcon } from "lucide-react";
+import {
+  CircleHelpIcon,
+  Hash,
+  InfoIcon,
+  Lock,
+  Settings,
+  XCircleIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { useAnalytics } from "@/lib/analytics";
@@ -72,20 +79,27 @@ export default function SlackSettings() {
     [channels],
   );
 
+  const PrivateChannelIcon = useMemo(
+    () => <Lock className="h-4 w-4 text-muted-foreground" />,
+    [],
+  );
+
   const channelOptions = useMemo(
     () =>
       filteredChannels.map((channel) => ({
         value: channel.id,
         label: channel.name,
-        icon: ChannelIcon,
+        icon: channel.is_private ? PrivateChannelIcon : ChannelIcon,
         meta: {
-          color: "slate",
+          color: channel.is_private ? "amber" : "slate",
           description: channel.is_private
-            ? "Private channel"
+            ? channel.is_member
+              ? "Private channel (bot is member)"
+              : "Private channel (invite bot to use)"
             : "Public channel",
         },
       })),
-    [filteredChannels, ChannelIcon],
+    [filteredChannels, ChannelIcon, PrivateChannelIcon],
   );
 
   useEffect(() => {
@@ -510,27 +524,48 @@ export default function SlackSettings() {
                               </div>
                             </div>
                           ) : (
-                            <MultiSelect
-                              loading={false}
-                              options={channelOptions}
-                              value={Object.keys(
-                                integration.configuration?.enabledChannels ||
-                                  {},
-                              )}
-                              setIsPopoverOpen={setIsChannelPopoverOpen}
-                              isPopoverOpen={isChannelPopoverOpen}
-                              onValueChange={debouncedChannelsUpdate}
-                              placeholder={
-                                pendingChannelUpdate
-                                  ? "Saving changes..."
-                                  : "Select channels..."
-                              }
-                              maxCount={5}
-                              searchPlaceholder="Search channels..."
-                              triggerIcon={
-                                <Hash className="h-4 w-4 text-muted-foreground" />
-                              }
-                            />
+                            <>
+                              <MultiSelect
+                                loading={false}
+                                options={channelOptions}
+                                value={Object.keys(
+                                  integration.configuration?.enabledChannels ||
+                                    {},
+                                )}
+                                setIsPopoverOpen={setIsChannelPopoverOpen}
+                                isPopoverOpen={isChannelPopoverOpen}
+                                onValueChange={debouncedChannelsUpdate}
+                                placeholder={
+                                  pendingChannelUpdate
+                                    ? "Saving changes..."
+                                    : "Select channels..."
+                                }
+                                maxCount={5}
+                                searchPlaceholder="Search channels..."
+                                triggerIcon={
+                                  <Hash className="h-4 w-4 text-muted-foreground" />
+                                }
+                              />
+                              {/* Info about private channels */}
+                              <div className="mt-3 flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-400">
+                                <InfoIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                                <div>
+                                  <p className="font-medium">
+                                    Missing a private channel?
+                                  </p>
+                                  <p className="mt-1 text-blue-600 dark:text-blue-400">
+                                    To use a private channel, either reconnect
+                                    the Slack integration to grant access, or
+                                    invite the Papermark app to the channel by
+                                    typing{" "}
+                                    <code className="rounded bg-blue-100 px-1 py-0.5 font-mono text-xs dark:bg-blue-900">
+                                      /invite @Papermark
+                                    </code>{" "}
+                                    in that channel.
+                                  </p>
+                                </div>
+                              </div>
+                            </>
                           )}
                         </div>
                       </div>

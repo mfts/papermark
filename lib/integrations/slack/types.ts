@@ -6,7 +6,12 @@ export type SlackCredential = {
   scope: string;
   accessToken: string;
   tokenType: string;
-  authUser: { id: string };
+  authUser: {
+    id: string;
+    scope?: string;
+    accessToken?: string;
+    tokenType?: string;
+  };
   team: { id: string; name: string };
 };
 

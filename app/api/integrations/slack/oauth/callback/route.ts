@@ -97,7 +97,15 @@ export const GET = async (req: Request) => {
       scope: data.scope,
       accessToken: encryptSlackToken(data.access_token),
       tokenType: data.token_type,
-      authUser: data.authed_user,
+      authUser: {
+        id: data.authed_user.id,
+        scope: data.authed_user.scope,
+        // Store user token if available (required for accessing private channels the user is member of)
+        accessToken: data.authed_user.access_token
+          ? encryptSlackToken(data.authed_user.access_token)
+          : undefined,
+        tokenType: data.authed_user.token_type,
+      },
       team: data.team,
     };
 

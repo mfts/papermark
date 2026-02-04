@@ -57,8 +57,11 @@ export default async function handler(
 
       try {
         const slackClient = getSlackClient();
+        const credentials = integration.credentials as SlackCredential;
+        // Pass both bot token and user token (if available) for better private channel visibility
         const channels = await slackClient.getChannels(
-          (integration.credentials as SlackCredential).accessToken,
+          credentials.accessToken,
+          credentials.authUser?.accessToken,
         );
 
         const availableChannels = channels

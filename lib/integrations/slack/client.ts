@@ -141,18 +141,19 @@ export class SlackClient {
   //   };
   // }
 
-  async getChannels(accessToken: string): Promise<SlackChannel[]> {
-    const decryptedToken = decryptSlackToken(accessToken);
-    if (!decryptedToken) {
-      throw new Error("Missing Slack access token");
-    }
-
+  /**
+   * Fetch channels from Slack using a specific token
+   */
+  private async fetchChannelsWithToken(
+    token: string,
+    types: string,
+  ): Promise<SlackChannel[]> {
     const channels: SlackChannel[] = [];
     let cursor: string | undefined = undefined;
 
     do {
       const url = new URL(`${this.baseUrl}/conversations.list`);
-      url.searchParams.set("types", "public_channel,private_channel");
+      url.searchParams.set("types", types);
       url.searchParams.set("exclude_archived", "true");
       if (cursor) url.searchParams.set("cursor", cursor);
 
@@ -161,21 +162,23 @@ export class SlackClient {
       const to = setTimeout(() => ac.abort(), 10000);
       const resp = await fetch(requestUrl, {
         headers: {
-          Authorization: `Bearer ${decryptedToken}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         signal: ac.signal,
       }).finally(() => clearTimeout(to));
+
       // Basic 429 handling
       if (resp.status === 429) {
         const retry = Number(resp.headers.get("retry-after") || 1);
         await new Promise((r) => setTimeout(r, retry * 1000));
         continue;
       }
-      if (!resp.ok)
+      if (!resp.ok) {
         throw new Error(
           `Failed to get channels: ${resp.status} ${resp.statusText}`,
         );
+      }
       const data = await resp.json();
       if (!data.ok) throw new Error(`Slack API error: ${data.error}`);
       channels.push(
@@ -191,6 +194,87 @@ export class SlackClient {
     } while (cursor);
 
     return channels;
+  }
+
+  /**
+   * Get channels from Slack workspace
+   * Uses user token for private channels (when available) and bot token for public channels
+   *
+   * @param botAccessToken - The encrypted bot access token
+   * @param userAccessToken - Optional encrypted user access token for private channel access
+   */
+  async getChannels(
+    botAccessToken: string,
+    userAccessToken?: string,
+  ): Promise<SlackChannel[]> {
+    const decryptedBotToken = decryptSlackToken(botAccessToken);
+    if (!decryptedBotToken) {
+      throw new Error("Missing Slack access token");
+    }
+
+    const channelMap = new Map<string, SlackChannel>();
+
+    // First, fetch public channels with bot token
+    try {
+      const publicChannels = await this.fetchChannelsWithToken(
+        decryptedBotToken,
+        "public_channel",
+      );
+      publicChannels.forEach((channel) => {
+        channelMap.set(channel.id, channel);
+      });
+    } catch (error) {
+      console.error("Error fetching public channels with bot token:", error);
+      throw error;
+    }
+
+    // If user token is available, use it for private channels
+    // User token can see all private channels the user is a member of
+    if (userAccessToken) {
+      try {
+        const decryptedUserToken = decryptSlackToken(userAccessToken);
+        if (decryptedUserToken) {
+          const privateChannels = await this.fetchChannelsWithToken(
+            decryptedUserToken,
+            "private_channel",
+          );
+          privateChannels.forEach((channel) => {
+            channelMap.set(channel.id, channel);
+          });
+        }
+      } catch (error) {
+        // Log but don't fail - fall back to bot token for private channels
+        console.warn(
+          "Error fetching private channels with user token, falling back to bot token:",
+          error,
+        );
+      }
+    }
+
+    // Fall back: If no user token or user token failed, try bot token for private channels
+    // Note: Bot token can only see private channels where bot has been explicitly added
+    if (!userAccessToken || channelMap.size === 0) {
+      try {
+        const botPrivateChannels = await this.fetchChannelsWithToken(
+          decryptedBotToken,
+          "private_channel",
+        );
+        botPrivateChannels.forEach((channel) => {
+          // Only add if not already present from user token
+          if (!channelMap.has(channel.id)) {
+            channelMap.set(channel.id, channel);
+          }
+        });
+      } catch (error) {
+        // Bot may not have groups:read scope, which is fine
+        console.warn(
+          "Could not fetch private channels with bot token (may not have groups:read scope):",
+          error,
+        );
+      }
+    }
+
+    return Array.from(channelMap.values());
   }
 
   /**
