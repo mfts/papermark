@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth";
 
+import { deleteAllUserSessions } from "@/lib/auth/user-session";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
@@ -32,6 +33,9 @@ export default async function handle(
           },
         },
       });
+
+      // Delete all UserSession tracking records
+      await deleteAllUserSessions(sessionUser.id);
 
       // Also delete any database sessions (if using database strategy as fallback)
       await prisma.session.deleteMany({

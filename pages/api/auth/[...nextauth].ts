@@ -18,6 +18,7 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
+import { generateSessionToken } from "@/lib/utils/session";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -128,6 +129,10 @@ export const authOptions: NextAuthOptions = {
         token.user = user;
         // Store sessionVersion in token for later validation
         token.sessionVersion = (user as CustomUser).sessionVersion ?? 0;
+        // Generate a unique session token for tracking (will be set in signIn event)
+        if (!token.userSessionToken) {
+          token.userSessionToken = generateSessionToken();
+        }
       }
 
       // Validate sessionVersion on every request (except initial sign-in)
@@ -143,6 +148,24 @@ export const authOptions: NextAuthOptions = {
           currentUser.sessionVersion !== (token.sessionVersion ?? 0)
         ) {
           return {}; // This will force a re-login
+        }
+
+        // Update lastActiveAt periodically (every 5 minutes max to reduce DB writes)
+        const userSessionToken = token.userSessionToken as string | undefined;
+        const lastUpdate = token.lastSessionUpdate as number | undefined;
+        const now = Date.now();
+        if (
+          userSessionToken &&
+          (!lastUpdate || now - lastUpdate > 5 * 60 * 1000)
+        ) {
+          token.lastSessionUpdate = now;
+          // Fire and forget - don't await to avoid slowing down requests
+          prisma.userSession
+            .updateMany({
+              where: { sessionToken: userSessionToken },
+              data: { lastActiveAt: new Date() },
+            })
+            .catch(() => {}); // Ignore errors
         }
       }
 
@@ -176,6 +199,9 @@ export const authOptions: NextAuthOptions = {
         // @ts-ignore
         ...(token || session).user,
       };
+      // Include userSessionToken in session for client-side identification
+      // @ts-ignore
+      session.userSessionToken = token.userSessionToken;
       return session;
     },
   },
