@@ -8,6 +8,8 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
   Bold,
+  Heading1,
+  Heading2,
   ImageIcon,
   Italic,
   List,
@@ -159,6 +161,29 @@ export function RichTextEditor({
     <div className="rounded-md border border-input">
       {/* Toolbar */}
       <div className="flex flex-wrap gap-1 border-b border-input p-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          type="button"
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 1 }).run()
+          }
+          className={editor.isActive("heading", { level: 1 }) ? "bg-muted" : ""}
+        >
+          <Heading1 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          type="button"
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 2 }).run()
+          }
+          className={editor.isActive("heading", { level: 2 }) ? "bg-muted" : ""}
+        >
+          <Heading2 className="h-4 w-4" />
+        </Button>
+        <div className="mx-1 h-6 w-px bg-border" />
         <Button
           variant="ghost"
           size="sm"

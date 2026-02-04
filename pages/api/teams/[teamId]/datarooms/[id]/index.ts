@@ -117,6 +117,8 @@ export default async function handle(
         showLastUpdated,
         tags,
         agentsEnabled,
+        introductionEnabled,
+        introductionContent,
       } = req.body as {
         name?: string;
         internalName?: string | null;
@@ -126,6 +128,8 @@ export default async function handle(
         showLastUpdated?: boolean;
         tags?: string[];
         agentsEnabled?: boolean;
+        introductionEnabled?: boolean;
+        introductionContent?: any;
       };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
@@ -171,6 +175,12 @@ export default async function handle(
             }),
             ...(typeof agentsEnabled === "boolean" && {
               agentsEnabled,
+            }),
+            ...(typeof introductionEnabled === "boolean" && {
+              introductionEnabled,
+            }),
+            ...(introductionContent !== undefined && {
+              introductionContent,
             }),
           },
         });

@@ -48,6 +48,7 @@ import DocumentCard from "../dataroom/document-card";
 import { DocumentUploadModal } from "../dataroom/document-upload-modal";
 import FolderCard from "../dataroom/folder-card";
 import IndexFileDialog from "../dataroom/index-file-dialog";
+import { IntroductionModal } from "../dataroom/introduction-modal";
 import DataroomNav from "../dataroom/nav-dataroom";
 
 const ViewerBreadcrumbItem = ({
@@ -561,6 +562,9 @@ export default function DataroomViewer({
       {/* AI Chat Components */}
       <ViewerChatPanel />
       <ViewerChatToggle />
+
+      {/* Introduction Modal */}
+      <IntroductionModal dataroom={dataroom} viewerId={viewerId} />
     </ViewerChatProvider>
   );
 }

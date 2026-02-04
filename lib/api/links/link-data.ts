@@ -206,6 +206,8 @@ export async function fetchDataroomLinkData({
           teamId: true,
           allowBulkDownload: true,
           showLastUpdated: true,
+          introductionEnabled: true,
+          introductionContent: true,
           createdAt: true,
           documents: {
             where:
