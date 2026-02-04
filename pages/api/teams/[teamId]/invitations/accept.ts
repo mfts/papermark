@@ -3,9 +3,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 
-import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
 import { errorhandler } from "@/lib/errorHandler";
-import { capturePostHogEvent } from "@/lib/posthog-server";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -122,7 +121,7 @@ export default async function handle(
       });
 
       // Track in PostHog
-      await capturePostHogEvent({
+      await analytics.capture({
         distinctId: invitation.email,
         event: "Team Member Invitation Accepted",
         properties: {
