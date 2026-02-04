@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
+import Youtube from "@tiptap/extension-youtube";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
@@ -17,7 +18,18 @@ import {
   Quote,
   Redo,
   Undo,
+  Youtube as YoutubeIcon,
 } from "lucide-react";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 import { Button } from "@/components/ui/button";
 
@@ -34,6 +46,9 @@ export function RichTextEditor({
   placeholder = "Start typing...",
   onImageUpload,
 }: RichTextEditorProps) {
+  const [youtubeDialogOpen, setYoutubeDialogOpen] = useState(false);
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -42,6 +57,13 @@ export function RichTextEditor({
         allowBase64: true,
         HTMLAttributes: {
           class: "rounded-lg max-w-full h-auto",
+        },
+      }),
+      Youtube.configure({
+        controls: true,
+        nocookie: true,
+        HTMLAttributes: {
+          class: "rounded-lg w-full aspect-video",
         },
       }),
       Placeholder.configure({
@@ -153,6 +175,17 @@ export function RichTextEditor({
     [editor, onImageUpload],
   );
 
+  const addYoutubeVideo = useCallback(() => {
+    if (!editor || !youtubeUrl) return;
+
+    editor.commands.setYoutubeVideo({
+      src: youtubeUrl,
+    });
+
+    setYoutubeUrl("");
+    setYoutubeDialogOpen(false);
+  }, [editor, youtubeUrl]);
+
   if (!editor) {
     return null;
   }
@@ -238,6 +271,14 @@ export function RichTextEditor({
             </Button>
           </>
         )}
+        <Button
+          variant="ghost"
+          size="sm"
+          type="button"
+          onClick={() => setYoutubeDialogOpen(true)}
+        >
+          <YoutubeIcon className="h-4 w-4" />
+        </Button>
         <div className="mx-1 h-6 w-px bg-border" />
         <Button
           variant="ghost"
@@ -266,6 +307,47 @@ export function RichTextEditor({
           className="prose prose-sm max-w-none focus:outline-none [&_.ProseMirror]:min-h-[150px] [&_.ProseMirror]:focus:outline-none"
         />
       </div>
+
+      {/* YouTube Dialog */}
+      <Dialog open={youtubeDialogOpen} onOpenChange={setYoutubeDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add YouTube Video</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="youtube-url">YouTube URL</Label>
+              <Input
+                id="youtube-url"
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addYoutubeVideo();
+                  }
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                Paste a YouTube video URL (e.g., youtube.com/watch?v=...,
+                youtu.be/...)
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setYoutubeDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={addYoutubeVideo} disabled={!youtubeUrl}>
+              Add Video
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

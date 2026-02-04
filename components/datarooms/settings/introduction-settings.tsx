@@ -246,16 +246,7 @@ function generateIntroductionContent(
   });
 
   // Placeholder for navigation screenshot
-  content.push({
-    type: "paragraph",
-    content: [
-      {
-        type: "text",
-        text: "[Add a screenshot of your data room navigation here]",
-        marks: [{ type: "italic" }],
-      },
-    ],
-  });
+
 
   // Q&A and Conversations section
   content.push({
@@ -323,16 +314,7 @@ function generateIntroductionContent(
   });
 
   // Placeholder for conversations screenshot
-  content.push({
-    type: "paragraph",
-    content: [
-      {
-        type: "text",
-        text: "[Add a screenshot of the chat/conversation feature here]",
-        marks: [{ type: "italic" }],
-      },
-    ],
-  });
+ 
 
   // Need Help section
   content.push({
@@ -471,6 +453,32 @@ function renderContent(content: any): React.ReactNode {
           alt={node.attrs?.alt || ""}
           className="my-3 h-auto max-w-full rounded-md"
         />
+      );
+    } else if (node.type === "youtube") {
+      // Extract video ID from the src URL
+      const src = node.attrs?.src || "";
+      let videoId = "";
+
+      // Handle different YouTube URL formats
+      const youtubeMatch = src.match(
+        /(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([^?&]+)/,
+      );
+      if (youtubeMatch) {
+        videoId = youtubeMatch[1];
+      }
+
+      if (!videoId) return null;
+
+      return (
+        <div key={index} className="my-4 aspect-video w-full">
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+            title="YouTube video"
+            className="h-full w-full rounded-lg"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
       );
     }
     return null;
@@ -715,7 +723,7 @@ export default function IntroductionSettings({
 
         {/* Preview Dialog */}
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
-          <DialogContent className="max-h-[90vh] w-[95vw] max-w-3xl overflow-hidden border-0 p-0 shadow-2xl sm:rounded-2xl">
+          <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden border-0 p-0 shadow-2xl sm:max-w-xl sm:rounded-2xl md:max-w-2xl">
             <DialogHeader className="border-b border-gray-100 bg-gray-50 px-4 py-6 dark:border-gray-800 dark:bg-gray-900 sm:px-6">
               <p className="mb-1 text-xs text-muted-foreground">
                 This is preview

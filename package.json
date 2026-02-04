@@ -73,6 +73,7 @@
     "@teamhanko/passkeys-next-auth-provider": "^0.3.1",
     "@tiptap/extension-image": "^3.6.2",
     "@tiptap/extension-placeholder": "^3.6.2",
+    "@tiptap/extension-youtube": "^3.19.0",
     "@tiptap/react": "^3.6.2",
     "@tiptap/starter-kit": "^3.6.2",
     "@tremor/react": "^3.18.7",

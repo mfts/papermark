@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 
 import { InfoIcon } from "lucide-react";
 
@@ -27,6 +33,51 @@ interface IntroductionModalProps {
     introductionContent?: any;
   };
   viewerId?: string;
+}
+
+// Context to share modal state
+interface IntroductionContextType {
+  openIntroduction: () => void;
+  hasIntroduction: boolean;
+  hasSeen: boolean;
+}
+
+const IntroductionContext = createContext<IntroductionContextType>({
+  openIntroduction: () => {},
+  hasIntroduction: false,
+  hasSeen: false,
+});
+
+export const useIntroduction = () => useContext(IntroductionContext);
+
+// Info button component to be placed inline (e.g., next to dataroom name)
+export function IntroductionInfoButton() {
+  const { openIntroduction, hasIntroduction, hasSeen } = useIntroduction();
+
+  if (!hasIntroduction) return null;
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={openIntroduction}
+            className={`inline-flex items-center justify-center rounded-full p-1.5 transition-colors ${
+              hasSeen
+                ? "text-muted-foreground hover:bg-muted hover:text-foreground"
+                : "border-2 border-gray-900 text-gray-900 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-800"
+            }`}
+            aria-label="View introduction"
+          >
+            <InfoIcon className="h-5 w-5" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="left">
+          <p>View introduction</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 }
 
 // Render TipTap JSON content
@@ -144,93 +195,123 @@ function renderContent(content: any): React.ReactNode {
           className="my-3 h-auto max-w-full rounded-md"
         />
       );
+    } else if (node.type === "youtube") {
+      // Extract video ID from the src URL
+      const src = node.attrs?.src || "";
+      let videoId = "";
+
+      // Handle different YouTube URL formats
+      const youtubeMatch = src.match(
+        /(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([^?&]+)/,
+      );
+      if (youtubeMatch) {
+        videoId = youtubeMatch[1];
+      }
+
+      if (!videoId) return null;
+
+      return (
+        <div key={index} className="my-4 aspect-video w-full">
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+            title="YouTube video"
+            className="h-full w-full rounded-lg"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      );
     }
     return null;
   });
 }
 
-export function IntroductionModal({
+interface IntroductionProviderProps extends IntroductionModalProps {
+  children: React.ReactNode;
+}
+
+export function IntroductionProvider({
   dataroom,
   viewerId,
-}: IntroductionModalProps) {
+  children,
+}: IntroductionProviderProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [hasSeen, setHasSeen] = useState(true); // Default to true, will be updated on mount
 
   const storageKey = `dataroom-intro-seen-${dataroom.id}${viewerId ? `-${viewerId}` : ""}`;
 
+  const content = dataroom.introductionContent as any;
+  const hasContent =
+    dataroom.introductionEnabled &&
+    content?.content &&
+    content.content.length > 0;
+
   useEffect(() => {
     // Check if introduction is enabled and has content
-    if (!dataroom.introductionEnabled || !dataroom.introductionContent) {
+    if (!hasContent) {
       return;
     }
 
-    // Check if user has already seen the introduction - show only first time
+    // Check if user has already seen the introduction
     const seen = localStorage.getItem(storageKey);
+    setHasSeen(!!seen);
+
+    // Show modal only first time
     if (!seen) {
       setIsOpen(true);
     }
-  }, [dataroom.introductionEnabled, dataroom.introductionContent, storageKey]);
+  }, [hasContent, storageKey]);
 
   const handleClose = () => {
     setIsOpen(false);
     localStorage.setItem(storageKey, "true");
+    setHasSeen(true);
   };
 
-  const handleReopen = () => {
+  const openIntroduction = useCallback(() => {
     setIsOpen(true);
-  };
-
-  // Don't render anything if introduction is not enabled or has no content
-  if (!dataroom.introductionEnabled || !dataroom.introductionContent) {
-    return null;
-  }
-
-  const content = dataroom.introductionContent as any;
-  const hasContent = content?.content && content.content.length > 0;
-
-  if (!hasContent) {
-    return null;
-  }
+  }, []);
 
   return (
-    <>
-      {/* Info icon to reopen introduction - always visible */}
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={handleReopen}
-              className="fixed right-4 top-20 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg ring-1 ring-gray-200 backdrop-blur-sm transition-all hover:bg-white hover:shadow-xl dark:bg-gray-800/90 dark:ring-gray-700 dark:hover:bg-gray-800"
-              aria-label="View introduction"
-            >
-              <InfoIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="left">
-            <p>View introduction</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+    <IntroductionContext.Provider
+      value={{ openIntroduction, hasIntroduction: hasContent, hasSeen }}
+    >
+      {children}
 
       {/* Introduction Modal */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden border-0 p-0 shadow-2xl sm:max-w-xl sm:rounded-2xl md:max-w-2xl">
-          <DialogHeader className="border-b border-gray-100 bg-gray-50 px-6 py-6 dark:border-gray-800 dark:bg-gray-900">
-            <DialogTitle className="text-xl font-semibold">
-              Welcome to {dataroom.name || "Data Room"}
-            </DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="max-h-[60vh] px-6 py-5">
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              {renderContent(content)}
+      {hasContent && (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden border-0 p-0 shadow-2xl sm:max-w-xl sm:rounded-2xl md:max-w-2xl">
+            <DialogHeader className="border-b border-gray-100 bg-gray-50 px-6 py-6 dark:border-gray-800 dark:bg-gray-900">
+              <DialogTitle className="text-xl font-semibold">
+                Welcome to {dataroom.name || "Data Room"}
+              </DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] px-6 py-5">
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                {renderContent(content)}
+              </div>
+            </ScrollArea>
+            <div className="flex justify-end border-t border-gray-100 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-900">
+              <Button onClick={handleClose} size="lg">
+                Continue to Data Room
+              </Button>
             </div>
-          </ScrollArea>
-          <div className="flex justify-end border-t border-gray-100 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-900">
-            <Button onClick={handleClose} size="lg">
-              Continue to Data Room
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+          </DialogContent>
+        </Dialog>
+      )}
+    </IntroductionContext.Provider>
+  );
+}
+
+// Backwards compatible export
+export function IntroductionModal({
+  dataroom,
+  viewerId,
+}: IntroductionModalProps) {
+  return (
+    <IntroductionProvider dataroom={dataroom} viewerId={viewerId}>
+      {null}
+    </IntroductionProvider>
   );
 }
