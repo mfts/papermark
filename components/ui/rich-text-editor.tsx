@@ -21,6 +21,7 @@ import {
   Youtube as YoutubeIcon,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -30,8 +31,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { Button } from "@/components/ui/button";
 
 /**
  * Validates if a given URL is a valid YouTube URL.
@@ -244,8 +243,10 @@ export function RichTextEditor({
   const addYoutubeVideo = useCallback(() => {
     if (!editor || !youtubeUrl) return;
 
+    const trimmed = youtubeUrl.trim();
+
     // Re-validate URL before inserting
-    if (!isValidYouTubeUrl(youtubeUrl)) {
+    if (!isValidYouTubeUrl(trimmed)) {
       setYoutubeUrlError(
         "Please enter a valid YouTube URL (e.g., youtube.com/watch?v=..., youtu.be/...)",
       );
@@ -253,7 +254,7 @@ export function RichTextEditor({
     }
 
     editor.commands.setYoutubeVideo({
-      src: youtubeUrl,
+      src: trimmed,
     });
 
     setYoutubeUrl("");
