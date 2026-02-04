@@ -280,7 +280,16 @@ export function IntroductionProvider({
 
       {/* Introduction Modal */}
       {hasContent && (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog
+          open={isOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              handleClose();
+            } else {
+              setIsOpen(true);
+            }
+          }}
+        >
           <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden border-0 p-0 shadow-2xl sm:max-w-xl sm:rounded-2xl md:max-w-2xl">
             <DialogHeader className="border-b border-gray-100 bg-gray-50 px-6 py-6 dark:border-gray-800 dark:bg-gray-900">
               <DialogTitle className="text-xl font-semibold">
