@@ -247,7 +247,6 @@ function generateIntroductionContent(
 
   // Placeholder for navigation screenshot
 
-
   // Q&A and Conversations section
   content.push({
     type: "heading",
@@ -314,7 +313,6 @@ function generateIntroductionContent(
   });
 
   // Placeholder for conversations screenshot
- 
 
   // Need Help section
   content.push({
@@ -726,7 +724,7 @@ export default function IntroductionSettings({
           <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden border-0 p-0 shadow-2xl sm:max-w-xl sm:rounded-2xl md:max-w-2xl">
             <DialogHeader className="border-b border-gray-100 bg-gray-50 px-4 py-6 dark:border-gray-800 dark:bg-gray-900 sm:px-6">
               <p className="mb-1 text-xs text-muted-foreground">
-                This is preview
+                This is a preview
               </p>
               <DialogTitle className="text-xl font-semibold">
                 Welcome to {dataroomName}
