@@ -48,6 +48,10 @@ import DocumentCard from "../dataroom/document-card";
 import { DocumentUploadModal } from "../dataroom/document-upload-modal";
 import FolderCard from "../dataroom/folder-card";
 import IndexFileDialog from "../dataroom/index-file-dialog";
+import {
+  IntroductionInfoButton,
+  IntroductionProvider,
+} from "../dataroom/introduction-modal";
 import DataroomNav from "../dataroom/nav-dataroom";
 
 const ViewerBreadcrumbItem = ({
@@ -384,16 +388,17 @@ export default function DataroomViewer({
   }));
 
   return (
-    <ViewerChatProvider
-      enabled={viewData.agentsEnabled}
-      dataroomId={dataroom?.id}
-      dataroomName={viewData.dataroomName}
-      linkId={linkId}
-      viewId={viewId}
-      viewerId={viewerId}
-      documents={documentsForChat}
-      folders={folders}
-    >
+    <IntroductionProvider dataroom={dataroom} viewerId={viewerId}>
+      <ViewerChatProvider
+        enabled={viewData.agentsEnabled}
+        dataroomId={dataroom?.id}
+        dataroomName={viewData.dataroomName}
+        linkId={linkId}
+        viewId={viewId}
+        viewerId={viewerId}
+        documents={documentsForChat}
+        folders={folders}
+      >
       <DataroomNav
         brand={brand}
         linkId={linkId}
@@ -499,6 +504,7 @@ export default function DataroomViewer({
                     </Breadcrumb>
 
                     <div className="flex items-center gap-x-2">
+                      <IntroductionInfoButton />
                       <SearchBoxPersisted inputClassName="h-9" />
                       {enableIndexFile && viewId && viewerId && (
                         <IndexFileDialog
@@ -561,6 +567,7 @@ export default function DataroomViewer({
       {/* AI Chat Components */}
       <ViewerChatPanel />
       <ViewerChatToggle />
-    </ViewerChatProvider>
+      </ViewerChatProvider>
+    </IntroductionProvider>
   );
 }

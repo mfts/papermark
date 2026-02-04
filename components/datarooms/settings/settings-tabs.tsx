@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { BellIcon, CogIcon, DownloadIcon, ShieldIcon } from "lucide-react";
+import {
+  BellIcon,
+  BookOpenIcon,
+  CogIcon,
+  DownloadIcon,
+  ShieldIcon,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -26,6 +32,18 @@ export default function SettingsTabs({ dataroomId }: SettingsTabsProps) {
       >
         <CogIcon className="h-4 w-4" />
         General
+      </Link>
+      <Link
+        href={`/datarooms/${dataroomId}/settings/introduction`}
+        className={cn(
+          "flex items-center gap-x-2 rounded-md p-2 text-primary hover:bg-muted",
+          {
+            "bg-muted font-medium": router.pathname.includes("introduction"),
+          },
+        )}
+      >
+        <BookOpenIcon className="h-4 w-4" />
+        Introduction
       </Link>
       <Link
         href={`/datarooms/${dataroomId}/settings/notifications`}
