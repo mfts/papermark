@@ -80,6 +80,45 @@ export function IntroductionInfoButton() {
   );
 }
 
+// Helper to render inline text nodes with marks (bold, italic, etc.)
+function renderInlineContent(nodes: any[] | undefined): React.ReactNode {
+  if (!nodes) return null;
+
+  return nodes.map((textNode: any, textIndex: number) => {
+    if (textNode.type === "text") {
+      let text: React.ReactNode = textNode.text;
+      if (textNode.marks) {
+        textNode.marks.forEach((mark: any) => {
+          if (mark.type === "bold") {
+            text = (
+              <strong key={`bold-${textIndex}`} className="font-semibold">
+                {text}
+              </strong>
+            );
+          } else if (mark.type === "italic") {
+            text = (
+              <em key={`italic-${textIndex}`} className="italic">
+                {text}
+              </em>
+            );
+          }
+        });
+      }
+      return <React.Fragment key={textIndex}>{text}</React.Fragment>;
+    } else if (textNode.type === "image") {
+      return (
+        <img
+          key={textIndex}
+          src={textNode.attrs?.src}
+          alt={textNode.attrs?.alt || ""}
+          className="my-2 h-auto max-w-full rounded-md"
+        />
+      );
+    }
+    return null;
+  });
+}
+
 // Render TipTap JSON content
 function renderContent(content: any): React.ReactNode {
   if (!content || !content.content) return null;
@@ -109,39 +148,7 @@ function renderContent(content: any): React.ReactNode {
     } else if (node.type === "paragraph") {
       return (
         <p key={index} className="mb-3 text-sm leading-relaxed text-gray-700">
-          {node.content?.map((textNode: any, textIndex: number) => {
-            if (textNode.type === "text") {
-              let text: React.ReactNode = textNode.text;
-              if (textNode.marks) {
-                textNode.marks.forEach((mark: any) => {
-                  if (mark.type === "bold") {
-                    text = (
-                      <strong key={textIndex} className="font-semibold">
-                        {text}
-                      </strong>
-                    );
-                  } else if (mark.type === "italic") {
-                    text = (
-                      <em key={textIndex} className="italic">
-                        {text}
-                      </em>
-                    );
-                  }
-                });
-              }
-              return text;
-            } else if (textNode.type === "image") {
-              return (
-                <img
-                  key={textIndex}
-                  src={textNode.attrs?.src}
-                  alt={textNode.attrs?.alt || ""}
-                  className="my-2 h-auto max-w-full rounded-md"
-                />
-              );
-            }
-            return null;
-          }) ?? null}
+          {renderInlineContent(node.content)}
         </p>
       );
     } else if (node.type === "bulletList") {
@@ -149,10 +156,7 @@ function renderContent(content: any): React.ReactNode {
         <ul key={index} className="mb-3 list-disc pl-5 text-sm text-gray-700">
           {node.content?.map((item: any, itemIndex: number) => (
             <li key={itemIndex} className="mb-1">
-              {item.content?.[0]?.content?.map(
-                (textNode: any, textIndex: number) =>
-                  textNode.type === "text" ? textNode.text : null,
-              )}
+              {renderInlineContent(item.content?.[0]?.content)}
             </li>
           ))}
         </ul>
@@ -165,10 +169,7 @@ function renderContent(content: any): React.ReactNode {
         >
           {node.content?.map((item: any, itemIndex: number) => (
             <li key={itemIndex} className="mb-1">
-              {item.content?.[0]?.content?.map(
-                (textNode: any, textIndex: number) =>
-                  textNode.type === "text" ? textNode.text : null,
-              )}
+              {renderInlineContent(item.content?.[0]?.content)}
             </li>
           ))}
         </ol>
