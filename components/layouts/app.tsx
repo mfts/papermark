@@ -83,7 +83,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       Cookies.remove(DATAROOM_SIDEBAR_COOKIE_NAME);
       // Restore main sidebar state
       const mainCookie = Cookies.get(SIDEBAR_COOKIE_NAME);
-      setSidebarOpen(mainCookie === "true");
+      // setSidebarOpen(mainCookie === "true");
+      setSidebarOpen(mainCookie !== undefined ? mainCookie === "true" : true);
     }
 
     prevIsDataroomRef.current = isDataroom;
