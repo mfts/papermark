@@ -203,7 +203,7 @@ function renderContent(content: any): React.ReactNode {
 
       // Handle different YouTube URL formats
       const youtubeMatch = src.match(
-        /(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([^?&]+)/,
+        /(?:youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([^?&]+)/,
       );
       if (youtubeMatch) {
         videoId = youtubeMatch[1];
