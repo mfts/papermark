@@ -647,6 +647,9 @@ export default function IntroductionSettings({
       return;
     }
     setIntroductionEnabled(checked);
+    if (checked) {
+      toast.success("Introduction page enabled");
+    }
   };
 
   const hasContent =
