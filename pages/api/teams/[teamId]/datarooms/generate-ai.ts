@@ -49,19 +49,29 @@ export default async function handle(
       });
     }
 
-    // Validate folder structure
+    // Validate folder structure (max 3 levels deep, limited folders per level)
     const validateFolder = (folder: any, depth = 0): boolean => {
-      if (depth >= 5) return false;
+      if (depth >= 3) return false; // Max 3 levels deep
       if (!folder.name || typeof folder.name !== "string") return false;
       if (folder.name.length > 255) return false;
       if (folder.subfolders) {
         if (!Array.isArray(folder.subfolders)) return false;
+        // Limit subfolders: 5 for level 1, 4 for level 2
+        const maxSubfolders = depth === 0 ? 5 : 4;
+        if (folder.subfolders.length > maxSubfolders) return false;
         return folder.subfolders.every((sub: any) =>
           validateFolder(sub, depth + 1),
         );
       }
       return true;
     };
+
+    // Limit top-level folders to 10
+    if (folders.length > 10) {
+      return res.status(400).json({
+        message: "Too many top-level folders (maximum 10)",
+      });
+    }
 
     if (!folders.every((folder) => validateFolder(folder))) {
       return res.status(400).json({
