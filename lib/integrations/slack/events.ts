@@ -33,7 +33,7 @@ export class SlackEventManager {
       d.startsWith("@") ? d.substring(1) : d,
     );
 
-    return normalizedIgnoredDomains.includes(viewerDomain.toLowerCase());
+    return normalizedIgnoredDomains.includes(viewerDomain);
   }
 
   async processEvent(eventData: SlackEventData): Promise<void> {
@@ -69,8 +69,10 @@ export class SlackEventManager {
       if (
         this.isViewerDomainIgnored(eventData.viewerEmail, team?.ignoredDomains ?? null)
       ) {
+        // Log only the domain to avoid persisting PII
+        const redactedDomain = eventData.viewerEmail?.split("@").pop() ?? "unknown-domain";
         console.log(
-          `Slack notification skipped for ignored domain: ${eventData.viewerEmail}`,
+          `Slack notification skipped for ignored domain: ${redactedDomain}`,
         );
         return;
       }
