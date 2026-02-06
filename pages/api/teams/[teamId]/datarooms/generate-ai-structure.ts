@@ -19,36 +19,25 @@ export const config = {
   maxDuration: 120,
 };
 
-// Non-recursive folder schema with fixed depth (max 5 levels)
+// Non-recursive folder schema with fixed depth (max 2 levels)
 // This avoids the "Recursive reference detected" error from the AI SDK
 // which cannot convert z.lazy() recursive schemas to JSON Schema properly
-const folderLevel5Schema = z.object({
-  name: z.string().min(1).max(255),
+// Limited to top-level folders + 1 level of subfolders for simplicity
+
+// Level 2 (subfolders) - no further nesting allowed
+const subfolderSchema = z.object({
+  name: z.string().min(1).max(100),
 });
 
-const folderLevel4Schema = z.object({
-  name: z.string().min(1).max(255),
-  subfolders: z.array(folderLevel5Schema).optional(),
-});
-
-const folderLevel3Schema = z.object({
-  name: z.string().min(1).max(255),
-  subfolders: z.array(folderLevel4Schema).optional(),
-});
-
-const folderLevel2Schema = z.object({
-  name: z.string().min(1).max(255),
-  subfolders: z.array(folderLevel3Schema).optional(),
-});
-
-const folderLevel1Schema = z.object({
-  name: z.string().min(1).max(255),
-  subfolders: z.array(folderLevel2Schema).optional(),
+// Level 1 (top-level folders) - limited subfolders, no deeper nesting
+const folderSchema = z.object({
+  name: z.string().min(1).max(100),
+  subfolders: z.array(subfolderSchema).max(5).optional(),
 });
 
 const dataroomStructureSchema = z.object({
   name: z.string().min(1).max(255),
-  folders: z.array(folderLevel1Schema).min(1),
+  folders: z.array(folderSchema).min(1).max(8),
 });
 
 export default async function handle(
@@ -121,30 +110,41 @@ export default async function handle(
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        temperature: 0.5,
+        temperature: 0.3,
         providerOptions: {
           openai: {
-            maxOutputTokens: 1000,
+            maxOutputTokens: 600,
           },
         },
       });
-      // Validate folder depth (max 5 levels)
-      const validateFolderDepth = (folder: any, depth = 0): boolean => {
-        if (depth >= 5) return false;
+
+      // Validate folder depth (max 2 levels: top-level + 1 subfolder level)
+      const validateFolderStructure = (folder: any): boolean => {
         if (folder.subfolders) {
-          return folder.subfolders.every((sub: any) =>
-            validateFolderDepth(sub, depth + 1),
-          );
+          // Enforce subfolder limits (max 5 subfolders per folder)
+          if (folder.subfolders.length > 5) return false;
+          // Ensure subfolders don't have their own subfolders (max 2 levels)
+          for (const sub of folder.subfolders) {
+            if (sub.subfolders && sub.subfolders.length > 0) return false;
+          }
         }
         return true;
       };
 
       if (
-        !result.object.folders.every((folder) => validateFolderDepth(folder))
+        !result.object.folders.every((folder) => validateFolderStructure(folder))
       ) {
         return res.status(500).json({
           message:
-            "Generated folder structure exceeds maximum depth (5 levels)",
+            "Generated folder structure exceeds maximum depth (2 levels)",
+        });
+      }
+
+      // Additional safety: ensure we don't have too many top-level folders
+      if (result.object.folders.length > 8) {
+        return res.status(500).json({
+          message:
+            "Generated folder structure has too many top-level folders (max 8)",
         });
       }
 
