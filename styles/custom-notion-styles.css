@@ -452,6 +452,19 @@ textarea,
   gap: 0;
 }
 
+/* Responsive: stack columns on small screens */
+@media (max-width: 640px) {
+  .notion-row {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .notion-row > .notion-column {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+}
+
 /* Override any inline width styles on asset wrappers in columns */
 .notion-column .notion-asset-wrapper[style*="width"] {
   width: 100% !important;
