@@ -330,6 +330,7 @@ export default function NotionForm() {
                             data={linkData}
                             setData={setLinkData}
                             linkType={LinkType.DOCUMENT_LINK}
+                            isNotionDocument={true}
                           />
                         </AccordionContent>
                       </AccordionItem>

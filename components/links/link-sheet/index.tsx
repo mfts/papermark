@@ -148,12 +148,14 @@ export default function LinkSheet({
   linkType,
   currentLink,
   existingLinks,
+  isNotionDocument = false,
 }: {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   linkType: Omit<LinkType, "WORKFLOW_LINK">;
   currentLink?: DEFAULT_LINK_TYPE;
   existingLinks?: LinkWithViews[];
+  isNotionDocument?: boolean;
 }) {
   const router = useRouter();
   const { id: targetId, groupId } = router.query as {
@@ -604,6 +606,7 @@ export default function LinkSheet({
                           linkType={linkType}
                           editLink={!!currentLink}
                           currentPreset={currentPreset}
+                          isNotionDocument={isNotionDocument}
                         />
                       </div>
                     </TabsContent>
@@ -754,6 +757,7 @@ export default function LinkSheet({
                           linkType={linkType}
                           editLink={!!currentLink}
                           currentPreset={currentPreset}
+                          isNotionDocument={isNotionDocument}
                         />
                       </div>
                     </TabsContent>

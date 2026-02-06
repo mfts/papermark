@@ -6,9 +6,11 @@ import LinkItem from "./link-item";
 export default function AllowDownloadSection({
   data,
   setData,
+  isNotionDocument = false,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
+  isNotionDocument?: boolean;
 }) {
   const { allowDownload } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
@@ -22,6 +24,11 @@ export default function AllowDownloadSection({
     setData({ ...data, allowDownload: updatedAllowDownload });
     setEnabled(updatedAllowDownload);
   };
+
+  // Hide download option for Notion documents since downloading is not supported
+  if (isNotionDocument) {
+    return null;
+  }
 
   return (
     <div className="pb-5">

@@ -364,7 +364,7 @@ export default function Nav({
               </DropdownMenu>
             ) : null}
 
-            {allowDownload ? (
+            {allowDownload && type !== "notion" ? (
               <Button
                 onClick={downloadFile}
                 className="size-8 bg-gray-900 text-white hover:bg-gray-900/80 sm:size-10"

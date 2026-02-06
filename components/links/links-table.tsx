@@ -1226,6 +1226,7 @@ export default function LinksTable({
             linkType={`${targetType}_LINK`}
             currentLink={selectedLink.id ? selectedLink : undefined}
             existingLinks={links}
+            isNotionDocument={primaryVersion?.type === "notion"}
           />
         )}
 

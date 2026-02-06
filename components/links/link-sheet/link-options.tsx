@@ -83,6 +83,7 @@ export const LinkOptions = ({
   linkType,
   editLink,
   currentPreset = null,
+  isNotionDocument = false,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
@@ -90,6 +91,7 @@ export const LinkOptions = ({
   linkType: Omit<LinkType, "WORKFLOW_LINK">;
   editLink?: boolean;
   currentPreset?: LinkPreset | null;
+  isNotionDocument?: boolean;
 }) => {
   const {
     isStarter,
@@ -141,7 +143,7 @@ export const LinkOptions = ({
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
-      <AllowDownloadSection {...{ data, setData }} />
+      <AllowDownloadSection {...{ data, setData, isNotionDocument }} />
 
       {data.audienceType === LinkAudienceType.GENERAL ? (
         <>

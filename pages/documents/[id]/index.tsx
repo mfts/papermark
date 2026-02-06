@@ -233,6 +233,7 @@ export default function DocumentPage() {
           linkType="DOCUMENT_LINK"
           setIsOpen={setIsLinkSheetOpen}
           existingLinks={links}
+          isNotionDocument={primaryVersion?.type === "notion"}
         />
       </main>
     </AppLayout>
