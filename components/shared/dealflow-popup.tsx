@@ -251,7 +251,7 @@ export function DealflowPopup() {
             </div>
 
             <p className="mt-3  text-xs text-muted-foreground">
-              By answering each question, you receive $10 credit
+              This will help tailor your experience
             </p>
           </>
         ) : step === 2 ? (
@@ -284,7 +284,7 @@ export function DealflowPopup() {
             </div>
 
             <p className="mt-3 text-xs text-muted-foreground">
-              By answering each question, you receive $10 credit
+              This will help tailor your experience
             </p>
           </>
         ) : (
