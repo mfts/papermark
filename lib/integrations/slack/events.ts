@@ -12,25 +12,68 @@ export class SlackEventManager {
     this.client = new SlackClient();
   }
 
+  /**
+   * Check if the viewer's email domain is in the team's ignored domains list
+   */
+  private isViewerDomainIgnored(
+    viewerEmail: string | undefined,
+    ignoredDomains: string[] | null,
+  ): boolean {
+    if (!viewerEmail || !ignoredDomains || ignoredDomains.length === 0) {
+      return false;
+    }
+
+    const viewerDomain = viewerEmail.split("@").pop();
+    if (!viewerDomain) {
+      return false;
+    }
+
+    // Normalize ignored domains (remove @ prefix if present)
+    const normalizedIgnoredDomains = ignoredDomains.map((d) =>
+      d.startsWith("@") ? d.substring(1) : d,
+    );
+
+    return normalizedIgnoredDomains.includes(viewerDomain);
+  }
+
   async processEvent(eventData: SlackEventData): Promise<void> {
     try {
       const env = getSlackEnv();
 
-      const integration = await prisma.installedIntegration.findUnique({
-        where: {
-          teamId_integrationId: {
-            teamId: eventData.teamId,
-            integrationId: env.SLACK_INTEGRATION_ID,
+      // Fetch integration and team's ignored domains in parallel
+      const [integration, team] = await Promise.all([
+        prisma.installedIntegration.findUnique({
+          where: {
+            teamId_integrationId: {
+              teamId: eventData.teamId,
+              integrationId: env.SLACK_INTEGRATION_ID,
+            },
           },
-        },
-        select: {
-          enabled: true,
-          credentials: true,
-          configuration: true,
-        },
-      });
+          select: {
+            enabled: true,
+            credentials: true,
+            configuration: true,
+          },
+        }),
+        prisma.team.findUnique({
+          where: { id: eventData.teamId },
+          select: { ignoredDomains: true },
+        }),
+      ]);
 
       if (!integration || !integration.enabled) {
+        return;
+      }
+
+      // Check if the viewer's email domain is in the ignored domains list
+      if (
+        this.isViewerDomainIgnored(eventData.viewerEmail, team?.ignoredDomains ?? null)
+      ) {
+        // Log only the domain to avoid persisting PII
+        const redactedDomain = eventData.viewerEmail?.split("@").pop() ?? "unknown-domain";
+        console.log(
+          `Slack notification skipped for ignored domain: ${redactedDomain}`,
+        );
         return;
       }
 
