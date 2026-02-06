@@ -16,6 +16,7 @@ import DeleteTeam from "@/components/settings/delete-team";
 import GlobalBlockListForm from "@/components/settings/global-block-list-form";
 import IgnoredDomainsForm from "@/components/settings/ignored-domains-form";
 import { SettingsHeader } from "@/components/settings/settings-header";
+import { SurveySettings } from "@/components/settings/survey-settings";
 import { TimezoneSelector } from "@/components/settings/timezone-selector";
 import { Form } from "@/components/ui/form";
 
@@ -225,6 +226,7 @@ export default function General() {
           <TimezoneSelector />
           <IgnoredDomainsForm />
           <GlobalBlockListForm />
+          <SurveySettings />
 
           <DeleteTeam />
         </div>
