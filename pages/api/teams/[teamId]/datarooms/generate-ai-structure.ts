@@ -29,10 +29,10 @@ const subfolderSchema = z.object({
   name: z.string().min(1).max(100),
 });
 
-// Level 1 (top-level folders) - limited subfolders, no deeper nesting
+// Level 1 (top-level folders) - subfolders is required but can be empty array
 const folderSchema = z.object({
   name: z.string().min(1).max(100),
-  subfolders: z.array(subfolderSchema).max(5).optional(),
+  subfolders: z.array(subfolderSchema).max(5), // Required, but can be empty []
 });
 
 const dataroomStructureSchema = z.object({
@@ -154,14 +154,38 @@ export default async function handle(
         message: "Folder structure generated successfully",
       });
     } catch (error) {
-      const errorMessage =
-        process.env.NODE_ENV === "production"
-          ? "An unexpected error occurred"
-          : (error as Error).message;
+      console.error("Error generating AI folder structure:", error);
 
-      return res.status(500).json({
-        message: "Error generating folder structure",
-        error: errorMessage,
+      // Provide more specific error messages based on error type
+      let errorMessage = "Error generating folder structure";
+      let statusCode = 500;
+
+      if (error instanceof Error) {
+        // Check for OpenAI API errors
+        if (
+          error.message.includes("API key") ||
+          error.message.includes("authentication")
+        ) {
+          errorMessage = "AI service configuration error";
+        } else if (
+          error.message.includes("rate limit") ||
+          error.message.includes("quota")
+        ) {
+          errorMessage =
+            "AI service is temporarily unavailable. Please try again later.";
+          statusCode = 429;
+        } else if (error.message.includes("timeout")) {
+          errorMessage =
+            "Request timed out. Please try again with a shorter description.";
+          statusCode = 504;
+        } else if (process.env.NODE_ENV !== "production") {
+          // Only show detailed error in development
+          errorMessage = error.message;
+        }
+      }
+
+      return res.status(statusCode).json({
+        message: errorMessage,
       });
     }
   } else {
