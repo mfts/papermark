@@ -148,7 +148,7 @@ export function AddDataroomModal({
     },
     {
       id: "fund-management",
-      name: "Fund Management",
+      name: "Fundraising & Reporting",
       icon: BuildingIcon,
     },
     {

@@ -12,7 +12,7 @@ import NotionIcon from "@/components/shared/icons/files/notion";
 
 const DEAL_TYPE_OPTIONS = [
   { value: "startup-fundraising", label: "Startup Fundraising" },
-  { value: "fund-management", label: "Fund Management" },
+  { value: "fund-management", label: "Fundraising & Reporting" },
   { value: "mergers-acquisitions", label: "Mergers & Acquisitions" },
   { value: "financial-operations", label: "Financial Operations" },
   { value: "real-estate", label: "Real Estate" },

@@ -49,7 +49,6 @@ export default async function handler(
   try {
     await getTeamWithUsersAndDocument({
       teamId,
-      visitorId: undefined,
       userId,
       options: {},
     });

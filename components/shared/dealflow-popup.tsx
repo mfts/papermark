@@ -12,7 +12,7 @@ import Link from "next/link";
 
 const DEAL_TYPE_OPTIONS = [
   { value: "startup-fundraising", label: "Startup Fundraising" },
-  { value: "fund-management", label: "Fund Management" },
+  { value: "fund-management", label: "Fundraising & Reporting" },
   { value: "mergers-acquisitions", label: "Mergers & Acquisitions" },
   { value: "financial-operations", label: "Financial Operations" },
   { value: "real-estate", label: "Real Estate" },
@@ -46,24 +46,36 @@ export function DealflowPopup() {
 
   useEffect(() => {
     // Don't show on onboarding pages
-    if (isOnboarding) return;
+    if (isOnboarding) {
+      console.log("[DealflowPopup] Skipping - on onboarding page");
+      return;
+    }
 
     // Don't show if no team context
-    if (!teamId) return;
+    if (!teamId) {
+      console.log("[DealflowPopup] Skipping - no teamId");
+      return;
+    }
 
     // Check if already dismissed in localStorage for this team
     const dismissed = localStorage.getItem(storageKey);
-    if (dismissed) return;
+    if (dismissed) {
+      console.log("[DealflowPopup] Skipping - dismissed in localStorage:", storageKey);
+      return;
+    }
 
     // Check if team already has survey data
     const checkSurvey = async () => {
       try {
+        console.log("[DealflowPopup] Checking survey for team:", teamId);
         const response = await fetch(`/api/teams/${teamId}/survey`);
         if (response.ok) {
           const data = await response.json();
+          console.log("[DealflowPopup] Survey data:", data);
           
           // If dealType is missing → show popup from question 1
           if (!data.dealType) {
+            console.log("[DealflowPopup] No dealType - showing popup step 1");
             setTimeout(() => {
               setStep(1);
               setIsOpen(true);
@@ -71,17 +83,22 @@ export function DealflowPopup() {
           }
           // If dealType exists but dealSize is missing (and not project-management) → show popup from question 2
           else if (!data.dealSize && data.dealType !== "project-management") {
+            console.log("[DealflowPopup] Has dealType but no dealSize - showing popup step 2");
             setTimeout(() => {
               setDealType(data.dealType);
               setDealTypeOther(data.dealTypeOther || "");
               setStep(2);
               setIsOpen(true);
             }, 2000);
+          } else {
+            console.log("[DealflowPopup] Survey complete - not showing popup");
           }
           // If both are filled → don't show popup
+        } else {
+          console.log("[DealflowPopup] API response not ok:", response.status);
         }
       } catch (error) {
-        console.error("Failed to check survey status:", error);
+        console.error("[DealflowPopup] Failed to check survey status:", error);
       }
     };
 
@@ -251,7 +268,7 @@ export function DealflowPopup() {
             </div>
 
             <p className="mt-3  text-xs text-muted-foreground">
-              This will help tailor your experience
+              This will help us tailor your Papermark experience
             </p>
           </>
         ) : step === 2 ? (
@@ -284,7 +301,7 @@ export function DealflowPopup() {
             </div>
 
             <p className="mt-3 text-xs text-muted-foreground">
-              This will help tailor your experience
+              This will help us tailor your Papermark experience
             </p>
           </>
         ) : (

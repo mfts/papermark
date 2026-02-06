@@ -54,8 +54,7 @@ export default function DataroomTrial() {
 
   // Check if use case needs deal size question
   const needsDealSize =
-    useCase &&
-    useCase !== "project-management";
+    !!useCase && useCase !== "project-management";
 
   // Helper function to convert use case to proper dataroom name
   const getDataroomName = (useCaseValue: string, customValue: string = "") => {
@@ -66,7 +65,7 @@ export default function DataroomTrial() {
     const useCaseNames: Record<string, string> = {
       "mergers-and-acquisitions": "Mergers & Acquisitions Data Room",
       "startup-fundraising": "Startup Fundraising Data Room",
-      "fund-management": "Fund Management Data Room",
+      "fund-management": "Fundraising & Reporting Data Room",
       sales: "Sales Data Room",
       "project-management": "Project Management Data Room",
       operations: "Financial Operations Data Room",
@@ -304,7 +303,7 @@ export default function DataroomTrial() {
                   Startup Fundraising
                 </SelectItem>
                 <SelectItem value="fund-management">
-                  Fund Management
+                  Fundraising & Reporting
                 </SelectItem>
                 <SelectItem value="sales">Sales</SelectItem>
                 <SelectItem value="project-management">
