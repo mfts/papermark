@@ -236,6 +236,101 @@ textarea,
   }
 }
 
+/* Video blocks - match Notion's video layout */
+.notion-asset-wrapper video {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 4px;
+  display: block;
+  background: #000;
+}
+
+/* Ensure video containers have proper aspect ratio handling */
+.notion-asset-wrapper:has(video) {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Video iframe embeds (YouTube, Vimeo, etc.) */
+.notion-asset-wrapper iframe {
+  border-radius: 4px;
+}
+
+/* YouTube lite embed styling */
+.notion-yt-lite {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Ensure asset wrappers for videos take full width by default */
+.notion-asset-wrapper-video {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+/* Video block specific layout - match Notion's page width behavior */
+.notion-video {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Embed blocks (external videos like Sieve, etc.) - ensure proper aspect ratio */
+.notion-asset-wrapper:has(iframe) {
+  width: 100%;
+}
+
+/* Fix for video embeds that don't have explicit dimensions */
+.notion-asset-wrapper > div[style*="padding-bottom"] {
+  width: 100%;
+}
+
+/* Ensure external embed iframes fill their container */
+.notion-asset-wrapper iframe.notion-asset-object-fit {
+  width: 100%;
+  height: 100%;
+}
+
+/* Video wrapper default aspect ratio when not specified */
+.notion-asset-wrapper > div:has(> video):not([style*="padding-bottom"]):not([style*="height"]) {
+  aspect-ratio: 16 / 9;
+}
+
+/* Ensure videos without explicit sizing get proper dimensions */
+.notion-asset-wrapper video:not([style*="width"]) {
+  width: 100%;
+}
+
+.notion-asset-wrapper video:not([style*="height"]) {
+  height: auto;
+}
+
+/* 
+ * Fix for native video elements that don't have aspect ratio set by react-notion-x
+ * react-notion-x removes paddingBottom for video blocks, so we need to ensure
+ * videos maintain proper layout while loading
+ */
+.notion-asset-wrapper > div:has(> video) {
+  min-height: 200px; /* Fallback minimum height while video loads */
+}
+
+/* Once video has loaded and has natural dimensions, allow it to use those */
+.notion-asset-wrapper video[src] {
+  min-height: unset;
+}
+
+/* Responsive video handling */
+@media (max-width: 768px) {
+  .notion-asset-wrapper video,
+  .notion-asset-wrapper iframe {
+    max-width: 100%;
+  }
+  
+  .notion-asset-wrapper:has(video),
+  .notion-asset-wrapper:has(iframe) {
+    max-width: calc(100vw - 2rem);
+  }
+}
+
 .notion-hr {
   border-top: 1px solid var(--fg-color-0);
 }
@@ -318,4 +413,70 @@ textarea,
 .notion-row .notion-column {
   flex: 1 1 0;
   min-width: 0;
+}
+
+/* Ensure assets in columns take full width of their column */
+.notion-column .notion-asset-wrapper {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+/* Fix video sizing within columns */
+.notion-column .notion-asset-wrapper video {
+  width: 100%;
+  height: auto;
+}
+
+/* Fix iframe sizing within columns */
+.notion-column .notion-asset-wrapper iframe {
+  width: 100%;
+}
+
+/* Ensure the inner div of asset wrapper in columns expands properly */
+.notion-column .notion-asset-wrapper > div {
+  width: 100% !important;
+}
+
+/* Images in columns should also take full width */
+.notion-column .notion-asset-wrapper img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Ensure notion-row displays as proper flexbox */
+.notion-row {
+  display: flex !important;
+  flex-wrap: nowrap;
+  width: 100%;
+  gap: 0;
+}
+
+/* Responsive: stack columns on small screens */
+@media (max-width: 640px) {
+  .notion-row {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .notion-row > .notion-column {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+}
+
+/* Override any inline width styles on asset wrappers in columns */
+.notion-column .notion-asset-wrapper[style*="width"] {
+  width: 100% !important;
+}
+
+/* Handle asset wrapper inner positioning div */
+.notion-column .notion-asset-wrapper > div[style] {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure lazy image wrappers in columns expand properly */
+.notion-column .lazy-image-wrapper {
+  width: 100% !important;
 }
