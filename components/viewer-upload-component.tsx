@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { toast } from "sonner";
 
+import { usePendingUploads } from "@/context/pending-uploads-context";
 import { DocumentData } from "@/lib/documents/create-document";
+import { newId } from "@/lib/id-helper";
 
 import ViewerUploadZone from "@/components/viewer-upload-zone";
 
@@ -10,10 +12,12 @@ export function ViewerUploadComponent({
   viewerData,
   teamId,
   folderId,
+  onUploadSuccess,
 }: {
   viewerData: { id: string; linkId: string; dataroomId?: string };
   teamId: string;
   folderId?: string;
+  onUploadSuccess?: () => void;
 }) {
   const [uploads, setUploads] = useState<
     { fileName: string; progress: number }[]
@@ -22,22 +26,60 @@ export function ViewerUploadComponent({
     { fileName: string; message: string }[]
   >([]);
 
+  const { addPendingUpload, updatePendingUpload } = usePendingUploads();
+
+  // Map file names to their pending upload IDs
+  const pendingUploadIds = useRef<Map<string, string>>(new Map());
+
   const handleUploadStart = (
-    uploads: { fileName: string; progress: number }[],
+    newUploads: { fileName: string; progress: number }[],
   ) => {
-    setUploads(uploads);
+    setUploads(newUploads);
+
+    // Add each file to pending uploads context
+    newUploads.forEach((upload) => {
+      const pendingId = newId("pending");
+      pendingUploadIds.current.set(upload.fileName, pendingId);
+
+      addPendingUpload({
+        id: pendingId,
+        name: upload.fileName,
+        folderId: folderId ?? null,
+        uploadedAt: new Date(),
+        status: "uploading",
+        progress: 0,
+      });
+    });
   };
 
   const handleUploadProgress = (index: number, progress: number) => {
     setUploads((prev) => {
       const updated = [...prev];
-      updated[index] = { ...updated[index], progress };
+      if (updated[index]) {
+        updated[index] = { ...updated[index], progress };
+
+        // Update pending upload progress
+        const pendingId = pendingUploadIds.current.get(updated[index].fileName);
+        if (pendingId) {
+          updatePendingUpload(pendingId, { progress });
+        }
+      }
       return updated;
     });
   };
 
   const handleUploadComplete = async (documentData: DocumentData) => {
-    // Call your API to add the document to the dataroom or store it for viewer uploads
+    const pendingId = pendingUploadIds.current.get(documentData.name);
+
+    // Update status to processing (file uploaded to S3, now being processed by backend)
+    if (pendingId) {
+      updatePendingUpload(pendingId, {
+        status: "processing",
+        progress: 100,
+      });
+    }
+
+    // Call the API to add the document to the dataroom
     try {
       const response = await fetch(`/api/links/${viewerData.linkId}/upload`, {
         method: "POST",
@@ -56,10 +98,31 @@ export function ViewerUploadComponent({
         throw new Error(errorData.message || "Failed to process upload");
       }
 
-      // Optional: You might want to update UI or fetch updated document list
+      const result = await response.json();
+
+      // Update pending upload with real document data
+      if (pendingId && result.document) {
+        updatePendingUpload(pendingId, {
+          status: "processing", // Keep as processing until pages are ready
+          documentId: result.document.id,
+          dataroomDocumentId: result.document.dataroomDocumentId,
+          fileType: result.document.fileType,
+        });
+      }
+
+      // Notify parent component of successful upload
+      onUploadSuccess?.();
     } catch (error) {
       console.error("Error processing upload:", error);
       toast.error((error as Error).message || "Failed to upload document");
+
+      // Update pending upload with error status
+      if (pendingId) {
+        updatePendingUpload(pendingId, {
+          status: "error",
+          errorMessage: (error as Error).message || "Failed to upload document",
+        });
+      }
     }
   };
 

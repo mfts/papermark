@@ -148,7 +148,19 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ success: true });
+    // Return document data for optimistic UI rendering
+    return NextResponse.json({
+      success: true,
+      document: {
+        id: document.id,
+        name: document.name,
+        dataroomDocumentId: newDataroomDocument.id,
+        folderId: dataroomFolderId,
+        fileType: document.type,
+        hasPages: document.versions[0]?.hasPages ?? false,
+        createdAt: document.createdAt,
+      },
+    });
   } catch (error) {
     console.error("Error uploading document:", error);
     return NextResponse.json(
