@@ -21,6 +21,12 @@ export interface DownloadJob {
   error?: string;
   teamId: string;
   userId: string;
+  /** Viewer download: link this job belongs to */
+  linkId?: string;
+  /** Viewer download: viewer record id */
+  viewerId?: string;
+  /** Viewer download: email used for job list and email notification */
+  viewerEmail?: string;
   triggerRunId?: string; // Trigger.dev run ID for cancellation
   createdAt: string;
   updatedAt: string;
@@ -28,10 +34,13 @@ export interface DownloadJob {
   expiresAt?: string; // When download links expire
   emailNotification?: boolean;
   emailAddress?: string;
+  /** Folder download: name of the folder (when type === "folder") */
+  folderName?: string;
 }
 
 const JOB_PREFIX = "download_job:";
 const TEAM_JOBS_PREFIX = "team_download_jobs:";
+const VIEWER_JOBS_PREFIX = "viewer_download_jobs:";
 const JOB_TTL = 60 * 60 * 24 * 3; // 3 days - Redis handles cleanup via TTL
 
 export class RedisDownloadJobStore {
@@ -41,6 +50,10 @@ export class RedisDownloadJobStore {
 
   private getTeamJobsKey(teamId: string): string {
     return `${TEAM_JOBS_PREFIX}${teamId}`;
+  }
+
+  private getViewerJobsKey(linkId: string, viewerEmail: string): string {
+    return `${VIEWER_JOBS_PREFIX}${linkId}:${viewerEmail.toLowerCase()}`;
   }
 
   async createJob(
@@ -65,6 +78,16 @@ export class RedisDownloadJobStore {
     // Add to team's job list (sorted by creation time)
     await redis.zadd(teamJobsKey, { score: Date.now(), member: jobId });
     await redis.expire(teamJobsKey, JOB_TTL);
+
+    // If viewer download, add to viewer index for getViewerJobs
+    if (jobData.linkId && jobData.viewerEmail) {
+      const viewerJobsKey = this.getViewerJobsKey(
+        jobData.linkId,
+        jobData.viewerEmail,
+      );
+      await redis.zadd(viewerJobsKey, { score: Date.now(), member: jobId });
+      await redis.expire(viewerJobsKey, JOB_TTL);
+    }
 
     return job;
   }
@@ -150,6 +173,32 @@ export class RedisDownloadJobStore {
         return matchesDataroom && matchStatus;
       })
       .slice(0, limit);
+  }
+
+  /**
+   * List download jobs for a viewer (link + email). Used on viewer downloads page.
+   */
+  async getViewerJobs(
+    linkId: string,
+    viewerEmail: string,
+    limit: number = 20,
+  ): Promise<DownloadJob[]> {
+    const viewerJobsKey = this.getViewerJobsKey(linkId, viewerEmail);
+    const jobIds = await redis.zrange(viewerJobsKey, 0, limit - 1, {
+      rev: true,
+    });
+
+    if (!jobIds.length) {
+      return [];
+    }
+
+    const jobs = await Promise.all(
+      (jobIds as string[]).map((jobId: string) => this.getJob(jobId)),
+    );
+
+    return jobs.filter(
+      (job: DownloadJob | null): job is DownloadJob => job !== null,
+    );
   }
 }
 

@@ -7,17 +7,20 @@ export const sendDownloadReadyEmail = async ({
   dataroomName,
   downloadUrl,
   expiresAt,
+  isViewer,
 }: {
   to: string;
   dataroomName: string;
   downloadUrl: string;
   expiresAt?: string;
+  isViewer?: boolean;
 }) => {
   const emailTemplate = DownloadReady({
     dataroomName,
     downloadUrl,
     email: to,
     expiresAt,
+    isViewer: isViewer ?? false,
   });
 
   try {

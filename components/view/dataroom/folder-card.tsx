@@ -49,7 +49,7 @@ export default function FolderCard({
     folder.hierarchicalIndex,
     dataroomIndexEnabled || false,
   );
-  const downloadDocument = async () => {
+  const openFolderDownloadModal = () => {
     if (!allowDownload) {
       toast.error("Downloading folders is not allowed.");
       return;
@@ -59,45 +59,10 @@ export default function FolderCard({
       return;
     }
 
-    toast.promise(
-      fetch(`/api/links/download/dataroom-folder`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          folderId: folder.id,
-          dataroomId,
-          viewId,
-          linkId,
-        }),
+    window.dispatchEvent(
+      new CustomEvent("viewer-download-modal-open", {
+        detail: { folderId: folder.id, folderName: folder.name },
       }),
-      {
-        loading: "Downloading dataroom folder...",
-        success: async (response) => {
-          if (!response.ok) {
-            throw new Error("Failed to fetch download URL");
-          }
-
-          const { downloadUrl } = await response.json();
-
-          const link = document.createElement("a");
-          link.href = downloadUrl;
-          link.rel = "noopener noreferrer";
-          document.body.appendChild(link);
-          link.click();
-
-          setTimeout(() => {
-            document.body.removeChild(link);
-          }, 100);
-
-          return `${folder.name} downloaded successfully.`;
-        },
-        error: (error) => {
-          console.error("Error downloading folder:", error);
-          return error.message || "An error occurred while downloading file.";
-        },
-      },
     );
   };
 
@@ -149,7 +114,7 @@ export default function FolderCard({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  downloadDocument();
+                  openFolderDownloadModal();
                   setOpen(false);
                 }}
                 disabled={isPreview}

@@ -409,6 +409,7 @@ export default function DataroomViewer({
         isPreview={isPreview}
         dataroomId={dataroom?.id}
         viewerId={viewerId}
+        viewerEmail={viewerEmail}
         conversationsEnabled={viewData.conversationsEnabled}
         isTeamMember={viewData.isTeamMember}
       />
