@@ -207,8 +207,17 @@ export function ViewerDownloadProgressModal({
   };
 
   const handleDownload = (url: string) => {
+    // Ensure we use a relative path so the request goes to the current origin
+    // (where the session cookie lives), not a potentially different subdomain.
+    let href = url;
+    try {
+      const parsed = new URL(url, window.location.origin);
+      href = parsed.pathname + parsed.search;
+    } catch {
+      // url is already relative, use as-is
+    }
     const a = document.createElement("a");
-    a.href = url;
+    a.href = href;
     a.rel = "noopener noreferrer";
     document.body.appendChild(a);
     a.click();

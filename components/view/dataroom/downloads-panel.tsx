@@ -35,7 +35,6 @@ export function DownloadsPanel({ linkId }: { linkId: string }) {
   const [loading, setLoading] = useState(true);
   const [hasSession, setHasSession] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
-  const [viewId, setViewId] = useState<string | null>(null);
   const [step, setStep] = useState<"session" | "email" | "otp" | "list">(
     "session",
   );
@@ -43,6 +42,7 @@ export function DownloadsPanel({ linkId }: { linkId: string }) {
   const [jobsLoading, setJobsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
+  const [emailSubmitting, setEmailSubmitting] = useState(false);
 
   // ── Session check ──────────────────────────────────────────────────
   const checkSession = useCallback(async () => {
@@ -137,13 +137,14 @@ export function DownloadsPanel({ linkId }: { linkId: string }) {
     };
   }, [step, jobs, fetchJobs]);
 
-  // ── Email submit (POST — avoids leaking PII in URL) ────────────────
+  // ── Email submit — send OTP directly (view is resolved server-side) ─
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!linkId || !email.trim()) return;
     setError(null);
+    setEmailSubmitting(true);
     try {
-      const res = await fetch(`/api/links/download/by-email`, {
+      const res = await fetch(`/api/links/download/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -152,23 +153,27 @@ export function DownloadsPanel({ linkId }: { linkId: string }) {
           email: email.trim(),
         }),
       });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 404) {
+        setError(
+          "No access found for this email. Use the email you used to open the dataroom.",
+        );
+        return;
+      }
+      if (res.status === 429) {
+        setError(data.error ?? "Too many requests. Please try again later.");
+        return;
+      }
       if (!res.ok) {
-        setError(
-          "No access found for this email. Use the email you used to open the dataroom.",
-        );
+        setError(data.error ?? "Something went wrong.");
         return;
       }
-      const data = await res.json();
-      if (!data.viewId) {
-        setError(
-          "No access found for this email. Use the email you used to open the dataroom.",
-        );
-        return;
-      }
-      setViewId(data.viewId);
+      // OTP sent successfully — move to verification step
       setStep("otp");
     } catch {
       setError("Something went wrong.");
+    } finally {
+      setEmailSubmitting(false);
     }
   };
 
@@ -180,8 +185,17 @@ export function DownloadsPanel({ linkId }: { linkId: string }) {
 
   // ── Download helpers ───────────────────────────────────────────────
   const handleDownload = (url: string) => {
+    // Ensure we use a relative path so the request goes to the current origin
+    // (where the session cookie lives), not a potentially different subdomain.
+    let href = url;
+    try {
+      const parsed = new URL(url, window.location.origin);
+      href = parsed.pathname + parsed.search;
+    } catch {
+      // url is already relative, use as-is
+    }
     const a = document.createElement("a");
-    a.href = url;
+    a.href = href;
     a.rel = "noopener noreferrer";
     document.body.appendChild(a);
     a.click();
@@ -259,21 +273,20 @@ export function DownloadsPanel({ linkId }: { linkId: string }) {
             required
           />
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" className="w-full">
-            Continue
+          <Button type="submit" className="w-full" disabled={emailSubmitting}>
+            {emailSubmitting ? "Sending code..." : "Continue"}
           </Button>
         </form>
       </div>
     );
   }
 
-  if (step === "otp" && viewId) {
+  if (step === "otp") {
     return (
       <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4">
         <h1 className="text-xl font-semibold">Verify your email</h1>
         <DownloadOtpVerification
           linkId={linkId}
-          viewId={viewId}
           email={email.trim()}
           onVerified={handleOtpVerified}
         />

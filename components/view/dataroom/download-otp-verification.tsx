@@ -13,7 +13,8 @@ const REGEXP_ONLY_DIGITS = "^\\d+$";
 
 export interface DownloadOtpVerificationProps {
   linkId: string;
-  viewId: string;
+  /** viewId is optional — when omitted the server resolves the view by email + linkId. */
+  viewId?: string;
   email: string;
   onVerified: () => void;
   onCancel?: () => void;
@@ -44,11 +45,13 @@ export function DownloadOtpVerification({
     setIsSending(true);
     setError(null);
     try {
+      const body: Record<string, string> = { linkId, email };
+      if (viewId) body.viewId = viewId;
       const res = await fetch("/api/links/download/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ linkId, viewId, email }),
+        body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -73,11 +76,13 @@ export function DownloadOtpVerification({
     setIsLoading(true);
     setError(null);
     try {
+      const body: Record<string, string> = { linkId, email, code: code! };
+      if (viewId) body.viewId = viewId;
       const res = await fetch("/api/links/download/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ linkId, viewId, email, code }),
+        body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
