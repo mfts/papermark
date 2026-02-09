@@ -477,7 +477,6 @@ export default async function handle(
     console.error("Error starting bulk download:", error);
     return res.status(500).json({
       message: "Internal Server Error",
-      error: (error as Error).message,
     });
   }
 }
