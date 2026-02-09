@@ -47,7 +47,11 @@ export default async function handler(
   }
 
   // Use the request's origin so download links work on custom domains
-  const proto = req.headers["x-forwarded-proto"] || "https";
+  const rawProto = req.headers["x-forwarded-proto"];
+  const proto =
+    (Array.isArray(rawProto)
+      ? rawProto[0]
+      : rawProto?.split(",")[0]?.trim()) || "https";
   const host = req.headers["host"] || "app.papermark.com";
   const baseUrl = `${proto}://${host}`;
 
