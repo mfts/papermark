@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   InputOTP,
@@ -38,7 +38,7 @@ export function DownloadOtpVerification({
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const hasSentOnMountRef = { current: false };
+  const hasSentOnMountRef = useRef(false);
 
   const sendOtp = useCallback(async () => {
     setIsSending(true);
