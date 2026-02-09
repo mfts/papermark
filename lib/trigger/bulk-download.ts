@@ -6,7 +6,7 @@ import { downloadJobStore } from "@/lib/redis-download-job-store";
 import { constructLinkUrl } from "@/lib/utils/link-url";
 
 // Maximum files per batch (Lambda payload limit)
-const MAX_FILES_PER_BATCH = 10;
+const MAX_FILES_PER_BATCH = 500;
 // Maximum size for a single ZIP file (500MB to stay within Vercel's 5min timeout)
 // Lambda needs time to: read from S3 + create ZIP + upload to S3
 // Conservative estimate: ~500MB can be processed in ~2-3 minutes
@@ -139,7 +139,12 @@ export const bulkDownloadTask = task({
           dataroomName,
           zipPartNumber: 1,
           totalParts: 1,
-          zipFileName: generateZipFileName(dataroomName, downloadTimestamp, undefined, folderName),
+          zipFileName: generateZipFileName(
+            dataroomName,
+            downloadTimestamp,
+            undefined,
+            folderName,
+          ),
         });
 
         // Update job with completed status
