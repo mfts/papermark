@@ -29,6 +29,14 @@ export default async function handle(
     emailNotification?: boolean;
   };
 
+  if (typeof linkId !== "string" || !linkId.trim()) {
+    return res.status(400).json({ error: "linkId is required" });
+  }
+
+  if (typeof viewId !== "string" || !viewId.trim()) {
+    return res.status(400).json({ error: "viewId is required" });
+  }
+
   try {
     const view = await prisma.view.findUnique({
       where: {
