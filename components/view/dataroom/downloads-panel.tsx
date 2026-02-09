@@ -159,6 +159,12 @@ export function DownloadsPanel({ linkId }: { linkId: string }) {
         return;
       }
       const data = await res.json();
+      if (!data.viewId) {
+        setError(
+          "No access found for this email. Use the email you used to open the dataroom.",
+        );
+        return;
+      }
       setViewId(data.viewId);
       setStep("otp");
     } catch {
