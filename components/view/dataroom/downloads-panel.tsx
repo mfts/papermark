@@ -199,6 +199,7 @@ export function DownloadsPanel({ linkId }: { linkId: string }) {
     if (!expiresAt) return "";
     const exp = new Date(expiresAt);
     const now = new Date();
+    if (exp.getTime() <= now.getTime()) return "expired";
     const d = Math.floor(
       (exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
     );
