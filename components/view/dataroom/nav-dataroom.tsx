@@ -217,7 +217,7 @@ export default function DataroomNav({
         </div>
       )}
 
-      {linkId && viewerEmail && (
+      {linkId && viewId && viewerEmail && (
         <ViewerDownloadProgressModal
           isOpen={showDownloadModal}
           onClose={() => {
@@ -227,7 +227,7 @@ export default function DataroomNav({
             setDownloadFolderName(null);
           }}
           linkId={linkId}
-          viewId={viewId ?? ""}
+          viewId={viewId}
           viewerEmail={viewerEmail}
           dataroomName={dataroom?.name ?? ""}
           dataroomId={dataroomId}
