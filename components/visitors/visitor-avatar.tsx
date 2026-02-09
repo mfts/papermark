@@ -7,6 +7,14 @@ import { cn } from "@/lib/utils";
 
 import { BadgeTooltip } from "../ui/tooltip";
 
+// Custom avatars for test views
+const TEST_AVATARS: Record<string, string> = {
+  "marc@papermark.com":
+    "https://img.papermarkassets.com/upload/file_5wiyjQw7immnVwTRS4kwkw-1579073467174.jpeg",
+  "iuliia@papermark.com":
+    "https://img.papermarkassets.com/upload/file_XwVCDHcBYjtAF5AVWsghBW-1761133587990.jpeg",
+};
+
 export const VisitorAvatar = ({
   viewerEmail,
   isArchived,
@@ -70,6 +78,12 @@ export const VisitorAvatar = ({
     );
   }
 
+  // Use custom avatar for test views, otherwise use Gravatar
+  const avatarSrc =
+    viewerEmail && TEST_AVATARS[viewerEmail]
+      ? TEST_AVATARS[viewerEmail]
+      : `https://gravatar.com/avatar/${generateGravatarHash(viewerEmail)}?s=80&d=404`;
+
   return (
     <Avatar
       className={cn(
@@ -77,11 +91,7 @@ export const VisitorAvatar = ({
         className,
       )}
     >
-      <AvatarImage
-        src={`https://gravatar.com/avatar/${generateGravatarHash(
-          viewerEmail,
-        )}?s=80&d=404`}
-      />
+      <AvatarImage src={avatarSrc} />
 
       <AvatarFallback
         className={`${getColorFromHash(
