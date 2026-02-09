@@ -46,20 +46,13 @@ export default async function handler(
     return res.status(403).json({ error: "Job does not belong to this viewer" });
   }
 
-  // Use the request's origin so download links work on custom domains
-  const rawProto = req.headers["x-forwarded-proto"];
-  const proto =
-    (Array.isArray(rawProto)
-      ? rawProto[0]
-      : rawProto?.split(",")[0]?.trim()) || "https";
-  const host = req.headers["host"] || "app.papermark.com";
-  const baseUrl = `${proto}://${host}`;
-
+  // Use relative URLs so the browser resolves them against the current page origin,
+  // ensuring the session cookie (scoped to the page host) is always sent.
   const partCount = job.downloadUrls?.length ?? 0;
   const proxyDownloadUrls =
     job.status === "COMPLETED" && partCount > 0
       ? Array.from({ length: partCount }, (_, i) =>
-          `${baseUrl}/api/links/download/file/${jobId}/${i}?linkId=${encodeURIComponent(linkId)}`,
+          `/api/links/download/file/${jobId}/${i}?linkId=${encodeURIComponent(linkId)}`,
         )
       : undefined;
 
