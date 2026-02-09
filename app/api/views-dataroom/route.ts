@@ -216,7 +216,6 @@ export async function POST(request: NextRequest) {
         linkId,
       );
 
-      console.log("previewSession", previewSession);
       if (!previewSession) {
         return NextResponse.json(
           {
@@ -236,6 +235,7 @@ export async function POST(request: NextRequest) {
         linkId,
         link.dataroomId!,
       );
+
 
       // If we have a dataroom session, use its verified status
       if (dataroomSession) {
@@ -669,7 +669,6 @@ export async function POST(request: NextRequest) {
 
     // ** DATAROOM_VIEW **
     if (viewType === "DATAROOM_VIEW") {
-      console.log("viewType is DATAROOM_VIEW");
       try {
         let newDataroomView: { id: string } | null = null;
         if (!isPreview) {
@@ -796,9 +795,6 @@ export async function POST(request: NextRequest) {
 
         // if dataroomSession is not present, create a dataroom view first
         if (!dataroomSession) {
-          console.log(
-            "no dataroom session present, creating new dataroom view",
-          );
           dataroomView = await prisma.view.create({
             data: { ...viewFields, viewType: "DATAROOM_VIEW" },
             select: { id: true },

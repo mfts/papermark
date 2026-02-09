@@ -1,17 +1,18 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { getTeamStorageConfigById } from "@/ee/features/storage/config";
-import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
 import { ItemType, ViewType } from "@prisma/client";
 import slugify from "@sindresorhus/slugify";
 
-import { getLambdaClientForTeam } from "@/lib/files/aws-client";
+import { verifyDataroomSessionInPagesRouter } from "@/lib/auth/dataroom-auth";
 import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
+import { downloadJobStore } from "@/lib/redis-download-job-store";
+import { bulkDownloadTask } from "@/lib/trigger/bulk-download";
 import { getIpAddress } from "@/lib/utils/ip";
 
 export const config = {
-  maxDuration: 300,
+  maxDuration: 60,
 };
 
 export default async function handler(
@@ -24,11 +25,12 @@ export default async function handler(
   }
 
   try {
-    const { folderId, dataroomId, viewId, linkId } = req.body as {
+    const { folderId, dataroomId, viewId, linkId, emailNotification } = req.body as {
       folderId: string;
       dataroomId: string;
       viewId: string;
       linkId: string;
+      emailNotification?: boolean;
     };
     if (!folderId) {
       return res
@@ -65,12 +67,35 @@ export default async function handler(
       },
     });
 
-    // if view does not exist, we should not allow the download
     if (!view) {
       return res.status(404).json({ error: "Error downloading" });
     }
 
-    // if link does not allow download, we should not allow the download
+    const session = await verifyDataroomSessionInPagesRouter(
+      req,
+      linkId,
+      dataroomId,
+    );
+    if (!session) {
+      return res.status(401).json({ error: "Session required to download" });
+    }
+
+    // Verified session and email are only required when the viewer requested email notification
+    if (emailNotification) {
+      if (!view.viewerEmail) {
+        return res.status(400).json({
+          error:
+            "Email is required to receive download notifications. Enter your email in the dataroom.",
+        });
+      }
+      if (!session.verified) {
+        return res.status(403).json({
+          error:
+            "Verify your email with the one-time code to receive a notification when the download is ready.",
+        });
+      }
+    }
+
     if (!view.link.allowDownload) {
       return res.status(403).json({ error: "Error downloading" });
     }
@@ -357,24 +382,46 @@ export default async function handler(
           documentCount: allDocuments.length,
           isFolderDownload: true,
         },
-      }).catch((error) => {
-        console.error("Error sending Slack notification:", error);
-      });
+      }).catch((err) => console.error("Error sending Slack notification:", err));
     }
 
-    // Get team-specific storage configuration
-    const [client, storageConfig] = await Promise.all([
-      getLambdaClientForTeam(view.link.teamId!),
-      getTeamStorageConfigById(view.link.teamId!),
-    ]);
+    const teamId = view.link.teamId!;
+    const storageConfig = await getTeamStorageConfigById(teamId);
+    const dataroom = await prisma.dataroom.findUnique({
+      where: { id: dataroomId },
+      select: { name: true },
+    });
+    const dataroomName = dataroom?.name ?? "Dataroom";
+    const sendEmail =
+      !!emailNotification && !!view.viewerEmail && !!session.verified;
 
-    const params = {
-      FunctionName: `bulk-download-zip-creator-${process.env.NODE_ENV === "development" ? "dev" : "prod"}`,
-      InvocationType: InvocationType.RequestResponse,
-      Payload: JSON.stringify({
-        sourceBucket: storageConfig.bucket,
-        fileKeys,
+    const job = await downloadJobStore.createJob({
+      type: "folder",
+      status: "PENDING",
+      dataroomId,
+      dataroomName,
+      folderName: rootFolder.name,
+      totalFiles: fileKeys.length,
+      processedFiles: 0,
+      progress: 0,
+      teamId,
+      userId: view.viewerId ?? view.viewerEmail ?? "viewer",
+      linkId,
+      viewerId: view.viewerId ?? undefined,
+      viewerEmail: view.viewerEmail ?? undefined,
+      emailNotification: sendEmail,
+      emailAddress: sendEmail ? view.viewerEmail ?? undefined : undefined,
+    });
+
+    const handle = await bulkDownloadTask.trigger(
+      {
+        jobId: job.id,
+        dataroomId,
+        dataroomName,
+        teamId,
         folderStructure,
+        fileKeys,
+        sourceBucket: storageConfig.bucket,
         watermarkConfig: view.link.enableWatermark
           ? {
               enabled: true,
@@ -392,18 +439,29 @@ export default async function handler(
               },
             }
           : { enabled: false },
-      }),
-    };
+        viewId: view.id,
+        viewerId: view.viewerId ?? undefined,
+        viewerEmail: view.viewerEmail ?? undefined,
+        linkId,
+        emailNotification: sendEmail,
+        emailAddress: sendEmail ? view.viewerEmail ?? undefined : undefined,
+        folderName: rootFolder.name,
+      },
+      {
+        idempotencyKey: job.id,
+        tags: [`team_${teamId}`, `dataroom_${dataroomId}`, `job_${job.id}`, `link_${linkId}`],
+      },
+    );
 
-    const command = new InvokeCommand(params);
-    const response = await client.send(command);
+    await downloadJobStore.updateJob(job.id, { triggerRunId: handle.id });
 
-    if (!response.Payload) throw new Error("Lambda returned empty payload");
-
-    const parsed = JSON.parse(new TextDecoder().decode(response.Payload));
-    const { downloadUrl } = JSON.parse(parsed.body);
-
-    res.status(200).json({ downloadUrl });
+    return res.status(202).json({
+      jobId: job.id,
+      status: "PENDING",
+      message: sendEmail
+        ? "Download started. We'll email you when it's ready."
+        : "Download started. Check the downloads page for status.",
+    });
   } catch (error) {
     console.error("Download error:", error);
     return res.status(500).json({

@@ -34,11 +34,13 @@ export default function DownloadReady({
   downloadUrl = "https://app.papermark.com",
   email = "email@example.com",
   expiresAt,
+  isViewer = false,
 }: {
   dataroomName?: string;
   downloadUrl?: string;
   email: string;
   expiresAt?: string;
+  isViewer?: boolean;
 }) {
   const expirationTime = formatExpirationTime(expiresAt);
 
@@ -56,8 +58,9 @@ export default function DownloadReady({
               Your download of <strong>{dataroomName}</strong> is ready!
             </Text>
             <Text className="text-sm leading-6 text-black">
-              Click the button below to download your files. You&apos;ll need to
-              be logged in to your Papermark account to access the download.
+              {isViewer
+                ? "Click the button below to open your downloads page and get your files."
+                : "Click the button below to download your files. You'll need to be logged in to your Papermark account to access the download."}
             </Text>
 
             <Section className="my-8 text-center">
