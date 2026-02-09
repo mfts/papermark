@@ -40,8 +40,8 @@ export default async function handler(
 
   if (
     job.linkId !== linkId ||
-    job.viewerEmail.toLowerCase().trim() !==
-      view.viewerEmail.toLowerCase().trim()
+    job.viewerEmail?.toLowerCase().trim() !==
+      view.viewerEmail?.toLowerCase().trim()
   ) {
     return res.status(403).json({ error: "Job does not belong to this viewer" });
   }
