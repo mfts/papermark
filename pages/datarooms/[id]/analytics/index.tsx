@@ -75,24 +75,22 @@ export default function DataroomAnalyticsPage() {
           <StatsCard />
 
           <Tabs defaultValue={defaultTab} className="space-y-6">
-            <div className="flex items-center justify-between">
-              <TabsList>
-                <TabsTrigger
-                  value="analytics"
-                  className="flex items-center gap-2"
-                >
-                  <ChartNoAxesColumnIcon className="h-4 w-4" />
-                  Analytics
-                </TabsTrigger>
-                <TabsTrigger
-                  value="audit-log"
-                  className="flex items-center gap-2"
-                >
-                  <LogsIcon className="h-4 w-4" />
-                  Audit Log
-                </TabsTrigger>
-              </TabsList>
-            </div>
+            <TabsList>
+              <TabsTrigger
+                value="analytics"
+                className="flex items-center gap-2"
+              >
+                <ChartNoAxesColumnIcon className="h-4 w-4" />
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger
+                value="audit-log"
+                className="flex items-center gap-2"
+              >
+                <LogsIcon className="h-4 w-4" />
+                Audit Log
+              </TabsTrigger>
+            </TabsList>
 
             <TabsContent value="analytics" className="space-y-6">
               {hasAnalyticsAccess ? (
