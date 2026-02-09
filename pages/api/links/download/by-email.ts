@@ -9,8 +9,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", ["GET"]);
+  if (req.method !== "POST") {
+    res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
@@ -25,8 +25,7 @@ export default async function handler(
       .json({ error: "Too many requests. Try again later." });
   }
 
-  const linkId = req.query.linkId as string;
-  const email = req.query.email as string;
+  const { linkId, email } = req.body as { linkId?: string; email?: string };
   if (!linkId || !email) {
     return res.status(400).json({ error: "linkId and email are required" });
   }
