@@ -385,7 +385,9 @@ export function ViewerDownloadProgressModal({
             {(status?.status === "PENDING" || status?.status === "PROCESSING") && (
               <DialogFooter>
                 <p className="text-xs text-muted-foreground">
-                  You can close this. We’ll email you when it’s ready.
+                  {wantEmail
+                    ? "You can close this. We’ll email you when it’s ready."
+                    : "You can close this. Check back on the downloads page when it’s ready."}
                 </p>
               </DialogFooter>
             )}
