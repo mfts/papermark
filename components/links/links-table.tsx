@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { InviteViewersModal } from "@/ee/features/dataroom-invitations/components/invite-viewers-modal";
@@ -10,6 +10,7 @@ import { DocumentVersion, LinkAudienceType } from "@prisma/client";
 import { isWithinInterval, subMinutes } from "date-fns";
 import {
   BoxesIcon,
+  ChevronRightIcon,
   ClockFadingIcon,
   Code2Icon,
   CopyCheckIcon,
@@ -765,14 +766,66 @@ export default function LinksTable({
     [processedLinks],
   );
 
+  // Collapsible state for "All Links" section (document pages only)
+  const ALL_LINKS_COLLAPSED_KEY = "papermark-all-links-collapsed";
+  const [isAllLinksOpen, setIsAllLinksOpen] = useState<boolean>(true);
+
+  // Load collapse state from localStorage on mount
+  useEffect(() => {
+    if (targetType !== "DOCUMENT") return;
+    try {
+      const stored = localStorage.getItem(ALL_LINKS_COLLAPSED_KEY);
+      if (stored !== null) {
+        // stored value is "true" if collapsed, so we invert for isOpen
+        setIsAllLinksOpen(stored !== "true");
+      }
+    } catch (e) {
+      // localStorage might be unavailable
+      console.warn("Could not read from localStorage:", e);
+    }
+  }, [targetType]);
+
+  // Handle toggle and persist to localStorage
+  const handleAllLinksToggle = useCallback(
+    (open: boolean) => {
+      setIsAllLinksOpen(open);
+      try {
+        // Store "true" when collapsed, "false" when expanded
+        localStorage.setItem(ALL_LINKS_COLLAPSED_KEY, String(!open));
+      } catch (e) {
+        console.warn("Could not write to localStorage:", e);
+      }
+    },
+    [],
+  );
+
   return (
     <>
       <div className="w-full">
-        <div className={cn(targetType === "DATAROOM" && "hidden")}>
-          <h2 className="mb-2 md:mb-4">All links</h2>
-        </div>
-        <div className="rounded-md border">
-          <Table>
+        {/* Collapsible section for DOCUMENT type only */}
+        {targetType === "DOCUMENT" ? (
+          <Collapsible
+            open={isAllLinksOpen}
+            onOpenChange={handleAllLinksToggle}
+            className="w-full"
+          >
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="mb-2 flex w-full cursor-pointer items-center gap-2 text-left md:mb-4"
+              >
+                <ChevronRightIcon
+                  className={cn(
+                    "h-5 w-5 text-muted-foreground transition-transform duration-200",
+                    isAllLinksOpen && "rotate-90",
+                  )}
+                />
+                <h2 className="m-0">All links</h2>
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+              <div className="rounded-md border">
+                <Table>
             <TableHeader>
               <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
                 <TableHead>Name</TableHead>
@@ -1170,8 +1223,399 @@ export default function LinksTable({
                 </TableRow>
               )}
             </TableBody>
-          </Table>
-        </div>
+                </Table>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        ) : (
+          /* DATAROOM - non-collapsible layout */
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
+                  <TableHead>Name</TableHead>
+                  <TableHead>Link</TableHead>
+                  {hasAnyTags ? (
+                    <TableHead className="w-[250px] 2xl:w-auto">Tags</TableHead>
+                  ) : null}
+                  <TableHead className="w-[250px] sm:w-auto">Views</TableHead>
+                  <TableHead>Last Viewed</TableHead>
+                  <TableHead className="w-[80px]">Active</TableHead>
+                  <TableHead className="text-center sm:text-right"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {processedLinks && processedLinks.length > 0 ? (
+                  processedLinks.map((link) => (
+                    <Collapsible key={link.id} asChild>
+                      <>
+                        <TableRow
+                          key={link.id}
+                          className={cn(
+                            "group/row",
+                            popoverOpen === link.id && "bg-gray-100",
+                            link.isArchived &&
+                              "bg-gray-50 opacity-50 dark:bg-gray-700",
+                          )}
+                        >
+                          <TableCell className="w-[200px] truncate font-medium md:w-[220px] lg:w-[250px] xl:w-[280px] 2xl:w-[350px]">
+                            <div className="flex items-center gap-x-2">
+                              {link.groupId ? (
+                                <ButtonTooltip content="Group Link">
+                                  <BoxesIcon className="size-4 shrink-0" />
+                                </ButtonTooltip>
+                              ) : null}
+                              <ButtonTooltip
+                                content={
+                                  link.name || `Link #${link.id.slice(-5)}`
+                                }
+                              >
+                                <span className="max-w-[150px] truncate md:max-w-[170px] lg:max-w-[200px] xl:max-w-[230px] 2xl:max-w-[300px]">
+                                  {link.name || `Link #${link.id.slice(-5)}`}
+                                </span>
+                              </ButtonTooltip>
+                              {link.isNew && !link.isUpdated && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-emerald-600/80 text-emerald-600/80"
+                                >
+                                  New
+                                </Badge>
+                              )}
+                              {link.isUpdated && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-blue-500/80 text-blue-500/80"
+                                >
+                                  Updated
+                                </Badge>
+                              )}
+                              {link.expiresAt &&
+                                (new Date(link.expiresAt) < new Date() ? (
+                                  <TimestampTooltip
+                                    timestamp={link.expiresAt}
+                                    side="right"
+                                    rows={["local", "utc"]}
+                                    title="Expired at"
+                                    fullLabels
+                                  >
+                                    <span className="flex cursor-default items-center rounded-full bg-destructive/10 p-1 text-destructive ring-1 ring-destructive/20">
+                                      <TimerOffIcon className="h-3 w-3" />
+                                    </span>
+                                  </TimestampTooltip>
+                                ) : (
+                                  <TimestampTooltip
+                                    timestamp={link.expiresAt}
+                                    side="right"
+                                    rows={["local", "utc"]}
+                                    title="Expires at"
+                                    fullLabels
+                                  >
+                                    <span className="flex cursor-default items-center rounded-full bg-orange-100 p-1 text-orange-700 ring-1 ring-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:ring-orange-800">
+                                      <ClockFadingIcon className="h-3 w-3" />
+                                    </span>
+                                  </TimestampTooltip>
+                                ))}
+                              {link.domainId && isFree ? (
+                                <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
+                                  Inactive
+                                </span>
+                              ) : null}
+                            </div>
+                          </TableCell>
+                          <TableCell className="group/link max-w-[250px] pr-1 md:max-w-[300px] lg:max-w-[350px] xl:max-w-[400px] 2xl:max-w-[450px]">
+                            <div className="flex flex-row gap-x-1">
+                              <LinkUrlCell
+                                link={link}
+                                isFree={isFree}
+                                onCopy={handleCopyToClipboard}
+                                isProcessing={isDocumentProcessing(
+                                  primaryVersion,
+                                )}
+                                primaryVersion={primaryVersion}
+                                mutateDocument={mutateDocument}
+                                isPopoverOpen={popoverOpen === link.id}
+                              />
+                              <div className="flex shrink-0 items-center">
+                                <LinkActionsCell
+                                  link={link}
+                                  onCopy={handleCopyToClipboard}
+                                  onPreview={handlePreviewLink}
+                                  isProcessing={isDocumentProcessing(
+                                    primaryVersion,
+                                  )}
+                                />
+                                {isMobile ? (
+                                  <ButtonTooltip content="Edit link">
+                                    <Button
+                                      variant="link"
+                                      size="icon"
+                                      className="group h-8 w-8"
+                                      onClick={() => handleEditLink(link)}
+                                    >
+                                      <span className="sr-only">Edit link</span>
+                                      <Settings2Icon className="text-gray-400 group-hover:text-gray-500" />
+                                    </Button>
+                                  </ButtonTooltip>
+                                ) : (
+                                  <Popover
+                                    open={popoverOpen === link.id}
+                                    onOpenChange={() => {}}
+                                  >
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant="link"
+                                        className={cn(
+                                          "h-8 w-8 font-normal hover:no-underline focus-visible:ring-0 focus-visible:ring-offset-0",
+                                          popoverOpen === link.id
+                                            ? "text-foreground"
+                                            : "text-muted-foreground hover:text-foreground",
+                                        )}
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          handleEditLink(link);
+                                        }}
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        onMouseEnter={() => {
+                                          hoverTimeout.current = setTimeout(
+                                            () => setPopoverOpen(link.id),
+                                            250,
+                                          );
+                                        }}
+                                        onMouseLeave={() => {
+                                          if (hoverTimeout.current)
+                                            clearTimeout(hoverTimeout.current);
+                                          hoverTimeout.current = setTimeout(
+                                            () => setPopoverOpen(null),
+                                            100,
+                                          );
+                                        }}
+                                      >
+                                        <Settings2Icon />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                      side="top"
+                                      align="start"
+                                      className="w-56 p-0"
+                                      onMouseEnter={() => {
+                                        if (hoverTimeout.current)
+                                          clearTimeout(hoverTimeout.current);
+                                        setPopoverOpen(link.id);
+                                      }}
+                                      onMouseLeave={() => {
+                                        if (hoverTimeout.current)
+                                          clearTimeout(hoverTimeout.current);
+                                        hoverTimeout.current = setTimeout(
+                                          () => setPopoverOpen(null),
+                                          100,
+                                        );
+                                      }}
+                                    >
+                                      <LinkActiveControls
+                                        link={link}
+                                        onEditClick={(e) => {
+                                          e.preventDefault();
+                                          handleEditLink(link);
+                                        }}
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                )}
+                                {/* Reserve space for file permissions icon in dataroom */}
+                                <div className="flex w-8 items-center justify-center">
+                                  {link.permissionGroupId && (
+                                    <ButtonTooltip content="Limited File Access">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 cursor-default"
+                                      >
+                                        <FileSlidersIcon className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                      </Button>
+                                    </ButtonTooltip>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          {hasAnyTags ? (
+                            <TableCell className="w-[250px] 2xl:w-auto">
+                              <TagColumn link={link} />
+                            </TableCell>
+                          ) : null}
+                          <TableCell>
+                            <CollapsibleTrigger disabled={true}>
+                              <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
+                                <BarChart className="h-4 w-4 text-muted-foreground" />
+                                <p className="whitespace-nowrap text-sm text-muted-foreground">
+                                  {nFormatter(link._count.views)}
+                                  <span className="ml-1 hidden sm:inline-block">
+                                    views
+                                  </span>
+                                </p>
+                              </div>
+                            </CollapsibleTrigger>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {link.views[0] ? (
+                              <TimestampTooltip
+                                timestamp={link.views[0].viewedAt}
+                                side="right"
+                                rows={["local", "utc", "unix"]}
+                              >
+                                <time
+                                  className="select-none"
+                                  dateTime={new Date(
+                                    link.views[0].viewedAt,
+                                  ).toISOString()}
+                                >
+                                  {timeAgo(link.views[0].viewedAt)}
+                                </time>
+                              </TimestampTooltip>
+                            ) : (
+                              "-"
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-x-1">
+                              <Switch
+                                className="data-[state=checked]:bg-primary/80 data-[state=checked]:hover:bg-primary data-[state=unchecked]:hover:bg-muted-foreground/80"
+                                id={`${link.id}-active-switch`}
+                                checked={!link.isArchived}
+                                onCheckedChange={(checked) =>
+                                  handleArchiveLink(
+                                    link.id,
+                                    link.documentId ?? link.dataroomId ?? "",
+                                    checked,
+                                  )
+                                }
+                                disabled={loadingLinks.has(link.id)}
+                              />
+                              <Label
+                                className="font-normal"
+                                htmlFor={`${link.id}-active-switch`}
+                              >
+                                {link.isArchived ? "No" : "Yes"}
+                              </Label>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center sm:text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 group-hover/row:ring-1 group-hover/row:ring-gray-200 group-hover/row:dark:ring-gray-700"
+                                >
+                                  <span className="sr-only">Open menu</span>
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleEditLink(link)}
+                                >
+                                  <Settings2Icon className="mr-2 h-4 w-4" />
+                                  Edit Link
+                                </DropdownMenuItem>
+                                {link.audienceType !==
+                                  LinkAudienceType.GROUP && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleEditPermissions(link)}
+                                    disabled={isLoading}
+                                  >
+                                    <FileSlidersIcon className="mr-2 h-4 w-4" />
+                                    Edit File Permissions
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                  onClick={() => handlePreviewLink(link)}
+                                >
+                                  <EyeIcon className="mr-2 h-4 w-4" />
+                                  Preview Link
+                                </DropdownMenuItem>
+                                {isFeatureEnabled("dataroomInvitations") && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleSendInvitations(link)}
+                                  >
+                                    <SendIcon className="mr-2 h-4 w-4" />
+                                    Send Invitations
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                  disabled={!canAddLinks}
+                                  onClick={() => handleDuplicateLink(link)}
+                                >
+                                  <CopyPlusIcon className="mr-2 h-4 w-4" />
+                                  Duplicate Link
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedEmbedLink({
+                                      id: link.id,
+                                      name:
+                                        link.name || `Link #${link.id.slice(-5)}`,
+                                    });
+                                    setEmbedModalOpen(true);
+                                  }}
+                                >
+                                  <Code2Icon className="mr-2 h-4 w-4" />
+                                  Get Embed Code
+                                </DropdownMenuItem>
+                                {!isFree && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setLinkToDelete(link);
+                                        setShowDeleteLinkModal(true);
+                                      }}
+                                      className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                                    >
+                                      <Trash2Icon className="mr-2 h-4 w-4" />
+                                      Delete Link
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                        <CollapsibleContent asChild>
+                          <LinksVisitors
+                            linkName={link.name || "No link name"}
+                            linkId={link.id}
+                          />
+                        </CollapsibleContent>
+                      </>
+                    </Collapsible>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={hasAnyTags ? 7 : 6}>
+                      <div className="flex w-full flex-col items-center justify-center gap-4 rounded-xl py-4">
+                        <div className="hidden rounded-full sm:block">
+                          <div
+                            className={cn(
+                              "rounded-full border border-white bg-gradient-to-t from-gray-100 p-1 md:p-3",
+                            )}
+                          >
+                            <LinkIcon className="size-6" />
+                          </div>
+                        </div>
+                        <p>No links found for this dataroom</p>
+                        <AddLinkButton />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
 
         {targetType === "DATAROOM" ? (
           <>
