@@ -39,35 +39,55 @@ export default async function handler(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const { linkId, viewId, email, code } = req.body as {
+  const { linkId, viewId: providedViewId, email, code } = req.body as {
     linkId?: string;
     viewId?: string;
     email?: string;
     code?: string;
   };
 
-  if (!linkId || !viewId || !email) {
+  if (!linkId || !email) {
     return res
       .status(400)
-      .json({ error: "linkId, viewId and email are required" });
+      .json({ error: "linkId and email are required" });
   }
 
-  const view = await prisma.view.findUnique({
-    where: { id: viewId, linkId, viewType: "DATAROOM_VIEW" },
-    select: {
-      id: true,
-      dataroomId: true,
-      viewerId: true,
-      viewerEmail: true,
-      link: { select: { teamId: true } },
-    },
-  });
+  // Look up the view: use provided viewId if given, otherwise find by email + linkId
+  const view = providedViewId
+    ? await prisma.view.findUnique({
+        where: { id: providedViewId, linkId, viewType: "DATAROOM_VIEW" },
+        select: {
+          id: true,
+          dataroomId: true,
+          viewerId: true,
+          viewerEmail: true,
+          link: { select: { teamId: true } },
+        },
+      })
+    : await prisma.view.findFirst({
+        where: {
+          linkId,
+          viewType: "DATAROOM_VIEW",
+          viewerEmail: { equals: email, mode: "insensitive" },
+        },
+        select: {
+          id: true,
+          dataroomId: true,
+          viewerId: true,
+          viewerEmail: true,
+          link: { select: { teamId: true } },
+        },
+        orderBy: { viewedAt: "desc" },
+      });
 
   if (!view || view.viewerEmail?.toLowerCase() !== email.toLowerCase()) {
     return res
       .status(404)
       .json({ error: "View not found or email does not match" });
   }
+
+  // Use the resolved viewId from here on
+  const viewId = view.id;
 
   if (!view.link?.teamId) {
     return res.status(400).json({ error: "Link has no team" });
