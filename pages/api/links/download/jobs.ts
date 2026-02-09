@@ -37,5 +37,34 @@ export default async function handler(
     20,
   );
 
-  return res.status(200).json(jobs);
+  // Replace raw S3 presigned URLs with relative proxy URLs so the browser
+  // routes through the current origin (where the session cookie lives).
+  const sanitisedJobs = jobs.map((job) => {
+    const partCount = job.downloadUrls?.length ?? 0;
+    const proxyUrls =
+      job.status === "COMPLETED" && partCount > 0
+        ? Array.from(
+            { length: partCount },
+            (_, i) =>
+              `/api/links/download/file/${job.id}/${i}?linkId=${encodeURIComponent(linkId)}`,
+          )
+        : undefined;
+
+    return {
+      id: job.id,
+      status: job.status,
+      progress: job.progress,
+      totalFiles: job.totalFiles,
+      processedFiles: job.processedFiles,
+      downloadUrls: proxyUrls,
+      error: job.status === "FAILED" ? job.error : undefined,
+      dataroomName: job.dataroomName,
+      type: job.type,
+      folderName: job.folderName,
+      createdAt: job.createdAt,
+      expiresAt: job.expiresAt,
+    };
+  });
+
+  return res.status(200).json(sanitisedJobs);
 }
