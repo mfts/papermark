@@ -38,7 +38,11 @@ export default async function handler(
       .json({ error: "Download job not found or expired" });
   }
 
-  if (job.linkId !== linkId || job.viewerEmail !== view.viewerEmail) {
+  if (
+    job.linkId !== linkId ||
+    job.viewerEmail.toLowerCase().trim() !==
+      view.viewerEmail.toLowerCase().trim()
+  ) {
     return res.status(403).json({ error: "Job does not belong to this viewer" });
   }
 
