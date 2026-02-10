@@ -213,6 +213,8 @@ const SettingsBreadcrumb = () => {
         return "General";
       case "/settings/people":
         return "Team";
+      case "/settings/security":
+        return "Security";
       case "/settings/domains":
         return "Domains";
       case "/settings/presets":

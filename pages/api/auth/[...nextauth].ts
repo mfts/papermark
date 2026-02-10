@@ -4,6 +4,7 @@ import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import PasskeyProvider from "@teamhanko/passkeys-next-auth-provider";
 import NextAuth, { type NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import EmailProvider from "next-auth/providers/email";
 import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
@@ -14,6 +15,7 @@ import { dub } from "@/lib/dub";
 import { isBlacklistedEmail } from "@/lib/edge-config/blacklist";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
 import hanko from "@/lib/hanko";
+import initJackson from "@/lib/jackson";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
@@ -26,6 +28,10 @@ function getMainDomainUrl(): string {
     return process.env.NEXTAUTH_URL || "http://localhost:3000";
   }
   return process.env.NEXTAUTH_URL || "https://app.papermark.com";
+}
+
+function getSamlRedirectUrl(): string {
+  return `${getMainDomainUrl()}/auth/saml`;
 }
 
 // This function can run for a maximum of 180 seconds
@@ -62,6 +68,111 @@ export const authOptions: NextAuthOptions = {
         };
       },
       allowDangerousEmailAccountLinking: true,
+    }),
+    CredentialsProvider({
+      id: "saml-idp",
+      name: "IdP Login",
+      credentials: {
+        code: {
+          type: "text",
+        },
+      },
+      async authorize(credentials) {
+        if (!credentials?.code || typeof credentials.code !== "string") {
+          return null;
+        }
+
+        const { oauthController } = await initJackson();
+
+        const { access_token } = await oauthController.token({
+          code: credentials.code,
+          grant_type: "authorization_code",
+          redirect_uri: getSamlRedirectUrl(),
+          client_id: "dummy",
+          client_secret: process.env.NEXTAUTH_SECRET as string,
+        });
+
+        if (!access_token) {
+          return null;
+        }
+
+        const userInfo = await oauthController.userInfo(access_token);
+        const tenantId = userInfo?.requested?.tenant;
+
+        if (!userInfo?.email || !tenantId) {
+          return null;
+        }
+
+        const team = await prisma.team.findUnique({
+          where: {
+            id: tenantId,
+          },
+          select: {
+            id: true,
+            samlEnabled: true,
+          },
+        });
+
+        if (!team?.samlEnabled) {
+          return null;
+        }
+
+        const fullName = [userInfo.firstName, userInfo.lastName]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+
+        let appUser = await prisma.user.findUnique({
+          where: {
+            email: userInfo.email,
+          },
+        });
+
+        if (!appUser) {
+          appUser = await prisma.user.create({
+            data: {
+              email: userInfo.email,
+              name: fullName || null,
+              emailVerified: new Date(),
+            },
+          });
+        } else if (!appUser.name && fullName) {
+          appUser = await prisma.user.update({
+            where: {
+              id: appUser.id,
+            },
+            data: {
+              name: fullName,
+            },
+          });
+        }
+
+        await prisma.userTeam.upsert({
+          where: {
+            userId_teamId: {
+              userId: appUser.id,
+              teamId: team.id,
+            },
+          },
+          update: {
+            status: "ACTIVE",
+          },
+          create: {
+            userId: appUser.id,
+            teamId: team.id,
+            role: "MEMBER",
+            status: "ACTIVE",
+          },
+        });
+
+        return {
+          id: appUser.id,
+          email: appUser.email,
+          name: appUser.name,
+          image: appUser.image,
+          profile: userInfo,
+        } as any;
+      },
     }),
     EmailProvider({
       async sendVerificationRequest({ identifier, url }) {
@@ -120,12 +231,15 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     jwt: async (params) => {
-      const { token, user, trigger } = params;
+      const { token, user, trigger, account } = params;
       if (!token.email) {
         return {};
       }
       if (user) {
         token.user = user;
+      }
+      if (account?.provider === "saml-idp" && user) {
+        (token as any).provider = "saml";
       }
       // refresh the user data
       if (trigger === "update") {
@@ -156,6 +270,9 @@ export const authOptions: NextAuthOptions = {
         // @ts-ignore
         ...(token || session).user,
       };
+      if ((token as any).provider) {
+        (session as any).provider = (token as any).provider;
+      }
       return session;
     },
   },
@@ -184,7 +301,7 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
     ...authOptions,
     callbacks: {
       ...authOptions.callbacks,
-      signIn: async ({ user }) => {
+      signIn: async ({ user, account }) => {
         if (!user.email || (await isBlacklistedEmail(user.email))) {
           await identifyUser(user.email ?? user.id);
           await trackAnalytics({
@@ -213,6 +330,10 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
             }
           }
         } catch (error) {}
+
+        if (account?.provider === "saml-idp") {
+          return true;
+        }
 
         return true;
       },

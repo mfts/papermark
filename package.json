@@ -17,7 +17,8 @@
     "trigger:v3:deploy": "npx trigger.dev@3 deploy",
     "stripe:webhook": "pkgx stripe listen --forward-to localhost:3000/api/stripe/webhook",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,mdx}\"",
-    "dev:prisma": "npx prisma generate && npx prisma migrate deploy"
+    "dev:prisma": "npx prisma generate && npx prisma migrate deploy",
+    "prisma:generate:jackson": "prisma generate --schema=prisma/jackson/schema.prisma"
   },
   "dependencies": {
     "@ai-sdk/google-vertex": "^4.0.42",
@@ -28,6 +29,7 @@
     "@aws-sdk/cloudfront-signer": "^3.978.0",
     "@aws-sdk/lib-storage": "^3.982.0",
     "@aws-sdk/s3-request-presigner": "^3.982.0",
+    "@boxyhq/saml-jackson": "^1.52.2",
     "@calcom/embed-react": "^1.5.3",
     "@chronark/zod-bird": "^0.3.10",
     "@dnd-kit/core": "^6.3.1",

@@ -31,6 +31,11 @@ export function SettingsHeader() {
             segment: "people",
           },
           {
+            label: "Security",
+            href: `/settings/security`,
+            segment: "security",
+          },
+          {
             label: "Domains",
             href: `/settings/domains`,
             segment: "domains",

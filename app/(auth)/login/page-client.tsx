@@ -17,6 +17,7 @@ import Google from "@/components/shared/icons/google";
 import LinkedIn from "@/components/shared/icons/linkedin";
 import Passkey from "@/components/shared/icons/passkey";
 import { LogoCloud } from "@/components/shared/logo-cloud";
+import { SSOLogin } from "@/components/auth/sso-login";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -211,6 +212,10 @@ export default function Login() {
                 {lastUsed === "passkey" && <LastUsed />}
               </Button>
             </div>
+          </div>
+          <div className="px-4 pb-2 pt-6 sm:px-12">
+            <p className="pb-4 text-center text-sm text-muted-foreground">or</p>
+            <SSOLogin />
           </div>
           <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-12">
             By clicking continue, you acknowledge that you have read and agree

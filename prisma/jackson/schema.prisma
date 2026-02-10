@@ -1,0 +1,44 @@
+datasource db {
+  provider = "postgresql"
+  // Point this at the same Postgres database with a dedicated schema,
+  // e.g. postgresql://.../db?schema=jackson
+  url = env("JACKSON_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../lib/generated/jackson-prisma-client"
+}
+
+model JacksonStore {
+  key        String        @id @db.VarChar(1500)
+  value      String
+  iv         String?       @db.VarChar(64)
+  tag        String?       @db.VarChar(64)
+  namespace  String?       @db.VarChar(256)
+  createdAt  DateTime      @default(now())
+  modifiedAt DateTime?
+  indexes    JacksonIndex[]
+
+  @@index([namespace], map: "_jackson_store_namespace")
+  @@map("jackson_store")
+}
+
+model JacksonIndex {
+  id       Int          @id @default(autoincrement())
+  key      String       @db.VarChar(1500)
+  storeKey String       @db.VarChar(1500)
+  store    JacksonStore @relation(fields: [storeKey], references: [key], onDelete: Cascade)
+
+  @@index([key], map: "_jackson_index_key")
+  @@index([key, storeKey], map: "_jackson_index_key_store")
+  @@map("jackson_index")
+}
+
+model JacksonTTL {
+  key       String @id @db.VarChar(1500)
+  expiresAt BigInt
+
+  @@index([expiresAt], map: "_jackson_ttl_expires_at")
+  @@map("jackson_ttl")
+}

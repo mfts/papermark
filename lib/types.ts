@@ -309,6 +309,12 @@ export interface Team {
   createdAt?: Date;
   enableExcelAdvancedMode?: boolean;
   replicateDataroomFolders?: boolean;
+  samlEnabled?: boolean;
+  samlProvider?: string | null;
+  samlConnectionId?: string | null;
+  scimEnabled?: boolean;
+  scimProvider?: string | null;
+  scimDirectoryId?: string | null;
 }
 
 export interface TeamDetail {
