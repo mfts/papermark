@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { customAlphabet } from "nanoid";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
@@ -67,6 +68,7 @@ export default async function handle(
         },
         select: {
           id: true,
+          slug: true,
         },
       });
 
@@ -74,7 +76,14 @@ export default async function handle(
         return res.status(404).json({ error: "Link not found" });
       }
 
-      // Soft delete the link by setting deletedAt and isArchived
+      // Generate a random suffix for the deleted slug to free up the original slug
+      const generateDeletedSuffix = customAlphabet(
+        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+        6,
+      );
+
+      // Soft delete the link by setting deletedAt and isArchived,
+      // and rename the slug so the original can be reused
       await prisma.link.update({
         where: {
           id: linkId,
@@ -82,6 +91,9 @@ export default async function handle(
         data: {
           deletedAt: new Date(),
           isArchived: true,
+          ...(linkToDelete.slug && {
+            slug: `${linkToDelete.slug}-DELETED-${generateDeletedSuffix()}`,
+          }),
         },
       });
 
