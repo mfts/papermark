@@ -4,6 +4,7 @@ import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import PasskeyProvider from "@teamhanko/passkeys-next-auth-provider";
 import NextAuth, { type NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import EmailProvider from "next-auth/providers/email";
 import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
@@ -14,6 +15,7 @@ import { dub } from "@/lib/dub";
 import { isBlacklistedEmail } from "@/lib/edge-config/blacklist";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
 import hanko from "@/lib/hanko";
+import jackson from "@/lib/jackson";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
@@ -102,6 +104,86 @@ export const authOptions: NextAuthOptions = {
         return user;
       },
     }),
+    CredentialsProvider({
+      id: "saml-idp",
+      name: "IdP Login",
+      credentials: {
+        code: { type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.code) return null;
+
+        try {
+          const { oauthController } = await jackson();
+
+          // Exchange the authorization code for an access token
+          const { access_token } = await oauthController.token({
+            code: credentials.code,
+            grant_type: "authorization_code",
+            redirect_uri: process.env.NEXTAUTH_URL!,
+            client_id: "dummy", // Jackson uses tenant+product, not traditional client_id
+            client_secret: process.env.NEXTAUTH_SECRET!,
+          });
+
+          if (!access_token) return null;
+
+          // Fetch user info from Jackson
+          const userInfo = await oauthController.userInfo(access_token);
+          if (!userInfo) return null;
+
+          // userInfo contains: id, email, firstName, lastName, requested.tenant, requested.product
+          const { email, firstName, lastName, requested } = userInfo as any;
+
+          if (!email) return null;
+
+          const name = [firstName, lastName].filter(Boolean).join(" ") || email;
+
+          // Upsert user in the main DB
+          const user = await prisma.user.upsert({
+            where: { email },
+            create: {
+              email,
+              name,
+            },
+            update: {
+              name: name || undefined,
+            },
+          });
+
+          // If we have tenant info, ensure user is a member of the workspace (team)
+          const tenant = requested?.tenant;
+          if (tenant) {
+            const existingMembership = await prisma.userTeam.findUnique({
+              where: {
+                userId_teamId: {
+                  userId: user.id,
+                  teamId: tenant,
+                },
+              },
+            });
+
+            if (!existingMembership) {
+              await prisma.userTeam.create({
+                data: {
+                  userId: user.id,
+                  teamId: tenant,
+                  role: "MEMBER",
+                },
+              });
+            }
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          };
+        } catch (error) {
+          console.error("[SAML] Error during SAML authorization:", error);
+          return null;
+        }
+      },
+    }),
   ],
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
@@ -120,12 +202,16 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     jwt: async (params) => {
-      const { token, user, trigger } = params;
+      const { token, user, trigger, account } = params;
       if (!token.email) {
         return {};
       }
       if (user) {
         token.user = user;
+      }
+      // Track SAML provider on the token
+      if (account?.provider === "saml-idp" && user) {
+        token.provider = "saml";
       }
       // refresh the user data
       if (trigger === "update") {

@@ -28,6 +28,7 @@
     "@aws-sdk/cloudfront-signer": "^3.978.0",
     "@aws-sdk/lib-storage": "^3.982.0",
     "@aws-sdk/s3-request-presigner": "^3.982.0",
+    "@boxyhq/saml-jackson": "^1.52.2",
     "@calcom/embed-react": "^1.5.3",
     "@chronark/zod-bird": "^0.3.10",
     "@dnd-kit/core": "^6.3.1",
