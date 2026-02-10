@@ -821,6 +821,11 @@ export default function LinksTable({
                   )}
                 />
                 <h2 className="m-0">All links</h2>
+                {processedLinks && processedLinks.length > 0 && (
+                  <Badge variant="outline" className="text-muted-foreground">
+                    {processedLinks.length}
+                  </Badge>
+                )}
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
