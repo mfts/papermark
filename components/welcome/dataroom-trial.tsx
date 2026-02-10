@@ -33,12 +33,28 @@ export default function DataroomTrial() {
 
   const [useCase, setUseCase] = useState<string>("");
   const [customUseCase, setCustomUseCase] = useState<string>("");
+  const [dealSize, setDealSize] = useState<string>("");
   const [companySize, setCompanySize] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [companyName, setCompanyName] = useState<string>("");
   const [tools, setTools] = useState<string>("");
 
   const [loading, setLoading] = useState<boolean>(false);
+
+  // Map use case to deal type for survey
+  const useCaseToDealType: Record<string, string> = {
+    "mergers-and-acquisitions": "mergers-acquisitions",
+    "startup-fundraising": "startup-fundraising",
+    "fund-management": "fund-management",
+    sales: "sales",
+    "project-management": "project-management",
+    operations: "financial-operations",
+    "real-estate": "real-estate",
+  };
+
+  // Check if use case needs deal size question
+  const needsDealSize =
+    !!useCase && useCase !== "project-management";
 
   // Helper function to convert use case to proper dataroom name
   const getDataroomName = (useCaseValue: string, customValue: string = "") => {
@@ -47,12 +63,13 @@ export default function DataroomTrial() {
     }
 
     const useCaseNames: Record<string, string> = {
-      "mergers-and-acquisitions": "Mergers and Acquisitions Data Room",
+      "mergers-and-acquisitions": "Mergers & Acquisitions Data Room",
       "startup-fundraising": "Startup Fundraising Data Room",
-      "fund-management": "Fund Management & Fundraising Data Room",
+      "fund-management": "Fundraising & Reporting Data Room",
       sales: "Sales Data Room",
       "project-management": "Project Management Data Room",
-      operations: "Operations Data Room",
+      operations: "Financial Operations Data Room",
+      "real-estate": "Real Estate Data Room",
     };
 
     return useCaseNames[useCaseValue] || "Data Room";
@@ -67,11 +84,31 @@ export default function DataroomTrial() {
       return;
     }
 
+    // Check if deal size is required but not filled
+    if (needsDealSize && !dealSize) {
+      toast.error("Please select a deal size.");
+      return;
+    }
+
     setLoading(true);
 
     const dataroomName = getDataroomName(useCase, customUseCase.trim());
 
     try {
+      // Save survey data to team
+      const dealType = useCase === "other" ? "other" : useCaseToDealType[useCase];
+      if (dealType) {
+        await fetch(`/api/teams/${teamInfo?.currentTeam?.id}/survey`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dealType,
+            dealTypeOther: useCase === "other" ? customUseCase.trim() : null,
+            dealSize: dealSize || null,
+          }),
+        });
+      }
+
       const response = await fetch(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/trial`,
         {
@@ -107,6 +144,7 @@ export default function DataroomTrial() {
         dataroomName: dataroomName,
         useCase: useCase === "other" ? customUseCase.trim() : useCase,
         companySize,
+        dealSize,
         dataroomId,
       });
       toast.success("Dataroom successfully created! 🎉");
@@ -250,6 +288,8 @@ export default function DataroomTrial() {
                 if (value !== "other") {
                   setCustomUseCase("");
                 }
+                // Reset deal size when use case changes
+                setDealSize("");
               }}
             >
               <SelectTrigger>
@@ -257,19 +297,20 @@ export default function DataroomTrial() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="mergers-and-acquisitions">
-                  Mergers and Acquisitions
+                  Mergers & Acquisitions
                 </SelectItem>
                 <SelectItem value="startup-fundraising">
                   Startup Fundraising
                 </SelectItem>
                 <SelectItem value="fund-management">
-                  Fund management & Fundraising
+                  Fundraising & Reporting
                 </SelectItem>
                 <SelectItem value="sales">Sales</SelectItem>
                 <SelectItem value="project-management">
-                  Project management
+                  Project Management
                 </SelectItem>
-                <SelectItem value="operations">Operations</SelectItem>
+                <SelectItem value="operations">Financial Operations</SelectItem>
+                <SelectItem value="real-estate">Real Estate</SelectItem>
 
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
@@ -284,6 +325,29 @@ export default function DataroomTrial() {
               />
             )}
           </div>
+
+          {/* Deal Size - shown after use case is selected (except project-management and operations) */}
+          {needsDealSize && (
+            <div className="space-y-1">
+              <Label className="opacity-80">
+                {useCase === "startup-fundraising" || useCase === "fund-management"
+                  ? "How much are you raising?*"
+                  : "What's the deal size?*"}
+              </Label>
+              <Select onValueChange={(value) => setDealSize(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select deal size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0-500k">$0 - $500K</SelectItem>
+                  <SelectItem value="500k-5m">$500K - $5M</SelectItem>
+                  <SelectItem value="5m-10m">$5M - $10M</SelectItem>
+                  <SelectItem value="10m-100m">$10M - $100M</SelectItem>
+                  <SelectItem value="100m+">$100M+</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-1">
             <Label htmlFor="tools" className="opacity-80">
@@ -318,7 +382,8 @@ export default function DataroomTrial() {
                 !useCase ||
                 !name ||
                 !companyName ||
-                (useCase === "other" && !customUseCase.trim())
+                (useCase === "other" && !customUseCase.trim()) ||
+                (needsDealSize && !dealSize)
               }
               loading={loading}
             >
