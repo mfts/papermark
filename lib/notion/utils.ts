@@ -44,12 +44,67 @@ function extractPageReferencesFromRichText(
 }
 
 /**
+ * Normalizes the block entries in a recordMap to ensure a consistent structure.
+ *
+ * The Notion API (via `getBlocks` / newer API responses) sometimes returns blocks
+ * in a double-nested format:
+ *   { spaceId, value: { value: { id, type, ... }, role: "reader" } }
+ *
+ * But `react-notion-x` expects:
+ *   { value: { id, type, ... }, role: "reader" }
+ *
+ * This function flattens any double-nested entries so the renderer doesn't crash
+ * when calling `uuidToId` on an undefined block id.
+ */
+export function normalizeRecordMap(recordMap: ExtendedRecordMap): void {
+  // Normalize blocks
+  for (const blockId of Object.keys(recordMap.block)) {
+    const entry = recordMap.block[blockId] as any;
+    if (
+      entry?.value &&
+      typeof entry.value === "object" &&
+      entry.value.value &&
+      typeof entry.value.value === "object" &&
+      entry.value.value.id
+    ) {
+      // Double-nested: flatten { value: { value: {...}, role }, spaceId } → { value: {...}, role }
+      recordMap.block[blockId] = {
+        value: entry.value.value,
+        role: entry.value.role ?? entry.role ?? "reader",
+      } as any;
+    }
+  }
+
+  // Normalize collections (same pattern can occur)
+  if (recordMap.collection) {
+    for (const collectionId of Object.keys(recordMap.collection)) {
+      const entry = recordMap.collection[collectionId] as any;
+      if (
+        entry?.value &&
+        typeof entry.value === "object" &&
+        entry.value.value &&
+        typeof entry.value.value === "object" &&
+        entry.value.value.id
+      ) {
+        recordMap.collection[collectionId] = {
+          value: entry.value.value,
+          role: entry.value.role ?? entry.role ?? "reader",
+        } as any;
+      }
+    }
+  }
+}
+
+/**
  * Fetches missing page blocks that are referenced in rich text but not in the recordMap.
  * This fixes the issue where tables with multiple page links only show the first one.
  */
 export async function fetchMissingPageReferences(
   recordMap: ExtendedRecordMap,
 ): Promise<void> {
+  // Normalize first so we can safely access block.value.properties
+  normalizeRecordMap(recordMap);
+
   const allPageReferenceIds = new Set<string>();
 
   // Iterate through all blocks to find page references in their properties
@@ -81,6 +136,8 @@ export async function fetchMissingPageReferences(
         ...newBlocks.recordMap.block,
       };
     }
+    // Normalize again after merging new blocks (getBlocks may return double-nested format)
+    normalizeRecordMap(recordMap);
   } catch (err) {
     console.warn("Failed to fetch missing page references:", err);
   }
