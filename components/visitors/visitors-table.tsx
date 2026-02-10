@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -14,10 +15,13 @@ import {
   DownloadCloudIcon,
   FileBadgeIcon,
   FileDigitIcon,
+  MailIcon,
   MoreHorizontalIcon,
+  PlayCircleIcon,
   ServerIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
+  Trash2Icon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -27,6 +31,8 @@ import { useDocumentVisits } from "@/lib/swr/use-document";
 import { durationFormat, timeAgo } from "@/lib/utils";
 
 import ChevronDown from "@/components/shared/icons/chevron-down";
+import LinkedIn from "@/components/shared/icons/linkedin";
+import Twitter from "@/components/shared/icons/twitter";
 import {
   Collapsible,
   CollapsibleContent,
@@ -64,6 +70,35 @@ import VisitorUserAgent from "./visitor-useragent";
 import VisitorUserAgentPlaceholder from "./visitor-useragent-placeholder";
 import VisitorVideoChart from "./visitor-video-chart";
 
+const TEST_VIEWER_EMAILS = ["marc@papermark.com", "iuliia@papermark.com"];
+
+// Test viewer profiles with hardcoded display values
+const TEST_VIEWER_PROFILES: Record<
+  string,
+  {
+    title: string;
+    linkedin: string;
+    twitter: string;
+    duration: number; // in milliseconds
+    completionRate: number; // percentage
+  }
+> = {
+  "marc@papermark.com": {
+    title: "Co-Founder of Papermark",
+    linkedin: "https://www.linkedin.com/in/marcseitz/",
+    twitter: "https://x.com/mfts0",
+    duration: 342000, // 5:42 mins
+    completionRate: 100,
+  },
+  "iuliia@papermark.com": {
+    title: "Co-Founder of Papermark",
+    linkedin: "https://www.linkedin.com/in/iuliia-shnai/",
+    twitter: "https://x.com/shnai0",
+    duration: 185000, // 3:05 mins
+    completionRate: 60,
+  },
+};
+
 export default function VisitorsTable({
   primaryVersion,
   isVideo = false,
@@ -71,6 +106,8 @@ export default function VisitorsTable({
   primaryVersion: DocumentVersion;
   isVideo?: boolean;
 }) {
+  const router = useRouter();
+  const { id: documentId } = router.query as { id: string };
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -85,6 +122,113 @@ export default function VisitorsTable({
 
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCreatingTestView, setIsCreatingTestView] = useState(false);
+  const [isDeletingTestView, setIsDeletingTestView] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [testViewsDeleted, setTestViewsDeleted] = useState(false);
+
+  // Check localStorage on mount to persist "deleted" state across refreshes
+  useEffect(() => {
+    if (documentId) {
+      const deleted = localStorage.getItem(`testViewsDeleted_${documentId}`);
+      if (deleted === "true") {
+        setTestViewsDeleted(true);
+      }
+    }
+  }, [documentId]);
+
+  // Check if there are any test views
+  const hasTestView = views?.viewsWithDuration?.some(
+    (view) =>
+      view.viewerEmail && TEST_VIEWER_EMAILS.includes(view.viewerEmail),
+  );
+
+  // Check if there are any real (non-test) views
+  const hasRealViews = views?.viewsWithDuration?.some(
+    (view) =>
+      !view.viewerEmail || !TEST_VIEWER_EMAILS.includes(view.viewerEmail),
+  );
+
+  // Only show test view buttons if there are no real views and test views haven't been deleted
+  const showTestViewButton = !hasRealViews && !testViewsDeleted;
+
+  // Check if row should be expanded (all views start closed)
+  const isRowExpanded = (viewId: string) => {
+    return expandedRows.has(viewId);
+  };
+
+  const toggleRowExpanded = (viewId: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(viewId)) {
+        next.delete(viewId);
+      } else {
+        next.add(viewId);
+      }
+      return next;
+    });
+  };
+
+  const handleCreateTestView = async () => {
+    if (!teamId || !documentId) return;
+
+    setIsCreatingTestView(true);
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/documents/${documentId}/test-view`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create test view");
+      }
+
+      toast.success("You got your first views!");
+      // Short delay then reload - display values are hardcoded for test viewers
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      router.reload();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create test view",
+      );
+      setIsCreatingTestView(false);
+    }
+  };
+
+  const handleDeleteTestView = async () => {
+    if (!teamId || !documentId) return;
+
+    setIsDeletingTestView(true);
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/documents/${documentId}/test-view`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete test views");
+      }
+
+      toast.success("Test views deleted!");
+      // Mark test views as deleted so button disappears permanently
+      setTestViewsDeleted(true);
+      // Persist to localStorage so it survives page refresh
+      localStorage.setItem(`testViewsDeleted_${documentId}`, "true");
+      // Refresh the views data
+      mutateViews();
+    } catch (error) {
+      toast.error("Failed to delete test views");
+    } finally {
+      setIsDeletingTestView(false);
+    }
+  };
 
   const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
@@ -133,8 +277,36 @@ export default function VisitorsTable({
 
   return (
     <div className="w-full">
-      <div className="mb-2 md:mb-4">
+      <div className="mb-2 flex items-center justify-between md:mb-4">
         <h2>All visitors</h2>
+        <div>
+          {showTestViewButton && (
+            <>
+              {hasTestView ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeleteTestView}
+                  disabled={isDeletingTestView}
+                  className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <Trash2Icon className="!size-4" />
+                  {isDeletingTestView ? "Deleting..." : "Delete test views"}
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={handleCreateTestView}
+                  disabled={isCreatingTestView}
+                  className="bg-emerald-500 text-white hover:bg-emerald-600"
+                >
+                  <PlayCircleIcon className="!size-4" />
+                  {isCreatingTestView ? "Creating..." : "Show test views"}
+                </Button>
+              )}
+            </>
+          )}
+        </div>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -247,17 +419,28 @@ export default function VisitorsTable({
                           </div>
                         </div>
                       </TableCell>
-                      {/* Duration */}
+                      {/* Duration - use hardcoded value for test viewers */}
                       <TableCell className="">
                         <div className="text-sm text-muted-foreground">
-                          {durationFormat(view.totalDuration)}
+                          {durationFormat(
+                            view.viewerEmail &&
+                              TEST_VIEWER_PROFILES[view.viewerEmail]
+                              ? TEST_VIEWER_PROFILES[view.viewerEmail].duration
+                              : view.totalDuration,
+                          )}
                         </div>
                       </TableCell>
-                      {/* Completion */}
+                      {/* Completion - use hardcoded value for test viewers */}
                       <TableCell className="flex justify-start">
                         <div className="text-sm text-muted-foreground">
                           <Gauge
-                            value={view.completionRate}
+                            value={
+                              view.viewerEmail &&
+                              TEST_VIEWER_PROFILES[view.viewerEmail]
+                                ? TEST_VIEWER_PROFILES[view.viewerEmail]
+                                    .completionRate
+                                : view.completionRate
+                            }
                             size={"small"}
                             showValue={true}
                           />
@@ -322,7 +505,12 @@ export default function VisitorsTable({
                   );
                 }
                 return (
-                  <Collapsible key={view.id} asChild>
+                  <Collapsible
+                    key={view.id}
+                    asChild
+                    open={isRowExpanded(view.id)}
+                    onOpenChange={() => toggleRowExpanded(view.id)}
+                  >
                     <>
                       <CollapsibleTrigger asChild>
                         <TableRow key={view.id} className="group/row">
@@ -336,14 +524,25 @@ export default function VisitorsTable({
                                     {view.viewerEmail ? (
                                       <>
                                         {view.viewerName || view.viewerEmail}{" "}
-                                        {view.verified && (
-                                          <BadgeTooltip
-                                            content="Verified visitor"
-                                            key={`verified-${view.id}`}
-                                          >
-                                            <BadgeCheckIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
-                                          </BadgeTooltip>
-                                        )}
+                                        {view.verified &&
+                                          (view.viewerEmail &&
+                                          TEST_VIEWER_EMAILS.includes(
+                                            view.viewerEmail,
+                                          ) ? (
+                                            <BadgeTooltip
+                                              content="Test visitor"
+                                              key={`test-${view.id}`}
+                                            >
+                                              <BadgeCheckIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
+                                            </BadgeTooltip>
+                                          ) : (
+                                            <BadgeTooltip
+                                              content="Verified visitor"
+                                              key={`verified-${view.id}`}
+                                            >
+                                              <BadgeCheckIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
+                                            </BadgeTooltip>
+                                          ))}
                                         {view.internal && (
                                           <BadgeTooltip
                                             content="Internal visitor"
@@ -399,26 +598,86 @@ export default function VisitorsTable({
                                       {view.viewerEmail}
                                     </p>
                                   )}
-                                  <p className="text-xs text-muted-foreground/60 sm:text-sm">
-                                    {view.link && view.link.name
-                                      ? view.link.name
-                                      : view.linkId}
-                                  </p>
+                                  {/* Show title and social links for test viewers instead of link ID */}
+                                  {view.viewerEmail &&
+                                  TEST_VIEWER_PROFILES[view.viewerEmail] ? (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-muted-foreground sm:text-sm">
+                                        {
+                                          TEST_VIEWER_PROFILES[view.viewerEmail]
+                                            .title
+                                        }
+                                      </span>
+                                      <div className="flex items-center gap-1.5">
+                                        <a
+                                          href={
+                                            TEST_VIEWER_PROFILES[
+                                              view.viewerEmail
+                                            ].linkedin
+                                          }
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="text-muted-foreground"
+                                        >
+                                          <LinkedIn className="h-3.5 w-3.5" color={false} />
+                                        </a>
+                                        <a
+                                          href={
+                                            TEST_VIEWER_PROFILES[
+                                              view.viewerEmail
+                                            ].twitter
+                                          }
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="text-muted-foreground"
+                                        >
+                                          <Twitter className="h-3.5 w-3.5" />
+                                        </a>
+                                        <a
+                                          href={`mailto:${view.viewerEmail}`}
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="text-muted-foreground hover:text-emerald-500"
+                                        >
+                                          <MailIcon className="h-3.5 w-3.5" />
+                                        </a>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground/60 sm:text-sm">
+                                      {view.link && view.link.name
+                                        ? view.link.name
+                                        : view.linkId}
+                                    </p>
+                                  )}
                                 </div>
                               </div>
                             </div>
                           </TableCell>
-                          {/* Duration */}
+                          {/* Duration - use hardcoded value for test viewers */}
                           <TableCell className="">
                             <div className="text-sm text-muted-foreground">
-                              {durationFormat(view.totalDuration)}
+                              {durationFormat(
+                                view.viewerEmail &&
+                                  TEST_VIEWER_PROFILES[view.viewerEmail]
+                                  ? TEST_VIEWER_PROFILES[view.viewerEmail]
+                                      .duration
+                                  : view.totalDuration,
+                              )}
                             </div>
                           </TableCell>
-                          {/* Completion */}
+                          {/* Completion - use hardcoded value for test viewers */}
                           <TableCell className="flex justify-start">
                             <div className="text-sm text-muted-foreground">
                               <Gauge
-                                value={view.completionRate}
+                                value={
+                                  view.viewerEmail &&
+                                  TEST_VIEWER_PROFILES[view.viewerEmail]
+                                    ? TEST_VIEWER_PROFILES[view.viewerEmail]
+                                        .completionRate
+                                    : view.completionRate
+                                }
                                 size={"small"}
                                 showValue={true}
                               />
@@ -442,42 +701,50 @@ export default function VisitorsTable({
 
                           {/* Actions */}
                           <TableCell className="text-center sm:text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0 group-hover/row:ring-1 group-hover/row:ring-gray-200 group-hover/row:dark:ring-gray-700"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                  }}
-                                >
-                                  <span className="sr-only">Open menu</span>
-                                  <MoreHorizontalIcon className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <div className="flex items-center justify-end gap-1">
+                              {/* Expand indicator - shows on hover */}
+                              <ChevronDown
+                                className={`h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-all duration-200 group-hover/row:opacity-100 ${
+                                  isRowExpanded(view.id) ? "rotate-180" : ""
+                                }`}
+                              />
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0 group-hover/row:ring-1 group-hover/row:ring-gray-200 group-hover/row:dark:ring-gray-700"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                    }}
+                                  >
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontalIcon className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    handleArchiveView(
-                                      view.id,
-                                      view.documentId ?? "",
-                                      view.isArchived,
-                                    );
-                                  }}
-                                  disabled={isLoading}
-                                >
-                                  <ArchiveIcon className="mr-2 h-4 w-4" />
-                                  Archive
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                      handleArchiveView(
+                                        view.id,
+                                        view.documentId ?? "",
+                                        view.isArchived,
+                                      );
+                                    }}
+                                    disabled={isLoading}
+                                  >
+                                    <ArchiveIcon className="mr-2 h-4 w-4" />
+                                    Archive
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </TableCell>
                         </TableRow>
                       </CollapsibleTrigger>

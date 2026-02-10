@@ -16,6 +16,16 @@ import {
 } from "@/lib/tinybird/pipes";
 import { CustomUser } from "@/lib/types";
 
+// Hardcoded test viewer stats
+const TEST_VIEWER_STATS: Record<
+  string,
+  { duration: number; completionRate: number }
+> = {
+  "marc@papermark.com": { duration: 342000, completionRate: 100 }, // 5:42 mins
+  "iuliia@papermark.com": { duration: 185000, completionRate: 60 }, // 3:05 mins
+};
+const TEST_VIEWER_EMAILS = Object.keys(TEST_VIEWER_STATS);
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -224,13 +234,60 @@ export default async function handle(
         }
       }
 
+      // Separate test views from real views
+      const testViews = filteredViews.filter(
+        (view) =>
+          view.viewerEmail && TEST_VIEWER_EMAILS.includes(view.viewerEmail),
+      );
+      const realViews = filteredViews.filter(
+        (view) =>
+          !view.viewerEmail || !TEST_VIEWER_EMAILS.includes(view.viewerEmail),
+      );
+
+      // Calculate final stats using hardcoded values for test views
+      let finalAvgCompletionRate = avgCompletionRate;
+      let finalTotalDuration =
+        filteredViews.length > 0
+          ? (totalDocumentDuration.data[0]?.sum_duration ?? 0) /
+            filteredViews.length
+          : 0;
+
+      if (testViews.length > 0) {
+        // Calculate hardcoded totals for test views
+        const testViewsCompletionSum = testViews.reduce((sum, view) => {
+          const stats = TEST_VIEWER_STATS[view.viewerEmail || ""];
+          return sum + (stats?.completionRate || 0);
+        }, 0);
+        const testViewsDurationSum = testViews.reduce((sum, view) => {
+          const stats = TEST_VIEWER_STATS[view.viewerEmail || ""];
+          return sum + (stats?.duration || 0);
+        }, 0);
+
+        if (realViews.length === 0) {
+          // Only test views - use hardcoded averages
+          finalAvgCompletionRate = testViewsCompletionSum / testViews.length;
+          finalTotalDuration = testViewsDurationSum / testViews.length;
+        } else {
+          // Mix of test and real views - calculate weighted average
+          const realViewsCompletionSum = avgCompletionRate * realViews.length;
+          const realViewsDurationSum =
+            (totalDocumentDuration.data[0]?.sum_duration ?? 0) -
+            testViewsDurationSum;
+
+          finalAvgCompletionRate =
+            (testViewsCompletionSum + realViewsCompletionSum) /
+            filteredViews.length;
+          finalTotalDuration =
+            (testViewsDurationSum + realViewsDurationSum) /
+            filteredViews.length;
+        }
+      }
+
       const stats = {
         views: filteredViews,
         duration,
-        total_duration:
-          (totalDocumentDuration.data[0].sum_duration * 1.0) /
-          filteredViews.length,
-        avgCompletionRate: Math.round(avgCompletionRate),
+        total_duration: finalTotalDuration,
+        avgCompletionRate: Math.round(finalAvgCompletionRate),
         totalViews: filteredViews.length,
       };
 
