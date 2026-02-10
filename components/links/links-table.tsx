@@ -1020,22 +1020,6 @@ export default function LinksTable({
                                   </PopoverContent>
                                 </Popover>
                               )}
-                              {/* Reserve space for file permissions icon in dataroom */}
-                              {targetType === "DATAROOM" && (
-                                <div className="flex w-8 items-center justify-center">
-                                  {link.permissionGroupId && (
-                                    <ButtonTooltip content="Limited File Access">
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 cursor-default"
-                                      >
-                                        <FileSlidersIcon className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                                      </Button>
-                                    </ButtonTooltip>
-                                  )}
-                                </div>
-                              )}
                             </div>
                           </div>
                         </TableCell>
@@ -1047,8 +1031,7 @@ export default function LinksTable({
                         <TableCell>
                           <CollapsibleTrigger
                             disabled={
-                              Number(nFormatter(link._count.views)) === 0 ||
-                              targetType === "DATAROOM"
+                              Number(nFormatter(link._count.views)) === 0
                             }
                           >
                             <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
@@ -1059,8 +1042,7 @@ export default function LinksTable({
                                   views
                                 </span>
                               </p>
-                              {Number(nFormatter(link._count.views)) > 0 &&
-                              targetType !== "DATAROOM" ? (
+                              {Number(nFormatter(link._count.views)) > 0 ? (
                                 <ChevronDown className="chevron h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
                               ) : null}
                             </div>
@@ -1129,32 +1111,12 @@ export default function LinksTable({
                                 <Settings2Icon className="mr-2 h-4 w-4" />
                                 Edit Link
                               </DropdownMenuItem>
-                              {targetType === "DATAROOM" &&
-                                link.audienceType !==
-                                  LinkAudienceType.GROUP && (
-                                  <DropdownMenuItem
-                                    onClick={() => handleEditPermissions(link)}
-                                    disabled={isLoading}
-                                  >
-                                    <FileSlidersIcon className="mr-2 h-4 w-4" />
-                                    Edit File Permissions
-                                  </DropdownMenuItem>
-                                )}
                               <DropdownMenuItem
                                 onClick={() => handlePreviewLink(link)}
                               >
                                 <EyeIcon className="mr-2 h-4 w-4" />
                                 Preview Link
                               </DropdownMenuItem>
-                              {targetType === "DATAROOM" &&
-                                isFeatureEnabled("dataroomInvitations") && (
-                                  <DropdownMenuItem
-                                    onClick={() => handleSendInvitations(link)}
-                                  >
-                                    <SendIcon className="mr-2 h-4 w-4" />
-                                    Send Invitations
-                                  </DropdownMenuItem>
-                                )}
                               <DropdownMenuItem
                                 disabled={!canAddLinks}
                                 onClick={() => handleDuplicateLink(link)}
