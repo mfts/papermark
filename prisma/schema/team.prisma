@@ -47,6 +47,16 @@ model Team {
   replicateDataroomFolders Boolean @default(true) // Replicate dataroom folder structure in "All Documents"
   timezone               String  @default("Etc/UTC") // Team-wide timezone for analytics display (IANA timezone identifier)
 
+  // SAML SSO
+  samlEnabled      Boolean @default(false) // Whether SAML SSO is enabled
+  samlProvider     String? // IdP provider: "azure", "okta", "google", "custom"
+  samlConnectionId String? // Jackson SAML connection client_id
+
+  // SCIM Directory Sync
+  scimEnabled     Boolean @default(false) // Whether SCIM directory sync is enabled
+  scimProvider    String? // Directory provider: "azure-scim-v2", "okta-scim-v2", etc.
+  scimDirectoryId String? // Jackson directory sync ID
+
   // AI agents
   agentsEnabled Boolean @default(false) // Enable AI agents for the team
   vectorStoreId String? // OpenAI vector store ID for team-level document search

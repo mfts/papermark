@@ -79,6 +79,11 @@ export function SettingsHeader() {
             disabled: !features?.incomingWebhooks,
           },
           {
+            label: "Security",
+            href: `/settings/security`,
+            segment: "security",
+          },
+          {
             label: "Billing",
             href: `/settings/billing`,
             segment: "billing",

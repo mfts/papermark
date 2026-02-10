@@ -12,6 +12,7 @@ import { z } from "zod";
 
 import { cn } from "@/lib/utils";
 
+import { SSOLogin } from "@/components/auth/sso-login";
 import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
 import Google from "@/components/shared/icons/google";
 import LinkedIn from "@/components/shared/icons/linkedin";
@@ -210,6 +211,21 @@ export default function Login() {
                 <span>Continue with a passkey</span>
                 {lastUsed === "passkey" && <LastUsed />}
               </Button>
+            </div>
+          </div>
+          <div className="px-4 pt-4 sm:px-12">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-200" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-gray-50 px-2 text-muted-foreground">
+                  Enterprise SSO
+                </span>
+              </div>
+            </div>
+            <div className="mt-4">
+              <SSOLogin />
             </div>
           </div>
           <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-12">
