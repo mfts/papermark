@@ -35,7 +35,7 @@ export default async function handler(
       }
     });
 
-    const { status, json } = await directorySyncController.requests.handle(
+    const response = await directorySyncController.requests.handle(
       {
         method: req.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
         body,
@@ -48,7 +48,7 @@ export default async function handler(
       handleSCIMEvents,
     );
 
-    return res.status(status).json(json);
+    return res.status(response.status).json(response.data || {});
   } catch (error: any) {
     console.error("[SCIM] Request error:", error);
     return res.status(500).json({
