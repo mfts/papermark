@@ -1,9 +1,11 @@
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
+import { useIsAdmin } from "@/lib/hooks/use-is-admin";
 
 import { NavMenu } from "../navigation-menu";
 
 export function SettingsHeader() {
   const { features } = useFeatureFlags();
+  const { isAdmin } = useIsAdmin();
 
   return (
     <header>
@@ -82,11 +84,13 @@ export function SettingsHeader() {
             label: "Security",
             href: `/settings/security`,
             segment: "security",
+            disabled: !isAdmin,
           },
           {
             label: "Billing",
             href: `/settings/billing`,
             segment: "billing",
+            disabled: !isAdmin,
           },
         ]}
       />

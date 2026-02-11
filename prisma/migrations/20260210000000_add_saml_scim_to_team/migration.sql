@@ -1,10 +1,14 @@
--- AlterTable: Add SAML/SCIM fields to Team
-ALTER TABLE "Team" ADD COLUMN "samlEnabled" BOOLEAN NOT NULL DEFAULT false;
-ALTER TABLE "Team" ADD COLUMN "samlProvider" TEXT;
-ALTER TABLE "Team" ADD COLUMN "samlConnectionId" TEXT;
-ALTER TABLE "Team" ADD COLUMN "scimEnabled" BOOLEAN NOT NULL DEFAULT false;
-ALTER TABLE "Team" ADD COLUMN "scimProvider" TEXT;
-ALTER TABLE "Team" ADD COLUMN "scimDirectoryId" TEXT;
+-- AlterTable: Add slug and SSO fields to Team
+ALTER TABLE "Team" ADD COLUMN "slug" TEXT;
+ALTER TABLE "Team" ADD COLUMN "ssoEnabled" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Team" ADD COLUMN "ssoEmailDomain" TEXT;
+ALTER TABLE "Team" ADD COLUMN "ssoEnforcedAt" TIMESTAMP(3);
+
+-- CreateIndex: unique slug for SSO login
+CREATE UNIQUE INDEX "Team_slug_key" ON "Team"("slug");
+
+-- CreateIndex: unique email domain for SSO
+CREATE UNIQUE INDEX "Team_ssoEmailDomain_key" ON "Team"("ssoEmailDomain");
 
 -- CreateTable: Jackson SAML/SCIM internal tables
 CREATE TABLE "jackson_index" (

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import { useState } from "react";
 
+import { SSOLogin } from "@/ee/features/security/sso";
 import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -12,7 +13,6 @@ import { z } from "zod";
 
 import { cn } from "@/lib/utils";
 
-import { SSOLogin } from "@/components/auth/sso-login";
 import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
 import Google from "@/components/shared/icons/google";
 import LinkedIn from "@/components/shared/icons/linkedin";
@@ -212,19 +212,7 @@ export default function Login() {
                 {lastUsed === "passkey" && <LastUsed />}
               </Button>
             </div>
-          </div>
-          <div className="px-4 pt-4 sm:px-12">
             <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-gray-50 px-2 text-muted-foreground">
-                  Enterprise SSO
-                </span>
-              </div>
-            </div>
-            <div className="mt-4">
               <SSOLogin />
             </div>
           </div>

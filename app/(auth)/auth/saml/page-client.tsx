@@ -6,6 +6,17 @@ import { useEffect, useState } from "react";
 
 import { signIn } from "next-auth/react";
 
+/**
+ * SAML Callback Page
+ *
+ * This page handles IdP-initiated SSO flow:
+ * 1. User clicks the app tile in their IdP dashboard
+ * 2. Jackson processes the SAML response and redirects here with a `code`
+ * 3. We exchange the code via the `saml-idp` CredentialsProvider
+ *
+ * SP-initiated SSO (user clicks "Continue with SSO" on login page) is handled
+ * entirely by NextAuth's OAuth flow via the `saml` provider — it never hits this page.
+ */
 export default function SAMLCallbackClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -15,7 +26,6 @@ export default function SAMLCallbackClient() {
   useEffect(() => {
     const code = searchParams?.get("code");
     if (code) {
-      // Use NextAuth's signIn with the saml-idp credentials provider
       signIn("saml-idp", {
         code,
         redirect: false,
@@ -31,7 +41,9 @@ export default function SAMLCallbackClient() {
       });
     } else {
       setStatus("error");
-      setErrorMessage("No authorization code received from your identity provider.");
+      setErrorMessage(
+        "No authorization code received from your identity provider.",
+      );
     }
   }, [searchParams, router]);
 

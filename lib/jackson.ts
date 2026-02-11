@@ -5,9 +5,19 @@ import type {
   JacksonOption,
 } from "@boxyhq/saml-jackson";
 import samlJackson from "@boxyhq/saml-jackson";
+import crypto from "crypto";
 
-export const samlAudience =
-  process.env.SAML_AUDIENCE || "https://saml.papermark.com";
+export const samlAudience = "https://saml.papermark.com";
+
+export { JACKSON_PRODUCT as jacksonProduct } from "@/ee/features/security/sso/product";
+
+// Jackson's AES-256-GCM encrypter requires exactly 32 bytes.
+// Derive a stable 32-byte key from NEXTAUTH_SECRET using SHA-256.
+const encryptionKey = crypto
+  .createHash("sha256")
+  .update(process.env.NEXTAUTH_SECRET || "")
+  .digest("base64url")
+  .substring(0, 32);
 
 const opts: JacksonOption = {
   externalUrl: process.env.NEXTAUTH_URL || "https://app.papermark.com",
@@ -17,10 +27,12 @@ const opts: JacksonOption = {
     engine: "sql",
     type: "postgres",
     url:
-      process.env.POSTGRES_PRISMA_URL_NON_POOLING ||
-      (process.env.POSTGRES_PRISMA_URL as string),
+      (process.env.POSTGRES_PRISMA_URL as string) ||
+      process.env.POSTGRES_PRISMA_URL_NON_POOLING,
+
+    encryptionKey,
   },
-  idpEnabled: true, // to allow folks to SSO directly from their IDP
+  idpEnabled: true, // to allow to SSO from their IDP
   scimPath: "/api/scim/v2.0",
   clientSecretVerifier: process.env.NEXTAUTH_SECRET as string,
 };

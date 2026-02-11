@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { checkRateLimit, rateLimiters } from "@/ee/features/security";
+import { isSamlEnforcedForEmailDomain } from "@/lib/api/teams/is-saml-enforced-for-email-domain";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import PasskeyProvider from "@teamhanko/passkeys-next-auth-provider";
 import NextAuth, { type NextAuthOptions } from "next-auth";
@@ -104,6 +105,58 @@ export const authOptions: NextAuthOptions = {
         return user;
       },
     }),
+    // ─── SP-Initiated SAML SSO (OAuth flow with PKCE + state) ───
+    // Used when user clicks "Continue with SSO" on the login page.
+    // NextAuth handles PKCE and state validation automatically.
+    {
+      id: "saml",
+      name: "BoxyHQ SAML",
+      type: "oauth",
+      version: "2.0",
+      checks: ["pkce", "state"],
+      authorization: {
+        url: `${process.env.NEXTAUTH_URL}/api/auth/saml/authorize`,
+        params: {
+          scope: "",
+          response_type: "code",
+          provider: "saml",
+        },
+      },
+      token: {
+        url: `${process.env.NEXTAUTH_URL}/api/auth/saml/token`,
+        params: { grant_type: "authorization_code" },
+      },
+      userinfo: `${process.env.NEXTAUTH_URL}/api/auth/saml/userinfo`,
+      profile: async (profile) => {
+        let existingUser = await prisma.user.findUnique({
+          where: { email: profile.email },
+        });
+
+        if (!existingUser) {
+          existingUser = await prisma.user.create({
+            data: {
+              email: profile.email,
+              name: `${profile.firstName || ""} ${profile.lastName || ""}`.trim(),
+            },
+          });
+        }
+
+        return {
+          id: existingUser.id,
+          name: existingUser.name,
+          email: existingUser.email,
+          image: existingUser.image,
+        };
+      },
+      options: {
+        clientId: "dummy",
+        clientSecret: process.env.NEXTAUTH_SECRET as string,
+      },
+      allowDangerousEmailAccountLinking: true,
+    },
+    // ─── IdP-Initiated SAML SSO (Credentials provider) ───
+    // Used when user clicks the app tile in their IdP dashboard.
+    // Jackson redirects with a code to /auth/saml, which then calls signIn("saml-idp", { code }).
     CredentialsProvider({
       id: "saml-idp",
       name: "IdP Login",
@@ -116,68 +169,56 @@ export const authOptions: NextAuthOptions = {
         try {
           const { oauthController } = await jackson();
 
-          // Exchange the authorization code for an access token
           const { access_token } = await oauthController.token({
             code: credentials.code,
             grant_type: "authorization_code",
             redirect_uri: process.env.NEXTAUTH_URL!,
-            client_id: "dummy", // Jackson uses tenant+product, not traditional client_id
+            client_id: "dummy",
             client_secret: process.env.NEXTAUTH_SECRET!,
           });
 
           if (!access_token) return null;
 
-          // Fetch user info from Jackson
           const userInfo = await oauthController.userInfo(access_token);
           if (!userInfo) return null;
 
-          // userInfo contains: id, email, firstName, lastName, requested.tenant, requested.product
           const { email, firstName, lastName, requested } = userInfo as any;
-
           if (!email) return null;
 
           const name = [firstName, lastName].filter(Boolean).join(" ") || email;
 
-          // Upsert user in the main DB
           const user = await prisma.user.upsert({
             where: { email },
-            create: {
-              email,
-              name,
-            },
-            update: {
-              name: name || undefined,
-            },
+            create: { email, name },
+            update: { name: name || undefined },
           });
 
-          // If we have tenant info, ensure user is a member of the workspace (team)
+          // If we have tenant info, ensure user is a member of the workspace
           const tenant = requested?.tenant;
           if (tenant) {
-            const existingMembership = await prisma.userTeam.findUnique({
+            await prisma.userTeam.upsert({
               where: {
                 userId_teamId: {
                   userId: user.id,
                   teamId: tenant,
                 },
               },
+              update: {},
+              create: {
+                userId: user.id,
+                teamId: tenant,
+                role: "MEMBER",
+              },
             });
-
-            if (!existingMembership) {
-              await prisma.userTeam.create({
-                data: {
-                  userId: user.id,
-                  teamId: tenant,
-                  role: "MEMBER",
-                },
-              });
-            }
           }
 
           return {
             id: user.id,
             email: user.email,
             name: user.name,
-          };
+            // Pass profile for signIn callback to access tenant
+            profile: userInfo,
+          } as any;
         } catch (error) {
           console.error("[SAML] Error during SAML authorization:", error);
           return null;
@@ -194,7 +235,6 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
         domain: VERCEL_DEPLOYMENT ? ".papermark.com" : undefined,
         secure: VERCEL_DEPLOYMENT,
       },
@@ -210,7 +250,10 @@ export const authOptions: NextAuthOptions = {
         token.user = user;
       }
       // Track SAML provider on the token
-      if (account?.provider === "saml-idp" && user) {
+      if (
+        (account?.provider === "saml" || account?.provider === "saml-idp") &&
+        user
+      ) {
         token.provider = "saml";
       }
       // refresh the user data
@@ -226,7 +269,6 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (refreshedUser?.email !== user.email) {
-          // if user has changed email, delete all accounts for the user
           if (user.id && refreshedUser.email) {
             await prisma.account.deleteMany({
               where: { userId: user.id },
@@ -259,7 +301,7 @@ export const authOptions: NextAuthOptions = {
         body: {
           userId: message.user.id,
         },
-        delay: 15 * 60, // 15 minutes
+        delay: 15 * 60,
       });
     },
   },
@@ -270,7 +312,7 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
     ...authOptions,
     callbacks: {
       ...authOptions.callbacks,
-      signIn: async ({ user }) => {
+      signIn: async ({ user, account, profile }) => {
         if (!user.email || (await isBlacklistedEmail(user.email))) {
           await identifyUser(user.email ?? user.id);
           await trackAnalytics({
@@ -279,6 +321,92 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
             userId: user.id,
           });
           return false;
+        }
+
+        // ─── SSO Enforcement ───
+        // If user is NOT signing in via SAML, check if their domain requires SSO
+        if (
+          account?.provider !== "saml" &&
+          account?.provider !== "saml-idp"
+        ) {
+          const ssoEnforced = await isSamlEnforcedForEmailDomain(user.email);
+          if (ssoEnforced) {
+            throw new Error("require-saml-sso");
+          }
+        }
+
+        // ─── SAML user → email domain validation + workspace membership ───
+        if (
+          account?.provider === "saml" ||
+          account?.provider === "saml-idp"
+        ) {
+          // Get the SAML profile — comes from different places depending on provider
+          let samlProfile: any;
+          if (account.provider === "saml-idp") {
+            // IdP-initiated: we attached the Jackson userInfo to user.profile
+            samlProfile = (user as any).profile;
+          } else {
+            // SP-initiated OAuth: NextAuth passes the raw Jackson userInfo as `profile`
+            samlProfile = profile;
+          }
+
+          const tenant = samlProfile?.requested?.tenant;
+          if (tenant) {
+            // ─── Email domain validation ───
+            // Verify the SAML user's email domain matches the team's ssoEmailDomain.
+            // This prevents a misconfigured IdP from injecting users from unexpected domains.
+            const team = await prisma.team.findUnique({
+              where: { id: tenant },
+              select: { ssoEmailDomain: true },
+            });
+
+            if (team?.ssoEmailDomain) {
+              const userEmailDomain = user.email
+                .split("@")[1]
+                ?.toLowerCase();
+              if (
+                userEmailDomain !==
+                team.ssoEmailDomain.toLowerCase()
+              ) {
+                console.warn(
+                  `[SAML] Rejected: user ${user.email} domain does not match team ssoEmailDomain ${team.ssoEmailDomain}`,
+                );
+                return false;
+              }
+            }
+
+            // ─── Auto-join workspace ───
+            await prisma.userTeam
+              .upsert({
+                where: {
+                  userId_teamId: {
+                    userId: user.id,
+                    teamId: tenant,
+                  },
+                },
+                update: {},
+                create: {
+                  userId: user.id,
+                  teamId: tenant,
+                  role: "MEMBER",
+                },
+              })
+              .catch(() => {
+                // Team may not exist, that's ok
+              });
+
+            // Clean up any pending invitations for this user
+            await prisma.invitation
+              .deleteMany({
+                where: {
+                  email: user.email,
+                  teamId: tenant,
+                },
+              })
+              .catch(() => {
+                // No invitation to clean up
+              });
+          }
         }
 
         // Apply rate limiting for signin attempts
@@ -295,7 +423,7 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
                 message: `Rate limit exceeded for IP ${clientIP} during signin attempt`,
                 type: "error",
               });
-              return false; // Block the signin
+              return false;
             }
           }
         } catch (error) {}
@@ -306,7 +434,6 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
     events: {
       ...authOptions.events,
       signIn: async (message) => {
-        // Identify and track sign-in without blocking the event flow
         await Promise.allSettled([
           identifyUser(message.user.email ?? message.user.id),
           trackAnalytics({
@@ -317,7 +444,6 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
 
         if (message.isNewUser) {
           const { dub_id } = req.cookies;
-          // Only fire lead event if Dub is enabled
           if (dub_id && process.env.DUB_API_KEY) {
             try {
               await dub.track.lead({
