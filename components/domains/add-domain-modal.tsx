@@ -310,61 +310,66 @@ export function AddDomainModal({
           <Label htmlFor="domain" className="opacity-80">
             Your domain
           </Label>
-          <div
-            className={cn(
-              "-m-1 mt-2 rounded-[0.625rem] p-1",
-              STATUS_CONFIG[domainStatus].className ||
-                "bg-neutral-100 text-neutral-500",
-            )}
-          >
-            <div className="flex rounded-md border border-neutral-300 bg-white">
-              <Input
-                id="domain"
-                placeholder="docs.yourdomain.com"
-                className="border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                value={domainInput}
-                onBlur={() => {
-                  const normalized = sanitizeDomain(domainInput);
-                  if (normalized && normalized !== domainInput) {
-                    setDomainInput(normalized);
-                  }
-                }}
-                onChange={(e) => {
-                  setDomainStatus("idle");
-                  setStatusMessageOverride(null);
-                  setDomainInput(e.target.value);
-                }}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-4 p-2 text-sm">
-              <p>
-                {["checking", "conflict", "has site", "available"].includes(
-                  domainStatus,
-                ) ? (
-                  <>
-                    {STATUS_CONFIG[domainStatus].prefix || "The domain"}{" "}
-                    {STATUS_CONFIG[domainStatus].useStrong ? (
-                      <strong className="font-semibold underline underline-offset-2">
-                        {sanitizedDomain || "this domain"}
-                      </strong>
-                    ) : (
-                      <span className="font-semibold underline underline-offset-2">
-                        {sanitizedDomain || "this domain"}
-                      </span>
-                    )}{" "}
-                    {STATUS_CONFIG[domainStatus].suffix}
-                  </>
-                ) : (
-                  statusMessageOverride ||
-                  STATUS_CONFIG[domainStatus].message ||
-                  "Enter a valid domain to check availability."
+          {(() => {
+            const currentStatus = STATUS_CONFIG[domainStatus];
+            const StatusIcon = currentStatus.icon;
+            return (
+              <div
+                className={cn(
+                  "-m-1 mt-2 rounded-[0.625rem] p-1",
+                  currentStatus.className || "bg-neutral-100 text-neutral-500",
                 )}
-              </p>
-              {STATUS_CONFIG[domainStatus].icon && (
-                <STATUS_CONFIG[domainStatus].icon className="h-5 w-5 shrink-0" />
-              )}
-            </div>
-          </div>
+              >
+                <div className="flex rounded-md border border-neutral-300 bg-white">
+                  <Input
+                    id="domain"
+                    placeholder="docs.yourdomain.com"
+                    className="border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                    value={domainInput}
+                    onBlur={() => {
+                      const normalized = sanitizeDomain(domainInput);
+                      if (normalized && normalized !== domainInput) {
+                        setDomainInput(normalized);
+                      }
+                    }}
+                    onChange={(e) => {
+                      setDomainStatus("idle");
+                      setStatusMessageOverride(null);
+                      setDomainInput(e.target.value);
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-4 p-2 text-sm">
+                  <p>
+                    {["checking", "conflict", "has site", "available"].includes(
+                      domainStatus,
+                    ) ? (
+                      <>
+                        {currentStatus.prefix || "The domain"}{" "}
+                        {currentStatus.useStrong ? (
+                          <strong className="font-semibold underline underline-offset-2">
+                            {sanitizedDomain || "this domain"}
+                          </strong>
+                        ) : (
+                          <span className="font-semibold underline underline-offset-2">
+                            {sanitizedDomain || "this domain"}
+                          </span>
+                        )}{" "}
+                        {currentStatus.suffix}
+                      </>
+                    ) : (
+                      statusMessageOverride ||
+                      currentStatus.message ||
+                      "Enter a valid domain to check availability."
+                    )}
+                  </p>
+                  {StatusIcon && (
+                    <StatusIcon className="h-5 w-5 shrink-0" />
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           <DialogFooter className="mt-6">
             <Button

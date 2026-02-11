@@ -105,13 +105,13 @@ async function hasSiteConfigured(domain: string): Promise<boolean> {
         const response = await fetch(url, {
           method: "HEAD",
           signal: controller.signal,
+          redirect: "manual",
         });
         clearTimeout(timeoutId);
-        if (response.ok) return true;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          continue;
-        }
+        // Any response (including redirects) means a site is configured
+        if (response.status < 500) return true;
+      } catch {
+        // Timeout, network error, or certificate error – try next URL
         continue;
       }
     }
