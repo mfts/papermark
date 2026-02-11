@@ -45,6 +45,8 @@ import {
 import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
+import { Badge } from "@/components/ui/badge";
+
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Pagination } from "../documents/pagination";
 import { Button } from "../ui/button";
@@ -133,8 +135,13 @@ export default function VisitorsTable({
 
   return (
     <div className="w-full">
-      <div className="mb-2 md:mb-4">
+      <div className="mb-2 flex items-center gap-2 md:mb-4">
         <h2>All visitors</h2>
+        {views && views.totalViews > 0 && (
+          <Badge variant="outline" className="text-muted-foreground">
+            {views.totalViews}
+          </Badge>
+        )}
       </div>
       <div className="rounded-md border">
         <Table>
