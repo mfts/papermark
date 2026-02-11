@@ -39,7 +39,16 @@ export async function POST(req: Request) {
   try {
     const { oauthController } = await jackson();
 
-    const body = await req.json();
+    const contentType = req.headers.get("content-type") || "";
+
+    let body: Record<string, any>;
+
+    if (contentType.includes("application/x-www-form-urlencoded")) {
+      const formData = await req.formData();
+      body = Object.fromEntries(formData.entries());
+    } else {
+      body = await req.json();
+    }
 
     const { redirect_url, authorize_form } =
       await oauthController.authorize(body);
