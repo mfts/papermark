@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { useEffect } from "react";
@@ -68,12 +69,12 @@ export default function SecuritySettings() {
                 </p>
                 {!isPlanEligible && (
                   <p className="mt-2 text-sm text-muted-foreground">
-                    <a
+                    <Link
                       href="/settings/billing"
                       className="font-medium underline"
                     >
                       Upgrade to Datarooms Premium
-                    </a>{" "}
+                    </Link>{" "}
                     to add SSO for your team.
                   </p>
                 )}
