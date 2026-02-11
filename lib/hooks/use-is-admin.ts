@@ -9,12 +9,15 @@ import { CustomUser } from "@/lib/types";
  * when the team data is already loaded on a settings page.
  */
 export function useIsAdmin() {
-  const { data: session } = useSession();
-  const { team, loading } = useGetTeam();
+  const { data: session, status } = useSession();
+  const { team, loading: teamLoading } = useGetTeam();
+
+  const sessionLoading = status === "loading";
+  const loading = teamLoading || sessionLoading;
 
   const userId = (session?.user as CustomUser)?.id;
 
-  const isAdmin =
+  const isAdmin = !loading &&
     !!team?.users?.some(
       (u) => u.userId === userId && u.role === "ADMIN",
     );
