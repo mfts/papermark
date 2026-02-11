@@ -1,8 +1,14 @@
 import { jackson } from "@/lib/jackson";
 import prisma from "@/lib/prisma";
 import type { DirectorySyncEvent } from "@boxyhq/saml-jackson";
+import { createHash } from "crypto";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+
+/** Return a truncated SHA-256 hex digest (first 12 chars) for log-safe pseudonymisation. */
+function hashEmail(email: string): string {
+  return createHash("sha256").update(email).digest("hex").slice(0, 12);
+}
 
 const handler = async (
   req: Request,
@@ -107,7 +113,7 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
     switch (eventType) {
       case "user.created": {
         console.log(
-          `[SCIM] User created: ${data.email} for tenant ${tenant}`,
+          `[SCIM] User created: user_${hashEmail(data.email)} for tenant ${tenant}`,
         );
 
         const user = await prisma.user.upsert({
@@ -138,7 +144,7 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
 
       case "user.updated": {
         console.log(
-          `[SCIM] User updated: ${data.email} for tenant ${tenant}`,
+          `[SCIM] User updated: user_${hashEmail(data.email)} for tenant ${tenant}`,
         );
 
         // Handle Azure AD's active/inactive (can be boolean or string)
@@ -165,7 +171,7 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
               })
               .catch(() => {
                 console.warn(
-                  `[SCIM] Could not remove team membership for ${data.email}`,
+                  `[SCIM] Could not remove team membership for user_${hashEmail(data.email)}`,
                 );
               });
           }
@@ -214,7 +220,7 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
             })
             .catch(() => {
               console.warn(
-                `[SCIM] Could not update user ${data.email} — user not found`,
+                `[SCIM] Could not update user user_${hashEmail(data.email)} — user not found`,
               );
             });
         }
@@ -223,7 +229,7 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
 
       case "user.deleted": {
         console.log(
-          `[SCIM] User deleted: ${data.email} for tenant ${tenant}`,
+          `[SCIM] User deleted: user_${hashEmail(data.email)} for tenant ${tenant}`,
         );
 
         const user = await prisma.user.findUnique({
@@ -242,7 +248,7 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
             })
             .catch(() => {
               console.warn(
-                `[SCIM] Could not remove team membership for ${data.email}`,
+                `[SCIM] Could not remove team membership for user_${hashEmail(data.email)}`,
               );
             });
         }
