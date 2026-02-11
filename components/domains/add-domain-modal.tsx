@@ -219,39 +219,44 @@ export function AddDomainModal({
     }
 
     setSubmitting(true);
-    const response = await fetch(
-      `/api/teams/${teamId}/domains`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/domains`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            domain: normalizedDomain,
+          }),
         },
-        body: JSON.stringify({
-          domain: normalizedDomain,
-        }),
-      },
-    );
+      );
 
-    if (!response.ok) {
-      const { message } = await response.json();
+      if (!response.ok) {
+        const { message } = await response.json();
+        toast.error(message);
+        return;
+      }
+
+      const newDomain = await response.json();
+
+      analytics.capture("Domain Added", { slug: normalizedDomain });
+      toast.success("Domain added successfully! 🎉");
+
+      // Update local data with the new link
+      onAddition && onAddition(newDomain);
+
+      setOpen(false);
+
+      !onAddition && window.open("/settings/domains", "_blank");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      toast.error(`Failed to add domain: ${message}`);
+    } finally {
       setSubmitting(false);
-      toast.error(message);
-      return;
     }
-
-    const newDomain = await response.json();
-
-    analytics.capture("Domain Added", { slug: normalizedDomain });
-    toast.success("Domain added successfully! 🎉");
-
-    // Update local data with the new link
-    onAddition && onAddition(newDomain);
-
-    setOpen(false);
-
-    setSubmitting(false);
-
-    !onAddition && window.open("/settings/domains", "_blank");
   };
 
   // If the team is
