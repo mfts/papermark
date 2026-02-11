@@ -151,8 +151,12 @@ const nextConfig = {
   experimental: {
     outputFileTracingIncludes: {
       "/api/mupdf/*": ["./node_modules/mupdf/dist/*.wasm"],
-      // Jackson SAML token route needs jose + openid-client for crypto
+      // Jackson SAML routes need jose + openid-client for crypto
       "/api/auth/saml/token": [
+        "./node_modules/jose/**/*",
+        "./node_modules/openid-client/**/*",
+      ],
+      "/api/auth/saml/userinfo": [
         "./node_modules/jose/**/*",
         "./node_modules/openid-client/**/*",
       ],
