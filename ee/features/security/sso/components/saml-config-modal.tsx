@@ -6,6 +6,7 @@ import { Copy, Shield, Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 
 import useSAML from "@/lib/swr/use-saml";
+import { copyToClipboard } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -135,10 +136,6 @@ export function SAMLConfigModal({ teamId }: SAMLConfigModalProps) {
     }
   }
 
-  function copyToClipboard(text: string, label: string) {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copied to clipboard`);
-  }
 
   if (loading) {
     return (
@@ -204,7 +201,7 @@ export function SAMLConfigModal({ teamId }: SAMLConfigModalProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => copyToClipboard(issuer, "Entity ID")}
+                onClick={() => copyToClipboard(issuer, "Entity ID copied to clipboard")}
               >
                 <Copy className="h-3 w-3" />
               </Button>
@@ -219,7 +216,7 @@ export function SAMLConfigModal({ teamId }: SAMLConfigModalProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => copyToClipboard(acs, "ACS URL")}
+                onClick={() => copyToClipboard(acs, "ACS URL copied to clipboard")}
               >
                 <Copy className="h-3 w-3" />
               </Button>
@@ -267,7 +264,7 @@ export function SAMLConfigModal({ teamId }: SAMLConfigModalProps) {
                       onClick={() =>
                         copyToClipboard(
                           issuer || "https://saml.papermark.com",
-                          "Entity ID",
+                          "Entity ID copied to clipboard",
                         )
                       }
                       className="text-muted-foreground hover:text-foreground"
@@ -289,7 +286,7 @@ export function SAMLConfigModal({ teamId }: SAMLConfigModalProps) {
                         copyToClipboard(
                           acs ||
                             `${window.location.origin}/api/auth/saml/callback`,
-                          "ACS URL",
+                          "ACS URL copied to clipboard",
                         )
                       }
                       className="text-muted-foreground hover:text-foreground"
