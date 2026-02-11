@@ -376,24 +376,38 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
             }
 
             // ─── Auto-join workspace ───
-            await prisma.userTeam
-              .upsert({
-                where: {
-                  userId_teamId: {
+            const team_exists = await prisma.team.findUnique({
+              where: { id: tenant },
+              select: { id: true },
+            });
+
+            if (!team_exists) {
+              console.warn(
+                `[SAML] Skipping auto-join: team ${tenant} does not exist for user ${user.id}`,
+              );
+            } else {
+              try {
+                await prisma.userTeam.upsert({
+                  where: {
+                    userId_teamId: {
+                      userId: user.id,
+                      teamId: tenant,
+                    },
+                  },
+                  update: {},
+                  create: {
                     userId: user.id,
                     teamId: tenant,
+                    role: "MEMBER",
                   },
-                },
-                update: {},
-                create: {
-                  userId: user.id,
-                  teamId: tenant,
-                  role: "MEMBER",
-                },
-              })
-              .catch(() => {
-                // Team may not exist, that's ok
-              });
+                });
+              } catch (error) {
+                console.error(
+                  `[SAML] Failed to upsert userTeam for user ${user.id} in team ${tenant}:`,
+                  error,
+                );
+              }
+            }
 
             // Clean up any pending invitations for this user
             await prisma.invitation
