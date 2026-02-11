@@ -13,18 +13,18 @@ CREATE UNIQUE INDEX "Team_ssoEmailDomain_key" ON "Team"("ssoEmailDomain");
 -- CreateTable: Jackson SAML/SCIM internal tables
 CREATE TABLE "jackson_index" (
     "id" SERIAL NOT NULL,
-    "key" VARCHAR(250) NOT NULL,
-    "storeKey" VARCHAR(250) NOT NULL,
+    "key" TEXT NOT NULL,
+    "storeKey" TEXT NOT NULL,
 
     CONSTRAINT "jackson_index_pkey" PRIMARY KEY ("id")
 );
 
 CREATE TABLE "jackson_store" (
-    "key" VARCHAR(250) NOT NULL,
+    "key" TEXT NOT NULL,
     "value" TEXT NOT NULL,
-    "iv" VARCHAR(64),
-    "tag" VARCHAR(64),
-    "namespace" VARCHAR(64),
+    "iv" TEXT,
+    "tag" TEXT,
+    "namespace" TEXT,
     "createdAt" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "modifiedAt" TIMESTAMP(0),
 
@@ -32,7 +32,7 @@ CREATE TABLE "jackson_store" (
 );
 
 CREATE TABLE "jackson_ttl" (
-    "key" VARCHAR(250) NOT NULL,
+    "key" TEXT NOT NULL,
     "expiresAt" BIGINT NOT NULL,
 
     CONSTRAINT "jackson_ttl_pkey" PRIMARY KEY ("key")
