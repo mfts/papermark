@@ -13,7 +13,7 @@ export default function SAMLCallbackClient() {
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
-    const code = searchParams.get("code");
+    const code = searchParams?.get("code");
     if (code) {
       // Use NextAuth's signIn with the saml-idp credentials provider
       signIn("saml-idp", {

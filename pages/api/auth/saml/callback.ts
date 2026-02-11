@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import jackson from "@/lib/jackson";
+import { jackson } from "@/lib/jackson";
 
 // Disable body parsing — we need the raw form data
 export const config = {

@@ -1,58 +1,51 @@
-import jackson, {
-  type IConnectionAPIController,
-  type IDirectorySyncController,
-  type IOAuthController,
-  type JacksonOption,
+import type {
+  IConnectionAPIController,
+  IDirectorySyncController,
+  IOAuthController,
+  JacksonOption,
 } from "@boxyhq/saml-jackson";
+import samlJackson from "@boxyhq/saml-jackson";
 
-const g = global as any;
+export const samlAudience =
+  process.env.SAML_AUDIENCE || "https://saml.papermark.com";
 
-export default async function init(): Promise<{
-  oauthController: IOAuthController;
-  connectionController: IConnectionAPIController;
-  directorySyncController: IDirectorySyncController;
-}> {
-  // Singleton — reuse across hot reloads in dev
+const opts: JacksonOption = {
+  externalUrl: process.env.NEXTAUTH_URL || "https://app.papermark.com",
+  samlPath: "/api/auth/saml/callback",
+  samlAudience,
+  db: {
+    engine: "sql",
+    type: "postgres",
+    url:
+      process.env.POSTGRES_PRISMA_URL_NON_POOLING ||
+      (process.env.POSTGRES_PRISMA_URL as string),
+  },
+  idpEnabled: true, // to allow folks to SSO directly from their IDP
+  scimPath: "/api/scim/v2.0",
+  clientSecretVerifier: process.env.NEXTAUTH_SECRET as string,
+};
+
+declare global {
+  var apiController: IConnectionAPIController | undefined;
+  var oauthController: IOAuthController | undefined;
+  var directorySyncController: IDirectorySyncController | undefined;
+}
+
+export async function jackson() {
   if (
-    g.oauthController &&
-    g.connectionController &&
-    g.directorySyncController
+    !globalThis.apiController ||
+    !globalThis.oauthController ||
+    !globalThis.directorySyncController
   ) {
-    return {
-      oauthController: g.oauthController,
-      connectionController: g.connectionController,
-      directorySyncController: g.directorySyncController,
-    };
+    const ret = await samlJackson(opts);
+    globalThis.apiController = ret.connectionAPIController;
+    globalThis.oauthController = ret.oauthController;
+    globalThis.directorySyncController = ret.directorySyncController;
   }
 
-  const opts: JacksonOption = {
-    externalUrl: process.env.JACKSON_EXTERNAL_URL || process.env.NEXTAUTH_URL!,
-    samlAudience: process.env.SAML_AUDIENCE || process.env.JACKSON_EXTERNAL_URL!,
-    samlPath: process.env.SAML_PATH || "/api/auth/saml/callback",
-    db: {
-      engine: "sql",
-      type: "postgres",
-      url: process.env.POSTGRES_PRISMA_URL_NON_POOLING || process.env.POSTGRES_PRISMA_URL!,
-      encryptionKey: process.env.JACKSON_ENCRYPTION_KEY!,
-    },
-    idpEnabled: true,
-    scimPath: "/api/scim/v2.0",
-    openid: {},
-  };
-
-  const {
-    oauthController,
-    connectionAPIController: connectionController,
-    directorySyncController,
-  } = await jackson(opts);
-
-  g.oauthController = oauthController;
-  g.connectionController = connectionController;
-  g.directorySyncController = directorySyncController;
-
   return {
-    oauthController,
-    connectionController,
-    directorySyncController,
+    apiController: globalThis.apiController,
+    oauthController: globalThis.oauthController,
+    directorySyncController: globalThis.directorySyncController,
   };
 }

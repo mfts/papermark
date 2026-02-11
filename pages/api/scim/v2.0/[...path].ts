@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import jackson from "@/lib/jackson";
+import { jackson } from "@/lib/jackson";
 import prisma from "@/lib/prisma";
 
 export default async function handler(

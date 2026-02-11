@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
-import jackson from "@/lib/jackson";
+import { jackson } from "@/lib/jackson";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -43,9 +43,9 @@ export default async function handle(
   if (req.method === "GET") {
     // GET /api/teams/:teamId/saml — list SAML connections
     try {
-      const { connectionController } = await jackson();
+      const { apiController } = await jackson();
 
-      const connections = await connectionController.getConnections({
+      const connections = await apiController.getConnections({
         tenant: teamId,
         product: process.env.JACKSON_PRODUCT!,
       });
@@ -57,7 +57,7 @@ export default async function handle(
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/saml — create a new SAML connection
     try {
-      const { connectionController } = await jackson();
+      const { apiController } = await jackson();
 
       const { rawMetadata, metadataUrl, name, description } = req.body;
 
@@ -68,7 +68,7 @@ export default async function handle(
         });
       }
 
-      const connection = await connectionController.createSAMLConnection({
+      const connection = await apiController.createSAMLConnection({
         defaultRedirectUrl: `${process.env.NEXTAUTH_URL}/auth/saml`,
         redirectUrl: JSON.stringify([
           `${process.env.NEXTAUTH_URL}`,
@@ -108,7 +108,7 @@ export default async function handle(
   } else if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId/saml — remove a SAML connection
     try {
-      const { connectionController } = await jackson();
+      const { apiController } = await jackson();
 
       const { clientID, clientSecret } = req.body;
 
@@ -118,13 +118,13 @@ export default async function handle(
           .json({ error: "clientID and clientSecret are required" });
       }
 
-      await connectionController.deleteConnections({
+      await apiController.deleteConnections({
         clientID,
         clientSecret,
       });
 
       // Check if there are remaining connections
-      const remaining = await connectionController.getConnections({
+      const remaining = await apiController.getConnections({
         tenant: teamId,
         product: process.env.JACKSON_PRODUCT!,
       });
