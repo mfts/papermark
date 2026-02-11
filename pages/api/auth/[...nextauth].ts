@@ -283,6 +283,15 @@ export const authOptions: NextAuthOptions = {
 };
 
 const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
+  // ─── Shared state for the current auth request ───
+  // The signIn callback runs BEFORE the user is created in the DB (for new
+  // OAuth users), so `user.id` there may not be a valid database ID.
+  // We capture the SAML tenant in the callback (where we have the raw
+  // OAuthProfile with `requested.tenant`) and use it in the signIn event
+  // (where `user.id` is guaranteed to be the real database ID).
+  let samlTenant: string | null = null;
+  let samlUserEmail: string | null = null;
+
   return {
     ...authOptions,
     callbacks: {
@@ -310,7 +319,7 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
           }
         }
 
-        // ─── SAML user → email domain validation + workspace membership ───
+        // ─── SAML user → email domain validation ───
         if (
           account?.provider === "saml" ||
           account?.provider === "saml-idp"
@@ -350,46 +359,13 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
               }
             }
 
-            // ─── Auto-join workspace ───
-            if (!team) {
-              console.warn(
-                `[SAML] Skipping auto-join: team ${tenant} does not exist for user ${user.id}`,
-              );
-            } else {
-              try {
-                await prisma.userTeam.upsert({
-                  where: {
-                    userId_teamId: {
-                      userId: user.id,
-                      teamId: tenant,
-                    },
-                  },
-                  update: {},
-                  create: {
-                    userId: user.id,
-                    teamId: tenant,
-                    role: "MEMBER",
-                  },
-                });
-              } catch (error) {
-                console.error(
-                  `[SAML] Failed to upsert userTeam for user ${user.id} in team ${tenant}:`,
-                  error,
-                );
-              }
-            }
-
-            // Clean up any pending invitations for this user
-            await prisma.invitation
-              .deleteMany({
-                where: {
-                  email: user.email,
-                  teamId: tenant,
-                },
-              })
-              .catch(() => {
-                // No invitation to clean up
-              });
+            // Store tenant for the signIn event to handle auto-join.
+            // We can't reliably do the userTeam upsert here because for
+            // new users (or first-time SSO users), user.id is not yet a
+            // valid database ID — NextAuth creates the user AFTER this
+            // callback returns true.
+            samlTenant = tenant;
+            samlUserEmail = user.email;
           }
         }
 
@@ -425,6 +401,50 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
             email: message.user.email,
           }),
         ]);
+
+        // ─── SAML: Auto-join workspace + clean up invitations ───
+        // This runs AFTER the user is created in the DB, so message.user.id
+        // is guaranteed to be the real database user ID.
+        if (samlTenant) {
+          const tenant = samlTenant;
+          const userEmail = samlUserEmail;
+
+          try {
+            await prisma.userTeam.upsert({
+              where: {
+                userId_teamId: {
+                  userId: message.user.id,
+                  teamId: tenant,
+                },
+              },
+              update: {},
+              create: {
+                userId: message.user.id,
+                teamId: tenant,
+                role: "MEMBER",
+              },
+            });
+          } catch (error) {
+            console.error(
+              `[SAML] Failed to upsert userTeam for user ${message.user.id} in team ${tenant}:`,
+              error,
+            );
+          }
+
+          // Clean up any pending invitations for this user
+          if (userEmail) {
+            await prisma.invitation
+              .deleteMany({
+                where: {
+                  email: userEmail,
+                  teamId: tenant,
+                },
+              })
+              .catch(() => {
+                // No invitation to clean up
+              });
+          }
+        }
 
         if (message.isNewUser) {
           const { dub_id } = req.cookies;
