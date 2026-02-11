@@ -318,7 +318,35 @@ export async function DELETE(
       );
     }
 
-    await apiController.deleteConnections({ clientID, clientSecret });
+    // Ownership check: verify the connection belongs to this team before deleting
+    const existingConnections = await apiController.getConnections({
+      clientID,
+    });
+
+    const connection = Array.isArray(existingConnections)
+      ? existingConnections[0]
+      : existingConnections;
+
+    if (!connection) {
+      return NextResponse.json(
+        { error: "SAML connection not found" },
+        { status: 404 },
+      );
+    }
+
+    if (connection.tenant !== teamId) {
+      return NextResponse.json(
+        { error: "You do not have permission to delete this connection" },
+        { status: 403 },
+      );
+    }
+
+    await apiController.deleteConnections({
+      clientID,
+      clientSecret,
+      tenant: teamId,
+      product: jacksonProduct,
+    });
 
     // Check if there are remaining connections
     const remaining = await apiController.getConnections({
