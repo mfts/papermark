@@ -1,4 +1,5 @@
 import { jackson } from "@/lib/jackson";
+import type { OAuthReq } from "@boxyhq/saml-jackson";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
@@ -6,7 +7,9 @@ export async function GET(req: Request) {
     const { oauthController } = await jackson();
 
     const url = new URL(req.url);
-    const requestParams = Object.fromEntries(url.searchParams.entries());
+    const requestParams = Object.fromEntries(
+      url.searchParams.entries(),
+    ) as unknown as OAuthReq;
 
     const { redirect_url, authorize_form } =
       await oauthController.authorize(requestParams);
