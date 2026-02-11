@@ -128,24 +128,18 @@ export const authOptions: NextAuthOptions = {
       },
       userinfo: `${process.env.NEXTAUTH_URL}/api/auth/saml/userinfo`,
       profile: async (profile) => {
-        let existingUser = await prisma.user.findUnique({
-          where: { email: profile.email },
-        });
-
-        if (!existingUser) {
-          existingUser = await prisma.user.create({
-            data: {
-              email: profile.email,
-              name: `${profile.firstName || ""} ${profile.lastName || ""}`.trim(),
-            },
-          });
-        }
+        // Return the normalized profile and let PrismaAdapter.createUser
+        // handle user creation so the createUser event fires correctly
+        // (welcome emails, analytics, etc.)
+        const name =
+          `${profile.firstName || ""} ${profile.lastName || ""}`.trim() ||
+          null;
 
         return {
-          id: existingUser.id,
-          name: existingUser.name,
-          email: existingUser.email,
-          image: existingUser.image,
+          id: profile.id || profile.email,
+          name,
+          email: profile.email,
+          image: null,
         };
       },
       options: {
