@@ -1025,7 +1025,7 @@ export default function LinksTable({
                       <CollapsibleTrigger
                         disabled={
                           isDataroom ||
-                          Number(nFormatter(link._count.views)) === 0
+                          link._count.views === 0
                         }
                       >
                         <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
@@ -1037,7 +1037,7 @@ export default function LinksTable({
                             </span>
                           </p>
                           {!isDataroom &&
-                          Number(nFormatter(link._count.views)) > 0 ? (
+                          link._count.views > 0 ? (
                             <ChevronDown className="chevron h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
                           ) : null}
                         </div>
