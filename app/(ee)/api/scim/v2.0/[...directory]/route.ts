@@ -61,7 +61,7 @@ const handler = async (
     return NextResponse.json(
       {
         schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
-        detail: error.message || "Internal server error",
+        detail: "Internal server error",
         status: 500,
       },
       { status: 500 },
@@ -109,17 +109,20 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
     return;
   }
 
+  // Normalize once so look-ups/upserts always use a consistent lowercase key
+  const email = data.email.trim().toLowerCase();
+
   try {
     switch (eventType) {
       case "user.created": {
         console.log(
-          `[SCIM] User created: user_${hashEmail(data.email)} for tenant ${tenant}`,
+          `[SCIM] User created: user_${hashEmail(email)} for tenant ${tenant}`,
         );
 
         const user = await prisma.user.upsert({
-          where: { email: data.email },
+          where: { email },
           create: {
-            email: data.email,
+            email,
             name: [data.first_name, data.last_name].filter(Boolean).join(" "),
           },
           update: {},
@@ -144,7 +147,7 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
 
       case "user.updated": {
         console.log(
-          `[SCIM] User updated: user_${hashEmail(data.email)} for tenant ${tenant}`,
+          `[SCIM] User updated: user_${hashEmail(email)} for tenant ${tenant}`,
         );
 
         // Handle Azure AD's active/inactive (can be boolean or string)
@@ -156,7 +159,7 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
         if (isInactive) {
           // Deactivated — remove from team (same as user.deleted)
           const user = await prisma.user.findUnique({
-            where: { email: data.email },
+            where: { email },
           });
 
           if (user) {
@@ -171,16 +174,16 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
               })
               .catch(() => {
                 console.warn(
-                  `[SCIM] Could not remove team membership for user_${hashEmail(data.email)}`,
+                  `[SCIM] Could not remove team membership for user_${hashEmail(email)}`,
                 );
               });
           }
         } else if (isActive) {
           // Reactivated — re-add to team
           const user = await prisma.user.upsert({
-            where: { email: data.email },
+            where: { email },
             create: {
-              email: data.email,
+              email,
               name: [data.first_name, data.last_name]
                 .filter(Boolean)
                 .join(" "),
@@ -210,7 +213,7 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
           // Just a name/attribute update
           await prisma.user
             .update({
-              where: { email: data.email },
+              where: { email },
               data: {
                 name:
                   [data.first_name, data.last_name]
@@ -220,7 +223,7 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
             })
             .catch(() => {
               console.warn(
-                `[SCIM] Could not update user user_${hashEmail(data.email)} — user not found`,
+                `[SCIM] Could not update user user_${hashEmail(email)} — user not found`,
               );
             });
         }
@@ -229,11 +232,11 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
 
       case "user.deleted": {
         console.log(
-          `[SCIM] User deleted: user_${hashEmail(data.email)} for tenant ${tenant}`,
+          `[SCIM] User deleted: user_${hashEmail(email)} for tenant ${tenant}`,
         );
 
         const user = await prisma.user.findUnique({
-          where: { email: data.email },
+          where: { email },
         });
 
         if (user) {
@@ -248,7 +251,7 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
             })
             .catch(() => {
               console.warn(
-                `[SCIM] Could not remove team membership for user_${hashEmail(data.email)}`,
+                `[SCIM] Could not remove team membership for user_${hashEmail(email)}`,
               );
             });
         }
