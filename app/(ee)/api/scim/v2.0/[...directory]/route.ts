@@ -150,11 +150,17 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
           `[SCIM] User updated: user_${hashEmail(email)} for tenant ${tenant}`,
         );
 
-        // Handle Azure AD's active/inactive (can be boolean or string)
-        const isActive =
-          (data as any).active === true || (data as any).active === "True";
-        const isInactive =
-          (data as any).active === false || (data as any).active === "False";
+        // Handle Azure AD's active/inactive (can be boolean or string in any casing)
+        const rawActive = (data as any).active;
+        const normalizedActive =
+          rawActive === undefined
+            ? undefined
+            : typeof rawActive === "string"
+              ? rawActive.toLowerCase() === "true"
+              : Boolean(rawActive);
+
+        const isActive = normalizedActive === true;
+        const isInactive = normalizedActive === false;
 
         if (isInactive) {
           // Deactivated — remove from team (same as user.deleted)
