@@ -338,7 +338,7 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
             // This prevents a misconfigured IdP from injecting users from unexpected domains.
             const team = await prisma.team.findUnique({
               where: { id: tenant },
-              select: { ssoEmailDomain: true },
+              select: { ssoEmailDomain: true, id: true },
             });
 
             if (team?.ssoEmailDomain) {
@@ -357,12 +357,7 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
             }
 
             // ─── Auto-join workspace ───
-            const team_exists = await prisma.team.findUnique({
-              where: { id: tenant },
-              select: { id: true },
-            });
-
-            if (!team_exists) {
+            if (!team) {
               console.warn(
                 `[SAML] Skipping auto-join: team ${tenant} does not exist for user ${user.id}`,
               );
