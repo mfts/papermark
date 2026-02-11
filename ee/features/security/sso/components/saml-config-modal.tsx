@@ -42,6 +42,7 @@ export function SAMLConfigModal({ teamId }: SAMLConfigModalProps) {
     SAMLProviderKey | undefined
   >();
   const [metadataUrl, setMetadataUrl] = useState("");
+  const [domain, setDomain] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [fileContent, setFileContent] = useState("");
 
@@ -72,6 +73,11 @@ export function SAMLConfigModal({ teamId }: SAMLConfigModalProps) {
         body.metadataUrl = metadataUrl;
       }
 
+      // Include the explicit SSO email domain if provided by the admin
+      if (domain.trim()) {
+        body.domain = domain.trim();
+      }
+
       const res = await fetch(`/api/teams/${teamId}/saml`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -86,6 +92,7 @@ export function SAMLConfigModal({ teamId }: SAMLConfigModalProps) {
       toast.success("SAML SSO configured successfully!");
       setOpen(false);
       setMetadataUrl("");
+      setDomain("");
       setFile(null);
       setFileContent("");
       setSelectedProvider(undefined);
@@ -369,6 +376,27 @@ export function SAMLConfigModal({ teamId }: SAMLConfigModalProps) {
                     disabled={submitting}
                   />
                 )}
+              </div>
+            )}
+
+            {/* Step 4: SSO Email Domain */}
+            {currentProvider && (
+              <div className="space-y-2">
+                <Label htmlFor="ssoDomain">
+                  Step 4: SSO Email Domain
+                </Label>
+                <Input
+                  id="ssoDomain"
+                  placeholder="example.com"
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                  disabled={submitting}
+                />
+                <p className="text-xs text-muted-foreground">
+                  The email domain used by your organization (e.g.,
+                  example.com). Only users with this domain will be able to
+                  sign in via SSO.
+                </p>
               </div>
             )}
 

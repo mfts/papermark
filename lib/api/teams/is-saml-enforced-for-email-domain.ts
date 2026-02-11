@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { isGenericEmail } from "@/lib/utils/email-domain";
 
 /**
  * Checks if SAML SSO is enforced for a given email address's domain.
@@ -15,24 +16,7 @@ export async function isSamlEnforcedForEmailDomain(
   }
 
   // Skip generic email providers — SSO enforcement doesn't apply
-  const genericDomains = [
-    "gmail.com",
-    "googlemail.com",
-    "yahoo.com",
-    "hotmail.com",
-    "outlook.com",
-    "live.com",
-    "aol.com",
-    "icloud.com",
-    "me.com",
-    "mail.com",
-    "protonmail.com",
-    "proton.me",
-    "fastmail.com",
-    "zoho.com",
-  ];
-
-  if (genericDomains.includes(emailDomain)) {
+  if (isGenericEmail(email)) {
     return false;
   }
 

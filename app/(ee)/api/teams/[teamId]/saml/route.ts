@@ -1,6 +1,7 @@
 import { jackson, jacksonProduct, samlAudience } from "@/lib/jackson";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { isGenericDomain } from "@/lib/utils/email-domain";
 import { getServerSession } from "next-auth/next";
 import { NextResponse } from "next/server";
 
@@ -97,7 +98,7 @@ export async function POST(
   try {
     const { apiController } = await jackson();
     const body = await req.json();
-    const { rawMetadata, encodedRawMetadata, metadataUrl } = body;
+    const { rawMetadata, encodedRawMetadata, metadataUrl, domain } = body;
 
     if (!rawMetadata && !metadataUrl && !encodedRawMetadata) {
       return NextResponse.json(
@@ -109,8 +110,30 @@ export async function POST(
       );
     }
 
-    // Extract email domain from the admin's email for SSO domain binding
-    const ssoEmailDomain = auth.email.split("@")[1]?.toLowerCase();
+    // Normalize the explicit domain provided by the admin (if any)
+    const explicitDomain = typeof domain === "string"
+      ? domain.trim().toLowerCase().replace(/^@/, "")
+      : undefined;
+
+    // Validate explicit domain format if provided
+    if (explicitDomain && !/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(explicitDomain)) {
+      return NextResponse.json(
+        { error: "Invalid domain format. Please provide a valid domain (e.g., example.com)." },
+        { status: 400 },
+      );
+    }
+
+    // Reject public / free email provider domains – SSO should only be
+    // configured for organisation-owned domains.
+    if (explicitDomain && isGenericDomain(explicitDomain)) {
+      return NextResponse.json(
+        {
+          error:
+            "Public email domains (e.g., gmail.com, outlook.com) cannot be used for SSO. Please provide your organization's domain.",
+        },
+        { status: 400 },
+      );
+    }
 
     const connection = await apiController.createSAMLConnection({
       defaultRedirectUrl: `${process.env.NEXTAUTH_URL}/auth/saml`,
@@ -122,13 +145,71 @@ export async function POST(
       metadataUrl: metadataUrl || undefined,
     });
 
-    // Store the email domain for SSO enforcement
-    await prisma.team.update({
-      where: { id: teamId },
-      data: {
-        ssoEmailDomain: ssoEmailDomain || undefined,
-      },
-    });
+    // Attempt to extract a domain hint from the IdP metadata returned by the
+    // SAML connection.  Standard IdP entity IDs / SSO URLs sometimes contain
+    // the organisation's own domain (e.g. for self-hosted IdPs).  We use this
+    // as an additional validation signal – if the admin supplied a domain we
+    // check it is consistent; if not, we fall back to the metadata hint only
+    // when it looks like a real organisation domain (not a generic IdP host).
+    let metadataDomain: string | undefined;
+    try {
+      const idpMeta = (connection as any)?.idpMetadata;
+      const candidateUrls: string[] = [
+        idpMeta?.entityID,
+        idpMeta?.sso?.postUrl,
+        idpMeta?.sso?.redirectUrl,
+      ].filter(Boolean);
+
+      const genericIdpHosts = new Set([
+        "accounts.google.com",
+        "login.microsoftonline.com",
+        "sts.windows.net",
+        "idp.ssocircle.com",
+        "www.okta.com",
+        "dev.okta.com",
+        "auth0.com",
+        "onelogin.com",
+        "pingone.com",
+      ]);
+
+      for (const raw of candidateUrls) {
+        try {
+          const host = new URL(raw).hostname.toLowerCase();
+          // Skip well-known generic IdP hosts and public email domains
+          if (
+            [...genericIdpHosts].some((g) => host === g || host.endsWith(`.${g}`)) ||
+            isGenericDomain(host)
+          ) {
+            continue;
+          }
+          // Must have at least two labels (e.g. "company.com")
+          if (host.split(".").length >= 2) {
+            metadataDomain = host;
+            break;
+          }
+        } catch {
+          // not a valid URL – skip
+        }
+      }
+    } catch {
+      // metadata extraction is best-effort
+    }
+
+    // Determine the validated domain to persist:
+    //  1. Prefer the explicitly admin-provided domain.
+    //  2. Fall back to a domain extracted from metadata (if non-generic).
+    //  3. If neither is available, do NOT store a domain.
+    const validatedDomain = explicitDomain || metadataDomain || undefined;
+
+    // Only persist ssoEmailDomain when we have a validated value
+    if (validatedDomain) {
+      await prisma.team.update({
+        where: { id: teamId },
+        data: {
+          ssoEmailDomain: validatedDomain,
+        },
+      });
+    }
 
     return NextResponse.json(connection, { status: 201 });
   } catch (error: any) {
