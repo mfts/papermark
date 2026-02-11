@@ -97,23 +97,24 @@ export async function POST(
     const body = await req.json();
     const { name, type, currentDirectoryId } = body;
 
-    const [result] = await Promise.all([
-      directorySyncController.directories.create({
-        tenant: teamId,
-        product: jacksonProduct,
-        name: name || "Papermark SCIM Directory",
-        type: type || "azure-scim-v2",
-      }),
-      // If replacing an existing directory, delete the old one
-      currentDirectoryId &&
-        directorySyncController.directories.delete(currentDirectoryId),
-    ]);
+    // Create the new directory first; only delete the old one on success
+    const result = await directorySyncController.directories.create({
+      tenant: teamId,
+      product: jacksonProduct,
+      name: name || "Papermark SCIM Directory",
+      type: type || "azure-scim-v2",
+    });
 
     if (result.error) {
       return NextResponse.json(
         { error: result.error.message },
         { status: 400 },
       );
+    }
+
+    // If replacing an existing directory, delete the old one after successful create
+    if (currentDirectoryId) {
+      await directorySyncController.directories.delete(currentDirectoryId);
     }
 
     return NextResponse.json(result, { status: 201 });
