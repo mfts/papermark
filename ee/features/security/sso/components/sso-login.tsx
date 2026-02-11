@@ -12,10 +12,14 @@ import { Label } from "@/components/ui/label";
 
 import { JACKSON_PRODUCT } from "../product";
 
-export function SSOLogin() {
+interface SSOLoginProps {
+  autoExpand?: boolean;
+}
+
+export function SSOLogin({ autoExpand = false }: SSOLoginProps) {
   const [teamSlug, setTeamSlug] = useState("");
   const [loading, setLoading] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(autoExpand);
   const [step, setStep] = useState<"idle" | "redirecting">("idle");
   const inputRef = useRef<HTMLInputElement>(null);
 
