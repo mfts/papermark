@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     }
 
     const { redirect_url, authorize_form } =
-      await oauthController.authorize(body);
+      await oauthController.authorize(body as unknown as OAuthReq);
 
     if (redirect_url) {
       return NextResponse.redirect(redirect_url, { status: 302 });
