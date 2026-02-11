@@ -1,4 +1,4 @@
-import { useEffect, useState, type ElementType } from "react";
+import { useEffect, useRef, useState, type ElementType } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -122,6 +122,7 @@ export function AddDomainModal({
   const [statusMessageOverride, setStatusMessageOverride] = useState<
     string | null
   >(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
@@ -163,7 +164,11 @@ export function AddDomainModal({
       return;
     }
 
-    let active = true;
+    // Abort any in-flight validation request before starting a new one
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setDomainStatus("checking");
     setStatusMessageOverride(null);
 
@@ -171,10 +176,10 @@ export function AddDomainModal({
       `/api/teams/${teamId}/domains/${encodeURIComponent(
         debouncedDomain,
       )}/validate`,
+      { signal: controller.signal },
     )
       .then(async (res) => res.json())
       .then((data) => {
-        if (!active) return;
         const nextStatus = data?.status as DomainStatus | undefined;
         if (
           nextStatus &&
@@ -185,13 +190,15 @@ export function AddDomainModal({
           setDomainStatus("error");
         }
       })
-      .catch(() => {
-        if (!active) return;
+      .catch((err) => {
+        // Ignore aborted requests – they are expected when the user types again
+        if ((err as DOMException).name === "AbortError") return;
         setDomainStatus("error");
       });
 
     return () => {
-      active = false;
+      controller.abort();
+      abortRef.current = null;
     };
   }, [debouncedDomain, open, teamId]);
 
@@ -338,6 +345,10 @@ export function AddDomainModal({
                       }
                     }}
                     onChange={(e) => {
+                      // Cancel any in-flight validation so stale results
+                      // don't overwrite the reset status below
+                      abortRef.current?.abort();
+                      abortRef.current = null;
                       setDomainStatus("idle");
                       setStatusMessageOverride(null);
                       setDomainInput(e.target.value);
