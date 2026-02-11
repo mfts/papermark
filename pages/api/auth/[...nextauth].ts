@@ -193,25 +193,6 @@ export const authOptions: NextAuthOptions = {
             update: { name: name || undefined },
           });
 
-          // If we have tenant info, ensure user is a member of the workspace
-          const tenant = requested?.tenant;
-          if (tenant) {
-            await prisma.userTeam.upsert({
-              where: {
-                userId_teamId: {
-                  userId: user.id,
-                  teamId: tenant,
-                },
-              },
-              update: {},
-              create: {
-                userId: user.id,
-                teamId: tenant,
-                role: "MEMBER",
-              },
-            });
-          }
-
           return {
             id: user.id,
             email: user.email,
