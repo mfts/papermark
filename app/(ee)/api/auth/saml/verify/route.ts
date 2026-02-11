@@ -31,19 +31,13 @@ export async function POST(req: Request) {
           select: { id: true, ssoEnabled: true },
         });
 
-    if (!team) {
-      // Generic error — don't reveal whether team exists
-      return NextResponse.json(
-        { error: "SSO is not configured for this team." },
-        { status: 404 },
-      );
-    }
+    const ssoUnavailable = NextResponse.json(
+      { error: "SSO is not available for this team." },
+      { status: 404 },
+    );
 
-    if (!team.ssoEnabled) {
-      return NextResponse.json(
-        { error: "SSO is not enabled for this team." },
-        { status: 404 },
-      );
+    if (!team || !team.ssoEnabled) {
+      return ssoUnavailable;
     }
 
     // Check Jackson for actual SAML connections
@@ -55,10 +49,7 @@ export async function POST(req: Request) {
     });
 
     if (!connections || connections.length === 0) {
-      return NextResponse.json(
-        { error: "No SSO connections found for this team." },
-        { status: 404 },
-      );
+      return ssoUnavailable;
     }
 
     // Only return the team ID — no names, providers, or other metadata
