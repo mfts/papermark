@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 
 import { useAnalytics } from "@/lib/analytics";
+import { validDomainRegex } from "@/lib/domains";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { cn } from "@/lib/utils";
@@ -32,10 +33,6 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { UpgradeButton } from "../ui/upgrade-button";
-
-const validDomainRegex = new RegExp(
-  /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/,
-);
 
 const sanitizeDomain = (value: string) =>
   value
