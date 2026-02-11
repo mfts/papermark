@@ -273,16 +273,18 @@ export async function PATCH(
       }
     }
 
+    const now = enforced ? new Date() : null;
+
     await prisma.team.update({
       where: { id: teamId },
       data: {
-        ssoEnforcedAt: enforced ? new Date() : null,
+        ssoEnforcedAt: now,
       },
     });
 
     return NextResponse.json({
       enforced,
-      ssoEnforcedAt: enforced ? new Date().toISOString() : null,
+      ssoEnforcedAt: now?.toISOString() ?? null,
     });
   } catch (error: any) {
     console.error("[SAML] Update enforcement error:", error);
