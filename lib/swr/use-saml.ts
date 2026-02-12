@@ -17,6 +17,9 @@ export default function useSAML() {
     slug: string | null;
   }>(teamId ? `/api/teams/${teamId}/saml` : null, fetcher, {
     keepPreviousData: true,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 60_000,
   });
 
   const configured = !!(data?.connections && data.connections.length > 0);

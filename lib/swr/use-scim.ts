@@ -13,6 +13,9 @@ export default function useSCIM() {
     fetcher,
     {
       keepPreviousData: true,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 60_000,
     },
   );
 
