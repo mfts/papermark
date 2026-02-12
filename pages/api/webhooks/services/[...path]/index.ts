@@ -861,7 +861,7 @@ async function handleLinkUpdate(
 
   if (!existingLink) {
     return res
-      .status(400)
+      .status(404)
       .json({ error: "Link not found or not associated with this team" });
   }
 
