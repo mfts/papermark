@@ -237,9 +237,26 @@ export default async function handler(
                 },
               },
             }),
+            // Connect visitor groups for allow-list
+            ...(linkData.visitorGroupIds?.length > 0 && {
+              visitorGroups: {
+                createMany: {
+                  data: linkData.visitorGroupIds.map(
+                    (visitorGroupId: string) => ({
+                      visitorGroupId,
+                    }),
+                  ),
+                },
+              },
+            }),
           },
           include: {
             customFields: true,
+            visitorGroups: {
+              select: {
+                visitorGroupId: true,
+              },
+            },
           },
         });
 

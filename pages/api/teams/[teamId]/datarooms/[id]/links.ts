@@ -64,6 +64,9 @@ export default async function handle(
             },
           },
           customFields: true,
+          visitorGroups: {
+            select: { visitorGroupId: true },
+          },
           _count: {
             select: { views: { where: { viewType: "DATAROOM_VIEW" } } },
           },

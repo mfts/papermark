@@ -1,7 +1,5 @@
 import { useRouter } from "next/router";
 
-
-
 import { useEffect, useState } from "react";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -10,7 +8,9 @@ import useViewers from "@/lib/swr/use-viewers";
 import AppLayout from "@/components/layouts/app";
 import { SearchBoxPersisted } from "@/components/search-box";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ContactsTable } from "@/components/visitors/contacts-table";
+import { VisitorGroupsSection } from "@/components/visitors/visitor-groups-section";
 
 export default function Visitors() {
   const router = useRouter();
@@ -19,6 +19,9 @@ export default function Visitors() {
   const [pageSize, setPageSize] = useState(10);
   const [sortBy, setSortBy] = useState("lastViewed");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [activeTab, setActiveTab] = useState(
+    (router.query.tab as string) || "visitors",
+  );
 
   const { viewers, pagination, isValidating } = useViewers(
     currentPage,
@@ -50,6 +53,21 @@ export default function Visitors() {
     if (isFree && !isTrial) router.push("/documents");
   }, [isTrial, isFree]);
 
+  useEffect(() => {
+    if (router.query.tab) {
+      setActiveTab(router.query.tab as string);
+    }
+  }, [router.query.tab]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    router.push(
+      { pathname: router.pathname, query: { ...router.query, tab: value } },
+      undefined,
+      { shallow: true },
+    );
+  };
+
   return (
     <AppLayout>
       <div className="p-4 pb-0 sm:m-4 sm:py-4">
@@ -59,33 +77,46 @@ export default function Visitors() {
               All visitors
             </h2>
             <p className="text-xs text-muted-foreground sm:text-sm">
-              See all your visitors in one place.
+              See all your visitors and manage visitor groups.
             </p>
           </div>
         </section>
 
-        <div className="mb-2 flex justify-end gap-x-2">
-          <div className="relative w-full sm:max-w-xs">
-            <SearchBoxPersisted
-              loading={isValidating}
-              placeholder="Search visitors..."
-              inputClassName="h-10"
-            />
-          </div>
-        </div>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="visitors">Visitors</TabsTrigger>
+            <TabsTrigger value="groups">Visitor Groups</TabsTrigger>
+          </TabsList>
 
-        <Separator className="bg-gray-200 dark:bg-gray-800" />
-      </div>
+          <TabsContent value="visitors">
+            <div className="mb-2 flex justify-end gap-x-2">
+              <div className="relative w-full sm:max-w-xs">
+                <SearchBoxPersisted
+                  loading={isValidating}
+                  placeholder="Search visitors..."
+                  inputClassName="h-10"
+                />
+              </div>
+            </div>
 
-      <div className="relative p-4 pt-0 sm:mx-4 sm:mt-4">
-        <ContactsTable
-          viewers={viewers}
-          pagination={pagination}
-          sorting={{ sortBy, sortOrder }}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          onSortChange={handleSortChange}
-        />
+            <Separator className="bg-gray-200 dark:bg-gray-800" />
+
+            <div className="relative pt-4">
+              <ContactsTable
+                viewers={viewers}
+                pagination={pagination}
+                sorting={{ sortBy, sortOrder }}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                onSortChange={handleSortChange}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="groups">
+            <VisitorGroupsSection />
+          </TabsContent>
+        </Tabs>
       </div>
     </AppLayout>
   );

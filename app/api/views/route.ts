@@ -123,6 +123,15 @@ export async function POST(request: NextRequest) {
             agentsEnabled: true,
           },
         },
+        visitorGroups: {
+          select: {
+            visitorGroup: {
+              select: {
+                emails: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -246,10 +255,18 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: "Access denied" }, { status: 403 });
       }
 
+      // Build combined allow list from individual emails + visitor groups
+      const visitorGroupEmails =
+        link.visitorGroups?.flatMap((vg) => vg.visitorGroup.emails) || [];
+      const combinedAllowList = [
+        ...(link.allowList || []),
+        ...visitorGroupEmails,
+      ];
+
       // Check if email is allowed to visit the link
-      if (link.allowList && link.allowList.length > 0) {
+      if (combinedAllowList.length > 0) {
         // Determine if the email or its domain is allowed
-        const isAllowed = link.allowList.some((allowed) =>
+        const isAllowed = combinedAllowList.some((allowed) =>
           isEmailMatched(email, allowed),
         );
 

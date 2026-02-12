@@ -85,6 +85,9 @@ export default async function handle(
                 },
                 orderBy: { orderIndex: "asc" },
               },
+              visitorGroups: {
+                select: { visitorGroupId: true },
+              },
               _count: { select: { views: true } },
             },
           },

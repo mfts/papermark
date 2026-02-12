@@ -369,6 +369,10 @@ export default function LinksTable({
       allowDownload: link.allowDownload ? link.allowDownload : false,
       allowList: link.allowList,
       denyList: link.denyList,
+      visitorGroupIds:
+        link.visitorGroups?.map(
+          (vg: { visitorGroupId: string }) => vg.visitorGroupId,
+        ) || [],
       enableNotification: link.enableNotification
         ? link.enableNotification
         : false,

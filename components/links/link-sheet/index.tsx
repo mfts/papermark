@@ -66,6 +66,7 @@ export const DEFAULT_LINK_PROPS = (
   allowDownload: false,
   allowList: [],
   denyList: [],
+  visitorGroupIds: [],
   enableNotification: true,
   enableFeedback: false,
   enableScreenshotProtection: false,
@@ -110,6 +111,7 @@ export type DEFAULT_LINK_TYPE = {
   allowDownload: boolean;
   allowList: string[];
   denyList: string[];
+  visitorGroupIds: string[];
   enableNotification: boolean;
   enableFeedback: boolean;
   enableScreenshotProtection: boolean;

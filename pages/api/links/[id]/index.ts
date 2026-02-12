@@ -406,6 +406,11 @@ export default async function handle(
         },
         include: {
           customFields: true,
+          visitorGroups: {
+            select: {
+              visitorGroupId: true,
+            },
+          },
           views: {
             orderBy: {
               viewedAt: "desc",
@@ -416,6 +421,27 @@ export default async function handle(
           },
         },
       });
+
+      // Update visitor groups (replace all)
+      if (linkData.visitorGroupIds !== undefined) {
+        // Delete existing visitor group associations
+        await tx.linkVisitorGroup.deleteMany({
+          where: { linkId: id },
+        });
+
+        // Create new associations
+        if (linkData.visitorGroupIds?.length > 0) {
+          await tx.linkVisitorGroup.createMany({
+            data: linkData.visitorGroupIds.map(
+              (visitorGroupId: string) => ({
+                linkId: id,
+                visitorGroupId,
+              }),
+            ),
+            skipDuplicates: true,
+          });
+        }
+      }
       if (linkData.tags?.length) {
         // Remove only tags that are not in the new list
         await tx.tagItem.deleteMany({
