@@ -127,7 +127,6 @@ export default function DataroomDocumentView({
   );
   const [verificationRequested, setVerificationRequested] =
     useState<boolean>(false);
-  const [dataroomVerified, setDataroomVerified] = useState<boolean>(false);
   const [verificationToken, setVerificationToken] = useState<string | null>(
     token ?? null,
   );
@@ -151,7 +150,6 @@ export default function DataroomDocumentView({
         userId: userId ?? null,
         documentVersionId: link.dataroomDocument.document.versions[0].id,
         hasPages: link.dataroomDocument.document.versions[0].hasPages,
-        dataroomVerified: dataroomVerified,
         dataroomId: link.dataroomId,
         linkType: "DATAROOM_LINK",
         dataroomViewId: viewData.dataroomViewId ?? null,
@@ -251,7 +249,6 @@ export default function DataroomDocumentView({
         setVerificationToken(null);
         setCode(null);
         setIsInvalidCode(true);
-        setDataroomVerified(false);
       }
       setIsLoading(false);
     }
