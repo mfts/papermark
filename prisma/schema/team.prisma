@@ -11,8 +11,9 @@ model Team {
   brand        Brand?
   datarooms    Dataroom[]
   agreements   Agreement[]
-  viewerGroups ViewerGroup[]
-  viewers      Viewer[]
+  viewerGroups  ViewerGroup[]
+  visitorGroups VisitorGroup[]
+  viewers       Viewer[]
 
   permissionGroups  PermissionGroup[]
   linkPresets       LinkPreset[] // Link presets for the team
