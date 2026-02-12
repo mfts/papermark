@@ -685,6 +685,7 @@ async function processLinkData(
     deletedAt: undefined,
     document: undefined,
     dataroom: undefined,
+    password: link.password ? "protected" : null,
     // Use sanitized agreement
     agreement: sanitizedAgreement,
     ...(teamPlan === "free" && {
