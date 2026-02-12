@@ -264,7 +264,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               ) : null}
             </span>
           ) : null}
-          {isDataroomsPlus ? (
+          {isDataroomsPlus && !isDataroomsPremium ? (
             <span className="relative ml-4 inline-flex items-center rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
               Datarooms+
               {isPaused ? (

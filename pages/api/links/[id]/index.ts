@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { Brand, DataroomBrand, LinkAudienceType } from "@prisma/client";
+import { customAlphabet } from "nanoid";
 import { getServerSession } from "next-auth/next";
 
 import {
@@ -546,7 +547,14 @@ export default async function handle(
         return res.status(401).end("Unauthorized to delete this link");
       }
 
-      // Soft delete the link by setting deletedAt and isArchived
+      // Generate a random suffix for the deleted slug to free up the original slug
+      const generateDeletedSuffix = customAlphabet(
+        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+        6,
+      );
+
+      // Soft delete the link by setting deletedAt and isArchived,
+      // and rename the slug so the original can be reused
       await prisma.link.update({
         where: {
           id: id,
@@ -554,6 +562,9 @@ export default async function handle(
         data: {
           deletedAt: new Date(),
           isArchived: true,
+          ...(linkToBeDeleted.slug && {
+            slug: `${linkToBeDeleted.slug}-DELETED-${generateDeletedSuffix()}`,
+          }),
         },
       });
 
