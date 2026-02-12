@@ -1085,7 +1085,7 @@ async function handleLinkUpdate(
       message: "Link updated successfully",
       linkId: updatedLink.id,
       linkUrl:
-        domainId && link.domain && link.slug
+        updatedLink.domainSlug && updatedLink.slug
           ? `https://${updatedLink.domainSlug}/${updatedLink.slug}`
           : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${updatedLink.id}`,
     });
