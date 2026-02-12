@@ -18,6 +18,7 @@ import {
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { PanelLeftIcon, XIcon } from "lucide-react";
 
+import { usePendingUploads } from "@/context/pending-uploads-context";
 import { cn } from "@/lib/utils";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
@@ -53,6 +54,7 @@ import {
   IntroductionProvider,
 } from "../dataroom/introduction-modal";
 import DataroomNav from "../dataroom/nav-dataroom";
+import PendingDocumentCard from "../dataroom/pending-document-card";
 
 const ViewerBreadcrumbItem = ({
   folder,
@@ -174,6 +176,10 @@ export default function DataroomViewer({
 
   const router = useRouter();
   const searchQuery = (router.query.search as string)?.toLowerCase() || "";
+
+  // Get pending uploads for the current folder
+  const { getPendingUploadsForFolder } = usePendingUploads();
+  const pendingUploadsForFolder = getPendingUploadsForFolder(folderId);
 
   const breadcrumbFolders = useMemo(
     () => getParentFolders(folderId, folders),
@@ -545,7 +551,16 @@ export default function DataroomViewer({
                 )}
 
                 <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
-                  {mixedItems.length === 0 ? (
+                  {/* Show pending uploads at the top */}
+                  {!searchQuery &&
+                    pendingUploadsForFolder.map((pendingUpload) => (
+                      <li key={pendingUpload.id}>
+                        <PendingDocumentCard pendingUpload={pendingUpload} />
+                      </li>
+                    ))}
+
+                  {mixedItems.length === 0 &&
+                  pendingUploadsForFolder.length === 0 ? (
                     <li className="py-6 text-center text-muted-foreground">
                       {searchQuery
                         ? "No documents match your search."

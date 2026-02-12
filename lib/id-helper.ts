@@ -48,4 +48,5 @@ export const newId = new IdGenerator({
   token: "pmk",
   clickEvent: "click",
   preset: "preset",
+  pending: "pending", // for pending uploads
 }).id;
