@@ -524,8 +524,6 @@ export default function LinkSheet({
         };
       }
 
-      console.log("Link Updated tracked fields", changedFields);
-
       analytics.capture("Link Updated", {
         linkId: currentLink.id,
         targetId,
