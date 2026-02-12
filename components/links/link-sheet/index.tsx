@@ -16,12 +16,14 @@ import useSWR from "swr";
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
+import { useDocument } from "@/lib/swr/use-document";
 import { useDomains } from "@/lib/swr/use-domains";
 import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { convertDataUrlToFile, fetcher, uploadImage } from "@/lib/utils";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { isDocumentProcessing } from "@/components/documents/document-preview-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -180,6 +182,12 @@ export default function LinkSheet({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [currentPreset, setCurrentPreset] = useState<LinkPreset | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Check if document is processing (only for document links)
+  const { document, primaryVersion } = useDocument();
+  const isDocumentCurrentlyProcessing = 
+    linkType === LinkType.DOCUMENT_LINK && 
+    isDocumentProcessing(primaryVersion);
 
   const isPresetsAllowed =
     isTrial ||
@@ -785,6 +793,7 @@ export default function LinkSheet({
                 type="button"
                 variant="outline"
                 loading={isLoading}
+                disabled={isDocumentCurrentlyProcessing}
                 onClick={(e) => handleSubmit(e, true)}
               >
                 {currentLink ? "Update & Preview" : "Save & Preview"}
