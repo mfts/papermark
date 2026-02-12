@@ -35,7 +35,12 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
         file: string;
         pageNumber: string;
         embeddedLinks: string[];
-        pageLinks: { href: string; coords: string }[];
+        pageLinks: {
+          href: string;
+          coords: string;
+          isInternal?: boolean;
+          targetPage?: number;
+        }[];
         metadata: { width: number; height: number; scaleFactor: number };
       }[]
     | null;

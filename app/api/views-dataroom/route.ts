@@ -216,7 +216,6 @@ export async function POST(request: NextRequest) {
         linkId,
       );
 
-      console.log("previewSession", previewSession);
       if (!previewSession) {
         return NextResponse.json(
           {
@@ -236,6 +235,7 @@ export async function POST(request: NextRequest) {
         linkId,
         link.dataroomId!,
       );
+
 
       // If we have a dataroom session, use its verified status
       if (dataroomSession) {
@@ -669,7 +669,6 @@ export async function POST(request: NextRequest) {
 
     // ** DATAROOM_VIEW **
     if (viewType === "DATAROOM_VIEW") {
-      console.log("viewType is DATAROOM_VIEW");
       try {
         let newDataroomView: { id: string } | null = null;
         if (!isPreview) {
@@ -692,7 +691,7 @@ export async function POST(request: NextRequest) {
               clickId: newId("linkView"),
               viewId: newDataroomView.id,
               linkId,
-              dataroomId,
+              dataroomId: link.dataroomId!,
               teamId: link.teamId!,
               enableNotification: link.enableNotification,
               isPaused,
@@ -705,7 +704,7 @@ export async function POST(request: NextRequest) {
                 try {
                   await notifyDataroomAccess({
                     teamId: link.teamId!,
-                    dataroomId,
+                    dataroomId: link.dataroomId!,
                     linkId,
                     viewerEmail: verifiedEmail ?? email,
                     viewerId: viewer?.id,
@@ -743,7 +742,7 @@ export async function POST(request: NextRequest) {
         // Create a dataroom session token if a dataroom session doesn't exist yet
         if (!dataroomSession && !isPreview) {
           const newDataroomSession = await createDataroomSession(
-            dataroomId,
+            link.dataroomId!,
             linkId,
             newDataroomView?.id!,
             ipAddress(request) ?? LOCALHOST_IP,
@@ -796,9 +795,6 @@ export async function POST(request: NextRequest) {
 
         // if dataroomSession is not present, create a dataroom view first
         if (!dataroomSession) {
-          console.log(
-            "no dataroom session present, creating new dataroom view",
-          );
           dataroomView = await prisma.view.create({
             data: { ...viewFields, viewType: "DATAROOM_VIEW" },
             select: { id: true },
@@ -811,7 +807,7 @@ export async function POST(request: NextRequest) {
               clickId: newId("linkView"),
               viewId: dataroomView.id,
               linkId,
-              dataroomId,
+              dataroomId: link.dataroomId!,
               teamId: link.teamId!,
               enableNotification: link.enableNotification,
               isPaused,
@@ -839,7 +835,7 @@ export async function POST(request: NextRequest) {
                 await notifyDocumentView({
                   teamId: link.teamId!,
                   documentId,
-                  dataroomId,
+                  dataroomId: link.dataroomId!,
                   linkId,
                   viewerEmail: verifiedEmail ?? email,
                   viewerId: viewer?.id,
@@ -955,12 +951,12 @@ export async function POST(request: NextRequest) {
           link.permissionGroupId) &&
         effectiveGroupId &&
         documentId &&
-        dataroomId
+        link.dataroomId
       ) {
         const dataroomDocument = await prisma.dataroomDocument.findUnique({
           where: {
             dataroomId_documentId: {
-              dataroomId: dataroomId,
+              dataroomId: link.dataroomId,
               documentId: documentId,
             },
           },
@@ -1060,7 +1056,7 @@ export async function POST(request: NextRequest) {
       // Create a dataroom session token if a dataroom session doesn't exist yet
       if (!dataroomSession && !isPreview) {
         const newDataroomSession = await createDataroomSession(
-          dataroomId,
+          link.dataroomId!,
           linkId,
           dataroomView?.id!,
           ipAddress(request) ?? LOCALHOST_IP,

@@ -29,6 +29,7 @@ type FolderCardProps = {
   viewId?: string;
   allowDownload: boolean;
   dataroomIndexEnabled?: boolean;
+  showLastUpdated?: boolean;
 };
 export default function FolderCard({
   folder,
@@ -39,6 +40,7 @@ export default function FolderCard({
   viewId,
   allowDownload,
   dataroomIndexEnabled,
+  showLastUpdated = true,
 }: FolderCardProps) {
   const [open, setOpen] = useState(false);
 
@@ -48,7 +50,7 @@ export default function FolderCard({
     folder.hierarchicalIndex,
     dataroomIndexEnabled || false,
   );
-  const downloadDocument = async () => {
+  const openFolderDownloadModal = () => {
     if (!allowDownload) {
       toast.error("Downloading folders is not allowed.");
       return;
@@ -58,50 +60,21 @@ export default function FolderCard({
       return;
     }
 
-    toast.promise(
-      fetch(`/api/links/download/dataroom-folder`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          folderId: folder.id,
-          dataroomId,
-          viewId,
-          linkId,
-        }),
+    window.dispatchEvent(
+      new CustomEvent("viewer-download-modal-open", {
+        detail: { folderId: folder.id, folderName: folder.name },
       }),
-      {
-        loading: "Downloading dataroom folder...",
-        success: async (response) => {
-          if (!response.ok) {
-            throw new Error("Failed to fetch download URL");
-          }
-
-          const { downloadUrl } = await response.json();
-
-          const link = document.createElement("a");
-          link.href = downloadUrl;
-          link.rel = "noopener noreferrer";
-          document.body.appendChild(link);
-          link.click();
-
-          setTimeout(() => {
-            document.body.removeChild(link);
-          }, 100);
-
-          return `${folder.name} downloaded successfully.`;
-        },
-        error: (error) => {
-          console.error("Error downloading folder:", error);
-          return error.message || "An error occurred while downloading file.";
-        },
-      },
     );
   };
 
   return (
     <div className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-400 transition-all hover:bg-secondary hover:ring-gray-500 dark:bg-secondary dark:ring-gray-500 hover:dark:ring-gray-400 sm:p-4">
+      {/* Click target - outside of text hierarchy to fix Safari truncation issue */}
+      <button
+        onClick={() => setFolderId(folder.id)}
+        className="absolute inset-0 z-0 cursor-pointer"
+        aria-hidden="true"
+      />
       <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
         <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
           {(() => {
@@ -116,24 +89,20 @@ export default function FolderCard({
           })()}
         </div>
 
-        <div className="flex-col">
+        <div className="min-w-0 flex-1 flex-col">
           <div className="flex items-center">
             <h2
-              className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg"
+              className="truncate text-sm font-semibold leading-6 text-foreground"
               style={HIERARCHICAL_DISPLAY_STYLE}
             >
-              <span
-                onClick={() => setFolderId(folder.id)}
-                className="cursor-pointer"
-              >
-                {displayName}
-                <span className="absolute inset-0" />
-              </span>
+              {displayName}
             </h2>
           </div>
-          <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
-            <p className="truncate">Updated {timeAgo(folder.updatedAt)}</p>
-          </div>
+          {showLastUpdated && (
+            <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+              <p className="truncate">Updated {timeAgo(folder.updatedAt)}</p>
+            </div>
+          )}
         </div>
       </div>
       {allowDownload ? (
@@ -155,7 +124,7 @@ export default function FolderCard({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  downloadDocument();
+                  openFolderDownloadModal();
                   setOpen(false);
                 }}
                 disabled={isPreview}

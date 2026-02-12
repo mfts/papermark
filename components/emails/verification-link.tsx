@@ -5,25 +5,25 @@ import {
   Container,
   Head,
   Heading,
+  Hr,
   Html,
-  Link,
   Preview,
   Section,
   Tailwind,
   Text,
 } from "@react-email/components";
 
-import { Footer } from "./shared/footer";
-
-const VerificationLinkEmail = ({
-  url = "https://www.papermark.com",
+const VerificationCodeEmail = ({
+  email = "user@example.com",
+  code = "45PFSNUDYW",
 }: {
-  url: string;
+  email?: string;
+  code?: string;
 }) => {
   return (
     <Html>
       <Head />
-      <Preview>Your Papermark Login Link</Preview>
+      <Preview>Your login code for Papermark: {code}</Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 max-w-[600px] rounded border border-solid border-neutral-200 px-10 py-5">
@@ -32,30 +32,37 @@ const VerificationLinkEmail = ({
                 Papermark
               </Text>
             </Section>
-            <Heading className="mx-0 my-7 p-0 text-lg font-medium text-black">
-              Your Login Link
+            <Heading className="mx-0 my-7 p-0 text-xl font-semibold text-black">
+              Your login code
             </Heading>
-            <Text className="text-sm leading-6 text-black">
-              Welcome to Papermark!
+            <Text className="text-sm leading-6 text-neutral-600">
+              Enter this code to sign in to your Papermark account:
             </Text>
-            <Text className="text-sm leading-6 text-black">
-              Please click the magic link below to sign in to your account.
-            </Text>
-            <Section className="my-8">
-              <Link
-                className="rounded-lg bg-black px-6 py-3 text-center text-[12px] font-semibold text-white no-underline"
-                href={url}
+            <Section className="my-6">
+              <Text
+                className="m-0 rounded-lg bg-neutral-100 px-4 py-3 text-center text-2xl font-bold tracking-[0.3em] text-black"
+                style={{ fontFamily: "monospace", letterSpacing: "0.3em" }}
               >
-                Sign in
-              </Link>
+                {code}
+              </Text>
             </Section>
-            <Text className="text-sm leading-6 text-black">
-              or copy and paste this URL into your browser:
+            <Text className="text-sm leading-6 text-neutral-600">
+              This code will expire in 15 minutes.
             </Text>
-            <Text className="max-w-sm flex-wrap break-words font-medium text-purple-600 no-underline">
-              {url.replace(/^https?:\/\//, "")}
+            <Text className="mt-4 text-sm leading-5 text-neutral-500">
+              If you didn&apos;t request this code, you can safely ignore this
+              email.
             </Text>
-            <Footer />
+            <Hr className="my-6" />
+            <Section className="text-gray-400">
+              <Text className="text-xs text-neutral-500">
+                Papermark, Inc.
+                <br />
+                1111B S Governors Ave #28117
+                <br />
+                Dover, DE 19904
+              </Text>
+            </Section>
           </Container>
         </Body>
       </Tailwind>
@@ -63,4 +70,4 @@ const VerificationLinkEmail = ({
   );
 };
 
-export default VerificationLinkEmail;
+export default VerificationCodeEmail;

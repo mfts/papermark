@@ -46,6 +46,10 @@ model Dataroom {
   // display settings
   showLastUpdated Boolean @default(true) // Show/hide last updated date in dataroom view
 
+  // Introduction page settings
+  introductionEnabled Boolean @default(false) // Toggle to show introduction on first visit
+  introductionContent Json?   // TipTap JSON content for the introduction page
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

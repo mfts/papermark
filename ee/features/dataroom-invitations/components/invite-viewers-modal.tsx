@@ -422,8 +422,8 @@ export function InviteViewersModal({
                   <br />
                   <span className="break-all text-foreground">
                     {selectedLink
-                      ? `https://papermark.io/view/${selectedLink.slug ?? selectedLink.id}`
-                      : "https://papermark.io/view/..."}
+                      ? `https://papermark.com/view/${selectedLink.slug ?? selectedLink.id}`
+                      : "https://papermark.com/view/..."}
                   </span>
                 </p>
                 <Separator className="my-2" />

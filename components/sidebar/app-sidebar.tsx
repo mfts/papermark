@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
+import { useIsAdmin } from "@/lib/hooks/use-is-admin";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
 import useLimits from "@/lib/swr/use-limits";
@@ -76,6 +77,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   // Check feature flags
   const { features } = useFeatureFlags();
+
+  // Check if current user is admin (for gating Security & Billing)
+  const { isAdmin } = useIsAdmin();
 
   // Fetch datarooms for the current team (simple mode - no filters or extra data)
   const { datarooms } = useDataroomsSimple();
@@ -201,11 +205,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: "/settings/slack",
             current: router.pathname.includes("settings/slack"),
           },
-          {
-            title: "Billing",
-            url: "/settings/billing",
-            current: router.pathname.includes("settings/billing"),
-          },
+          ...(isAdmin
+            ? [
+                {
+                  title: "Security",
+                  url: "/settings/security",
+                  current: router.pathname.includes("settings/security"),
+                },
+                {
+                  title: "Billing",
+                  url: "/settings/billing",
+                  current: router.pathname.includes("settings/billing"),
+                },
+              ]
+            : []),
         ],
       },
       // {
@@ -251,7 +264,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               ) : null}
             </span>
           ) : null}
-          {isDataroomsPlus ? (
+          {isDataroomsPlus && !isDataroomsPremium ? (
             <span className="relative ml-4 inline-flex items-center rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
               Datarooms+
               {isPaused ? (

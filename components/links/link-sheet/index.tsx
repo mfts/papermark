@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+
+import { useHotkeys } from "react-hotkeys-hook";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -177,6 +179,7 @@ export default function LinkSheet({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [currentPreset, setCurrentPreset] = useState<LinkPreset | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const isPresetsAllowed =
     isTrial ||
@@ -199,6 +202,19 @@ export default function LinkSheet({
   useEffect(() => {
     setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms));
   }, [currentLink]);
+
+  // Handle Command+Enter (Mac) or Ctrl+Enter (Windows/Linux) to submit the form
+  useHotkeys(
+    "mod+enter",
+    (e) => {
+      e.preventDefault();
+      if (!isSaving && formRef.current) {
+        formRef.current.requestSubmit();
+      }
+    },
+    { enabled: isOpen, enableOnFormTags: true },
+    [isSaving],
+  );
 
   const handlePreviewLink = async (link: LinkWithViews) => {
     if (link.domainId && isFree) {
@@ -470,6 +486,7 @@ export default function LinkSheet({
         </SheetHeader>
 
         <form
+          ref={formRef}
           className="flex grow flex-col"
           onSubmit={(e) => handleSubmit(e, false)}
         >

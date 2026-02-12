@@ -160,3 +160,28 @@ export function useRootFolders() {
     error,
   };
 }
+
+export function useHiddenDocuments() {
+  const teamInfo = useTeam();
+
+  const { data, error, mutate } = useSWR<{
+    folders: FolderWithCount[];
+    documents: DocumentWithLinksAndLinkCountAndViewCount[];
+  }>(
+    teamInfo?.currentTeam?.id &&
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/hidden`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000,
+    },
+  );
+
+  return {
+    folders: data?.folders,
+    documents: data?.documents,
+    loading: !data && !error,
+    error,
+    mutate,
+  };
+}

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { DataroomBrand } from "@prisma/client";
 import { BadgeInfoIcon, Download } from "lucide-react";
@@ -18,6 +18,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { Button } from "../../ui/button";
 import { ConversationSidebar } from "../conversations/sidebar";
+import { ViewerDownloadProgressModal } from "./viewer-download-progress-modal";
 
 const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
 
@@ -31,6 +32,7 @@ export default function DataroomNav({
   isPreview,
   dataroomId,
   viewerId,
+  viewerEmail,
   conversationsEnabled,
   isTeamMember,
 }: {
@@ -43,58 +45,56 @@ export default function DataroomNav({
   isPreview?: boolean;
   dataroomId?: string;
   viewerId?: string;
+  viewerEmail?: string | null;
   conversationsEnabled?: boolean;
   isTeamMember?: boolean;
 }) {
-  const [loading, setLoading] = useState<boolean>(false);
   const [showConversations, setShowConversations] = useState<boolean>(false);
+  const [showDownloadModal, setShowDownloadModal] = useState<boolean>(false);
+  const [downloadModalJobId, setDownloadModalJobId] = useState<string | null>(null);
+  const [downloadFolderId, setDownloadFolderId] = useState<string | null>(null);
+  const [downloadFolderName, setDownloadFolderName] = useState<string | null>(null);
 
-  const downloadDataroom = async () => {
+  // Derive downloads page URL from current path so it works for both
+  // /view/<linkId>/downloads and /<slug>/downloads (custom domains)
+  const downloadsPageUrl = useMemo(() => {
+    if (typeof window === "undefined") return "/downloads";
+    const path = window.location.pathname.replace(/\/+$/, "");
+    return `${path}/downloads`;
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: CustomEvent<{ jobId?: string; folderId?: string; folderName?: string }>) => {
+      setDownloadModalJobId(e.detail?.jobId ?? null);
+      setDownloadFolderId(e.detail?.folderId ?? null);
+      setDownloadFolderName(e.detail?.folderName ?? null);
+      setShowDownloadModal(true);
+    };
+    window.addEventListener(
+      "viewer-download-modal-open" as any,
+      handler as EventListener,
+    );
+    return () =>
+      window.removeEventListener(
+        "viewer-download-modal-open" as any,
+        handler as EventListener,
+      );
+  }, []);
+
+  const openDownloadModal = () => {
     if (isPreview) {
       toast.error("You cannot download datarooms in preview mode.");
       return;
     }
-    if (!allowDownload) return;
-    setLoading(true);
-    try {
-      toast.promise(
-        fetch(`/api/links/download/bulk`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ linkId, viewId }),
-        }),
-        {
-          loading: "Downloading dataroom...",
-          success: async (response) => {
-            const { downloadUrl } = await response.json();
-
-            const link = document.createElement("a");
-            link.href = downloadUrl;
-            link.rel = "noopener noreferrer";
-            document.body.appendChild(link);
-            link.click();
-
-            setTimeout(() => {
-              document.body.removeChild(link);
-            }, 100);
-
-            return "Dataroom downloaded successfully.";
-          },
-          error: (error) => {
-            console.log(error);
-            return (
-              error.message || "An error occurred while downloading dataroom."
-            );
-          },
-        },
-      );
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+    if (!allowDownload || !allowBulkDownload) return;
+    if (!viewerEmail) {
+      toast.error("Enter your email in the dataroom to download.");
+      return;
     }
+    setDownloadModalJobId(null);
+    setDownloadFolderId(null);
+    setDownloadFolderName(null);
+    setShowDownloadModal(true);
   };
 
   useEffect(() => {
@@ -176,13 +176,12 @@ export default function DataroomNav({
                 View FAQ
               </Button>
             )}
-            {allowDownload && allowBulkDownload ? (
+            {allowDownload && allowBulkDownload && viewerEmail ? (
               <ButtonTooltip content="Download Dataroom">
                 <Button
-                  onClick={downloadDataroom}
+                  onClick={openDownloadModal}
                   className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
                   size="icon"
-                  loading={loading}
                 >
                   <Download className="h-5 w-5" />
                 </Button>
@@ -218,6 +217,26 @@ export default function DataroomNav({
         </div>
       )}
 
+      {linkId && viewId && viewerEmail && (
+        <ViewerDownloadProgressModal
+          isOpen={showDownloadModal}
+          onClose={() => {
+            setShowDownloadModal(false);
+            setDownloadModalJobId(null);
+            setDownloadFolderId(null);
+            setDownloadFolderName(null);
+          }}
+          linkId={linkId}
+          viewId={viewId}
+          viewerEmail={viewerEmail}
+          dataroomName={dataroom?.name ?? ""}
+          dataroomId={dataroomId}
+          downloadsPageUrl={downloadsPageUrl}
+          initialJobId={downloadModalJobId ?? undefined}
+          folderId={downloadFolderId}
+          folderName={downloadFolderName}
+        />
+      )}
       {conversationsEnabled && showConversations ? (
         <ConversationSidebar
           dataroomId={dataroomId}

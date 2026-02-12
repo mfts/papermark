@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+
+import { useHotkeys } from "react-hotkeys-hook";
 
 import { useTeam } from "@/context/team-context";
 import {
@@ -113,6 +115,7 @@ export function DataroomLinkSheet({
   const [currentPreset, setCurrentPreset] = useState<LinkPreset | null>(null);
   const [showPermissionsSheet, setShowPermissionsSheet] =
     useState<boolean>(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const [pendingLinkData, setPendingLinkData] =
     useState<DEFAULT_LINK_TYPE | null>(null);
   const [showSuccessSheet, setShowSuccessSheet] = useState<boolean>(false);
@@ -139,6 +142,19 @@ export function DataroomLinkSheet({
   useEffect(() => {
     setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms));
   }, [currentLink]);
+
+  // Handle Command+Enter (Mac) or Ctrl+Enter (Windows/Linux) to submit the form
+  useHotkeys(
+    "mod+enter",
+    (e) => {
+      e.preventDefault();
+      if (!isSaving && formRef.current) {
+        formRef.current.requestSubmit();
+      }
+    },
+    { enabled: isOpen, enableOnFormTags: true },
+    [isSaving],
+  );
 
   const handlePreviewLink = async (link: LinkWithViews) => {
     if (link.domainId && isFree) {
@@ -695,6 +711,7 @@ export function DataroomLinkSheet({
           </SheetHeader>
 
           <form
+            ref={formRef}
             className="flex grow flex-col"
             onSubmit={(e) => handleSubmit(e, false)}
           >

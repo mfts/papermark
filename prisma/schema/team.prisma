@@ -1,6 +1,7 @@
 model Team {
   id           String        @id @default(cuid())
   name         String
+  slug         String?       @unique // Optional human-readable identifier (e.g. "acme"), used for SSO login
   users        UserTeam[]
   documents    Document[]
   folders      Folder[]
@@ -26,8 +27,8 @@ model Team {
 
   installedIntegrations InstalledIntegration[]
 
-  links Link[]
-  views View[]
+  links     Link[]
+  views     View[]
   workflows Workflow[]
 
   plan           String    @default("free")
@@ -43,9 +44,14 @@ model Team {
   limits Json? // Plan limits // {datarooms: 1, users: 1, domains: 1, customDomainOnPro: boolean, customDomainInDataroom: boolean}
 
   // team settings
-  enableExcelAdvancedMode Boolean @default(false) // Enable Excel advanced mode for all documents in the team
+  enableExcelAdvancedMode  Boolean @default(false) // Enable Excel advanced mode for all documents in the team
   replicateDataroomFolders Boolean @default(true) // Replicate dataroom folder structure in "All Documents"
-  timezone               String  @default("Etc/UTC") // Team-wide timezone for analytics display (IANA timezone identifier)
+  timezone                 String  @default("Etc/UTC") // Team-wide timezone for analytics display (IANA timezone identifier)
+
+  // SSO (SAML/SCIM via BoxyHQ Jackson)
+  ssoEnabled     Boolean   @default(false) // Feature flag: team has access to SSO
+  ssoEmailDomain String?   @unique // Email domain enforced for SSO (e.g. "acme.com")
+  ssoEnforcedAt  DateTime? // When set, all users with this domain MUST use SSO
 
   // AI agents
   agentsEnabled Boolean @default(false) // Enable AI agents for the team

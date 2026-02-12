@@ -34,7 +34,10 @@ export const convertPdfToImageRoute = task({
     if (!documentVersion) {
       logger.error("File not found", { payload });
       updateStatus({ progress: 0, text: "Document not found" });
-      return;
+      return {
+        success: false,
+        message: "Document version not found",
+      };
     }
 
     logger.info("Document version", { documentVersion });
@@ -51,7 +54,10 @@ export const convertPdfToImageRoute = task({
     if (!signedUrl) {
       logger.error("Failed to get signed url", { payload });
       updateStatus({ progress: 0, text: "Failed to retrieve document" });
-      return;
+      return {
+        success: false,
+        message: "Failed to get signed URL for document",
+      };
     }
 
     let numPages = documentVersion.numPages;
@@ -61,39 +67,67 @@ export const convertPdfToImageRoute = task({
       // 3. send file to api/convert endpoint in a task and get back number of pages
       logger.info("Sending file to api/get-pages endpoint");
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/get-pages`,
-        {
-          method: "POST",
-          body: JSON.stringify({ url: signedUrl }),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/get-pages`,
+          {
+            method: "POST",
+            body: JSON.stringify({ url: signedUrl }),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+            },
           },
-        },
-      );
+        );
 
-      if (!response.ok) {
-        logger.error("Failed to get number of pages", {
-          signedUrl,
-          response,
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          logger.error("Failed to get number of pages", {
+            signedUrl,
+            status: response.status,
+            error: errorData,
+            payload,
+          });
+          updateStatus({ progress: 0, text: "Failed to get number of pages" });
+          return {
+            success: false,
+            message: "Failed to get number of pages",
+          };
+        }
+
+        const { numPages: numPagesResult } = (await response.json()) as {
+          numPages: number;
+        };
+
+        logger.info("Received number of pages", { numPagesResult });
+
+        if (numPagesResult < 1) {
+          logger.error("Failed to get number of pages", { payload });
+          updateStatus({ progress: 0, text: "Failed to get number of pages" });
+          return {
+            success: false,
+            message: "Failed to get number of pages - invalid page count",
+          };
+        }
+
+        numPages = numPagesResult;
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        const errorCause =
+          error instanceof Error && error.cause ? error.cause : undefined;
+
+        logger.error("Failed to fetch page count", {
+          error: errorMessage,
+          cause: errorCause,
+          payload,
         });
-        throw new Error("Failed to get number of pages");
+        updateStatus({ progress: 0, text: "Failed to retrieve page count" });
+        return {
+          success: false,
+          message: `Failed to fetch page count: ${errorMessage}`,
+        };
       }
-
-      const { numPages: numPagesResult } = (await response.json()) as {
-        numPages: number;
-      };
-
-      logger.info("Received number of pages", { numPagesResult });
-
-      if (numPagesResult < 1) {
-        logger.error("Failed to get number of pages", { payload });
-        updateStatus({ progress: 0, text: "Failed to get number of pages" });
-        return;
-      }
-
-      numPages = numPagesResult;
     }
 
     updateStatus({ progress: 20, text: "Converting document..." });
@@ -165,11 +199,17 @@ export const convertPdfToImageRoute = task({
         });
       } catch (error: unknown) {
         conversionWithoutError = false;
-        if (error instanceof Error) {
-          logger.error("Failed to convert page", {
-            error: error.message,
-          });
-        }
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        const errorCause =
+          error instanceof Error && error.cause ? error.cause : undefined;
+
+        logger.error("Failed to convert page", {
+          pageNumber: currentPage,
+          error: errorMessage,
+          cause: errorCause,
+          payload,
+        });
       }
 
       updateStatus({
@@ -184,7 +224,12 @@ export const convertPdfToImageRoute = task({
         progress: (currentPage / numPages) * 100,
         text: `Error processing page ${currentPage} of ${numPages}`,
       });
-      return;
+      return {
+        success: false,
+        message: `Failed to process page ${currentPage} of ${numPages}`,
+        totalPages: numPages,
+        failedAtPage: currentPage,
+      };
     }
 
     // 5. after all pages are uploaded, update document version to hasPages = true

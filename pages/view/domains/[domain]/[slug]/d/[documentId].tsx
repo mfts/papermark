@@ -11,8 +11,13 @@ import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 import z from "zod";
 
+import { fetchLinkDataByDomainSlug } from "@/lib/api/links/link-data";
 import notion from "@/lib/notion";
-import { addSignedUrls } from "@/lib/notion/utils";
+import {
+  addSignedUrls,
+  fetchMissingPageReferences,
+  normalizeRecordMap,
+} from "@/lib/notion/utils";
 import { CustomUser, LinkWithDataroomDocument, NotionTheme } from "@/lib/types";
 
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -45,6 +50,7 @@ type DataroomDocumentProps = {
   useAdvancedExcelViewer: boolean;
   useCustomAccessForm: boolean;
   logoOnAccessForm: boolean;
+  error?: boolean;
 };
 
 export default function DataroomDocumentViewPage({
@@ -56,6 +62,7 @@ export default function DataroomDocumentViewPage({
   useAdvancedExcelViewer,
   useCustomAccessForm,
   logoOnAccessForm,
+  error,
 }: DataroomDocumentProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -80,6 +87,12 @@ export default function DataroomDocumentViewPage({
       <div className="flex h-screen items-center justify-center bg-black">
         <LoadingSpinner className="h-20 w-20" />
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <NotFound message="Sorry, we had trouble loading this link. Please try again in a moment." />
     );
   }
 
@@ -198,17 +211,16 @@ export async function getStaticProps(context: GetStaticPropsContext) {
       .parse(slugParam);
     const documentId = z.string().cuid().parse(documentIdParam);
 
-    const res = await fetch(
-      `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
-        domain,
-      )}/${encodeURIComponent(slug)}/documents/${documentId}`,
-    );
-    if (!res.ok) {
-      throw new Error(`Failed to fetch: ${res.status}`);
+    const result = await fetchLinkDataByDomainSlug({
+      domain,
+      slug,
+      dataroomDocumentId: documentId,
+    });
+    if (result.status !== "ok") {
+      return { notFound: true };
     }
 
-    const { linkType, link, brand } =
-      (await res.json()) as DataroomDocumentLinkData;
+    const { linkType, link, brand } = result;
 
     if (!link || !linkType) {
       return { notFound: true };
@@ -236,6 +248,10 @@ export async function getStaticProps(context: GetStaticPropsContext) {
 
       pageId = notionPageId;
       recordMap = await notion.getPage(pageId, { signFileUrls: false });
+      // Fetch missing page references that are embedded in rich text (e.g., table cells with multiple page links)
+      await fetchMissingPageReferences(recordMap);
+      // Normalize double-nested block structures from the Notion API
+      normalizeRecordMap(recordMap);
       // TODO: separately sign the file urls until PR merged and published; ref: https://github.com/NotionX/react-notion-x/issues/580#issuecomment-2542823817
       await addSignedUrls({ recordMap });
     }
@@ -281,13 +297,16 @@ export async function getStaticProps(context: GetStaticPropsContext) {
         useCustomAccessForm:
           teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
           teamId === "clup33by90000oewh4rfvp2eg" ||
-          teamId === "cm76hfyvy0002q623hmen99pf",
+          teamId === "cm76hfyvy0002q623hmen99pf" ||
+          teamId === "cm9ztf0s70005js04i689gefn" ||
+          teamId === "cmk2hnmqh0000k304zcoezt6n",
         logoOnAccessForm: teamId === "cm7nlkrhm0000qgh0nvyrrywr",
       },
       revalidate: brand || recordMap ? 10 : 60,
     };
   } catch (error) {
-    console.error("Fetching error:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Fetching error:", message);
     return { props: { error: true }, revalidate: 30 };
   }
 }

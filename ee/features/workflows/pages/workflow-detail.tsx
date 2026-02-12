@@ -1,11 +1,11 @@
 import { useRouter } from "next/router";
 
 import { useState } from "react";
-import { z } from "zod";
 
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import useSWR from "swr";
+import { z } from "zod";
 
 import { fetcher } from "@/lib/utils";
 
@@ -87,7 +87,9 @@ export default function WorkflowDetailPage() {
     error,
     mutate,
   } = useSWR<Workflow>(
-    validWorkflowId && validTeamId ? `/api/workflows/${validWorkflowId}?teamId=${validTeamId}` : null,
+    validWorkflowId && validTeamId
+      ? `/api/workflows/${validWorkflowId}?teamId=${validTeamId}`
+      : null,
     fetcher,
   );
 
@@ -101,7 +103,7 @@ export default function WorkflowDetailPage() {
     if (workflow.entryLink.domainSlug && workflow.entryLink.slug) {
       return `https://${workflow.entryLink.domainSlug}/${workflow.entryLink.slug}`;
     }
-    return `${process.env.NEXT_PUBLIC_MARKETING_URL || "https://www.papermark.io"}/view/${workflow.entryLink.id}`;
+    return `${process.env.NEXT_PUBLIC_MARKETING_URL || "https://www.papermark.com"}/view/${workflow.entryLink.id}`;
   };
 
   const handleDeleteStep = async (stepId: string) => {
@@ -110,7 +112,11 @@ export default function WorkflowDetailPage() {
     const stepIdValidation = z.string().cuid().safeParse(stepId);
     const teamIdValidation = z.string().cuid().safeParse(teamId);
 
-    if (!workflowIdValidation.success || !stepIdValidation.success || !teamIdValidation.success) {
+    if (
+      !workflowIdValidation.success ||
+      !stepIdValidation.success ||
+      !teamIdValidation.success
+    ) {
       toast.error("Invalid workflow, step, or team ID");
       return;
     }
