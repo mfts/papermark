@@ -2,6 +2,8 @@ import { jackson } from "@/lib/jackson";
 import type { OAuthReq } from "@boxyhq/saml-jackson";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   try {
     const { oauthController } = await jackson();

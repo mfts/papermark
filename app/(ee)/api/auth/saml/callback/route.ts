@@ -1,6 +1,8 @@
 import { jackson } from "@/lib/jackson";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     const { oauthController } = await jackson();

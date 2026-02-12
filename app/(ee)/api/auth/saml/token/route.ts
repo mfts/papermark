@@ -11,6 +11,8 @@ import * as openidClient from "openid-client";
 const _dependencies = [jose, openidClient];
 void _dependencies;
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     const { oauthController } = await jackson();
