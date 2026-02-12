@@ -769,10 +769,10 @@ async function handleLinkCreate(
         domainSlug: link.domain || null,
         slug: link.slug || null,
         expiresAt: expiresAtDate,
-        emailProtected: link.emailProtected || preset?.emailProtected || false,
+        emailProtected: link.emailProtected ?? preset?.emailProtected ?? false,
         emailAuthenticated:
-          link.emailAuthenticated || preset?.emailAuthenticated || false,
-        allowDownload: link.allowDownload || preset?.allowDownload,
+          link.emailAuthenticated ?? preset?.emailAuthenticated ?? false,
+        allowDownload: link.allowDownload ?? preset?.allowDownload,
         enableNotification:
           link.enableNotification ?? preset?.enableNotification ?? false,
         enableFeedback: link.enableFeedback,
@@ -1265,10 +1265,10 @@ async function handleDataroomCreate(
           password: hashedPassword,
           expiresAt: expiresAtDate,
           emailProtected:
-            link.emailProtected || preset?.emailProtected || false,
+            link.emailProtected ?? preset?.emailProtected ?? false,
           emailAuthenticated:
-            link.emailAuthenticated || preset?.emailAuthenticated || false,
-          allowDownload: link.allowDownload || preset?.allowDownload,
+            link.emailAuthenticated ?? preset?.emailAuthenticated ?? false,
+          allowDownload: link.allowDownload ?? preset?.allowDownload,
           enableNotification:
             link.enableNotification ?? preset?.enableNotification ?? false,
           enableFeedback: link.enableFeedback,
