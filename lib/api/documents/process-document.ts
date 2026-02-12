@@ -138,6 +138,7 @@ export const processDocument = async ({
         links: {
           create: {
             teamId,
+            ownerId: userId,
           },
         },
       }),

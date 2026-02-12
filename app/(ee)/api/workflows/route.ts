@@ -230,6 +230,7 @@ export async function POST(req: NextRequest) {
         data: {
           linkType: "WORKFLOW_LINK",
           teamId,
+          ownerId: userId,
           name: `${name} - Entry Link`,
           slug: slug || null,
           domainId: domainId,

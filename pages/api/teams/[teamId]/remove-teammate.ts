@@ -50,6 +50,16 @@ export default async function handle(
             ownerId: null,
           },
         }),
+        // update all links owned by the user to have no owner
+        prisma.link.updateMany({
+          where: {
+            teamId,
+            ownerId: userToBeDeleted,
+          },
+          data: {
+            ownerId: null,
+          },
+        }),
         // delete the user from the team
         prisma.userTeam.delete({
           where: {

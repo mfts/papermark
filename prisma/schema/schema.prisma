@@ -68,6 +68,8 @@ model User {
   createdAnnotations DocumentAnnotation[] // Annotations created by this user
 
   installedIntegrations InstalledIntegration[]
+
+  links Link[] @relation("LinkOwner")
 }
 
 model Brand {
