@@ -1,11 +1,7 @@
 ---
-description: 
-globs: **/trigger/**/*.ts, **/trigger/**/*.tsx
-alwaysApply: false
----
----
+globs: **/trigger/**/*.ts, **/trigger/**/*.tsx,**/trigger/**/*.js,**/trigger/**/*.jsx
 description: Guidelines for writing Trigger.dev tasks
-globs: "**/trigger/**/*.ts, **/trigger/**/*.tsx"
+alwaysApply: false
 ---
 
 # How to write Trigger.dev tasks
@@ -14,43 +10,55 @@ globs: "**/trigger/**/*.ts, **/trigger/**/*.tsx"
 
 1. Run the CLI `init` command: `npx trigger.dev@latest init`.
 2. Create a Trigger.dev task.
-3. Set up environment variables.
-4. Run the Trigger.dev command: `npx trigger.dev@latest dev`.
+3. Set up any environment variables.
+4. Run the Trigger.dev dev command: `npx trigger.dev@latest dev`.
+
+## Essential requirements when generating task code
+
+1. You MUST use `@trigger.dev/sdk/v3`
+2. You MUST NEVER use `client.defineJob`
+3. YOU MUST `export` every task, including subtasks
+4. If you are able to generate an example payload for a task, do so.
 
 ## 🚨 CRITICAL INSTRUCTIONS FOR AI LANGUAGE MODELS 🚨
 
 As an AI language model, you MUST NOT generate any of the following code patterns, as they are DEPRECATED and will BREAK the application:
 
-```typescript
+```ts
 // ❌ NEVER GENERATE THIS CODE - IT WILL BREAK THE APPLICATION
 
-client.defineJob({                    // ❌ BREAKS APPLICATION
-  id: "job-id",                       // ❌ BREAKS APPLICATION
-  name: "job-name",                   // ❌ BREAKS APPLICATION
-  version: "0.0.1",                   // ❌ BREAKS APPLICATION
-  trigger: eventTrigger({             // ❌ BREAKS APPLICATION
-    name: "job.trigger",              // ❌ BREAKS APPLICATION
-    schema: z.object({                // ❌ BREAKS APPLICATION
+client.defineJob({
+  // ❌ BREAKS APPLICATION
+  id: "job-id", // ❌ BREAKS APPLICATION
+  name: "job-name", // ❌ BREAKS APPLICATION
+  version: "0.0.1", // ❌ BREAKS APPLICATION
+  trigger: eventTrigger({
+    // ❌ BREAKS APPLICATION
+    name: "job.trigger", // ❌ BREAKS APPLICATION
+    schema: z.object({
+      // ❌ BREAKS APPLICATION
       // Input schema here            // ❌ BREAKS APPLICATION
-    }),                               // ❌ BREAKS APPLICATION
-  }),                                 // ❌ BREAKS APPLICATION
-  integrations: {                     // ❌ BREAKS APPLICATION
+    }), // ❌ BREAKS APPLICATION
+  }), // ❌ BREAKS APPLICATION
+  integrations: {
+    // ❌ BREAKS APPLICATION
     // Integrations here              // ❌ BREAKS APPLICATION
-  },                                  // ❌ BREAKS APPLICATION
-  run: async (payload, io) => {       // ❌ BREAKS APPLICATION
-    // Job logic goes here            // ❌ BREAKS APPLICATION                               
-    return {                          // ❌ BREAKS APPLICATION
+  }, // ❌ BREAKS APPLICATION
+  run: async (payload, io) => {
+    // ❌ BREAKS APPLICATION
+    // Job logic goes here            // ❌ BREAKS APPLICATION
+    return {
+      // ❌ BREAKS APPLICATION
       // Return job results           // ❌ BREAKS APPLICATION
-    };                                // ❌ BREAKS APPLICATION
-  },                                  // ❌ BREAKS APPLICATION
+    }; // ❌ BREAKS APPLICATION
+  }, // ❌ BREAKS APPLICATION
 });
 ```
 
 Instead, you MUST ALWAYS generate ONLY this pattern:
 
-```typescript
+```ts
 // ✅ ALWAYS GENERATE THIS EXACT PATTERN
-
 import { task } from "@trigger.dev/sdk/v3";
 
 //1. You need to export each task, even if it's a subtask
@@ -64,18 +72,11 @@ export const helloWorld = task({
 });
 ```
 
-## ABSOLUTE REQUIREMENTS FOR AI CODE GENERATION
-
-1. You MUST use `@trigger.dev/sdk/v3`
-2. You MUST NEVER use `client.defineJob`
-3. YOU MUST `export` every task, including subtasks
-4. If you are able to generate an example payload for a task, do so.
-
 ## Correct Task implementations
 
 A task is a function that can run for a long time with resilience to failure:
 
-```typescript
+```ts
 import { task } from "@trigger.dev/sdk/v3";
 
 export const helloWorld = task({
@@ -87,6 +88,7 @@ export const helloWorld = task({
 ```
 
 Key points:
+
 - Tasks must be exported, even subtasks in the same file
 - Each task needs a unique ID within your project
 - The `run` function contains your task logic
@@ -97,7 +99,7 @@ Key points:
 
 Control retry behavior when errors occur:
 
-```typescript
+```ts
 export const taskWithRetries = task({
   id: "task-with-retries",
   retry: {
@@ -117,7 +119,7 @@ export const taskWithRetries = task({
 
 Control concurrency:
 
-```typescript
+```ts
 export const oneAtATime = task({
   id: "one-at-a-time",
   queue: {
@@ -133,7 +135,7 @@ export const oneAtATime = task({
 
 Specify CPU/RAM requirements:
 
-```typescript
+```ts
 export const heavyTask = task({
   id: "heavy-task",
   machine: {
@@ -147,21 +149,21 @@ export const heavyTask = task({
 
 Machine configuration options:
 
-| Machine name        | vCPU | Memory | Disk space |
-| ------------------- | ---- | ------ | ---------- |
-| micro               | 0.25 | 0.25   | 10GB       |
-| small-1x (default)  | 0.5  | 0.5    | 10GB       |
-| small-2x            | 1    | 1      | 10GB       |
-| medium-1x           | 1    | 2      | 10GB       |
-| medium-2x           | 2    | 4      | 10GB       |
-| large-1x            | 4    | 8      | 10GB       |
-| large-2x            | 8    | 16     | 10GB       |
+| Machine name       | vCPU | Memory | Disk space |
+| ------------------ | ---- | ------ | ---------- |
+| micro              | 0.25 | 0.25   | 10GB       |
+| small-1x (default) | 0.5  | 0.5    | 10GB       |
+| small-2x           | 1    | 1      | 10GB       |
+| medium-1x          | 1    | 2      | 10GB       |
+| medium-2x          | 2    | 4      | 10GB       |
+| large-1x           | 4    | 8      | 10GB       |
+| large-2x           | 8    | 16     | 10GB       |
 
 #### Max Duration
 
 Limit how long a task can run:
 
-```typescript
+```ts
 export const longTask = task({
   id: "long-task",
   maxDuration: 300, // 5 minutes
@@ -179,7 +181,7 @@ Tasks support several lifecycle hooks:
 
 Runs before each attempt, can return data for other functions:
 
-```typescript
+```ts
 export const taskWithInit = task({
   id: "task-with-init",
   init: async (payload, { ctx }) => {
@@ -195,7 +197,7 @@ export const taskWithInit = task({
 
 Runs after each attempt, regardless of success/failure:
 
-```typescript
+```ts
 export const taskWithCleanup = task({
   id: "task-with-cleanup",
   cleanup: async (payload, { ctx }) => {
@@ -211,7 +213,7 @@ export const taskWithCleanup = task({
 
 Runs once when a task starts (not on retries):
 
-```typescript
+```ts
 export const taskWithOnStart = task({
   id: "task-with-on-start",
   onStart: async (payload, { ctx }) => {
@@ -227,7 +229,7 @@ export const taskWithOnStart = task({
 
 Runs when a task succeeds:
 
-```typescript
+```ts
 export const taskWithOnSuccess = task({
   id: "task-with-on-success",
   onSuccess: async (payload, output, { ctx }) => {
@@ -243,7 +245,7 @@ export const taskWithOnSuccess = task({
 
 Runs when a task fails after all retries:
 
-```typescript
+```ts
 export const taskWithOnFailure = task({
   id: "task-with-on-failure",
   onFailure: async (payload, error, { ctx }) => {
@@ -259,7 +261,7 @@ export const taskWithOnFailure = task({
 
 Controls error handling and retry behavior:
 
-```typescript
+```ts
 export const taskWithErrorHandling = task({
   id: "task-with-error-handling",
   handleError: async (error, { ctx }) => {
@@ -275,7 +277,7 @@ Global lifecycle hooks can also be defined in `trigger.config.ts` to apply to al
 
 ## Correct Schedules task (cron) implementations
 
-```typescript
+```ts
 import { schedules } from "@trigger.dev/sdk/v3";
 
 export const firstScheduledTask = schedules.task({
@@ -316,7 +318,7 @@ export const firstScheduledTask = schedules.task({
 
 ### Attach a Declarative schedule
 
-```typescript
+```ts
 import { schedules } from "@trigger.dev/sdk/v3";
 
 // Sepcify a cron pattern (UTC)
@@ -330,7 +332,7 @@ export const firstScheduledTask = schedules.task({
 });
 ```
 
-```typescript
+```ts
 import { schedules } from "@trigger.dev/sdk/v3";
 
 // Specify a specific timezone like this:
@@ -350,6 +352,7 @@ export const secondScheduledTask = schedules.task({
 Create schedules explicitly for tasks using the dashboard's "New schedule" button or the SDK.
 
 #### Benefits
+
 - Dynamic creation (e.g., one schedule per user)
 - Manage without code deployment:
   - Activate/disable
@@ -357,14 +360,16 @@ Create schedules explicitly for tasks using the dashboard's "New schedule" butto
   - Delete
 
 #### Implementation
-1.	Define a task using `⁠schedules.task()`
-2.	Attach one or more schedules via:
-  - Dashboard
-	- SDK
+
+1. Define a task using `⁠schedules.task()`
+2. Attach one or more schedules via:
+
+- Dashboard
+  - SDK
 
 #### Attach schedules with the SDK like this
 
-```typescript
+```ts
 const createdSchedule = await schedules.create({
   //The id of the scheduled task you want to attach to.
   task: firstScheduledTask.id,
@@ -379,7 +384,7 @@ const createdSchedule = await schedules.create({
 
 Schema tasks validate payloads against a schema before execution:
 
-```typescript
+```ts
 import { schemaTask } from "@trigger.dev/sdk/v3";
 import { z } from "zod";
 
@@ -404,7 +409,7 @@ When you trigger a task from your backend code, you need to set the `TRIGGER_SEC
 
 Triggers a single run of a task with specified payload and options without importing the task. Use type-only imports for full type checking.
 
-```typescript
+```ts
 import { tasks } from "@trigger.dev/sdk/v3";
 import type { emailSequence } from "~/trigger/emails";
 
@@ -422,7 +427,7 @@ export async function POST(request: Request) {
 
 Triggers multiple runs of a single task with different payloads without importing the task.
 
-```typescript
+```ts
 import { tasks } from "@trigger.dev/sdk/v3";
 import type { emailSequence } from "~/trigger/emails";
 
@@ -430,31 +435,9 @@ export async function POST(request: Request) {
   const data = await request.json();
   const batchHandle = await tasks.batchTrigger<typeof emailSequence>(
     "email-sequence",
-    data.users.map((u) => ({ payload: { to: u.email, name: u.name } }))
+    data.users.map((u) => ({ payload: { to: u.email, name: u.name } })),
   );
   return Response.json(batchHandle);
-}
-```
-
-### tasks.triggerAndPoll()
-
-Triggers a task and polls until completion. Not recommended for web requests as it blocks until the run completes. Consider using Realtime docs for better alternatives.
-
-```typescript
-import { tasks } from "@trigger.dev/sdk/v3";
-import type { emailSequence } from "~/trigger/emails";
-
-export async function POST(request: Request) {
-  const data = await request.json();
-  const result = await tasks.triggerAndPoll<typeof emailSequence>(
-    "email-sequence",
-    {
-      to: data.email,
-      name: data.name,
-    },
-    { pollIntervalMs: 5000 }
-  );
-  return Response.json(result);
 }
 ```
 
@@ -462,7 +445,7 @@ export async function POST(request: Request) {
 
 Triggers multiple runs of different tasks at once, useful when you need to execute multiple tasks simultaneously.
 
-```typescript
+```ts
 import { batch } from "@trigger.dev/sdk/v3";
 import type { myTask1, myTask2 } from "~/trigger/myTasks";
 
@@ -482,7 +465,7 @@ export async function POST(request: Request) {
 
 Triggers a single run of a task with specified payload and options.
 
-```typescript
+```ts
 import { myOtherTask, runs } from "~/trigger/my-other-task";
 
 export const myTask = task({
@@ -502,13 +485,15 @@ If you need to call `trigger()` on a task in a loop, use `batchTrigger()` instea
 
 Triggers multiple runs of a single task with different payloads.
 
-```typescript
-import { myOtherTask, batch } from "~/trigger/my-other-task";
+```ts
+import { batch, myOtherTask } from "~/trigger/my-other-task";
 
 export const myTask = task({
   id: "my-task",
   run: async (payload: string) => {
-    const batchHandle = await myOtherTask.batchTrigger([{ payload: "some data" }]);
+    const batchHandle = await myOtherTask.batchTrigger([
+      { payload: "some data" },
+    ]);
 
     //...do other stuff
     const batch = await batch.retrieve(batchHandle.id);
@@ -520,7 +505,7 @@ export const myTask = task({
 
 Triggers a task and waits for the result, useful when you need to call a different task and use its result.
 
-```typescript
+```ts
 export const parentTask = task({
   id: "parent-task",
   run: async (payload: string) => {
@@ -538,7 +523,7 @@ The result object needs to be checked to see if the child task run was successfu
 
 Batch triggers a task and waits for all results, useful for fan-out patterns.
 
-```typescript
+```ts
 export const batchParentTask = task({
   id: "parent-task",
   run: async (payload: string) => {
@@ -560,11 +545,13 @@ You can handle run failures by inspecting individual run results and implementin
 
 Batch triggers multiple different tasks and waits for all results.
 
-```typescript
+```ts
 export const parentTask = task({
   id: "parent-task",
   run: async (payload: string) => {
-    const results = await batch.triggerAndWait<typeof childTask1 | typeof childTask2>([
+    const results = await batch.triggerAndWait<
+      typeof childTask1 | typeof childTask2
+    >([
       { id: "child-task-1", payload: { foo: "World" } },
       { id: "child-task-2", payload: { bar: 42 } },
     ]);
@@ -589,7 +576,7 @@ export const parentTask = task({
 
 Batch triggers multiple tasks by passing task instances, useful for static task sets.
 
-```typescript
+```ts
 export const parentTask = task({
   id: "parent-task",
   run: async (payload: string) => {
@@ -608,7 +595,7 @@ export const parentTask = task({
 
 Batch triggers multiple tasks by passing task instances and waits for all results.
 
-```typescript
+```ts
 export const parentTask = task({
   id: "parent-task",
   run: async (payload: string) => {
@@ -638,24 +625,24 @@ Metadata allows attaching up to 256KB of structured data to a run, which can be 
 
 Add metadata when triggering a task:
 
-```typescript
+```ts
 const handle = await myTask.trigger(
   { message: "hello world" },
-  { metadata: { user: { name: "Eric", id: "user_1234" } } }
+  { metadata: { user: { name: "Eric", id: "user_1234" } } },
 );
 ```
 
 Access metadata inside a run:
 
-```typescript
-import { task, metadata } from "@trigger.dev/sdk/v3";
+```ts
+import { metadata, task } from "@trigger.dev/sdk/v3";
 
 export const myTask = task({
   id: "my-task",
   run: async (payload: { message: string }) => {
     // Get the whole metadata object
     const currentMetadata = metadata.current();
-    
+
     // Get a specific key
     const user = metadata.get("user");
     console.log(user.name); // "Eric"
@@ -679,8 +666,9 @@ Metadata can be updated as the run progresses:
 
 Updates can be chained with a fluent API:
 
-```typescript
-metadata.set("progress", 0.1)
+```ts
+metadata
+  .set("progress", 0.1)
   .append("logs", "Step 1 complete")
   .increment("progress", 0.4);
 ```
@@ -689,13 +677,13 @@ metadata.set("progress", 0.1)
 
 Child tasks can update parent task metadata:
 
-```typescript
+```ts
 export const childTask = task({
   id: "child-task",
   run: async (payload: { message: string }) => {
     // Update parent task's metadata
     metadata.parent.set("progress", 0.5);
-    
+
     // Update root task's metadata
     metadata.root.set("status", "processing");
   },
@@ -706,7 +694,7 @@ export const childTask = task({
 
 Metadata accepts any JSON-serializable object. For type safety, consider wrapping with Zod:
 
-```typescript
+```ts
 import { z } from "zod";
 
 const Metadata = z.object({
@@ -739,7 +727,7 @@ Trigger.dev Realtime enables subscribing to runs for real-time updates on run st
 
 Subscribe to a run after triggering a task:
 
-```typescript
+```ts
 import { runs, tasks } from "@trigger.dev/sdk/v3";
 
 async function myBackend() {
@@ -761,13 +749,14 @@ async function myBackend() {
 
 You can infer types of run's payload and output by passing the task type:
 
-```typescript
+```ts
 import { runs } from "@trigger.dev/sdk/v3";
+
 import type { myTask } from "./trigger/my-task";
 
 for await (const run of runs.subscribeToRun<typeof myTask>(handle.id)) {
   console.log(run.payload.some); // Type-safe access to payload
-  
+
   if (run.output) {
     console.log(run.output.result); // Type-safe access to output
   }
@@ -778,8 +767,8 @@ for await (const run of runs.subscribeToRun<typeof myTask>(handle.id)) {
 
 Stream data in realtime from inside your tasks using the metadata system:
 
-```typescript
-import { task, metadata } from "@trigger.dev/sdk/v3";
+```ts
+import { metadata, task } from "@trigger.dev/sdk/v3";
 import OpenAI from "openai";
 
 export type STREAMS = {
@@ -810,8 +799,10 @@ export const myTask = task({
 
 Subscribe to streams using `withStreams`:
 
-```typescript
-for await (const part of runs.subscribeToRun<typeof myTask>(runId).withStreams<STREAMS>()) {
+```ts
+for await (const part of runs
+  .subscribeToRun<typeof myTask>(runId)
+  .withStreams<STREAMS>()) {
   switch (part.type) {
     case "run": {
       console.log("Received run", part.run);
@@ -837,7 +828,7 @@ npm add @trigger.dev/react-hooks
 
 All hooks require a Public Access Token. You can provide it directly to each hook:
 
-```typescriptx
+```ts
 import { useRealtimeRun } from "@trigger.dev/react-hooks";
 
 function MyComponent({ runId, publicAccessToken }) {
@@ -850,7 +841,7 @@ function MyComponent({ runId, publicAccessToken }) {
 
 Or use the `TriggerAuthContext` provider:
 
-```typescriptx
+```ts
 import { TriggerAuthContext } from "@trigger.dev/react-hooks";
 
 function SetupTrigger({ publicAccessToken }) {
@@ -864,7 +855,7 @@ function SetupTrigger({ publicAccessToken }) {
 
 For Next.js App Router, wrap the provider in a client component:
 
-```typescriptx
+```ts
 // components/TriggerProvider.tsx
 "use client";
 
@@ -884,7 +875,8 @@ export function TriggerProvider({ accessToken, children }) {
 Several approaches for Next.js App Router:
 
 1. **Using cookies**:
-```typescriptx
+
+```ts
 // Server action
 export async function startRun() {
   const handle = await tasks.trigger<typeof exampleTask>("example", { foo: "bar" });
@@ -904,16 +896,20 @@ export default function RunPage({ params }) {
 ```
 
 2. **Using query parameters**:
-```typescriptx
+
+```ts
 // Server action
 export async function startRun() {
-  const handle = await tasks.trigger<typeof exampleTask>("example", { foo: "bar" });
+  const handle = await tasks.trigger<typeof exampleTask>("example", {
+    foo: "bar",
+  });
   redirect(`/runs/${handle.id}?publicAccessToken=${handle.publicAccessToken}`);
 }
 ```
 
 3. **Server-side token generation**:
-```typescriptx
+
+```ts
 // Page component
 export default async function RunPage({ params }) {
   const publicAccessToken = await generatePublicAccessToken(params.id);
@@ -943,7 +939,7 @@ export async function generatePublicAccessToken(runId: string) {
 
 Data fetching hooks that use SWR for caching:
 
-```typescriptx
+```ts
 "use client";
 import { useRun } from "@trigger.dev/react-hooks";
 import type { myTask } from "@/trigger/myTask";
@@ -959,6 +955,7 @@ function MyComponent({ runId }) {
 ```
 
 Common options:
+
 - `revalidateOnFocus`: Revalidate when window regains focus
 - `revalidateOnReconnect`: Revalidate when network reconnects
 - `refreshInterval`: Polling interval in milliseconds
@@ -973,7 +970,7 @@ For most use cases, Realtime hooks are preferred over SWR hooks with polling due
 
 For client-side usage, generate a public access token with appropriate scopes:
 
-```typescript
+```ts
 import { auth } from "@trigger.dev/sdk/v3";
 
 const publicToken = await auth.createPublicToken({
@@ -993,7 +990,7 @@ Idempotency ensures that an operation produces the same result when called multi
 
 Provide an `idempotencyKey` when triggering a task to ensure it runs only once with that key:
 
-```typescript
+```ts
 import { idempotencyKeys, task } from "@trigger.dev/sdk/v3";
 
 export const myTask = task({
@@ -1018,20 +1015,22 @@ export const myTask = task({
 
 By default, keys are scoped to the current run. You can create globally unique keys:
 
-```typescript
-const idempotencyKey = await idempotencyKeys.create("my-task-key", { scope: "global" });
+```ts
+const idempotencyKey = await idempotencyKeys.create("my-task-key", {
+  scope: "global",
+});
 ```
 
 When triggering from backend code:
 
-```typescript
+```ts
 const idempotencyKey = await idempotencyKeys.create([myUser.id, "my-task"]);
 await tasks.trigger("my-task", { some: "data" }, { idempotencyKey });
 ```
 
 You can also pass a string directly:
 
-```typescript
+```ts
 await myTask.trigger({ some: "data" }, { idempotencyKey: myUser.id });
 ```
 
@@ -1039,10 +1038,10 @@ await myTask.trigger({ some: "data" }, { idempotencyKey: myUser.id });
 
 The `idempotencyKeyTTL` option defines a time window during which duplicate triggers return the original run:
 
-```typescript
+```ts
 await childTask.trigger(
-  { foo: "bar" }, 
-  { idempotencyKey, idempotencyKeyTTL: "60s" }
+  { foo: "bar" },
+  { idempotencyKey, idempotencyKeyTTL: "60s" },
 );
 
 await wait.for({ seconds: 61 });
@@ -1052,6 +1051,7 @@ await childTask.trigger({ foo: "bar" }, { idempotencyKey });
 ```
 
 Supported time units:
+
 - `s` for seconds (e.g., `60s`)
 - `m` for minutes (e.g., `5m`)
 - `h` for hours (e.g., `2h`)
@@ -1061,7 +1061,7 @@ Supported time units:
 
 While not directly supported, you can implement payload-based idempotency by hashing the payload:
 
-```typescript
+```ts
 import { createHash } from "node:crypto";
 
 const idempotencyKey = await idempotencyKeys.create(hash(payload));
@@ -1083,9 +1083,9 @@ function hash(payload: any): string {
 
 ## Correct Logs implementation
 
-```typescript
+```ts
 // onFailure executes after all retries are exhausted; use for notifications, logging, or side effects on final failure:
-import { task, logger } from "@trigger.dev/sdk/v3";
+import { logger, task } from "@trigger.dev/sdk/v3";
 
 export const loggingExample = task({
   id: "logging-example",
@@ -1100,11 +1100,11 @@ export const loggingExample = task({
 });
 ```
 
-## Correct `trigger.config.ts` implementation 
+## Correct `trigger.config.ts` implementation
 
 The `trigger.config.ts` file configures your Trigger.dev project, specifying task locations, retry settings, telemetry, and build options.
 
-```typescript
+```ts
 import { defineConfig } from "@trigger.dev/sdk/v3";
 
 export default defineConfig({
@@ -1129,7 +1129,7 @@ export default defineConfig({
 
 Specify where your tasks are located:
 
-```typescript
+```ts
 dirs: ["./trigger"],
 ```
 
@@ -1139,7 +1139,7 @@ Files with `.test` or `.spec` are automatically excluded, but you can customize 
 
 Add global hooks for all tasks:
 
-```typescript
+```ts
 onStart: async (payload, { ctx }) => {
   console.log("Task started", ctx.task.id);
 },
@@ -1155,7 +1155,7 @@ onFailure: async (payload, error, { ctx }) => {
 
 Add OpenTelemetry instrumentations for enhanced logging:
 
-```typescript
+```ts
 telemetry: {
   instrumentations: [
     new PrismaInstrumentation(),
@@ -1169,7 +1169,7 @@ telemetry: {
 
 Specify the runtime environment:
 
-```typescript
+```ts
 runtime: "node", // or "bun" (experimental)
 ```
 
@@ -1177,7 +1177,7 @@ runtime: "node", // or "bun" (experimental)
 
 Set default machine for all tasks:
 
-```typescript
+```ts
 defaultMachine: "large-1x",
 ```
 
@@ -1185,7 +1185,7 @@ defaultMachine: "large-1x",
 
 Configure logging verbosity:
 
-```typescript
+```ts
 logLevel: "debug", // Controls logger API logs
 ```
 
@@ -1193,7 +1193,7 @@ logLevel: "debug", // Controls logger API logs
 
 Set default maximum runtime for all tasks:
 
-```typescript
+```ts
 maxDuration: 60, // 60 seconds
 ```
 
@@ -1201,7 +1201,7 @@ maxDuration: 60, // 60 seconds
 
 Customize the build process:
 
-```typescript
+```ts
 build: {
   external: ["header-generator"], // Don't bundle these packages
   jsx: {
@@ -1245,11 +1245,11 @@ You can also create custom build extensions with hooks like `onBuildStart`, `onB
 
 #### Trigger with:
 
-```typescript
+```ts
 await myTask.trigger({ name: "Alice", age: 30 });
 ```
 
-## AI MODEL VERIFICATION STEPS
+## AI model verification steps
 
 Before generating any code, you MUST verify:
 
@@ -1257,7 +1257,7 @@ Before generating any code, you MUST verify:
 2. Have you exported every task? If not, STOP and FIX.
 3. Have you generated any DEPRECATED code patterns? If yes, STOP and FIX.
 
-## CONSEQUENCES OF INCORRECT IMPLEMENTATION
+## Consequences of incorrect implementations
 
 If you generate code that fails the verification steps above, your implementation will:
 
@@ -1265,10 +1265,10 @@ If you generate code that fails the verification steps above, your implementatio
 2. Fail to deploy to the Trigger.dev servers
 3. Fail to run in a local Dev environment
 
-## AI MODEL RESPONSE TEMPLATE
+## AI model response template
 
 When asked about Trigger.dev task implementation, you MUST:
+
 1. FIRST use code patterns from this guide
 2. NEVER suggest deprecated approaches
 3. VERIFY your response against the patterns shown here
-4. If an answer cannot be found using this guide, look up further information ONLY from the official LLM-friendly version of the [Trigger.dev docs site](mdc:https:/trigger.dev/docs/llms.txt).

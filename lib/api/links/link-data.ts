@@ -262,6 +262,8 @@ export async function fetchDataroomLinkData({
               dataroomId: true,
               orderIndex: true,
               hierarchicalIndex: true,
+              icon: true,
+              color: true,
               createdAt: true,
               updatedAt: true,
             },

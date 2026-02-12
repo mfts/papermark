@@ -100,6 +100,8 @@ model Folder {
   path                 String // the materialized path to the folder; starts always with "/"
   parentId             String?
   hiddenInAllDocuments Boolean    @default(false) // Indicates if the folder is hidden from All Documents view
+  icon                 String? // Icon identifier from predefined icon set (e.g., "folder", "briefcase", "archive")
+  color                String? // Color from predefined palette (e.g., "gray", "red", "blue")
   documents            Document[]
   childFolders         Folder[]   @relation("SubFolders")
   parentFolder         Folder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: SetNull)

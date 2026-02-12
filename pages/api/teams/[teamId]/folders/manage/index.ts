@@ -4,6 +4,10 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
+import {
+  ALLOWED_FOLDER_COLORS,
+  ALLOWED_FOLDER_ICONS,
+} from "@/lib/constants/folder-constants";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
@@ -21,9 +25,33 @@ export default async function handle(
     }
     const userId = (session.user as CustomUser).id;
     const { teamId } = req.query as { teamId: string };
-    const { folderId, name } = req.body as { folderId: string; name: string };
+    const { folderId, name, icon, color } = req.body as {
+      folderId: string;
+      name: string;
+      icon?: string | null;
+      color?: string | null;
+    };
 
     try {
+      // Validate icon if provided
+      if (icon !== undefined && icon !== null && !ALLOWED_FOLDER_ICONS.includes(icon as any)) {
+        return res.status(400).json({ message: "Invalid folder icon" });
+      }
+
+      // Validate color if provided
+      if (color !== undefined && color !== null && !ALLOWED_FOLDER_COLORS.includes(color as any)) {
+        return res.status(400).json({ message: "Invalid folder color" });
+      }
+
+      // Validate name
+      if (!name || name.trim().length === 0) {
+        return res.status(400).json({ message: "Folder name is required" });
+      }
+
+      if (name.trim().length > 256) {
+        return res.status(400).json({ message: "Folder name must be 256 characters or less" });
+      }
+
       const team = await prisma.team.findUnique({
         where: {
           id: teamId,
@@ -46,6 +74,8 @@ export default async function handle(
         select: {
           name: true,
           path: true,
+          icon: true,
+          color: true,
         },
       });
 
@@ -56,21 +86,45 @@ export default async function handle(
       // take the old path and replace the last part with the new name
       const newPath = folder.path.split("/");
       newPath.pop();
-      newPath.push(slugify(name));
+      newPath.push(slugify(name.trim()));
 
-      await prisma.folder.update({
+      // Build update data object with only changed fields
+      const updateData: {
+        name: string;
+        path: string;
+        icon?: string | null;
+        color?: string | null;
+      } = {
+        name: name.trim(),
+        path: newPath.join("/"),
+      };
+
+      // Only include icon and color in update if they were provided
+      if (icon !== undefined) {
+        updateData.icon = icon;
+      }
+      if (color !== undefined) {
+        updateData.color = color;
+      }
+
+      const updatedFolder = await prisma.folder.update({
         where: {
           id: folderId,
         },
-        data: {
-          name: name,
-          path: newPath.join("/"),
-        },
+        data: updateData,
       });
 
-      return res
-        .status(200)
-        .json({ message: "Folder name updated successfully" });
+      // Get parent folder path for cache invalidation
+      const parentFolderPath = folder.path.substring(
+        0,
+        folder.path.lastIndexOf("/"),
+      );
+
+      return res.status(200).json({
+        message: "Folder updated successfully",
+        parentFolderPath: parentFolderPath || "/",
+        folder: updatedFolder,
+      });
     } catch (error) {
       errorhandler(error, res);
     }

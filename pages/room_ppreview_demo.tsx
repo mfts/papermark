@@ -79,6 +79,8 @@ export default function ViewPage() {
                 path: "/",
                 createdAt: new Date(),
                 updatedAt: new Date(),
+                icon: null,
+                color: null,
               },
               {
                 id: "2",
@@ -90,6 +92,8 @@ export default function ViewPage() {
                 path: "/",
                 createdAt: new Date(),
                 updatedAt: new Date(),
+                icon: null,
+                color: null,
               },
             ]}
             documents={[
@@ -131,6 +135,8 @@ export default function ViewPage() {
                       path: "/",
                       createdAt: new Date(),
                       updatedAt: new Date(),
+                      icon: null,
+                      color: null,
                     }}
                     dataroomId="1"
                     setFolderId={() => {}}
@@ -152,6 +158,8 @@ export default function ViewPage() {
                       path: "/",
                       createdAt: new Date(),
                       updatedAt: new Date(),
+                      icon: null,
+                      color: null,
                     }}
                     dataroomId="1"
                     setFolderId={() => {}}
