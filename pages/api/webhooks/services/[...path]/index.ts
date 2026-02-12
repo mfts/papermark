@@ -867,6 +867,21 @@ async function handleLinkUpdate(
 
   // If domain and slug are provided, validate them
   let domainId = null;
+
+  // Reject requests where exactly one of domain/slug is present
+  if (link.domain && !link.slug) {
+    return res.status(400).json({
+      error:
+        "Both 'domain' and 'slug' must be provided together. 'slug' is missing.",
+    });
+  }
+  if (link.slug && !link.domain) {
+    return res.status(400).json({
+      error:
+        "Both 'domain' and 'slug' must be provided together. 'domain' is missing.",
+    });
+  }
+
   if (link.domain && link.slug) {
     // Check if domain exists
     const domain = await prisma.domain.findUnique({
