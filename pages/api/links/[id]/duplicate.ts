@@ -130,6 +130,7 @@ export default async function handle(
             createdAt: undefined,
             updatedAt: undefined,
             permissionGroupId: newPermissionGroupId,
+            ownerId: userId,
           },
         });
 

@@ -164,6 +164,7 @@ export default async function handler(
             dataroomId: dataroomLink ? targetId : null,
             linkType,
             teamId,
+            ownerId: userId,
             password: hashedPassword,
             name: linkData.name || null,
             emailProtected:

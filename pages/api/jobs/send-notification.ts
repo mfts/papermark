@@ -47,7 +47,7 @@ export default async function handle(
     viewType: "DOCUMENT_VIEW" | "DATAROOM_VIEW";
     viewerEmail: string | null;
     linkId: string;
-    link: { name: string | null } | null;
+    link: { name: string | null; ownerId: string | null } | null;
     document: {
       teamId: string | null;
       id: string;
@@ -79,6 +79,7 @@ export default async function handle(
         link: {
           select: {
             name: true,
+            ownerId: true,
           },
         },
         document: {
@@ -160,28 +161,51 @@ export default async function handle(
     },
   });
 
-  // Get the active owner of the document
-  let ownerEmail: string | null = null;
-  if (view.document?.ownerId) {
-    const ownerUser = await prisma.userTeam.findUnique({
-      where: {
-        userId_teamId: {
-          userId: view.document!.ownerId!,
-          teamId: teamId,
-        },
-        status: "ACTIVE",
-      },
-      select: {
-        user: {
-          select: {
-            email: true,
-          },
-        },
-      },
-    });
-
-    ownerEmail = ownerUser?.user.email || null;
-  }
+  // Fetch document owner and link owner emails in parallel (async-parallel best practice)
+  const [ownerEmail, linkOwnerEmail] = await Promise.all([
+    // Get the active owner of the document
+    view.document?.ownerId
+      ? prisma.userTeam
+          .findUnique({
+            where: {
+              userId_teamId: {
+                userId: view.document.ownerId,
+                teamId: teamId,
+              },
+              status: "ACTIVE",
+            },
+            select: {
+              user: {
+                select: {
+                  email: true,
+                },
+              },
+            },
+          })
+          .then((result) => result?.user.email || null)
+      : null,
+    // Get the active owner of the link
+    view.link?.ownerId
+      ? prisma.userTeam
+          .findUnique({
+            where: {
+              userId_teamId: {
+                userId: view.link.ownerId,
+                teamId: teamId,
+              },
+              status: "ACTIVE",
+            },
+            select: {
+              user: {
+                select: {
+                  email: true,
+                },
+              },
+            },
+          })
+          .then((result) => result?.user.email || null)
+      : null,
+  ]);
 
   const includeLocation =
     !view.team?.plan?.includes("free") &&
@@ -223,6 +247,16 @@ export default async function handle(
         teamMembers.push(ownerEmail);
       }
 
+      // Add linkOwnerEmail to teamMembers if it exists and isn't already included
+      if (
+        linkOwnerEmail &&
+        linkOwnerEmail !== adminEmail &&
+        linkOwnerEmail !== ownerEmail &&
+        !teamMembers.includes(linkOwnerEmail)
+      ) {
+        teamMembers.push(linkOwnerEmail);
+      }
+
       // send appropriate email based on team pause status
       if (teamIsPaused) {
         await sendViewedDocumentPausedEmail({
@@ -243,15 +277,26 @@ export default async function handle(
         });
       }
     } else {
+      const teamMembers = users
+        .map((user) => user.user.email!)
+        .filter((email) => email !== adminEmail);
+
+      // Add linkOwnerEmail to teamMembers if it exists and isn't already included
+      if (
+        linkOwnerEmail &&
+        linkOwnerEmail !== adminEmail &&
+        !teamMembers.includes(linkOwnerEmail)
+      ) {
+        teamMembers.push(linkOwnerEmail);
+      }
+
       // send appropriate email based on team pause status
       if (teamIsPaused) {
         await sendViewedDataroomPausedEmail({
           ownerEmail: adminEmail,
           dataroomName: view.dataroom!.name,
           linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
-          teamMembers: users
-            .map((user) => user.user.email!)
-            .filter((email) => email !== adminEmail),
+          teamMembers,
         });
       } else {
         await sendViewedDataroomEmail({
@@ -260,9 +305,7 @@ export default async function handle(
           dataroomName: view.dataroom!.name,
           viewerEmail: view.viewerEmail,
           linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
-          teamMembers: users
-            .map((user) => user.user.email!)
-            .filter((email) => email !== adminEmail),
+          teamMembers,
           locationString: includeLocation ? locationString : undefined,
         });
       }

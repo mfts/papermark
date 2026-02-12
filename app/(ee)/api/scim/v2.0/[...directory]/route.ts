@@ -171,20 +171,37 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
           });
 
           if (user) {
-            await prisma.userTeam
-              .delete({
-                where: {
-                  userId_teamId: {
-                    userId: user.id,
+            await Promise.all([
+              prisma.link
+                .updateMany({
+                  where: {
                     teamId: tenant,
+                    ownerId: user.id,
                   },
-                },
-              })
-              .catch(() => {
-                console.warn(
-                  `[SCIM] Could not remove team membership for user_${hashEmail(email)}`,
-                );
-              });
+                  data: {
+                    ownerId: null,
+                  },
+                })
+                .catch(() => {
+                  console.warn(
+                    `[SCIM] Could not reset link ownership for user_${hashEmail(email)}`,
+                  );
+                }),
+              prisma.userTeam
+                .delete({
+                  where: {
+                    userId_teamId: {
+                      userId: user.id,
+                      teamId: tenant,
+                    },
+                  },
+                })
+                .catch(() => {
+                  console.warn(
+                    `[SCIM] Could not remove team membership for user_${hashEmail(email)}`,
+                  );
+                }),
+            ]);
           }
         } else if (isActive) {
           // Reactivated — re-add to team
@@ -243,25 +260,42 @@ async function handleSCIMEvents(event: DirectorySyncEvent) {
           `[SCIM] User deleted: user_${hashEmail(email)} for tenant ${tenant}`,
         );
 
-        const user = await prisma.user.findUnique({
+        const deletedUser = await prisma.user.findUnique({
           where: { email },
         });
 
-        if (user) {
-          await prisma.userTeam
-            .delete({
-              where: {
-                userId_teamId: {
-                  userId: user.id,
+        if (deletedUser) {
+          await Promise.all([
+            prisma.link
+              .updateMany({
+                where: {
                   teamId: tenant,
+                  ownerId: deletedUser.id,
                 },
-              },
-            })
-            .catch(() => {
-              console.warn(
-                `[SCIM] Could not remove team membership for user_${hashEmail(email)}`,
-              );
-            });
+                data: {
+                  ownerId: null,
+                },
+              })
+              .catch(() => {
+                console.warn(
+                  `[SCIM] Could not reset link ownership for user_${hashEmail(email)}`,
+                );
+              }),
+            prisma.userTeam
+              .delete({
+                where: {
+                  userId_teamId: {
+                    userId: deletedUser.id,
+                    teamId: tenant,
+                  },
+                },
+              })
+              .catch(() => {
+                console.warn(
+                  `[SCIM] Could not remove team membership for user_${hashEmail(email)}`,
+                );
+              }),
+          ]);
         }
         break;
       }

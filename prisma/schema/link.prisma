@@ -88,6 +88,9 @@ model Link {
   teamId String?
   team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
+  ownerId String?
+  owner   User?   @relation("LinkOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
   customFields CustomField[]
 
   tags TagItem[]
@@ -102,6 +105,7 @@ model Link {
   @@index([documentId, isArchived]) // Performance optimization for active links filtering
   @@index([permissionGroupId]) // Performance optimization for permission group queries
   @@index([deletedAt]) // Performance optimization for filtering deleted links
+  @@index([ownerId]) // Performance optimization for link owner queries
 }
 
 model LinkPreset {
