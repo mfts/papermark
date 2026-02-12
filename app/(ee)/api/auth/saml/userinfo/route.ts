@@ -7,6 +7,10 @@ import * as openidClient from "openid-client";
 const _dependencies = [jose, openidClient];
 void _dependencies;
 
+// Prevent Next.js from statically generating this route at build time —
+// it requires a live database connection via Jackson.
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   try {
     const { oauthController } = await jackson();

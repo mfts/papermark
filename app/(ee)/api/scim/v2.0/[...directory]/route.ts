@@ -5,6 +5,8 @@ import { createHash } from "crypto";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 /** Return a truncated SHA-256 hex digest (first 12 chars) for log-safe pseudonymisation. */
 function hashEmail(email: string): string {
   return createHash("sha256").update(email).digest("hex").slice(0, 12);

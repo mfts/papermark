@@ -2,6 +2,8 @@ import { jackson, jacksonProduct } from "@/lib/jackson";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 /**
  * POST /api/auth/saml/verify
  * Verifies that a team has SSO configured.
