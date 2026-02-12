@@ -530,10 +530,10 @@ async function handleDocumentCreate(
         domainId: domainId,
         domainSlug: link.domain || null,
         slug: link.slug || null,
-        emailProtected: link.emailProtected || preset?.emailProtected || false,
+        emailProtected: link.emailProtected ?? preset?.emailProtected ?? false,
         emailAuthenticated:
-          link.emailAuthenticated || preset?.emailAuthenticated || false,
-        allowDownload: link.allowDownload || preset?.allowDownload,
+          link.emailAuthenticated ?? preset?.emailAuthenticated ?? false,
+        allowDownload: link.allowDownload ?? preset?.allowDownload,
         enableNotification:
           link.enableNotification ?? preset?.enableNotification ?? false,
         enableFeedback: link.enableFeedback,
@@ -962,56 +962,123 @@ async function handleLinkUpdate(
 
   // Update the link
   try {
-    // Hash password if provided
-    const hashedPassword = link.password
-      ? await generateEncrpytedPassword(link.password)
-      : preset?.password
-        ? await generateEncrpytedPassword(preset.password)
-        : null;
+    // Build update payload conditionally – only fields explicitly provided in
+    // the incoming link payload (or supplied by a preset) are included.
+    // Prisma treats missing / undefined keys as "do not update".
+    const data: Record<string, unknown> = {};
 
-    const expiresAtDate = link.expiresAt
-      ? new Date(link.expiresAt)
-      : preset?.expiresAt
-        ? new Date(preset.expiresAt)
-        : null;
+    /** Returns true when the property was explicitly sent in the link payload */
+    const has = (key: string): boolean => key in link;
 
-    const isGroupAudience = link.audienceType === "GROUP";
+    // name
+    if (has("name")) {
+      data.name = link.name;
+    }
+
+    // password – hash when provided via link or preset
+    if (has("password")) {
+      data.password = link.password
+        ? await generateEncrpytedPassword(link.password)
+        : null;
+    } else if (preset?.password) {
+      data.password = await generateEncrpytedPassword(preset.password);
+    }
+
+    // domain + slug (validated to always be paired earlier)
+    if (has("domain") && has("slug")) {
+      data.domainId = domainId;
+      data.domainSlug = link.domain || null;
+      data.slug = link.slug || null;
+    }
+
+    // expiresAt
+    if (has("expiresAt")) {
+      data.expiresAt = link.expiresAt ? new Date(link.expiresAt) : null;
+    } else if (preset?.expiresAt) {
+      data.expiresAt = new Date(preset.expiresAt);
+    }
+
+    // boolean flags – include when explicitly provided or when preset supplies a value
+    if (has("emailProtected")) {
+      data.emailProtected = link.emailProtected;
+    } else if (preset?.emailProtected != null) {
+      data.emailProtected = preset.emailProtected;
+    }
+
+    if (has("emailAuthenticated")) {
+      data.emailAuthenticated = link.emailAuthenticated;
+    } else if (preset?.emailAuthenticated != null) {
+      data.emailAuthenticated = preset.emailAuthenticated;
+    }
+
+    if (has("allowDownload")) {
+      data.allowDownload = link.allowDownload;
+    } else if (preset?.allowDownload != null) {
+      data.allowDownload = preset.allowDownload;
+    }
+
+    if (has("enableNotification")) {
+      data.enableNotification = link.enableNotification;
+    } else if (preset?.enableNotification != null) {
+      data.enableNotification = preset.enableNotification;
+    }
+
+    if (has("enableFeedback")) {
+      data.enableFeedback = link.enableFeedback;
+    }
+
+    if (has("enableScreenshotProtection")) {
+      data.enableScreenshotProtection = link.enableScreenshotProtection;
+    }
+
+    if (has("showBanner")) {
+      data.showBanner = link.showBanner;
+    } else if (preset?.showBanner != null) {
+      data.showBanner = preset.showBanner;
+    }
+
+    // audienceType & groupId
+    if (has("audienceType")) {
+      data.audienceType = link.audienceType;
+      // When switching away from GROUP, clear groupId
+      if (link.audienceType !== "GROUP") {
+        data.groupId = null;
+      } else if (has("groupId")) {
+        data.groupId = link.groupId;
+      }
+    } else if (has("groupId")) {
+      data.groupId = link.groupId;
+    }
+
+    // allow / deny lists
+    // For group links, ignore preset lists as access is controlled by group membership
+    const isGroupAudience =
+      has("audienceType") && link.audienceType === "GROUP";
+
+    if (has("allowList")) {
+      data.allowList = link.allowList;
+    } else if (!isGroupAudience && preset?.allowList) {
+      data.allowList = preset.allowList;
+    }
+
+    if (has("denyList")) {
+      data.denyList = link.denyList;
+    } else if (!isGroupAudience && preset?.denyList) {
+      data.denyList = preset.denyList;
+    }
+
+    // Preset custom meta tag fields – only applied when the preset flag is set
+    if (preset?.enableCustomMetaTag) {
+      data.enableCustomMetatag = preset.enableCustomMetaTag;
+      data.metaTitle = preset.metaTitle;
+      data.metaDescription = preset.metaDescription;
+      data.metaImage = metaImage;
+      data.metaFavicon = metaFavicon;
+    }
 
     const updatedLink = await prisma.link.update({
       where: { id: linkId, teamId: teamId },
-      data: {
-        name: link.name,
-        password: hashedPassword,
-        domainId: domainId,
-        domainSlug: link.domain || null,
-        slug: link.slug || null,
-        expiresAt: expiresAtDate,
-        emailProtected: link.emailProtected || preset?.emailProtected || false,
-        emailAuthenticated:
-          link.emailAuthenticated || preset?.emailAuthenticated || false,
-        allowDownload: link.allowDownload || preset?.allowDownload,
-        enableNotification:
-          link.enableNotification ?? preset?.enableNotification ?? false,
-        enableFeedback: link.enableFeedback,
-        enableScreenshotProtection: link.enableScreenshotProtection,
-        showBanner: link.showBanner ?? preset?.showBanner ?? false,
-        audienceType: link.audienceType,
-        groupId: isGroupAudience ? link.groupId : null,
-        // For group links, ignore allow/deny lists from presets as access is controlled by group membership
-        allowList: isGroupAudience
-          ? link.allowList
-          : link.allowList || preset?.allowList,
-        denyList: isGroupAudience
-          ? link.denyList
-          : link.denyList || preset?.denyList,
-        ...(preset?.enableCustomMetaTag && {
-          enableCustomMetatag: preset?.enableCustomMetaTag,
-          metaTitle: preset?.metaTitle,
-          metaDescription: preset?.metaDescription,
-          metaImage: metaImage,
-          metaFavicon: metaFavicon,
-        }),
-      },
+      data,
     });
 
     return res.status(200).json({
