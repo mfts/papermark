@@ -590,6 +590,116 @@ export function DataroomLinkSheet({
         }
       }
 
+      // Track what changed for analytics
+      const changedFields: Record<string, { from: unknown; to: unknown }> =
+        {};
+      const trackableFields: (keyof BASE_DEFAULT_LINK_TYPE)[] = [
+        "name",
+        "domain",
+        "slug",
+        "expiresAt",
+        "emailProtected",
+        "emailAuthenticated",
+        "allowDownload",
+        "allowList",
+        "denyList",
+        "enableNotification",
+        "enableFeedback",
+        "enableScreenshotProtection",
+        "enableCustomMetatag",
+        "metaTitle",
+        "metaDescription",
+        "welcomeMessage",
+        "enableQuestion",
+        "questionText",
+        "questionType",
+        "enableAgreement",
+        "agreementId",
+        "showBanner",
+        "enableWatermark",
+        "audienceType",
+        "groupId",
+        "enableConversation",
+        "enableAIAgents",
+        "enableUpload",
+        "isFileRequestOnly",
+        "uploadFolderId",
+        "enableIndexFile",
+        "permissionGroupId",
+        "tags",
+      ];
+
+      for (const field of trackableFields) {
+        if (
+          JSON.stringify(currentLink![field]) !== JSON.stringify(data[field])
+        ) {
+          changedFields[field] = {
+            from: currentLink![field],
+            to: data[field],
+          };
+        }
+      }
+
+      // Password: log set/unset/changed status only, not actual values
+      if (!!currentLink!.password !== !!data.password) {
+        changedFields.password = {
+          from: currentLink!.password ? "set" : "unset",
+          to: data.password ? "set" : "unset",
+        };
+      } else if (
+        currentLink!.password &&
+        data.password &&
+        currentLink!.password !== data.password
+      ) {
+        changedFields.password = { from: "set", to: "changed" };
+      }
+
+      // Image fields: log set/unset status only, not URLs
+      if (currentLink!.metaImage !== data.metaImage) {
+        changedFields.metaImage = {
+          from: currentLink!.metaImage ? "set" : "unset",
+          to: data.metaImage ? "set" : "unset",
+        };
+      }
+      if (currentLink!.metaFavicon !== data.metaFavicon) {
+        changedFields.metaFavicon = {
+          from: currentLink!.metaFavicon ? "set" : "unset",
+          to: data.metaFavicon ? "set" : "unset",
+        };
+      }
+
+      // Watermark config: log configured/unset status
+      if (
+        JSON.stringify(currentLink!.watermarkConfig) !==
+        JSON.stringify(data.watermarkConfig)
+      ) {
+        changedFields.watermarkConfig = {
+          from: currentLink!.watermarkConfig ? "configured" : "unset",
+          to: data.watermarkConfig ? "configured" : "unset",
+        };
+      }
+
+      // Custom fields: log count change
+      if (
+        JSON.stringify(currentLink!.customFields) !==
+        JSON.stringify(data.customFields)
+      ) {
+        changedFields.customFields = {
+          from: currentLink!.customFields?.length ?? 0,
+          to: data.customFields?.length ?? 0,
+        };
+      }
+
+      analytics.capture("Link Updated", {
+        linkId: currentLink!.id,
+        targetId,
+        linkType,
+        teamId,
+        customDomain: returnedLink.domainSlug ?? null,
+        changes: changedFields,
+        changedProperties: Object.keys(changedFields),
+      });
+
       toast.success("Link updated successfully");
     } else {
       // Add the new link to the list of links
