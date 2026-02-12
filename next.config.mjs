@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
+  transpilePackages: ["@boxyhq/saml-jackson"],
   images: {
     minimumCacheTTL: 2592000, // 30 days
     remotePatterns: prepareRemotePatterns(),
@@ -150,6 +151,15 @@ const nextConfig = {
   experimental: {
     outputFileTracingIncludes: {
       "/api/mupdf/*": ["./node_modules/mupdf/dist/*.wasm"],
+      // Jackson SAML routes need jose + openid-client for crypto
+      "/api/auth/saml/token": [
+        "./node_modules/jose/**/*",
+        "./node_modules/openid-client/**/*",
+      ],
+      "/api/auth/saml/userinfo": [
+        "./node_modules/jose/**/*",
+        "./node_modules/openid-client/**/*",
+      ],
     },
     missingSuspenseWithCSRBailout: false,
   },
@@ -161,6 +171,13 @@ const nextConfig = {
       "@google-cloud/kms": false,
       "@google-cloud/secret-manager": false,
     };
+
+    // Suppress critical dependency warnings from Jackson's dynamic requires
+    config.module = {
+      ...config.module,
+      exprContextCritical: false,
+    };
+
     return config;
   },
 };

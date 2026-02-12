@@ -1,0 +1,31 @@
+// Jackson SAML/SCIM tables
+// These are managed by @boxyhq/saml-jackson internally.
+// We define them here so Prisma is aware of the tables and
+// migrations stay in sync with the main app schema.
+
+model jackson_index {
+  id       Int    @id @default(autoincrement())
+  key      String
+  storeKey String
+
+  @@index([key, storeKey], map: "_jackson_index_key_store")
+}
+
+model jackson_store {
+  key        String    @id
+  value      String
+  iv         String?
+  tag        String?
+  namespace  String?
+  createdAt  DateTime  @default(now()) @db.Timestamp(0)
+  modifiedAt DateTime? @db.Timestamp(0)
+
+  @@index([namespace], map: "_jackson_store_namespace")
+}
+
+model jackson_ttl {
+  key       String @id
+  expiresAt BigInt
+
+  @@index([expiresAt], map: "_jackson_ttl_expires_at")
+}

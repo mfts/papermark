@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { useState } from "react";
 
+import { AlertCircle } from "lucide-react";
+
+import { SSOLogin } from "@/ee/features/security/sso";
 import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -24,6 +27,9 @@ import { Label } from "@/components/ui/label";
 export default function Login() {
   const { next } = useParams as { next?: string };
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const authError = searchParams?.get("error");
+  const isSSORequired = authError === "require-saml-sso";
 
   const [lastUsed, setLastUsed] = useLastUsed();
   const authMethods = ["google", "email", "linkedin", "passkey"] as const;
@@ -71,6 +77,20 @@ export default function Login() {
               Share documents. Not attachments.
             </h3>
           </div>
+          {isSSORequired && (
+            <div className="mx-4 mb-2 flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 sm:mx-12">
+              <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-orange-600" />
+              <div>
+                <p className="text-sm font-medium text-orange-900">
+                  Your organization requires SSO login
+                </p>
+                <p className="mt-1 text-sm text-orange-700">
+                  Please use the <strong>SAML SSO</strong> option below to sign
+                  in with your company&apos;s identity provider.
+                </p>
+              </div>
+            </div>
+          )}
           <form
             className="flex flex-col gap-4 px-4 pt-8 sm:px-12"
             onSubmit={(e) => {
@@ -210,6 +230,9 @@ export default function Login() {
                 <span>Continue with a passkey</span>
                 {lastUsed === "passkey" && <LastUsed />}
               </Button>
+            </div>
+            <div className="relative">
+              <SSOLogin autoExpand={isSSORequired} />
             </div>
           </div>
           <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-12">
