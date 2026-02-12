@@ -56,7 +56,12 @@ const LinkSchema = z.object({
 
 // Define validation schemas for different resource types
 const BaseSchema = z.object({
-  resourceType: z.enum(["document.create", "link.create", "dataroom.create"]),
+  resourceType: z.enum([
+    "document.create",
+    "link.create",
+    "link.update",
+    "dataroom.create",
+  ]),
 });
 
 const DocumentCreateSchema = BaseSchema.extend({
@@ -75,6 +80,12 @@ const LinkCreateSchema = BaseSchema.extend({
   resourceType: z.literal("link.create"),
   targetId: z.string(),
   linkType: z.enum(["DOCUMENT_LINK", "DATAROOM_LINK"]),
+  link: LinkSchema,
+});
+
+const LinkUpdateSchema = BaseSchema.extend({
+  resourceType: z.literal("link.update"),
+  linkId: z.string(),
   link: LinkSchema,
 });
 
@@ -98,6 +109,7 @@ const DataroomCreateSchema = BaseSchema.extend({
 const RequestBodySchema = z.discriminatedUnion("resourceType", [
   DocumentCreateSchema,
   LinkCreateSchema,
+  LinkUpdateSchema,
   DataroomCreateSchema,
 ]);
 
@@ -212,6 +224,13 @@ export default async function incomingWebhookHandler(
       );
     } else if (validatedData.resourceType === "link.create") {
       return await handleLinkCreate(
+        validatedData,
+        incomingWebhook.teamId,
+        token,
+        res,
+      );
+    } else if (validatedData.resourceType === "link.update") {
+      return await handleLinkUpdate(
         validatedData,
         incomingWebhook.teamId,
         token,
@@ -511,10 +530,10 @@ async function handleDocumentCreate(
         domainId: domainId,
         domainSlug: link.domain || null,
         slug: link.slug || null,
-        emailProtected: link.emailProtected || preset?.emailProtected || false,
+        emailProtected: link.emailProtected ?? preset?.emailProtected ?? false,
         emailAuthenticated:
-          link.emailAuthenticated || preset?.emailAuthenticated || false,
-        allowDownload: link.allowDownload || preset?.allowDownload,
+          link.emailAuthenticated ?? preset?.emailAuthenticated ?? false,
+        allowDownload: link.allowDownload ?? preset?.allowDownload,
         enableNotification:
           link.enableNotification ?? preset?.enableNotification ?? false,
         enableFeedback: link.enableFeedback,
@@ -750,10 +769,10 @@ async function handleLinkCreate(
         domainSlug: link.domain || null,
         slug: link.slug || null,
         expiresAt: expiresAtDate,
-        emailProtected: link.emailProtected || preset?.emailProtected || false,
+        emailProtected: link.emailProtected ?? preset?.emailProtected ?? false,
         emailAuthenticated:
-          link.emailAuthenticated || preset?.emailAuthenticated || false,
-        allowDownload: link.allowDownload || preset?.allowDownload,
+          link.emailAuthenticated ?? preset?.emailAuthenticated ?? false,
+        allowDownload: link.allowDownload ?? preset?.allowDownload,
         enableNotification:
           link.enableNotification ?? preset?.enableNotification ?? false,
         enableFeedback: link.enableFeedback,
@@ -802,6 +821,277 @@ async function handleLinkCreate(
   } catch (error) {
     console.error("Link creation error:", error);
     return res.status(500).json({ error: "Failed to create link" });
+  }
+}
+
+/**
+ * Handle link.update resource type
+ */
+async function handleLinkUpdate(
+  data: z.infer<typeof LinkUpdateSchema>,
+  teamId: string,
+  token: string,
+  res: NextApiResponse,
+) {
+  const { linkId, link } = data;
+
+  // Check if team is paused
+  const teamIsPaused = await isTeamPausedById(teamId);
+  if (teamIsPaused) {
+    return res.status(403).json({
+      error: "Team is currently paused. Link updates are not available.",
+    });
+  }
+
+  // Validate link exists and belongs to the team
+  const existingLink = await prisma.link.findUnique({
+    where: {
+      id: linkId,
+      teamId: teamId,
+    },
+    select: {
+      id: true,
+      domainSlug: true,
+      slug: true,
+      documentId: true,
+      dataroomId: true,
+      linkType: true,
+    },
+  });
+
+  if (!existingLink) {
+    return res
+      .status(404)
+      .json({ error: "Link not found or not associated with this team" });
+  }
+
+  // If domain and slug are provided, validate them
+  let domainId = null;
+
+  // Reject requests where exactly one of domain/slug is present
+  if (link.domain && !link.slug) {
+    return res.status(400).json({
+      error:
+        "Both 'domain' and 'slug' must be provided together. 'slug' is missing.",
+    });
+  }
+  if (link.slug && !link.domain) {
+    return res.status(400).json({
+      error:
+        "Both 'domain' and 'slug' must be provided together. 'domain' is missing.",
+    });
+  }
+
+  if (link.domain && link.slug) {
+    // Check if domain exists
+    const domain = await prisma.domain.findUnique({
+      where: {
+        slug: link.domain,
+        teamId: teamId,
+      },
+      select: { id: true },
+    });
+
+    if (!domain) {
+      return res
+        .status(400)
+        .json({ error: "Domain not found or not associated with this team" });
+    }
+
+    domainId = domain.id;
+
+    // Check if the slug is already in use with this domain (excluding the current link)
+    const conflictingLink = await prisma.link.findUnique({
+      where: {
+        domainSlug_slug: {
+          slug: link.slug,
+          domainSlug: link.domain,
+        },
+      },
+    });
+
+    if (conflictingLink && conflictingLink.id !== linkId) {
+      return res
+        .status(400)
+        .json({ error: "The link with this domain and slug already exists" });
+    }
+  }
+
+  // If preset is provided, validate it
+  let preset: LinkPreset | null = null;
+  let metaImage: string | null = null;
+  let metaFavicon: string | null = null;
+  if (link.presetId) {
+    preset = await prisma.linkPreset.findUnique({
+      where: { pId: link.presetId, teamId: teamId },
+    });
+
+    if (!preset) {
+      return res.status(400).json({
+        error: "Link preset not found or not associated with this team",
+      });
+    }
+
+    // Handle image files for custom meta tag (if enabled)
+    if (preset.enableCustomMetaTag) {
+      // Process meta image if present
+      if (preset.metaImage && isDataUrl(preset.metaImage)) {
+        const { buffer, mimeType, filename } = convertDataUrlToBuffer(
+          preset.metaImage,
+        );
+        const blob = await put(filename, buffer, {
+          access: "public",
+          addRandomSuffix: true,
+        });
+        metaImage = blob.url;
+      }
+
+      // Process favicon if present
+      if (preset.metaFavicon && isDataUrl(preset.metaFavicon)) {
+        const { buffer, mimeType, filename } = convertDataUrlToBuffer(
+          preset.metaFavicon,
+        );
+        const blob = await put(filename, buffer, {
+          access: "public",
+          addRandomSuffix: true,
+        });
+        metaFavicon = blob.url;
+      }
+    }
+  }
+
+  // Update the link
+  try {
+    // Build update payload conditionally – only fields explicitly provided in
+    // the incoming link payload (or supplied by a preset) are included.
+    // Prisma treats missing / undefined keys as "do not update".
+    const data: Record<string, unknown> = {};
+
+    /** Returns true when the property was explicitly sent in the link payload */
+    const has = (key: string): boolean => key in link;
+
+    // name
+    if (has("name")) {
+      data.name = link.name;
+    }
+
+    // password – hash when provided via link or preset
+    if (has("password")) {
+      data.password = link.password
+        ? await generateEncrpytedPassword(link.password)
+        : null;
+    } else if (preset?.password) {
+      data.password = await generateEncrpytedPassword(preset.password);
+    }
+
+    // domain + slug (validated to always be paired earlier)
+    if (has("domain") && has("slug")) {
+      data.domainId = domainId;
+      data.domainSlug = link.domain || null;
+      data.slug = link.slug || null;
+    }
+
+    // expiresAt
+    if (has("expiresAt")) {
+      data.expiresAt = link.expiresAt ? new Date(link.expiresAt) : null;
+    } else if (preset?.expiresAt) {
+      data.expiresAt = new Date(preset.expiresAt);
+    }
+
+    // boolean flags – include when explicitly provided or when preset supplies a value
+    if (has("emailProtected")) {
+      data.emailProtected = link.emailProtected;
+    } else if (preset?.emailProtected != null) {
+      data.emailProtected = preset.emailProtected;
+    }
+
+    if (has("emailAuthenticated")) {
+      data.emailAuthenticated = link.emailAuthenticated;
+    } else if (preset?.emailAuthenticated != null) {
+      data.emailAuthenticated = preset.emailAuthenticated;
+    }
+
+    if (has("allowDownload")) {
+      data.allowDownload = link.allowDownload;
+    } else if (preset?.allowDownload != null) {
+      data.allowDownload = preset.allowDownload;
+    }
+
+    if (has("enableNotification")) {
+      data.enableNotification = link.enableNotification;
+    } else if (preset?.enableNotification != null) {
+      data.enableNotification = preset.enableNotification;
+    }
+
+    if (has("enableFeedback")) {
+      data.enableFeedback = link.enableFeedback;
+    }
+
+    if (has("enableScreenshotProtection")) {
+      data.enableScreenshotProtection = link.enableScreenshotProtection;
+    }
+
+    if (has("showBanner")) {
+      data.showBanner = link.showBanner;
+    } else if (preset?.showBanner != null) {
+      data.showBanner = preset.showBanner;
+    }
+
+    // audienceType & groupId
+    if (has("audienceType")) {
+      data.audienceType = link.audienceType;
+      // When switching away from GROUP, clear groupId
+      if (link.audienceType !== "GROUP") {
+        data.groupId = null;
+      } else if (has("groupId")) {
+        data.groupId = link.groupId;
+      }
+    } else if (has("groupId")) {
+      data.groupId = link.groupId;
+    }
+
+    // allow / deny lists
+    // For group links, ignore preset lists as access is controlled by group membership
+    const isGroupAudience =
+      has("audienceType") && link.audienceType === "GROUP";
+
+    if (has("allowList")) {
+      data.allowList = link.allowList;
+    } else if (!isGroupAudience && preset?.allowList) {
+      data.allowList = preset.allowList;
+    }
+
+    if (has("denyList")) {
+      data.denyList = link.denyList;
+    } else if (!isGroupAudience && preset?.denyList) {
+      data.denyList = preset.denyList;
+    }
+
+    // Preset custom meta tag fields – only applied when the preset flag is set
+    if (preset?.enableCustomMetaTag) {
+      data.enableCustomMetatag = preset.enableCustomMetaTag;
+      data.metaTitle = preset.metaTitle;
+      data.metaDescription = preset.metaDescription;
+      data.metaImage = metaImage;
+      data.metaFavicon = metaFavicon;
+    }
+
+    const updatedLink = await prisma.link.update({
+      where: { id: linkId, teamId: teamId },
+      data,
+    });
+
+    return res.status(200).json({
+      message: "Link updated successfully",
+      linkId: updatedLink.id,
+      linkUrl:
+        updatedLink.domainSlug && updatedLink.slug
+          ? `https://${updatedLink.domainSlug}/${updatedLink.slug}`
+          : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${updatedLink.id}`,
+    });
+  } catch (error) {
+    console.error("Link update error:", error);
+    return res.status(500).json({ error: "Failed to update link" });
   }
 }
 
@@ -975,10 +1265,10 @@ async function handleDataroomCreate(
           password: hashedPassword,
           expiresAt: expiresAtDate,
           emailProtected:
-            link.emailProtected || preset?.emailProtected || false,
+            link.emailProtected ?? preset?.emailProtected ?? false,
           emailAuthenticated:
-            link.emailAuthenticated || preset?.emailAuthenticated || false,
-          allowDownload: link.allowDownload || preset?.allowDownload,
+            link.emailAuthenticated ?? preset?.emailAuthenticated ?? false,
+          allowDownload: link.allowDownload ?? preset?.allowDownload,
           enableNotification:
             link.enableNotification ?? preset?.enableNotification ?? false,
           enableFeedback: link.enableFeedback,
