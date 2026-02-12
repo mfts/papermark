@@ -5,6 +5,9 @@ import { ItemType, ViewType } from "@prisma/client";
 import slugify from "@sindresorhus/slugify";
 
 import { verifyDataroomSessionInPagesRouter } from "@/lib/auth/dataroom-auth";
+import {
+  buildFolderPathsFromHierarchy,
+} from "@/lib/dataroom/build-folder-hierarchy";
 import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { downloadJobStore } from "@/lib/redis-download-job-store";
@@ -128,19 +131,20 @@ export default async function handler(
         id: folderId,
         dataroomId,
       },
-      select: { id: true, name: true, path: true },
+      select: { id: true, name: true, path: true, parentId: true },
     });
 
     if (!rootFolder) {
       return res.status(404).json({ error: "Folder not found" });
     }
 
+    // Find all subfolders using path prefix (to get the full subtree)
     const subfolders = await prisma.dataroomFolder.findMany({
       where: {
         dataroomId,
         path: { startsWith: rootFolder.path + "/" },
       },
-      select: { id: true, name: true, path: true },
+      select: { id: true, name: true, path: true, parentId: true },
     });
 
     let allFolders = [rootFolder, ...subfolders];
@@ -212,6 +216,13 @@ export default async function handler(
       );
     }
 
+    // Build folder paths from the parentId hierarchy (source of truth)
+    // This ensures the download structure matches what the UI shows
+    const computedPathMap = buildFolderPathsFromHierarchy(allFolders);
+
+    // Compute the root folder's path from the hierarchy
+    const computedRootPath = computedPathMap.get(rootFolder.id) ?? rootFolder.path;
+
     const folderStructure: {
       [key: string]: {
         name: string;
@@ -229,28 +240,27 @@ export default async function handler(
     const fileKeys: string[] = [];
 
     const addFileToStructure = (
-      fullPath: string,
-      rootFolder: { name: string; path: string },
+      computedFolderPath: string,
+      rootFolderInfo: { name: string; computedPath: string },
       fileName: string,
       fileKey: string,
       fileType?: string,
       numPages?: number,
     ) => {
       let relativePath = "";
-      if (fullPath !== rootFolder.path) {
-        const pathRegex = new RegExp(`^${rootFolder.path}/(.*)$`);
-        const match = fullPath.match(pathRegex);
+      if (computedFolderPath !== rootFolderInfo.computedPath) {
+        const escapedRoot = rootFolderInfo.computedPath.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&",
+        );
+        const pathRegex = new RegExp(`^${escapedRoot}/(.*)$`);
+        const match = computedFolderPath.match(pathRegex);
         relativePath = match ? match[1] : "";
       }
 
-      const pathParts = [slugify(rootFolder.name)];
+      const pathParts = [slugify(rootFolderInfo.name)];
       if (relativePath) {
-        pathParts.push(
-          ...relativePath
-            .split("/")
-            .filter(Boolean)
-            .map((part) => slugify(part)),
-        );
+        pathParts.push(...relativePath.split("/").filter(Boolean));
       }
 
       let currentPath = "";
@@ -281,13 +291,16 @@ export default async function handler(
       }
     };
 
+    const rootFolderInfo = { name: rootFolder.name, computedPath: computedRootPath };
+
     for (const folder of allFolders) {
+      const folderPath = computedPathMap.get(folder.id) ?? folder.path;
       const docs = allDocuments.filter((doc) => doc.folderId === folder.id);
 
       if (docs.length === 0) {
         addFileToStructure(
-          folder.path,
-          rootFolder,
+          folderPath,
+          rootFolderInfo,
           "",
           "",
           undefined,
@@ -311,8 +324,8 @@ export default async function handler(
             ? version.file
             : (version.originalFile ?? version.file);
         addFileToStructure(
-          folder.path,
-          rootFolder,
+          folderPath,
+          rootFolderInfo,
           doc.document.name,
           fileKey,
           version.type ?? undefined,

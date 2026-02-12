@@ -4,6 +4,10 @@ import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 
+import {
+  buildFolderNameMap,
+  buildFolderPathsFromHierarchy,
+} from "@/lib/dataroom/build-folder-hierarchy";
 import prisma from "@/lib/prisma";
 import { downloadJobStore } from "@/lib/redis-download-job-store";
 import { bulkDownloadTask } from "@/lib/trigger/bulk-download";
@@ -58,6 +62,7 @@ export default async function handler(
               id: true,
               name: true,
               path: true,
+              parentId: true,
             },
           },
           documents: {
@@ -93,6 +98,12 @@ export default async function handler(
       let downloadFolders = dataroom.folders;
       let downloadDocuments = dataroom.documents;
 
+      // Build folder paths from the parentId hierarchy (source of truth)
+      // instead of using the materialized `path` field which can become stale
+      // after folder renames/moves
+      const computedPathMap = buildFolderPathsFromHierarchy(downloadFolders);
+      const folderMap = buildFolderNameMap(downloadFolders, computedPathMap);
+
       // Construct folderStructure and fileKeys
       const folderStructure: {
         [key: string]: {
@@ -102,12 +113,6 @@ export default async function handler(
         };
       } = {};
       const fileKeys: string[] = [];
-      const folderMap = new Map(
-        downloadFolders.map((folder) => [
-          folder.path,
-          { name: folder.name, id: folder.id },
-        ]),
-      );
 
       const addFileToStructure = (
         path: string,
@@ -168,6 +173,9 @@ export default async function handler(
         );
 
       downloadFolders.forEach((folder) => {
+        // Use the computed path from parentId hierarchy instead of the stored path
+        const folderPath = computedPathMap.get(folder.id) ?? folder.path;
+
         const folderDocs = downloadDocuments
           .filter((doc) => doc.folderId === folder.id)
           .filter((doc) => doc.document.versions[0].type !== "notion")
@@ -178,7 +186,7 @@ export default async function handler(
         folderDocs &&
           folderDocs.forEach((doc) =>
             addFileToStructure(
-              folder.path,
+              folderPath,
               doc.document.name,
               doc.document.versions[0].originalFile ??
                 doc.document.versions[0].file,
@@ -190,7 +198,7 @@ export default async function handler(
 
         // If the folder is empty, ensure it's still added to the structure
         if (folderDocs && folderDocs.length === 0) {
-          addFileToStructure(folder.path, "", "");
+          addFileToStructure(folderPath, "", "");
         }
       });
 
