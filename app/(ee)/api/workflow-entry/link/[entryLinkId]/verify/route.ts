@@ -55,9 +55,14 @@ export async function POST(
       },
     });
 
-    if (!workflow) {
+    // Return generic 404 for missing, archived, or deleted links to prevent enumeration
+    if (
+      !workflow ||
+      workflow.entryLink.isArchived ||
+      workflow.entryLink.deletedAt
+    ) {
       return NextResponse.json(
-        { error: "Workflow entry link not found" },
+        { error: "Link not found" },
         { status: 404 },
       );
     }
@@ -66,13 +71,6 @@ export async function POST(
       return NextResponse.json(
         { error: "This workflow is currently inactive" },
         { status: 403 },
-      );
-    }
-
-    if (workflow.entryLink.isArchived || workflow.entryLink.deletedAt) {
-      return NextResponse.json(
-        { error: "This link is no longer available" },
-        { status: 404 },
       );
     }
 

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { Brand, DataroomBrand, LinkAudienceType } from "@prisma/client";
 
+import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import { fetchDataroomDocumentLinkData } from "@/lib/api/links/link-data";
 import {
   fetchDataroomLinkData,
@@ -10,6 +11,13 @@ import {
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
+
+// Generic not-found response to prevent enumeration.
+// Always returns the same shape regardless of why the link wasn't found.
+const LINK_NOT_FOUND_RESPONSE = {
+  error: "Link not found",
+  message: "No link found",
+} as const;
 
 export default async function handle(
   req: NextApiRequest,
@@ -27,9 +35,23 @@ export default async function handle(
     const documentId = domainSlug[3];
 
     if (slug === "404") {
-      return res.status(404).json({
-        error: "Link not found",
-        message: "link not found",
+      return res.status(404).json(LINK_NOT_FOUND_RESPONSE);
+    }
+
+    // --- Rate limiting to prevent link enumeration ---
+    const clientIp =
+      (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+      req.socket.remoteAddress ||
+      "unknown";
+
+    const rateLimitResult = await checkRateLimit(
+      rateLimiters.linkLookup,
+      `link-lookup:${clientIp}`,
+    );
+    if (!rateLimitResult.success) {
+      return res.status(429).json({
+        error: "Too many requests",
+        message: "Please try again later",
       });
     }
 
@@ -102,31 +124,28 @@ export default async function handle(
       });
       console.timeEnd("get-link");
 
-      // if link not found, return 404
+      // if link not found, return 404 with generic message
       if (!link) {
-        log({
-          message: `Link not found for custom domain _${domain}/${slug}_`,
-          type: "error",
-          mention: true,
+        // Count this as a miss for stricter rate limiting
+        await checkRateLimit(
+          rateLimiters.linkLookupMiss,
+          `link-miss:${clientIp}`,
+        ).then((result) => {
+          if (!result.success) {
+            log({
+              message: `Potential link enumeration from IP _${clientIp}_ on domain _${domain}_`,
+              type: "error",
+              mention: true,
+            });
+          }
         });
-        return res.status(404).json({
-          error: "Link not found",
-          message: "No link found",
-        });
+
+        return res.status(404).json(LINK_NOT_FOUND_RESPONSE);
       }
 
-      if (link.isArchived) {
-        return res.status(404).json({
-          error: "Link is archived",
-          message: "link is archived",
-        });
-      }
-
-      if (link.deletedAt) {
-        return res.status(404).json({
-          error: "Link has been deleted",
-          message: "This link has been deleted",
-        });
+      // Return identical 404 for archived/deleted links to prevent enumeration
+      if (link.isArchived || link.deletedAt) {
+        return res.status(404).json(LINK_NOT_FOUND_RESPONSE);
       }
 
       const { email } = req.query as { email?: string };
@@ -143,17 +162,14 @@ export default async function handle(
 
       const teamPlan = link.team?.plan || "free";
       const teamId = link.teamId;
-      // if owner of document is on free plan, return 404
+      // if owner of document is on free plan, return generic 404
       if (teamPlan.includes("free")) {
         log({
           message: `Link is from a free team _${teamId}_ for custom domain _${domain}/${slug}_`,
           type: "info",
           mention: true,
         });
-        return res.status(404).json({
-          error: "Link not found",
-          message: `link found, team ${teamPlan}`,
-        });
+        return res.status(404).json(LINK_NOT_FOUND_RESPONSE);
       }
 
       const linkType = link.linkType;
@@ -252,9 +268,9 @@ export default async function handle(
         type: "error",
         mention: true,
       });
+      // Return generic error to avoid leaking internal details
       return res.status(500).json({
         message: "Internal Server Error",
-        error: (error as Error).message,
       });
     }
   } else {

@@ -4,6 +4,7 @@ import { Brand, DataroomBrand, LinkAudienceType } from "@prisma/client";
 import { customAlphabet } from "nanoid";
 import { getServerSession } from "next-auth/next";
 
+import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import {
   fetchDataroomLinkData,
   fetchDocumentLinkData,
@@ -19,6 +20,9 @@ import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 import { DomainObject } from "..";
 import { authOptions } from "../../auth/[...nextauth]";
 
+// Generic not-found response to prevent enumeration
+const LINK_NOT_FOUND_RESPONSE = { error: "Link not found" } as const;
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -26,6 +30,23 @@ export default async function handle(
   if (req.method === "GET") {
     // GET /api/links/:id
     const { id } = req.query as { id: string };
+
+    // --- Rate limiting to prevent link ID enumeration ---
+    const clientIp =
+      (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+      req.socket.remoteAddress ||
+      "unknown";
+
+    const rateLimitResult = await checkRateLimit(
+      rateLimiters.linkLookup,
+      `link-lookup:${clientIp}`,
+    );
+    if (!rateLimitResult.success) {
+      return res.status(429).json({
+        error: "Too many requests",
+        message: "Please try again later",
+      });
+    }
 
     try {
       console.time("get-link");
@@ -95,16 +116,16 @@ export default async function handle(
 
       console.timeEnd("get-link");
 
-      if (!link) {
-        return res.status(404).json({ error: "Link not found" });
-      }
-
-      if (link.deletedAt) {
-        return res.status(404).json({ error: "Link has been deleted" });
-      }
-
-      if (link.isArchived) {
-        return res.status(404).json({ error: "Link is archived" });
+      // Return identical 404 for all not-found cases to prevent enumeration
+      if (!link || link.deletedAt || link.isArchived) {
+        // Count misses for stricter rate limiting
+        if (!link) {
+          await checkRateLimit(
+            rateLimiters.linkLookupMiss,
+            `link-miss:${clientIp}`,
+          );
+        }
+        return res.status(404).json(LINK_NOT_FOUND_RESPONSE);
       }
 
       const { email } = req.query as { email?: string };

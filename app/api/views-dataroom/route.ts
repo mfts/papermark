@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { reportDeniedAccessAttempt } from "@/ee/features/access-notifications";
+import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { ItemType, LinkAudienceType } from "@prisma/client";
@@ -95,6 +96,19 @@ export async function POST(request: NextRequest) {
       verifiedEmail?: string;
     };
 
+    // --- Rate limiting to prevent link enumeration via view creation ---
+    const clientIp = ipAddress(request) || LOCALHOST_IP;
+    const viewRateLimitResult = await checkRateLimit(
+      rateLimiters.viewCreation,
+      `view-creation:${clientIp}`,
+    );
+    if (!viewRateLimitResult.success) {
+      return NextResponse.json(
+        { message: "Too many requests. Please try again later." },
+        { status: 429 },
+      );
+    }
+
     // Fetch the link to verify the settings
     const link = await prisma.link.findUnique({
       where: {
@@ -150,20 +164,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (!link) {
-      return NextResponse.json({ message: "Link not found." }, { status: 404 });
-    }
-
-    if (link.isArchived) {
+    // Return generic 404 for all cases to prevent link enumeration
+    if (!link || link.isArchived || link.deletedAt) {
       return NextResponse.json(
-        { message: "Link is no longer available." },
-        { status: 404 },
-      );
-    }
-
-    if (link.deletedAt) {
-      return NextResponse.json(
-        { message: "Link has been deleted." },
+        { message: "Link not found." },
         { status: 404 },
       );
     }

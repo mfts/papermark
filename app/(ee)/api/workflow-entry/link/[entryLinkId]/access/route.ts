@@ -70,9 +70,10 @@ export async function POST(
       },
     });
 
-    if (!workflow) {
+    // Return generic 404 for missing links to prevent enumeration
+    if (!workflow || workflow.entryLink.isArchived || workflow.entryLink.deletedAt) {
       return NextResponse.json(
-        { error: "Workflow entry link not found" },
+        { error: "Link not found" },
         { status: 404 },
       );
     }
