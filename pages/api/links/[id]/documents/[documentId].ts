@@ -84,16 +84,9 @@ export default async function handle(
       },
     });
 
-    if (!link) {
+    // Return identical 404 for all not-found cases to prevent link enumeration
+    if (!link || link.deletedAt || link.isArchived) {
       return res.status(404).json({ error: "Link not found" });
-    }
-
-    if (link.deletedAt) {
-      return res.status(404).json({ error: "Link has been deleted" });
-    }
-
-    if (link.isArchived) {
-      return res.status(404).json({ error: "Link is archived" });
     }
 
     const { email } = req.query as { email?: string };
