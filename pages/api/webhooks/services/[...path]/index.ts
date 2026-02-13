@@ -117,7 +117,7 @@ export default async function incomingWebhookHandler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (req.method !== "POST") {
+  if (req.method !== "POST" && req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -203,6 +203,12 @@ export default async function incomingWebhookHandler(
       return res.status(404).json({ error: "Webhook not found" });
     }
 
+    // Handle GET requests – return all links for the team
+    if (req.method === "GET") {
+      return await handleGetTeamLinks(incomingWebhook.teamId, res);
+    }
+
+    // Handle POST requests
     // Validate request body against the schema
     const validationResult = RequestBodySchema.safeParse(req.body);
     if (!validationResult.success) {
@@ -250,6 +256,61 @@ export default async function incomingWebhookHandler(
   } catch (error) {
     console.error("Webhook error:", error);
     return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+/**
+ * Handle GET request – return all links for the team
+ */
+async function handleGetTeamLinks(teamId: string, res: NextApiResponse) {
+  try {
+    const links = await prisma.link.findMany({
+      where: {
+        teamId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        name: true,
+        linkType: true,
+        documentId: true,
+        dataroomId: true,
+        url: true,
+        slug: true,
+        domainSlug: true,
+        expiresAt: true,
+        isArchived: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const transformedLinks = links.map((link) => ({
+      linkId: link.id,
+      name: link.name,
+      linkType: link.linkType,
+      documentId: link.documentId ?? null,
+      dataroomId: link.dataroomId ?? null,
+      url: link.url,
+      slug: link.slug,
+      domainSlug: link.domainSlug,
+      expiresAt: link.expiresAt,
+      isArchived: link.isArchived,
+      createdAt: link.createdAt,
+      updatedAt: link.updatedAt,
+      linkUrl:
+        link.domainSlug && link.slug
+          ? `https://${link.domainSlug}/${link.slug}`
+          : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`,
+    }));
+
+    return res.status(200).json(transformedLinks);
+  } catch (error) {
+    console.error("Error fetching team links:", error);
+    return res.status(500).json({ error: "Failed to fetch team links" });
   }
 }
 
