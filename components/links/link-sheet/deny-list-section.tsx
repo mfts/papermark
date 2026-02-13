@@ -40,14 +40,14 @@ export default function DenyListSection({
   );
 
   useEffect(() => {
-    // Update the denyList in the data state when their inputs change
-    const newDenyList = sanitizeList(denyListInput);
-    setEnabled((prevEnabled) => prevEnabled && emailProtected);
-    setData((prevData) => ({
-      ...prevData,
-      denyList: emailProtected && enabled ? newDenyList : [],
-    }));
-  }, [denyListInput, enabled, emailProtected, setData]);
+    if (!emailProtected && enabled) {
+      setEnabled(false);
+      setData((prevData) => ({
+        ...prevData,
+        denyList: [],
+      }));
+    }
+  }, [emailProtected, enabled, setData]);
 
   useEffect(() => {
     if (isAllowed && presets?.denyList && presets.denyList.length > 0) {
@@ -78,7 +78,15 @@ export default function DenyListSection({
   const handleDenyListChange = (
     event: React.ChangeEvent<HTMLTextAreaElement>,
   ) => {
-    setDenyListInput(event.target.value);
+    const updatedDenyListInput = event.target.value;
+    setDenyListInput(updatedDenyListInput);
+
+    if (emailProtected && enabled) {
+      setData((prevData) => ({
+        ...prevData,
+        denyList: sanitizeList(updatedDenyListInput),
+      }));
+    }
   };
 
   return (
