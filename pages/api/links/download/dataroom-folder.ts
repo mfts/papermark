@@ -297,9 +297,18 @@ export default async function handler(
 
     const rootFolderInfo = { name: rootFolder.name, computedPath: computedRootPath };
 
+    // Pre-index documents by folderId for O(1) lookup per folder
+    const docsByFolderId = new Map<string, typeof allDocuments>();
+    for (const doc of allDocuments) {
+      if (!doc.folderId) continue;
+      const list = docsByFolderId.get(doc.folderId) ?? [];
+      list.push(doc);
+      docsByFolderId.set(doc.folderId, list);
+    }
+
     for (const folder of allFolders) {
       const folderPath = computedPathMap.get(folder.id) ?? folder.path;
-      const docs = allDocuments.filter((doc) => doc.folderId === folder.id);
+      const docs = docsByFolderId.get(folder.id) ?? [];
 
       if (docs.length === 0) {
         addFileToStructure(

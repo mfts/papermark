@@ -172,12 +172,20 @@ export default async function handler(
           ),
         );
 
+      // Pre-index documents by folderId for O(1) lookup per folder
+      const docsByFolderId = new Map<string, typeof downloadDocuments>();
+      for (const doc of downloadDocuments) {
+        if (!doc.folderId) continue;
+        const list = docsByFolderId.get(doc.folderId) ?? [];
+        list.push(doc);
+        docsByFolderId.set(doc.folderId, list);
+      }
+
       downloadFolders.forEach((folder) => {
         // Use the computed path from parentId hierarchy instead of the stored path
         const folderPath = computedPathMap.get(folder.id) ?? folder.path;
 
-        const folderDocs = downloadDocuments
-          .filter((doc) => doc.folderId === folder.id)
+        const folderDocs = (docsByFolderId.get(folder.id) ?? [])
           .filter((doc) => doc.document.versions[0].type !== "notion")
           .filter(
             (doc) => doc.document.versions[0].storageType !== "VERCEL_BLOB",
