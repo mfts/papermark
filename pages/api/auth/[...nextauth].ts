@@ -11,6 +11,10 @@ import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import {
+  PROVIDER_REVALIDATION_INTERVAL_MS,
+  validateOAuthProviderAccount,
+} from "@/lib/auth/validate-oauth-provider";
 import { qstash } from "@/lib/cron";
 import { dub } from "@/lib/dub";
 import { isBlacklistedEmail } from "@/lib/edge-config/blacklist";
@@ -224,13 +228,58 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.user = user;
       }
-      // Track SAML provider on the token
-      if (
-        (account?.provider === "saml" || account?.provider === "saml-idp") &&
-        user
-      ) {
-        token.provider = "saml";
+
+      // ─── Track OAuth provider on the token at sign-in ───
+      // This enables periodic provider-account validation below.
+      if (account && user) {
+        if (
+          account.provider === "saml" ||
+          account.provider === "saml-idp"
+        ) {
+          token.provider = "saml";
+        } else if (
+          account.provider === "google" ||
+          account.provider === "linkedin"
+        ) {
+          token.provider = account.provider;
+        }
+        // Mark the session as freshly verified at sign-in
+        token.providerAccountLastVerifiedAt = Date.now();
       }
+
+      // ─── Periodic OAuth provider account validation ───
+      // For sessions authenticated via an external OAuth provider (e.g. Google),
+      // periodically verify that the provider account is still active.
+      // If the provider account has been deleted, disabled, or access revoked,
+      // the session is immediately invalidated by returning an empty token.
+      if (
+        token.provider === "google" &&
+        token.sub // user ID
+      ) {
+        const lastVerified =
+          (token.providerAccountLastVerifiedAt as number) || 0;
+        const elapsed = Date.now() - lastVerified;
+
+        if (elapsed > PROVIDER_REVALIDATION_INTERVAL_MS) {
+          const result = await validateOAuthProviderAccount(
+            token.sub,
+            token.provider as string,
+          );
+
+          if (!result.valid) {
+            log({
+              message: `[Session Revoked] Provider account invalid for user ${token.sub}: ${result.reason}`,
+              type: "error",
+            });
+            // Returning an empty object invalidates the JWT session,
+            // forcing the user to re-authenticate.
+            return {};
+          }
+
+          token.providerAccountLastVerifiedAt = Date.now();
+        }
+      }
+
       // refresh the user data
       if (trigger === "update") {
         const user = token?.user as CustomUser;
