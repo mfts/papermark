@@ -35,6 +35,7 @@ import CustomFieldsSection from "./custom-fields-section";
 import IndexFileSection from "./index-file-section";
 import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
+import TextSelectionSection from "./text-selection-section";
 import UploadSection from "./upload-section";
 import WatermarkSection from "./watermark-section";
 import { WelcomeMessageSection } from "./welcome-message-section";
@@ -188,6 +189,7 @@ export const LinkOptions = ({
             }
             handleUpgradeStateChange={handleUpgradeStateChange}
           />
+          <TextSelectionSection {...{ data, setData }} />
           <WatermarkSection
             {...{ data, setData }}
             isAllowed={

@@ -36,6 +36,11 @@ const LINK_SETTINGS: LinkSetting[] = [
     isActive: (link) => !!link.enableScreenshotProtection,
   },
   {
+    key: "enableTextSelection",
+    label: "Text selection allowed",
+    isActive: (link) => !!link.enableTextSelection,
+  },
+  {
     key: "enableWatermark",
     label: "Watermark enabled",
     isActive: (link) => !!link.enableWatermark,

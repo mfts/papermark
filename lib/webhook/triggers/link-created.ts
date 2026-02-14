@@ -95,6 +95,7 @@ export async function sendLinkCreatedWebhook({
       enabledFeedback: link.enableFeedback ?? false,
       enabledQuestion: link.enableQuestion ?? false,
       enabledScreenshotProtection: link.enableScreenshotProtection ?? false,
+      enabledTextSelection: link.enableTextSelection ?? false,
       enabledAgreement: link.enableAgreement ?? false,
       enabledWatermark: link.enableWatermark ?? false,
       metaTitle: link.metaTitle,

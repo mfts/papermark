@@ -181,6 +181,7 @@ export default async function handler(
             enableNotification: linkData.enableNotification,
             enableFeedback: linkData.enableFeedback,
             enableScreenshotProtection: linkData.enableScreenshotProtection,
+            enableTextSelection: linkData.enableTextSelection || false,
             enableCustomMetatag: linkData.enableCustomMetatag,
             metaTitle: linkData.metaTitle || null,
             metaDescription: linkData.metaDescription || null,

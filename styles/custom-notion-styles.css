@@ -72,7 +72,7 @@
   }
 }
 
-/* Disable user selection for all text content */
+/* Disable user selection for all text content (default) */
 .notion-page,
 .notion-text,
 .notion-h1,
@@ -101,6 +101,37 @@
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+/* Re-enable user selection when text selection is allowed */
+.notion-text-selection-enabled .notion-page,
+.notion-text-selection-enabled .notion-text,
+.notion-text-selection-enabled .notion-h1,
+.notion-text-selection-enabled .notion-h2,
+.notion-text-selection-enabled .notion-h3,
+.notion-text-selection-enabled .notion-h4,
+.notion-text-selection-enabled .notion-h5,
+.notion-text-selection-enabled .notion-h6,
+.notion-text-selection-enabled .notion-header,
+.notion-text-selection-enabled .notion-sub_header,
+.notion-text-selection-enabled .notion-sub_sub_header,
+.notion-text-selection-enabled .notion-quote,
+.notion-text-selection-enabled .notion-callout,
+.notion-text-selection-enabled .notion-toggle,
+.notion-text-selection-enabled .notion-list,
+.notion-text-selection-enabled .notion-numbered-list,
+.notion-text-selection-enabled .notion-to_do,
+.notion-text-selection-enabled .notion-code,
+.notion-text-selection-enabled .notion-simple-table,
+.notion-text-selection-enabled .notion-table,
+.notion-text-selection-enabled .notion-column-list,
+.notion-text-selection-enabled .notion-bookmark,
+.notion-text-selection-enabled .notion-embed,
+.notion-text-selection-enabled .notion-database {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 /* Disable image dragging */

@@ -39,6 +39,7 @@ model Link {
   enableFeedback             Boolean?   @default(false) // Optional give user a option to enable the reactions toolbar
   enableQuestion             Boolean?   @default(false) // Optional give user a option to enable the question feedback
   enableScreenshotProtection Boolean?   @default(false) // Optional give user a option to enable the screenshot protection
+  enableTextSelection        Boolean?   @default(false) // Optional give user a option to allow visitors to select and copy text on Notion pages
   feedback                   Feedback?
   enableAgreement            Boolean?   @default(false) // Optional give user a option to enable the terms and conditions
   agreement                  Agreement? @relation(fields: [agreementId], references: [id], onDelete: SetNull)
