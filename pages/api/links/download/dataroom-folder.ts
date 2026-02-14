@@ -201,22 +201,26 @@ export default async function handler(
         });
       }
 
-      const permittedFolderIds = groupPermissions
-        .filter(
-          (permission) => permission.itemType === ItemType.DATAROOM_FOLDER,
-        )
-        .map((permission) => permission.itemId);
-      const permittedDocumentIds = groupPermissions
-        .filter(
-          (permission) => permission.itemType === ItemType.DATAROOM_DOCUMENT,
-        )
-        .map((permission) => permission.itemId);
+      const permittedFolderIds = new Set(
+        groupPermissions
+          .filter(
+            (permission) => permission.itemType === ItemType.DATAROOM_FOLDER,
+          )
+          .map((permission) => permission.itemId),
+      );
+      const permittedDocumentIds = new Set(
+        groupPermissions
+          .filter(
+            (permission) => permission.itemType === ItemType.DATAROOM_DOCUMENT,
+          )
+          .map((permission) => permission.itemId),
+      );
 
       allFolders = allFolders.filter((folder) =>
-        permittedFolderIds.includes(folder.id),
+        permittedFolderIds.has(folder.id),
       );
       allDocuments = allDocuments.filter((doc) =>
-        permittedDocumentIds.includes(doc.id),
+        permittedDocumentIds.has(doc.id),
       );
     }
 
