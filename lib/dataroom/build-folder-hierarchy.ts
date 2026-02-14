@@ -55,6 +55,45 @@ export function buildFolderPathsFromHierarchy(
 }
 
 /**
+ * Collects all descendant folder IDs for a given root folder using
+ * the parentId hierarchy (BFS traversal).
+ *
+ * Use this instead of `path: { startsWith }` queries, which rely on
+ * the materialized `path` field that can become stale after renames/moves.
+ *
+ * @param rootId - The ID of the root folder
+ * @param folders - All folders to search through (must include at least the subtree)
+ * @returns Set of descendant folder IDs (does NOT include rootId itself)
+ */
+export function collectDescendantIds(
+  rootId: string,
+  folders: { id: string; parentId: string | null }[],
+): Set<string> {
+  // Build a children lookup map
+  const childrenMap = new Map<string, string[]>();
+  for (const folder of folders) {
+    if (folder.parentId) {
+      const siblings = childrenMap.get(folder.parentId) ?? [];
+      siblings.push(folder.id);
+      childrenMap.set(folder.parentId, siblings);
+    }
+  }
+
+  // BFS from rootId
+  const descendants = new Set<string>();
+  const queue = childrenMap.get(rootId) ?? [];
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    if (descendants.has(current)) continue; // guard against cycles
+    descendants.add(current);
+    const children = childrenMap.get(current) ?? [];
+    queue.push(...children);
+  }
+
+  return descendants;
+}
+
+/**
  * Builds a folder name map from computed paths.
  * Maps computedPath -> { name, id } for looking up display names.
  */

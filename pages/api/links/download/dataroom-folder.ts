@@ -7,6 +7,7 @@ import slugify from "@sindresorhus/slugify";
 import { verifyDataroomSessionInPagesRouter } from "@/lib/auth/dataroom-auth";
 import {
   buildFolderPathsFromHierarchy,
+  collectDescendantIds,
 } from "@/lib/dataroom/build-folder-hierarchy";
 import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
@@ -138,14 +139,17 @@ export default async function handler(
       return res.status(404).json({ error: "Folder not found" });
     }
 
-    // Find all subfolders using path prefix (to get the full subtree)
-    const subfolders = await prisma.dataroomFolder.findMany({
-      where: {
-        dataroomId,
-        path: { startsWith: rootFolder.path + "/" },
-      },
+    // Fetch all folders in this dataroom so we can traverse the parentId
+    // hierarchy. This avoids relying on the materialized `path` field which
+    // can become stale after renames/moves.
+    const allDataroomFolders = await prisma.dataroomFolder.findMany({
+      where: { dataroomId },
       select: { id: true, name: true, path: true, parentId: true },
     });
+
+    // Collect descendants via parentId chain (source of truth)
+    const descendantIds = collectDescendantIds(rootFolder.id, allDataroomFolders);
+    const subfolders = allDataroomFolders.filter((f) => descendantIds.has(f.id));
 
     let allFolders = [rootFolder, ...subfolders];
     let allDocuments = await prisma.dataroomDocument.findMany({
