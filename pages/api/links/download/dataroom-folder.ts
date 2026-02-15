@@ -151,7 +151,11 @@ export default async function handler(
     const descendantIds = collectDescendantIds(rootFolder.id, allDataroomFolders);
     const subfolders = allDataroomFolders.filter((f) => descendantIds.has(f.id));
 
-    let allFolders = [rootFolder, ...subfolders];
+    // Keep the full (unfiltered) folder list for path computation below.
+    // Permission filtering may remove parent folders that only have canView
+    // (not canDownload), which would break child path computation.
+    const fullFolders = [rootFolder, ...subfolders];
+    let allFolders = [...fullFolders];
     let allDocuments = await prisma.dataroomDocument.findMany({
       where: {
         dataroomId,
@@ -224,9 +228,11 @@ export default async function handler(
       );
     }
 
-    // Build folder paths from the parentId hierarchy (source of truth)
-    // This ensures the download structure matches what the UI shows
-    const computedPathMap = buildFolderPathsFromHierarchy(allFolders);
+    // Build folder paths from the FULL (unfiltered) folder hierarchy so that
+    // parent folders removed by permission filtering are still present in the
+    // path map, producing correct child paths (e.g. "/legal/contracts" instead
+    // of just "/contracts").
+    const computedPathMap = buildFolderPathsFromHierarchy(fullFolders);
 
     // Compute the root folder's path from the hierarchy
     const computedRootPath = computedPathMap.get(rootFolder.id) ?? rootFolder.path;

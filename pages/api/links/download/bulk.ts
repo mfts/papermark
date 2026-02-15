@@ -178,7 +178,15 @@ export default async function handle(
       return res.status(403).json({ error: "Error downloading" });
     }
 
-    let downloadFolders = view.dataroom.folders;
+    // Build folder paths from the FULL folder list (source of truth) BEFORE
+    // permission filtering. This ensures parent folders that only have canView
+    // (not canDownload) are still included in the hierarchy so child paths are
+    // computed correctly (e.g. "/legal/contracts" instead of just "/contracts").
+    const allFolders = view.dataroom.folders;
+    const computedPathMap = buildFolderPathsFromHierarchy(allFolders);
+    const folderMap = buildFolderNameMap(allFolders, computedPathMap);
+
+    let downloadFolders = allFolders;
     let downloadDocuments = view.dataroom.documents;
 
     // Check permissions based on groupId (ViewerGroup) or permissionGroupId (PermissionGroup)
@@ -266,12 +274,6 @@ export default async function handle(
       })),
       skipDuplicates: true,
     });
-
-    // Build folder paths from the parentId hierarchy (source of truth)
-    // instead of using the materialized `path` field which can become stale
-    // after folder renames/moves
-    const computedPathMap = buildFolderPathsFromHierarchy(downloadFolders);
-    const folderMap = buildFolderNameMap(downloadFolders, computedPathMap);
 
     // Construct folderStructure and fileKeys
     const folderStructure: {
