@@ -84,9 +84,11 @@ export default async function handle(
       }
 
       // take the old path and replace the last part with the new name
-      const newPath = folder.path.split("/");
-      newPath.pop();
-      newPath.push(slugify(name.trim()));
+      const oldPath = folder.path;
+      const newPathParts = folder.path.split("/");
+      newPathParts.pop();
+      newPathParts.push(slugify(name.trim()));
+      const newPath = newPathParts.join("/");
 
       // Build update data object with only changed fields
       const updateData: {
@@ -96,7 +98,7 @@ export default async function handle(
         color?: string | null;
       } = {
         name: name.trim(),
-        path: newPath.join("/"),
+        path: newPath,
       };
 
       // Only include icon and color in update if they were provided
@@ -107,11 +109,47 @@ export default async function handle(
         updateData.color = color;
       }
 
-      const updatedFolder = await prisma.folder.update({
-        where: {
-          id: folderId,
-        },
-        data: updateData,
+      // Use a transaction to update descendant paths and the folder atomically
+      const updatedFolder = await prisma.$transaction(async (tx) => {
+        // If the path is changing, we need to update all descendant folder paths
+        if (oldPath !== newPath) {
+          // Fetch all descendant folders whose path starts with the old path
+          const descendantFolders = await tx.folder.findMany({
+            where: {
+              teamId: teamId,
+              path: { startsWith: `${oldPath}/` },
+            },
+            select: {
+              id: true,
+              path: true,
+            },
+          });
+
+          // Update all descendant paths by replacing the old prefix with the new one
+          // Update descendants first to avoid unique constraint violations
+          if (descendantFolders.length > 0) {
+            const descendantUpdates = descendantFolders.map((descendant) => {
+              // Replace the old path prefix with the new path
+              const relativePath = descendant.path.slice(oldPath.length);
+              const newDescendantPath = `${newPath}${relativePath}`;
+
+              return tx.folder.update({
+                where: { id: descendant.id },
+                data: { path: newDescendantPath },
+              });
+            });
+
+            await Promise.all(descendantUpdates);
+          }
+        }
+
+        // Now update the renamed folder itself
+        return tx.folder.update({
+          where: {
+            id: folderId,
+          },
+          data: updateData,
+        });
       });
 
       // Get parent folder path for cache invalidation

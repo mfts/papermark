@@ -5,6 +5,10 @@ import { ItemType, ViewType } from "@prisma/client";
 import slugify from "@sindresorhus/slugify";
 
 import { verifyDataroomSessionInPagesRouter } from "@/lib/auth/dataroom-auth";
+import {
+  buildFolderPathsFromHierarchy,
+  collectDescendantIds,
+} from "@/lib/dataroom/build-folder-hierarchy";
 import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { downloadJobStore } from "@/lib/redis-download-job-store";
@@ -128,22 +132,30 @@ export default async function handler(
         id: folderId,
         dataroomId,
       },
-      select: { id: true, name: true, path: true },
+      select: { id: true, name: true, path: true, parentId: true },
     });
 
     if (!rootFolder) {
       return res.status(404).json({ error: "Folder not found" });
     }
 
-    const subfolders = await prisma.dataroomFolder.findMany({
-      where: {
-        dataroomId,
-        path: { startsWith: rootFolder.path + "/" },
-      },
-      select: { id: true, name: true, path: true },
+    // Fetch all folders in this dataroom so we can traverse the parentId
+    // hierarchy. This avoids relying on the materialized `path` field which
+    // can become stale after renames/moves.
+    const allDataroomFolders = await prisma.dataroomFolder.findMany({
+      where: { dataroomId },
+      select: { id: true, name: true, path: true, parentId: true },
     });
 
-    let allFolders = [rootFolder, ...subfolders];
+    // Collect descendants via parentId chain (source of truth)
+    const descendantIds = collectDescendantIds(rootFolder.id, allDataroomFolders);
+    const subfolders = allDataroomFolders.filter((f) => descendantIds.has(f.id));
+
+    // Keep the full (unfiltered) folder list for path computation below.
+    // Permission filtering may remove parent folders that only have canView
+    // (not canDownload), which would break child path computation.
+    const fullFolders = [rootFolder, ...subfolders];
+    let allFolders = [...fullFolders];
     let allDocuments = await prisma.dataroomDocument.findMany({
       where: {
         dataroomId,
@@ -193,24 +205,37 @@ export default async function handler(
         });
       }
 
-      const permittedFolderIds = groupPermissions
-        .filter(
-          (permission) => permission.itemType === ItemType.DATAROOM_FOLDER,
-        )
-        .map((permission) => permission.itemId);
-      const permittedDocumentIds = groupPermissions
-        .filter(
-          (permission) => permission.itemType === ItemType.DATAROOM_DOCUMENT,
-        )
-        .map((permission) => permission.itemId);
+      const permittedFolderIds = new Set(
+        groupPermissions
+          .filter(
+            (permission) => permission.itemType === ItemType.DATAROOM_FOLDER,
+          )
+          .map((permission) => permission.itemId),
+      );
+      const permittedDocumentIds = new Set(
+        groupPermissions
+          .filter(
+            (permission) => permission.itemType === ItemType.DATAROOM_DOCUMENT,
+          )
+          .map((permission) => permission.itemId),
+      );
 
       allFolders = allFolders.filter((folder) =>
-        permittedFolderIds.includes(folder.id),
+        permittedFolderIds.has(folder.id),
       );
       allDocuments = allDocuments.filter((doc) =>
-        permittedDocumentIds.includes(doc.id),
+        permittedDocumentIds.has(doc.id),
       );
     }
+
+    // Build folder paths from the FULL (unfiltered) folder hierarchy so that
+    // parent folders removed by permission filtering are still present in the
+    // path map, producing correct child paths (e.g. "/legal/contracts" instead
+    // of just "/contracts").
+    const computedPathMap = buildFolderPathsFromHierarchy(fullFolders);
+
+    // Compute the root folder's path from the hierarchy
+    const computedRootPath = computedPathMap.get(rootFolder.id) ?? rootFolder.path;
 
     const folderStructure: {
       [key: string]: {
@@ -229,28 +254,27 @@ export default async function handler(
     const fileKeys: string[] = [];
 
     const addFileToStructure = (
-      fullPath: string,
-      rootFolder: { name: string; path: string },
+      computedFolderPath: string,
+      rootFolderInfo: { name: string; computedPath: string },
       fileName: string,
       fileKey: string,
       fileType?: string,
       numPages?: number,
     ) => {
       let relativePath = "";
-      if (fullPath !== rootFolder.path) {
-        const pathRegex = new RegExp(`^${rootFolder.path}/(.*)$`);
-        const match = fullPath.match(pathRegex);
+      if (computedFolderPath !== rootFolderInfo.computedPath) {
+        const escapedRoot = rootFolderInfo.computedPath.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&",
+        );
+        const pathRegex = new RegExp(`^${escapedRoot}/(.*)$`);
+        const match = computedFolderPath.match(pathRegex);
         relativePath = match ? match[1] : "";
       }
 
-      const pathParts = [slugify(rootFolder.name)];
+      const pathParts = [slugify(rootFolderInfo.name)];
       if (relativePath) {
-        pathParts.push(
-          ...relativePath
-            .split("/")
-            .filter(Boolean)
-            .map((part) => slugify(part)),
-        );
+        pathParts.push(...relativePath.split("/").filter(Boolean));
       }
 
       let currentPath = "";
@@ -281,13 +305,25 @@ export default async function handler(
       }
     };
 
+    const rootFolderInfo = { name: rootFolder.name, computedPath: computedRootPath };
+
+    // Pre-index documents by folderId for O(1) lookup per folder
+    const docsByFolderId = new Map<string, typeof allDocuments>();
+    for (const doc of allDocuments) {
+      if (!doc.folderId) continue;
+      const list = docsByFolderId.get(doc.folderId) ?? [];
+      list.push(doc);
+      docsByFolderId.set(doc.folderId, list);
+    }
+
     for (const folder of allFolders) {
-      const docs = allDocuments.filter((doc) => doc.folderId === folder.id);
+      const folderPath = computedPathMap.get(folder.id) ?? folder.path;
+      const docs = docsByFolderId.get(folder.id) ?? [];
 
       if (docs.length === 0) {
         addFileToStructure(
-          folder.path,
-          rootFolder,
+          folderPath,
+          rootFolderInfo,
           "",
           "",
           undefined,
@@ -311,8 +347,8 @@ export default async function handler(
             ? version.file
             : (version.originalFile ?? version.file);
         addFileToStructure(
-          folder.path,
-          rootFolder,
+          folderPath,
+          rootFolderInfo,
           doc.document.name,
           fileKey,
           version.type ?? undefined,

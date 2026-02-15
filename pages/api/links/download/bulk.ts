@@ -4,6 +4,10 @@ import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { ItemType, ViewType } from "@prisma/client";
 
 import { verifyDataroomSessionInPagesRouter } from "@/lib/auth/dataroom-auth";
+import {
+  buildFolderNameMap,
+  buildFolderPathsFromHierarchy,
+} from "@/lib/dataroom/build-folder-hierarchy";
 import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { downloadJobStore } from "@/lib/redis-download-job-store";
@@ -74,6 +78,7 @@ export default async function handle(
                 id: true,
                 name: true,
                 path: true,
+                parentId: true,
               },
             },
             documents: {
@@ -173,7 +178,15 @@ export default async function handle(
       return res.status(403).json({ error: "Error downloading" });
     }
 
-    let downloadFolders = view.dataroom.folders;
+    // Build folder paths from the FULL folder list (source of truth) BEFORE
+    // permission filtering. This ensures parent folders that only have canView
+    // (not canDownload) are still included in the hierarchy so child paths are
+    // computed correctly (e.g. "/legal/contracts" instead of just "/contracts").
+    const allFolders = view.dataroom.folders;
+    const computedPathMap = buildFolderPathsFromHierarchy(allFolders);
+    const folderMap = buildFolderNameMap(allFolders, computedPathMap);
+
+    let downloadFolders = allFolders;
     let downloadDocuments = view.dataroom.documents;
 
     // Check permissions based on groupId (ViewerGroup) or permissionGroupId (PermissionGroup)
@@ -197,22 +210,26 @@ export default async function handle(
         });
       }
 
-      const permittedFolderIds = groupPermissions
-        .filter(
-          (permission) => permission.itemType === ItemType.DATAROOM_FOLDER,
-        )
-        .map((permission) => permission.itemId);
-      const permittedDocumentIds = groupPermissions
-        .filter(
-          (permission) => permission.itemType === ItemType.DATAROOM_DOCUMENT,
-        )
-        .map((permission) => permission.itemId);
+      const permittedFolderIds = new Set(
+        groupPermissions
+          .filter(
+            (permission) => permission.itemType === ItemType.DATAROOM_FOLDER,
+          )
+          .map((permission) => permission.itemId),
+      );
+      const permittedDocumentIds = new Set(
+        groupPermissions
+          .filter(
+            (permission) => permission.itemType === ItemType.DATAROOM_DOCUMENT,
+          )
+          .map((permission) => permission.itemId),
+      );
 
       downloadFolders = downloadFolders.filter((folder) =>
-        permittedFolderIds.includes(folder.id),
+        permittedFolderIds.has(folder.id),
       );
       downloadDocuments = downloadDocuments.filter((doc) =>
-        permittedDocumentIds.includes(doc.id),
+        permittedDocumentIds.has(doc.id),
       );
     }
 
@@ -273,14 +290,6 @@ export default async function handle(
       };
     } = {};
     const fileKeys: string[] = [];
-
-    // Create a map of folder IDs to folder names
-    const folderMap = new Map(
-      downloadFolders.map((folder) => [
-        folder.path,
-        { name: folder.name, id: folder.id },
-      ]),
-    );
 
     const addFileToStructure = (
       path: string,
@@ -350,10 +359,21 @@ export default async function handle(
         );
       });
 
+    // Pre-index documents by folderId for O(1) lookup per folder
+    const docsByFolderId = new Map<string, typeof downloadDocuments>();
+    for (const doc of downloadDocuments) {
+      if (!doc.folderId) continue;
+      const list = docsByFolderId.get(doc.folderId) ?? [];
+      list.push(doc);
+      docsByFolderId.set(doc.folderId, list);
+    }
+
     // Add documents in folders
     downloadFolders.forEach((folder) => {
-      const folderDocs = downloadDocuments
-        .filter((doc) => doc.folderId === folder.id)
+      // Use the computed path from parentId hierarchy instead of the stored path
+      const folderPath = computedPathMap.get(folder.id) ?? folder.path;
+
+      const folderDocs = (docsByFolderId.get(folder.id) ?? [])
         .filter((doc) => doc.document.versions[0].type !== "notion")
         .filter(
           (doc) => doc.document.versions[0].storageType !== "VERCEL_BLOB",
@@ -369,7 +389,7 @@ export default async function handle(
                 doc.document.versions[0].file);
 
           addFileToStructure(
-            folder.path,
+            folderPath,
             doc.document.name,
             fileKey,
             doc.document.versions[0].type ?? undefined,
@@ -379,7 +399,7 @@ export default async function handle(
 
       // If the folder is empty, ensure it's still added to the structure
       if (folderDocs && folderDocs.length === 0) {
-        addFileToStructure(folder.path, "", "");
+        addFileToStructure(folderPath, "", "");
       }
     });
 
