@@ -78,6 +78,10 @@ export function ViewerDownloadProgressModal({
   const [error, setError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchVerified = useCallback(async () => {
@@ -224,10 +228,16 @@ export function ViewerDownloadProgressModal({
     setTimeout(() => document.body.removeChild(a), 100);
   };
 
-  const handleDownloadAll = (urls: string[]) => {
-    urls.forEach((url, i) => {
-      setTimeout(() => handleDownload(url), i * 1500);
-    });
+  const handleDownloadAll = async (urls: string[]) => {
+    setDownloadProgress({ current: 0, total: urls.length });
+    for (let i = 0; i < urls.length; i++) {
+      setDownloadProgress({ current: i + 1, total: urls.length });
+      handleDownload(urls[i]);
+      if (i < urls.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
+    setDownloadProgress(null);
   };
 
   const handleClose = () => {
@@ -240,6 +250,7 @@ export function ViewerDownloadProgressModal({
     setStatus(null);
     setError(null);
     setIsPolling(false);
+    setDownloadProgress(null);
     onClose();
   };
 
@@ -364,10 +375,21 @@ export function ViewerDownloadProgressModal({
                   <>
                     <Button
                       className="w-full"
+                      disabled={!!downloadProgress}
                       onClick={() => handleDownloadAll(status.downloadUrls!)}
                     >
-                      <Download className="mr-2 h-4 w-4" />
-                      Download all ({status.downloadUrls.length} parts)
+                      {downloadProgress ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Downloading {downloadProgress.current} of{" "}
+                          {downloadProgress.total}...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="mr-2 h-4 w-4" />
+                          Download all ({status.downloadUrls.length} parts)
+                        </>
+                      )}
                     </Button>
                     <div className="max-h-32 space-y-1 overflow-y-auto">
                       {status.downloadUrls.map((url, i) => (

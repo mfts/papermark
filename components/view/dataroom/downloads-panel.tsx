@@ -43,6 +43,11 @@ export function DownloadsPanel({ linkId }: { linkId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
   const [emailSubmitting, setEmailSubmitting] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<{
+    jobId: string;
+    current: number;
+    total: number;
+  } | null>(null);
 
   // ── Session check ──────────────────────────────────────────────────
   const checkSession = useCallback(async () => {
@@ -202,10 +207,16 @@ export function DownloadsPanel({ linkId }: { linkId: string }) {
     setTimeout(() => document.body.removeChild(a), 100);
   };
 
-  const handleDownloadAll = (urls: string[]) => {
-    urls.forEach((url, i) => {
-      setTimeout(() => handleDownload(url), i * 300);
-    });
+  const handleDownloadAll = async (jobId: string, urls: string[]) => {
+    setDownloadProgress({ jobId, current: 0, total: urls.length });
+    for (let i = 0; i < urls.length; i++) {
+      setDownloadProgress({ jobId, current: i + 1, total: urls.length });
+      handleDownload(urls[i]);
+      if (i < urls.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
+    setDownloadProgress(null);
   };
 
   // ── Formatters ─────────────────────────────────────────────────────
@@ -381,12 +392,23 @@ export function DownloadsPanel({ linkId }: { linkId: string }) {
                             <Button
                               size="sm"
                               className="w-full"
+                              disabled={downloadProgress?.jobId === job.id}
                               onClick={() =>
-                                handleDownloadAll(job.downloadUrls!)
+                                handleDownloadAll(job.id, job.downloadUrls!)
                               }
                             >
-                              <Download className="mr-2 h-3 w-3" />
-                              Download all ({job.downloadUrls!.length} parts)
+                              {downloadProgress?.jobId === job.id ? (
+                                <>
+                                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                  Downloading {downloadProgress.current} of{" "}
+                                  {downloadProgress.total}...
+                                </>
+                              ) : (
+                                <>
+                                  <Download className="mr-2 h-3 w-3" />
+                                  Download all ({job.downloadUrls!.length} parts)
+                                </>
+                              )}
                             </Button>
                             <p className="text-xs text-muted-foreground">
                               Or download individually:

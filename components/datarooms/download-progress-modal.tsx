@@ -71,6 +71,11 @@ export function DownloadProgressModal({
   const [expandedDownloadId, setExpandedDownloadId] = useState<string | null>(
     null,
   );
+  const [downloadProgress, setDownloadProgress] = useState<{
+    downloadId: string;
+    current: number;
+    total: number;
+  } | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup interval on component unmount
@@ -252,17 +257,16 @@ export function DownloadProgressModal({
     }, 100);
   };
 
-  const handleDownloadAll = async (urls: string[]) => {
-    // Download files sequentially with longer delays to avoid browser blocking
-    // Browsers typically block rapid automatic downloads as a security measure
-    console.log("Downloading all files:", urls);
+  const handleDownloadAll = async (downloadId: string, urls: string[]) => {
+    setDownloadProgress({ downloadId, current: 0, total: urls.length });
     for (let i = 0; i < urls.length; i++) {
+      setDownloadProgress({ downloadId, current: i + 1, total: urls.length });
       handleDownload(urls[i]);
-      // Wait 1.5 seconds between downloads to avoid browser blocking
       if (i < urls.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
     }
+    setDownloadProgress(null);
   };
 
   const handleClose = () => {
@@ -276,6 +280,7 @@ export function DownloadProgressModal({
     setShowNewDownload(false);
     setExistingDownloads([]);
     setExpandedDownloadId(null);
+    setDownloadProgress(null);
     setLoading(true);
     onClose();
   };
@@ -421,36 +426,35 @@ export function DownloadProgressModal({
                   </Button>
                 ) : (
                   <>
-                    {status.downloadUrls.length <= 3 ? (
-                      <Button
-                        className="w-full"
-                        onClick={() => handleDownloadAll(status.downloadUrls!)}
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Download All ({status.downloadUrls.length} files)
-                      </Button>
-                    ) : (
-                      <p className="text-center text-xs text-muted-foreground">
-                        Your download has been split into{" "}
-                        {status.downloadUrls.length} parts. Download each part
-                        below:
-                      </p>
-                    )}
-                    <div className="space-y-2">
-                      {status.downloadUrls.length <= 3 && (
-                        <p className="text-xs text-muted-foreground">
-                          Or download individually:
-                        </p>
+                    <Button
+                      className="w-full"
+                      disabled={downloadProgress?.downloadId === status.id}
+                      onClick={() =>
+                        handleDownloadAll(status.id, status.downloadUrls!)
+                      }
+                    >
+                      {downloadProgress?.downloadId === status.id ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Downloading {downloadProgress.current} of{" "}
+                          {downloadProgress.total}...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="mr-2 h-4 w-4" />
+                          Download All ({status.downloadUrls.length} parts)
+                        </>
                       )}
+                    </Button>
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        Or download individually:
+                      </p>
                       <div className="max-h-48 space-y-1 overflow-y-auto">
                         {status.downloadUrls.map((url, index) => (
                           <Button
                             key={index}
-                            variant={
-                              status.downloadUrls!.length > 3
-                                ? "default"
-                                : "outline"
-                            }
+                            variant="outline"
                             size="sm"
                             className="w-full justify-start"
                             onClick={() => handleDownload(url)}
@@ -603,13 +607,29 @@ export function DownloadProgressModal({
                             <Button
                               size="sm"
                               className="w-full"
+                              disabled={
+                                downloadProgress?.downloadId === download.id
+                              }
                               onClick={() =>
-                                handleDownloadAll(download.downloadUrls!)
+                                handleDownloadAll(
+                                  download.id,
+                                  download.downloadUrls!,
+                                )
                               }
                             >
-                              <Download className="mr-2 h-3 w-3" />
-                              Download All ({download.downloadUrls.length}{" "}
-                              parts)
+                              {downloadProgress?.downloadId === download.id ? (
+                                <>
+                                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                  Downloading {downloadProgress.current} of{" "}
+                                  {downloadProgress.total}...
+                                </>
+                              ) : (
+                                <>
+                                  <Download className="mr-2 h-3 w-3" />
+                                  Download All ({download.downloadUrls.length}{" "}
+                                  parts)
+                                </>
+                              )}
                             </Button>
                             <p className="text-xs text-muted-foreground">
                               Or download individually:
