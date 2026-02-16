@@ -4,6 +4,7 @@ import {
   DownloadCloudIcon,
   MailOpenIcon,
   SendIcon,
+  UploadCloudIcon,
 } from "lucide-react";
 
 import { useDataroomViewers } from "@/lib/swr/use-dataroom";
@@ -100,6 +101,14 @@ export default function DataroomViewersTable({
                                         key={`invited-${viewer.id}`}
                                       >
                                         <SendIcon className="h-4 w-4 text-sky-500 hover:text-sky-600" />
+                                      </BadgeTooltip>
+                                    )}
+                                    {viewer.uploadCount > 0 && (
+                                      <BadgeTooltip
+                                        content={`Uploaded ${viewer.uploadCount} document${viewer.uploadCount !== 1 ? "s" : ""}`}
+                                        key={`upload-${viewer.id}`}
+                                      >
+                                        <UploadCloudIcon className="h-4 w-4 text-[#fb7a00] hover:text-orange-600" />
                                       </BadgeTooltip>
                                     )}
                                   </>

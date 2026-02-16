@@ -116,11 +116,27 @@ export default async function handle(
 
       const views = dataroom?.views || [];
 
+      // Fetch upload counts for all dataroom views
+      const viewIds = views.map((view) => view.id);
+      const uploadCounts = await prisma.documentUpload.groupBy({
+        by: ["viewId"],
+        where: {
+          viewId: { in: viewIds },
+        },
+        _count: {
+          id: true,
+        },
+      });
+      const uploadCountMap = new Map(
+        uploadCounts.map((uc) => [uc.viewId, uc._count.id]),
+      );
+
       const returnViews = views.map((view) => {
         return {
           ...view,
           dataroomName: dataroom?.name,
           internal: users.some((user) => user.email === view.viewerEmail), // set internal to true if view.viewerEmail is in the users list
+          uploadCount: uploadCountMap.get(view.id) ?? 0,
         };
       });
 

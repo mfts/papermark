@@ -11,6 +11,7 @@ import {
   DownloadCloudIcon,
   FileBadgeIcon,
   MailOpenIcon,
+  UploadCloudIcon,
 } from "lucide-react";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -159,6 +160,14 @@ export default function DataroomVisitorsTable({
                                         key={`download-${view.id}`}
                                       >
                                         <DownloadCloudIcon className="h-4 w-4 text-cyan-500 hover:text-cyan-600" />
+                                      </BadgeTooltip>
+                                    )}
+                                    {view.uploadCount > 0 && (
+                                      <BadgeTooltip
+                                        content={`Uploaded ${view.uploadCount} document${view.uploadCount !== 1 ? "s" : ""}`}
+                                        key={`upload-${view.id}`}
+                                      >
+                                        <UploadCloudIcon className="h-4 w-4 text-[#fb7a00] hover:text-orange-600" />
                                       </BadgeTooltip>
                                     )}
                                     {view.agreementResponse && (

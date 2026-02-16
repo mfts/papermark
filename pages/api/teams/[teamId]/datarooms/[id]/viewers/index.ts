@@ -98,6 +98,22 @@ export default async function handle(
         },
       });
 
+      // Fetch upload counts per viewer for this dataroom
+      const viewerIds = viewers.map((v) => v.id);
+      const uploadCounts = await prisma.documentUpload.groupBy({
+        by: ["viewerId"],
+        where: {
+          viewerId: { in: viewerIds },
+          dataroomId: dataroomId,
+        },
+        _count: {
+          id: true,
+        },
+      });
+      const uploadCountMap = new Map(
+        uploadCounts.map((uc) => [uc.viewerId, uc._count.id]),
+      );
+
       const returnViews = viewers.map((viewer) => {
         // Get the name from the most recent view that has a name
         const viewerName = viewer.views.find((v) => v.viewerName)?.viewerName;
@@ -109,6 +125,7 @@ export default async function handle(
             viewer.views.length > 0 ? viewer.views[0].viewedAt : null,
           viewerName: viewerName || null,
           internal: users.some((user) => user.email === viewer.email), // set internal to true if view.viewerEmail is in the users list
+          uploadCount: uploadCountMap.get(viewer.id) ?? 0,
         };
       });
 
