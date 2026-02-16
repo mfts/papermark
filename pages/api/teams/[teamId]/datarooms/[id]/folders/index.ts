@@ -38,6 +38,7 @@ async function applyDefaultFolderPermissions(
       where: { dataroomId },
       select: {
         id: true,
+        _count: { select: { accessControls: true } },
       },
     }),
     prisma.permissionGroup.findMany({
@@ -45,6 +46,7 @@ async function applyDefaultFolderPermissions(
       select: {
         id: true,
         name: true,
+        _count: { select: { accessControls: true } },
       },
     }),
   ]);
@@ -62,6 +64,9 @@ async function applyDefaultFolderPermissions(
   }
 
   // Fallback to default behavior (for root folders or non-inherit strategies)
+  // Groups that already have granular permissions configured should NOT automatically
+  // receive access to new root-level folders, since the admin has intentionally curated
+  // what those groups can see.
   const allPermissionGroupData: {
     groupId: string;
     itemId: string;
@@ -76,29 +81,34 @@ async function applyDefaultFolderPermissions(
       dataroom.defaultPermissionStrategy ===
       DefaultPermissionStrategy.INHERIT_FROM_PARENT
     ) {
-      permissionGroups.forEach((group) => {
-        allPermissionGroupData.push({
-          groupId: group.id,
-          itemId: folderId,
-          itemType: ItemType.DATAROOM_FOLDER,
-          canView: true, // Root folders get view permissions by default
-          canDownload: false,
-          canDownloadOriginal: false,
+      permissionGroups
+        .filter((group) => group._count.accessControls === 0)
+        .forEach((group) => {
+          allPermissionGroupData.push({
+            groupId: group.id,
+            itemId: folderId,
+            itemType: ItemType.DATAROOM_FOLDER,
+            canView: true, // Root folders get view permissions by default
+            canDownload: false,
+            canDownloadOriginal: false,
+          });
         });
-      });
     }
     // For other strategies (ASK_EVERY_TIME, HIDDEN_BY_DEFAULT), don't auto-create permissions
   }
 
-  const viewerGroupData = viewerGroups.map((group) => ({
-    groupId: group.id,
-    itemId: folderId,
-    itemType: ItemType.DATAROOM_FOLDER,
-    canView:
-      dataroom.defaultPermissionStrategy ===
-      DefaultPermissionStrategy.INHERIT_FROM_PARENT,
-    canDownload: false,
-  }));
+  // Only auto-grant root folder access to viewer groups that don't have existing granular permissions
+  const viewerGroupData = viewerGroups
+    .filter((group) => group._count.accessControls === 0)
+    .map((group) => ({
+      groupId: group.id,
+      itemId: folderId,
+      itemType: ItemType.DATAROOM_FOLDER,
+      canView:
+        dataroom.defaultPermissionStrategy ===
+        DefaultPermissionStrategy.INHERIT_FROM_PARENT,
+      canDownload: false,
+    }));
 
   await Promise.all([
     viewerGroupData.length > 0 &&

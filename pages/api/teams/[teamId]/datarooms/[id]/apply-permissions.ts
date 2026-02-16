@@ -153,47 +153,60 @@ async function applyRootLevelPermissions(
     folderId: string | null;
   }[],
 ) {
-  // Get both ViewerGroups and PermissionGroups
+  // Get both ViewerGroups and PermissionGroups along with their existing access control counts.
+  // Groups that already have granular permissions configured should NOT automatically
+  // receive access to new root-level items, since the admin has intentionally curated
+  // what those groups can see.
   const [viewerGroups, permissionGroups] = await Promise.all([
     prisma.viewerGroup.findMany({
       where: { dataroomId },
-      select: { id: true },
+      select: {
+        id: true,
+        _count: { select: { accessControls: true } },
+      },
     }),
     prisma.permissionGroup.findMany({
       where: { dataroomId },
-      select: { id: true },
+      select: {
+        id: true,
+        _count: { select: { accessControls: true } },
+      },
     }),
   ]);
 
   const viewerGroupPermissionsToCreate: any[] = [];
   const permissionGroupPermissionsToCreate: any[] = [];
 
-  // ViewerGroup permissions - all get view-only access
-  viewerGroups.forEach((group) => {
-    dataroomDocuments.forEach((doc) => {
-      viewerGroupPermissionsToCreate.push({
-        groupId: group.id,
-        itemId: doc.id,
-        itemType: ItemType.DATAROOM_DOCUMENT,
-        canView: true,
-        canDownload: false,
+  // ViewerGroup permissions - only groups without existing granular permissions get auto-access
+  viewerGroups
+    .filter((group) => group._count.accessControls === 0)
+    .forEach((group) => {
+      dataroomDocuments.forEach((doc) => {
+        viewerGroupPermissionsToCreate.push({
+          groupId: group.id,
+          itemId: doc.id,
+          itemType: ItemType.DATAROOM_DOCUMENT,
+          canView: true,
+          canDownload: false,
+        });
       });
     });
-  });
 
-  // PermissionGroup permissions - all get view-only access
-  permissionGroups.forEach((group) => {
-    dataroomDocuments.forEach((doc) => {
-      permissionGroupPermissionsToCreate.push({
-        groupId: group.id,
-        itemId: doc.id,
-        itemType: ItemType.DATAROOM_DOCUMENT,
-        canView: true,
-        canDownload: false,
-        canDownloadOriginal: false,
+  // PermissionGroup permissions - only groups without existing granular permissions get auto-access
+  permissionGroups
+    .filter((group) => group._count.accessControls === 0)
+    .forEach((group) => {
+      dataroomDocuments.forEach((doc) => {
+        permissionGroupPermissionsToCreate.push({
+          groupId: group.id,
+          itemId: doc.id,
+          itemType: ItemType.DATAROOM_DOCUMENT,
+          canView: true,
+          canDownload: false,
+          canDownloadOriginal: false,
+        });
       });
     });
-  });
 
   // Apply permissions in a transaction
   await prisma.$transaction(async (tx) => {
