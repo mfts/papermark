@@ -47,7 +47,7 @@ export default function ViewerUploadZone({
         if (errors.find(({ code }) => code === "file-too-large")) {
           message = `File size too big (max. ${maxFileSize} MB).`;
         } else if (errors.find(({ code }) => code === "file-invalid-type")) {
-          message = `File type not supported. Please upload PDF or Excel files.`;
+          message = `File type not supported. Please upload PDF, Word, or Excel files.`;
         }
         return { fileName: file.name, message };
       });
@@ -186,7 +186,7 @@ export default function ViewerUploadZone({
                   Drop your file(s) here
                 </span>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Only *.pdf, *.xls, *.xlsx, *.csv, *.tsv, *.ods files
+                  Only *.pdf, *.doc, *.docx, *.xls, *.xlsx, *.csv, *.ods files
                 </p>
               </div>
             </div>

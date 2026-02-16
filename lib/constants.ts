@@ -164,6 +164,8 @@ export const VIEWER_ACCEPTED_FILE_TYPES = {
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
   "text/csv": [], // ".csv"
   "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+  "application/msword": [], // ".doc"
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [], // ".docx"
   "image/jpeg": [], // ".jpg"
   "image/png": [], // ".png"
   "image/jpg": [], // ".jpg"
