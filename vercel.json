@@ -1,5 +1,8 @@
 {
   "functions": {
+    "pages/api/mupdf/get-pages.ts": {
+      "memory": 2048
+    },
     "pages/api/mupdf/convert-page.ts": {
       "memory": 2048
     },

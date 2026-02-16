@@ -68,23 +68,53 @@ export const convertPdfToImageRoute = task({
       logger.info("Sending file to api/get-pages endpoint");
 
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/get-pages`,
-          {
-            method: "POST",
-            body: JSON.stringify({ url: signedUrl }),
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
-            },
-          },
-        );
+        const GET_PAGES_MAX_RETRIES = 2;
+        const GET_PAGES_RETRY_DELAYS = [2000, 5000];
+        let getPagesResponse: Response | null = null;
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
+        for (let attempt = 0; attempt <= GET_PAGES_MAX_RETRIES; attempt++) {
+          if (attempt > 0) {
+            logger.info(
+              `Retrying get-pages (attempt ${attempt + 1}/${GET_PAGES_MAX_RETRIES + 1})`,
+            );
+            await new Promise((resolve) =>
+              setTimeout(resolve, GET_PAGES_RETRY_DELAYS[attempt - 1]),
+            );
+          }
+
+          getPagesResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/get-pages`,
+            {
+              method: "POST",
+              body: JSON.stringify({ url: signedUrl }),
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+              },
+            },
+          );
+
+          // Retry on 503 (WASM memory limit)
+          if (
+            getPagesResponse.status === 503 &&
+            attempt < GET_PAGES_MAX_RETRIES
+          ) {
+            logger.warn("WASM memory limit hit on get-pages, will retry", {
+              attempt: attempt + 1,
+            });
+            continue;
+          }
+
+          break;
+        }
+
+        if (!getPagesResponse || !getPagesResponse.ok) {
+          const errorData = await getPagesResponse
+            ?.json()
+            .catch(() => ({}));
           logger.error("Failed to get number of pages", {
             signedUrl,
-            status: response.status,
+            status: getPagesResponse?.status,
             error: errorData,
             payload,
           });
@@ -95,7 +125,7 @@ export const convertPdfToImageRoute = task({
           };
         }
 
-        const { numPages: numPagesResult } = (await response.json()) as {
+        const { numPages: numPagesResult } = (await getPagesResponse.json()) as {
           numPages: number;
         };
 
@@ -148,25 +178,51 @@ export const convertPdfToImageRoute = task({
       });
 
       try {
-        // send page number to api/convert-page endpoint in a task and get back page img url
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/convert-page`,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              documentVersionId: documentVersionId,
-              pageNumber: currentPage,
-              url: signedUrl,
-              teamId: teamId,
-            }),
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
-            },
-          },
-        );
+        // Retry logic for transient failures (e.g., WASM memory limits on warm instances)
+        const MAX_RETRIES = 3;
+        const RETRY_DELAYS = [2000, 5000, 10000]; // Exponential backoff in ms
+        let lastError: Error | null = null;
 
-        if (!response.ok) {
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+          if (attempt > 0) {
+            logger.info(
+              `Retrying page ${currentPage} (attempt ${attempt + 1}/${MAX_RETRIES + 1})`,
+            );
+            await new Promise((resolve) =>
+              setTimeout(resolve, RETRY_DELAYS[attempt - 1]),
+            );
+          }
+
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/convert-page`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                documentVersionId: documentVersionId,
+                pageNumber: currentPage,
+                url: signedUrl,
+                teamId: teamId,
+              }),
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+              },
+            },
+          );
+
+          if (response.ok) {
+            const { documentPageId } = (await response.json()) as {
+              documentPageId: string;
+            };
+
+            logger.info(`Created document page for page ${currentPage}:`, {
+              documentPageId,
+              payload,
+            });
+            lastError = null;
+            break;
+          }
+
           const errorData = await response.json().catch(() => ({}));
 
           // If document was blocked, stop processing entirely
@@ -186,17 +242,31 @@ export const convertPdfToImageRoute = task({
             throw new Error("Document processing blocked");
           }
 
-          throw new Error("Failed to convert page");
+          // Retry on 503 (WASM memory limit) - the next request may hit a fresh instance
+          if (response.status === 503 && attempt < MAX_RETRIES) {
+            logger.warn(
+              `WASM memory limit hit for page ${currentPage}, will retry`,
+              {
+                attempt: attempt + 1,
+                status: response.status,
+                error: errorData,
+              },
+            );
+            lastError = new Error(
+              `WASM memory limit (503) on page ${currentPage}`,
+            );
+            continue;
+          }
+
+          lastError = new Error(
+            `Failed to convert page ${currentPage}: HTTP ${response.status}`,
+          );
+          break;
         }
 
-        const { documentPageId } = (await response.json()) as {
-          documentPageId: string;
-        };
-
-        logger.info(`Created document page for page ${currentPage}:`, {
-          documentPageId,
-          payload,
-        });
+        if (lastError) {
+          throw lastError;
+        }
       } catch (error: unknown) {
         conversionWithoutError = false;
         const errorMessage =
