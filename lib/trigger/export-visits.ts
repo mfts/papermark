@@ -599,12 +599,40 @@ async function exportDataroomVisits(
     (view) => view.viewType === "DOCUMENT_VIEW",
   );
 
+  // Fetch document uploads for all dataroom views
+  const dataroomViewIds = dataroomViews.map((v) => v.id);
+  const documentUploads = await prisma.documentUpload.findMany({
+    where: {
+      viewId: { in: dataroomViewIds },
+    },
+    select: {
+      viewId: true,
+      originalFilename: true,
+      uploadedAt: true,
+      fileSize: true,
+      mimeType: true,
+    },
+    orderBy: {
+      uploadedAt: "asc",
+    },
+  });
+
+  // Group uploads by viewId
+  const uploadsByViewId = new Map<string, typeof documentUploads>();
+  documentUploads.forEach((upload) => {
+    if (!upload.viewId) return;
+    const existing = uploadsByViewId.get(upload.viewId) || [];
+    existing.push(upload);
+    uploadsByViewId.set(upload.viewId, existing);
+  });
+
   // Collect all unique custom fields from dataroom views
   const uniqueCustomFields = collectUniqueCustomFields(dataroomViews);
 
   logger.info("Processing dataroom views with rate limiting", {
     dataroomViewCount: dataroomViews.length,
     documentViewCount: documentViews.length,
+    documentUploadCount: documentUploads.length,
   });
 
   // Process dataroom views
@@ -668,6 +696,15 @@ async function exportDataroomVisits(
       });
     }
 
+    // Get uploads associated with this dataroom view
+    const associatedUploads = uploadsByViewId.get(dataroomView.id) || [];
+    const uploadDetails = associatedUploads.map((upload) => ({
+      originalFilename: upload.originalFilename || "NaN",
+      uploadedAt: upload.uploadedAt.toISOString(),
+      fileSize: upload.fileSize ? Number(upload.fileSize) : null,
+      mimeType: upload.mimeType || "NaN",
+    }));
+
     exportData.push({
       dataroomViewId: dataroomView.id, // Add the unique view ID for direct matching
       dataroomViewedAt: dataroomView.viewedAt.toISOString(),
@@ -683,6 +720,7 @@ async function exportDataroomVisits(
       agreementContent:
         dataroomView.agreementResponse?.agreement.content || "NaN",
       documentViews: documentViewDetails,
+      documentUploads: uploadDetails,
     });
   }
 
@@ -727,8 +765,9 @@ async function exportDataroomVisits(
     "Agreement Name",
     "Agreement Content",
     "Agreement Accepted At",
+    "Action Type",
     "Document Name",
-    "Document Viewed At",
+    "Action Timestamp",
     "Document Downloaded At",
     "Total Visit Duration (s)",
     "Total Document Completion (%)",
@@ -746,7 +785,10 @@ async function exportDataroomVisits(
   csvRows.push(createCsvRow(headers));
 
   exportData.forEach((view) => {
-    if (view.documentViews.length === 0) {
+    const hasDocumentViews = view.documentViews.length > 0;
+    const hasUploads = view.documentUploads.length > 0;
+
+    if (!hasDocumentViews && !hasUploads) {
       const rowData = [
         view.dataroomViewedAt,
         view.dataroomDownloadedAt,
@@ -758,8 +800,9 @@ async function exportDataroomVisits(
         view.agreementName,
         view.agreementContent,
         view.agreementAcceptedAt,
+        "Accessed Dataroom",
         "NaN",
-        "NaN",
+        view.dataroomViewedAt,
         "NaN",
         "NaN",
         "NaN",
@@ -779,6 +822,7 @@ async function exportDataroomVisits(
 
       csvRows.push(createCsvRow(rowData));
     } else {
+      // Add document view rows
       view.documentViews.forEach((docView) => {
         const userAgentData = userAgentDataMap.get(docView.viewId);
 
@@ -793,6 +837,7 @@ async function exportDataroomVisits(
           view.agreementName,
           view.agreementContent,
           view.agreementAcceptedAt,
+          docView.downloadedAt !== "NaN" ? "Viewed & Downloaded" : "Viewed",
           docView.documentName,
           docView.viewedAt,
           docView.downloadedAt,
@@ -804,6 +849,42 @@ async function exportDataroomVisits(
           userAgentData?.data[0]?.device || "NaN",
           userAgentData?.data[0]?.country || "NaN",
           userAgentData?.data[0]?.city || "NaN",
+        ];
+
+        // Add custom field values for this dataroom view using direct ID lookup
+        const dataroomView = dataroomViewMap.get(view.dataroomViewId);
+        rowData.push(
+          ...extractCustomFieldValues(dataroomView, uniqueCustomFields),
+        );
+
+        csvRows.push(createCsvRow(rowData));
+      });
+
+      // Add upload rows
+      view.documentUploads.forEach((upload) => {
+        const rowData = [
+          view.dataroomViewedAt,
+          view.dataroomDownloadedAt,
+          view.viewerName,
+          view.viewerEmail,
+          view.linkName,
+          view.verified,
+          view.agreementStatus,
+          view.agreementName,
+          view.agreementContent,
+          view.agreementAcceptedAt,
+          "Uploaded",
+          upload.originalFilename,
+          upload.uploadedAt,
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
+          "NaN",
         ];
 
         // Add custom field values for this dataroom view using direct ID lookup
