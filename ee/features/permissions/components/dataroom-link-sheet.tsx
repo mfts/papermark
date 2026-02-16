@@ -606,6 +606,7 @@ export function DataroomLinkSheet({
         "enableNotification",
         "enableFeedback",
         "enableScreenshotProtection",
+        "enableTextSelection",
         "enableCustomMetatag",
         "metaTitle",
         "metaDescription",

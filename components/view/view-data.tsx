@@ -136,6 +136,7 @@ export default function ViewData({
             versionNumber={document.versions[0].versionNumber}
             theme={notionData.theme}
             screenshotProtectionEnabled={link.enableScreenshotProtection!}
+            textSelectionEnabled={link.enableTextSelection ?? false}
             navData={navData}
           />
         ) : viewData.fileType === "link" ? (
