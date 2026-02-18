@@ -53,7 +53,6 @@ export default async function handle(
           enableCustomMetatag: true,
           enableFeedback: true,
           enableScreenshotProtection: true,
-          enableTextSelection: true,
           enableIndexFile: true,
           metaTitle: true,
           metaDescription: true,

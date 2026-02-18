@@ -62,6 +62,7 @@ export default function DataroomView({
   isEmbedded,
   preview,
   dataroomIndexEnabled,
+  textSelectionEnabled,
 }: {
   link: LinkWithDataroom;
   userEmail: string | null | undefined;
@@ -77,6 +78,7 @@ export default function DataroomView({
   preview?: boolean;
   logoOnAccessForm?: boolean;
   dataroomIndexEnabled?: boolean;
+  textSelectionEnabled?: boolean;
 }) {
   useDisablePrint();
   const {

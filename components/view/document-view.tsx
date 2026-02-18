@@ -72,6 +72,7 @@ export default function DocumentView({
   logoOnAccessForm,
   isEmbedded,
   annotationsEnabled,
+  textSelectionEnabled,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -94,6 +95,7 @@ export default function DocumentView({
   isEmbedded?: boolean;
   logoOnAccessForm?: boolean;
   annotationsEnabled?: boolean;
+  textSelectionEnabled?: boolean;
 }) {
   useDisablePrint();
   const {
@@ -314,6 +316,7 @@ export default function DocumentView({
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
           annotationsEnabled={annotationsEnabled}
+          textSelectionEnabled={textSelectionEnabled}
         />
       ) : (
         <div className="flex h-screen items-center justify-center">

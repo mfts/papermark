@@ -15,7 +15,8 @@ export type BetaFeatures =
   | "dataroomInvitations"
   | "workflows"
   | "ai"
-  | "sso";
+  | "sso"
+  | "textSelection";
 
 type BetaFeaturesRecord = Record<BetaFeatures, string[]>;
 
@@ -36,6 +37,7 @@ export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
     workflows: false,
     ai: false,
     sso: false,
+    textSelection: false,
   };
 
   // Return all features as false if edge config is not available

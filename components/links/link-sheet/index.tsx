@@ -68,7 +68,6 @@ export const DEFAULT_LINK_PROPS = (
   enableNotification: true,
   enableFeedback: false,
   enableScreenshotProtection: false,
-    enableTextSelection: false,
     enableCustomMetatag: false,
   metaTitle: null,
   metaDescription: null,
@@ -113,7 +112,6 @@ export type DEFAULT_LINK_TYPE = {
   enableNotification: boolean;
   enableFeedback: boolean;
   enableScreenshotProtection: boolean;
-  enableTextSelection: boolean;
   enableCustomMetatag: boolean; // metatags
   metaTitle: string | null; // metatags
   metaDescription: string | null; // metatags
@@ -442,7 +440,6 @@ export default function LinkSheet({
         "enableNotification",
         "enableFeedback",
         "enableScreenshotProtection",
-        "enableTextSelection",
         "enableCustomMetatag",
         "metaTitle",
         "metaDescription",

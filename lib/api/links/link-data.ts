@@ -39,7 +39,6 @@ const linkSelect = {
   allowDownload: true,
   enableFeedback: true,
   enableScreenshotProtection: true,
-  enableTextSelection: true,
   password: true,
   isArchived: true,
   deletedAt: true,

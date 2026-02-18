@@ -84,6 +84,7 @@ export default function DataroomDocumentView({
   isEmbedded,
   preview,
   logoOnAccessForm,
+  textSelectionEnabled,
 }: {
   link: LinkWithDataroomDocument;
   userEmail: string | null | undefined;
@@ -104,6 +105,7 @@ export default function DataroomDocumentView({
   isEmbedded?: boolean;
   preview?: boolean;
   logoOnAccessForm?: boolean;
+  textSelectionEnabled?: boolean;
 }) {
   useDisablePrint();
   const {
@@ -362,6 +364,7 @@ export default function DataroomDocumentView({
             undefined
           }
           canDownload={viewData.canDownload}
+          textSelectionEnabled={textSelectionEnabled}
         />
       ) : (
         <div className="flex h-screen items-center justify-center">
