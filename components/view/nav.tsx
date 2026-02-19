@@ -66,6 +66,8 @@ export type TNavData = {
   hasAnnotations?: boolean;
   annotationsFeatureEnabled?: boolean;
   onToggleAnnotations?: (enabled: boolean) => void;
+  emailProtected?: boolean;
+  emailAuthenticated?: boolean;
 };
 
 export default function Nav({
@@ -114,6 +116,8 @@ export default function Nav({
     hasAnnotations,
     annotationsFeatureEnabled,
     onToggleAnnotations,
+    emailProtected,
+    emailAuthenticated,
   } = navData;
 
   const [showConversations, setShowConversations] = useState(false);
@@ -456,13 +460,16 @@ export default function Nav({
                 </span>
               </div>
             ) : null}
-            {/* add a separator that doesn't use radix or shadcn  */}
-            <div className="h-6 w-px bg-gray-800" />
-            <ReportForm
-              linkId={linkId}
-              documentId={documentId}
-              viewId={viewId}
-            />
+            {!isDataroom && !emailProtected && !emailAuthenticated && (
+              <>
+                <div className="h-6 w-px bg-gray-800" />
+                <ReportForm
+                  linkId={linkId}
+                  documentId={documentId}
+                  viewId={viewId}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>

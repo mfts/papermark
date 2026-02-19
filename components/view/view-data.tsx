@@ -108,6 +108,8 @@ export default function ViewData({
       isDownloadAllowed(canDownload, link.allowDownload ?? false),
     isTeamMember: viewData.isTeamMember,
     annotationsFeatureEnabled: annotationsEnabled,
+    emailProtected: link.emailProtected ?? false,
+    emailAuthenticated: link.emailAuthenticated ?? false,
   };
 
   // Check if agents are enabled (returned from views API after access is granted)
