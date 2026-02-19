@@ -66,7 +66,6 @@ export type TNavData = {
   hasAnnotations?: boolean;
   annotationsFeatureEnabled?: boolean;
   onToggleAnnotations?: (enabled: boolean) => void;
-  emailProtected?: boolean;
   emailAuthenticated?: boolean;
 };
 
@@ -116,7 +115,6 @@ export default function Nav({
     hasAnnotations,
     annotationsFeatureEnabled,
     onToggleAnnotations,
-    emailProtected,
     emailAuthenticated,
   } = navData;
 
@@ -460,7 +458,7 @@ export default function Nav({
                 </span>
               </div>
             ) : null}
-            {!isDataroom && !emailProtected && !emailAuthenticated && (
+            {!isDataroom && !emailAuthenticated && (
               <>
                 <div className="h-6 w-px bg-gray-800" />
                 <ReportForm

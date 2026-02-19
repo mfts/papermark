@@ -108,7 +108,6 @@ export default function ViewData({
       isDownloadAllowed(canDownload, link.allowDownload ?? false),
     isTeamMember: viewData.isTeamMember,
     annotationsFeatureEnabled: annotationsEnabled,
-    emailProtected: link.emailProtected ?? false,
     emailAuthenticated: link.emailAuthenticated ?? false,
   };
 
