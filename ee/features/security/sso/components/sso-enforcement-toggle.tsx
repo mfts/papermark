@@ -24,7 +24,7 @@ interface SSOEnforcementToggleProps {
 
 export function SSOEnforcementToggle({ teamId }: SSOEnforcementToggleProps) {
   const { configured, ssoEmailDomain, ssoEnforcedAt, slug, mutate, loading } =
-    useSAML();
+    useSAML(teamId);
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 

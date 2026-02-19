@@ -1,20 +1,24 @@
 import { useTeam } from "@/context/team-context";
 import type { Directory } from "@boxyhq/saml-jackson";
-import useSWR from "swr";
+import useSWRImmutable from "swr/immutable";
 
 import { fetcher } from "@/lib/utils";
 
-export default function useSCIM() {
-  const teamInfo = useTeam();
-  const teamId = teamInfo?.currentTeam?.id;
+export default function useSCIM(teamIdOverride?: string | null) {
+  const { currentTeamId } = useTeam();
+  const teamId = teamIdOverride ?? currentTeamId;
 
-  const { data, isLoading, mutate } = useSWR<{ directories: Directory[] }>(
+  const { data, error, isLoading, mutate } = useSWRImmutable<{
+    directories: Directory[];
+  }>(
     teamId ? `/api/teams/${teamId}/directory-sync` : null,
     fetcher,
     {
       keepPreviousData: true,
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
+      revalidateIfStale: false,
+      shouldRetryOnError: false,
       dedupingInterval: 60_000,
     },
   );
@@ -26,7 +30,8 @@ export default function useSCIM() {
     directories: data?.directories ?? [],
     provider: configured ? data!.directories[0].type : null,
     configured,
-    loading: isLoading,
+    loading: isLoading && !data,
+    error,
     mutate,
   };
 }

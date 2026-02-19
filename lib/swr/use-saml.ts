@@ -1,26 +1,34 @@
 import { useTeam } from "@/context/team-context";
 import type { SAMLSSORecord } from "@boxyhq/saml-jackson";
-import useSWR from "swr";
+import useSWRImmutable from "swr/immutable";
 
 import { fetcher } from "@/lib/utils";
 
-export default function useSAML() {
-  const teamInfo = useTeam();
-  const teamId = teamInfo?.currentTeam?.id;
+interface SAMLConfigResponse {
+  connections: SAMLSSORecord[];
+  issuer: string;
+  acs: string;
+  ssoEmailDomain: string | null;
+  ssoEnforcedAt: string | null;
+  slug: string | null;
+}
 
-  const { data, isLoading, mutate } = useSWR<{
-    connections: SAMLSSORecord[];
-    issuer: string;
-    acs: string;
-    ssoEmailDomain: string | null;
-    ssoEnforcedAt: string | null;
-    slug: string | null;
-  }>(teamId ? `/api/teams/${teamId}/saml` : null, fetcher, {
-    keepPreviousData: true,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-    dedupingInterval: 60_000,
-  });
+export default function useSAML(teamIdOverride?: string | null) {
+  const { currentTeamId } = useTeam();
+  const teamId = teamIdOverride ?? currentTeamId;
+
+  const { data, error, isLoading, mutate } = useSWRImmutable<SAMLConfigResponse>(
+    teamId ? `/api/teams/${teamId}/saml` : null,
+    fetcher,
+    {
+      keepPreviousData: true,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      revalidateIfStale: false,
+      shouldRetryOnError: false,
+      dedupingInterval: 60_000,
+    },
+  );
 
   const configured = !!(data?.connections && data.connections.length > 0);
 
@@ -36,7 +44,8 @@ export default function useSAML() {
       ? data!.connections[0].idpMetadata?.provider ?? null
       : null,
     configured,
-    loading: isLoading,
+    loading: isLoading && !data,
+    error,
     mutate,
   };
 }

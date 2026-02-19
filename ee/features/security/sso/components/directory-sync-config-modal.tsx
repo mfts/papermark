@@ -35,7 +35,7 @@ interface DirectorySyncConfigModalProps {
 export function DirectorySyncConfigModal({
   teamId,
 }: DirectorySyncConfigModalProps) {
-  const { directories, configured, mutate, loading } = useSCIM();
+  const { directories, configured, mutate, loading } = useSCIM(teamId);
 
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);

@@ -35,7 +35,7 @@ interface SAMLConfigModalProps {
 }
 
 export function SAMLConfigModal({ teamId }: SAMLConfigModalProps) {
-  const { connections, issuer, acs, mutate, loading } = useSAML();
+  const { connections, issuer, acs, mutate, loading } = useSAML(teamId);
 
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
