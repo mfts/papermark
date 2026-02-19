@@ -1,3 +1,5 @@
+import { useRef } from "react";
+
 import { useTeam } from "@/context/team-context";
 import type { Directory } from "@boxyhq/saml-jackson";
 import useSWR from "swr";
@@ -21,12 +23,19 @@ export default function useSCIM() {
 
   const configured = !!(data?.directories && data.directories.length > 0);
 
+  const hasLoadedOnceRef = useRef(false);
+  if (data !== undefined) {
+    hasLoadedOnceRef.current = true;
+  }
+
+  const isInitialLoading = isLoading && !hasLoadedOnceRef.current;
+
   return {
     scim: data,
     directories: data?.directories ?? [],
     provider: configured ? data!.directories[0].type : null,
     configured,
-    loading: isLoading,
+    loading: isInitialLoading,
     mutate,
   };
 }

@@ -1,3 +1,5 @@
+import { useRef } from "react";
+
 import { useTeam } from "@/context/team-context";
 import type { SAMLSSORecord } from "@boxyhq/saml-jackson";
 import useSWR from "swr";
@@ -24,6 +26,13 @@ export default function useSAML() {
 
   const configured = !!(data?.connections && data.connections.length > 0);
 
+  const hasLoadedOnceRef = useRef(false);
+  if (data !== undefined) {
+    hasLoadedOnceRef.current = true;
+  }
+
+  const isInitialLoading = isLoading && !hasLoadedOnceRef.current;
+
   return {
     saml: data,
     connections: data?.connections ?? [],
@@ -36,7 +45,7 @@ export default function useSAML() {
       ? data!.connections[0].idpMetadata?.provider ?? null
       : null,
     configured,
-    loading: isLoading,
+    loading: isInitialLoading,
     mutate,
   };
 }
