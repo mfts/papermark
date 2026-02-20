@@ -75,6 +75,7 @@ export default function Domains() {
                     <DomainCard
                       domain={domain.slug}
                       isDefault={domain.isDefault}
+                      redirectUrl={domain.redirectUrl}
                       onDelete={handleDomainDeletion}
                     />
                   </li>
