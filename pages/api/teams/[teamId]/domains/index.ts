@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
+import { setDomainRedirectUrl } from "@/lib/api/domains/redis";
 import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
@@ -35,6 +36,7 @@ export default async function handle(
             slug: true,
             verified: true,
             isDefault: true,
+            redirectUrl: true,
           },
           orderBy: {
             createdAt: "asc",
@@ -68,8 +70,7 @@ export default async function handle(
         userId,
       });
 
-      // Assuming data is an object with `domain` properties
-      const { domain } = req.body;
+      const { domain, redirectUrl } = req.body;
 
       // Sanitize domain by removing whitespace, protocol, and paths
       const sanitizedDomain = domain
@@ -109,9 +110,14 @@ export default async function handle(
           slug: sanitizedDomain,
           userId,
           teamId,
+          ...(redirectUrl && { redirectUrl }),
         },
       });
       await addDomainToVercel(sanitizedDomain);
+
+      if (redirectUrl) {
+        await setDomainRedirectUrl(sanitizedDomain, redirectUrl);
+      }
 
       return res.status(201).json(response);
     } catch (error) {
