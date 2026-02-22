@@ -4,6 +4,7 @@ import { FREE_PLAN_LIMITS } from "@/ee/limits/constants";
 import { Prisma } from "@prisma/client";
 import Stripe from "stripe";
 
+import { clearTeamDomainRedirects } from "@/lib/api/domains/clear-team-redirects";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 
@@ -32,7 +33,6 @@ export async function customerSubscriptionDeleted(
         endsAt: null,
         startsAt: null,
         limits: freePlanLimits,
-        // Clear cancellation and pause state when downgrading to free
         cancelledAt: null,
         pausedAt: null,
         pauseStartsAt: null,
@@ -40,6 +40,8 @@ export async function customerSubscriptionDeleted(
       },
       select: { id: true },
     });
+
+    await clearTeamDomainRedirects(team.id);
 
     await log({
       message: ":cry: Team *`" + team.id + "`* deleted their subscription",

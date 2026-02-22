@@ -37,11 +37,13 @@ export default function DomainCard({
   domain,
   isDefault,
   redirectUrl: initialRedirectUrl,
+  redirectsAllowed,
   onDelete,
 }: {
   domain: string;
   isDefault: boolean;
   redirectUrl?: string | null;
+  redirectsAllowed: boolean;
   onDelete: (deletedDomain: string) => void;
 }) {
   const [showDetails, setShowDetails] = useState(false);
@@ -274,28 +276,37 @@ export default function DomainCard({
               <ExternalLinkIcon className="h-4 w-4" />
               Root Domain Redirect
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Redirect visitors who land on{" "}
-              <span className="font-medium">{domain}</span> to a specific URL.
-              Leave empty to redirect to papermark.com.
-            </p>
-            <div className="mt-3 flex items-center gap-2">
-              <Input
-                type="url"
-                placeholder="https://example.com"
-                value={redirectUrl}
-                onChange={(e) => setRedirectUrl(e.target.value)}
-                className="h-9 flex-1"
-              />
-              <Button
-                size="sm"
-                onClick={handleSaveRedirectUrl}
-                disabled={savingRedirect}
-                className="h-9 shrink-0"
-              >
-                {savingRedirect ? "Saving..." : "Save"}
-              </Button>
-            </div>
+            {redirectsAllowed ? (
+              <>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Redirect visitors who land on{" "}
+                  <span className="font-medium">{domain}</span> to a specific
+                  URL. Leave empty to redirect to papermark.com.
+                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <Input
+                    type="url"
+                    placeholder="https://example.com"
+                    value={redirectUrl}
+                    onChange={(e) => setRedirectUrl(e.target.value)}
+                    className="h-9 flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleSaveRedirectUrl}
+                    disabled={savingRedirect}
+                    className="h-9 shrink-0"
+                  >
+                    {savingRedirect ? "Saving..." : "Save"}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Root domain redirects require a{" "}
+                <span className="font-semibold">Business</span> plan or higher.
+              </p>
+            )}
           </div>
         </motion.div>
       </div>

@@ -2,7 +2,19 @@ import { redis } from "@/lib/redis";
 
 const DOMAIN_REDIRECT_PREFIX = "domain:redirect";
 
-function getRedisKey(domain: string): string {
+const PLANS_WITH_REDIRECTS = new Set([
+  "business",
+  "datarooms",
+  "datarooms-plus",
+  "datarooms-premium",
+]);
+
+export function planSupportsRedirects(plan: string): boolean {
+  const normalized = plan.replace("+old", "");
+  return PLANS_WITH_REDIRECTS.has(normalized);
+}
+
+export function getRedisKey(domain: string): string {
   return `${DOMAIN_REDIRECT_PREFIX}:${domain.toLowerCase()}`;
 }
 

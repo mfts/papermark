@@ -2,7 +2,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { setDomainRedirectUrl } from "@/lib/api/domains/redis";
+import {
+  planSupportsRedirects,
+  setDomainRedirectUrl,
+} from "@/lib/api/domains/redis";
+import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
 import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
@@ -65,7 +69,7 @@ export default async function handle(
     }
 
     try {
-      await getTeamWithDomain({
+      const { team } = await getTeamWithDomain({
         teamId,
         userId,
       });
@@ -105,18 +109,33 @@ export default async function handle(
           .json({ message: "Unable to add this domain. Please try a different one." });
       }
 
+      let validatedRedirectUrl: string | undefined;
+      if (redirectUrl) {
+        if (!planSupportsRedirects(team.plan)) {
+          return res.status(403).json({
+            message:
+              "Root domain redirects require a Business plan or higher",
+          });
+        }
+        const result = await validateRedirectUrl(redirectUrl, teamId);
+        if (!result.valid) {
+          return res.status(422).json({ message: result.message });
+        }
+        validatedRedirectUrl = result.url || undefined;
+      }
+
       const response = await prisma.domain.create({
         data: {
           slug: sanitizedDomain,
           userId,
           teamId,
-          ...(redirectUrl && { redirectUrl }),
+          ...(validatedRedirectUrl && { redirectUrl: validatedRedirectUrl }),
         },
       });
       await addDomainToVercel(sanitizedDomain);
 
-      if (redirectUrl) {
-        await setDomainRedirectUrl(sanitizedDomain, redirectUrl);
+      if (validatedRedirectUrl) {
+        await setDomainRedirectUrl(sanitizedDomain, validatedRedirectUrl);
       }
 
       return res.status(201).json(response);

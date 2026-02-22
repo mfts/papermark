@@ -12,8 +12,9 @@ export default async function DomainMiddleware(req: NextRequest) {
     if (host) {
       const redirectUrl = await getDomainRedirectUrl(host);
       if (redirectUrl) {
+        // 302: intentionally non-permanent since the target is user-configurable
         return NextResponse.redirect(new URL(redirectUrl, req.url), {
-          status: 301,
+          status: 302,
         });
       }
     }

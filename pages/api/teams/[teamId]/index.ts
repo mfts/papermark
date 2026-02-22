@@ -5,6 +5,7 @@ import { isOldAccount } from "@/ee/stripe/utils";
 import { DocumentStorageType } from "@prisma/client";
 import { getServerSession } from "next-auth";
 
+import { deleteDomainRedirectUrl } from "@/lib/api/domains/redis";
 import { removeDomainFromVercelProject } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
 import { deleteFiles } from "@/lib/files/delete-team-files-server";
@@ -204,12 +205,13 @@ export default async function handle(
         },
       });
 
-      // prepare a list of promises to delete domains
-      let domainPromises: void[] = [];
+      // prepare a list of promises to delete domains and their Redis redirect entries
+      let domainPromises: Promise<unknown>[] = [];
       if (team.domains) {
-        domainPromises = team.domains.map((domain) => {
-          removeDomainFromVercelProject(domain.slug);
-        });
+        domainPromises = team.domains.flatMap((domain) => [
+          removeDomainFromVercelProject(domain.slug),
+          deleteDomainRedirectUrl(domain.slug),
+        ]);
       }
 
       await Promise.all([

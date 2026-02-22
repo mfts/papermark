@@ -5,8 +5,10 @@ import { getServerSession } from "next-auth/next";
 
 import {
   deleteDomainRedirectUrl,
+  planSupportsRedirects,
   setDomainRedirectUrl,
 } from "@/lib/api/domains/redis";
+import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
 import { getApexDomain, removeDomainFromVercel } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
@@ -152,7 +154,7 @@ export default async function handle(
     }
 
     try {
-      const { domain: domainToBeUpdated } = await getTeamWithDomain({
+      const { team, domain: domainToBeUpdated } = await getTeamWithDomain({
         teamId,
         userId,
         domain,
@@ -164,15 +166,21 @@ export default async function handle(
 
       const { redirectUrl } = req.body as { redirectUrl: string | null };
 
-      if (redirectUrl !== null && redirectUrl !== undefined && redirectUrl !== "") {
-        try {
-          new URL(redirectUrl);
-        } catch {
-          return res.status(422).json({ message: "Invalid redirect URL" });
-        }
+      if (redirectUrl && !planSupportsRedirects(team.plan)) {
+        return res.status(403).json({
+          message:
+            "Root domain redirects require a Business plan or higher",
+        });
       }
 
-      const normalizedUrl = redirectUrl || null;
+      let normalizedUrl: string | null = null;
+      if (redirectUrl) {
+        const result = await validateRedirectUrl(redirectUrl, teamId);
+        if (!result.valid) {
+          return res.status(422).json({ message: result.message });
+        }
+        normalizedUrl = result.url || null;
+      }
 
       const updatedDomain = await prisma.domain.update({
         where: {
