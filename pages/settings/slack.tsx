@@ -3,7 +3,13 @@ import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { CircleHelpIcon, Hash, Settings, XCircleIcon } from "lucide-react";
+import {
+  CircleHelpIcon,
+  Hash,
+  RefreshCwIcon,
+  Settings,
+  XCircleIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { useAnalytics } from "@/lib/analytics";
@@ -41,6 +47,7 @@ export default function SlackSettings() {
   const [connecting, setConnecting] = useState(false);
   const [isChannelPopoverOpen, setIsChannelPopoverOpen] = useState(false);
   const [pendingChannelUpdate, setPendingChannelUpdate] = useState(false);
+  const [refreshingChannels, setRefreshingChannels] = useState(false);
   const analytics = useAnalytics();
 
   // Use SWR hook for integration data
@@ -353,6 +360,18 @@ export default function SlackSettings() {
     [teamId, integration, mutateIntegration],
   );
 
+  const handleRefreshChannels = useCallback(async () => {
+    setRefreshingChannels(true);
+    try {
+      await mutateChannels();
+      toast.success("Channel list refreshed");
+    } catch (error) {
+      toast.error("Failed to refresh channel list");
+    } finally {
+      setRefreshingChannels(false);
+    }
+  }, [mutateChannels]);
+
   return (
     <AppLayout>
       <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
@@ -463,21 +482,42 @@ export default function SlackSettings() {
 
                         <Separator />
                         <div className="space-y-3">
-                          <div>
-                            <Label className="flex items-center gap-2 text-sm font-medium">
-                              Slack channel(s) *
-                              <BadgeTooltip
-                                content="Get instant notifications in Slack when someone views, downloads, or interacts with your documents and datarooms"
-                                key="channel_tooltip"
-                              >
-                                <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
-                              </BadgeTooltip>
-                            </Label>
-                            <p className="text-sm text-muted-foreground">
-                              Select the Slack channel(s) where you want to
-                              receive notifications.
-                            </p>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <Label className="flex items-center gap-2 text-sm font-medium">
+                                Slack channel(s) *
+                                <BadgeTooltip
+                                  content="Get instant notifications in Slack when someone views, downloads, or interacts with your documents and datarooms"
+                                  key="channel_tooltip"
+                                >
+                                  <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+                                </BadgeTooltip>
+                              </Label>
+                              <p className="text-sm text-muted-foreground">
+                                Select the Slack channel(s) where you want to
+                                receive notifications.
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleRefreshChannels}
+                              disabled={refreshingChannels || loadingChannels}
+                              className="shrink-0"
+                            >
+                              <RefreshCwIcon
+                                className={`mr-1 h-4 w-4 ${refreshingChannels ? "animate-spin" : ""}`}
+                              />
+                              Refresh
+                            </Button>
                           </div>
+                          <p className="text-xs text-muted-foreground">
+                            To add Papermark to a private channel, type{" "}
+                            <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">
+                              /invite @Papermark
+                            </code>{" "}
+                            in that channel first, then refresh the list.
+                          </p>
 
                           {!integration ? (
                             <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">

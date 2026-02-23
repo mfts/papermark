@@ -27,6 +27,7 @@ import { NotionPage } from "@/components/view/viewer/notion-page";
 import PDFViewer from "@/components/view/viewer/pdf-default-viewer";
 
 import { DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE } from "./dataroom/dataroom-document-view";
+import LinkPreview from "./link-preview";
 import { TNavData } from "./nav";
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "./viewer/download-only-viewer";
@@ -65,6 +66,7 @@ export default function ViewData({
   dataroomId,
   canDownload,
   annotationsEnabled,
+  textSelectionEnabled,
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE | DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE;
   link: LinkWithDocument | LinkWithDataroomDocument;
@@ -82,6 +84,7 @@ export default function ViewData({
   dataroomId?: string;
   canDownload?: boolean;
   annotationsEnabled?: boolean;
+  textSelectionEnabled?: boolean;
 }) {
   const { isMobile } = useMediaQuery();
 
@@ -90,26 +93,22 @@ export default function ViewData({
     isPreview: viewData.isPreview,
     linkId: link.id,
     brand: brand,
-    viewerId: viewData.viewerId || ("viewerId" in viewData ? viewData.viewerId : undefined),
+    viewerId: "viewerId" in viewData ? viewData.viewerId : undefined,
     isMobile: isMobile,
     isDataroom: !!dataroomId,
     documentId: document.id,
     dataroomId: dataroomId,
     conversationsEnabled:
-      (!!dataroomId &&
-        ("conversationsEnabled" in viewData
-          ? viewData.conversationsEnabled
-          : false)) ||
-      (!dataroomId && link.enableConversation === true),
-    assistantEnabled: document.assistantEnabled,
+      !!dataroomId &&
+      ("conversationsEnabled" in viewData
+        ? viewData.conversationsEnabled
+        : false),
     allowDownload:
       document.downloadOnly ||
       isDownloadAllowed(canDownload, link.allowDownload ?? false),
     isTeamMember: viewData.isTeamMember,
     annotationsFeatureEnabled: annotationsEnabled,
   };
-
-  // Calculate allowDownload once for all components
 
   // Check if agents are enabled (returned from views API after access is granted)
   const agentsEnabled =
@@ -131,8 +130,6 @@ export default function ViewData({
       linkId={link.id}
       viewId={viewData.viewId}
       viewerId={"viewerId" in viewData ? viewData.viewerId : undefined}
-      // focusedDocumentId={dataroomId ? document.id : undefined}
-      // focusedDocumentName={dataroomId ? document.name : undefined}
     >
       <ViewerChatLayout>
         {notionData?.recordMap ? (
@@ -141,6 +138,14 @@ export default function ViewData({
             versionNumber={document.versions[0].versionNumber}
             theme={notionData.theme}
             screenshotProtectionEnabled={link.enableScreenshotProtection!}
+            textSelectionEnabled={textSelectionEnabled ?? false}
+            navData={navData}
+          />
+        ) : viewData.fileType === "link" ? (
+          <LinkPreview
+            linkUrl={viewData.file || document.versions[0]?.file || ""}
+            linkName={document.name}
+            versionNumber={document.versions[0]?.versionNumber || 1}
             navData={navData}
           />
         ) : document.downloadOnly ? (

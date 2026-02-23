@@ -1,0 +1,35 @@
+VERSION 1
+
+DESCRIPTION >
+    Get total duration and unique countries for all documents in a team
+
+NODE get_duration
+SQL >
+    %
+    SELECT
+        sum(duration) as total_duration
+    FROM page_views
+    WHERE documentId IN splitByString(',', {{String(documentIds, '')}})
+    AND time >= {{Int64(since, 0)}}
+    AND time < {{Int64(until, 9999999999999)}}
+
+NODE get_countries
+SQL >
+    %
+    SELECT
+        groupArray(DISTINCT country) as unique_countries
+    FROM pm_click_events
+    WHERE document_id IN splitByString(',', {{String(documentIds, '')}})
+    AND toUnixTimestamp64Milli(timestamp) >= {{Int64(since, 0)}}
+    AND toUnixTimestamp64Milli(timestamp) < {{Int64(until, 9999999999999)}}
+    AND country != 'Unknown'
+    AND country != ''
+
+NODE endpoint
+SQL >
+    %
+    SELECT
+        (SELECT total_duration FROM get_duration) as total_duration,
+        (SELECT unique_countries FROM get_countries) as unique_countries
+
+

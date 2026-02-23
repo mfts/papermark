@@ -59,11 +59,19 @@ export default async function handle(
     return res.status(200).json(brand);
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/branding
-    const { logo, banner, brandColor, accentColor, welcomeMessage } = req.body as {
+    const {
+      logo,
+      banner,
+      brandColor,
+      accentColor,
+      applyAccentColorToDataroomView,
+      welcomeMessage,
+    } = req.body as {
       logo?: string;
       banner?: string;
       brandColor?: string;
       accentColor?: string;
+      applyAccentColorToDataroomView?: boolean;
       welcomeMessage?: string;
     };
 
@@ -74,6 +82,7 @@ export default async function handle(
         banner,
         brandColor,
         accentColor,
+        applyAccentColorToDataroomView: !!applyAccentColorToDataroomView,
         welcomeMessage,
         teamId: teamId,
       },
@@ -87,11 +96,19 @@ export default async function handle(
     return res.status(200).json(brand);
   } else if (req.method === "PUT") {
     // PUT /api/teams/:teamId/branding
-    const { logo, banner, brandColor, accentColor, welcomeMessage } = req.body as {
+    const {
+      logo,
+      banner,
+      brandColor,
+      accentColor,
+      applyAccentColorToDataroomView,
+      welcomeMessage,
+    } = req.body as {
       logo?: string;
       banner?: string;
       brandColor?: string;
       accentColor?: string;
+      applyAccentColorToDataroomView?: boolean;
       welcomeMessage?: string;
     };
 
@@ -105,6 +122,7 @@ export default async function handle(
         banner,
         brandColor,
         accentColor,
+        applyAccentColorToDataroomView: !!applyAccentColorToDataroomView,
         welcomeMessage,
         teamId: teamId,
       },
@@ -113,6 +131,7 @@ export default async function handle(
         banner,
         brandColor,
         accentColor,
+        applyAccentColorToDataroomView: !!applyAccentColorToDataroomView,
         welcomeMessage,
       },
     });

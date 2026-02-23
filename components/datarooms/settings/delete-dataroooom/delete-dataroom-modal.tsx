@@ -51,7 +51,10 @@ function DeleteDataroomModal({
             dataroomName: dataroomName,
             dataroomId: dataroomId,
           });
-          await mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+          await Promise.all([
+            mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`),
+            mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms?simple=true`),
+          ]);
           router.push("/datarooms");
           resolve(null);
         } else {

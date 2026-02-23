@@ -67,6 +67,7 @@ export interface LinkWithViews extends Link {
   customFields: CustomField[];
   tags: TagProps[];
   uploadFolderName: string | undefined;
+  visitorGroups?: { visitorGroupId: string }[];
 }
 
 export interface LinkWithDocument extends Link {
@@ -370,6 +371,7 @@ export type BasePlan =
   | "business"
   | "datarooms"
   | "datarooms-plus"
+  | "datarooms-premium"
   | "enterprise";
 
 export const tagColors = [

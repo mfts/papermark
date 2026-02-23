@@ -12,7 +12,7 @@ import prisma from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 
 import { CustomUser } from "@/lib/types";
-import { unsubscribe } from "@/lib/unsend";
+import { unsubscribe } from "@/lib/resend";
 
 import { authOptions } from "../../auth/[...nextauth]";
 

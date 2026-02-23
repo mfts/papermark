@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import useDatarooms from "@/lib/swr/use-datarooms";
+import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
 
 import {
   Select,
@@ -48,7 +48,7 @@ export function AddFolderToDataroomModal({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { datarooms } = useDatarooms();
+  const { datarooms } = useDataroomsSimple();
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();

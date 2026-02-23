@@ -27,8 +27,8 @@ export const LOCALHOST_GEO_DATA = {
   city: "Munich",
   region: "BY",
   country: "DE",
-  latitude: "48.137154",
-  longitude: "11.576124",
+  latitude: "48.1371",
+  longitude: "11.5761",
 };
 
 export const LOCALHOST_IP = "127.0.0.1";

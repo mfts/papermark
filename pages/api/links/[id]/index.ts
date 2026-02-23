@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { Brand, DataroomBrand, LinkAudienceType } from "@prisma/client";
+import { customAlphabet } from "nanoid";
 import { getServerSession } from "next-auth/next";
 
 import {
@@ -322,6 +323,23 @@ export default async function handle(
       }
     }
 
+    // Validate visitor group IDs belong to this team
+    if (linkData.visitorGroupIds?.length > 0) {
+      const validGroups = await prisma.visitorGroup.findMany({
+        where: {
+          id: { in: linkData.visitorGroupIds },
+          teamId: teamId,
+        },
+        select: { id: true },
+      });
+
+      if (validGroups.length !== linkData.visitorGroupIds.length) {
+        return res.status(400).json({
+          error: "One or more visitor group IDs do not belong to this team.",
+        });
+      }
+    }
+
     const updatedLink = await prisma.$transaction(async (tx) => {
       const link = await tx.link.update({
         where: { id, teamId },
@@ -406,16 +424,43 @@ export default async function handle(
         },
         include: {
           customFields: true,
+          visitorGroups: {
+            select: {
+              visitorGroupId: true,
+            },
+          },
           views: {
             orderBy: {
               viewedAt: "desc",
             },
+            take: 1,
           },
           _count: {
             select: { views: true },
           },
         },
       });
+
+      // Update visitor groups (replace all)
+      if (linkData.visitorGroupIds !== undefined) {
+        // Delete existing visitor group associations
+        await tx.linkVisitorGroup.deleteMany({
+          where: { linkId: id },
+        });
+
+        // Create new associations
+        if (linkData.visitorGroupIds?.length > 0) {
+          await tx.linkVisitorGroup.createMany({
+            data: linkData.visitorGroupIds.map(
+              (visitorGroupId: string) => ({
+                linkId: id,
+                visitorGroupId,
+              }),
+            ),
+            skipDuplicates: true,
+          });
+        }
+      }
       if (linkData.tags?.length) {
         // Remove only tags that are not in the new list
         await tx.tagItem.deleteMany({
@@ -460,7 +505,13 @@ export default async function handle(
         },
       });
 
-      return { ...link, tags };
+      // Re-fetch visitor groups to get post-update associations
+      const freshVisitorGroups = await tx.linkVisitorGroup.findMany({
+        where: { linkId: id },
+        select: { visitorGroupId: true },
+      });
+
+      return { ...link, visitorGroups: freshVisitorGroups, tags };
     });
 
     if (!updatedLink) {
@@ -547,7 +598,14 @@ export default async function handle(
         return res.status(401).end("Unauthorized to delete this link");
       }
 
-      // Soft delete the link by setting deletedAt and isArchived
+      // Generate a random suffix for the deleted slug to free up the original slug
+      const generateDeletedSuffix = customAlphabet(
+        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+        6,
+      );
+
+      // Soft delete the link by setting deletedAt and isArchived,
+      // and rename the slug so the original can be reused
       await prisma.link.update({
         where: {
           id: id,
@@ -555,6 +613,9 @@ export default async function handle(
         data: {
           deletedAt: new Date(),
           isArchived: true,
+          ...(linkToBeDeleted.slug && {
+            slug: `${linkToBeDeleted.slug}-DELETED-${generateDeletedSuffix()}`,
+          }),
         },
       });
 

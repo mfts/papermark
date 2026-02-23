@@ -10,25 +10,37 @@ import { getViewPageDuration } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
-import { authOptions } from "../../auth/[...nextauth]";
+import { authOptions } from "../../../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
   if (req.method === "GET") {
-    // GET /api/links/:id/visits
+    // GET /api/teams/:teamId/links/:id/visits
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
     }
 
     // get link id from query params
-    const { id } = req.query as { id: string };
+    const { teamId, id } = req.query as { teamId: string; id: string };
 
     const userId = (session.user as CustomUser).id;
 
     try {
+      const teamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId: userId,
+            teamId: teamId,
+          },
+        },
+      });
+      if (!teamAccess) {
+        return res.status(401).end("Unauthorized");
+      }
+
       // get the numPages from document
       const result = await prisma.link.findUnique({
         where: {
@@ -50,6 +62,8 @@ export default async function handle(
                 select: {
                   id: true,
                   plan: true,
+                  pauseStartsAt: true,
+                  pauseEndsAt: true,
                 },
               },
             },
@@ -57,9 +71,9 @@ export default async function handle(
         },
       });
 
-      // If link doesn't exist (deleted), return empty array
+      // If link doesn't exist (deleted), return empty response
       if (!result || !result.document || result.deletedAt) {
-        return res.status(200).json([]);
+        return res.status(200).json({ views: [], hiddenFromPause: 0 });
       }
 
       const docId = result.document.id;
@@ -86,14 +100,33 @@ export default async function handle(
         result?.document?.numPages ||
         0;
 
-      const views = await prisma.view.findMany({
+      const pauseStartsAt = result?.document?.team?.pauseStartsAt;
+      const pauseEndsAt = result?.document?.team?.pauseEndsAt;
+
+      const allViews = await prisma.view.findMany({
         where: {
           linkId: id,
+          teamId: teamId,
         },
         orderBy: {
           viewedAt: "desc",
         },
       });
+
+      // Filter out views that occurred during the pause period and count hidden views
+      let hiddenFromPause = 0;
+      const views =
+        pauseStartsAt && pauseEndsAt
+          ? allViews.filter((view) => {
+              const viewedAt = new Date(view.viewedAt);
+              const isDuringPause =
+                viewedAt >= pauseStartsAt && viewedAt <= pauseEndsAt;
+              if (isDuringPause) {
+                hiddenFromPause++;
+              }
+              return !isDuringPause;
+            })
+          : allViews;
 
       // limit the number of views to 20 on free plan
       const limitedViews =
@@ -136,7 +169,10 @@ export default async function handle(
 
       // TODO: Check that the user is owner of the links, otherwise return 401
 
-      return res.status(200).json(viewsWithDuration);
+      return res.status(200).json({
+        views: viewsWithDuration,
+        hiddenFromPause,
+      });
     } catch (error) {
       log({
         message: `Failed to get views for link: _${id}_. \n\n ${error} \n\n*Metadata*: \`{userId: ${userId}}\``,

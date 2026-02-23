@@ -6,7 +6,7 @@ import { Brand, DataroomBrand } from "@prisma/client";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 import { useViewerAnnotations } from "@/lib/swr/use-annotations";
-import { determineTextColor } from "@/lib/utils/determine-text-color";
+import { createAdaptiveSurfacePalette } from "@/lib/utils/create-adaptive-surface-palette";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,7 @@ export function AnnotationPanel({
   isVisible,
   onResize,
 }: AnnotationPanelProps) {
+  const palette = createAdaptiveSurfacePalette(brand?.accentColor);
   const { annotations, loading } = useViewerAnnotations(
     linkId,
     documentId,
@@ -182,7 +183,7 @@ export function AnnotationPanel({
             <div className="flex items-center justify-center py-6">
               <div
                 className="text-xs opacity-70"
-                style={{ color: determineTextColor(brand?.accentColor) }}
+                style={{ color: palette.textColor }}
               >
                 Loading annotations...
               </div>
@@ -191,7 +192,7 @@ export function AnnotationPanel({
             <div className="flex flex-col items-center justify-center py-6 text-center">
               <p
                 className="mb-1 text-xs opacity-70"
-                style={{ color: determineTextColor(brand?.accentColor) }}
+                style={{ color: palette.textColor }}
               >
                 No annotations on this page
               </p>

@@ -7,12 +7,18 @@ import { z } from "zod";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { sanitizePlainText } from "@/lib/utils/sanitize-html";
 
 const updateNameSchema = z.object({
   name: z
     .string()
-    .min(1, "Document name is required")
-    .max(255, "Document name too long"),
+    .transform((value) => sanitizePlainText(value))
+    .pipe(
+      z
+        .string()
+        .min(1, "Document name is required")
+        .max(255, "Document name too long"),
+    ),
 });
 
 export default async function handle(

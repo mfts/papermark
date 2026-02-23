@@ -146,6 +146,7 @@ export const LinkOptions = ({
       {data.audienceType === LinkAudienceType.GENERAL ? (
         <>
           <AllowListSection
+            key={`allow-list-${data.id ?? "new"}`}
             {...{ data, setData }}
             isAllowed={
               isTrial ||
@@ -158,6 +159,7 @@ export const LinkOptions = ({
             presets={currentPreset}
           />
           <DenyListSection
+            key={`deny-list-${data.id ?? "new"}`}
             {...{ data, setData }}
             isAllowed={
               isTrial ||

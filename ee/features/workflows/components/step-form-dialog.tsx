@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { toast } from "sonner";
 import { z } from "zod";
@@ -327,7 +327,7 @@ export function StepFormDialog({
                     )}
                     {!link.domainSlug && link.slug && (
                       <span className="font-mono text-xs text-muted-foreground">
-                        papermark.io/{link.slug}
+                        papermark.com/{link.slug}
                       </span>
                     )}
                     <span className="font-mono text-xs text-muted-foreground">

@@ -22,10 +22,12 @@ export default async function handle(
 
     try {
       // check if currentUser is part of the team with the teamId
-      const userTeam = await prisma.userTeam.findFirst({
+      const userTeam = await prisma.userTeam.findUnique({
         where: {
-          teamId,
-          userId: (session.user as CustomUser).id,
+          userId_teamId: {
+            userId: (session.user as CustomUser).id,
+            teamId,
+          },
         },
       });
 
@@ -66,10 +68,12 @@ export default async function handle(
 
     try {
       // check if currentUser is part of the team with the teamId
-      const userTeam = await prisma.userTeam.findFirst({
+      const userTeam = await prisma.userTeam.findUnique({
         where: {
-          teamId,
-          userId: (session.user as CustomUser).id,
+          userId_teamId: {
+            userId: (session.user as CustomUser).id,
+            teamId,
+          },
         },
       });
 

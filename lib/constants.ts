@@ -83,6 +83,7 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "application/rtf", // .rtf
   "text/rtf", // .rtf
   "text/plain", // .txt
+  "text/markdown", // .md
   "image/vnd.dwg", // .dwg
   "image/vnd.dxf", // .dxf
   "image/png", // .png
@@ -163,6 +164,8 @@ export const VIEWER_ACCEPTED_FILE_TYPES = {
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
   "text/csv": [], // ".csv"
   "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+  "application/msword": [], // ".doc"
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [], // ".docx"
   "image/jpeg": [], // ".jpg"
   "image/png": [], // ".png"
   "image/jpg": [], // ".jpg"
@@ -171,6 +174,7 @@ export const VIEWER_ACCEPTED_FILE_TYPES = {
 export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "pdf",
   "notion",
+  "link",
   "sheet",
   "slides",
   "docs",

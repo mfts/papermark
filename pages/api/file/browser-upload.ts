@@ -45,7 +45,7 @@ export default async function handler(
         const stripedTeamPlan = team?.plan.replace("+old", "");
         if (
           stripedTeamPlan &&
-          ["business", "datarooms", "datarooms-plus"].includes(stripedTeamPlan)
+          ["business", "datarooms", "datarooms-plus", "datarooms-premium"].includes(stripedTeamPlan)
         ) {
           maxSize = 100 * 1024 * 1024; // 100 MB
         }

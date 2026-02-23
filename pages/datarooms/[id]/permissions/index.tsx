@@ -32,6 +32,7 @@ export default function DataroomAnalyticsPage() {
           <DataroomHeader
             title={dataroom.name}
             description={dataroom.pId}
+            internalName={dataroom.internalName}
             actions={[
               <Button onClick={() => setIsLinkSheetOpen(true)} key={1}>
                 Share

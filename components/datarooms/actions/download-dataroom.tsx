@@ -1,68 +1,49 @@
 import { useState } from "react";
 
 import { DownloadIcon } from "lucide-react";
-import { toast } from "sonner";
 
+import { DownloadProgressModal } from "@/components/datarooms/download-progress-modal";
 import { ResponsiveButton } from "@/components/ui/responsive-button";
 
 export default function DownloadDataroomButton({
   teamId,
   dataroomId,
+  dataroomName,
 }: {
   teamId: string;
   dataroomId: string;
+  dataroomName?: string;
 }) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
-  const downloadDataroom = async () => {
-    setIsLoading(true);
-    try {
-      toast.promise(
-        fetch(`/api/teams/${teamId}/datarooms/${dataroomId}/download/bulk`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }),
-        {
-          loading: "Downloading dataroom...",
-          success: async (response) => {
-            const { downloadUrl } = await response.json();
-
-            const link = document.createElement("a");
-            link.href = downloadUrl;
-            link.rel = "noopener noreferrer";
-            document.body.appendChild(link);
-            link.click();
-
-            setTimeout(() => {
-              document.body.removeChild(link);
-            }, 100);
-
-            return "Dataroom downloaded successfully.";
-          },
-          error: (error) => {
-            console.log(error);
-            return (
-              error.message || "An error occurred while downloading dataroom."
-            );
-          },
-        },
-      );
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+  const openDownloadModal = () => {
+    // Open the modal - it will show existing downloads and allow starting new ones
+    setShowDownloadModal(true);
   };
+
+  const handleCloseDownloadModal = () => {
+    setShowDownloadModal(false);
+  };
+
   return (
-    <ResponsiveButton
-      icon={<DownloadIcon className="h-4 w-4" />}
-      text="Download"
-      onClick={downloadDataroom}
-      variant="outline"
-      size="sm"
-      loading={isLoading}
-    />
+    <>
+      <ResponsiveButton
+        icon={<DownloadIcon className="h-4 w-4" />}
+        text="Download"
+        onClick={openDownloadModal}
+        variant="outline"
+        size="sm"
+      />
+
+      {/* Download Progress Modal */}
+      <DownloadProgressModal
+        isOpen={showDownloadModal}
+        onClose={handleCloseDownloadModal}
+        jobId={null}
+        dataroomName={dataroomName}
+        teamId={teamId}
+        dataroomId={dataroomId}
+      />
+    </>
   );
 }

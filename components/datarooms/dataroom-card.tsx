@@ -17,17 +17,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-type DataroomLink = {
-  id: string;
-  isArchived: boolean;
-  expiresAt: Date | null;
-  createdAt: Date;
-};
-
-type DataroomView = {
-  viewedAt: Date;
-};
-
 type DataroomTag = {
   tag: {
     id: string;
@@ -40,12 +29,13 @@ type DataroomTag = {
 type DataroomWithDetails = {
   id: string;
   name: string;
+  internalName?: string | null;
   _count: {
     documents: number;
     views: number;
   };
-  links: DataroomLink[];
-  views: DataroomView[];
+  activeLinkCount: number;
+  lastViewedAt: Date | null;
   createdAt: Date;
   tags?: DataroomTag[];
 };
@@ -57,16 +47,9 @@ interface DataroomCardProps {
 export default function DataroomCard({ dataroom }: DataroomCardProps) {
   const router = useRouter();
 
-  // Calculate active links
-  const activeLinks = dataroom.links.filter((link) => {
-    if (link.isArchived) return false;
-    if (link.expiresAt && new Date(link.expiresAt) < new Date()) return false;
-    return true;
-  });
-
-  const isActive = activeLinks.length > 0;
-  const activeLinkCount = activeLinks.length;
-  const lastViewedAt = dataroom.views[0]?.viewedAt;
+  const isActive = dataroom.activeLinkCount > 0;
+  const activeLinkCount = dataroom.activeLinkCount;
+  const lastViewedAt = dataroom.lastViewedAt;
   const hasDocuments = dataroom._count.documents > 0;
 
   const handleButtonClick = (e: React.MouseEvent) => {
@@ -87,7 +70,16 @@ export default function DataroomCard({ dataroom }: DataroomCardProps) {
       <Link href={`/datarooms/${dataroom.id}/documents`}>
         <CardHeader>
           <div className="flex items-start justify-between gap-2">
-            <CardTitle className="truncate text-lg">{dataroom.name}</CardTitle>
+            <div className="flex-1 min-w-0">
+              <CardTitle className="truncate text-lg">
+                {dataroom.internalName || dataroom.name}
+              </CardTitle>
+              {dataroom.internalName && (
+                <p className="truncate text-sm text-muted-foreground mt-0.5">
+                  {dataroom.name}
+                </p>
+              )}
+            </div>
             <div className="flex shrink-0 items-center gap-2">
               <TooltipProvider>
                 <Tooltip>

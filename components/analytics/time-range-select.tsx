@@ -16,7 +16,7 @@ import {
 
 import { cn } from "@/lib/utils";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 
 const TIME_RANGES = [
   { value: "24h", label: "Last 24 hours", shortcut: "D" },

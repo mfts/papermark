@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { FolderTemplate } from "@/ee/features/templates/constants/dataroom-templates";
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -48,17 +49,28 @@ export default async function handle(
       });
     }
 
-    // Validate folder structure
+    // Validate folder structure (max 2 levels: top-level + 1 subfolder level)
     const validateFolder = (folder: any, depth = 0): boolean => {
-      if (depth > 5) return false;
+      if (depth >= 2) return false; // Max 2 levels deep
       if (!folder.name || typeof folder.name !== "string") return false;
       if (folder.name.length > 255) return false;
       if (folder.subfolders) {
         if (!Array.isArray(folder.subfolders)) return false;
-        return folder.subfolders.every((sub: any) => validateFolder(sub, depth + 1));
+        // Limit subfolders to 5 per folder
+        if (folder.subfolders.length > 5) return false;
+        return folder.subfolders.every((sub: any) =>
+          validateFolder(sub, depth + 1),
+        );
       }
       return true;
     };
+
+    // Limit top-level folders to 8
+    if (folders.length > 8) {
+      return res.status(400).json({
+        message: "Too many top-level folders (maximum 8)",
+      });
+    }
 
     if (!folders.every((folder) => validateFolder(folder))) {
       return res.status(400).json({
@@ -92,24 +104,37 @@ export default async function handle(
         "business",
         "datarooms",
         "datarooms-plus",
+        "datarooms-premium",
         "business+old",
         "datarooms+old",
         "datarooms-plus+old",
+        "datarooms-premium+old",
         "datarooms+drtrial",
         "business+drtrial",
         "datarooms-plus+drtrial",
+        "datarooms-premium+drtrial",
         "free+drtrial",
       ];
 
       // Allow free plan (for onboarding) or any plan that includes allowed plans or drtrial
-      const hasAccess = 
+      const hasAccess =
         team.plan === "free" || // Allow free plan during onboarding
         team.plan.includes("drtrial") || // Allow any trial plan
         allowedPlans.some((plan) => team.plan.includes(plan));
 
       if (!hasAccess) {
         return res.status(403).json({
-          message: "This feature requires a datarooms plan. Please upgrade to access AI-generated data rooms.",
+          message:
+            "This feature requires a datarooms plan. Please upgrade to access AI-generated data rooms.",
+        });
+      }
+
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. New dataroom creation is not available.",
         });
       }
 
@@ -126,7 +151,11 @@ export default async function handle(
       const isFreePlan = team.plan === "free" || team.plan === "free+drtrial";
       const isFirstDataroom = dataroomCount === 0;
 
-      if (limits && !(isFreePlan && isFirstDataroom) && dataroomCount >= limits.datarooms) {
+      if (
+        limits &&
+        !(isFreePlan && isFirstDataroom) &&
+        dataroomCount >= limits.datarooms
+      ) {
         return res
           .status(403)
           .json({ message: "You have reached the limit of datarooms" });
@@ -200,4 +229,3 @@ export default async function handle(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
-

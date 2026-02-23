@@ -1,13 +1,12 @@
-import { useOptimisticUpdate } from "../hooks/use-optimistic-update";
-import { Switch } from "../ui/switch";
+import { useOptimisticUpdate } from "@/components/hooks/use-optimistic-update";
+import { Switch } from "@/components/ui/switch";
 
-// TODO: MAIL SUBSCRIPTION FOR LATER USE
 export const UpdateMailSubscribe = () => {
   const { data, isLoading, update } = useOptimisticUpdate<{
     subscribed: boolean;
   }>("/api/user/subscribe", {
     loading: "Updating email preferences...",
-    success: `Your ${process.env.NEXT_PUBLIC_BASE_URL} email preferences has been updated!`,
+    success: "Your email preferences have been updated!",
     error: "Failed to update email preferences. Please try again.",
   });
 
@@ -25,7 +24,8 @@ export const UpdateMailSubscribe = () => {
   return (
     <div className="flex items-center gap-x-2">
       <Switch
-        checked={data?.subscribed}
+        checked={data?.subscribed ?? true}
+        disabled={isLoading}
         onCheckedChange={(checked: boolean) => {
           update(() => subscribe(checked), { subscribed: checked });
         }}

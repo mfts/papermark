@@ -6,7 +6,7 @@ export default async function DomainMiddleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const host = req.headers.get("host");
 
-  // If it's the root path, redirect to papermark.com/home
+  // If it's the root path, redirect to papermark.com
   if (path === "/") {
     if (host === "guide.permithealth.com") {
       return NextResponse.redirect(
@@ -32,9 +32,13 @@ export default async function DomainMiddleware(req: NextRequest) {
       );
     }
 
-    return NextResponse.redirect(
-      new URL("https://www.papermark.com/home", req.url),
-    );
+    if (host === "research.elazaradvisors.com") {
+      return NextResponse.redirect(
+        new URL("https://research.elazaradvisors.com/root", req.url),
+      );
+    }
+
+    return NextResponse.redirect(new URL("https://www.papermark.com", req.url));
   }
 
   const url = req.nextUrl.clone();

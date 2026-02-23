@@ -70,11 +70,19 @@ export default async function handle(
     return res.status(200).json(brand);
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/datarooms/:id/branding
-    const { logo, banner, brandColor, accentColor, welcomeMessage } = req.body as {
+    const {
+      logo,
+      banner,
+      brandColor,
+      accentColor,
+      applyAccentColorToDataroomView,
+      welcomeMessage,
+    } = req.body as {
       logo?: string;
       banner?: string;
       brandColor?: string;
       accentColor?: string;
+      applyAccentColorToDataroomView?: boolean;
       welcomeMessage?: string;
     };
 
@@ -85,6 +93,7 @@ export default async function handle(
         banner,
         brandColor,
         accentColor,
+        applyAccentColorToDataroomView: !!applyAccentColorToDataroomView,
         welcomeMessage,
         dataroomId,
       },
@@ -93,11 +102,19 @@ export default async function handle(
     return res.status(200).json(brand);
   } else if (req.method === "PUT") {
     // PUT /api/teams/:teamId/datarooms/:id/branding
-    const { logo, banner, brandColor, accentColor, welcomeMessage } = req.body as {
+    const {
+      logo,
+      banner,
+      brandColor,
+      accentColor,
+      applyAccentColorToDataroomView,
+      welcomeMessage,
+    } = req.body as {
       logo?: string;
       banner?: string;
       brandColor?: string;
       accentColor?: string;
+      applyAccentColorToDataroomView?: boolean;
       welcomeMessage?: string;
     };
 
@@ -110,6 +127,7 @@ export default async function handle(
         banner,
         brandColor,
         accentColor,
+        applyAccentColorToDataroomView: !!applyAccentColorToDataroomView,
         welcomeMessage,
       },
     });
@@ -142,7 +160,7 @@ export default async function handle(
 
     return res.status(204).end();
   } else {
-    // We only allow GET and DELETE requests
+    // We only allow GET, POST, PUT, DELETE requests
     res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }

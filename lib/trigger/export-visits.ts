@@ -180,6 +180,18 @@ export const exportVisitsTask = task({
   },
 });
 
+// Helper function to check if a view occurred during a pause period
+function isViewDuringPause(
+  viewedAt: Date,
+  pauseStartsAt: Date | null,
+  pauseEndsAt: Date | null,
+): boolean {
+  if (!pauseStartsAt || !pauseEndsAt) {
+    return false;
+  }
+  return viewedAt >= pauseStartsAt && viewedAt <= pauseEndsAt;
+}
+
 async function exportDocumentVisits(
   docId: string,
   teamId: string,
@@ -187,7 +199,7 @@ async function exportDocumentVisits(
   csvData: string;
   resourceName: string;
 }> {
-  // Fetch Document
+  // Fetch Document with team pause information
   const document = await prisma.document.findUnique({
     where: { id: docId, teamId: teamId },
     select: {
@@ -205,6 +217,8 @@ async function exportDocumentVisits(
       team: {
         select: {
           plan: true,
+          pauseStartsAt: true,
+          pauseEndsAt: true,
         },
       },
     },
@@ -214,8 +228,10 @@ async function exportDocumentVisits(
     throw new Error("Document not found");
   }
 
+  const { pauseStartsAt, pauseEndsAt } = document.team;
+
   // Fetch views
-  const views = await prisma.view.findMany({
+  const allViews = await prisma.view.findMany({
     where: { documentId: docId },
     include: {
       link: { select: { name: true } },
@@ -239,6 +255,11 @@ async function exportDocumentVisits(
       viewedAt: "desc",
     },
   });
+
+  // Filter out views that occurred during the pause period
+  const views = allViews.filter(
+    (view) => !isViewDuringPause(view.viewedAt, pauseStartsAt, pauseEndsAt),
+  );
 
   if (!views || views.length === 0) {
     throw new Error("Document has no views");
@@ -477,7 +498,7 @@ async function exportDataroomVisits(
   csvData: string;
   resourceName: string;
 }> {
-  // Fetch Dataroom
+  // Fetch Dataroom with team pause information
   const dataroom = await prisma.dataroom.findUnique({
     where: { id: dataroomId, teamId: teamId },
     select: {
@@ -502,6 +523,12 @@ async function exportDataroomVisits(
           },
         },
       },
+      team: {
+        select: {
+          pauseStartsAt: true,
+          pauseEndsAt: true,
+        },
+      },
     },
   });
 
@@ -509,8 +536,10 @@ async function exportDataroomVisits(
     throw new Error("Dataroom not found");
   }
 
+  const { pauseStartsAt, pauseEndsAt } = dataroom.team;
+
   // Fetch views
-  const views = await prisma.view.findMany({
+  const allViews = await prisma.view.findMany({
     where: {
       dataroomId: dataroomId,
       ...(groupId && { groupId }),
@@ -552,6 +581,11 @@ async function exportDataroomVisits(
       viewedAt: "desc",
     },
   });
+
+  // Filter out views that occurred during the pause period
+  const views = allViews.filter(
+    (view) => !isViewDuringPause(view.viewedAt, pauseStartsAt, pauseEndsAt),
+  );
 
   if (!views || views.length === 0) {
     throw new Error("Dataroom has no views");

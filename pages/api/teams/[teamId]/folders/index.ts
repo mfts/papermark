@@ -42,13 +42,21 @@ export default async function handle(
           where: {
             teamId: teamId,
             parentId: null,
+            hiddenInAllDocuments: false, // Exclude hidden folders from All Documents view
           },
           orderBy: {
             name: "asc",
           },
           include: {
             _count: {
-              select: { documents: true, childFolders: true },
+              select: {
+                documents: {
+                  where: { hiddenInAllDocuments: false },
+                },
+                childFolders: {
+                  where: { hiddenInAllDocuments: false },
+                },
+              },
             },
           },
         });
@@ -101,7 +109,12 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     const { teamId } = req.query as { teamId: string };
-    const { name, path } = req.body as { name: string; path: string };
+    const { name, path, icon, color } = req.body as {
+      name: string;
+      path: string;
+      icon?: string;
+      color?: string;
+    };
 
     const parentFolderPath = path ? "/" + path : "/";
 
@@ -174,6 +187,8 @@ export default async function handle(
           path: childFolderPath,
           parentId: parentFolder?.id ?? null,
           teamId: teamId,
+          icon: icon ?? null,
+          color: color ?? null,
         },
       });
 

@@ -78,7 +78,7 @@ export function ViewerUploadComponent({
         <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
           <p>Drag & drop files here, or click to select files</p>
           <p className="mt-2 text-sm text-gray-500">
-            Supported file types: PDF, Excel, CSV
+            Supported file types: PDF, Word, Excel, CSV
           </p>
 
           {/* Display current uploads */}

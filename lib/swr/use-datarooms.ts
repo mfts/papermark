@@ -6,20 +6,13 @@ import useSWR from "swr";
 
 import { fetcher } from "@/lib/utils";
 
-export type DataroomWithCount = Dataroom & {
+export type DataroomWithCount = Pick<Dataroom, "id" | "name" | "createdAt"> & {
   _count: {
     documents: number;
     views: number;
   };
-  links: {
-    id: string;
-    isArchived: boolean;
-    expiresAt: Date | null;
-    createdAt: Date;
-  }[];
-  views: {
-    viewedAt: Date;
-  }[];
+  activeLinkCount: number;
+  lastViewedAt: Date | null;
   tags?: {
     tag: {
       id: string;

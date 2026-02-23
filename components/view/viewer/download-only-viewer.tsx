@@ -234,7 +234,17 @@ export default function DownloadOnlyViewer({
       } else {
         // Handle JSON response with downloadUrl (non-watermarked files)
         const { downloadUrl } = await response.json();
-        window.open(downloadUrl, "_blank");
+
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        document.body.appendChild(iframe);
+        iframe.src = downloadUrl;
+
+        setTimeout(() => {
+          if (iframe.parentNode) {
+            document.body.removeChild(iframe);
+          }
+        }, 5000);
       }
 
       return "File downloaded successfully";

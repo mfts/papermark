@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { DocumentVersion } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
@@ -50,6 +51,15 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. New document creation is not available.",
+        });
+      }
+
       const document = await prisma.document.findUnique({
         where: {
           id: docId,
@@ -86,7 +96,6 @@ export default async function handle(
           id: undefined,
           teamId: teamId,
           ownerId: userId,
-          assistantEnabled: false,
           createdAt: undefined,
           updatedAt: undefined,
           file: document.file.replace(data?.fromLocation!, data?.toLocation!),

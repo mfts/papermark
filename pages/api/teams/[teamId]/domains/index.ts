@@ -99,7 +99,9 @@ export default async function handle(
       });
 
       if (existingDomain) {
-        return res.status(400).json({ message: "Domain already exists" });
+        return res
+          .status(400)
+          .json({ message: "Unable to add this domain. Please try a different one." });
       }
 
       const response = await prisma.domain.create({

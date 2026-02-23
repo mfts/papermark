@@ -32,6 +32,11 @@ export async function customerSubscriptionDeleted(
         endsAt: null,
         startsAt: null,
         limits: freePlanLimits,
+        // Clear cancellation and pause state when downgrading to free
+        cancelledAt: null,
+        pausedAt: null,
+        pauseStartsAt: null,
+        pauseEndsAt: null,
       },
       select: { id: true },
     });

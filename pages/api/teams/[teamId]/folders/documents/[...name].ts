@@ -70,6 +70,7 @@ export default async function handle(
         where: {
           teamId: teamId,
           folderId: folder.id,
+          hiddenInAllDocuments: false, // Exclude hidden documents from All Documents folder view
         },
         orderBy: {
           createdAt: "desc",

@@ -10,6 +10,10 @@ import { SlackCredential } from "@/lib/integrations/slack/types";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
+export const config = {
+  maxDuration: 300,
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,

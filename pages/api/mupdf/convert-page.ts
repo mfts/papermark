@@ -31,12 +31,14 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  const { documentVersionId, pageNumber, url, teamId } = req.body as {
-    documentVersionId: string;
-    pageNumber: number;
-    url: string;
-    teamId: string;
-  };
+  const { documentVersionId, pageNumber, url, teamId, trustedTeam } =
+    req.body as {
+      documentVersionId: string;
+      pageNumber: number;
+      url: string;
+      teamId: string;
+      trustedTeam?: boolean;
+    };
 
   try {
     // Fetch the PDF data
@@ -142,11 +144,34 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     // get links
     const links = page.getLinks();
     const embeddedLinks = links.map((link) => {
-      return { href: link.getURI(), coords: link.getBounds().join(",") };
+      const coords = link.getBounds().join(",");
+
+      // Check if this is an internal link (GoTo action for TOC, etc.)
+      if (!link.isExternal()) {
+        try {
+          // Resolve internal link to page number (0-indexed from mupdf)
+          const targetPage = doc.resolveLink(link);
+          if (targetPage >= 0) {
+            return {
+              href: `#page=${targetPage + 1}`, // Convert to 1-indexed for frontend
+              coords,
+              isInternal: true,
+              targetPage: targetPage + 1,
+            };
+          }
+        } catch (e) {
+          console.log("Failed to resolve internal link:", e);
+        }
+        // Fallback for unresolvable internal links
+        return { href: "", coords, isInternal: true };
+      }
+
+      // External URI link
+      return { href: link.getURI(), coords, isInternal: false };
     });
 
-    // Check embedded links for blocked keywords
-    if (embeddedLinks.length > 0) {
+    // Check embedded links for blocked keywords (skip for trusted teams)
+    if (embeddedLinks.length > 0 && !trustedTeam) {
       try {
         const keywords = await get("keywords");
         if (Array.isArray(keywords) && keywords.length > 0) {

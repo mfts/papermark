@@ -111,7 +111,10 @@ export default function DataroomTrial() {
       });
       toast.success("Dataroom successfully created! 🎉");
 
-      await mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+      await Promise.all([
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`),
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms?simple=true`),
+      ]);
 
       // Navigate to dataroom choice page (scratch vs templates)
       router.push(`/welcome?type=dataroom-choice&dataroomId=${dataroomId}`);

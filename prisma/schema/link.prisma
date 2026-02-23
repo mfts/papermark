@@ -88,10 +88,16 @@ model Link {
   teamId String?
   team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
+  ownerId String?
+  owner   User?   @relation("LinkOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
   customFields CustomField[]
 
   tags TagItem[]
   viewerInvitations ViewerInvitation[]
+
+  // visitor groups for allow-list
+  visitorGroups LinkVisitorGroup[]
 
   // workflow entry link
   workflow Workflow?
@@ -102,6 +108,7 @@ model Link {
   @@index([documentId, isArchived]) // Performance optimization for active links filtering
   @@index([permissionGroupId]) // Performance optimization for permission group queries
   @@index([deletedAt]) // Performance optimization for filtering deleted links
+  @@index([ownerId]) // Performance optimization for link owner queries
 }
 
 model LinkPreset {
@@ -160,6 +167,36 @@ enum CustomFieldType {
   CHECKBOX
   SELECT
   MULTI_SELECT
+}
+
+model VisitorGroup {
+  id     String   @id @default(cuid())
+  name   String
+  emails String[] // List of emails and domains (e.g., "user@example.com", "@example.org")
+
+  teamId String
+  team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  links LinkVisitorGroup[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+}
+
+model LinkVisitorGroup {
+  id             String       @id @default(cuid())
+  linkId         String
+  link           Link         @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  visitorGroupId String
+  visitorGroup   VisitorGroup @relation(fields: [visitorGroupId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([linkId, visitorGroupId])
+  @@index([linkId])
+  @@index([visitorGroupId])
 }
 
 model CustomField {

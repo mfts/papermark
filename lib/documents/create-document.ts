@@ -100,21 +100,28 @@ export const createNewDocumentVersion = async ({
   documentId,
   teamId,
   numPages,
+  token,
 }: {
   documentData: DocumentData;
   documentId: string;
   teamId: string;
   numPages?: number;
+  token?: string;
 }) => {
   try {
     const documentIdParsed = z.string().cuid().parse(documentId);
 
+    // Use absolute URL when a token is provided (server-side / webhook context),
+    // otherwise use a relative URL (client-side context).
+    const baseUrl = token ? process.env.NEXT_PUBLIC_BASE_URL : "";
+
     const response = await fetch(
-      `/api/teams/${teamId}/documents/${documentIdParsed}/versions`,
+      `${baseUrl}/api/teams/${teamId}/documents/${documentIdParsed}/versions`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           url: documentData.key,

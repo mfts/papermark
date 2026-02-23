@@ -1,8 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
+import { hashToken } from "@/lib/api/auth/token";
 import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import prisma from "@/lib/prisma";
 import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
@@ -19,16 +21,41 @@ export default async function handle(
 ) {
   if (req.method === "POST") {
     // POST /api/teams/:teamId/documents/:id/versions
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
-    // get document id from query params
     const { teamId, id: documentId } = req.query as {
       teamId: string;
       id: string;
     };
+
+    // Check for API token first, then fall back to session auth
+    const authHeader = req.headers.authorization;
+    let userId: string;
+
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
+      const hashedToken = hashToken(token);
+
+      const restrictedToken = await prisma.restrictedToken.findUnique({
+        where: { hashedKey: hashedToken },
+        select: { userId: true, teamId: true },
+      });
+
+      if (!restrictedToken) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      if (restrictedToken.teamId !== teamId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      userId = restrictedToken.userId;
+    } else {
+      const session = await getServerSession(req, res, authOptions);
+      if (!session) {
+        return res.status(401).end("Unauthorized");
+      }
+      userId = (session.user as CustomUser).id;
+    }
+
     // Validate request body using Zod schema for security
     const validationResult = await documentUploadSchema.safeParseAsync({
       ...req.body,
@@ -49,8 +76,6 @@ export default async function handle(
     const { url, type, numPages, storageType, contentType, fileSize } =
       validationResult.data;
 
-    const userId = (session.user as CustomUser).id;
-
     try {
       const team = await prisma.team.findUnique({
         where: {
@@ -68,6 +93,15 @@ export default async function handle(
 
       if (!team) {
         return res.status(401).end("Unauthorized");
+      }
+
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. New document uploads are not available.",
+        });
       }
 
       const document = await prisma.document.findUnique({
@@ -106,17 +140,6 @@ export default async function handle(
           versionNumber: currentVersionNumber + 1,
           contentType,
           fileSize,
-        },
-      });
-
-      // turn off isPrimary flag for all other versions
-      await prisma.documentVersion.updateMany({
-        where: {
-          documentId: documentId,
-          id: { not: version.id },
-        },
-        data: {
-          isPrimary: false,
         },
       });
 

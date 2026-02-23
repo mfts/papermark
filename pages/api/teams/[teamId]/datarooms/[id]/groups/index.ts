@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { ItemType } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
@@ -160,6 +161,14 @@ export default async function handle(
 
       if (!teamAccess) {
         return res.status(401).end("Unauthorized");
+      }
+
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error: "Team is currently paused. Creating groups is not available.",
+        });
       }
 
       const group = await prisma.viewerGroup.create({

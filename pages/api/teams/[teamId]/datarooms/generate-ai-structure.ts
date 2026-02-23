@@ -1,16 +1,44 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { getServerSession } from "next-auth/next";
-
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import {
   getDataroomSystemPrompt,
   getDataroomUserPrompt,
 } from "@/ee/features/templates/lib/prompts";
-import { openai } from "@/lib/openai";
+import { openai } from "@ai-sdk/openai";
+import { generateObject } from "ai";
+import { getServerSession } from "next-auth/next";
+import { z } from "zod";
+
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";
+
+export const config = {
+  maxDuration: 120,
+};
+
+// Non-recursive folder schema with fixed depth (max 2 levels)
+// This avoids the "Recursive reference detected" error from the AI SDK
+// which cannot convert z.lazy() recursive schemas to JSON Schema properly
+// Limited to top-level folders + 1 level of subfolders for simplicity
+
+// Level 2 (subfolders) - no further nesting allowed
+const subfolderSchema = z.object({
+  name: z.string().min(1).max(100),
+});
+
+// Level 1 (top-level folders) - subfolders is required but can be empty array
+const folderSchema = z.object({
+  name: z.string().min(1).max(100),
+  subfolders: z.array(subfolderSchema).max(5), // Required, but can be empty []
+});
+
+const dataroomStructureSchema = z.object({
+  name: z.string().min(1).max(255),
+  folders: z.array(folderSchema).min(1).max(8),
+});
 
 export default async function handle(
   req: NextApiRequest,
@@ -28,7 +56,11 @@ export default async function handle(
     const { teamId } = req.query as { teamId: string };
     const { description } = req.body as { description: string };
 
-    if (!description || typeof description !== "string" || description.trim().length === 0) {
+    if (
+      !description ||
+      typeof description !== "string" ||
+      description.trim().length === 0
+    ) {
       return res.status(400).json({
         message: "Description is required",
       });
@@ -37,7 +69,8 @@ export default async function handle(
     // Validate description length and content
     if (description.length > 2000) {
       return res.status(400).json({
-        message: "Description is too long. Please keep it under 2000 characters.",
+        message:
+          "Description is too long. Please keep it under 2000 characters.",
       });
     }
 
@@ -54,87 +87,105 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      // Use GPT to generate folder structure
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. New dataroom creation is not available.",
+        });
+      }
+
+      // Use AI SDK with structured outputs to generate folder structure
+      // This automatically validates the response format and reduces parsing errors
       const [systemPrompt, userPrompt] = await Promise.all([
         getDataroomSystemPrompt(),
         getDataroomUserPrompt(description),
       ]);
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+      const result = await generateObject({
+        model: openai("gpt-4o-mini"),
+        schema: dataroomStructureSchema,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        temperature: 0.7,
-        max_tokens: 3000,
-        response_format: { type: "json_object" },
+        temperature: 0.3,
+        providerOptions: {
+          openai: {
+            maxOutputTokens: 600,
+          },
+        },
       });
 
-      const responseContent = completion.choices[0]?.message?.content;
-      if (!responseContent) {
-        return res.status(500).json({
-          message: "Failed to generate folder structure",
-        });
-      }
-
-      // Parse the JSON response
-      let parsedResponse;
-      try {
-        parsedResponse = JSON.parse(responseContent);
-      } catch (parseError) {
-        return res.status(500).json({
-          message: "Invalid response format from AI",
-        });
-      }
-
-      // Extract name and folders
-      const suggestedName = parsedResponse.name;
-      const folders = parsedResponse.folders;
-
-      if (!suggestedName || typeof suggestedName !== "string") {
-        return res.status(500).json({
-          message: "Invalid response: name is missing or invalid",
-        });
-      }
-
-      if (!Array.isArray(folders)) {
-        return res.status(500).json({
-          message: "Invalid folder structure format",
-        });
-      }
-
-      // Validate folder structure
-      const validateFolder = (folder: any, depth = 0): boolean => {
-        if (depth > 5) return false; // Max depth
-        if (!folder.name || typeof folder.name !== "string") return false;
-        if (folder.name.length > 255) return false;
+      // Validate folder depth (max 2 levels: top-level + 1 subfolder level)
+      const validateFolderStructure = (folder: any): boolean => {
         if (folder.subfolders) {
-          if (!Array.isArray(folder.subfolders)) return false;
-          return folder.subfolders.every((sub: any) => validateFolder(sub, depth + 1));
+          // Enforce subfolder limits (max 5 subfolders per folder)
+          if (folder.subfolders.length > 5) return false;
+          // Ensure subfolders don't have their own subfolders (max 2 levels)
+          for (const sub of folder.subfolders) {
+            if (sub.subfolders && sub.subfolders.length > 0) return false;
+          }
         }
         return true;
       };
 
-      if (!folders.every((folder) => validateFolder(folder))) {
+      if (
+        !result.object.folders.every((folder) => validateFolderStructure(folder))
+      ) {
         return res.status(500).json({
-          message: "Generated folder structure is invalid",
+          message:
+            "Generated folder structure exceeds maximum depth (2 levels)",
+        });
+      }
+
+      // Additional safety: ensure we don't have too many top-level folders
+      if (result.object.folders.length > 8) {
+        return res.status(500).json({
+          message:
+            "Generated folder structure has too many top-level folders (max 8)",
         });
       }
 
       res.status(200).json({
-        name: suggestedName.trim(),
-        folders: folders,
+        name: result.object.name.trim(),
+        folders: result.object.folders,
         message: "Folder structure generated successfully",
       });
     } catch (error) {
-      const errorMessage = process.env.NODE_ENV === "production" 
-       ? "An unexpected error occurred"
-       : (error as Error).message;
+      console.error("Error generating AI folder structure:", error);
 
-      return res.status(500).json({
-        message: "Error generating folder structure",
-        error: errorMessage,
+      // Provide more specific error messages based on error type
+      let errorMessage = "Error generating folder structure";
+      let statusCode = 500;
+
+      if (error instanceof Error) {
+        // Check for OpenAI API errors
+        if (
+          error.message.includes("API key") ||
+          error.message.includes("authentication")
+        ) {
+          errorMessage = "AI service configuration error";
+        } else if (
+          error.message.includes("rate limit") ||
+          error.message.includes("quota")
+        ) {
+          errorMessage =
+            "AI service is temporarily unavailable. Please try again later.";
+          statusCode = 429;
+        } else if (error.message.includes("timeout")) {
+          errorMessage =
+            "Request timed out. Please try again with a shorter description.";
+          statusCode = 504;
+        } else if (process.env.NODE_ENV !== "production") {
+          // Only show detailed error in development
+          errorMessage = error.message;
+        }
+      }
+
+      return res.status(statusCode).json({
+        message: errorMessage,
       });
     }
   } else {
@@ -143,4 +194,3 @@ export default async function handle(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
-

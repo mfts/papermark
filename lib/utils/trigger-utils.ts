@@ -12,6 +12,7 @@ const concurrencyConfig: Record<string, number> = {
   business: 10,
   datarooms: 10,
   "datarooms-plus": 10,
+  "datarooms-premium": 10,
 };
 
 export const conversionQueue = (plan: string): TQueueConfig => {

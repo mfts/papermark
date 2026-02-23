@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { LinkAudienceType, Tag } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
@@ -52,17 +53,27 @@ export default async function handler(
     const documentLink = linkType === "DOCUMENT_LINK";
 
     try {
-      const team = await prisma.team.findUnique({
+      const teamAccess = await prisma.userTeam.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: { userId },
+          userId_teamId: {
+            userId,
+            teamId,
           },
         },
+        select: { teamId: true },
       });
 
-      if (!team) {
-        return res.status(400).json({ error: "Team not found." });
+      if (!teamAccess) {
+        return res.status(401).json({ error: "Unauthorized." });
+      }
+
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. New link creation is not available.",
+        });
       }
 
       const hashedPassword =
@@ -145,6 +156,24 @@ export default async function handler(
         }
       }
 
+      // Validate visitor group IDs belong to this team
+      if (linkData.visitorGroupIds?.length > 0) {
+        const validGroups = await prisma.visitorGroup.findMany({
+          where: {
+            id: { in: linkData.visitorGroupIds },
+            teamId: teamId,
+          },
+          select: { id: true },
+        });
+
+        if (validGroups.length !== linkData.visitorGroupIds.length) {
+          return res.status(400).json({
+            error:
+              "One or more visitor group IDs do not belong to this team.",
+          });
+        }
+      }
+
       // Fetch the link and its related document from the database
       const updatedLink = await prisma.$transaction(async (tx) => {
         const link = await tx.link.create({
@@ -153,6 +182,7 @@ export default async function handler(
             dataroomId: dataroomLink ? targetId : null,
             linkType,
             teamId,
+            ownerId: userId,
             password: hashedPassword,
             name: linkData.name || null,
             emailProtected:
@@ -226,9 +256,26 @@ export default async function handler(
                 },
               },
             }),
+            // Connect visitor groups for allow-list
+            ...(linkData.visitorGroupIds?.length > 0 && {
+              visitorGroups: {
+                createMany: {
+                  data: linkData.visitorGroupIds.map(
+                    (visitorGroupId: string) => ({
+                      visitorGroupId,
+                    }),
+                  ),
+                },
+              },
+            }),
           },
           include: {
             customFields: true,
+            visitorGroups: {
+              select: {
+                visitorGroupId: true,
+              },
+            },
           },
         });
 
@@ -274,6 +321,11 @@ export default async function handler(
             dataroom_id: linkWithView.dataroomId,
           },
         }),
+      );
+
+      // Revalidate the view page to pre-generate it
+      await fetch(
+        `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${linkWithView.id}&hasDomain=${linkWithView.domainId ? "true" : "false"}`,
       );
 
       // Decrypt the password for the new link

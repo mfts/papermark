@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import {
@@ -175,6 +176,15 @@ export default async function handle(
         });
       }
 
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. Duplicating dataroom is not available.",
+        });
+      }
+
       const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: dataroomId,
@@ -224,6 +234,9 @@ export default async function handle(
               banner: dataroomContents.brand?.banner,
               logo: dataroomContents.brand?.logo,
               accentColor: dataroomContents.brand?.accentColor,
+              applyAccentColorToDataroomView:
+                (dataroomContents.brand as any)?.applyAccentColorToDataroomView ??
+                false,
               brandColor: dataroomContents.brand?.brandColor,
             },
           },

@@ -99,7 +99,7 @@ export default function UploadZone({
   const router = useRouter();
   const teamInfo = useTeam();
   const { data: session } = useSession();
-  const { limits, canAddDocuments } = useLimits();
+  const { limits, canAddDocuments, isPaused } = useLimits();
   const remainingDocuments = limits?.documents
     ? limits?.documents - limits?.usage?.documents
     : 0;
@@ -242,6 +242,20 @@ export default function UploadZone({
 
   const onDrop = useCallback(
     async (acceptedFiles: FileWithPaths[]) => {
+      // Check if team is paused
+      if (isPaused) {
+        toast.error(
+          "Your subscription is paused. Resume your subscription to upload documents.",
+          {
+            action: {
+              label: "Go to Billing",
+              onClick: () => router.push("/settings/billing"),
+            },
+          },
+        );
+        return;
+      }
+
       if (!canAddDocuments && acceptedFiles.length > remainingDocuments) {
         toast.error("You have reached the maximum number of documents.");
         return;
@@ -515,6 +529,7 @@ export default function UploadZone({
       fileSizeLimits,
       isFree,
       isTrial,
+      isPaused,
     ],
   );
 

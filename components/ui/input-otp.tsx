@@ -4,7 +4,7 @@ import { OTPInput, OTPInputContext } from "input-otp";
 import { Dot } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { determineTextColor } from "@/lib/utils/determine-text-color";
+import { createAdaptiveSurfacePalette } from "@/lib/utils/create-adaptive-surface-palette";
 
 // Create a context to pass accentColor to InputOTPSlot components
 const AccentColorContext = React.createContext<string | null | undefined>(
@@ -50,7 +50,8 @@ const InputOTPSlot = React.forwardRef<
   const inputOTPContext = React.useContext(OTPInputContext);
   const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index];
   const accentColor = React.useContext(AccentColorContext);
-  const textColor = determineTextColor(accentColor);
+  const otpPalette = createAdaptiveSurfacePalette(accentColor);
+  const textColor = otpPalette.textColor;
 
   return (
     <div

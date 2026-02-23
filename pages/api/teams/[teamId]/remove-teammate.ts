@@ -25,14 +25,17 @@ export default async function handle(
     const { userToBeDeleted } = req.body;
 
     try {
-      const userTeam = await prisma.userTeam.findFirst({
+      const userTeam = await prisma.userTeam.findUnique({
         where: {
-          teamId,
+          userId_teamId: {
+            userId,
+            teamId,
+          },
         },
       });
 
       if (!userTeam) {
-        return res.status(401).json("The teammate isn't the part of this team");
+        return res.status(401).json("Unauthorized");
       }
 
       if (userTeam?.role === "ADMIN" && userTeam.userId === userToBeDeleted) {
@@ -42,6 +45,16 @@ export default async function handle(
       await Promise.all([
         // update all documents owned by the user to be deleted to be owned by the team
         prisma.document.updateMany({
+          where: {
+            teamId,
+            ownerId: userToBeDeleted,
+          },
+          data: {
+            ownerId: null,
+          },
+        }),
+        // update all links owned by the user to have no owner
+        prisma.link.updateMany({
           where: {
             teamId,
             ownerId: userToBeDeleted,

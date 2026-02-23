@@ -62,7 +62,10 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
           stripe.subscriptions.update(team.subscriptionId, {
             cancel_at_period_end: true,
           }),
-          stripe.subscriptions.deleteDiscount(team.subscriptionId),
+          // Delete discount if one exists - catch errors since subscription may not have a discount
+          stripe.subscriptions.deleteDiscount(team.subscriptionId).catch(() => {
+            // Ignore error - subscription may not have a discount applied
+          }),
           prisma.team.update({
             where: { id: teamId },
             data: {

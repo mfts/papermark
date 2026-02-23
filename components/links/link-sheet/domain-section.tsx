@@ -1,10 +1,18 @@
 import Link from "next/link";
 
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { Domain, LinkType } from "@prisma/client";
+import { ShuffleIcon } from "lucide-react";
+import { customAlphabet } from "nanoid";
 import { mutate } from "swr";
 
 import { BLOCKED_PATHNAMES } from "@/lib/constants";
@@ -14,6 +22,7 @@ import { cn } from "@/lib/utils";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { AddDomainModal } from "@/components/domains/add-domain-modal";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -23,8 +32,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ButtonTooltip } from "@/components/ui/tooltip";
 
 import { DEFAULT_LINK_TYPE } from ".";
+
+// Unambiguous alphabet: excludes easily confused characters (0/O, 1/l/I)
+const generateRandomSlug = customAlphabet(
+  "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz",
+  10,
+);
 
 export default function DomainSection({
   data,
@@ -41,7 +57,10 @@ export default function DomainSection({
 }) {
   const [isModalOpen, setModalOpen] = useState(false);
   const [isUpgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [displayValue, setDisplayValue] = useState<string>("papermark.com");
+  // Initialize displayValue from data.domain when editing, otherwise "papermark.com"
+  const [displayValue, setDisplayValue] = useState<string>(
+    editLink && data.domain ? data.domain : "papermark.com",
+  );
   const teamInfo = useTeam();
   const { limits } = useLimits();
 
@@ -57,6 +76,11 @@ export default function DomainSection({
   const isEditingCustomDomain =
     editLink && data.domain && data.domain !== "papermark.com" ? true : false;
 
+  const generateAndSetSlug = useCallback(() => {
+    const newSlug = generateRandomSlug();
+    setData((prev) => ({ ...prev, slug: newSlug }));
+  }, [setData]);
+
   const handleDomainChange = (value: string) => {
     const canChangeCustomDomain =
       linkType === "DOCUMENT_LINK"
@@ -71,7 +95,7 @@ export default function DomainSection({
     // Handle opening the add domain modal
     if (value === "add_domain" || value === "add_dataroom_domain") {
       setModalOpen(true);
-      setData({ ...data, domain: "papermark.com" });
+      setData((prev) => ({ ...prev, domain: "papermark.com" }));
       setDisplayValue("papermark.com");
       return;
     }
@@ -84,14 +108,23 @@ export default function DomainSection({
         (linkType === "DATAROOM_LINK" && !canUseCustomDomainForDataroom)
       ) {
         setUpgradeModalOpen(true);
-        setData({ ...data, domain: "papermark.com" });
+        setData((prev) => ({ ...prev, domain: "papermark.com" }));
         setDisplayValue("papermark.com");
         return;
       }
+
+      // Auto-generate a slug if there isn't one yet
+      setData((prev) => ({
+        ...prev,
+        domain: value,
+        ...(!prev.slug && { slug: generateRandomSlug() }),
+      }));
+      setDisplayValue(value);
+      return;
     }
 
     // Update domain normally if allowed
-    setData({ ...data, domain: value });
+    setData((prev) => ({ ...prev, domain: value }));
     setDisplayValue(value);
   };
 
@@ -113,10 +146,15 @@ export default function DomainSection({
         ? (defaultDomain?.slug ?? "papermark.com")
         : "papermark.com";
 
-      setData({
-        ...data,
+      // Auto-generate a slug when a custom domain is auto-selected as default
+      const isCustomDomain =
+        domainValue !== "papermark.com" && canUseCustomDomain;
+
+      setData((prev) => ({
+        ...prev,
         domain: domainValue,
-      });
+        ...(isCustomDomain && !prev.slug && { slug: generateRandomSlug() }),
+      }));
 
       setDisplayValue(domainValue);
     }
@@ -145,6 +183,11 @@ export default function DomainSection({
 
   const currentDomain = domains?.find((domain) => domain.slug === data.domain);
   const isDomainVerified = currentDomain?.verified;
+
+  const isSlugInvalid =
+    !!data.slug &&
+    (!/^[a-zA-Z0-9-]+$/.test(data.slug) ||
+      BLOCKED_PATHNAMES.includes(`/${data.slug}`));
 
   const isDisabled =
     linkType === "DOCUMENT_LINK"
@@ -227,57 +270,81 @@ export default function DomainSection({
         </Select>
 
         {data.domain && data.domain !== "papermark.com" ? (
-          <Input
-            type="text"
-            name="key"
-            required
-            value={data.slug || ""}
-            disabled={isDisabled}
-            pattern="^[a-zA-Z0-9-]+$"
-            onKeyDown={(e) => {
-              // Allow navigation keys, backspace, delete, etc.
-              if (e.key.length === 1 && !/^[a-zA-Z0-9-]$/.test(e.key)) {
-                e.preventDefault();
-              }
-            }}
-            onInvalid={(e) => {
-              const currentValue = e.currentTarget.value;
-              const isBlocked = BLOCKED_PATHNAMES.includes(`/${currentValue}`);
-
-              if (isBlocked) {
-                e.currentTarget.setCustomValidity(
-                  "This pathname is blocked. Please choose another one.",
+          <>
+            <Input
+              type="text"
+              name="key"
+              required
+              value={data.slug || ""}
+              disabled={isDisabled}
+              pattern="^[a-zA-Z0-9-]+$"
+              onKeyDown={(e) => {
+                // Allow navigation keys, backspace, delete, etc.
+                if (e.key.length === 1 && !/^[a-zA-Z0-9-]$/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              onInvalid={(e) => {
+                const currentValue = e.currentTarget.value;
+                const isBlocked = BLOCKED_PATHNAMES.includes(
+                  `/${currentValue}`,
                 );
-              } else {
-                e.currentTarget.setCustomValidity(
-                  "Only letters, numbers, and '-' are allowed.",
-                );
-              }
-            }}
-            autoComplete="off"
-            className={cn(
-              "hidden rounded-l-none focus:ring-inset",
-              data.domain && data.domain !== "papermark.com" ? "flex" : "",
-              isDisabled ? "opacity-50" : "",
-            )}
-            placeholder="deck"
-            onChange={(e) => {
-              if (isDisabled) return;
 
-              const currentValue = e.target.value.replace(/[^a-zA-Z0-9-]/g, "");
-              const isBlocked = BLOCKED_PATHNAMES.includes(`/${currentValue}`);
+                if (isBlocked) {
+                  e.currentTarget.setCustomValidity(
+                    "This pathname is blocked. Please choose another one.",
+                  );
+                } else {
+                  e.currentTarget.setCustomValidity(
+                    "Only letters, numbers, and '-' are allowed.",
+                  );
+                }
+              }}
+              autoComplete="off"
+              className={cn(
+                "hidden rounded-none focus:ring-inset",
+                data.domain && data.domain !== "papermark.com" ? "flex" : "",
+                isDisabled ? "opacity-50" : "",
+              )}
+              placeholder="deck"
+              onChange={(e) => {
+                if (isDisabled) return;
 
-              if (isBlocked) {
-                e.currentTarget.setCustomValidity(
-                  "This pathname is blocked. Please choose another one.",
+                const currentValue = e.target.value.replace(
+                  /[^a-zA-Z0-9-]/g,
+                  "",
                 );
-              } else {
-                e.currentTarget.setCustomValidity("");
-              }
-              setData({ ...data, slug: currentValue });
-            }}
-            aria-invalid="true"
-          />
+                const isBlocked = BLOCKED_PATHNAMES.includes(
+                  `/${currentValue}`,
+                );
+
+                if (isBlocked) {
+                  e.currentTarget.setCustomValidity(
+                    "This pathname is blocked. Please choose another one.",
+                  );
+                } else {
+                  e.currentTarget.setCustomValidity("");
+                }
+                setData((prev) => ({ ...prev, slug: currentValue }));
+              }}
+              aria-invalid={isSlugInvalid}
+            />
+            <ButtonTooltip content="Generate random slug">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-10 min-w-10 rounded-l-none border-l-0"
+                disabled={isDisabled}
+                onClick={(e) => {
+                  e.preventDefault();
+                  generateAndSetSlug();
+                }}
+              >
+                <ShuffleIcon className="h-4 w-4" />
+              </Button>
+            </ButtonTooltip>
+          </>
         ) : null}
       </div>
 

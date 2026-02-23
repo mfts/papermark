@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkAudienceType, LinkPreset, LinkType } from "@prisma/client";
 import { RefreshCwIcon } from "lucide-react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import useSWR from "swr";
@@ -64,10 +65,11 @@ export const DEFAULT_LINK_PROPS = (
   allowDownload: false,
   allowList: [],
   denyList: [],
+  visitorGroupIds: [],
   enableNotification: true,
   enableFeedback: false,
   enableScreenshotProtection: false,
-  enableCustomMetatag: false,
+    enableCustomMetatag: false,
   metaTitle: null,
   metaDescription: null,
   metaImage: null,
@@ -108,6 +110,7 @@ export type DEFAULT_LINK_TYPE = {
   allowDownload: boolean;
   allowList: string[];
   denyList: string[];
+  visitorGroupIds: string[];
   enableNotification: boolean;
   enableFeedback: boolean;
   enableScreenshotProtection: boolean;
@@ -177,6 +180,7 @@ export default function LinkSheet({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [currentPreset, setCurrentPreset] = useState<LinkPreset | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const isPresetsAllowed =
     isTrial ||
@@ -199,6 +203,19 @@ export default function LinkSheet({
   useEffect(() => {
     setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms));
   }, [currentLink]);
+
+  // Handle Command+Enter (Mac) or Ctrl+Enter (Windows/Linux) to submit the form
+  useHotkeys(
+    "mod+enter",
+    (e) => {
+      e.preventDefault();
+      if (!isSaving && formRef.current) {
+        formRef.current.requestSubmit();
+      }
+    },
+    { enabled: isOpen, enableOnFormTags: true },
+    [isSaving],
+  );
 
   const handlePreviewLink = async (link: LinkWithViews) => {
     if (link.domainId && isFree) {
@@ -410,6 +427,115 @@ export default function LinkSheet({
         }
       }
 
+      // Track what changed for analytics
+      const changedFields: Record<string, { from: unknown; to: unknown }> = {};
+      const trackableFields: (keyof DEFAULT_LINK_TYPE)[] = [
+        "name",
+        "domain",
+        "slug",
+        "expiresAt",
+        "emailProtected",
+        "emailAuthenticated",
+        "allowDownload",
+        "allowList",
+        "denyList",
+        "enableNotification",
+        "enableFeedback",
+        "enableScreenshotProtection",
+        "enableCustomMetatag",
+        "metaTitle",
+        "metaDescription",
+        "welcomeMessage",
+        "enableQuestion",
+        "questionText",
+        "questionType",
+        "enableAgreement",
+        "agreementId",
+        "showBanner",
+        "enableWatermark",
+        "audienceType",
+        "groupId",
+        "enableConversation",
+        "enableAIAgents",
+        "enableUpload",
+        "isFileRequestOnly",
+        "uploadFolderId",
+        "enableIndexFile",
+        "permissionGroupId",
+        "tags",
+      ];
+
+      for (const field of trackableFields) {
+        if (
+          JSON.stringify(currentLink[field]) !== JSON.stringify(data[field])
+        ) {
+          changedFields[field] = {
+            from: currentLink[field],
+            to: data[field],
+          };
+        }
+      }
+
+      // Password: log set/unset/changed status only, not actual values
+      if (!!currentLink.password !== !!data.password) {
+        changedFields.password = {
+          from: currentLink.password ? "set" : "unset",
+          to: data.password ? "set" : "unset",
+        };
+      } else if (
+        currentLink.password &&
+        data.password &&
+        currentLink.password !== data.password
+      ) {
+        changedFields.password = { from: "set", to: "changed" };
+      }
+
+      // Image fields: log set/unset status only, not URLs
+      if (currentLink.metaImage !== data.metaImage) {
+        changedFields.metaImage = {
+          from: currentLink.metaImage ? "set" : "unset",
+          to: data.metaImage ? "set" : "unset",
+        };
+      }
+      if (currentLink.metaFavicon !== data.metaFavicon) {
+        changedFields.metaFavicon = {
+          from: currentLink.metaFavicon ? "set" : "unset",
+          to: data.metaFavicon ? "set" : "unset",
+        };
+      }
+
+      // Watermark config: log configured/unset status
+      if (
+        JSON.stringify(currentLink.watermarkConfig) !==
+        JSON.stringify(data.watermarkConfig)
+      ) {
+        changedFields.watermarkConfig = {
+          from: currentLink.watermarkConfig ? "configured" : "unset",
+          to: data.watermarkConfig ? "configured" : "unset",
+        };
+      }
+
+      // Custom fields: log count change
+      if (
+        JSON.stringify(currentLink.customFields) !==
+        JSON.stringify(data.customFields)
+      ) {
+        changedFields.customFields = {
+          from: currentLink.customFields?.length ?? 0,
+          to: data.customFields?.length ?? 0,
+        };
+      }
+
+      analytics.capture("Link Updated", {
+        linkId: currentLink.id,
+        targetId,
+        linkType,
+        teamId: teamInfo?.currentTeam?.id,
+        customDomain: returnedLink.domainSlug ?? null,
+        changes: changedFields,
+        changedProperties: Object.keys(changedFields),
+      });
+
       toast.success("Link updated successfully");
     } else {
       setIsOpen(false);
@@ -470,6 +596,7 @@ export default function LinkSheet({
         </SheetHeader>
 
         <form
+          ref={formRef}
           className="flex grow flex-col"
           onSubmit={(e) => handleSubmit(e, false)}
         >

@@ -7,7 +7,7 @@ import {
   BetweenHorizontalStartIcon,
   ClipboardCopyIcon,
   CopyIcon,
-  FolderIcon,
+  EyeOffIcon,
   FolderInputIcon,
   FolderPenIcon,
   MoreVertical,
@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { getFolderColorClasses, getFolderIcon } from "@/lib/constants/folder-constants";
 import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { timeAgo } from "@/lib/utils";
@@ -127,6 +128,7 @@ export default function FolderCard({
           toast.dismiss();
           setMenuOpen(false);
           mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+          mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms?simple=true`);
           toast.success(`Successfully created!`, {
             description: `${folder.name} → ${data.name}`,
             action: {
@@ -153,6 +155,42 @@ export default function FolderCard({
     router.push(folderPath);
   };
 
+  const handleHideFolder = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    toast.promise(
+      fetch(`/api/teams/${teamInfo?.currentTeam?.id}/folders/hide`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          folderIds: [folder.id],
+          hidden: true,
+        }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.message || "Failed to hide folder");
+        }
+        // Revalidate the folders and documents
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders?root=true`);
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders`);
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/folders${parentFolderPath}`,
+        );
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`);
+        setMenuOpen(false);
+      }),
+      {
+        loading: "Hiding folder from All Documents...",
+        success: "Folder hidden from All Documents.",
+        error: (err) => err.message || "Failed to hide folder. Try again.",
+      },
+    );
+  };
+
   return (
     <>
       <div
@@ -162,7 +200,16 @@ export default function FolderCard({
         <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
           {!isSelected && !isHovered ? (
             <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-              <FolderIcon className="h-8 w-8" strokeWidth={1} />
+              {(() => {
+                const FolderIconComponent = getFolderIcon(folder.icon);
+                const colorClasses = getFolderColorClasses(folder.color);
+                return (
+                  <FolderIconComponent
+                    className={`h-8 w-8 ${colorClasses.iconClass}`}
+                    strokeWidth={1}
+                  />
+                );
+              })()}
             </div>
           ) : (
             <div className="mx-0.5 w-8 sm:mx-1"></div>
@@ -278,6 +325,12 @@ export default function FolderCard({
                   {folder.id}
                 </span>
               </DropdownMenuItem>
+              {!isDataroom && (
+                <DropdownMenuItem onClick={handleHideFolder}>
+                  <EyeOffIcon className="mr-2 h-4 w-4" />
+                  Hide from All Documents
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
@@ -311,6 +364,8 @@ export default function FolderCard({
           setOpen={setOpenFolder}
           folderId={folder.id}
           name={folder.name}
+          icon={folder.icon}
+          color={folder.color}
           isDataroom={isDataroom}
           dataroomId={dataroomId}
         />

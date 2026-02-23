@@ -94,6 +94,11 @@ export async function checkoutSessionCompleted(
       startsAt: subscriptionStart,
       endsAt: subscriptionEnd,
       limits: planLimits,
+      // Clear cancellation and pause state when purchasing a new plan
+      cancelledAt: null,
+      pausedAt: null,
+      pauseStartsAt: null,
+      pauseEndsAt: null,
     },
     select: {
       id: true,

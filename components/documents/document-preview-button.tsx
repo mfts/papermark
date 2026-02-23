@@ -61,6 +61,11 @@ export function DocumentPreviewButton({
     setIsPreviewOpen(true);
   };
 
+  // Stop propagation on the container to prevent parent click handlers from firing
+  const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+  };
+
   const button = (
     <Button
       variant={variant}
@@ -93,14 +98,14 @@ export function DocumentPreviewButton({
   );
 
   return (
-    <>
+    <div onClick={handleContainerClick} onMouseDown={handleContainerClick}>
       {wrappedButton}
       <DocumentPreviewModal
         documentId={documentId}
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
       />
-    </>
+    </div>
   );
 }
 

@@ -35,7 +35,8 @@ export async function POST(
       );
     }
 
-    const { content, filterDocumentId } = validation.data;
+    const { content, filterDocumentId, filterDataroomDocumentIds } =
+      validation.data;
 
     const session = await getServerSession(authOptions);
     const searchParams = req.nextUrl.searchParams;
@@ -98,6 +99,20 @@ export async function POST(
       );
     }
 
+    if (
+      filterDataroomDocumentIds &&
+      filterDataroomDocumentIds.length > 0 &&
+      !chat.dataroomId
+    ) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Dataroom document filters are only allowed for dataroom chats",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
     // Generate title from first message if not set
     if (!chat.title && chat.messages.length === 0) {
       const title = await generateChatTitle(content);
@@ -124,6 +139,7 @@ export async function POST(
       vectorStoreId: chat.vectorStoreId,
       filteredDataroomDocumentIds,
       filterDocumentId,
+      userSelectedDataroomDocumentIds: filterDataroomDocumentIds,
     });
 
     return result.toTextStreamResponse();

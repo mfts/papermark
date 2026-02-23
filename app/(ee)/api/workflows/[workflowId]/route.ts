@@ -5,6 +5,7 @@ import {
   formatZodError,
 } from "@/ee/features/workflows/lib/validation";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { customAlphabet } from "nanoid";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
@@ -282,6 +283,11 @@ export async function DELETE(
       select: {
         id: true,
         entryLinkId: true,
+        entryLink: {
+          select: {
+            slug: true,
+          },
+        },
       },
     });
 
@@ -292,6 +298,12 @@ export async function DELETE(
       );
     }
 
+    // Generate a random suffix for the deleted slug to free up the original slug
+    const generateDeletedSuffix = customAlphabet(
+      "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+      6,
+    );
+
     // Delete workflow and entry link in transaction
     // Note: Steps and executions will cascade delete via Prisma relations
     await prisma.$transaction([
@@ -299,12 +311,15 @@ export async function DELETE(
       prisma.workflow.delete({
         where: { id: workflowId },
       }),
-      // Delete entry link
+      // Soft delete entry link and rename slug so it can be reused
       prisma.link.update({
         where: { id: workflow.entryLinkId },
         data: {
           deletedAt: new Date(),
           isArchived: true,
+          ...(workflow.entryLink?.slug && {
+            slug: `${workflow.entryLink.slug}-DELETED-${generateDeletedSuffix()}`,
+          }),
         },
       }),
     ]);

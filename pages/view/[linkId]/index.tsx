@@ -12,9 +12,14 @@ import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 import z from "zod";
 
+import { fetchLinkDataById } from "@/lib/api/links/link-data";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import notion from "@/lib/notion";
-import { addSignedUrls } from "@/lib/notion/utils";
+import {
+  addSignedUrls,
+  fetchMissingPageReferences,
+  normalizeRecordMap,
+} from "@/lib/notion/utils";
 import {
   CustomUser,
   LinkWithDataroom,
@@ -67,6 +72,7 @@ export interface ViewPageProps {
   logoOnAccessForm: boolean;
   dataroomIndexEnabled?: boolean;
   annotationsEnabled?: boolean;
+  textSelectionEnabled?: boolean;
 }
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
@@ -74,12 +80,18 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 
   try {
     const linkId = z.string().cuid().parse(linkIdParam);
-    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/links/${linkId}`);
-    if (!res.ok) {
-      throw new Error(`Failed to fetch: ${res.status}`);
+
+    // Fetch link data directly from database to avoid internal HTTP fetch
+    // which can be blocked by Vercel's edge protection (403 errors)
+    const result = await fetchLinkDataById({ linkId });
+
+    if (result.status !== "ok") {
+      return {
+        notFound: true,
+      };
     }
 
-    const { linkType, link, brand } = (await res.json()) as any;
+    const { linkType, link, brand } = result;
 
     if (!linkType) {
       return {
@@ -144,9 +156,17 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 
           pageId = notionPageId;
           recordMap = await notion.getPage(pageId, { signFileUrls: false });
+          // Fetch missing page references that are embedded in rich text (e.g., table cells with multiple page links)
+          await fetchMissingPageReferences(recordMap);
+          // Normalize double-nested block structures from the Notion API
+          normalizeRecordMap(recordMap);
           await addSignedUrls({ recordMap });
         } catch (notionError) {
-          console.error("Notion API error:", notionError);
+          const message =
+            notionError instanceof Error
+              ? notionError.message
+              : String(notionError);
+          console.error("Notion API error:", message);
           // Return a temporary error page instead of 404
           return {
             props: { notionError: true },
@@ -162,6 +182,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       // Check feature flags for document links
       const featureFlags = await getFeatureFlags({ teamId });
       const annotationsEnabled = featureFlags.annotations;
+      const textSelectionEnabled = featureFlags.textSelection;
 
       return {
         props: {
@@ -173,8 +194,6 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
               document: {
                 ...linkDocument,
                 versions: [versionWithoutTypeAndFile],
-                // TODO: remove this once the assistant feature is re-enabled
-                assistantEnabled: false,
               },
             },
             brand,
@@ -199,11 +218,13 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
             teamId === "clup33by90000oewh4rfvp2eg" ||
             teamId === "cm76hfyvy0002q623hmen99pf" ||
-            teamId === "cm9ztf0s70005js04i689gefn",
+            teamId === "cm9ztf0s70005js04i689gefn" ||
+            teamId === "cmk2hnmqh0000k304zcoezt6n",
           logoOnAccessForm:
             teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
             teamId === "clup33by90000oewh4rfvp2eg",
           annotationsEnabled,
+          textSelectionEnabled,
         },
         revalidate: brand || recordMap ? 10 : 60,
       };
@@ -241,6 +262,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       const featureFlags = await getFeatureFlags({ teamId });
       const dataroomIndexEnabled = featureFlags.dataroomIndex;
       const annotationsEnabled = featureFlags.annotations;
+      const textSelectionEnabled = featureFlags.textSelection;
 
       const lastUpdatedAt = link.dataroom.documents.reduce(
         (max: number, doc: any) => {
@@ -282,18 +304,21 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
             teamId === "clup33by90000oewh4rfvp2eg" ||
             teamId === "cm76hfyvy0002q623hmen99pf" ||
-            teamId === "cm9ztf0s70005js04i689gefn",
+            teamId === "cm9ztf0s70005js04i689gefn" ||
+            teamId === "cmk2hnmqh0000k304zcoezt6n",
           logoOnAccessForm:
             teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
             teamId === "clup33by90000oewh4rfvp2eg",
           dataroomIndexEnabled,
           annotationsEnabled,
+          textSelectionEnabled,
         },
         revalidate: 10,
       };
     }
   } catch (error) {
-    console.error("Fetching error:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Fetching error:", message);
     return { props: { error: true }, revalidate: 30 };
   }
 };
@@ -316,6 +341,7 @@ export default function ViewPage({
   logoOnAccessForm,
   dataroomIndexEnabled,
   annotationsEnabled,
+  textSelectionEnabled,
   error,
   notionError,
 }: ViewPageProps & { error?: boolean; notionError?: boolean }) {
@@ -468,6 +494,7 @@ export default function ViewPage({
           token={storedToken}
           verifiedEmail={verifiedEmail}
           annotationsEnabled={annotationsEnabled}
+          textSelectionEnabled={textSelectionEnabled}
         />
       </>
     );
@@ -548,6 +575,7 @@ export default function ViewPage({
           previewToken={previewToken}
           preview={!!preview}
           dataroomIndexEnabled={dataroomIndexEnabled}
+          textSelectionEnabled={textSelectionEnabled}
         />
       </>
     );

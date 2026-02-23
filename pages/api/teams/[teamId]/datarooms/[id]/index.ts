@@ -110,24 +110,30 @@ export default async function handle(
 
       const {
         name,
+        internalName,
         enableChangeNotifications,
         defaultPermissionStrategy,
         allowBulkDownload,
         showLastUpdated,
         tags,
         agentsEnabled,
+        introductionEnabled,
+        introductionContent,
       } = req.body as {
         name?: string;
+        internalName?: string | null;
         enableChangeNotifications?: boolean;
         defaultPermissionStrategy?: DefaultPermissionStrategy;
         allowBulkDownload?: boolean;
         showLastUpdated?: boolean;
         tags?: string[];
         agentsEnabled?: boolean;
+        introductionEnabled?: boolean;
+        introductionContent?: any;
       };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
-      const isDataroomsPlus = team.plan.includes("datarooms-plus");
+      const isDataroomsPlus = team.plan.includes("datarooms-plus") || team.plan.includes("datarooms-premium");
       const isTrial = team.plan.includes("drtrial");
 
       if (
@@ -154,6 +160,9 @@ export default async function handle(
           },
           data: {
             ...(name && { name }),
+            ...(internalName !== undefined && { 
+              internalName: internalName === null || internalName === "" ? null : internalName.trim() 
+            }),
             ...(typeof enableChangeNotifications === "boolean" && {
               enableChangeNotifications,
             }),
@@ -166,6 +175,12 @@ export default async function handle(
             }),
             ...(typeof agentsEnabled === "boolean" && {
               agentsEnabled,
+            }),
+            ...(typeof introductionEnabled === "boolean" && {
+              introductionEnabled,
+            }),
+            ...(introductionContent !== undefined && {
+              introductionContent,
             }),
           },
         });

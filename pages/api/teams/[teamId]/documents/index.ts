@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
@@ -74,37 +75,45 @@ export default async function handle(
         orderBy = { createdAt: "desc" };
       }
 
+      // Build the base where clause for All Documents view
+      // Documents should be excluded if:
+      // 1. They are directly hidden (hiddenInAllDocuments: true)
+      // 2. They are in a folder that is hidden (folder.hiddenInAllDocuments: true)
+      const baseWhere = {
+        teamId: teamId,
+        hiddenInAllDocuments: false, // Exclude directly hidden documents
+        ...(query && {
+          name: {
+            contains: query,
+            mode: "insensitive" as const,
+          },
+        }),
+        // For root view (no search/sort), only show root-level documents
+        ...(!(query || sort) && {
+          folderId: null,
+        }),
+        // For search/sort view, also exclude documents in hidden folders
+        ...((query || sort) && {
+          OR: [
+            { folderId: null },
+            {
+              folder: {
+                hiddenInAllDocuments: false,
+              },
+            },
+          ],
+        }),
+      };
+
       const totalDocuments = usePagination
         ? await prisma.document.count({
-            where: {
-              teamId: teamId,
-              ...(query && {
-                name: {
-                  contains: query,
-                  mode: "insensitive",
-                },
-              }),
-              ...(!(query || sort) && {
-                folderId: null,
-              }),
-            },
+            where: baseWhere,
           })
         : undefined;
 
       // First, get documents without expensive counts
       const documents = await prisma.document.findMany({
-        where: {
-          teamId: teamId,
-          ...(query && {
-            name: {
-              contains: query,
-              mode: "insensitive",
-            },
-          }),
-          ...(!(query || sort) && {
-            folderId: null,
-          }),
-        },
+        where: baseWhere,
         orderBy,
         ...(usePagination && {
           skip: ((page as number) - 1) * (limit as number),
@@ -337,11 +346,25 @@ export default async function handle(
         return res.status(404).end("Team not found");
       }
 
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. New document uploads are not available.",
+        });
+      }
+
+      // For link documents, storageType is optional but processDocument requires it
+      // Use VERCEL_BLOB as a placeholder (not actually used for links)
+      const finalStorageType =
+        storageType || (fileType === "link" ? "VERCEL_BLOB" : "VERCEL_BLOB");
+
       const document = await processDocument({
         documentData: {
           name,
           key: fileUrl,
-          storageType,
+          storageType: finalStorageType,
           numPages,
           supportedFileType: fileType,
           contentType: contentType || null,

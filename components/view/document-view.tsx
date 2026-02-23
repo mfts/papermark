@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 import { useAnalytics } from "@/lib/analytics";
 import { useDisablePrint } from "@/lib/hooks/use-disable-print";
-import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
+import { LinkWithDocument, NotionTheme } from "@/lib/types";
 
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
@@ -35,7 +35,12 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
         file: string;
         pageNumber: string;
         embeddedLinks: string[];
-        pageLinks: { href: string; coords: string }[];
+        pageLinks: {
+          href: string;
+          coords: string;
+          isInternal?: boolean;
+          targetPage?: number;
+        }[];
         metadata: { width: number; height: number; scaleFactor: number };
       }[]
     | null;
@@ -67,6 +72,7 @@ export default function DocumentView({
   logoOnAccessForm,
   isEmbedded,
   annotationsEnabled,
+  textSelectionEnabled,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -89,6 +95,7 @@ export default function DocumentView({
   isEmbedded?: boolean;
   logoOnAccessForm?: boolean;
   annotationsEnabled?: boolean;
+  textSelectionEnabled?: boolean;
 }) {
   useDisablePrint();
   const {
@@ -164,6 +171,7 @@ export default function DocumentView({
           isTeamMember,
           viewerId,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
+
         analytics.identify(
           userEmail ?? verifiedEmail ?? data.email ?? undefined,
         );
@@ -289,6 +297,7 @@ export default function DocumentView({
       </div>
     );
   }
+
   return (
     <div
       className="bg-gray-950"
@@ -309,6 +318,7 @@ export default function DocumentView({
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
           annotationsEnabled={annotationsEnabled}
+          textSelectionEnabled={textSelectionEnabled}
         />
       ) : (
         <div className="flex h-screen items-center justify-center">

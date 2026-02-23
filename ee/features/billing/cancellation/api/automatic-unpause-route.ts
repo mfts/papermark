@@ -128,6 +128,10 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
       await stripe.subscriptions.update(team.subscriptionId, {
         pause_collection: "", // Remove pause_collection (unpause)
       });
+      await stripe.subscriptions.update(team.subscriptionId, {
+        proration_behavior: "create_prorations", // Create prorations for immediate billing
+        billing_cycle_anchor: "now", // Reset billing cycle to start immediately
+      });
     } else {
       // Handle new coupon-based method
       // Since 3 months have passed, we definitely need to reset the billing cycle

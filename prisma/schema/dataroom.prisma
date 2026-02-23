@@ -2,6 +2,7 @@ model Dataroom {
   id           String             @id @default(cuid())
   pId          String             @unique // This is the generated public ID for the dataroom dr_1234
   name         String
+  internalName String?            // Private, internal name/alias visible only to the dataroom owner
   description  String?
   teamId       String
   team         Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -45,6 +46,10 @@ model Dataroom {
   // display settings
   showLastUpdated Boolean @default(true) // Show/hide last updated date in dataroom view
 
+  // Introduction page settings
+  introductionEnabled Boolean @default(false) // Toggle to show introduction on first visit
+  introductionContent Json?   // TipTap JSON content for the introduction page
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -85,6 +90,8 @@ model DataroomFolder {
   name              String
   path              String // the materialized path to the folder; starts always with "/"
   parentId          String?
+  icon              String? // Icon identifier from predefined icon set (e.g., "folder", "briefcase", "archive")
+  color             String? // Color from predefined palette (e.g., "gray", "red", "blue")
   documents         DataroomDocument[]
   childFolders      DataroomFolder[]   @relation("SubFolders")
   parentFolder      DataroomFolder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: SetNull)
@@ -107,6 +114,7 @@ model DataroomBrand {
   banner         String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   brandColor     String? // This should be a reference to the brand color
   accentColor    String? // This should be a reference to the accent color
+  applyAccentColorToDataroomView Boolean @default(false) // When true, apply accentColor to dataroom list/tree viewer background
   welcomeMessage String? // This should be a reference to the welcome message
   dataroomId     String   @unique
   dataroom       Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)

@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 
-import { Bot, ExternalLink, Loader2, Shield } from "lucide-react";
+import { ExternalLink, Shield } from "lucide-react";
+
+import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -20,6 +22,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+
+import { AIIndexingStatus } from "./ai-indexing-status";
 
 interface DocumentAIDialogProps {
   open: boolean;
@@ -45,12 +49,18 @@ export function DocumentAIDialog({
   const [loading, setLoading] = useState(false);
   const [indexing, setIndexing] = useState(false);
 
+  // Run tracking state for polling
+  const [indexingRunId, setIndexingRunId] = useState<string | null>(null);
+
   // Don't render if AI feature is not enabled
   if (!isAIFeatureEnabled) {
     return null;
   }
 
-  const handleToggleAgents = async (enabled: boolean) => {
+  const isIndexed = !!vectorStoreFileId;
+
+  // Disable agents (only allowed if already enabled)
+  const handleDisableAgents = async () => {
     setLoading(true);
 
     try {
@@ -61,30 +71,31 @@ export function DocumentAIDialog({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ agentsEnabled: enabled }),
+          body: JSON.stringify({ agentsEnabled: false }),
         },
       );
 
       if (!response.ok) {
-        throw new Error("Failed to update agents setting");
+        throw new Error("Failed to disable agents");
       }
 
-      setAgentsEnabled(enabled);
-      toast.success(`AI Agents ${enabled ? "enabled" : "disabled"}`);
+      setAgentsEnabled(false);
+      toast.success("AI Agents disabled");
 
       // Mutate the document cache
       await mutate(`/api/teams/${teamId}/documents/${documentId}`);
     } catch (error) {
-      console.error("Error toggling agents:", error);
-      toast.error("Failed to update agents setting");
-      setAgentsEnabled(!enabled);
+      console.error("Error disabling agents:", error);
+      toast.error("Failed to disable agents");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleIndexDocument = async () => {
+  // Enable agents and index document in one flow
+  const handleEnableAndIndex = async () => {
     setIndexing(true);
+    setIndexingRunId(null);
 
     try {
       const response = await fetch(
@@ -105,26 +116,101 @@ export function DocumentAIDialog({
         throw new Error(data.error);
       }
 
-      toast.success("Document indexed successfully");
-
-      // Mutate the document cache
-      await mutate(`/api/teams/${teamId}/documents/${documentId}`);
+      // Set up polling tracking
+      if (data.runId) {
+        setIndexingRunId(data.runId);
+      }
     } catch (error: any) {
       console.error("Error indexing document:", error);
       toast.error(error.message || "Failed to index document");
-    } finally {
       setIndexing(false);
     }
   };
 
-  const isIndexed = !!vectorStoreFileId;
+  // Re-index an already enabled document
+  const handleReindex = async () => {
+    setIndexing(true);
+    setIndexingRunId(null);
+
+    try {
+      const response = await fetch(
+        `/api/ai/store/teams/${teamId}/documents/${documentId}`,
+        {
+          method: "POST",
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to re-index document");
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      // Set up polling tracking
+      if (data.runId) {
+        setIndexingRunId(data.runId);
+      }
+    } catch (error: any) {
+      console.error("Error re-indexing document:", error);
+      toast.error(error.message || "Failed to re-index document");
+      setIndexing(false);
+    }
+  };
+
+  const handleIndexingComplete = async () => {
+    setIndexing(false);
+    setIndexingRunId(null);
+
+    // Only enable agents after successful indexing
+    if (!agentsEnabled) {
+      try {
+        const response = await fetch(
+          `/api/teams/${teamId}/documents/${documentId}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ agentsEnabled: true }),
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to enable agents");
+        }
+
+        setAgentsEnabled(true);
+      } catch (error) {
+        console.error("Error enabling agents after indexing:", error);
+        toast.error("Indexed successfully but failed to enable agents");
+        await mutate(`/api/teams/${teamId}/documents/${documentId}`);
+        return;
+      }
+    }
+
+    toast.success("Document indexed successfully");
+    // Mutate the document cache
+    await mutate(`/api/teams/${teamId}/documents/${documentId}`);
+  };
+
+  const handleIndexingError = (error: string) => {
+    setIndexing(false);
+    setIndexingRunId(null);
+    toast.error(error || "Failed to index document");
+    // Don't enable agentsEnabled on failure
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-primary" />
+            <PapermarkSparkle className="h-5 w-5 text-primary" />
             AI Agents
           </DialogTitle>
           <DialogDescription>
@@ -134,60 +220,72 @@ export function DocumentAIDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Toggle Section */}
-          <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
-            <Label htmlFor="agents-toggle" className="flex flex-col space-y-1">
-              <span className="font-medium">Enable AI Chat</span>
-              <span className="text-xs font-normal leading-snug text-muted-foreground">
-                Allow visitors to chat with AI about this document
-              </span>
-            </Label>
-            <Switch
-              id="agents-toggle"
-              checked={agentsEnabled}
-              onCheckedChange={handleToggleAgents}
-              disabled={loading}
-            />
-          </div>
-
-          {/* Index Status */}
-          {agentsEnabled && (
-            <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+          {/* Status & Actions Section */}
+          <div className="space-y-3 rounded-lg border p-4">
+            <div className="flex items-center justify-between space-x-2">
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium">Index Status</span>
+                <span className="text-sm font-medium">
+                  {agentsEnabled ? "AI Chat Status" : "Enable AI Chat"}
+                </span>
                 <span className="text-xs text-muted-foreground">
-                  {isIndexed
-                    ? "Document is indexed and ready for AI chat"
-                    : "Document needs to be indexed before AI chat can work"}
+                  {agentsEnabled
+                    ? isIndexed
+                      ? "Document is indexed and ready for AI chat"
+                      : "Document needs to be re-indexed"
+                    : "Index your document to enable AI-powered chat"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span
-                  className={cn(
-                    "inline-flex h-2 w-2 rounded-full",
-                    isIndexed ? "bg-green-500" : "bg-amber-500",
-                  )}
-                />
-                <Button
-                  onClick={handleIndexDocument}
-                  disabled={indexing}
-                  size="sm"
-                  variant={isIndexed ? "outline" : "default"}
-                >
-                  {indexing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Indexing...
-                    </>
-                  ) : isIndexed ? (
-                    "Re-index"
-                  ) : (
-                    "Index Document"
-                  )}
-                </Button>
+                {agentsEnabled && (
+                  <span
+                    className={cn(
+                      "inline-flex h-2 w-2 rounded-full",
+                      isIndexed ? "bg-green-500" : "bg-amber-500",
+                    )}
+                  />
+                )}
+                {agentsEnabled ? (
+                  <>
+                    <Button
+                      onClick={handleReindex}
+                      disabled={indexing}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {indexing ? "Indexing..." : "Re-index"}
+                    </Button>
+                    <Button
+                      onClick={handleDisableAgents}
+                      disabled={loading || indexing}
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive"
+                    >
+                      Disable
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={handleEnableAndIndex}
+                    disabled={indexing}
+                    size="sm"
+                  >
+                    {indexing ? "Indexing..." : "Enable AI Chat"}
+                  </Button>
+                )}
               </div>
             </div>
-          )}
+
+            {/* Indexing status with polling */}
+            {indexingRunId && (
+              <AIIndexingStatus
+                runId={indexingRunId}
+                onComplete={handleIndexingComplete}
+                onError={handleIndexingError}
+                className="pt-2 border-t"
+              />
+            )}
+          </div>
 
           {/* Privacy Notice */}
           <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950/30">

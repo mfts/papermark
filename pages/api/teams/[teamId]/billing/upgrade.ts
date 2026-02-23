@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import { stripeInstance } from "@/ee/stripe";
+import { getCouponFromPlan } from "@/ee/stripe/functions/get-coupon-from-plan";
 import { getPlanFromPriceId, isOldAccount } from "@/ee/stripe/utils";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
@@ -45,9 +46,10 @@ export default async function handle(
       return;
     }
 
-    const { teamId, priceId } = req.query as {
+    const { teamId, priceId, applyYearlyDiscount } = req.query as {
       teamId: string;
       priceId: string;
+      applyYearlyDiscount?: string;
     };
 
     const { id: userId, email: userEmail } = session.user as CustomUser;
@@ -80,6 +82,34 @@ export default async function handle(
     const minimumQuantity = plan.minQuantity;
 
     let stripeSession;
+    let couponId: string | undefined;
+
+    // Apply 30% coupon for yearly plans if requested (same as retention flow)
+    // Since the upgrade modal is yearly-only, if applyYearlyDiscount is true, always apply
+    if (applyYearlyDiscount === "true") {
+      // Use the same logic as retention flow: getCouponFromPlan(team.plan, isAnnualPlan)
+      // team.plan format is "pro", "business", "pro+old", "business+old", etc.
+      const planString = oldAccount ? `${plan.slug}+old` : plan.slug;
+      couponId = getCouponFromPlan(planString, true);
+      
+      // Verify coupon exists in Stripe (coupons might only exist in production, not test mode)
+      const stripe = stripeInstance(oldAccount);
+      try {
+        await stripe.coupons.retrieve(couponId);
+      } catch (error: any) {
+        // If coupon doesn't exist (common in test mode), continue without discount
+        if (error.code === "resource_missing") {
+          console.warn(
+            `[Upgrade] Coupon "${couponId}" not found in ${process.env.NEXT_PUBLIC_VERCEL_ENV || "test"} mode. ` +
+            `Continuing without discount. This is expected if the coupon only exists in production.`
+          );
+          couponId = undefined;
+        } else {
+          // Re-throw other errors
+          throw error;
+        }
+      }
+    }
 
     const lineItem = {
       price: priceId,
@@ -96,42 +126,38 @@ export default async function handle(
     const dubDiscount = await getDubDiscountForExternalUserId(userId);
 
     const stripe = stripeInstance(oldAccount);
+    const baseSessionConfig = {
+      billing_address_collection: "required" as const,
+      success_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
+      cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
+      line_items: [lineItem],
+      automatic_tax: {
+        enabled: true,
+      },
+      tax_id_collection: {
+        enabled: true,
+      },
+      mode: "subscription" as const,
+      client_reference_id: teamId,
+      ...(couponId && {
+        discounts: [{ coupon: couponId }],
+      }),
+    };
+
     if (team.stripeId) {
       // if the team already has a stripeId (i.e. is a customer) let's use as a customer
       stripeSession = await stripe.checkout.sessions.create({
+        ...baseSessionConfig,
         customer: team.stripeId,
         customer_update: { name: "auto" },
-        billing_address_collection: "required",
-        success_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
-        cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
-        line_items: [lineItem],
-        automatic_tax: {
-          enabled: true,
-        },
-        tax_id_collection: {
-          enabled: true,
-        },
-        mode: "subscription",
-        allow_promotion_codes: true,
-        client_reference_id: teamId,
+        ...(!couponId && { allow_promotion_codes: true }),
       });
     } else {
       // else initialize a new customer
       stripeSession = await stripe.checkout.sessions.create({
+        ...baseSessionConfig,
         customer_email: userEmail ?? undefined,
-        billing_address_collection: "required",
-        success_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
-        cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
-        line_items: [lineItem],
-        automatic_tax: {
-          enabled: true,
-        },
-        tax_id_collection: {
-          enabled: true,
-        },
-        mode: "subscription",
-        client_reference_id: teamId,
-        ...(dubDiscount ?? { allow_promotion_codes: true }),
+        ...(dubDiscount ?? (!couponId && { allow_promotion_codes: true })),
         metadata: {
           dubCustomerId: userId,
         },

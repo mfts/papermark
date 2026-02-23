@@ -352,6 +352,11 @@ export function useDataroomViewers({ dataroomId }: { dataroomId: string }) {
   };
 }
 
+type DataroomVisitsResponse = {
+  views: any[];
+  hiddenFromPause: number;
+};
+
 export function useDataroomVisits({
   dataroomId,
   groupId,
@@ -362,7 +367,7 @@ export function useDataroomVisits({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: views, error } = useSWR<any[]>(
+  const { data, error } = useSWR<DataroomVisitsResponse>(
     teamId &&
       dataroomId &&
       `/api/teams/${teamId}/datarooms/${dataroomId}${groupId ? `/groups/${groupId}` : ""}/views`,
@@ -373,8 +378,9 @@ export function useDataroomVisits({
   );
 
   return {
-    views,
-    loading: !error && !views,
+    views: data?.views,
+    hiddenFromPause: data?.hiddenFromPause ?? 0,
+    loading: !error && !data,
     error,
   };
 }

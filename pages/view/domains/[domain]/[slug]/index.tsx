@@ -12,8 +12,14 @@ import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 import z from "zod";
 
+import { fetchLinkDataByDomainSlug } from "@/lib/api/links/link-data";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import notion from "@/lib/notion";
+import {
+  addSignedUrls,
+  fetchMissingPageReferences,
+  normalizeRecordMap,
+} from "@/lib/notion/utils";
 import {
   CustomUser,
   LinkWithDataroom,
@@ -62,16 +68,14 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       .regex(/^[a-zA-Z0-9_-]+$/, "Invalid path parameter")
       .parse(slugParam);
 
-    const res = await fetch(
-      `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
-        domain,
-      )}/${encodeURIComponent(slug)}`,
-    );
-    if (!res.ok) {
-      throw new Error(`Failed to fetch: ${res.status}`);
+    const result = await fetchLinkDataByDomainSlug({ domain, slug });
+    if (result.status !== "ok") {
+      return {
+        notFound: true,
+      };
     }
-    const responseData = (await res.json()) as any;
-    const { linkType, link, brand, linkId } = responseData;
+
+    const { linkType, link, brand, linkId } = result;
 
     if (!linkType) {
       return {
@@ -138,12 +142,21 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         }
 
         pageId = notionPageId;
-        recordMap = await notion.getPage(pageId);
+        recordMap = await notion.getPage(pageId, { signFileUrls: false });
+        // Fetch missing page references that are embedded in rich text (e.g., table cells with multiple page links)
+        await fetchMissingPageReferences(recordMap);
+        // Normalize double-nested block structures from the Notion API
+        normalizeRecordMap(recordMap);
+        await addSignedUrls({ recordMap });
       }
 
       const { team, teamId, advancedExcelEnabled, ...linkDocument } =
         link.document;
       const teamPlan = team?.plan || "free";
+
+      // Check feature flags for document links
+      const docFeatureFlags = await getFeatureFlags({ teamId: teamId || undefined });
+      const textSelectionEnabled = docFeatureFlags.textSelection;
 
       return {
         props: {
@@ -155,8 +168,6 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
               document: {
                 ...linkDocument,
                 versions: [versionWithoutTypeAndFile],
-                // TODO: remove this once the assistant feature is re-enabled
-                assistantEnabled: false,
               },
             },
             brand,
@@ -180,10 +191,12 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
             teamId === "clup33by90000oewh4rfvp2eg" ||
             teamId === "cm76hfyvy0002q623hmen99pf" ||
-            teamId === "cm9ztf0s70005js04i689gefn",
+            teamId === "cm9ztf0s70005js04i689gefn" ||
+            teamId === "cmk2hnmqh0000k304zcoezt6n",
           logoOnAccessForm:
             teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
             teamId === "clup33by90000oewh4rfvp2eg",
+          textSelectionEnabled,
         },
         revalidate: 10,
       };
@@ -217,9 +230,10 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 
       const { teamId } = link.dataroom;
 
-      // Check if dataroomIndex feature flag is enabled
+      // Check feature flags
       const featureFlags = await getFeatureFlags({ teamId });
       const dataroomIndexEnabled = featureFlags.dataroomIndex;
+      const textSelectionEnabled = featureFlags.textSelection;
 
       const lastUpdatedAt = link.dataroom.documents.reduce(
         (max: number, doc: any) => {
@@ -261,17 +275,20 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
             teamId === "clup33by90000oewh4rfvp2eg" ||
             teamId === "cm76hfyvy0002q623hmen99pf" ||
-            teamId === "cm9ztf0s70005js04i689gefn",
+            teamId === "cm9ztf0s70005js04i689gefn" ||
+            teamId === "cmk2hnmqh0000k304zcoezt6n",
           logoOnAccessForm:
             teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
             teamId === "clup33by90000oewh4rfvp2eg",
           dataroomIndexEnabled,
+          textSelectionEnabled,
         },
         revalidate: 10,
       };
     }
   } catch (error) {
-    console.error("Fetching error:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Fetching error:", message);
     return { props: { error: true }, revalidate: 30 };
   }
 };
@@ -292,6 +309,7 @@ export default function ViewPage({
   useCustomAccessForm,
   logoOnAccessForm,
   dataroomIndexEnabled,
+  textSelectionEnabled,
   error,
 }: {
   linkData: DocumentLinkData | DataroomLinkData | WorkflowLinkData;
@@ -313,6 +331,7 @@ export default function ViewPage({
   useCustomAccessForm: boolean;
   logoOnAccessForm: boolean;
   dataroomIndexEnabled?: boolean;
+  textSelectionEnabled?: boolean;
   error?: boolean;
 }) {
   const router = useRouter();
@@ -459,6 +478,7 @@ export default function ViewPage({
           token={storedToken}
           verifiedEmail={verifiedEmail}
           logoOnAccessForm={logoOnAccessForm}
+          textSelectionEnabled={textSelectionEnabled}
         />
       </>
     );
@@ -539,6 +559,7 @@ export default function ViewPage({
           preview={!!preview}
           logoOnAccessForm={logoOnAccessForm}
           dataroomIndexEnabled={dataroomIndexEnabled}
+          textSelectionEnabled={textSelectionEnabled}
         />
       </>
     );

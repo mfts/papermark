@@ -18,10 +18,12 @@ import {
 export const DataroomHeader = ({
   title,
   description,
+  internalName,
   actions,
 }: {
   title: string;
   description: string;
+  internalName?: string | null;
   actions?: React.ReactNode[];
 }) => {
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
@@ -39,9 +41,14 @@ export const DataroomHeader = ({
     <section className="mb-4">
       <div className="flex items-center justify-between">
         <div className="flex min-h-10 items-center gap-x-2 space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-            {title}
-          </h1>
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+              {internalName || title}
+            </h1>
+            {internalName && (
+              <p className="text-sm text-muted-foreground">{title}</p>
+            )}
+          </div>
           {dataroom?.enableChangeNotifications ? (
             <Tooltip>
               <TooltipTrigger asChild>

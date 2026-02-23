@@ -48,11 +48,17 @@ export function useViewerAnnotations(
   documentId?: string,
   viewId?: string,
 ) {
+  // Don't fetch annotations if viewId is not available
+  // This prevents 404 errors when the view hasn't been created yet
+  const shouldFetch = !!viewId;
+
   // For dataroom document links, use the specific document endpoint
   // For regular document links, use the general link endpoint
-  const endpoint = documentId
-    ? `/api/links/${linkId}/documents/${documentId}/annotations?viewId=${viewId}`
-    : `/api/links/${linkId}/annotations?viewId=${viewId}`;
+  const endpoint = shouldFetch
+    ? documentId
+      ? `/api/links/${linkId}/documents/${documentId}/annotations?viewId=${viewId}`
+      : `/api/links/${linkId}/annotations?viewId=${viewId}`
+    : null;
 
   const { data, error, mutate } = useSWR<Omit<Annotation, "createdBy">[]>(
     endpoint,
@@ -65,7 +71,7 @@ export function useViewerAnnotations(
 
   return {
     annotations: data,
-    loading: !error && !data,
+    loading: shouldFetch && !error && !data,
     error,
     mutate,
   };

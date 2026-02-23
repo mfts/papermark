@@ -118,6 +118,7 @@ type TStatsData = {
   hiddenViewCount: number;
   viewsWithDuration: ViewWithDuration[];
   totalViews: number;
+  hiddenFromPause: number;
 };
 
 export function useDocumentVisits(page: number, limit: number) {

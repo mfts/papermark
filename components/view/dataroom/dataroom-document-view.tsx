@@ -40,7 +40,12 @@ export type DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE = {
         file: string;
         pageNumber: string;
         embeddedLinks: string[];
-        pageLinks: { href: string; coords: string }[];
+        pageLinks: {
+          href: string;
+          coords: string;
+          isInternal?: boolean;
+          targetPage?: number;
+        }[];
         metadata: { width: number; height: number; scaleFactor: number };
       }[]
     | null;
@@ -79,6 +84,7 @@ export default function DataroomDocumentView({
   isEmbedded,
   preview,
   logoOnAccessForm,
+  textSelectionEnabled,
 }: {
   link: LinkWithDataroomDocument;
   userEmail: string | null | undefined;
@@ -99,6 +105,7 @@ export default function DataroomDocumentView({
   isEmbedded?: boolean;
   preview?: boolean;
   logoOnAccessForm?: boolean;
+  textSelectionEnabled?: boolean;
 }) {
   useDisablePrint();
   const {
@@ -122,7 +129,6 @@ export default function DataroomDocumentView({
   );
   const [verificationRequested, setVerificationRequested] =
     useState<boolean>(false);
-  const [dataroomVerified, setDataroomVerified] = useState<boolean>(false);
   const [verificationToken, setVerificationToken] = useState<string | null>(
     token ?? null,
   );
@@ -146,7 +152,6 @@ export default function DataroomDocumentView({
         userId: userId ?? null,
         documentVersionId: link.dataroomDocument.document.versions[0].id,
         hasPages: link.dataroomDocument.document.versions[0].hasPages,
-        dataroomVerified: dataroomVerified,
         dataroomId: link.dataroomId,
         linkType: "DATAROOM_LINK",
         dataroomViewId: viewData.dataroomViewId ?? null,
@@ -246,7 +251,6 @@ export default function DataroomDocumentView({
         setVerificationToken(null);
         setCode(null);
         setIsInvalidCode(true);
-        setDataroomVerified(false);
       }
       setIsLoading(false);
     }
@@ -360,6 +364,7 @@ export default function DataroomDocumentView({
             undefined
           }
           canDownload={viewData.canDownload}
+          textSelectionEnabled={textSelectionEnabled}
         />
       ) : (
         <div className="flex h-screen items-center justify-center">

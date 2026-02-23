@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { Prisma } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -36,7 +36,9 @@ export default async function handle(
     const validSortFields = ["lastViewed", "totalVisits"];
     const validSortOrders = ["asc", "desc"];
     const sort = validSortFields.includes(sortBy || "") ? sortBy : "lastViewed";
-    const order = validSortOrders.includes(sortOrder || "") ? sortOrder : "desc";
+    const order = validSortOrders.includes(sortOrder || "")
+      ? sortOrder
+      : "desc";
 
     const userId = (session.user as CustomUser).id;
 
@@ -62,22 +64,44 @@ export default async function handle(
         : Prisma.empty;
 
       let orderByClause: Prisma.Sql;
-      if (sort === 'totalVisits') {
-        orderByClause = order === 'desc'
-          ? Prisma.sql`"totalVisits" DESC, "createdAt" DESC`
-          : Prisma.sql`"totalVisits" ASC, "createdAt" DESC`;
-      } else if (sort === 'lastViewed') {
-        orderByClause = order === 'desc'
-          ? Prisma.sql`"lastViewed" DESC NULLS LAST, "createdAt" DESC`
-          : Prisma.sql`"lastViewed" ASC NULLS LAST, "createdAt" DESC`;
+      if (sort === "totalVisits") {
+        orderByClause =
+          order === "desc"
+            ? Prisma.sql`"totalVisits" DESC, "createdAt" DESC`
+            : Prisma.sql`"totalVisits" ASC, "createdAt" DESC`;
+      } else if (sort === "lastViewed") {
+        orderByClause =
+          order === "desc"
+            ? Prisma.sql`"lastViewed" DESC NULLS LAST, "createdAt" DESC`
+            : Prisma.sql`"lastViewed" ASC NULLS LAST, "createdAt" DESC`;
       } else {
-        orderByClause = order === 'desc'
-          ? Prisma.sql`"createdAt" DESC`
-          : Prisma.sql`"createdAt" ASC`;
+        orderByClause =
+          order === "desc"
+            ? Prisma.sql`"createdAt" DESC`
+            : Prisma.sql`"createdAt" ASC`;
       }
 
-      const viewersWithStats = await prisma.$queryRaw`
-        WITH viewer_stats AS (
+      const viewersWithStats = (await prisma.$queryRaw`
+        WITH view_stats AS (
+          SELECT 
+            vw."viewerId",
+            COUNT(*)::int as total_visits,
+            MAX(vw."viewedAt") as last_viewed
+          FROM "View" vw
+          JOIN "Viewer" vr ON vr.id = vw."viewerId" AND vr."teamId" = ${teamId}
+          WHERE vw."documentId" IS NOT NULL
+          GROUP BY vw."viewerId"
+        ),
+        latest_viewer_names AS (
+          SELECT DISTINCT ON (vw."viewerId")
+            vw."viewerId",
+            vw."viewerName"
+          FROM "View" vw
+          JOIN "Viewer" vr ON vr.id = vw."viewerId" AND vr."teamId" = ${teamId}
+          WHERE vw."viewerName" IS NOT NULL
+          ORDER BY vw."viewerId", vw."viewedAt" DESC
+        ),
+        viewer_stats AS (
           SELECT 
             v.id,
             v.email,
@@ -85,25 +109,10 @@ export default async function handle(
             v."updatedAt",
             COALESCE(vs.total_visits, 0)::int as "totalVisits",
             vs.last_viewed as "lastViewed",
-            vs.viewer_name as "viewerName"
+            lvn."viewerName" as "viewerName"
           FROM "Viewer" v
-          LEFT JOIN (
-            SELECT 
-              "viewerId",
-              COUNT(*)::int as total_visits,
-              MAX("viewedAt") as last_viewed,
-              (
-                SELECT "viewerName"
-                FROM "View" v2
-                WHERE v2."viewerId" = "View"."viewerId"
-                  AND v2."viewerName" IS NOT NULL
-                ORDER BY v2."viewedAt" DESC
-                LIMIT 1
-              ) as viewer_name
-            FROM "View"
-            WHERE "documentId" IS NOT NULL
-            GROUP BY "viewerId"
-          ) vs ON v.id = vs."viewerId"
+          LEFT JOIN view_stats vs ON v.id = vs."viewerId"
+          LEFT JOIN latest_viewer_names lvn ON v.id = lvn."viewerId"
           WHERE v."teamId" = ${teamId}
             ${searchCondition}
         )
@@ -111,7 +120,7 @@ export default async function handle(
         ORDER BY ${orderByClause}
         LIMIT ${limit}
         OFFSET ${offset}
-      ` as Array<{
+      `) as Array<{
         id: string;
         email: string;
         createdAt: Date;
@@ -121,12 +130,12 @@ export default async function handle(
         viewerName: string | null;
       }>;
 
-      const totalCountResult = await prisma.$queryRaw`
+      const totalCountResult = (await prisma.$queryRaw`
         SELECT COUNT(*)::int as count
         FROM "Viewer" v
         WHERE v."teamId" = ${teamId}
           ${searchCondition}
-      ` as Array<{ count: number }>;
+      `) as Array<{ count: number }>;
 
       const totalCount = totalCountResult[0]?.count || 0;
       const totalPages = Math.ceil(totalCount / limit);
@@ -157,8 +166,10 @@ export default async function handle(
         },
       };
 
-
-      res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
+      res.setHeader(
+        "Cache-Control",
+        "public, s-maxage=30, stale-while-revalidate=300",
+      );
 
       return res.status(200).json(response);
     } catch (error) {

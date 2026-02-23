@@ -6,6 +6,7 @@
  *
  */
 import React, {
+  CSSProperties,
   createContext,
   memo,
   useCallback,
@@ -25,9 +26,14 @@ import {
 import { cn } from "@/lib/utils";
 
 const ctx = createContext(0);
+const prefersLightTextCtx = createContext(false);
 
 function useIndent() {
   return useContext(ctx);
+}
+
+export function usePrefersLightText() {
+  return useContext(prefersLightTextCtx);
 }
 
 interface FolderProps {
@@ -50,11 +56,24 @@ interface FileProps {
   onToggle?: (active: boolean) => void;
 }
 
-function Tree({ children }: { children: ReactNode }): ReactElement {
+function Tree({
+  children,
+  prefersLightText,
+  style,
+}: {
+  children: ReactNode;
+  prefersLightText?: boolean;
+  style?: CSSProperties;
+}): ReactElement {
   return (
-    <div className={cn("nextra-filetree !mt-0 w-full select-none text-sm")}>
-      <div className="block space-y-1 rounded-lg">{children}</div>
-    </div>
+    <prefersLightTextCtx.Provider value={prefersLightText ?? false}>
+      <div
+        className={cn("nextra-filetree !mt-0 w-full select-none text-sm")}
+        style={style}
+      >
+        <div className="block space-y-1 rounded-lg">{children}</div>
+      </div>
+    </prefersLightTextCtx.Provider>
   );
 }
 
@@ -83,6 +102,7 @@ const Folder = memo<FolderProps>(
     disable,
   }) => {
     const indent = useIndent();
+    const prefersLightText = usePrefersLightText();
     const [isOpen, setIsOpen] = useState(defaultOpen || childActive);
 
     useEffect(() => {
@@ -121,9 +141,15 @@ const Folder = memo<FolderProps>(
           title={name}
           className={cn(
             "inline-flex w-full cursor-pointer items-center overflow-hidden",
-            "rounded-md text-foreground duration-100 hover:bg-gray-100 hover:dark:bg-muted",
+            "rounded-md duration-100",
+            prefersLightText
+              ? "text-[var(--viewer-text)] hover:bg-[var(--viewer-control-bg)]"
+              : "text-foreground hover:bg-gray-100 hover:dark:bg-muted",
             "px-3 py-1.5 leading-6",
-            active && "bg-gray-100 font-semibold dark:bg-muted",
+            active &&
+              (prefersLightText
+                ? "bg-[var(--viewer-panel-active)] font-semibold"
+                : "bg-gray-100 font-semibold dark:bg-muted"),
             disable && "pointer-events-none cursor-auto opacity-50",
             className,
           )}
@@ -169,17 +195,24 @@ Folder.displayName = "Folder";
 
 const File = memo<FileProps>(({ label, name, active, onToggle }) => {
   const indent = useIndent();
+  const prefersLightText = usePrefersLightText();
   const toggle = useCallback(() => {
     onToggle?.(!active);
-  }, [onToggle]);
+  }, [active, onToggle]);
 
   return (
     <li
       className={cn(
         "flex list-none",
-        "rounded-md text-foreground duration-100 hover:bg-gray-100 hover:dark:bg-muted",
+        "rounded-md duration-100",
+        prefersLightText
+          ? "text-[var(--viewer-muted-text)] hover:bg-[var(--viewer-control-bg)]"
+          : "text-foreground hover:bg-gray-100 hover:dark:bg-muted",
         "px-3 py-1.5 leading-6",
-        active && "bg-gray-100 font-semibold dark:bg-muted",
+        active &&
+          (prefersLightText
+            ? "bg-[var(--viewer-panel-active)] text-[var(--viewer-text)] font-semibold"
+            : "bg-gray-100 font-semibold dark:bg-muted"),
       )}
     >
       <span

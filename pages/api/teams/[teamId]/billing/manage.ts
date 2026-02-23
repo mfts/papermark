@@ -1,9 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { stripeInstance } from "@/ee/stripe";
+import { getCouponFromPlan } from "@/ee/stripe/functions/get-coupon-from-plan";
 import { getQuantityFromPriceId } from "@/ee/stripe/functions/get-quantity-from-plan";
 import getSubscriptionItem from "@/ee/stripe/functions/get-subscription-item";
-import { isOldAccount } from "@/ee/stripe/utils";
+import { getPlanFromPriceId, isOldAccount } from "@/ee/stripe/utils";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
@@ -42,6 +43,7 @@ export default async function handle(
       addSeat,
       proAnnualBanner,
       return_url,
+      applyYearlyDiscount,
       type = "manage",
     } = req.body as {
       priceId: string;
@@ -50,11 +52,13 @@ export default async function handle(
       addSeat?: boolean;
       proAnnualBanner?: boolean;
       return_url?: string;
+      applyYearlyDiscount?: boolean;
       type?:
         | "manage"
         | "invoices"
         | "subscription_update"
-        | "payment_method_update";
+        | "payment_method_update"
+        | "cancellation";
     };
     try {
       const team = await prisma.team.findUnique({
@@ -96,6 +100,39 @@ export default async function handle(
       const minQuantity = getQuantityFromPriceId(priceId);
 
       const stripe = stripeInstance(isOldAccount(team.plan));
+      
+      // Apply 30% discount for yearly plans before redirecting to billing portal
+      // Same logic as retention flow: apply coupon directly to subscription
+      if (applyYearlyDiscount && upgradePlan) {
+        const plan = getPlanFromPriceId(priceId, isOldAccount(team.plan));
+        if (plan) {
+          // Use the same logic as retention flow: getCouponFromPlan(team.plan, isAnnualPlan)
+          // team.plan format is "pro", "business", "pro+old", "business+old", etc.
+          const planString = `${plan.slug}${isOldAccount(team.plan) ? "+old" : ""}`;
+          const couponId = getCouponFromPlan(planString, true);
+          
+          // Verify coupon exists before applying (coupons might only exist in production, not test mode)
+          try {
+            await stripe.coupons.retrieve(couponId);
+            // Apply discount directly to subscription (same as retention flow)
+            await stripe.subscriptions.update(team.subscriptionId, {
+              discounts: [{ coupon: couponId }],
+            });
+          } catch (error: any) {
+            // If coupon doesn't exist (common in test mode), log and skip
+            if (error.code === "resource_missing") {
+              console.warn(
+                `[Manage] Coupon "${couponId}" not found in ${process.env.NEXT_PUBLIC_VERCEL_ENV || "test"} mode. ` +
+                `Skipping discount application. This is expected if the coupon only exists in production.`
+              );
+            } else {
+              // Re-throw other errors
+              throw error;
+            }
+          }
+        }
+      }
+
       const { url } = await stripe.billingPortal.sessions.create({
         customer: team.stripeId,
         return_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
@@ -131,6 +168,22 @@ export default async function handle(
             type: "subscription_update",
             subscription_update: {
               subscription: team.subscriptionId,
+            },
+          },
+        }),
+        ...(type === "cancellation" && {
+          flow_data: {
+            type: "subscription_cancel",
+            subscription_cancel: {
+              subscription: team.subscriptionId,
+            },
+            after_completion: {
+              type: "redirect",
+              redirect: {
+                return_url:
+                  return_url ??
+                  `${process.env.NEXTAUTH_URL}/settings/billing?cancellation=true`,
+              },
             },
           },
         }),

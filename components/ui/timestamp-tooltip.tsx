@@ -30,6 +30,9 @@ export type TimestampTooltipProps = {
   className?: string;
   side?: "top" | "right" | "bottom" | "left";
   align?: "start" | "center" | "end";
+  title?: string;
+  /** Force full labels (e.g., "Australia/Melbourne") instead of short labels (e.g., "GMT+11"). Defaults to auto-detect. */
+  fullLabels?: boolean;
   children?: React.ReactNode;
 };
 
@@ -49,6 +52,8 @@ export function TimestampTooltip({
   side = "top",
   align = "center",
   className,
+  title,
+  fullLabels,
   children,
 }: TimestampTooltipProps) {
   if (!timestamp || new Date(timestamp).toString() === "Invalid Date")
@@ -70,6 +75,8 @@ export function TimestampTooltip({
             timestamp={timestamp}
             rows={rows}
             interactive={interactive}
+            title={title}
+            fullLabels={fullLabels}
           />
         </TooltipContent>
       </TooltipPortal>
@@ -81,7 +88,12 @@ function TimestampTooltipContent({
   timestamp,
   rows = ["local", "utc"],
   interactive,
-}: Pick<TimestampTooltipProps, "timestamp" | "rows" | "interactive">) {
+  title,
+  fullLabels: forceFullLabels,
+}: Pick<
+  TimestampTooltipProps,
+  "timestamp" | "rows" | "interactive" | "title" | "fullLabels"
+>) {
   if (!timestamp)
     throw new Error("Falsy timestamp not permitted in TimestampTooltipContent");
 
@@ -159,7 +171,8 @@ function TimestampTooltipContent({
     [rows, date],
   );
 
-  const shortLabels = items.every(({ shortLabel }) => shortLabel);
+  const shortLabels =
+    !forceFullLabels && items.every(({ shortLabel }) => shortLabel);
 
   // Re-render every second to update the relative time
   const [_, setRenderCount] = useState(0);
@@ -170,6 +183,9 @@ function TimestampTooltipContent({
 
   return (
     <div className="flex max-w-[360px] flex-col gap-2 px-2.5 py-2 text-left text-xs">
+      {title && (
+        <span className="font-medium text-muted-foreground">{title}</span>
+      )}
       <table>
         {items.map((row, idx) => (
           <tr

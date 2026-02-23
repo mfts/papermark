@@ -65,6 +65,7 @@ export default function DataroomAnalyticsPage() {
           <DataroomHeader
             title={dataroom.name}
             description={dataroom.pId}
+            internalName={dataroom.internalName}
             actions={[]}
           />
           <DataroomNavigation dataroomId={dataroom.id} />

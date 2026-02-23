@@ -1,15 +1,22 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import {
+  SUPPORTED_AI_CONTENT_TYPES,
+  addFileToVectorStoreTask,
+  processDocumentForAITask,
+} from "@/ee/features/ai/lib/trigger";
+import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { runs } from "@trigger.dev/sdk/v3";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { sendDataroomChangeNotificationTask } from "@/lib/trigger/dataroom-change-notification";
 import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { log, serializeFileSize } from "@/lib/utils";
 import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 
 export const config = {
@@ -133,10 +140,22 @@ export default async function handle(
             },
           },
         },
+        select: {
+          id: true,
+        },
       });
 
       if (!team) {
         return res.status(401).end("Unauthorized");
+      }
+
+      // Check if team is paused
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return res.status(403).json({
+          error:
+            "Team is currently paused. Adding documents to dataroom is not available.",
+        });
       }
 
       const folder = await prisma.dataroomFolder.findUnique({
@@ -151,16 +170,28 @@ export default async function handle(
         },
       });
 
-      const document = await prisma.dataroomDocument.create({
+      const dataroomDocument = await prisma.dataroomDocument.create({
         data: {
           documentId,
           dataroomId,
           folderId: folder?.id,
         },
         include: {
+          document: {
+            include: {
+              versions: {
+                where: { isPrimary: true },
+                take: 1,
+              },
+            },
+          },
           dataroom: {
             select: {
+              teamId: true,
+              name: true,
               enableChangeNotifications: true,
+              agentsEnabled: true,
+              vectorStoreId: true,
               links: {
                 select: { id: true },
                 orderBy: { createdAt: "desc" },
@@ -174,8 +205,83 @@ export default async function handle(
         },
       });
 
+      // Auto-index document if dataroom has AI agents enabled
+      if (
+        dataroomDocument.dataroom.agentsEnabled &&
+        dataroomDocument.dataroom.vectorStoreId
+      ) {
+        const primaryVersion = dataroomDocument.document.versions[0];
+        const contentType = primaryVersion?.contentType || "";
+
+        // Check if AI feature is enabled for the team
+        const features = await getFeatureFlags({ teamId });
+
+        if (
+          features.ai &&
+          primaryVersion &&
+          SUPPORTED_AI_CONTENT_TYPES.includes(contentType)
+        ) {
+          const filePath =
+            primaryVersion.originalFile && contentType !== "application/pdf"
+              ? primaryVersion.originalFile
+              : primaryVersion.file;
+
+          const fileMetadata = {
+            teamId: dataroomDocument.dataroom.teamId,
+            documentId: dataroomDocument.document.id,
+            documentName: dataroomDocument.document.name,
+            versionId: primaryVersion.id,
+            dataroomId: dataroomDocument.dataroomId,
+            dataroomDocumentId: dataroomDocument.id,
+            dataroomFolderId: dataroomDocument.folderId || "root",
+          };
+
+          try {
+            // If document already has fileId, just add to vector store
+            if (primaryVersion.fileId) {
+              waitUntil(
+                addFileToVectorStoreTask.trigger({
+                  fileId: primaryVersion.fileId,
+                  vectorStoreId: dataroomDocument.dataroom.vectorStoreId,
+                  metadata: fileMetadata,
+                }),
+              );
+            } else {
+              // Trigger full processing
+              waitUntil(
+                processDocumentForAITask.trigger(
+                  {
+                    documentId: dataroomDocument.document.id,
+                    documentVersionId: primaryVersion.id,
+                    teamId: dataroomDocument.dataroom.teamId,
+                    vectorStoreId: dataroomDocument.dataroom.vectorStoreId,
+                    documentName: dataroomDocument.document.name,
+                    filePath,
+                    storageType: primaryVersion.storageType,
+                    contentType,
+                    metadata: fileMetadata,
+                  },
+                  {
+                    idempotencyKey: `ai-index-dataroom-${dataroomId}-${primaryVersion.id}`,
+                    tags: [
+                      `team_${teamId}`,
+                      `dataroom_${dataroomId}`,
+                      `document_${dataroomDocument.document.id}`,
+                      `version_${primaryVersion.id}`,
+                    ],
+                  },
+                ),
+              );
+            }
+          } catch (error) {
+            console.error("Error triggering AI indexing for document:", error);
+            // Don't fail the document add, just log the error
+          }
+        }
+      }
+
       // Check if the team has the dataroom change notification enabled
-      if (document.dataroom.enableChangeNotifications) {
+      if (dataroomDocument.dataroom.enableChangeNotifications) {
         // Get all delayed and queued runs for this dataroom
         const allRuns = await runs.list({
           taskIdentifier: ["send-dataroom-change-notification"],
@@ -191,16 +297,16 @@ export default async function handle(
           sendDataroomChangeNotificationTask.trigger(
             {
               dataroomId,
-              dataroomDocumentId: document.id,
+              dataroomDocumentId: dataroomDocument.id,
               senderUserId: userId,
               teamId,
             },
             {
-              idempotencyKey: `dataroom-notification-${teamId}-${dataroomId}-${document.id}`,
+              idempotencyKey: `dataroom-notification-${teamId}-${dataroomId}-${dataroomDocument.id}`,
               tags: [
                 `team_${teamId}`,
                 `dataroom_${dataroomId}`,
-                `document_${document.id}`,
+                `document_${dataroomDocument.id}`,
               ],
               delay: new Date(Date.now() + 10 * 60 * 1000), // 10 minute delay
             },
@@ -208,7 +314,7 @@ export default async function handle(
         );
       }
 
-      return res.status(201).json(document);
+      return res.status(201).json(serializeFileSize(dataroomDocument));
     } catch (error) {
       log({
         message: `Failed to create dataroom document. \n\n*teamId*: _${teamId}_, \n\n*dataroomId*: ${dataroomId} \n\n ${error}`,

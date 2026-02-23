@@ -3,7 +3,9 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { Bot, ExternalLink, Shield, Sparkles } from "lucide-react";
+import { ExternalLink, Shield, Sparkles } from "lucide-react";
+
+import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -146,7 +148,7 @@ export default function AISettings() {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Bot className="h-5 w-5 text-primary" />
+                <PapermarkSparkle className="h-5 w-5 text-primary" />
                 <CardTitle>Enable AI Agents</CardTitle>
               </div>
               <CardDescription>

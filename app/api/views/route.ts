@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
             plan: true,
             globalBlockList: true,
             agentsEnabled: true,
+            pauseStartsAt: true,
           },
         },
         customFields: {
@@ -120,6 +121,15 @@ export async function POST(request: NextRequest) {
         document: {
           select: {
             agentsEnabled: true,
+          },
+        },
+        visitorGroups: {
+          select: {
+            visitorGroup: {
+              select: {
+                emails: true,
+              },
+            },
           },
         },
       },
@@ -245,10 +255,18 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: "Access denied" }, { status: 403 });
       }
 
+      // Build combined allow list from individual emails + visitor groups
+      const visitorGroupEmails =
+        link.visitorGroups?.flatMap((vg) => vg.visitorGroup.emails) || [];
+      const combinedAllowList = [
+        ...(link.allowList || []),
+        ...visitorGroupEmails,
+      ];
+
       // Check if email is allowed to visit the link
-      if (link.allowList && link.allowList.length > 0) {
+      if (combinedAllowList.length > 0) {
         // Determine if the email or its domain is allowed
-        const isAllowed = link.allowList.some((allowed) =>
+        const isAllowed = combinedAllowList.some((allowed) =>
           isEmailMatched(email, allowed),
         );
 
@@ -287,6 +305,21 @@ export async function POST(request: NextRequest) {
       if (link.emailAuthenticated && !code && !token) {
         const ipAddressValue = ipAddress(request);
 
+        // Rate limit per email/link combination (1 per 30 seconds) to prevent OTP flooding
+        const { success: emailLimitSuccess } = await ratelimit(1, "30 s").limit(
+          `send-otp:${linkId}:${email}`,
+        );
+        if (!emailLimitSuccess) {
+          return NextResponse.json(
+            {
+              message:
+                "Please wait before requesting another code. Try again in 30 seconds.",
+            },
+            { status: 429 },
+          );
+        }
+
+        // Additional IP-based rate limit (10 per minute) to prevent abuse across different emails
         const { success } = await ratelimit(10, "1 m").limit(
           `send-otp:${ipAddressValue}`,
         );
@@ -637,6 +670,11 @@ export async function POST(request: NextRequest) {
         console.timeEnd("get-file");
       }
 
+      const isPaused =
+        link.team?.pauseStartsAt && link.team?.pauseStartsAt <= new Date()
+          ? true
+          : false;
+
       if (newView) {
         // Record view in the background to avoid blocking the response
         waitUntil(
@@ -649,6 +687,7 @@ export async function POST(request: NextRequest) {
             documentId,
             teamId: link.teamId!,
             enableNotification: link.enableNotification,
+            isPaused,
           }),
         );
         if (!isPreview) {
@@ -659,6 +698,7 @@ export async function POST(request: NextRequest) {
               linkId,
               viewerEmail: email ?? undefined,
               viewerId: viewer?.id ?? undefined,
+              teamIsPaused: isPaused,
             }).catch((error) => {
               console.error("Error sending Slack notification:", error);
             }),
@@ -680,7 +720,8 @@ export async function POST(request: NextRequest) {
             (documentVersion.type === "pdf" ||
               documentVersion.type === "image" ||
               documentVersion.type === "zip" ||
-              documentVersion.type === "video")) ||
+              documentVersion.type === "video" ||
+              documentVersion.type === "link")) ||
           (documentVersion && useAdvancedExcelViewer)
             ? documentVersion.file
             : undefined,

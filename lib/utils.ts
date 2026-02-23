@@ -85,6 +85,30 @@ export const logStore = async ({ object }: { object: any }) => {
   }
 };
 
+const LOG_TIMEOUT_MS = 2500;
+
+const postJsonWithTimeout = async (
+  url: string,
+  body: unknown,
+  timeoutMs: number,
+) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  timeoutId.unref?.();
+  try {
+    return await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
+
 export const log = async ({
   message,
   type,
@@ -105,45 +129,32 @@ export const log = async ({
 
   /* Log a message to channel */
   try {
-    if (type === "trial" && process.env.PPMK_TRIAL_SLACK_WEBHOOK_URL) {
-      return await fetch(`${process.env.PPMK_TRIAL_SLACK_WEBHOOK_URL}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    const payload = {
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            // prettier-ignore
+            text: `${mention ? "<@U05BTDUKPLZ> " : ""}${type === "error" ? ":rotating_light: " : ""}${message}`,
+          },
         },
-        body: JSON.stringify({
-          blocks: [
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                // prettier-ignore
-                text: `${mention ? "<@U05BTDUKPLZ> " : ""}${message}`,
-              },
-            },
-          ],
-        }),
-      });
+      ],
+    };
+
+    if (type === "trial" && process.env.PPMK_TRIAL_SLACK_WEBHOOK_URL) {
+      return await postJsonWithTimeout(
+        process.env.PPMK_TRIAL_SLACK_WEBHOOK_URL,
+        payload,
+        LOG_TIMEOUT_MS,
+      );
     }
 
-    return await fetch(`${process.env.PPMK_SLACK_WEBHOOK_URL}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        blocks: [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              // prettier-ignore
-              text: `${mention ? "<@U05BTDUKPLZ> " : ""}${type === "error" ? ":rotating_light: " : ""}${message}`,
-            },
-          },
-        ],
-      }),
-    });
+    return await postJsonWithTimeout(
+      `${process.env.PPMK_SLACK_WEBHOOK_URL}`,
+      payload,
+      LOG_TIMEOUT_MS,
+    );
   } catch (e) {}
 };
 

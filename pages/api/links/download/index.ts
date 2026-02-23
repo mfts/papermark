@@ -209,7 +209,9 @@ export default async function handle(
         return res.send(Buffer.from(pdfBuffer));
       }
 
-      return res.status(200).json({ downloadUrl });
+      return res
+        .status(200)
+        .json({ downloadUrl, fileName: view.document!.name });
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",

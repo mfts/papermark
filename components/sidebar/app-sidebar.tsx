@@ -16,13 +16,16 @@ import {
   FolderIcon,
   HouseIcon,
   Loader,
+  PauseCircleIcon,
   ServerIcon,
+  Sparkles as SparklesIcon,
   WorkflowIcon,
 } from "lucide-react";
 
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
+import { useIsAdmin } from "@/lib/hooks/use-is-admin";
 import { usePlan } from "@/lib/swr/use-billing";
-import useDatarooms from "@/lib/swr/use-datarooms";
+import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
 import useLimits from "@/lib/swr/use-limits";
 import { useSlackIntegration } from "@/lib/swr/use-slack-integration";
 import { nFormatter } from "@/lib/utils";
@@ -39,17 +42,14 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-import ProAnnualBanner from "../billing/pro-annual-banner";
 import ProBanner from "../billing/pro-banner";
 import { Progress } from "../ui/progress";
+import { BadgeTooltip } from "../ui/tooltip";
 import SlackBanner from "./banners/slack-banner";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
-  const [showProAnnualBanner, setShowProAnnualBanner] = useState<
-    boolean | null
-  >(null);
   const [showSlackBanner, setShowSlackBanner] = useState<boolean | null>(null);
   const { currentTeam, teams, setCurrentTeam, isLoading }: TeamContextType =
     useTeam() || initialState;
@@ -63,6 +63,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     isDataroomsPremium,
     isFree,
     isTrial,
+    isPaused,
   } = usePlan();
 
   const { limits } = useLimits();
@@ -77,19 +78,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Check feature flags
   const { features } = useFeatureFlags();
 
-  // Fetch datarooms for the current team
-  const { datarooms } = useDatarooms();
+  // Check if current user is admin (for gating Security & Billing)
+  const { isAdmin } = useIsAdmin();
+
+  // Fetch datarooms for the current team (simple mode - no filters or extra data)
+  const { datarooms } = useDataroomsSimple();
 
   useEffect(() => {
     if (Cookies.get("hideProBanner") !== "pro-banner") {
       setShowProBanner(true);
     } else {
       setShowProBanner(false);
-    }
-    if (Cookies.get("hideProAnnualBanner") !== "pro-annual-banner") {
-      setShowProAnnualBanner(true);
-    } else {
-      setShowProAnnualBanner(false);
     }
     if (Cookies.get("hideSlackBanner") !== "slack-banner") {
       setShowSlackBanner(true);
@@ -102,7 +101,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const dataroomItems =
     datarooms && datarooms.length > 0
       ? datarooms.slice(0, 5).map((dataroom) => ({
-          title: dataroom.name,
+          title: dataroom.internalName || dataroom.name,
           url: `/datarooms/${dataroom.id}/documents`,
           current:
             router.pathname.includes("/datarooms/[id]") &&
@@ -206,13 +205,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: "/settings/slack",
             current: router.pathname.includes("settings/slack"),
           },
-          {
-            title: "Billing",
-            url: "/settings/billing",
-            current: router.pathname.includes("settings/billing"),
-          },
+          ...(isAdmin
+            ? [
+                {
+                  title: "Security",
+                  url: "/settings/security",
+                  current: router.pathname.includes("settings/security"),
+                },
+                {
+                  title: "Billing",
+                  url: "/settings/billing",
+                  current: router.pathname.includes("settings/billing"),
+                },
+              ]
+            : []),
         ],
       },
+      // {
+      //   title: "2025 Recap",
+      //   url: "/dashboard?openRecap=true",
+      //   icon: SparklesIcon,
+      //   current: false,
+      // },
     ],
   };
 
@@ -241,18 +255,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <p className="ml-2 flex items-center text-2xl font-bold tracking-tighter text-black group-data-[collapsible=icon]:hidden dark:text-white">
           <Link href="/dashboard">Papermark</Link>
           {userPlan && !isFree && !isDataroomsPlus && !isDataroomsPremium ? (
-            <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
+            <span className="relative ml-4 inline-flex items-center rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
               {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
+              {isPaused ? (
+                <BadgeTooltip content="Subscription paused">
+                  <PauseCircleIcon className="absolute -right-1.5 -top-1.5 h-5 w-5 rounded-full bg-background text-amber-500" />
+                </BadgeTooltip>
+              ) : null}
             </span>
           ) : null}
-          {isDataroomsPlus ? (
-            <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
+          {isDataroomsPlus && !isDataroomsPremium ? (
+            <span className="relative ml-4 inline-flex items-center rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
               Datarooms+
+              {isPaused ? (
+                <BadgeTooltip content="Subscription paused">
+                  <PauseCircleIcon className="absolute -right-1.5 -top-1.5 h-5 w-5 rounded-full bg-background text-amber-500" />
+                </BadgeTooltip>
+              ) : null}
             </span>
           ) : null}
           {isDataroomsPremium ? (
-            <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
+            <span className="relative ml-4 inline-flex items-center rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
               Premium
+              {isPaused ? (
+                <BadgeTooltip content="Subscription paused">
+                  <PauseCircleIcon className="absolute -right-1.5 -top-1.5 h-5 w-5 rounded-full bg-background text-amber-500" />
+                </BadgeTooltip>
+              ) : null}
             </span>
           ) : null}
           {isTrial ? (
@@ -291,14 +320,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                */}
               {isFree && showProBanner ? (
                 <ProBanner setShowProBanner={setShowProBanner} />
-              ) : null}
-              {/*
-               * if user is pro and showProAnnualBanner is true show pro annual banner
-               */}
-              {isPro && !isAnnualPlan && showProAnnualBanner ? (
-                <ProAnnualBanner
-                  setShowProAnnualBanner={setShowProAnnualBanner}
-                />
               ) : null}
 
               <div className="mb-2">

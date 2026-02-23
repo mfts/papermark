@@ -259,6 +259,7 @@ export default function DataroomAIGenerate() {
       });
 
       mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms?simple=true`);
       toast.success("Dataroom successfully generated! 🎉");
       router.push(`/datarooms/${dataroom.id}/documents`);
     } catch (error) {

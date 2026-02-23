@@ -20,6 +20,21 @@ export async function createSlackMessage(
   eventData: SlackEventData,
 ): Promise<SlackMessage | null> {
   try {
+    // If team is paused, return paused message templates
+    if (eventData.teamIsPaused) {
+      switch (eventData.eventType) {
+        case "document_view":
+          return await createDocumentViewPausedMessage(eventData);
+        case "dataroom_access":
+          return await createDataroomAccessPausedMessage(eventData);
+        case "document_download":
+          // Downloads are blocked when paused, so no message needed
+          return null;
+        default:
+          return null;
+      }
+    }
+
     switch (eventData.eventType) {
       case "document_view":
         return await createDocumentViewMessage(eventData);
@@ -343,6 +358,158 @@ async function createDocumentDownloadMessage(
               : eventData.documentId
                 ? `${process.env.NEXTAUTH_URL}/documents/${eventData.documentId}`
                 : `${process.env.NEXTAUTH_URL}/dashboard`,
+          },
+        ],
+      },
+    ],
+  };
+}
+
+/**
+ * Document View Paused Message Template
+ */
+async function createDocumentViewPausedMessage(
+  eventData: SlackEventData,
+): Promise<SlackMessage> {
+  const document = eventData.documentId
+    ? await getDocumentInfo(eventData.documentId)
+    : null;
+  const link = eventData.linkId ? await getLinkInfo(eventData.linkId) : null;
+
+  return {
+    text: `Your document has been viewed: ${document?.name || "Unknown document"} by someone`,
+    blocks: [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: "New Document Visitor",
+          emoji: false,
+        },
+      },
+      {
+        type: "section",
+        fields: [
+          {
+            type: "mrkdwn",
+            text: `*Document:*\n${document?.name || "Unknown"}`,
+          },
+          {
+            type: "mrkdwn",
+            text: `*Viewer:*\nSomeone`,
+          },
+        ],
+      },
+      {
+        type: "section",
+        fields: [
+          {
+            type: "mrkdwn",
+            text: link?.name
+              ? `*Shared Link:*\n${link.name}`
+              : `*Access:*\nDirect access`,
+          },
+          {
+            type: "mrkdwn",
+            text: `*Time:*\n${new Date().toLocaleString()}`,
+          },
+        ],
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "⏸️ Your team is currently paused, so detailed visitor information is not available. To see who visited your documents and access full analytics, please unpause your subscription.",
+        },
+      },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "Manage Subscription",
+              emoji: true,
+            },
+            style: "primary",
+            url: `${process.env.NEXTAUTH_URL}/settings/billing`,
+          },
+        ],
+      },
+    ],
+  };
+}
+
+/**
+ * Dataroom Access Paused Message Template
+ */
+async function createDataroomAccessPausedMessage(
+  eventData: SlackEventData,
+): Promise<SlackMessage> {
+  const dataroom = eventData.dataroomId
+    ? await getDataroomInfo(eventData.dataroomId)
+    : null;
+  const link = eventData.linkId ? await getLinkInfo(eventData.linkId) : null;
+
+  return {
+    text: `Your dataroom has been viewed: ${dataroom?.name || "Unknown dataroom"} by someone`,
+    blocks: [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: "New Dataroom Visitor",
+          emoji: false,
+        },
+      },
+      {
+        type: "section",
+        fields: [
+          {
+            type: "mrkdwn",
+            text: `*Dataroom:*\n${dataroom?.name || "Unknown"}`,
+          },
+          {
+            type: "mrkdwn",
+            text: `*Viewer:*\nSomeone`,
+          },
+        ],
+      },
+      {
+        type: "section",
+        fields: [
+          {
+            type: "mrkdwn",
+            text: link?.name
+              ? `*Shared Link:*\n${link.name}`
+              : `*Access:*\nDirect access`,
+          },
+          {
+            type: "mrkdwn",
+            text: `*Time:*\n${new Date().toLocaleString()}`,
+          },
+        ],
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "⏸️ Your team is currently paused, so detailed visitor information is not available. To see who visited your dataroom and access full analytics, please unpause your subscription.",
+        },
+      },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "Manage Subscription",
+              emoji: true,
+            },
+            style: "primary",
+            url: `${process.env.NEXTAUTH_URL}/settings/billing`,
           },
         ],
       },

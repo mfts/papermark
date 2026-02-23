@@ -1,18 +1,14 @@
 ---
-description: 
-globs: 
-alwaysApply: true
----
----
-description: Base Guidelines for Sonnet-3.7 + Cursor Agent
+description: Base Guidelines for Claude Opus 4.6 + Cursor Agent
 globs: *,**/*
+alwaysApply: true
 ---
 
 # Instructions
 
-1. Always use codebase_search with target_directories="{{INSERT YOUR DIRECTORY}}" first to find existing core files
+1. Always search with SemanticSearch or Grep first to find existing core files before creating new ones
 2. Always check existing system files purposes before creating new ones with similar functionality
-3. Always list the cursor rules youre using
+3. Always list the cursor rules you're using
 
 # Optional
 

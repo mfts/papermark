@@ -62,8 +62,12 @@ export default async function handle(
             orderBy: {
               viewedAt: "desc",
             },
+            take: 1,
           },
           customFields: true,
+          visitorGroups: {
+            select: { visitorGroupId: true },
+          },
           _count: {
             select: { views: { where: { viewType: "DATAROOM_VIEW" } } },
           },

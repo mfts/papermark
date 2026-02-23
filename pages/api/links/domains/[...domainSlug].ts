@@ -173,7 +173,7 @@ export default async function handle(
           });
           brand = teamBrand;
         }
-        
+
         return res.status(200).json({ linkType, brand, linkId: link.id });
       }
 

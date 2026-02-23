@@ -22,6 +22,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useViewerSurfaceTheme } from "@/components/view/viewer/viewer-surface-theme";
 
 import { DocumentVersion } from "../viewer/dataroom-viewer";
 
@@ -43,6 +44,7 @@ type DocumentsCardProps = {
   allowDownload: boolean;
   isProcessing?: boolean;
   dataroomIndexEnabled?: boolean;
+  showLastUpdated?: boolean;
 };
 
 export default function DocumentCard({
@@ -53,8 +55,10 @@ export default function DocumentCard({
   allowDownload,
   isProcessing = false,
   dataroomIndexEnabled,
+  showLastUpdated = true,
 }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
+  const { palette } = useViewerSurfaceTheme();
   const canDownload = document.canDownload && allowDownload;
 
   const isLight =
@@ -149,27 +153,22 @@ export default function DocumentCard({
         return "File downloaded successfully";
       }
 
-      // For all other files, use the iframe method
+      // For all other files, use a hidden iframe to trigger the download
       if (contentType?.includes("application/json")) {
         const data = await response.json();
-        const downloadUrl = data.isDirectDownload
-          ? data.downloadUrl
-          : response.url;
 
-        // Create a hidden iframe for download
         const iframe = window.document.createElement("iframe");
         iframe.style.display = "none";
         window.document.body.appendChild(iframe);
-        iframe.src = downloadUrl;
+        iframe.src = data.downloadUrl;
 
-        // Clean up the iframe after a delay
         setTimeout(() => {
-          if (iframe && iframe.parentNode) {
+          if (iframe.parentNode) {
             window.document.body.removeChild(iframe);
           }
         }, 5000);
 
-        return "Download started";
+        return "File downloaded successfully";
       }
 
       throw new Error("Unexpected response format");
@@ -185,11 +184,34 @@ export default function DocumentCard({
   return (
     <div
       className={cn(
-        "group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4",
+        "group/row relative flex items-center justify-between rounded-lg border p-3 transition-all sm:p-4",
+        "bg-[var(--viewer-panel-bg)] hover:bg-[var(--viewer-panel-bg-hover)]",
+        "border-[var(--viewer-panel-border)] hover:border-[var(--viewer-panel-border-hover)]",
         isProcessing && "cursor-not-allowed opacity-60",
       )}
+      style={
+        {
+          "--viewer-panel-bg": palette.panelBgColor,
+          "--viewer-panel-bg-hover": palette.panelHoverBgColor,
+          "--viewer-panel-border": palette.panelBorderColor,
+          "--viewer-panel-border-hover": palette.panelBorderHoverColor,
+          "--viewer-text": palette.textColor,
+          "--viewer-muted-text": palette.mutedTextColor,
+          "--viewer-control-bg": palette.controlBgColor,
+          "--viewer-control-border": palette.controlBorderColor,
+          "--viewer-control-border-strong": palette.controlBorderStrongColor,
+          "--viewer-control-icon": palette.controlIconColor,
+        } as React.CSSProperties
+      }
     >
-      <div className="z-0 flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
+      {/* Click target - outside of text hierarchy to fix Safari truncation issue */}
+      <button
+        onClick={handleDocumentClick}
+        className="absolute inset-0 z-0 cursor-pointer"
+        disabled={isProcessing}
+        aria-hidden="true"
+      />
+      <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
         <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
           {fileIcon({
             fileType: document.versions[0].type ?? "",
@@ -198,32 +220,31 @@ export default function DocumentCard({
           })}
         </div>
 
-        <div className="flex-col">
+        <div className="min-w-0 flex-1 flex-col">
           <div className="flex items-center">
             <h2
-              className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg"
+              className="truncate text-sm font-semibold leading-6 text-[var(--viewer-text)]"
               style={HIERARCHICAL_DISPLAY_STYLE}
             >
-              <button
-                onClick={handleDocumentClick}
-                className="w-full truncate"
-                disabled={isProcessing}
-              >
-                <span>{displayName}</span>
-                {isProcessing && (
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    (Processing...)
-                  </span>
-                )}
-                <span className="absolute inset-0" />
-              </button>
+              {displayName}
+              {isProcessing && (
+                <span
+                  className="ml-2 text-xs text-[var(--viewer-muted-text)]"
+                >
+                  (Processing...)
+                </span>
+              )}
             </h2>
           </div>
-          <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
-            <p className="truncate">
-              Updated {timeAgo(document.versions[0].updatedAt)}
-            </p>
-          </div>
+          {showLastUpdated && (
+            <div
+              className="mt-1 flex items-center space-x-1 text-xs leading-5 text-[var(--viewer-muted-text)]"
+            >
+              <p className="truncate">
+                Updated {timeAgo(document.versions[0].updatedAt)}
+              </p>
+            </div>
+          )}
         </div>
       </div>
       {canDownload && !isProcessing && (
@@ -233,7 +254,11 @@ export default function DocumentCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 p-0 text-gray-500 ring-1 ring-gray-100 hover:bg-gray-200 group-hover/row:text-foreground group-hover/row:ring-gray-300"
+                className={cn(
+                  "h-8 w-8 border bg-transparent p-0",
+                  "text-[var(--viewer-control-icon)] border-[var(--viewer-control-border)] hover:bg-[var(--viewer-control-bg)]",
+                  "group-hover/row:text-[var(--viewer-text)] group-hover/row:border-[var(--viewer-control-border-strong)]",
+                )}
                 aria-label="Open menu"
               >
                 <MoreVerticalIcon className="h-4 w-4" />

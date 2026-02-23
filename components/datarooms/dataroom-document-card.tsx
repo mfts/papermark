@@ -8,6 +8,7 @@ import { TeamContextType } from "@/context/team-context";
 import {
   ArchiveXIcon,
   BetweenHorizontalStartIcon,
+  FilePenIcon,
   FileSlidersIcon,
   FolderInputIcon,
   MoreVertical,
@@ -39,6 +40,7 @@ import {
 import { AddToDataroomModal } from "../documents/add-document-to-dataroom-modal";
 import { DocumentPreviewButton } from "../documents/document-preview-button";
 import FileProcessStatusBar from "../documents/file-process-status-bar";
+import { EditDataroomDocumentModal } from "./edit-dataroom-document-modal";
 import { SetUnifiedPermissionsModal } from "./groups/set-unified-permissions-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
@@ -74,6 +76,7 @@ export default function DataroomDocumentCard({
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
+  const [renameOpen, setRenameOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [addDataRoomOpen, setAddDataRoomOpen] = useState<boolean>(false);
 
@@ -91,6 +94,14 @@ export default function DataroomDocumentCard({
       });
     }
   }, [moveFolderOpen]);
+
+  useEffect(() => {
+    if (!renameOpen) {
+      setTimeout(() => {
+        document.body.style.pointerEvents = "";
+      });
+    }
+  }, [renameOpen]);
 
   useEffect(() => {
     function handleClickOutside(event: { target: any }) {
@@ -290,6 +301,15 @@ export default function DataroomDocumentCard({
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
+                    setRenameOpen(true);
+                  }}
+                >
+                  <FilePenIcon className="mr-2 h-4 w-4" />
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setMoveFolderOpen(true);
                   }}
                 >
@@ -353,6 +373,15 @@ export default function DataroomDocumentCard({
             />
           )}
       </div>
+      {renameOpen ? (
+        <EditDataroomDocumentModal
+          open={renameOpen}
+          setOpen={setRenameOpen}
+          documentId={dataroomDocument.document.id}
+          documentName={dataroomDocument.document.name}
+          dataroomId={dataroomId}
+        />
+      ) : null}
       {addDataRoomOpen ? (
         <AddToDataroomModal
           open={addDataRoomOpen}

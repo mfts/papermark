@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { determineTextColor } from "@/lib/utils/determine-text-color";
+import { createAdaptiveSurfacePalette } from "@/lib/utils/create-adaptive-surface-palette";
 
 import {
   DropdownMenu,
@@ -61,7 +61,6 @@ export type TNavData = {
   isPreview?: boolean;
   dataroomId?: string;
   conversationsEnabled?: boolean;
-  assistantEnabled?: boolean;
   isTeamMember?: boolean;
   annotationsEnabled?: boolean;
   hasAnnotations?: boolean;
@@ -110,7 +109,6 @@ export default function Nav({
     documentId,
     dataroomId,
     conversationsEnabled,
-    assistantEnabled,
     isTeamMember,
     annotationsEnabled,
     hasAnnotations,
@@ -119,6 +117,7 @@ export default function Nav({
   } = navData;
 
   const [showConversations, setShowConversations] = useState(false);
+  const navColorPalette = createAdaptiveSurfacePalette(brand?.brandColor);
 
   // Extract the dataroom path from the URL
   // This regex captures everything before "/d/" in the path
@@ -183,15 +182,16 @@ export default function Nav({
         // Handle JSON response with downloadUrl (non-watermarked files)
         const { downloadUrl } = await response.json();
 
-        const link = document.createElement("a");
-        link.href = downloadUrl;
-        link.rel = "noopener noreferrer";
-        document.body.appendChild(link);
-        link.click();
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        document.body.appendChild(iframe);
+        iframe.src = downloadUrl;
 
         setTimeout(() => {
-          document.body.removeChild(link);
-        }, 100);
+          if (iframe.parentNode) {
+            document.body.removeChild(iframe);
+          }
+        }, 5000);
       }
 
       return "File downloaded successfully";
@@ -256,7 +256,7 @@ export default function Nav({
                 />
               ) : (
                 <Link
-                  href={`https://www.papermark.com/home?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
+                  href={`https://www.papermark.com?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
                   target="_blank"
                   className="text-2xl font-bold tracking-tighter text-white"
                 >
@@ -272,7 +272,7 @@ export default function Nav({
                       className="cursor-pointer underline underline-offset-4 hover:font-medium"
                       href={`${dataroomPath}${isPreview ? "?previewToken=" + previewToken + "&preview=" + preview : ""}`}
                       style={{
-                        color: determineTextColor(brand?.brandColor),
+                        color: navColorPalette.textColor,
                       }}
                     >
                       Home
@@ -365,21 +365,7 @@ export default function Nav({
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : null}
-            {assistantEnabled ? (
-              <Link href={`/view/${linkId}/chat`}>
-                <Button
-                  className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
-                  variant={"special"}
-                  size={"icon"}
-                  style={{
-                    backgroundSize: "200% auto",
-                  }}
-                  title="Open AI Document Assistant"
-                >
-                  <PapermarkSparkle className="h-5 w-5" />
-                </Button>
-              </Link>
-            ) : null}
+
             {allowDownload ? (
               <Button
                 onClick={downloadFile}

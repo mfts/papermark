@@ -68,6 +68,8 @@ model User {
   createdAnnotations DocumentAnnotation[] // Annotations created by this user
 
   installedIntegrations InstalledIntegration[]
+
+  links Link[] @relation("LinkOwner")
 }
 
 model Brand {
@@ -76,6 +78,7 @@ model Brand {
   banner         String? // Banner image for dataroom view (fallback)
   brandColor     String? // This should be a reference to the brand color
   accentColor    String? // This should be a reference to the accent color
+  applyAccentColorToDataroomView Boolean @default(false) // Global default for whether accentColor applies to dataroom list/tree viewer background
   welcomeMessage String? // This should be a reference to the welcome message
   teamId         String  @unique
   team           Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -112,7 +115,7 @@ model Domain {
 
 model View {
   id                  String               @id @default(cuid())
-  link                Link                 @relation(fields: [linkId], references: [id])
+  link                Link                 @relation(fields: [linkId], references: [id], onDelete: Cascade)
   linkId              String
   document            Document?            @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId          String?

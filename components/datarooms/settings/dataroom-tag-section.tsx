@@ -121,6 +121,7 @@ export default function DataroomTagSection({
 
       await Promise.all([
         mutate(`/api/teams/${teamId}/datarooms`),
+        mutate(`/api/teams/${teamId}/datarooms?simple=true`),
         mutate(`/api/teams/${teamId}/datarooms/${dataroomId}`),
       ]);
 

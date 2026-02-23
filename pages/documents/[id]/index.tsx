@@ -9,21 +9,18 @@ import { PlanEnum } from "@/ee/stripe/constants";
 
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { useDocumentOverview } from "@/lib/swr/use-document-overview";
-import useSWR from "swr";
-import { fetcher } from "@/lib/utils";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
-import { AnnotationSheet } from "@/components/documents/annotations/annotation-sheet";
 import DocumentHeader from "@/components/documents/document-header";
 import { DocumentPreviewButton } from "@/components/documents/document-preview-button";
 // Import placeholder components
 import DocumentStatsPlaceholder from "@/components/documents/document-stats-placeholder";
+import LinkDocumentIndicator from "@/components/documents/link-document-indicator";
 import NotionAccessibilityIndicator from "@/components/documents/notion-accessibility-indicator";
 import VideoStatsPlaceholder from "@/components/documents/video-stats-placeholder";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import LinksTable from "@/components/links/links-table";
-import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 
@@ -72,9 +69,7 @@ export default function DocumentPage() {
     document: prismaDocument,
     primaryVersion,
     limits,
-    featureFlags,
     team,
-    counts,
     isEmpty,
     loading: overviewLoading,
     error,
@@ -87,27 +82,6 @@ export default function DocumentPage() {
   const teamId = teamInfo?.currentTeam?.id;
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
-
-  // Fetch conversations to show badge and determine if menu should be visible
-  const { data: conversations = [] } = useSWR<any[]>(
-    prismaDocument?.id && teamId
-      ? `/api/teams/${teamId}/documents/${prismaDocument.id}/conversations`
-      : null,
-    fetcher,
-    {
-      revalidateOnFocus: true,
-      dedupingInterval: 10000,
-      keepPreviousData: true,
-    },
-  );
-
-  // Only show Conversations menu if there are actual conversations
-  const hasConversations = conversations.length > 0;
-  // Calculate total unread count across all conversations
-  const unreadCount = conversations.reduce(
-    (total, conv) => total + (conv.unreadCount || 0),
-    0,
-  );
 
   // Mutate function that updates both overview and links
   const mutateDocument = () => {
@@ -171,59 +145,36 @@ export default function DocumentPage() {
   return (
     <AppLayout>
       <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
-        <header>
-          {/* Action Header - Shows immediately */}
-          <DocumentHeader
-            primaryVersion={primaryVersion}
-            prismaDocument={prismaDocument}
-            teamId={teamId}
-            actions={[
-              <NotionAccessibilityIndicator
-                key={"notion-status"}
-                documentId={prismaDocument.id}
-                primaryVersion={primaryVersion}
-                onUrlUpdate={mutateDocument}
-              />,
-              <>
-                {featureFlags?.annotations && (
-                  <AnnotationSheet
-                    documentId={prismaDocument.id}
-                    teamId={teamId}
-                    numPages={primaryVersion.numPages || 1}
-                  />
-                )}
-              </>,
-              <DocumentPreviewButton
-                key={"preview"}
-                documentId={prismaDocument.id}
-                primaryVersion={primaryVersion}
-                variant="outline"
-                size="default"
-                showTooltip={false}
-                className="h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm"
-              />,
-              <AddLinkButton key={"create-link"} />,
-            ]}
-          />
-
-        {hasConversations && (
-          <NavMenu
-            navigation={[
-              {
-                label: "Overview",
-                href: `/documents/${prismaDocument.id}`,
-                segment: `${prismaDocument.id}`,
-              },
-              {
-                label: "Conversations",
-                href: `/documents/${prismaDocument.id}/conversations`,
-                segment: "conversations",
-                count: unreadCount > 0 ? unreadCount : undefined,
-              },
-            ]}
-          />
-        )}
-        </header>
+        {/* Action Header - Shows immediately */}
+        <DocumentHeader
+          primaryVersion={primaryVersion}
+          prismaDocument={prismaDocument}
+          teamId={teamId}
+          actions={[
+            <NotionAccessibilityIndicator
+              key={"notion-status"}
+              documentId={prismaDocument.id}
+              primaryVersion={primaryVersion}
+              onUrlUpdate={mutateDocument}
+            />,
+            <LinkDocumentIndicator
+              key={"link-status"}
+              documentId={prismaDocument.id}
+              primaryVersion={primaryVersion}
+              onUrlUpdate={mutateDocument}
+            />,
+            <DocumentPreviewButton
+              key={"preview"}
+              documentId={prismaDocument.id}
+              primaryVersion={primaryVersion}
+              variant="outline"
+              size="default"
+              showTooltip={false}
+              className="h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm"
+            />,
+            <AddLinkButton key={"create-link"} />,
+          ]}
+        />
 
         {/* Progressive Loading: Always show components, but optimize for empty states */}
         <Suspense
