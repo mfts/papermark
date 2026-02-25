@@ -3,7 +3,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import { stripeInstance } from "@/ee/stripe";
 import { getCouponFromPlan } from "@/ee/stripe/functions/get-coupon-from-plan";
-import { getPlanFromPriceId, isOldAccount } from "@/ee/stripe/utils";
+import {
+  getPlanFromPriceId,
+  isOldAccount,
+  planHasDualPricing,
+} from "@/ee/stripe/utils";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
@@ -16,7 +20,6 @@ import { getIpAddress } from "@/lib/utils/ip";
 import { authOptions } from "../../../auth/[...nextauth]";
 
 export const config = {
-  // in order to enable `waitUntil` function
   supportsResponseStreaming: true,
 };
 
@@ -25,7 +28,6 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "POST") {
-    // Apply rate limiting
     const clientIP = getIpAddress(req.headers);
     const rateLimitResult = await checkRateLimit(
       rateLimiters.billing,
@@ -46,11 +48,13 @@ export default async function handle(
       return;
     }
 
-    const { teamId, priceId, applyYearlyDiscount } = req.query as {
-      teamId: string;
-      priceId: string;
-      applyYearlyDiscount?: string;
-    };
+    const { teamId, priceId, perSeatPriceId, applyYearlyDiscount } =
+      req.query as {
+        teamId: string;
+        priceId: string;
+        perSeatPriceId?: string;
+        applyYearlyDiscount?: string;
+      };
 
     const { id: userId, email: userEmail } = session.user as CustomUser;
 
@@ -79,49 +83,70 @@ export default async function handle(
       return;
     }
 
-    const minimumQuantity = plan.minQuantity;
+    const isDual = planHasDualPricing(plan);
 
     let stripeSession;
     let couponId: string | undefined;
 
-    // Apply 30% coupon for yearly plans if requested (same as retention flow)
-    // Since the upgrade modal is yearly-only, if applyYearlyDiscount is true, always apply
     if (applyYearlyDiscount === "true") {
-      // Use the same logic as retention flow: getCouponFromPlan(team.plan, isAnnualPlan)
-      // team.plan format is "pro", "business", "pro+old", "business+old", etc.
       const planString = oldAccount ? `${plan.slug}+old` : plan.slug;
       couponId = getCouponFromPlan(planString, true);
-      
-      // Verify coupon exists in Stripe (coupons might only exist in production, not test mode)
+
       const stripe = stripeInstance(oldAccount);
       try {
         await stripe.coupons.retrieve(couponId);
       } catch (error: any) {
-        // If coupon doesn't exist (common in test mode), continue without discount
         if (error.code === "resource_missing") {
           console.warn(
             `[Upgrade] Coupon "${couponId}" not found in ${process.env.NEXT_PUBLIC_VERCEL_ENV || "test"} mode. ` +
-            `Continuing without discount. This is expected if the coupon only exists in production.`
+              `Continuing without discount.`,
           );
           couponId = undefined;
         } else {
-          // Re-throw other errors
           throw error;
         }
       }
     }
 
-    const lineItem = {
-      price: priceId,
-      quantity: oldAccount ? 1 : minimumQuantity,
-      ...(!oldAccount && {
+    const lineItems: Array<{
+      price: string;
+      quantity: number;
+      adjustable_quantity?: {
+        enabled: boolean;
+        minimum: number;
+        maximum: number;
+      };
+    }> = [];
+
+    if (isDual && perSeatPriceId) {
+      // Dual pricing: flat base + per-seat addon
+      lineItems.push({
+        price: priceId,
+        quantity: 1,
+      });
+      lineItems.push({
+        price: perSeatPriceId,
+        quantity: 0,
         adjustable_quantity: {
           enabled: true,
-          minimum: minimumQuantity,
+          minimum: 0,
           maximum: 99,
         },
-      }),
-    };
+      });
+    } else {
+      // Single pricing (Pro) or legacy fallback
+      lineItems.push({
+        price: priceId,
+        quantity: oldAccount ? 1 : plan.includedUsers,
+        ...(!oldAccount && {
+          adjustable_quantity: {
+            enabled: true,
+            minimum: plan.includedUsers,
+            maximum: 99,
+          },
+        }),
+      });
+    }
 
     const dubDiscount = await getDubDiscountForExternalUserId(userId);
 
@@ -130,7 +155,7 @@ export default async function handle(
       billing_address_collection: "required" as const,
       success_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
       cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
-      line_items: [lineItem],
+      line_items: lineItems,
       automatic_tax: {
         enabled: true,
       },
@@ -145,7 +170,6 @@ export default async function handle(
     };
 
     if (team.stripeId) {
-      // if the team already has a stripeId (i.e. is a customer) let's use as a customer
       stripeSession = await stripe.checkout.sessions.create({
         ...baseSessionConfig,
         customer: team.stripeId,
@@ -153,7 +177,6 @@ export default async function handle(
         ...(!couponId && { allow_promotion_codes: true }),
       });
     } else {
-      // else initialize a new customer
       stripeSession = await stripe.checkout.sessions.create({
         ...baseSessionConfig,
         customer_email: userEmail ?? undefined,
@@ -177,7 +200,6 @@ export default async function handle(
 
     return res.status(200).json(stripeSession);
   } else {
-    // We only allow POST requests
     res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }

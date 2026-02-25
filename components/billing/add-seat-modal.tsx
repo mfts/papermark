@@ -4,8 +4,10 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
-import { getQuantityFromPriceId } from "@/ee/stripe/functions/get-quantity-from-plan";
+import {
+  getPriceIdFromPlan,
+  getPerSeatPriceIdFromPlan,
+} from "@/ee/stripe/functions/get-price-id-from-plan";
 import { toast } from "sonner";
 
 import { useAnalytics } from "@/lib/analytics";
@@ -44,13 +46,18 @@ export function AddSeatModal({
   const [quantity, setQuantity] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Get the minimum quantity for the current plan
+  const period = isAnnualPlan ? "yearly" : "monthly";
   const priceId = getPriceIdFromPlan({
     planSlug: userPlan,
     isOld: isOldAccount,
-    period: isAnnualPlan ? "yearly" : "monthly",
+    period,
   });
-  const minQuantity = getQuantityFromPriceId(priceId);
+  const perSeatPriceId = getPerSeatPriceIdFromPlan({
+    planSlug: userPlan,
+    isOld: isOldAccount,
+    period,
+  });
+  const hasDualPricing = !!perSeatPriceId;
 
   // Set initial quantity to 1 (adding one seat)
   useEffect(() => {
@@ -76,21 +83,28 @@ export function AddSeatModal({
     setLoading(true);
 
     try {
+      const body: Record<string, unknown> = {
+        priceId,
+        addSeat: true,
+      };
+
+      if (hasDualPricing) {
+        // For dual pricing, quantity is the total number of additional users (per-seat count)
+        body.perSeatPriceId = perSeatPriceId;
+        body.quantity = totalSeatsAfterUpdate - 1; // subtract the 1 included user
+      } else {
+        body.quantity = totalSeatsAfterUpdate;
+      }
+
       const response = await fetch(`/api/teams/${teamId}/billing/manage`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          priceId,
-          quantity: totalSeatsAfterUpdate,
-          addSeat: true,
-          // return_url: `${process.env.NEXTAUTH_URL}/settings/people?success=true`,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
-        const error = await response.json();
         toast.error("Unable to add seats. Please contact support.");
         setLoading(false);
         return;
@@ -174,9 +188,9 @@ export function AddSeatModal({
             {totalSeatsAfterUpdate === 1 ? "user" : "users"}
           </p>
 
-          {minQuantity > 1 && (
+          {hasDualPricing && (
             <p className="mt-2 text-center text-sm text-muted-foreground">
-              Minimum quantity for {planName}: {minQuantity} users
+              1 user included in base plan. Additional users billed separately.
             </p>
           )}
         </div>

@@ -7,12 +7,11 @@ import {
   DATAROOMS_PREMIUM_PLAN_LIMITS,
   PRO_PLAN_LIMITS,
 } from "@/ee/limits/constants";
+import { getPlanFromSubscriptionItems } from "@/ee/stripe/functions/get-plan-from-subscription";
 import Stripe from "stripe";
 
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
-
-import { getPlanFromPriceId } from "../utils";
 
 export async function customerSubsciptionUpdated(
   event: Stripe.Event,
@@ -20,18 +19,24 @@ export async function customerSubsciptionUpdated(
   isOldAccount: boolean = false,
 ) {
   const subscriptionUpdated = event.data.object as Stripe.Subscription;
-  const priceId = subscriptionUpdated.items.data[0].price.id;
 
-  const plan = getPlanFromPriceId(priceId, isOldAccount);
+  const planInfo = getPlanFromSubscriptionItems(
+    subscriptionUpdated.items.data,
+    isOldAccount,
+  );
 
-  if (!plan) {
+  if (!planInfo) {
+    const priceIds = subscriptionUpdated.items.data
+      .map((i) => i.price.id)
+      .join(", ");
     await log({
-      message: `Invalid price ID in customer.subscription.updated event: ${priceId}, isOldAccount: ${isOldAccount}. Skipping webhook processing to prevent unintended plan changes.`,
+      message: `Invalid price IDs in customer.subscription.updated: ${priceIds}, isOldAccount: ${isOldAccount}. Skipping.`,
       type: "error",
     });
     return res.status(200).json({ received: true });
   }
 
+  const { plan, totalUsers } = planInfo;
   const stripeId = subscriptionUpdated.customer.toString();
 
   const team = await prisma.team.findUnique({
@@ -53,16 +58,13 @@ export async function customerSubsciptionUpdated(
   const subscriptionId = subscriptionUpdated.id;
   const startsAt = new Date(subscriptionUpdated.current_period_start * 1000);
   const endsAt = new Date(subscriptionUpdated.current_period_end * 1000);
-  const quantity = subscriptionUpdated.items.data[0].quantity;
 
   let teamPlan = team.plan;
   if (isOldAccount) {
-    // remove +old from plan
     teamPlan = teamPlan.replace("+old", "");
   }
-  // If a team upgrades/downgrades their subscription, update their plan
+
   if (teamPlan !== newPlan) {
-    // Choose the correct plan limits
     let planLimits:
       | typeof PRO_PLAN_LIMITS
       | typeof BUSINESS_PLAN_LIMITS
@@ -81,13 +83,8 @@ export async function customerSubsciptionUpdated(
       planLimits = structuredClone(DATAROOMS_PREMIUM_PLAN_LIMITS);
     }
 
-    // Update the user limit in planLimits based on the subscription quantity
-    planLimits.users =
-      typeof quantity === "number" && quantity > 1
-        ? quantity
-        : planLimits.users;
+    planLimits.users = Math.max(totalUsers, planLimits.users);
 
-    // Update the user with the subscription information and stripeId
     await prisma.team.update({
       where: { stripeId },
       data: {
@@ -100,15 +97,14 @@ export async function customerSubsciptionUpdated(
     });
   }
 
-  // If new account, and the plan is the same, but the quantity is different, update the quantity
+  // If same plan but user count changed, update the limit
   if (
     !isOldAccount &&
     teamPlan === newPlan &&
-    (team.limits as any)?.users !== quantity
+    (team.limits as any)?.users !== totalUsers
   ) {
-    // Update the user limit in planLimits based on the subscription quantity
-    const newLimits = team.limits as any;
-    newLimits.users = quantity;
+    const newLimits = { ...(team.limits as any) };
+    newLimits.users = totalUsers;
     await prisma.team.update({
       where: { stripeId },
       data: {
@@ -121,7 +117,6 @@ export async function customerSubsciptionUpdated(
     });
   }
 
-  // Update the subscription start and end dates
   await prisma.team.update({
     where: { stripeId },
     data: {

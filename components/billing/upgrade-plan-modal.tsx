@@ -7,7 +7,10 @@ import React from "react";
 import { useTeam } from "@/context/team-context";
 import { getStripe } from "@/ee/stripe/client";
 import { Feature, PlanEnum, getPlanFeatures } from "@/ee/stripe/constants";
-import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
+import {
+  getPriceIdFromPlan,
+  getPerSeatPriceIdFromPlan,
+} from "@/ee/stripe/functions/get-price-id-from-plan";
 import { PLANS } from "@/ee/stripe/utils";
 import { CheckIcon, CircleHelpIcon, Users2Icon, XIcon } from "lucide-react";
 
@@ -300,6 +303,19 @@ export function UpgradePlanModal({
                   <span className="text-gray-500 dark:text-white/75">
                     /month{period === "yearly" && ", billed annually"}
                   </span>
+                  {PLANS.find((p) => p.name === displayPlanName)?.price[
+                    period
+                  ].perSeat && (
+                    <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
+                      +€
+                      {
+                        PLANS.find((p) => p.name === displayPlanName)?.price[
+                          period
+                        ].perSeat?.amount
+                      }
+                      /mo per additional user
+                    </p>
+                  )}
                 </div>
 
                 {planOption === PlanEnum.DataRooms &&
@@ -346,6 +362,11 @@ export function UpgradePlanModal({
                         period,
                         isOld: isOldAccount,
                       });
+                      const perSeatPriceId = getPerSeatPriceIdFromPlan({
+                        planName: displayPlanName,
+                        period,
+                        isOld: isOldAccount,
+                      });
 
                       setSelectedPlan(planOption);
                       if (isCustomer && teamPlan !== "free") {
@@ -356,6 +377,7 @@ export function UpgradePlanModal({
                           },
                           body: JSON.stringify({
                             priceId,
+                            perSeatPriceId,
                             upgradePlan: true,
                           }),
                         })
@@ -368,10 +390,14 @@ export function UpgradePlanModal({
                             setSelectedPlan(null);
                           });
                       } else {
+                        const params = new URLSearchParams({
+                          priceId: priceId!,
+                        });
+                        if (perSeatPriceId) {
+                          params.set("perSeatPriceId", perSeatPriceId);
+                        }
                         fetch(
-                          `/api/teams/${teamId}/billing/upgrade?priceId=${
-                            priceId
-                          }`,
+                          `/api/teams/${teamId}/billing/upgrade?${params.toString()}`,
                           {
                             method: "POST",
                             headers: {

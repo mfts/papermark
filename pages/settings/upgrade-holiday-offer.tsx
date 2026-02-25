@@ -6,6 +6,10 @@ import React from "react";
 import { useTeam } from "@/context/team-context";
 import { getStripe } from "@/ee/stripe/client";
 import { Feature, PlanEnum, getPlanFeatures } from "@/ee/stripe/constants";
+import {
+  getPriceIdFromPlan,
+  getPerSeatPriceIdFromPlan,
+} from "@/ee/stripe/functions/get-price-id-from-plan";
 import { PLANS } from "@/ee/stripe/utils";
 import { CheckIcon, Users2Icon, XIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -310,16 +314,16 @@ export default function UpgradeHolidayOfferPage() {
                     disabled={selectedPlan !== null}
                     onClick={() => {
                       setSelectedPlan(planOption);
-                      const envKey =
-                        process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
-                          ? "production"
-                          : "test";
-                      const plan = PLANS.find((p) => p.name === planOption);
-                      if (!plan) return;
-                      const priceId =
-                        plan.price[period].priceIds[envKey][
-                          isOldAccount ? "old" : "new"
-                        ];
+                      const priceId = getPriceIdFromPlan({
+                        planName: planOption,
+                        period,
+                        isOld: isOldAccount,
+                      });
+                      const perSeatPriceId = getPerSeatPriceIdFromPlan({
+                        planName: planOption,
+                        period,
+                        isOld: isOldAccount,
+                      });
 
                       if (isCustomer && teamPlan !== "free") {
                         fetch(
@@ -331,6 +335,7 @@ export default function UpgradeHolidayOfferPage() {
                             },
                             body: JSON.stringify({
                               priceId,
+                              perSeatPriceId,
                               upgradePlan: true,
                               applyYearlyDiscount: period === "yearly",
                             }),
@@ -353,10 +358,15 @@ export default function UpgradeHolidayOfferPage() {
                             setSelectedPlan(null);
                           });
                       } else {
+                        const params = new URLSearchParams({
+                          priceId: priceId!,
+                          applyYearlyDiscount: String(period === "yearly"),
+                        });
+                        if (perSeatPriceId) {
+                          params.set("perSeatPriceId", perSeatPriceId);
+                        }
                         fetch(
-                          `/api/teams/${
-                            teamInfo?.currentTeam?.id
-                          }/billing/upgrade?priceId=${priceId}&applyYearlyDiscount=${period === "yearly"}`,
+                          `/api/teams/${teamInfo?.currentTeam?.id}/billing/upgrade?${params.toString()}`,
                           {
                             method: "POST",
                             headers: {
@@ -501,16 +511,16 @@ export default function UpgradeHolidayOfferPage() {
                     disabled={selectedPlan !== null}
                     onClick={() => {
                       setSelectedPlan(planOption);
-                      const envKey =
-                        process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
-                          ? "production"
-                          : "test";
-                      const plan = PLANS.find((p) => p.name === planOption);
-                      if (!plan) return;
-                      const priceId =
-                        plan.price[period].priceIds[envKey][
-                          isOldAccount ? "old" : "new"
-                        ];
+                      const priceId = getPriceIdFromPlan({
+                        planName: planOption,
+                        period,
+                        isOld: isOldAccount,
+                      });
+                      const perSeatPriceId = getPerSeatPriceIdFromPlan({
+                        planName: planOption,
+                        period,
+                        isOld: isOldAccount,
+                      });
 
                       if (isCustomer && teamPlan !== "free") {
                         fetch(
@@ -522,6 +532,7 @@ export default function UpgradeHolidayOfferPage() {
                             },
                             body: JSON.stringify({
                               priceId,
+                              perSeatPriceId,
                               upgradePlan: true,
                               applyYearlyDiscount: period === "yearly",
                             }),
@@ -544,10 +555,15 @@ export default function UpgradeHolidayOfferPage() {
                             setSelectedPlan(null);
                           });
                       } else {
+                        const params = new URLSearchParams({
+                          priceId: priceId!,
+                          applyYearlyDiscount: String(period === "yearly"),
+                        });
+                        if (perSeatPriceId) {
+                          params.set("perSeatPriceId", perSeatPriceId);
+                        }
                         fetch(
-                          `/api/teams/${
-                            teamInfo?.currentTeam?.id
-                          }/billing/upgrade?priceId=${priceId}&applyYearlyDiscount=${period === "yearly"}`,
+                          `/api/teams/${teamInfo?.currentTeam?.id}/billing/upgrade?${params.toString()}`,
                           {
                             method: "POST",
                             headers: {
@@ -692,16 +708,16 @@ export default function UpgradeHolidayOfferPage() {
                     disabled={selectedPlan !== null}
                     onClick={() => {
                       setSelectedPlan(planOption);
-                      const envKey =
-                        process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
-                          ? "production"
-                          : "test";
-                      const plan = PLANS.find((p) => p.name === planOption);
-                      if (!plan) return;
-                      const priceId =
-                        plan.price[period].priceIds[envKey][
-                          isOldAccount ? "old" : "new"
-                        ];
+                      const priceId = getPriceIdFromPlan({
+                        planName: planOption,
+                        period,
+                        isOld: isOldAccount,
+                      });
+                      const perSeatPriceId = getPerSeatPriceIdFromPlan({
+                        planName: planOption,
+                        period,
+                        isOld: isOldAccount,
+                      });
 
                       if (isCustomer && teamPlan !== "free") {
                         fetch(
@@ -713,6 +729,7 @@ export default function UpgradeHolidayOfferPage() {
                             },
                             body: JSON.stringify({
                               priceId,
+                              perSeatPriceId,
                               upgradePlan: true,
                               applyYearlyDiscount: period === "yearly",
                             }),
@@ -735,10 +752,15 @@ export default function UpgradeHolidayOfferPage() {
                             setSelectedPlan(null);
                           });
                       } else {
+                        const params = new URLSearchParams({
+                          priceId: priceId!,
+                          applyYearlyDiscount: String(period === "yearly"),
+                        });
+                        if (perSeatPriceId) {
+                          params.set("perSeatPriceId", perSeatPriceId);
+                        }
                         fetch(
-                          `/api/teams/${
-                            teamInfo?.currentTeam?.id
-                          }/billing/upgrade?priceId=${priceId}&applyYearlyDiscount=${period === "yearly"}`,
+                          `/api/teams/${teamInfo?.currentTeam?.id}/billing/upgrade?${params.toString()}`,
                           {
                             method: "POST",
                             headers: {

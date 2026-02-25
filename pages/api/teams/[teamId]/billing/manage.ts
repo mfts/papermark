@@ -2,9 +2,12 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { stripeInstance } from "@/ee/stripe";
 import { getCouponFromPlan } from "@/ee/stripe/functions/get-coupon-from-plan";
-import { getQuantityFromPriceId } from "@/ee/stripe/functions/get-quantity-from-plan";
 import getSubscriptionItem from "@/ee/stripe/functions/get-subscription-item";
-import { getPlanFromPriceId, isOldAccount } from "@/ee/stripe/utils";
+import {
+  getPlanFromPriceId,
+  isOldAccount,
+  planHasDualPricing,
+} from "@/ee/stripe/utils";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
@@ -16,7 +19,6 @@ import { CustomUser } from "@/lib/types";
 import { authOptions } from "../../../auth/[...nextauth]";
 
 export const config = {
-  // in order to enable `waitUntil` function
   supportsResponseStreaming: true,
 };
 
@@ -25,7 +27,6 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "POST") {
-    // POST /api/teams/:teamId/billing/manage – manage a user's subscription
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       res.status(401).end("Unauthorized");
@@ -38,6 +39,7 @@ export default async function handle(
     const { teamId } = req.query as { teamId: string };
     const {
       priceId,
+      perSeatPriceId,
       upgradePlan,
       quantity,
       addSeat,
@@ -47,6 +49,7 @@ export default async function handle(
       type = "manage",
     } = req.body as {
       priceId: string;
+      perSeatPriceId?: string;
       upgradePlan: boolean;
       quantity?: number;
       addSeat?: boolean;
@@ -88,48 +91,88 @@ export default async function handle(
         return res.status(400).json({ error: "No subscription ID" });
       }
 
-      const {
-        id: subscriptionItemId,
-        currentPeriodStart,
-        currentPeriodEnd,
-      } = await getSubscriptionItem(
+      const subscriptionData = await getSubscriptionItem(
         team.subscriptionId,
         isOldAccount(team.plan),
       );
 
-      const minQuantity = getQuantityFromPriceId(priceId);
-
       const stripe = stripeInstance(isOldAccount(team.plan));
-      
-      // Apply 30% discount for yearly plans before redirecting to billing portal
-      // Same logic as retention flow: apply coupon directly to subscription
+
       if (applyYearlyDiscount && upgradePlan) {
         const plan = getPlanFromPriceId(priceId, isOldAccount(team.plan));
         if (plan) {
-          // Use the same logic as retention flow: getCouponFromPlan(team.plan, isAnnualPlan)
-          // team.plan format is "pro", "business", "pro+old", "business+old", etc.
           const planString = `${plan.slug}${isOldAccount(team.plan) ? "+old" : ""}`;
           const couponId = getCouponFromPlan(planString, true);
-          
-          // Verify coupon exists before applying (coupons might only exist in production, not test mode)
+
           try {
             await stripe.coupons.retrieve(couponId);
-            // Apply discount directly to subscription (same as retention flow)
             await stripe.subscriptions.update(team.subscriptionId, {
               discounts: [{ coupon: couponId }],
             });
           } catch (error: any) {
-            // If coupon doesn't exist (common in test mode), log and skip
             if (error.code === "resource_missing") {
               console.warn(
-                `[Manage] Coupon "${couponId}" not found in ${process.env.NEXT_PUBLIC_VERCEL_ENV || "test"} mode. ` +
-                `Skipping discount application. This is expected if the coupon only exists in production.`
+                `[Manage] Coupon "${couponId}" not found in ${process.env.NEXT_PUBLIC_VERCEL_ENV || "test"} mode. Skipping.`,
               );
             } else {
-              // Re-throw other errors
               throw error;
             }
           }
+        }
+      }
+
+      // Build subscription update items for billing portal
+      let updateItems: Array<{
+        id: string;
+        quantity: number;
+        price: string;
+      }> = [];
+
+      const plan = priceId
+        ? getPlanFromPriceId(priceId, isOldAccount(team.plan))
+        : null;
+      const isDual = plan && planHasDualPricing(plan);
+
+      if (
+        type === "manage" &&
+        (upgradePlan || addSeat) &&
+        subscriptionData.id
+      ) {
+        if (isDual && perSeatPriceId) {
+          // Dual pricing: update base item to qty 1, and per-seat item to the requested quantity
+          updateItems.push({
+            id: subscriptionData.id,
+            quantity: 1,
+            price: priceId,
+          });
+
+          if (addSeat) {
+            // When adding seats, the quantity is the total additional users
+            const perSeatItemId = subscriptionData.perSeatId;
+            if (perSeatItemId) {
+              updateItems.push({
+                id: perSeatItemId,
+                quantity: quantity ?? 0,
+                price: perSeatPriceId,
+              });
+            }
+          } else {
+            // New subscription upgrade: start with 0 additional seats
+            updateItems.push({
+              id: subscriptionData.perSeatId || subscriptionData.id,
+              quantity: 0,
+              price: perSeatPriceId,
+            });
+          }
+        } else {
+          // Single pricing (Pro) or legacy subscription
+          updateItems.push({
+            id: subscriptionData.id,
+            quantity: isOldAccount(team.plan)
+              ? 1
+              : (quantity ?? plan?.includedUsers ?? 1),
+            price: priceId,
+          });
         }
       }
 
@@ -138,20 +181,12 @@ export default async function handle(
         return_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
         ...(type === "manage" &&
           (upgradePlan || addSeat) &&
-          subscriptionItemId && {
+          updateItems.length > 0 && {
             flow_data: {
               type: "subscription_update_confirm",
               subscription_update_confirm: {
                 subscription: team.subscriptionId,
-                items: [
-                  {
-                    id: subscriptionItemId,
-                    quantity: isOldAccount(team.plan)
-                      ? 1
-                      : (quantity ?? minQuantity),
-                    price: priceId,
-                  },
-                ],
+                items: updateItems,
               },
               after_completion: {
                 type: "redirect",

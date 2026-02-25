@@ -6,6 +6,7 @@ import {
   PRO_PLAN_LIMITS,
 } from "@/ee/limits/constants";
 import { stripeInstance } from "@/ee/stripe";
+import { getPlanFromSubscriptionItems } from "@/ee/stripe/functions/get-plan-from-subscription";
 import { waitUntil } from "@vercel/functions";
 import Stripe from "stripe";
 
@@ -14,8 +15,6 @@ import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
 import prisma from "@/lib/prisma";
 import { sendUpgradeOneMonthCheckinEmailTask } from "@/lib/trigger/send-scheduled-email";
 import { log } from "@/lib/utils";
-
-import { getPlanFromPriceId } from "../utils";
 
 export async function checkoutSessionCompleted(
   event: Stripe.Event,
@@ -38,25 +37,30 @@ export async function checkoutSessionCompleted(
   const subscription = await stripe.subscriptions.retrieve(
     checkoutSession.subscription as string,
   );
-  const priceId = subscription.items.data[0].price.id;
   const subscriptionId = subscription.id;
   const subscriptionStart = new Date(subscription.current_period_start * 1000);
   const subscriptionEnd = new Date(subscription.current_period_end * 1000);
-  const quantity = subscription.items.data[0].quantity;
 
   console.log("subscription", subscription);
   console.log("subscription items", subscription.items.data);
 
-  const plan = getPlanFromPriceId(priceId, isOldAccount);
+  const planInfo = getPlanFromSubscriptionItems(
+    subscription.items.data,
+    isOldAccount,
+  );
 
-  if (!plan) {
+  if (!planInfo) {
+    const priceIds = subscription.items.data
+      .map((i) => i.price.id)
+      .join(", ");
     await log({
-      message: `Invalid price ID in checkout.session.completed event: ${priceId}, isOldAccount: ${isOldAccount}. Skipping webhook processing to prevent unintended plan changes.`,
+      message: `Invalid price IDs in checkout.session.completed: ${priceIds}, isOldAccount: ${isOldAccount}. Skipping to prevent unintended plan changes.`,
       type: "error",
     });
     return;
   }
 
+  const { plan, totalUsers } = planInfo;
   const stripeId = checkoutSession.customer.toString();
   const teamId = checkoutSession.client_reference_id;
 
@@ -78,11 +82,8 @@ export async function checkoutSessionCompleted(
     planLimits = structuredClone(DATAROOMS_PREMIUM_PLAN_LIMITS);
   }
 
-  // Update the user limit in planLimits based on the subscription quantity
-  planLimits.users =
-    typeof quantity === "number" && quantity > 1 ? quantity : planLimits.users;
+  planLimits.users = Math.max(totalUsers, planLimits.users);
 
-  // Update the user with the subscription information and stripeId
   const team = await prisma.team.update({
     where: {
       id: teamId,
@@ -94,7 +95,6 @@ export async function checkoutSessionCompleted(
       startsAt: subscriptionStart,
       endsAt: subscriptionEnd,
       limits: planLimits,
-      // Clear cancellation and pause state when purchasing a new plan
       cancelledAt: null,
       pausedAt: null,
       pauseStartsAt: null,
@@ -111,7 +111,6 @@ export async function checkoutSessionCompleted(
     },
   });
 
-  // if event creation time more than 1 hour ago, return
   if (event.created < Date.now() / 1000 - 1 * 60 * 60) {
     await log({
       message: `Checkout session completed event created more than 1 hour ago: ${event.id}`,
@@ -120,7 +119,6 @@ export async function checkoutSessionCompleted(
     return;
   }
 
-  // Send thank you email to project owner if they are a new customer
   waitUntil(
     sendUpgradePlanEmail({
       user: {
@@ -131,7 +129,6 @@ export async function checkoutSessionCompleted(
     }),
   );
 
-  // send personal welcome email
   waitUntil(
     sendUpgradePersonalEmail({
       user: {

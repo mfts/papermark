@@ -44,7 +44,7 @@ export const PLAN_PRICING = {
   },
   Business: {
     extraUserPrice: {
-      monthly: "€26/month per additional team member",
+      monthly: "€26.50/month per additional team member",
       yearly: "€19/month per additional team member",
     },
   },
@@ -91,9 +91,9 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
     features: [
       {
         id: "users",
-        text: "3 team members included",
+        text: "1 team member included",
         isUsers: true,
-        usersIncluded: 3,
+        usersIncluded: 1,
       },
       { 
         id: "datarooms", 
@@ -123,9 +123,9 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
     features: [
       {
         id: "users",
-        text: "3 team members included",
+        text: "1 team member included",
         isUsers: true,
-        usersIncluded: 3,
+        usersIncluded: 1,
       },
       { id: "datarooms", text: "Unlimited data rooms" },
       // { id: "documents", text: "Unlimited documents" },
@@ -152,9 +152,9 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
     features: [
       {
         id: "users",
-        text: "5 team members included",
+        text: "1 team member included",
         isUsers: true,
-        usersIncluded: 5,
+        usersIncluded: 1,
       },
       { id: "documents", text: "Unlimited documents in data rooms" },
       {
@@ -185,9 +185,9 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
       },
       {
         id: "users",
-        text: "10 team members included",
+        text: "1 team member included",
         isUsers: true,
-        usersIncluded: 10,
+        usersIncluded: 1,
       },
       { id: "storage", text: "Unlimited encrypted storage", highlight: true },
       { id: "file-size", text: "No file size limit" },

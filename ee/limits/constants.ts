@@ -36,7 +36,7 @@ export const PRO_PLAN_LIMITS = {
 };
 
 export const BUSINESS_PLAN_LIMITS = {
-  users: 3,
+  users: 1,
   links: null,
   documents: null,
   domains: 5,
@@ -50,7 +50,7 @@ export const BUSINESS_PLAN_LIMITS = {
 };
 
 export const DATAROOMS_PLAN_LIMITS = {
-  users: 3,
+  users: 1,
   links: null,
   documents: null,
   domains: 10,
@@ -64,7 +64,7 @@ export const DATAROOMS_PLAN_LIMITS = {
 };
 
 export const DATAROOMS_PLUS_PLAN_LIMITS = {
-  users: 5,
+  users: 1,
   links: null,
   documents: null,
   domains: 1000,
@@ -80,7 +80,7 @@ export const DATAROOMS_PLUS_PLAN_LIMITS = {
 };
 
 export const DATAROOMS_PREMIUM_PLAN_LIMITS = {
-  users: 10,
+  users: 1,
   links: null,
   documents: null,
   domains: 1000,

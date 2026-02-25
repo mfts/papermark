@@ -6,6 +6,10 @@ import React from "react";
 import { useTeam } from "@/context/team-context";
 import { getStripe } from "@/ee/stripe/client";
 import { Feature, PlanEnum, getPlanFeatures } from "@/ee/stripe/constants";
+import {
+  getPriceIdFromPlan,
+  getPerSeatPriceIdFromPlan,
+} from "@/ee/stripe/functions/get-price-id-from-plan";
 import { PLANS } from "@/ee/stripe/utils";
 import { CheckIcon, Users2Icon, XIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -235,6 +239,17 @@ export default function UpgradePage() {
                   /month{period === "yearly" && ", billed annually"}
                 </span>
               </div>
+              {PLANS.find((p) => p.name === planOption)?.price[period]
+                .perSeat && (
+                <p className="text-sm text-gray-500 dark:text-white/60">
+                  +€
+                  {
+                    PLANS.find((p) => p.name === planOption)?.price[period]
+                      .perSeat?.amount
+                  }
+                  /mo per additional user
+                </p>
+              )}
               <p className="mt-4 text-sm text-gray-600 dark:text-white">
                 {planFeatures.featureIntro}
               </p>
@@ -289,18 +304,24 @@ export default function UpgradePage() {
                           setSelectedPlan(null);
                         });
                     } else {
+                      const basePriceId = getPriceIdFromPlan({
+                        planName: planOption,
+                        period,
+                        isOld: isOldAccount,
+                      });
+                      const seatPriceId = getPerSeatPriceIdFromPlan({
+                        planName: planOption,
+                        period,
+                        isOld: isOldAccount,
+                      });
+                      const params = new URLSearchParams({
+                        priceId: basePriceId!,
+                      });
+                      if (seatPriceId) {
+                        params.set("perSeatPriceId", seatPriceId);
+                      }
                       fetch(
-                        `/api/teams/${
-                          teamInfo?.currentTeam?.id
-                        }/billing/upgrade?priceId=${
-                          PLANS.find((p) => p.name === planOption)!.price[
-                            period
-                          ].priceIds[
-                            process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
-                              ? "production"
-                              : "test"
-                          ][isOldAccount ? "old" : "new"]
-                        }`,
+                        `/api/teams/${teamInfo?.currentTeam?.id}/billing/upgrade?${params.toString()}`,
                         {
                           method: "POST",
                           headers: {
@@ -392,6 +413,17 @@ export default function UpgradePage() {
                     /month{period === "yearly" && ", billed annually"}
                   </span>
                 </div>
+                {PLANS.find((p) => p.name === planOption)?.price[period]
+                  .perSeat && (
+                  <p className="text-sm text-gray-500 dark:text-white/60">
+                    +€
+                    {
+                      PLANS.find((p) => p.name === planOption)?.price[period]
+                        .perSeat?.amount
+                    }
+                    /mo per additional user
+                  </p>
+                )}
                 <p className="mt-4 text-sm text-gray-600 dark:text-white">
                   {planFeatures.featureIntro}
                 </p>
@@ -446,19 +478,24 @@ export default function UpgradePage() {
                             setSelectedPlan(null);
                           });
                       } else {
+                        const basePriceId = getPriceIdFromPlan({
+                          planName: planOption,
+                          period,
+                          isOld: isOldAccount,
+                        });
+                        const seatPriceId = getPerSeatPriceIdFromPlan({
+                          planName: planOption,
+                          period,
+                          isOld: isOldAccount,
+                        });
+                        const params = new URLSearchParams({
+                          priceId: basePriceId!,
+                        });
+                        if (seatPriceId) {
+                          params.set("perSeatPriceId", seatPriceId);
+                        }
                         fetch(
-                          `/api/teams/${
-                            teamInfo?.currentTeam?.id
-                          }/billing/upgrade?priceId=${
-                            PLANS.find((p) => p.name === planOption)!.price[
-                              period
-                            ].priceIds[
-                              process.env.NEXT_PUBLIC_VERCEL_ENV ===
-                                "production"
-                                ? "production"
-                                : "test"
-                            ][isOldAccount ? "old" : "new"]
-                          }`,
+                          `/api/teams/${teamInfo?.currentTeam?.id}/billing/upgrade?${params.toString()}`,
                           {
                             method: "POST",
                             headers: {
@@ -549,6 +586,17 @@ export default function UpgradePage() {
                       /month{period === "yearly" && ", billed annually"}
                     </span>
                   </div>
+                  {PLANS.find((p) => p.name === planOption)?.price[period]
+                    .perSeat && (
+                    <p className="text-sm text-gray-500 dark:text-white/60">
+                      +€
+                      {
+                        PLANS.find((p) => p.name === planOption)?.price[period]
+                          .perSeat?.amount
+                      }
+                      /mo per additional user
+                    </p>
+                  )}
                   <p className="mt-4 text-sm text-gray-600 dark:text-white">
                     {planFeatures.featureIntro}
                   </p>
@@ -603,19 +651,24 @@ export default function UpgradePage() {
                               setSelectedPlan(null);
                             });
                         } else {
+                          const basePriceId = getPriceIdFromPlan({
+                            planName: planOption,
+                            period,
+                            isOld: isOldAccount,
+                          });
+                          const seatPriceId = getPerSeatPriceIdFromPlan({
+                            planName: planOption,
+                            period,
+                            isOld: isOldAccount,
+                          });
+                          const params = new URLSearchParams({
+                            priceId: basePriceId!,
+                          });
+                          if (seatPriceId) {
+                            params.set("perSeatPriceId", seatPriceId);
+                          }
                           fetch(
-                            `/api/teams/${
-                              teamInfo?.currentTeam?.id
-                            }/billing/upgrade?priceId=${
-                              PLANS.find((p) => p.name === planOption)!.price[
-                                period
-                              ].priceIds[
-                                process.env.NEXT_PUBLIC_VERCEL_ENV ===
-                                  "production"
-                                  ? "production"
-                                  : "test"
-                              ][isOldAccount ? "old" : "new"]
-                            }`,
+                            `/api/teams/${teamInfo?.currentTeam?.id}/billing/upgrade?${params.toString()}`,
                             {
                               method: "POST",
                               headers: {
