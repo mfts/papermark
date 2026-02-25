@@ -15,6 +15,46 @@ export const config = {
   maxDuration: 300,
 };
 
+type AnnotateDocumentErrorType =
+  | "Request timeout"
+  | "Document too large"
+  | "Failed to fetch document"
+  | "Invalid request"
+  | "Failed to apply watermark";
+
+class AnnotateDocumentError extends Error {
+  readonly statusCode: number;
+  readonly errorType: AnnotateDocumentErrorType;
+
+  constructor({
+    message,
+    statusCode,
+    errorType,
+  }: {
+    message: string;
+    statusCode: number;
+    errorType: AnnotateDocumentErrorType;
+  }) {
+    super(message);
+    this.name = "AnnotateDocumentError";
+    this.statusCode = statusCode;
+    this.errorType = errorType;
+  }
+}
+
+const toAnnotateDocumentError = (error: unknown): AnnotateDocumentError => {
+  if (error instanceof AnnotateDocumentError) {
+    return error;
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+  return new AnnotateDocumentError({
+    message,
+    statusCode: 500,
+    errorType: "Failed to apply watermark",
+  });
+};
+
 const NOTO_SANS_FONT_PATH = path.join(
   process.cwd(),
   "public",
@@ -31,7 +71,11 @@ const getNotoSansFontBytes = async () => {
       .catch((error) => {
         notoSansFontBytesPromise = null;
         const message = error instanceof Error ? error.message : String(error);
-        throw new Error(`Failed to load Noto Sans font: ${message}`);
+        throw new AnnotateDocumentError({
+          message: `Failed to load Noto Sans font: ${message}`,
+          statusCode: 400,
+          errorType: "Invalid request",
+        });
       });
   }
 
@@ -268,9 +312,11 @@ export const annotatePdfWithEmbeddedWatermark = async ({
 
   const sourcePageCount = pdfDoc.getPageCount();
   if (numPages > sourcePageCount) {
-    throw new Error(
-      `Invalid page count: requested ${numPages}, document has ${sourcePageCount}`,
-    );
+    throw new AnnotateDocumentError({
+      message: `Invalid page count: requested ${numPages}, document has ${sourcePageCount}`,
+      statusCode: 400,
+      errorType: "Invalid request",
+    });
   }
 
   const pagesToProcess = Math.min(numPages, sourcePageCount);
@@ -285,7 +331,11 @@ export const annotatePdfWithEmbeddedWatermark = async ({
   );
   const watermarkText = rawWatermarkText;
   if (!watermarkText.trim()) {
-    throw new Error("Watermark text is empty");
+    throw new AnnotateDocumentError({
+      message: "Watermark text is empty",
+      statusCode: 400,
+      errorType: "Invalid request",
+    });
   }
 
   const embeddedWatermarksBySize = new Map<
@@ -438,7 +488,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new AnnotateDocumentError({
+          message: `HTTP ${response.status}: ${response.statusText}`,
+          statusCode: 502,
+          errorType: "Failed to fetch document",
+        });
       }
 
       console.log(`PDF fetch took ${Date.now() - fetchStart}ms`);
@@ -451,10 +505,18 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       });
 
       if (errorMsg.includes("aborted")) {
-        throw new Error("Timeout fetching PDF (exceeded 60s)");
+        throw new AnnotateDocumentError({
+          message: "Timeout fetching PDF (exceeded 60s)",
+          statusCode: 504,
+          errorType: "Request timeout",
+        });
       }
 
-      throw new Error(`Failed to fetch PDF: ${errorMsg}`);
+      throw new AnnotateDocumentError({
+        message: `Failed to fetch PDF: ${errorMsg}`,
+        statusCode: 502,
+        errorType: "Failed to fetch document",
+      });
     }
 
     const bufferStart = Date.now();
@@ -485,45 +547,18 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     res.status(200).send(Buffer.from(annotatedPdf));
     return;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    const annotateError = toAnnotateDocumentError(error);
     const elapsedTime = Date.now() - startTime;
 
-    let statusCode = 500;
-    let errorType = "Failed to apply watermark";
-
-    if (errorMessage.includes("Timeout") || errorMessage.includes("timeout")) {
-      statusCode = 504;
-      errorType = "Request timeout";
-    } else if (
-      errorMessage.includes("too large") ||
-      errorMessage.includes("Maximum")
-    ) {
-      statusCode = 413;
-      errorType = "Document too large";
-    } else if (
-      errorMessage.includes("fetch") ||
-      errorMessage.includes("HTTP")
-    ) {
-      statusCode = 502;
-      errorType = "Failed to fetch document";
-    } else if (
-      errorMessage.includes("Invalid page count") ||
-      errorMessage.includes("Watermark text is empty") ||
-      errorMessage.includes("Failed to load Noto Sans font")
-    ) {
-      statusCode = 400;
-      errorType = "Invalid request";
-    }
-
     log({
-      message: `${errorType} after ${elapsedTime}ms: ${errorMessage}\n\nDocument: ${originalFileName || "unknown"}\nPages: ${numPages}\nURL: ${url?.substring(0, 100)}...`,
+      message: `${annotateError.errorType} after ${elapsedTime}ms: ${annotateError.message}\n\nDocument: ${originalFileName || "unknown"}\nPages: ${numPages}\nURL: ${url?.substring(0, 100)}...`,
       type: "error",
       mention: elapsedTime > 120000,
     });
 
-    res.status(statusCode).json({
-      error: errorType,
-      details: errorMessage,
+    res.status(annotateError.statusCode).json({
+      error: annotateError.errorType,
+      details: annotateError.message,
       processingTime: elapsedTime,
     });
     return;
