@@ -100,9 +100,10 @@ export default function UploadZone({
   const teamInfo = useTeam();
   const { data: session } = useSession();
   const { limits, canAddDocuments, isPaused } = useLimits();
-  const remainingDocuments = limits?.documents
-    ? limits?.documents - limits?.usage?.documents
-    : 0;
+  const hasDocumentLimit = limits?.documents != null && limits.documents > 0;
+  const remainingDocuments = hasDocumentLimit
+    ? limits.documents - (limits?.usage?.documents ?? 0)
+    : Infinity;
 
   // Fetch team settings with proper revalidation - ensures settings stay fresh across tabs
   const { settings: teamSettings } = useTeamSettings(teamInfo?.currentTeam?.id);
@@ -222,6 +223,25 @@ export default function UploadZone({
 
   const onDropRejected = useCallback(
     (rejectedFiles: FileRejection[]) => {
+      const hasTooManyFiles = rejectedFiles.some(({ errors }) =>
+        errors.some(({ code }) => code === "too-many-files"),
+      );
+
+      if (hasTooManyFiles) {
+        const maxFiles = fileSizeLimits.maxFiles ?? 150;
+        toast.error(
+          `You're trying to upload ${rejectedFiles.length} files, but you can only upload up to ${maxFiles} files at once. Please upload in smaller batches.`,
+          { duration: 8000 },
+        );
+        onUploadRejected([
+          {
+            fileName: `${rejectedFiles.length} files selected`,
+            message: `Maximum ${maxFiles} files per upload`,
+          },
+        ]);
+        return;
+      }
+
       const rejected = rejectedFiles.map(({ file, errors }) => {
         let message = "";
         if (errors.find(({ code }) => code === "file-too-large")) {
@@ -256,13 +276,39 @@ export default function UploadZone({
         return;
       }
 
-      if (!canAddDocuments && acceptedFiles.length > remainingDocuments) {
-        toast.error("You have reached the maximum number of documents.");
+      if (hasDocumentLimit && remainingDocuments <= 0) {
+        toast.error(
+          `You've reached your plan's document limit (${limits?.usage?.documents}/${limits?.documents} documents). Upgrade your plan to upload more.`,
+          {
+            action: {
+              label: "Upgrade",
+              onClick: () => router.push("/settings/billing"),
+            },
+            duration: 8000,
+          },
+        );
         return;
       }
 
+      let filesToUpload = acceptedFiles;
+
+      if (hasDocumentLimit && acceptedFiles.length > remainingDocuments) {
+        const skippedCount = acceptedFiles.length - remainingDocuments;
+        toast.warning(
+          `You're trying to upload ${acceptedFiles.length} files, but your plan only allows ${remainingDocuments} more document${remainingDocuments === 1 ? "" : "s"} (${limits?.usage?.documents}/${limits?.documents} used). ${skippedCount} file${skippedCount === 1 ? "" : "s"} will be skipped.`,
+          {
+            action: {
+              label: "Upgrade",
+              onClick: () => router.push("/settings/billing"),
+            },
+            duration: 10000,
+          },
+        );
+        filesToUpload = acceptedFiles.slice(0, remainingDocuments);
+      }
+
       // Validate files and separate into valid and invalid
-      const validatedFiles = acceptedFiles.reduce<{
+      const validatedFiles = filesToUpload.reduce<{
         valid: FileWithPaths[];
         invalid: { fileName: string; message: string }[];
       }>(
@@ -530,6 +576,8 @@ export default function UploadZone({
       isFree,
       isTrial,
       isPaused,
+      hasDocumentLimit,
+      remainingDocuments,
     ],
   );
 
@@ -537,6 +585,11 @@ export default function UploadZone({
     async (event: DropEvent) => {
       // This callback also run when event.type =`dragenter`. We only need to compute files when the event.type is `drop`.
       if ("type" in event && event.type !== "drop" && event.type !== "change") {
+        return [];
+      }
+
+      // Early check: skip folder traversal (and folder creation) if document limit is already reached
+      if (hasDocumentLimit && remainingDocuments <= 0) {
         return [];
       }
 
@@ -817,6 +870,8 @@ export default function UploadZone({
       setRejectedFiles,
       acceptableDropZoneFileTypes,
       getOrCreateDataroomFolder,
+      hasDocumentLimit,
+      remainingDocuments,
     ],
   );
 
