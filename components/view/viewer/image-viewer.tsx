@@ -3,6 +3,8 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 
+import { Minimize2 } from "lucide-react";
+
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 import { WatermarkConfig } from "@/lib/types";
@@ -39,12 +41,14 @@ export default function ImageViewer({
 }) {
   const router = useRouter();
 
-  const { isPreview, linkId, documentId, viewId, dataroomId } = navData;
+  const { isPreview, linkId, documentId, viewId, dataroomId, isMobile } =
+    navData;
 
   const numPages = 1;
   const pageNumber = 1;
 
   const [scale, setScale] = useState<number>(1);
+  const [isFullscreenMode, setIsFullscreenMode] = useState<boolean>(false);
   const [isWindowFocused, setIsWindowFocused] = useState(true);
 
   const startTimeRef = useRef(Date.now());
@@ -80,8 +84,11 @@ export default function ImageViewer({
     setScale((prev) => Math.max(prev - 0.25, 0.5)); // Min zoom 0.5x
   };
 
-  // Add fullscreen handler
   const handleFullscreen = () => {
+    if (isMobile) {
+      setIsFullscreenMode((prev) => !prev);
+      return;
+    }
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch((err) => {
         console.error("Error attempting to enable fullscreen:", err);
@@ -301,6 +308,8 @@ export default function ImageViewer({
     stopIntervalTracking,
   ]);
 
+  const contentHeight = isFullscreenMode ? "100dvh" : "calc(100dvh - 64px)";
+
   return (
     <>
       <Nav
@@ -310,10 +319,21 @@ export default function ImageViewer({
         handleZoomIn={handleZoomIn}
         handleZoomOut={handleZoomOut}
         handleFullscreen={handleFullscreen}
+        isFullscreenMode={isFullscreenMode}
         navData={navData}
       />
+      {isFullscreenMode && isMobile && (
+        <div className="fixed right-3 top-3 z-50 flex items-center gap-2">
+          <button
+            onClick={() => setIsFullscreenMode(false)}
+            className="rounded-full bg-black/50 p-2 text-white backdrop-blur-sm active:bg-black/70"
+          >
+            <Minimize2 className="size-4" />
+          </button>
+        </div>
+      )}
       <div
-        style={{ height: "calc(100dvh - 64px)" }}
+        style={{ height: contentHeight }}
         className="relative flex items-center overflow-hidden"
       >
         <div
@@ -355,7 +375,12 @@ export default function ImageViewer({
               >
                 <div className="viewer-container relative mx-auto flex w-full justify-center">
                   <img
-                    className="viewer-image-mobile !pointer-events-auto max-h-[calc(100dvh-64px)] object-contain"
+                    className={cn(
+                      "viewer-image-mobile !pointer-events-auto object-contain",
+                      isFullscreenMode
+                        ? "max-h-dvh"
+                        : "max-h-[calc(100dvh-64px)]",
+                    )}
                     onContextMenu={(e) => {
                       e.preventDefault();
                       e.stopPropagation();

@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 
-import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, Minimize2 } from "lucide-react";
 
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { getTrackingOptions } from "@/lib/tracking/tracking-config";
@@ -117,6 +117,7 @@ export default function PagesVerticalViewer({
   const [submittedFeedback, setSubmittedFeedback] = useState<boolean>(false);
   const [accountCreated, setAccountCreated] = useState<boolean>(false);
   const [scale, setScale] = useState<number>(1);
+  const [isFullscreenMode, setIsFullscreenMode] = useState<boolean>(false);
 
   const initialViewedPages = Array.from({ length: numPages }, (_, index) => ({
     pageNumber: index + 1,
@@ -157,9 +158,10 @@ export default function PagesVerticalViewer({
     naturalHeight: number;
     scaleFactor: number;
   }) => {
+    const navHeight = isFullscreenMode ? 0 : 64;
     const containerHeight = imageDimensions[pageNumber - 1]
       ? imageDimensions[pageNumber - 1]!.height
-      : window.innerHeight - 64;
+      : window.innerHeight - navHeight;
 
     // Add a safety check to prevent division by zero
     if (!naturalHeight || naturalHeight === 0) {
@@ -761,8 +763,11 @@ export default function PagesVerticalViewer({
     setScale((prev) => Math.max(prev - 0.25, 0.5)); // Min zoom 0.5x
   };
 
-  // Add fullscreen handler
   const handleFullscreen = () => {
+    if (isMobile) {
+      setIsFullscreenMode((prev) => !prev);
+      return;
+    }
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch((err) => {
         console.error("Error attempting to enable fullscreen:", err);
@@ -806,6 +811,8 @@ export default function PagesVerticalViewer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const contentHeight = isFullscreenMode ? "100dvh" : "calc(100dvh - 64px)";
+
   return (
     <>
       <Nav
@@ -816,10 +823,29 @@ export default function PagesVerticalViewer({
         handleZoomIn={handleZoomIn}
         handleZoomOut={handleZoomOut}
         handleFullscreen={handleFullscreen}
+        isFullscreenMode={isFullscreenMode}
         navData={navData}
       />
+      {isFullscreenMode && isMobile && (
+        <div className="fixed right-3 top-3 z-50 flex items-center gap-2">
+          {numPagesWithAccountCreation > 1 && (
+            <div className="rounded-full bg-black/50 px-3 py-1.5 text-xs font-medium tabular-nums text-white backdrop-blur-sm">
+              {pageNumber}
+              <span className="text-white/50">
+                /{numPagesWithAccountCreation}
+              </span>
+            </div>
+          )}
+          <button
+            onClick={() => setIsFullscreenMode(false)}
+            className="rounded-full bg-black/50 p-2 text-white backdrop-blur-sm active:bg-black/70"
+          >
+            <Minimize2 className="size-4" />
+          </button>
+        </div>
+      )}
       <div
-        style={{ height: "calc(100dvh - 64px)" }}
+        style={{ height: contentHeight }}
         className="relative overflow-hidden"
       >
         <ResizablePanelGroup direction="horizontal">
@@ -1059,7 +1085,7 @@ export default function PagesVerticalViewer({
                           <div
                             id="feedback-question"
                             className={cn("relative block h-dvh w-full")}
-                            style={{ height: "calc(100dvh - 64px)" }}
+                            style={{ height: contentHeight }}
                           >
                             <Question
                               accentColor={brand?.accentColor}

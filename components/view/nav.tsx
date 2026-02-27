@@ -10,6 +10,7 @@ import {
   BadgeInfoIcon,
   Download,
   Maximize,
+  Minimize2,
   MessageCircle,
   Slash,
   ZoomInIcon,
@@ -78,6 +79,7 @@ export default function Nav({
   handleZoomIn,
   handleZoomOut,
   handleFullscreen,
+  isFullscreenMode,
 }: {
   navData: TNavData;
   type?: "pdf" | "notion" | "sheet";
@@ -88,6 +90,7 @@ export default function Nav({
   handleZoomIn?: () => void;
   handleZoomOut?: () => void;
   handleFullscreen?: () => void;
+  isFullscreenMode?: boolean;
 }) {
   const router = useRouter();
   const asPath = router.asPath;
@@ -232,14 +235,16 @@ export default function Nav({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isDataroom, conversationsEnabled, showConversations]);
 
+  if (isFullscreenMode && isMobile) {
+    return null;
+  }
+
   return (
     <nav
       className="bg-black"
       style={{
         backgroundColor: brand && brand.brandColor ? brand.brandColor : "black",
-        // Extend navbar to full width when chat panel is open (counteract parent padding)
         marginRight: isChatOpen ? "-400px" : undefined,
-        // paddingRight: isChatOpen ? "400px" : undefined,
       }}
     >
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
@@ -441,6 +446,17 @@ export default function Nav({
                   </TooltipProvider>
                 )}
               </div>
+            )}
+
+            {isMobile && handleFullscreen && (
+              <Button
+                onClick={handleFullscreen}
+                className="size-8 bg-gray-900 text-white hover:bg-gray-900/80"
+                size="icon"
+                title="Fullscreen"
+              >
+                <Maximize className="size-4" />
+              </Button>
             )}
 
             {pageNumber && numPages ? (
