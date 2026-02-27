@@ -599,6 +599,25 @@ export default function PagesHorizontalViewer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [containerRef.current, pageNumber, imageDimensions]);
 
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const landscapeQuery = window.matchMedia("(orientation: landscape)");
+    const handleOrientationChange = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        setIsFullscreenMode(true);
+      }
+    };
+
+    if (landscapeQuery.matches) {
+      setIsFullscreenMode(true);
+    }
+
+    landscapeQuery.addEventListener("change", handleOrientationChange);
+    return () =>
+      landscapeQuery.removeEventListener("change", handleOrientationChange);
+  }, [isMobile]);
+
   // Compute scaled sizer dimensions for accurate scroll area
   const currentDims = imageDimensions[pageNumber - 1];
   const scaledWidthPx = currentDims ? currentDims.width * scale : undefined;

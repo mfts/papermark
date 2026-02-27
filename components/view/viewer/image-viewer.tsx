@@ -133,6 +133,25 @@ export default function ImageViewer({
   }, [containerRef.current, imageDimensions]);
 
   useEffect(() => {
+    if (!isMobile) return;
+
+    const landscapeQuery = window.matchMedia("(orientation: landscape)");
+    const handleOrientationChange = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        setIsFullscreenMode(true);
+      }
+    };
+
+    if (landscapeQuery.matches) {
+      setIsFullscreenMode(true);
+    }
+
+    landscapeQuery.addEventListener("change", handleOrientationChange);
+    return () =>
+      landscapeQuery.removeEventListener("change", handleOrientationChange);
+  }, [isMobile]);
+
+  useEffect(() => {
     const updateImageDimensions = () => {
       let newDimensions: { width: number; height: number } | null = null;
 

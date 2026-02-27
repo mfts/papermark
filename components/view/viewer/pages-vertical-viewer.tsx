@@ -811,6 +811,25 @@ export default function PagesVerticalViewer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const landscapeQuery = window.matchMedia("(orientation: landscape)");
+    const handleOrientationChange = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        setIsFullscreenMode(true);
+      }
+    };
+
+    if (landscapeQuery.matches) {
+      setIsFullscreenMode(true);
+    }
+
+    landscapeQuery.addEventListener("change", handleOrientationChange);
+    return () =>
+      landscapeQuery.removeEventListener("change", handleOrientationChange);
+  }, [isMobile]);
+
   const contentHeight = isFullscreenMode ? "100dvh" : "calc(100dvh - 64px)";
 
   return (

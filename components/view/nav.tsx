@@ -10,7 +10,6 @@ import {
   BadgeInfoIcon,
   Download,
   Maximize,
-  Minimize2,
   MessageCircle,
   Slash,
   ZoomInIcon,
