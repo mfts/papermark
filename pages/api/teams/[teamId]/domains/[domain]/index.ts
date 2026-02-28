@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api//auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
+import { z } from "zod";
 
 import {
   deleteDomainRedirectUrl,
@@ -15,6 +16,10 @@ import prisma from "@/lib/prisma";
 import { getTeamWithDomain } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
+
+const updateDomainSchema = z.object({
+  redirectUrl: z.string().nullable().optional(),
+});
 
 export default async function handle(
   req: NextApiRequest,
@@ -164,22 +169,34 @@ export default async function handle(
         return res.status(404).json("Domain not found");
       }
 
-      const { redirectUrl } = req.body as { redirectUrl: string | null };
+      const parsed = updateDomainSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res
+          .status(422)
+          .json({ message: parsed.error.issues[0]?.message ?? "Invalid body" });
+      }
 
-      if (redirectUrl && !planSupportsRedirects(team.plan)) {
+      const hasRedirectUrl = "redirectUrl" in parsed.data;
+      const redirectUrl = parsed.data.redirectUrl;
+
+      if (hasRedirectUrl && redirectUrl && !planSupportsRedirects(team.plan)) {
         return res.status(403).json({
           message:
             "Root domain redirects require a Business plan or higher",
         });
       }
 
-      let normalizedUrl: string | null = null;
-      if (redirectUrl) {
-        const result = await validateRedirectUrl(redirectUrl, teamId);
-        if (!result.valid) {
-          return res.status(422).json({ message: result.message });
+      let normalizedUrl: string | null | undefined;
+      if (hasRedirectUrl) {
+        if (redirectUrl) {
+          const result = await validateRedirectUrl(redirectUrl, teamId);
+          if (!result.valid) {
+            return res.status(422).json({ message: result.message });
+          }
+          normalizedUrl = result.url || null;
+        } else {
+          normalizedUrl = null;
         }
-        normalizedUrl = result.url || null;
       }
 
       const updatedDomain = await prisma.domain.update({
@@ -188,11 +205,13 @@ export default async function handle(
           teamId,
         },
         data: {
-          redirectUrl: normalizedUrl,
+          ...(normalizedUrl !== undefined && { redirectUrl: normalizedUrl }),
         },
       });
 
-      await setDomainRedirectUrl(domain, normalizedUrl);
+      if (normalizedUrl !== undefined) {
+        await setDomainRedirectUrl(domain, normalizedUrl);
+      }
 
       return res.status(200).json(updatedDomain);
     } catch (error) {
