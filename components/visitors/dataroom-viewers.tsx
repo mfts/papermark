@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   BadgeCheckIcon,
   BadgeInfoIcon,
@@ -27,7 +29,7 @@ import {
 import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
-import DataroomVisitHistory from "./dataroom-visitors-history";
+import { DataroomViewStats } from "./dataroom-view-stats";
 import { VisitorAvatar } from "./visitor-avatar";
 
 export default function DataroomViewersTable({
@@ -36,6 +38,21 @@ export default function DataroomViewersTable({
   dataroomId: string;
 }) {
   const { viewers } = useDataroomViewers({ dataroomId });
+  const [expandedViewerIds, setExpandedViewerIds] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const handleOpenChange = (viewerId: string, open: boolean) => {
+    setExpandedViewerIds((prev) => {
+      const next = new Set(prev);
+      if (open) {
+        next.add(viewerId);
+      } else {
+        next.delete(viewerId);
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="w-full">
@@ -43,14 +60,18 @@ export default function DataroomViewersTable({
         <h2 className="mb-2 md:mb-4">All dataroom visitors</h2>
       </div>
       <div className="rounded-md border">
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
               <TableHead>Name</TableHead>
-              {/* <TableHead>Visit Duration</TableHead> */}
-              {/* <TableHead>Last Viewed Document</TableHead> */}
-              <TableHead>Last Viewed</TableHead>
-              <TableHead className="text-center sm:text-right"></TableHead>
+              <TableHead className="w-[120px]">
+                {expandedViewerIds.size > 0 ? "View Duration" : null}
+              </TableHead>
+              <TableHead className="w-[140px]">
+                {expandedViewerIds.size > 0 ? "View Completion" : null}
+              </TableHead>
+              <TableHead className="w-[120px]">Last Viewed</TableHead>
+              <TableHead className="w-[48px]" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -65,7 +86,11 @@ export default function DataroomViewersTable({
             )}
             {viewers ? (
               viewers.map((viewer) => (
-                <Collapsible key={viewer.id} asChild>
+                <Collapsible
+                  key={viewer.id}
+                  asChild
+                  onOpenChange={(open) => handleOpenChange(viewer.id, open)}
+                >
                   <>
                     <TableRow key={viewer.id} className="group/row">
                       {/* Name */}
@@ -112,29 +137,12 @@ export default function DataroomViewersTable({
                                   {viewer.email}
                                 </p>
                               )}
-                              <p className="text-xs text-muted-foreground/60 sm:text-sm">
-                                {/* {view.link.name ? view.link.name : view.linkId} */}
-                              </p>
                             </div>
                           </div>
                         </div>
                       </TableCell>
-                      {/* Duration */}
-                      {/* <TableCell className="">
-                        <div className="text-sm text-muted-foreground">
-                          {durationFormat(view.totalDuration)}
-                        </div>
-                      </TableCell> */}
-                      {/* Completion */}
-                      {/* <TableCell className="flex justify-start">
-                        <div className="text-sm text-muted-foreground">
-                          <Gauge
-                            value={view.completionRate}
-                            size={"small"}
-                            showValue={true}
-                          />
-                        </div>
-                      </TableCell> */}
+                      <TableCell />
+                      <TableCell />
                       {/* Last Viewed */}
                       <TableCell className="text-sm text-muted-foreground">
                         {viewer.lastViewedAt ? (
@@ -172,14 +180,15 @@ export default function DataroomViewersTable({
                       ? viewer.views.map((view: any) => (
                           <CollapsibleContent asChild key={view.id}>
                             <>
-                              <TableRow key={view.id}>
+                              <TableRow key={view.id} className="[&>td]:py-3">
                                 <TableCell>
                                   <div className="flex items-center gap-x-4 overflow-visible">
                                     <MailOpenIcon className="h-5 w-5 text-[#fb7a00]" />
                                     Accessed {viewer.dataroomName} dataroom
                                   </div>
                                 </TableCell>
-
+                                <TableCell />
+                                <TableCell />
                                 <TableCell>
                                   <TimestampTooltip
                                     timestamp={view.viewedAt}
@@ -196,18 +205,22 @@ export default function DataroomViewersTable({
                                     </time>
                                   </TimestampTooltip>
                                 </TableCell>
-                                <TableCell className="table-cell"></TableCell>
+                                <TableCell />
                               </TableRow>
 
                               {view.downloadedAt ? (
-                                <TableRow key={`download-${view.id}`}>
+                                <TableRow
+                                  key={`download-${view.id}`}
+                                  className="[&>td]:py-3"
+                                >
                                   <TableCell>
                                     <div className="flex items-center gap-x-4 overflow-visible">
                                       <DownloadCloudIcon className="h-5 w-5 text-cyan-500 hover:text-cyan-600" />
                                       Downloaded {viewer.dataroomName} dataroom
                                     </div>
                                   </TableCell>
-
+                                  <TableCell />
+                                  <TableCell />
                                   <TableCell>
                                     <TimestampTooltip
                                       timestamp={view.downloadedAt}
@@ -224,13 +237,14 @@ export default function DataroomViewersTable({
                                       </time>
                                     </TimestampTooltip>
                                   </TableCell>
-                                  <TableCell className="table-cell"></TableCell>
+                                  <TableCell />
                                 </TableRow>
                               ) : null}
 
-                              <DataroomVisitHistory
+                              <DataroomViewStats
                                 viewId={view.id}
                                 dataroomId={dataroomId}
+                                isExpanded={expandedViewerIds.has(viewer.id)}
                               />
                             </>
                           </CollapsibleContent>
@@ -244,14 +258,17 @@ export default function DataroomViewersTable({
                 <TableCell className="min-w-[100px]">
                   <Skeleton className="h-6 w-full" />
                 </TableCell>
-                <TableCell className="min-w-[450px]">
-                  <Skeleton className="h-6 w-full" />
+                <TableCell>
+                  <Skeleton className="h-6 w-14" />
                 </TableCell>
                 <TableCell>
+                  <Skeleton className="h-6 w-6 rounded-full" />
+                </TableCell>
+                <TableCell className="min-w-[100px]">
                   <Skeleton className="h-6 w-24" />
                 </TableCell>
                 <TableCell>
-                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-6 w-6" />
                 </TableCell>
               </TableRow>
             )}

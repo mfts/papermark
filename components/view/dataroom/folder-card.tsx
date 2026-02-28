@@ -1,11 +1,12 @@
 import { useState } from "react";
+import type { CSSProperties } from "react";
 
 import { DataroomFolder } from "@prisma/client";
 import { Download, MoreVerticalIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { getFolderColorClasses, getFolderIcon } from "@/lib/constants/folder-constants";
-import { timeAgo } from "@/lib/utils";
+import { cn, timeAgo } from "@/lib/utils";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
   getHierarchicalDisplayName,
@@ -19,6 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useViewerSurfaceTheme } from "@/components/view/viewer/viewer-surface-theme";
 
 type FolderCardProps = {
   folder: DataroomFolder;
@@ -43,6 +45,7 @@ export default function FolderCard({
   showLastUpdated = true,
 }: FolderCardProps) {
   const [open, setOpen] = useState(false);
+  const { palette } = useViewerSurfaceTheme();
 
   // Get hierarchical display name
   const displayName = getHierarchicalDisplayName(
@@ -68,7 +71,27 @@ export default function FolderCard({
   };
 
   return (
-    <div className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-400 transition-all hover:bg-secondary hover:ring-gray-500 dark:bg-secondary dark:ring-gray-500 hover:dark:ring-gray-400 sm:p-4">
+    <div
+      className={cn(
+        "group/row relative flex items-center justify-between rounded-lg border p-3 transition-all sm:p-4",
+        "bg-[var(--viewer-panel-bg)] hover:bg-[var(--viewer-panel-bg-hover)]",
+        "border-[var(--viewer-panel-border)] hover:border-[var(--viewer-panel-border-hover)]",
+      )}
+      style={
+        {
+          "--viewer-panel-bg": palette.panelBgColor,
+          "--viewer-panel-bg-hover": palette.panelHoverBgColor,
+          "--viewer-panel-border": palette.panelBorderColor,
+          "--viewer-panel-border-hover": palette.panelBorderHoverColor,
+          "--viewer-text": palette.textColor,
+          "--viewer-muted-text": palette.mutedTextColor,
+          "--viewer-control-bg": palette.controlBgColor,
+          "--viewer-control-border": palette.controlBorderColor,
+          "--viewer-control-border-strong": palette.controlBorderStrongColor,
+          "--viewer-control-icon": palette.controlIconColor,
+        } as CSSProperties
+      }
+    >
       {/* Click target - outside of text hierarchy to fix Safari truncation issue */}
       <button
         onClick={() => setFolderId(folder.id)}
@@ -92,14 +115,16 @@ export default function FolderCard({
         <div className="min-w-0 flex-1 flex-col">
           <div className="flex items-center">
             <h2
-              className="truncate text-sm font-semibold leading-6 text-foreground"
+              className="truncate text-sm font-semibold leading-6 text-[var(--viewer-text)]"
               style={HIERARCHICAL_DISPLAY_STYLE}
             >
               {displayName}
             </h2>
           </div>
           {showLastUpdated && (
-            <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+            <div
+              className="mt-1 flex items-center space-x-1 text-xs leading-5 text-[var(--viewer-muted-text)]"
+            >
               <p className="truncate">Updated {timeAgo(folder.updatedAt)}</p>
             </div>
           )}
@@ -112,7 +137,11 @@ export default function FolderCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 p-0 text-gray-500 ring-1 ring-gray-100 hover:bg-gray-200 group-hover/row:text-foreground group-hover/row:ring-gray-300"
+                className={cn(
+                  "h-8 w-8 border bg-transparent p-0",
+                  "text-[var(--viewer-control-icon)] border-[var(--viewer-control-border)] hover:bg-[var(--viewer-control-bg)]",
+                  "group-hover/row:text-[var(--viewer-text)] group-hover/row:border-[var(--viewer-control-border-strong)]",
+                )}
                 aria-label="Open menu"
               >
                 <MoreVerticalIcon className="h-4 w-4" />

@@ -9,6 +9,7 @@ import {
   getNotionPageIdFromSlug,
   isCustomNotionDomain,
 } from "@/lib/notion/utils";
+import { sanitizePlainText } from "@/lib/utils/sanitize-html";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
 /**
@@ -221,8 +222,14 @@ export const documentUploadSchema = z
   .object({
     name: z
       .string()
-      .min(1, "Document name is required")
-      .max(255, "Document name too long"),
+      .max(10000, "Document name too long")
+      .transform((value) => sanitizePlainText(value))
+      .pipe(
+        z
+          .string()
+          .min(1, "Document name is required")
+          .max(255, "Document name too long"),
+      ),
     url: z.string().min(1, "URL is required"), // Use string for now, will validate based on type
     storageType: z
       .enum(["S3_PATH", "VERCEL_BLOB"], {

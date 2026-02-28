@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { LinkPreset } from "@prisma/client";
-import slugify from "@sindresorhus/slugify";
 import { put } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
@@ -21,6 +20,7 @@ import {
   convertDataUrlToBuffer,
   generateEncrpytedPassword,
   isDataUrl,
+  safeSlugify,
   uploadImage,
 } from "@/lib/utils";
 import {
@@ -1319,7 +1319,7 @@ async function createDataroomFoldersRecursive(
   parentId: string | null = null,
 ): Promise<void> {
   for (const folder of folders) {
-    const folderPath = parentPath + "/" + slugify(folder.name);
+    const folderPath = parentPath + "/" + safeSlugify(folder.name);
 
     // Create the folder
     const createdFolder = await prisma.dataroomFolder.create({

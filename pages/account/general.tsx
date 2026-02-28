@@ -1,5 +1,4 @@
 import { NextPage } from "next";
-import { useEffect, useState } from "react";
 
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -7,45 +6,16 @@ import { toast } from "sonner";
 import { AccountHeader } from "@/components/account/account-header";
 import { UpdateMailSubscribe } from "@/components/account/update-subscription";
 import UploadAvatar from "@/components/account/upload-avatar";
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { Form } from "@/components/ui/form";
-import { PlanEnum } from "@/ee/stripe/constants";
 
-import { usePlan } from "@/lib/swr/use-billing";
 import { validateEmail } from "@/lib/utils/validate-email";
 
 const ProfilePage: NextPage = () => {
   const { data: session, update } = useSession();
-  const { plan: teamPlan, isAnnualPlan, isFree } = usePlan();
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-
-  // Determine the next plan to highlight
-  const getNextPlan = () => {
-    if (isFree) return PlanEnum.Pro;
-    if (teamPlan === "pro") return PlanEnum.Business;
-    if (teamPlan === "business") return PlanEnum.DataRooms;
-    return PlanEnum.Business; // Default
-  };
-
-  const nextPlan = getNextPlan();
-
-  // Show modal for monthly subscribers and free users when opening account
-  useEffect(() => {
-    if (!isAnnualPlan) {
-      // Show modal for monthly subscribers and free users
-      setShowUpgradeModal(true);
-    }
-  }, [isAnnualPlan]);
 
   return (
     <AppLayout>
-      <UpgradePlanModal
-        clickedPlan={nextPlan}
-        trigger="account_page"
-        open={showUpgradeModal}
-        setOpen={setShowUpgradeModal}
-      />
       <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
         <AccountHeader />
         <div className="space-y-6">

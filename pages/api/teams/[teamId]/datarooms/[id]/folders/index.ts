@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { DefaultPermissionStrategy, ItemType } from "@prisma/client";
-import slugify from "@sindresorhus/slugify";
+import { safeSlugify } from "@/lib/utils";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
@@ -491,7 +491,7 @@ export default async function handle(
       const basePath =
         pathSegments.length > 0 ? "/" + pathSegments.join("/") + "/" : "/";
 
-      let childFolderPath = basePath + slugify(folderName);
+      let childFolderPath = basePath + safeSlugify(folderName);
 
       while (counter <= MAX_RETRIES) {
         const existingFolder = await prisma.dataroomFolder.findUnique({
@@ -504,7 +504,7 @@ export default async function handle(
         });
         if (!existingFolder) break;
         folderName = `${name} (${counter})`;
-        childFolderPath = basePath + slugify(folderName);
+        childFolderPath = basePath + safeSlugify(folderName);
         counter++;
       }
 

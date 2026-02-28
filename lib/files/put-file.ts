@@ -148,17 +148,19 @@ const putFileSingle = async ({
     );
   }
 
-  const { url, key, fileName } = (await presignedResponse.json()) as {
-    url: string;
-    key: string;
-    fileName: string;
-  };
+  const { url, key, fileName, contentDisposition } =
+    (await presignedResponse.json()) as {
+      url: string;
+      key: string;
+      fileName: string;
+      contentDisposition: string;
+    };
 
   const response = await fetch(url, {
     method: "PUT",
     headers: {
       "Content-Type": file.type,
-      "Content-Disposition": `attachment; filename="${fileName}"`,
+      "Content-Disposition": contentDisposition,
     },
     body: file,
   });

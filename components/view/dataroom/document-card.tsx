@@ -22,6 +22,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useViewerSurfaceTheme } from "@/components/view/viewer/viewer-surface-theme";
 
 import { DocumentVersion } from "../viewer/dataroom-viewer";
 
@@ -57,6 +58,7 @@ export default function DocumentCard({
   showLastUpdated = true,
 }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
+  const { palette } = useViewerSurfaceTheme();
   const canDownload = document.canDownload && allowDownload;
 
   const isLight =
@@ -182,9 +184,25 @@ export default function DocumentCard({
   return (
     <div
       className={cn(
-        "group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4",
+        "group/row relative flex items-center justify-between rounded-lg border p-3 transition-all sm:p-4",
+        "bg-[var(--viewer-panel-bg)] hover:bg-[var(--viewer-panel-bg-hover)]",
+        "border-[var(--viewer-panel-border)] hover:border-[var(--viewer-panel-border-hover)]",
         isProcessing && "cursor-not-allowed opacity-60",
       )}
+      style={
+        {
+          "--viewer-panel-bg": palette.panelBgColor,
+          "--viewer-panel-bg-hover": palette.panelHoverBgColor,
+          "--viewer-panel-border": palette.panelBorderColor,
+          "--viewer-panel-border-hover": palette.panelBorderHoverColor,
+          "--viewer-text": palette.textColor,
+          "--viewer-muted-text": palette.mutedTextColor,
+          "--viewer-control-bg": palette.controlBgColor,
+          "--viewer-control-border": palette.controlBorderColor,
+          "--viewer-control-border-strong": palette.controlBorderStrongColor,
+          "--viewer-control-icon": palette.controlIconColor,
+        } as React.CSSProperties
+      }
     >
       {/* Click target - outside of text hierarchy to fix Safari truncation issue */}
       <button
@@ -205,19 +223,23 @@ export default function DocumentCard({
         <div className="min-w-0 flex-1 flex-col">
           <div className="flex items-center">
             <h2
-              className="truncate text-sm font-semibold leading-6 text-foreground"
+              className="truncate text-sm font-semibold leading-6 text-[var(--viewer-text)]"
               style={HIERARCHICAL_DISPLAY_STYLE}
             >
               {displayName}
               {isProcessing && (
-                <span className="ml-2 text-xs text-muted-foreground">
+                <span
+                  className="ml-2 text-xs text-[var(--viewer-muted-text)]"
+                >
                   (Processing...)
                 </span>
               )}
             </h2>
           </div>
           {showLastUpdated && (
-            <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+            <div
+              className="mt-1 flex items-center space-x-1 text-xs leading-5 text-[var(--viewer-muted-text)]"
+            >
               <p className="truncate">
                 Updated {timeAgo(document.versions[0].updatedAt)}
               </p>
@@ -232,7 +254,11 @@ export default function DocumentCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 p-0 text-gray-500 ring-1 ring-gray-100 hover:bg-gray-200 group-hover/row:text-foreground group-hover/row:ring-gray-300"
+                className={cn(
+                  "h-8 w-8 border bg-transparent p-0",
+                  "text-[var(--viewer-control-icon)] border-[var(--viewer-control-border)] hover:bg-[var(--viewer-control-bg)]",
+                  "group-hover/row:text-[var(--viewer-text)] group-hover/row:border-[var(--viewer-control-border-strong)]",
+                )}
                 aria-label="Open menu"
               >
                 <MoreVerticalIcon className="h-4 w-4" />

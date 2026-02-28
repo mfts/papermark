@@ -78,6 +78,7 @@ model Brand {
   banner         String? // Banner image for dataroom view (fallback)
   brandColor     String? // This should be a reference to the brand color
   accentColor    String? // This should be a reference to the accent color
+  applyAccentColorToDataroomView Boolean @default(false) // Global default for whether accentColor applies to dataroom list/tree viewer background
   welcomeMessage String? // This should be a reference to the welcome message
   teamId         String  @unique
   team           Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)

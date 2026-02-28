@@ -4,10 +4,10 @@ import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team
 import { FolderTemplate } from "@/ee/features/templates/constants/dataroom-templates";
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
 import { newId } from "@/lib/id-helper";
+import { safeSlugify } from "@/lib/utils";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -182,7 +182,7 @@ export default async function handle(
           parentId: string | null = null,
         ): Promise<void> => {
           for (const folder of folders) {
-            const folderPath = parentPath + "/" + slugify(folder.name);
+            const folderPath = parentPath + "/" + safeSlugify(folder.name);
 
             // Create the folder
             const createdFolder = await tx.dataroomFolder.create({

@@ -2,6 +2,7 @@ import { NextRouter } from "next/router";
 
 import slugify from "@sindresorhus/slugify";
 import { upload } from "@vercel/blob/client";
+import { transliterate } from "transliteration";
 import bcrypt from "bcryptjs";
 import * as chrono from "chrono-node";
 import { type ClassValue, clsx } from "clsx";
@@ -351,6 +352,17 @@ export const nanoid = customAlphabet(
   7,
 ); // 7-character random string
 
+/**
+ * CJK-safe slugify: transliterates non-Latin characters (CJK, Cyrillic, etc.)
+ * to their romanized equivalents before slugifying, so the same input always
+ * produces the same slug. e.g. "文件报告" → "wen-jian-bao-gao"
+ */
+export function safeSlugify(input: string): string {
+  const slug = slugify(input);
+  if (slug.length > 0) return slug;
+  return slugify(transliterate(input)) || nanoid();
+}
+
 export const daysLeft = (
   accountCreationDate: Date,
   maxDays: number,
@@ -635,7 +647,7 @@ export const getBreadcrumbPath = (path: string[]) => {
   return [
     { name: "Home", pathLink: "/documents" },
     ...segments.map((segment, index) => {
-      currentPath += `/${slugify(segment)}`;
+      currentPath += `/${safeSlugify(segment)}`;
       return {
         name: segment,
         pathLink: currentPath,

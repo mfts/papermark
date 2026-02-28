@@ -6,10 +6,10 @@ import {
 } from "@/ee/features/templates/constants/dataroom-templates";
 import { applyTemplateSchema } from "@/ee/features/templates/schemas/dataroom-templates";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
+import { safeSlugify } from "@/lib/utils";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(
@@ -81,7 +81,7 @@ export default async function handle(
           parentId: string | null = null,
         ): Promise<void> => {
           for (const folder of folders) {
-            const folderPath = parentPath + "/" + slugify(folder.name);
+            const folderPath = parentPath + "/" + safeSlugify(folder.name);
 
             // Create the folder
             const createdFolder = await tx.dataroomFolder.create({

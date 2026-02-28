@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { Brand, CustomField, DataroomBrand } from "@prisma/client";
 import { ArrowUpRightIcon } from "lucide-react";
 
-import { determineTextColor } from "@/lib/utils/determine-text-color";
-
 import { Button } from "@/components/ui/button";
 
 import AgreementSection from "./agreement-section";
+import {
+  AccessFormThemeProvider,
+  createAccessFormTheme,
+} from "./access-form-theme";
 import CustomFieldsSection from "./custom-fields-section";
 import EmailSection from "./email-section";
 import NameSection from "./name-section";
@@ -68,6 +70,7 @@ export default function AccessForm({
   linkWelcomeMessage?: string | null;
 }) {
   const [isEmailValid, setIsEmailValid] = useState(true);
+  const accessFormTheme = createAccessFormTheme(brand?.accentColor);
 
   useEffect(() => {
     const userEmail = email;
@@ -77,7 +80,7 @@ export default function AccessForm({
         email: userEmail || prevData.email,
       }));
     }
-  }, [email]);
+  }, [email, setData]);
 
   const isFormValid = () => {
     if (requireEmail) {
@@ -115,13 +118,14 @@ export default function AccessForm({
   };
 
   return (
-    <div
-      className="flex h-full min-h-dvh flex-col justify-between pb-4"
-      style={{
-        backgroundColor:
-          brand && brand.accentColor ? brand.accentColor : "black",
-      }}
-    >
+    <AccessFormThemeProvider value={accessFormTheme}>
+      <div
+        className="flex h-full min-h-dvh flex-col justify-between pb-4"
+        style={{
+          backgroundColor: accessFormTheme.backgroundColor,
+          color: accessFormTheme.textColor,
+        }}
+      >
       {/* Light Navbar */}
       {logoOnAccessForm && brand && brand.logo && (
         <nav
@@ -144,9 +148,7 @@ export default function AccessForm({
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <h1
             className="mt-10 text-2xl font-bold leading-9 tracking-tight text-white"
-            style={{
-              color: determineTextColor(brand?.accentColor),
-            }}
+            style={{ color: accessFormTheme.textColor }}
           >
             {linkWelcomeMessage ||
               (brand && "welcomeMessage" in brand && brand.welcomeMessage) ||
@@ -195,9 +197,8 @@ export default function AccessForm({
                 className="w-1/3 min-w-fit bg-white text-gray-950 hover:bg-white/90"
                 loading={isLoading}
                 style={{
-                  backgroundColor: determineTextColor(brand?.accentColor),
-                  color:
-                    brand && brand.accentColor ? brand.accentColor : "black",
+                  backgroundColor: accessFormTheme.ctaBgColor,
+                  color: accessFormTheme.ctaTextColor,
                 }}
               >
                 Continue
@@ -208,25 +209,33 @@ export default function AccessForm({
       </div>
       {!useCustomAccessForm ? (
         <div className="flex flex-col items-center gap-0.5">
-          <p className="text-center text-sm tracking-tight text-gray-500">
+          <p
+            className="text-center text-sm tracking-tight"
+            style={{ color: accessFormTheme.subtleTextColor }}
+          >
             This document is securely shared with you using{" "}
             <a
               href="https://www.papermark.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium hover:text-gray-600"
+              className="font-medium"
+              style={{ color: accessFormTheme.mutedTextColor }}
             >
               Papermark
             </a>
             .
           </p>
-          <p className="text-center text-sm tracking-tight text-gray-500">
+          <p
+            className="text-center text-sm tracking-tight"
+            style={{ color: accessFormTheme.subtleTextColor }}
+          >
             See how we protect your data in our{" "}
             <a
               href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/privacy`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-0.5 hover:text-gray-600"
+              className="inline-flex items-center gap-0.5"
+              style={{ color: accessFormTheme.mutedTextColor }}
             >
               <span>Privacy Policy</span>
               <ArrowUpRightIcon className="h-3 w-3" />
@@ -234,6 +243,7 @@ export default function AccessForm({
           </p>
         </div>
       ) : null}
-    </div>
+      </div>
+    </AccessFormThemeProvider>
   );
 }

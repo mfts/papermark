@@ -300,6 +300,7 @@ export async function fetchDataroomLinkData({
       banner: true,
       brandColor: true,
       accentColor: true,
+      applyAccentColorToDataroomView: true,
       welcomeMessage: true,
     },
   });
@@ -311,6 +312,7 @@ export async function fetchDataroomLinkData({
       banner: true,
       brandColor: true,
       accentColor: true,
+      applyAccentColorToDataroomView: true,
       welcomeMessage: true,
     },
   });
@@ -320,6 +322,10 @@ export async function fetchDataroomLinkData({
     banner: dataroomBrand?.banner || teamBrand?.banner || null,
     brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
     accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
+    applyAccentColorToDataroomView:
+      dataroomBrand?.applyAccentColorToDataroomView ??
+      teamBrand?.applyAccentColorToDataroomView ??
+      false,
     welcomeMessage: dataroomBrand?.welcomeMessage || teamBrand?.welcomeMessage,
   };
 
@@ -440,6 +446,7 @@ export async function fetchDataroomDocumentLinkData({
       banner: true,
       brandColor: true,
       accentColor: true,
+      applyAccentColorToDataroomView: true,
       welcomeMessage: true,
     },
   });
@@ -451,6 +458,7 @@ export async function fetchDataroomDocumentLinkData({
       banner: true,
       brandColor: true,
       accentColor: true,
+      applyAccentColorToDataroomView: true,
       welcomeMessage: true,
     },
   });
@@ -460,6 +468,10 @@ export async function fetchDataroomDocumentLinkData({
     banner: dataroomBrand?.banner || teamBrand?.banner || null,
     brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
     accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
+    applyAccentColorToDataroomView:
+      dataroomBrand?.applyAccentColorToDataroomView ??
+      teamBrand?.applyAccentColorToDataroomView ??
+      false,
     welcomeMessage: dataroomBrand?.welcomeMessage || teamBrand?.welcomeMessage,
   };
 

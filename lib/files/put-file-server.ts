@@ -1,11 +1,11 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { DocumentStorageType } from "@prisma/client";
-import slugify from "@sindresorhus/slugify";
 import { put } from "@vercel/blob";
 import path from "node:path";
 import { match } from "ts-pattern";
 
 import { newId } from "@/lib/id-helper";
+import { safeSlugify } from "@/lib/utils";
 
 import { SUPPORTED_DOCUMENT_MIME_TYPES } from "../constants";
 import { getTeamS3ClientAndConfig } from "./aws-client";
@@ -93,13 +93,16 @@ const putFileInS3Server = async ({
   // Get the basename and extension for the file
   const { name, ext } = path.parse(file.name);
 
-  const key = `${teamId}/${docId}/${slugify(name)}${ext}`;
+  const slugifiedName = safeSlugify(name) + ext;
+  const originalFileName = `${name}${ext}`;
+  const key = `${teamId}/${docId}/${slugifiedName}`;
 
   const params = {
     Bucket: config.bucket,
     Key: key,
     Body: file.buffer,
     ContentType: file.type,
+    ContentDisposition: `attachment; filename="${slugifiedName}"; filename*=UTF-8''${encodeURIComponent(originalFileName)}`,
   };
 
   // Create a new instance of the PutObjectCommand with the parameters

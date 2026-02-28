@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import slugify from "@sindresorhus/slugify";
+import { safeSlugify } from "@/lib/utils";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
@@ -97,8 +97,8 @@ export default async function handle(
         foldersToMove.forEach((folder) => {
           const newPath =
             selectedFolderPath !== "/" && selectedFolderPath !== undefined
-              ? `${selectedFolderPath}/${slugify(folder.name)}`
-              : `/${slugify(folder.name)}`;
+              ? `${selectedFolderPath}/${safeSlugify(folder.name)}`
+              : `/${safeSlugify(folder.name)}`;
 
           folderPathUpdates.set(folder.id, newPath);
         });

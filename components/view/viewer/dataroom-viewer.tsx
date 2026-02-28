@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import React from "react";
 
 import { ViewerChatPanel } from "@/ee/features/ai/components/viewer-chat-panel";
@@ -16,8 +16,9 @@ import {
   ViewerGroupAccessControls,
 } from "@prisma/client";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { PanelLeftIcon, XIcon } from "lucide-react";
+import { PanelLeftIcon, UploadIcon, XIcon } from "lucide-react";
 
+import { usePendingUploads } from "@/context/pending-uploads-context";
 import { cn } from "@/lib/utils";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
@@ -53,6 +54,11 @@ import {
   IntroductionProvider,
 } from "../dataroom/introduction-modal";
 import DataroomNav from "../dataroom/nav-dataroom";
+import PendingDocumentCard from "../dataroom/pending-document-card";
+import {
+  ViewerSurfaceThemeProvider,
+  createViewerSurfaceTheme,
+} from "./viewer-surface-theme";
 
 const ViewerBreadcrumbItem = ({
   folder,
@@ -73,7 +79,10 @@ const ViewerBreadcrumbItem = ({
 
   if (isLast) {
     return (
-      <BreadcrumbPage className="capitalize" style={HIERARCHICAL_DISPLAY_STYLE}>
+      <BreadcrumbPage
+        className="capitalize text-[var(--viewer-text)]"
+        style={HIERARCHICAL_DISPLAY_STYLE}
+      >
         {displayName}
       </BreadcrumbPage>
     );
@@ -82,7 +91,7 @@ const ViewerBreadcrumbItem = ({
   return (
     <BreadcrumbLink
       onClick={() => setFolderId(folder.id)}
-      className="cursor-pointer capitalize"
+      className="cursor-pointer capitalize text-[var(--viewer-muted-text)] hover:text-[var(--viewer-text)]"
       style={HIERARCHICAL_DISPLAY_STYLE}
     >
       {displayName}
@@ -174,6 +183,21 @@ export default function DataroomViewer({
 
   const router = useRouter();
   const searchQuery = (router.query.search as string)?.toLowerCase() || "";
+
+  // Tab state: "documents" (normal view) or "my-uploads" (visitor's uploads)
+  const [activeTab, setActiveTab] = useState<"documents" | "my-uploads">(
+    "documents",
+  );
+
+  // Get pending uploads (in-flight + persisted from server)
+  const {
+    getPendingUploadsForFolder,
+    getAllUploads,
+    hasUploads,
+    updatePendingUpload,
+  } = usePendingUploads();
+  const pendingUploadsForFolder = getPendingUploadsForFolder(folderId);
+  const allUploads = getAllUploads();
 
   const breadcrumbFolders = useMemo(
     () => getParentFolders(folderId, folders),
@@ -342,6 +366,40 @@ export default function DataroomViewer({
     searchQuery,
   ]);
 
+  const filteredPendingUploads = useMemo(
+    () =>
+      pendingUploadsForFolder.filter((u) => {
+        if (!u.documentId) return true;
+        return !mixedItems.some(
+          (item) => "versions" in item && item.id === u.documentId,
+        );
+      }),
+    [pendingUploadsForFolder, mixedItems],
+  );
+
+  // Fallback reconciliation: if the document is already visible and ready,
+  // mark its pending upload as complete even if realtime status was missed.
+  useEffect(() => {
+    allUploads.forEach((upload) => {
+      if (upload.status !== "processing" || !upload.documentId) return;
+
+      const matchingDocument = documents.find((doc) => doc.id === upload.documentId);
+      if (!matchingDocument) return;
+
+      const primaryVersion = matchingDocument.versions[0];
+      if (!primaryVersion) return;
+
+      const needsProcessing = ["pdf", "docs", "slides"].includes(
+        primaryVersion.type,
+      );
+      const isReady = !needsProcessing || primaryVersion.hasPages;
+
+      if (isReady) {
+        updatePendingUpload(upload.id, { status: "complete" });
+      }
+    });
+  }, [allUploads, documents, updatePendingUpload]);
+
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
       const isProcessing =
@@ -379,6 +437,24 @@ export default function DataroomViewer({
     );
   };
 
+  const viewerSurfaceTheme = useMemo(
+    () =>
+      createViewerSurfaceTheme(
+        (brand as any)?.applyAccentColorToDataroomView
+          ? brand?.accentColor
+          : "#ffffff",
+      ),
+    [brand],
+  );
+  const mobileTreeTheme = useMemo(
+    () => ({
+      ...viewerSurfaceTheme,
+      textTone: "dark" as const,
+      usesLightText: false,
+    }),
+    [viewerSurfaceTheme],
+  );
+
   // Prepare documents for chat context
   const documentsForChat = documents.map((doc) => ({
     dataroomDocumentId: doc.dataroomDocumentId,
@@ -413,11 +489,47 @@ export default function DataroomViewer({
         conversationsEnabled={viewData.conversationsEnabled}
         isTeamMember={viewData.isTeamMember}
       />
-      <ViewerChatLayout>
-        <div className="relative flex flex-1 items-center overflow-hidden bg-white dark:bg-black">
-          <div className="relative mx-auto flex h-full w-full items-start justify-center">
+      <ViewerSurfaceThemeProvider value={viewerSurfaceTheme}>
+        <ViewerChatLayout>
+          <div
+            className="relative flex flex-1 items-center overflow-hidden bg-white dark:bg-black"
+            style={
+              viewerSurfaceTheme.palette.backgroundColor
+                ? { backgroundColor: viewerSurfaceTheme.palette.backgroundColor }
+                : undefined
+            }
+          >
+            <div
+              className="relative mx-auto flex h-full w-full items-start justify-center"
+              style={
+                {
+                  "--viewer-text": viewerSurfaceTheme.palette.textColor,
+                  "--viewer-muted-text": viewerSurfaceTheme.palette.mutedTextColor,
+                  "--viewer-subtle-text":
+                    viewerSurfaceTheme.palette.subtleTextColor,
+                  "--viewer-panel-bg": viewerSurfaceTheme.palette.panelBgColor,
+                  "--viewer-panel-bg-hover":
+                    viewerSurfaceTheme.palette.panelHoverBgColor,
+                  "--viewer-panel-border":
+                    viewerSurfaceTheme.palette.panelBorderColor,
+                  "--viewer-panel-border-hover":
+                    viewerSurfaceTheme.palette.panelBorderHoverColor,
+                  "--viewer-control-bg": viewerSurfaceTheme.palette.controlBgColor,
+                  "--viewer-control-border":
+                    viewerSurfaceTheme.palette.controlBorderColor,
+                  "--viewer-control-border-strong":
+                    viewerSurfaceTheme.palette.controlBorderStrongColor,
+                  "--viewer-control-icon":
+                    viewerSurfaceTheme.palette.controlIconColor,
+                  "--viewer-placeholder":
+                    viewerSurfaceTheme.palette.controlPlaceholderColor,
+                } as React.CSSProperties
+              }
+            >
             {/* Tree view */}
-            <div className="hidden h-full w-1/4 space-y-8 overflow-auto px-3 pb-4 pt-4 md:flex md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
+            <div
+              className="hidden h-full w-1/4 space-y-8 overflow-auto px-3 pb-4 pt-4 md:flex md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14"
+            >
               <ScrollArea showScrollbar className="w-full">
                 <ViewFolderTree
                   folders={folders}
@@ -436,13 +548,18 @@ export default function DataroomViewer({
               showScrollbar
               className="h-full flex-grow overflow-auto"
             >
-              <div className="h-full px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
+              <div
+                className="h-full px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14"
+              >
                 <div className="flex items-center gap-x-2">
                   {/* sidebar for mobile */}
                   <div className="flex md:hidden">
                     <Sheet>
                       <SheetTrigger asChild>
-                        <button className="text-muted-foreground lg:hidden">
+                        <button className={cn(
+                          "lg:hidden",
+                          "text-[var(--viewer-subtle-text)]",
+                        )}>
                           <PanelLeftIcon
                             className="h-5 w-5"
                             aria-hidden="true"
@@ -459,13 +576,15 @@ export default function DataroomViewer({
                           )}
                         >
                           <div className="mt-8 h-full space-y-8 overflow-auto px-2 py-3">
-                            <ViewFolderTree
-                              folders={folders}
-                              documents={documents}
-                              setFolderId={setFolderId}
-                              folderId={folderId}
-                              dataroomIndexEnabled={dataroomIndexEnabled}
-                            />
+                            <ViewerSurfaceThemeProvider value={mobileTreeTheme}>
+                              <ViewFolderTree
+                                folders={folders}
+                                documents={documents}
+                                setFolderId={setFolderId}
+                                folderId={folderId}
+                                dataroomIndexEnabled={dataroomIndexEnabled}
+                              />
+                            </ViewerSurfaceThemeProvider>
                           </div>
                           <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
                             <XIcon className="h-4 w-4" />
@@ -478,11 +597,11 @@ export default function DataroomViewer({
 
                   <div className="flex flex-1 items-center justify-between gap-x-2">
                     <Breadcrumb>
-                      <BreadcrumbList>
+                      <BreadcrumbList className="text-[var(--viewer-muted-text)]">
                         <BreadcrumbItem key={"root"}>
                           <BreadcrumbLink
                             onClick={() => setFolderId(null)}
-                            className="cursor-pointer"
+                            className="cursor-pointer text-[var(--viewer-muted-text)] hover:text-[var(--viewer-text)]"
                           >
                             Home
                           </BreadcrumbLink>
@@ -490,7 +609,9 @@ export default function DataroomViewer({
 
                         {breadcrumbFolders.map((folder, index) => (
                           <React.Fragment key={folder.id}>
-                            <BreadcrumbSeparator />
+                            <BreadcrumbSeparator
+                              className="text-[var(--viewer-subtle-text)]"
+                            />
                             <BreadcrumbItem>
                               <ViewerBreadcrumbItem
                                 folder={folder}
@@ -506,7 +627,11 @@ export default function DataroomViewer({
 
                     <div className="flex items-center gap-x-2">
                       <IntroductionInfoButton />
-                      <SearchBoxPersisted inputClassName="h-9" />
+                      <SearchBoxPersisted
+                        inputClassName="h-9 border-[var(--viewer-control-border)] bg-[var(--viewer-control-bg)] text-[var(--viewer-text)] placeholder:text-[var(--viewer-placeholder)] shadow-sm hover:border-[var(--viewer-control-border-strong)] focus:border-[var(--viewer-control-border-strong)]"
+                        leftIconClassName="text-[var(--viewer-control-icon)]"
+                        clearIconClassName="text-[var(--viewer-control-icon)] hover:text-[var(--viewer-text)]"
+                      />
                       {enableIndexFile && viewId && viewerId && (
                         <IndexFileDialog
                           linkId={linkId}
@@ -523,20 +648,66 @@ export default function DataroomViewer({
                           dataroomId={dataroom?.id}
                           viewerId={viewerId}
                           folderId={folderId ?? undefined}
+                          folderName={
+                            folderId
+                              ? folders.find((f) => f.id === folderId)?.name
+                              : undefined
+                          }
                         />
                       )}
                     </div>
                   </div>
                 </div>
 
+                {/* Tabs: Documents / My Uploads */}
+                {viewData?.enableVisitorUpload && hasUploads && (
+                  <div
+                    className="mt-4 flex items-center gap-1 border-b"
+                    style={{ borderColor: viewerSurfaceTheme.palette.panelBorderColor }}
+                  >
+                    <button
+                      onClick={() => setActiveTab("documents")}
+                      className={cn(
+                        "-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+                        activeTab === "documents"
+                          ? "border-[var(--viewer-text)] text-[var(--viewer-text)]"
+                          : "border-transparent text-[var(--viewer-subtle-text)] hover:border-[var(--viewer-panel-border-hover)] hover:text-[var(--viewer-text)]",
+                      )}
+                    >
+                      Documents
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("my-uploads")}
+                      className={cn(
+                        "-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+                        activeTab === "my-uploads"
+                          ? "border-[var(--viewer-text)] text-[var(--viewer-text)]"
+                          : "border-transparent text-[var(--viewer-subtle-text)] hover:border-[var(--viewer-panel-border-hover)] hover:text-[var(--viewer-text)]",
+                      )}
+                    >
+                      <UploadIcon className="h-3.5 w-3.5" />
+                      My Uploads
+                      <span
+                        className="inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-medium"
+                        style={{
+                          backgroundColor: viewerSurfaceTheme.palette.controlBgColor,
+                          color: viewerSurfaceTheme.palette.mutedTextColor,
+                        }}
+                      >
+                        {allUploads.length}
+                      </span>
+                    </button>
+                  </div>
+                )}
+
                 {/* Search results banner */}
-                {searchQuery && (
-                  <div className="mt-4 rounded-md border border-muted/50 bg-muted px-4 py-3">
+                {searchQuery && activeTab === "documents" && (
+                  <div className="mt-4 rounded-md border border-[var(--viewer-panel-border)] bg-[var(--viewer-control-bg)] px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="text-sm font-medium text-muted-foreground">
+                      <div className="text-sm font-medium text-[var(--viewer-muted-text)]">
                         Search results for &quot;{searchQuery}&quot;
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-[var(--viewer-subtle-text)]">
                         ({mixedItems.length} result
                         {mixedItems.length !== 1 ? "s" : ""} across all folders)
                       </div>
@@ -544,26 +715,72 @@ export default function DataroomViewer({
                   </div>
                 )}
 
-                <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
-                  {mixedItems.length === 0 ? (
-                    <li className="py-6 text-center text-muted-foreground">
-                      {searchQuery
-                        ? "No documents match your search."
-                        : "No items available."}
-                    </li>
-                  ) : (
-                    mixedItems.map((item) => (
-                      <li key={item.id}>{renderItem(item)}</li>
-                    ))
-                  )}
-                </ul>
+                {activeTab === "my-uploads" ? (
+                  /* My Uploads tab - show all uploads across all folders */
+                  <ul
+                    role="list"
+                    className="-mx-4 space-y-4 overflow-auto p-4"
+                  >
+                    {allUploads.length === 0 ? (
+                      <li className="py-6 text-center text-[var(--viewer-subtle-text)]">
+                        No uploads yet. Upload documents using the &quot;Add
+                        Document&quot; button.
+                      </li>
+                    ) : (
+                      allUploads.map((pendingUpload) => (
+                        <li key={pendingUpload.id}>
+                          <PendingDocumentCard
+                            pendingUpload={pendingUpload}
+                            folders={folders}
+                            linkId={linkId}
+                            showFolderPath
+                            onNavigateToFolder={(id) => {
+                              setFolderId(id);
+                              setActiveTab("documents");
+                            }}
+                          />
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                ) : (
+                  /* Documents tab - normal folder view */
+                  <ul
+                    role="list"
+                    className="-mx-4 space-y-4 overflow-auto p-4"
+                  >
+                    {!searchQuery &&
+                      filteredPendingUploads.map((pendingUpload) => (
+                        <li key={pendingUpload.id}>
+                          <PendingDocumentCard
+                            pendingUpload={pendingUpload}
+                            linkId={linkId}
+                          />
+                        </li>
+                      ))}
+
+                    {mixedItems.length === 0 &&
+                    filteredPendingUploads.length === 0 ? (
+                      <li className="py-6 text-center text-[var(--viewer-subtle-text)]">
+                        {searchQuery
+                          ? "No documents match your search."
+                          : "No items available."}
+                      </li>
+                    ) : (
+                      mixedItems.map((item) => (
+                        <li key={item.id}>{renderItem(item)}</li>
+                      ))
+                    )}
+                  </ul>
+                )}
               </div>
               <ScrollBar orientation="vertical" />
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </div>
-        </div>
-      </ViewerChatLayout>
+          </div>
+        </ViewerChatLayout>
+      </ViewerSurfaceThemeProvider>
 
       {/* AI Chat Components */}
       <ViewerChatPanel />

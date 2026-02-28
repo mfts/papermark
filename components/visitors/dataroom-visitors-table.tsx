@@ -38,9 +38,9 @@ import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { ExportVisitsModal } from "../datarooms/export-visits-modal";
+import { DataroomViewStats } from "./dataroom-view-stats";
 import DataroomVisitorCustomFields from "./dataroom-visitor-custom-fields";
 import { DataroomVisitorUserAgent } from "./dataroom-visitor-useragent";
-import DataroomVisitHistory from "./dataroom-visitors-history";
 import { VisitorAvatar } from "./visitor-avatar";
 
 export default function DataroomVisitorsTable({
@@ -61,9 +61,24 @@ export default function DataroomVisitorsTable({
   const { dataroom } = useDataroom();
   const { isPaused } = usePlan();
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [expandedViewIds, setExpandedViewIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   const exportVisitCounts = () => {
     setExportModalOpen(true);
+  };
+
+  const handleOpenChange = (viewId: string, open: boolean) => {
+    setExpandedViewIds((prev) => {
+      const next = new Set(prev);
+      if (open) {
+        next.add(viewId);
+      } else {
+        next.delete(viewId);
+      }
+      return next;
+    });
   };
 
   return (
@@ -76,14 +91,18 @@ export default function DataroomVisitorsTable({
         </Button>
       </div>
       <div className="rounded-md border">
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
               <TableHead>Name</TableHead>
-              {/* <TableHead>Visit Duration</TableHead> */}
-              {/* <TableHead>Last Viewed Document</TableHead> */}
-              <TableHead>Last Viewed</TableHead>
-              <TableHead className="text-center sm:text-right"></TableHead>
+              <TableHead className="w-[120px]">
+                {expandedViewIds.size > 0 ? "View Duration" : null}
+              </TableHead>
+              <TableHead className="w-[140px]">
+                {expandedViewIds.size > 0 ? "View Completion" : null}
+              </TableHead>
+              <TableHead className="w-[120px]">Last Viewed</TableHead>
+              <TableHead className="w-[48px]" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -99,7 +118,7 @@ export default function DataroomVisitorsTable({
             {isPaused && hiddenFromPause > 0 && (
               <>
                 <TableRow>
-                  <TableCell colSpan={3} className="text-left sm:text-center">
+                  <TableCell colSpan={5} className="text-left sm:text-center">
                     <div className="flex flex-col items-start justify-center gap-2 sm:flex-row sm:items-center">
                       <span className="flex items-center gap-x-1">
                         <AlertTriangleIcon className="inline-block h-4 w-4 text-orange-500" />
@@ -124,7 +143,11 @@ export default function DataroomVisitorsTable({
             )}
             {views ? (
               views.map((view) => (
-                <Collapsible key={view.id} asChild>
+                <Collapsible
+                  key={view.id}
+                  asChild
+                  onOpenChange={(open) => handleOpenChange(view.id, open)}
+                >
                   <>
                     <TableRow key={view.id} className="group/row">
                       {/* Name */}
@@ -186,22 +209,8 @@ export default function DataroomVisitorsTable({
                           </div>
                         </div>
                       </TableCell>
-                      {/* Duration */}
-                      {/* <TableCell className="">
-                        <div className="text-sm text-muted-foreground">
-                          {durationFormat(view.totalDuration)}
-                        </div>
-                      </TableCell> */}
-                      {/* Completion */}
-                      {/* <TableCell className="flex justify-start">
-                        <div className="text-sm text-muted-foreground">
-                          <Gauge
-                            value={view.completionRate}
-                            size={"small"}
-                            showValue={true}
-                          />
-                        </div>
-                      </TableCell> */}
+                      <TableCell />
+                      <TableCell />
                       {/* Last Viewed */}
                       <TableCell className="text-sm text-muted-foreground">
                         <TimestampTooltip
@@ -230,7 +239,7 @@ export default function DataroomVisitorsTable({
                     <CollapsibleContent asChild>
                       <>
                         <TableRow>
-                          <TableCell colSpan={3}>
+                          <TableCell colSpan={5}>
                             <DataroomVisitorCustomFields
                               viewId={view.id}
                               teamId={view.teamId!}
@@ -239,14 +248,15 @@ export default function DataroomVisitorsTable({
                             <DataroomVisitorUserAgent viewId={view.id} />
                           </TableCell>
                         </TableRow>
-                        <TableRow key={view.id}>
+                        <TableRow key={view.id} className="[&>td]:py-3">
                           <TableCell>
                             <div className="flex items-center gap-x-4 overflow-visible">
                               <MailOpenIcon className="h-5 w-5 text-[#fb7a00]" />
                               Accessed {view.dataroomName} dataroom
                             </div>
                           </TableCell>
-
+                          <TableCell />
+                          <TableCell />
                           <TableCell>
                             <TimestampTooltip
                               timestamp={view.viewedAt}
@@ -261,18 +271,22 @@ export default function DataroomVisitorsTable({
                               </time>
                             </TimestampTooltip>
                           </TableCell>
-                          <TableCell className="table-cell"></TableCell>
+                          <TableCell />
                         </TableRow>
 
                         {view.downloadedAt ? (
-                          <TableRow key={`download-item-${view.id}`}>
+                          <TableRow
+                            key={`download-item-${view.id}`}
+                            className="[&>td]:py-3"
+                          >
                             <TableCell>
                               <div className="flex items-center gap-x-4 overflow-visible">
                                 <DownloadCloudIcon className="h-5 w-5 text-cyan-500 hover:text-cyan-600" />
                                 Downloaded {view.dataroomName} dataroom
                               </div>
                             </TableCell>
-
+                            <TableCell />
+                            <TableCell />
                             <TableCell>
                               <TimestampTooltip
                                 timestamp={view.downloadedAt}
@@ -289,13 +303,14 @@ export default function DataroomVisitorsTable({
                                 </time>
                               </TimestampTooltip>
                             </TableCell>
-                            <TableCell className="table-cell"></TableCell>
+                            <TableCell />
                           </TableRow>
                         ) : null}
 
-                        <DataroomVisitHistory
+                        <DataroomViewStats
                           viewId={view.id}
                           dataroomId={dataroomId}
+                          isExpanded={expandedViewIds.has(view.id)}
                         />
                       </>
                     </CollapsibleContent>
@@ -307,14 +322,17 @@ export default function DataroomVisitorsTable({
                 <TableCell className="min-w-[100px]">
                   <Skeleton className="h-6 w-full" />
                 </TableCell>
-                <TableCell className="min-w-[450px]">
-                  <Skeleton className="h-6 w-full" />
+                <TableCell>
+                  <Skeleton className="h-6 w-14" />
                 </TableCell>
                 <TableCell>
+                  <Skeleton className="h-6 w-6 rounded-full" />
+                </TableCell>
+                <TableCell className="min-w-[100px]">
                   <Skeleton className="h-6 w-24" />
                 </TableCell>
                 <TableCell>
-                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-6 w-6" />
                 </TableCell>
               </TableRow>
             )}
@@ -336,7 +354,6 @@ export default function DataroomVisitorsTable({
   );
 }
 
-// create a component for a blurred view of the visitor
 const VisitorBlurred = () => {
   return (
     <TableRow className="blur-sm">
@@ -355,6 +372,8 @@ const VisitorBlurred = () => {
           </div>
         </div>
       </TableCell>
+      <TableCell />
+      <TableCell />
       {/* Last Viewed */}
       <TableCell className="text-sm text-muted-foreground">
         <time

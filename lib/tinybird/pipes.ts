@@ -213,6 +213,19 @@ export const getClickEventsByView = tb.buildPipe({
   }),
 });
 
+export const getDataroomViewDocumentStats = tb.buildPipe({
+  pipe: "get_dataroom_view_document_stats__v1",
+  parameters: z.object({
+    viewIds: z.string().describe("Comma separated viewIds"),
+  }),
+  data: z.object({
+    viewId: z.string(),
+    documentId: z.string(),
+    sum_duration: z.number(),
+    pages_viewed: z.number(),
+  }),
+});
+
 export const getTotalTeamDuration = tb.buildPipe({
   pipe: "get_total_team_duration__v1",
   parameters: z.object({

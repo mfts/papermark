@@ -322,6 +322,23 @@ export default async function handle(
       }
     }
 
+    // Validate visitor group IDs belong to this team
+    if (linkData.visitorGroupIds?.length > 0) {
+      const validGroups = await prisma.visitorGroup.findMany({
+        where: {
+          id: { in: linkData.visitorGroupIds },
+          teamId: teamId,
+        },
+        select: { id: true },
+      });
+
+      if (validGroups.length !== linkData.visitorGroupIds.length) {
+        return res.status(400).json({
+          error: "One or more visitor group IDs do not belong to this team.",
+        });
+      }
+    }
+
     const updatedLink = await prisma.$transaction(async (tx) => {
       const link = await tx.link.update({
         where: { id, teamId },
@@ -406,6 +423,11 @@ export default async function handle(
         },
         include: {
           customFields: true,
+          visitorGroups: {
+            select: {
+              visitorGroupId: true,
+            },
+          },
           views: {
             orderBy: {
               viewedAt: "desc",
@@ -417,6 +439,27 @@ export default async function handle(
           },
         },
       });
+
+      // Update visitor groups (replace all)
+      if (linkData.visitorGroupIds !== undefined) {
+        // Delete existing visitor group associations
+        await tx.linkVisitorGroup.deleteMany({
+          where: { linkId: id },
+        });
+
+        // Create new associations
+        if (linkData.visitorGroupIds?.length > 0) {
+          await tx.linkVisitorGroup.createMany({
+            data: linkData.visitorGroupIds.map(
+              (visitorGroupId: string) => ({
+                linkId: id,
+                visitorGroupId,
+              }),
+            ),
+            skipDuplicates: true,
+          });
+        }
+      }
       if (linkData.tags?.length) {
         // Remove only tags that are not in the new list
         await tx.tagItem.deleteMany({
@@ -461,7 +504,13 @@ export default async function handle(
         },
       });
 
-      return { ...link, tags };
+      // Re-fetch visitor groups to get post-update associations
+      const freshVisitorGroups = await tx.linkVisitorGroup.findMany({
+        where: { linkId: id },
+        select: { visitorGroupId: true },
+      });
+
+      return { ...link, visitorGroups: freshVisitorGroups, tags };
     });
 
     if (!updatedLink) {

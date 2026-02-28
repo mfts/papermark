@@ -633,8 +633,16 @@ export default function PagesHorizontalViewer({
                   <div
                     className="mx-auto"
                     style={{
-                      width: scaledWidthPx ? `${scaledWidthPx}px` : "100%",
-                      height: scaledHeightPx ? `${scaledHeightPx}px` : "auto",
+                      // Keep default zoom responsive to viewport changes.
+                      // Only lock dimensions when zoomed in to preserve a stable scroll area.
+                      width:
+                        scale > 1 && scaledWidthPx
+                          ? `${scaledWidthPx}px`
+                          : "100%",
+                      height:
+                        scale > 1 && scaledHeightPx
+                          ? `${scaledHeightPx}px`
+                          : "auto",
                     }}
                   >
                     {/* Content is scaled; origin set to top-left so it grows into the sizer */}

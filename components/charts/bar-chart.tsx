@@ -24,13 +24,18 @@ const renameDummyDurationKey = (data: Data[]): TransformedData[] => {
   }, [] as TransformedData[]);
 };
 
-const renameSumDurationKey = (data: SumData[], versionNumber?: number) => {
+const renameSumDurationKey = (
+  data: SumData[],
+  versionNumber?: number,
+  documentId?: string,
+) => {
   return data.map((item) => {
     return {
       ...item,
       "Time spent per page": item.sum_duration,
       sum_duration: undefined,
-      versionNumber: versionNumber,
+      versionNumber: versionNumber ?? 1,
+      documentId: documentId,
     };
   });
 };
@@ -64,16 +69,18 @@ export default function BarChartComponent({
   isSum = false,
   isDummy = false,
   versionNumber,
+  documentId,
 }: {
   data: any;
   isSum?: boolean;
   isDummy?: boolean;
   versionNumber?: number;
+  documentId?: string;
 }) {
   const [, setValue] = useState<any>(null);
 
   if (isSum) {
-    const renamedData = renameSumDurationKey(data, versionNumber);
+    const renamedData = renameSumDurationKey(data, versionNumber, documentId);
 
     return (
       <BarChart

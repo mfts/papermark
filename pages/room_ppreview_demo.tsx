@@ -3,19 +3,45 @@ import { useRouter } from "next/router";
 import { ViewFolderTree } from "@/components/datarooms/folders";
 import DocumentCard from "@/components/view/dataroom/document-card";
 import FolderCard from "@/components/view/dataroom/folder-card";
+import {
+  ViewerSurfaceThemeProvider,
+  createViewerSurfaceTheme,
+} from "@/components/view/viewer/viewer-surface-theme";
 
 const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
 
 export default function ViewPage() {
   const router = useRouter();
-  const { brandLogo, brandColor, brandBanner } = router.query as {
+  const {
+    brandLogo,
+    brandColor,
+    brandBanner,
+    accentColor,
+    applyAccentColorToDataroomView,
+  } = router.query as {
     brandLogo: string;
     brandColor: string;
     brandBanner: string;
+    accentColor: string;
+    applyAccentColorToDataroomView?: string;
   };
 
+  const shouldApplyAccentToDataroomView =
+    applyAccentColorToDataroomView === "1";
+  const dataroomViewBackgroundColor = shouldApplyAccentToDataroomView
+    ? accentColor
+    : "#ffffff";
+  const previewSurfaceTheme = createViewerSurfaceTheme(dataroomViewBackgroundColor);
+
   return (
-    <div className="bg-white">
+    <div
+      className="min-h-screen bg-white"
+      style={
+        dataroomViewBackgroundColor
+          ? { backgroundColor: dataroomViewBackgroundColor }
+          : undefined
+      }
+    >
       {/* Nav */}
       <nav
         className="bg-black"
@@ -64,141 +90,147 @@ export default function ViewPage() {
       </nav>
 
       {/* Body */}
-      <div style={{ height: "calc(100vh - 64px)" }} className="relative flex">
-        {/* Tree view */}
-        <div className="hidden h-full w-1/4 space-y-8 overflow-auto px-3 pb-4 pt-4 md:flex md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
-          <ViewFolderTree
-            folders={[
-              {
-                id: "1",
-                name: "Marketing",
-                parentId: null,
-                dataroomId: "1",
-                orderIndex: 0,
-                hierarchicalIndex: null,
-                path: "/",
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                icon: null,
-                color: null,
-              },
-              {
-                id: "2",
-                name: "Sales",
-                parentId: null,
-                dataroomId: "1",
-                orderIndex: 1,
-                hierarchicalIndex: null,
-                path: "/",
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                icon: null,
-                color: null,
-              },
-            ]}
-            documents={[
-              {
-                id: "1",
-                name: "Q4 Report.pdf",
-                dataroomDocumentId: "1",
-                folderId: null,
-                hierarchicalIndex: null,
-                versions: [
-                  {
-                    id: "1",
-                    versionNumber: 1,
-                    hasPages: true,
-                  },
-                ],
-              },
-            ]}
-            setFolderId={() => {}}
-            folderId={null}
-          />
-        </div>
-
-        {/* Detail view */}
-        <div className="flex-grow overflow-auto">
-          <div className="h-full space-y-8 px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
-            <div className="space-y-4">
-              <div className="text-sm text-muted-foreground">Home</div>
-              <ul className="grid gap-4">
-                <li key="1">
-                  <FolderCard
-                    folder={{
+      <ViewerSurfaceThemeProvider value={previewSurfaceTheme}>
+        <div style={{ height: "calc(100vh - 64px)" }} className="relative flex">
+          {/* Tree view */}
+          <div
+            className="hidden h-full w-1/4 space-y-8 overflow-auto px-3 pb-4 pt-4 md:flex md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14"
+          >
+            <ViewFolderTree
+              folders={[
+                {
+                  id: "1",
+                  name: "Marketing",
+                  parentId: null,
+                  dataroomId: "1",
+                  orderIndex: 0,
+                  hierarchicalIndex: null,
+                  path: "/",
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                  icon: null,
+                  color: null,
+                },
+                {
+                  id: "2",
+                  name: "Sales",
+                  parentId: null,
+                  dataroomId: "1",
+                  orderIndex: 1,
+                  hierarchicalIndex: null,
+                  path: "/",
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                  icon: null,
+                  color: null,
+                },
+              ]}
+              documents={[
+                {
+                  id: "1",
+                  name: "Q4 Report.pdf",
+                  dataroomDocumentId: "1",
+                  folderId: null,
+                  hierarchicalIndex: null,
+                  versions: [
+                    {
                       id: "1",
-                      name: "Marketing",
-                      parentId: null,
-                      dataroomId: "1",
-                      orderIndex: 0,
-                      hierarchicalIndex: null,
-                      path: "/",
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                      icon: null,
-                      color: null,
-                    }}
-                    dataroomId="1"
-                    setFolderId={() => {}}
-                    isPreview={false}
-                    linkId="1"
-                    allowDownload={false}
-                  />
-                </li>
+                      versionNumber: 1,
+                      hasPages: true,
+                    },
+                  ],
+                },
+              ]}
+              setFolderId={() => {}}
+              folderId={null}
+            />
+          </div>
 
-                <li key="2">
-                  <FolderCard
-                    folder={{
-                      id: "2",
-                      name: "Sales",
-                      parentId: null,
-                      dataroomId: "1",
-                      orderIndex: 1,
-                      hierarchicalIndex: null,
-                      path: "/",
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                      icon: null,
-                      color: null,
-                    }}
-                    dataroomId="1"
-                    setFolderId={() => {}}
-                    isPreview={false}
-                    linkId="1"
-                    allowDownload={false}
-                  />
-                </li>
+          {/* Detail view */}
+          <div className="flex-grow overflow-auto">
+            <div className="h-full space-y-8 px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
+              <div className="space-y-4">
+                <div
+                  className={`text-sm ${previewSurfaceTheme.usesLightText ? "text-white/70" : "text-muted-foreground"}`}
+                >Home</div>
+                <ul className="grid gap-4">
+                  <li key="1">
+                    <FolderCard
+                      folder={{
+                        id: "1",
+                        name: "Marketing",
+                        parentId: null,
+                        dataroomId: "1",
+                        orderIndex: 0,
+                        hierarchicalIndex: null,
+                        path: "/",
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                        icon: null,
+                        color: null,
+                      }}
+                      dataroomId="1"
+                      setFolderId={() => {}}
+                      isPreview={false}
+                      linkId="1"
+                      allowDownload={false}
+                    />
+                  </li>
 
-                <li key="3">
-                  <DocumentCard
-                    document={{
-                      id: "1",
-                      name: "Q4 Report.pdf",
-                      dataroomDocumentId: "1",
-                      downloadOnly: false,
-                      canDownload: false,
-                      hierarchicalIndex: null,
-                      versions: [
-                        {
-                          id: "1",
-                          type: "pdf",
-                          versionNumber: 1,
-                          hasPages: true,
-                          isVertical: true,
-                          updatedAt: new Date(),
-                        },
-                      ],
-                    }}
-                    linkId="1"
-                    isPreview={false}
-                    allowDownload={false}
-                  />
-                </li>
-              </ul>
+                  <li key="2">
+                    <FolderCard
+                      folder={{
+                        id: "2",
+                        name: "Sales",
+                        parentId: null,
+                        dataroomId: "1",
+                        orderIndex: 1,
+                        hierarchicalIndex: null,
+                        path: "/",
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                        icon: null,
+                        color: null,
+                      }}
+                      dataroomId="1"
+                      setFolderId={() => {}}
+                      isPreview={false}
+                      linkId="1"
+                      allowDownload={false}
+                    />
+                  </li>
+
+                  <li key="3">
+                    <DocumentCard
+                      document={{
+                        id: "1",
+                        name: "Q4 Report.pdf",
+                        dataroomDocumentId: "1",
+                        downloadOnly: false,
+                        canDownload: false,
+                        hierarchicalIndex: null,
+                        versions: [
+                          {
+                            id: "1",
+                            type: "pdf",
+                            versionNumber: 1,
+                            hasPages: true,
+                            isVertical: true,
+                            updatedAt: new Date(),
+                          },
+                        ],
+                      }}
+                      linkId="1"
+                      isPreview={false}
+                      allowDownload={false}
+                    />
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ViewerSurfaceThemeProvider>
     </div>
   );
 }

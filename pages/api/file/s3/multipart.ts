@@ -7,12 +7,12 @@ import {
   UploadPartCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth";
 import path from "node:path";
 
 import { ONE_HOUR, ONE_SECOND } from "@/lib/constants";
 import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
+import { safeSlugify } from "@/lib/utils";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { MultipartUploadSchema } from "@/lib/zod/schemas/multipart";
@@ -68,7 +68,8 @@ export default async function handler(
 
     // Get the basename and extension for the file
     const { name, ext } = path.parse(fileName);
-    const slugifiedName = slugify(name) + ext;
+    const slugifiedName = safeSlugify(name) + ext;
+    const originalFileName = `${name}${ext}`;
     const key = `${team.id}/${docId}/${slugifiedName}`;
 
     const { client, config } = await getTeamS3ClientAndConfig(team.id);
@@ -80,7 +81,7 @@ export default async function handler(
           Bucket: config.bucket,
           Key: key,
           ContentType: contentType,
-          ContentDisposition: `attachment; filename="${slugifiedName}"`,
+          ContentDisposition: `attachment; filename="${slugifiedName}"; filename*=UTF-8''${encodeURIComponent(originalFileName)}`,
         });
 
         const createResponse = await client.send(createCommand);

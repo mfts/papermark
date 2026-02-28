@@ -2,11 +2,10 @@ import { Dispatch, SetStateAction } from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 
-import { determineTextColor } from "@/lib/utils/determine-text-color";
-
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { DEFAULT_ACCESS_FORM_TYPE } from ".";
+import { useAccessFormTheme } from "./access-form-theme";
 
 export default function AgreementSection({
   data,
@@ -25,8 +24,14 @@ export default function AgreementSection({
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   useCustomAccessForm?: boolean;
 }) {
+  const theme = useAccessFormTheme();
+  const isChecked = !!data.hasConfirmedAgreement;
+
   const handleCheckChange = (checked: boolean) => {
     setData((prevData) => ({ ...prevData, hasConfirmedAgreement: checked }));
+  };
+  const toggleAgreement = () => {
+    handleCheckChange(!isChecked);
   };
 
   const isTextContent = agreementContentType === "TEXT";
@@ -35,39 +40,47 @@ export default function AgreementSection({
     <div className="relative flex items-start space-x-2 pt-5">
       <Checkbox
         id="agreement"
+        checked={isChecked}
         onCheckedChange={handleCheckChange}
-        className="border border-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-300 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-[var(--dynamic-accent-color)] data-[state=checked]:bg-[var(--dynamic-accent-color)] data-[state=checked]:text-[var(--dynamic-accent-color)]"
+        className="border border-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-300 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-[var(--agreement-checked-bg)] data-[state=checked]:bg-[var(--agreement-checked-bg)] data-[state=checked]:text-[var(--agreement-check-color)]"
         style={
           {
-            borderColor: determineTextColor(brand?.accentColor),
-            color: brand?.accentColor || undefined,
-            "--dynamic-accent-color": determineTextColor(brand?.accentColor),
+            borderColor: theme.controlBorderStrongColor,
+            color: theme.backgroundColor || undefined,
+            "--agreement-checked-bg": theme.textColor,
+            "--agreement-check-color": theme.inverseTextColor,
           } as React.CSSProperties
         }
       />
       <label
         className="text-sm font-normal leading-5 text-white peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-        style={{
-          color: determineTextColor(brand?.accentColor),
-        }}
+        style={{ color: theme.textColor }}
       >
         {isTextContent ? (
-          <span className="whitespace-pre-line">{agreementContent}</span>
+          <span
+            className="cursor-pointer whitespace-pre-line"
+            onClick={toggleAgreement}
+          >
+            {agreementContent}
+          </span>
         ) : (
           <>
-            I have reviewed and agree to the terms of this{" "}
+            <span className="cursor-pointer" onClick={toggleAgreement}>
+              I have reviewed and agree to the terms of this{" "}
+            </span>
             <a
               href={`${agreementContent}`}
               target="_blank"
               rel="noreferrer noopener"
               className="underline hover:text-gray-200"
-              style={{
-                color: determineTextColor(brand?.accentColor),
-              }}
+              onClick={(e) => e.stopPropagation()}
+              style={{ color: theme.textColor }}
             >
               {agreementName}
             </a>
-            .
+            <span className="cursor-pointer" onClick={toggleAgreement}>
+              .
+            </span>
           </>
         )}
       </label>

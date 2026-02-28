@@ -114,6 +114,7 @@ model DataroomBrand {
   banner         String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   brandColor     String? // This should be a reference to the brand color
   accentColor    String? // This should be a reference to the accent color
+  applyAccentColorToDataroomView Boolean @default(false) // When true, apply accentColor to dataroom list/tree viewer background
   welcomeMessage String? // This should be a reference to the welcome message
   dataroomId     String   @unique
   dataroom       Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)

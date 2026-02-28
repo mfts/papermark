@@ -26,6 +26,7 @@ export default async function handle(
     }
 
     const { teamId } = req.query as { teamId: string };
+    const userId = (session.user as CustomUser).id;
 
     const { email } = req.body;
 
@@ -34,6 +35,28 @@ export default async function handle(
     }
 
     try {
+      const userTeam = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId,
+            teamId,
+          },
+        },
+        select: {
+          role: true,
+        },
+      });
+
+      if (!userTeam) {
+        res.status(403).json("You are not part of this team");
+        return;
+      }
+
+      if (userTeam.role !== "ADMIN") {
+        res.status(403).json("Only admins can send the invitation!");
+        return;
+      }
+
       const team = await prisma.team.findUnique({
         where: {
           id: teamId,
@@ -58,22 +81,12 @@ export default async function handle(
         return;
       }
 
-      // check that the user is admin of the team, otherwise return 403
       const teamUsers = team.users;
-      const isUserAdmin = teamUsers.some(
-        (user) =>
-          user.role === "ADMIN" &&
-          user.userId === (session.user as CustomUser).id,
-      );
-      if (!isUserAdmin) {
-        res.status(403).json("Only admins can send the invitation!");
-        return;
-      }
 
       // Check if the user has reached the limit of users in the team
       const limits = await getLimits({
         teamId,
-        userId: (session.user as CustomUser).id,
+        userId,
       });
 
       if (limits && teamUsers.length >= limits.users) {

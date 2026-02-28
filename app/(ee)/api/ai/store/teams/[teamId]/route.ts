@@ -27,10 +27,12 @@ export async function GET(
     const userId = (session.user as CustomUser).id;
 
     // Verify user is member of team
-    const userTeam = await prisma.userTeam.findFirst({
+    const userTeam = await prisma.userTeam.findUnique({
       where: {
-        userId,
-        teamId,
+        userId_teamId: {
+          userId,
+          teamId,
+        },
       },
     });
 

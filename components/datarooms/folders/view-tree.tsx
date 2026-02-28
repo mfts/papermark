@@ -1,6 +1,7 @@
 import { useRouter } from "next/router";
 
 import { memo, useMemo } from "react";
+import type { CSSProperties } from "react";
 
 import { DataroomFolder } from "@prisma/client";
 import { HomeIcon } from "lucide-react";
@@ -12,6 +13,7 @@ import {
 } from "@/lib/utils/hierarchical-display";
 
 import { FileTree } from "@/components/ui/nextra-filetree";
+import { useViewerSurfaceTheme } from "@/components/view/viewer/viewer-surface-theme";
 
 import { buildNestedFolderStructureWithDocs } from "./utils";
 
@@ -182,15 +184,31 @@ const HomeLink = memo(
     folderId: string | null;
     setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
   }) => {
+    const { usesLightText, palette } = useViewerSurfaceTheme();
+
     return (
       <li
         className={cn(
           "flex list-none",
-          "rounded-md text-foreground transition-all duration-200 ease-in-out",
-          "hover:bg-gray-100 hover:shadow-sm hover:dark:bg-muted",
+          "rounded-md transition-all duration-200 ease-in-out",
+          usesLightText
+            ? "text-[var(--viewer-text)] hover:bg-[var(--viewer-control-bg)]"
+            : "text-foreground hover:bg-gray-100 hover:shadow-sm hover:dark:bg-muted",
           "px-3 py-1.5 leading-6",
-          folderId === null && "bg-gray-100 font-semibold dark:bg-muted",
+          folderId === null &&
+            (usesLightText
+              ? "bg-[var(--viewer-panel-active)] font-semibold"
+              : "bg-gray-100 font-semibold dark:bg-muted"),
         )}
+        style={
+          usesLightText
+            ? ({
+                "--viewer-text": palette.textColor,
+                "--viewer-control-bg": palette.controlBgColor,
+                "--viewer-panel-active": palette.panelActiveBgColor,
+              } as CSSProperties)
+            : undefined
+        }
       >
         <span
           className="inline-flex w-full cursor-pointer items-center"
@@ -223,6 +241,8 @@ const SidebarFolders = ({
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
   dataroomIndexEnabled?: boolean;
 }) => {
+  const { usesLightText, palette } = useViewerSurfaceTheme();
+
   const nestedFolders = useMemo(() => {
     if (folders) {
       return buildNestedFolderStructureWithDocs(folders, documents);
@@ -243,10 +263,22 @@ const SidebarFolders = ({
     }
 
     return null;
-  }, [folders, documents, folderId]);
+  }, [nestedFolders, folderId]);
 
   return (
-    <FileTree>
+    <FileTree
+      prefersLightText={usesLightText}
+      style={
+        usesLightText
+          ? ({
+              "--viewer-text": palette.textColor,
+              "--viewer-muted-text": palette.mutedTextColor,
+              "--viewer-control-bg": palette.controlBgColor,
+              "--viewer-panel-active": palette.panelActiveBgColor,
+            } as CSSProperties)
+          : undefined
+      }
+    >
       <HomeLink folderId={folderId} setFolderId={setFolderId} />
       {nestedFolders.map((folder) => (
         <FolderComponent

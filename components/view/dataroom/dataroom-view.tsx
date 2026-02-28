@@ -6,6 +6,7 @@ import { DataroomBrand } from "@prisma/client";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
 
+import { PendingUploadsProvider } from "@/context/pending-uploads-context";
 import { useAnalytics } from "@/lib/analytics";
 import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
 import { useDisablePrint } from "@/lib/hooks/use-disable-print";
@@ -111,6 +112,11 @@ export default function DataroomView({
 
   const [code, setCode] = useState<string | null>(null);
   const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
+  const shouldApplyAccentToDataroomView = !!(brand as any)
+    ?.applyAccentColorToDataroomView;
+  const dataroomViewBackgroundColor = shouldApplyAccentToDataroomView
+    ? brand?.accentColor
+    : "#ffffff";
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
@@ -280,36 +286,44 @@ export default function DataroomView({
 
   if (submitted) {
     return (
-      <div className="bg-gray-950">
-        <DataroomViewer
-          accessControls={link.accessControls || group?.accessControls || []}
-          brand={brand!}
-          viewId={viewData.viewId}
-          isPreview={viewData.isPreview}
-          linkId={link.id}
-          dataroom={dataroom}
-          allowDownload={link.allowDownload!}
-          enableIndexFile={link.enableIndexFile}
-          folderId={folderId}
-          setFolderId={setFolderId}
-          viewerId={viewData.viewerId}
-          viewData={viewData}
-          isEmbedded={isEmbedded}
-          dataroomIndexEnabled={dataroomIndexEnabled}
-          viewerEmail={
-            viewData.viewerEmail ??
-            data.email ??
-            verifiedEmail ??
-            userEmail ??
-            undefined
-          }
-        />
-      </div>
+      <PendingUploadsProvider linkId={link.id} dataroomId={dataroom?.id}>
+        <div
+          className="min-h-screen bg-white"
+          style={{ backgroundColor: dataroomViewBackgroundColor ?? undefined }}
+        >
+          <DataroomViewer
+            accessControls={link.accessControls || group?.accessControls || []}
+            brand={brand!}
+            viewId={viewData.viewId}
+            isPreview={viewData.isPreview}
+            linkId={link.id}
+            dataroom={dataroom}
+            allowDownload={link.allowDownload!}
+            enableIndexFile={link.enableIndexFile}
+            folderId={folderId}
+            setFolderId={setFolderId}
+            viewerId={viewData.viewerId}
+            viewData={viewData}
+            isEmbedded={isEmbedded}
+            dataroomIndexEnabled={dataroomIndexEnabled}
+            viewerEmail={
+              viewData.viewerEmail ??
+              data.email ??
+              verifiedEmail ??
+              userEmail ??
+              undefined
+            }
+          />
+        </div>
+      </PendingUploadsProvider>
     );
   }
 
   return (
-    <div className="bg-gray-950">
+    <div
+      className="min-h-screen bg-white"
+      style={{ backgroundColor: dataroomViewBackgroundColor ?? undefined }}
+    >
       <div className="flex h-screen items-center justify-center">
         <LoadingSpinner className="h-20 w-20" />
       </div>

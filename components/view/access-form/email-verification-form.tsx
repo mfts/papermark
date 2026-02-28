@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 
-import { determineTextColor } from "@/lib/utils/determine-text-color";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { DEFAULT_ACCESS_FORM_TYPE } from "@/components/view/access-form";
+import { createAccessFormTheme } from "@/components/view/access-form/access-form-theme";
 
 const REGEXP_ONLY_DIGITS = "^\\d+$";
 
@@ -35,6 +35,7 @@ export default function EmailVerificationMessage({
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
 }) {
   const { isMobile } = useMediaQuery();
+  const theme = createAccessFormTheme(brand?.accentColor);
   const [isResendLoading, setIsResendLoading] = useState(false);
   const [delaySeconds, setDelaySeconds] = useState(60);
 
@@ -54,24 +55,19 @@ export default function EmailVerificationMessage({
       <div
         className="flex h-screen flex-1 flex-col px-6 py-12 lg:px-8"
         style={{
-          backgroundColor:
-            brand && brand.accentColor ? brand.accentColor : "black",
+          backgroundColor: theme.backgroundColor,
         }}
       >
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <h2
             className="mt-10 text-2xl font-bold leading-9 tracking-tight"
-            style={{
-              color: determineTextColor(brand?.accentColor),
-            }}
+            style={{ color: theme.textColor }}
           >
             Verify your email address
           </h2>
           <p
             className="text-pretty text-sm leading-6"
-            style={{
-              color: determineTextColor(brand?.accentColor),
-            }}
+            style={{ color: theme.textColor }}
           >
             Enter the six digit verification code sent to{" "}
             <strong className="font-medium" title={data.email ?? ""}>
@@ -110,8 +106,8 @@ export default function EmailVerificationMessage({
               loading={isLoading && !isResendLoading}
               className="hover:opacity-90"
               style={{
-                backgroundColor: determineTextColor(brand?.accentColor),
-                color: brand && brand.accentColor ? brand.accentColor : "black",
+                backgroundColor: theme.ctaBgColor,
+                color: theme.ctaTextColor,
               }}
             >
               {isLoading && !isResendLoading ? "Verifying..." : "Continue"}
@@ -122,12 +118,7 @@ export default function EmailVerificationMessage({
             <div className="flex items-center">
               <p
                 className="text-xs"
-                style={{
-                  color:
-                    determineTextColor(brand?.accentColor) === "white"
-                      ? "rgb(75, 85, 99)"
-                      : "rgb(107, 114, 128)",
-                }}
+                style={{ color: theme.subtleTextColor }}
               >
                 Didn&apos;t receive the email?
               </p>{" "}
@@ -135,12 +126,7 @@ export default function EmailVerificationMessage({
                 variant="link"
                 size="sm"
                 className="text-xs font-normal"
-                style={{
-                  color:
-                    determineTextColor(brand?.accentColor) === "white"
-                      ? "rgb(107, 114, 128)"
-                      : "rgb(156, 163, 175)",
-                }}
+                style={{ color: theme.mutedTextColor }}
                 disabled={isLoading || delaySeconds > 0}
                 onClick={(e) => {
                   e.preventDefault();

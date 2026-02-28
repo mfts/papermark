@@ -1,13 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
 import {
   ALLOWED_FOLDER_COLORS,
   ALLOWED_FOLDER_ICONS,
 } from "@/lib/constants/folder-constants";
+import { safeSlugify } from "@/lib/utils";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
@@ -91,7 +91,7 @@ export default async function handle(
       const oldPath = folder.path;
       const newPathParts = folder.path.split("/");
       newPathParts.pop();
-      newPathParts.push(slugify(name.trim()));
+      newPathParts.push(safeSlugify(name.trim()));
       const newPath = newPathParts.join("/");
 
       // Build update data object with only changed fields

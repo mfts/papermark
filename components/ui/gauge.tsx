@@ -17,7 +17,7 @@ export const Gauge = ({
     xs: {
       width: "24",
       height: "24",
-      textSize: "text-xs",
+      textSize: "text-[10px]",
     },
     small: {
       width: "36",

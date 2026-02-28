@@ -1,11 +1,20 @@
 import { useEffect, useState } from "react";
 
 import { LinkPreset } from "@prisma/client";
+import { CheckIcon, UsersIcon, XIcon } from "lucide-react";
 import { motion } from "motion/react";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
+import useVisitorGroups from "@/lib/swr/use-visitor-groups";
 import { sanitizeList } from "@/lib/utils";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 
 import { DEFAULT_LINK_TYPE } from ".";
@@ -30,25 +39,29 @@ export default function AllowListSection({
   }: LinkUpgradeOptions) => void;
   presets: LinkPreset | null;
 }) {
-  const { emailProtected, allowList } = data;
+  const { emailProtected, allowList, visitorGroupIds } = data;
+  const { visitorGroups } = useVisitorGroups();
 
   // Initialize enabled state based on whether allowList is not null and not empty
+  // or if visitor groups are selected
   const [enabled, setEnabled] = useState<boolean>(
-    !!allowList && allowList.length > 0,
+    (!!allowList && allowList.length > 0) ||
+      (!!visitorGroupIds && visitorGroupIds.length > 0),
   );
   const [allowListInput, setAllowListInput] = useState<string>(
     allowList?.join("\n") || "",
   );
 
   useEffect(() => {
-    // Update the allowList in the data state when their inputs change
-    const newAllowList = sanitizeList(allowListInput);
-    setEnabled((prevEnabled) => prevEnabled && emailProtected);
-    setData((prevData) => ({
-      ...prevData,
-      allowList: emailProtected && enabled ? newAllowList : [],
-    }));
-  }, [allowListInput, emailProtected, enabled, setData]);
+    if (!emailProtected && enabled) {
+      setEnabled(false);
+      setData((prevData) => ({
+        ...prevData,
+        allowList: [],
+        visitorGroupIds: [],
+      }));
+    }
+  }, [emailProtected, enabled, setData]);
 
   useEffect(() => {
     if (isAllowed && presets?.allowList && presets.allowList.length > 0) {
@@ -72,6 +85,7 @@ export default function AllowListSection({
       setData((prevData) => ({
         ...prevData,
         allowList: [],
+        visitorGroupIds: [],
       }));
     }
   };
@@ -79,8 +93,38 @@ export default function AllowListSection({
   const handleAllowListChange = (
     event: React.ChangeEvent<HTMLTextAreaElement>,
   ) => {
-    setAllowListInput(event.target.value);
+    const updatedAllowListInput = event.target.value;
+    setAllowListInput(updatedAllowListInput);
+
+    if (emailProtected && enabled) {
+      setData((prevData) => ({
+        ...prevData,
+        allowList: sanitizeList(updatedAllowListInput),
+      }));
+    }
   };
+
+  const toggleVisitorGroup = (groupId: string) => {
+    setData((prevData) => {
+      const currentIds = prevData.visitorGroupIds || [];
+      const newIds = currentIds.includes(groupId)
+        ? currentIds.filter((id) => id !== groupId)
+        : [...currentIds, groupId];
+      return { ...prevData, visitorGroupIds: newIds };
+    });
+  };
+
+  const removeVisitorGroup = (groupId: string) => {
+    setData((prevData) => ({
+      ...prevData,
+      visitorGroupIds: (prevData.visitorGroupIds || []).filter(
+        (id) => id !== groupId,
+      ),
+    }));
+  };
+
+  const selectedGroups =
+    visitorGroups?.filter((g) => visitorGroupIds?.includes(g.id)) || [];
 
   return (
     <div className="pb-5">
@@ -88,7 +132,7 @@ export default function AllowListSection({
         <LinkItem
           title="Allow specified viewers"
           link="https://www.papermark.com/help/article/allow-list"
-          tooltipContent="Restrict access to a selected group of viewers. Enter allowed emails or domains."
+          tooltipContent={`Restrict access to a selected group of viewers. Enter allowed emails or domains${visitorGroups && visitorGroups.length > 0 ? ", or select visitor groups" : ""}.`}
           enabled={enabled}
           isAllowed={isAllowed}
           action={handleEnableAllowList}
@@ -105,9 +149,108 @@ export default function AllowListSection({
 
         {enabled && (
           <motion.div
-            className="mt-1 block w-full"
+            className="mt-1 block w-full space-y-3"
             {...FADE_IN_ANIMATION_SETTINGS}
           >
+            {/* Visitor Groups Selector */}
+            {visitorGroups && visitorGroups.length > 0 && (
+              <div>
+                <div className="mb-1.5 flex items-center gap-1.5">
+                  <UsersIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Visitor Groups
+                  </span>
+                </div>
+
+                {/* Selected groups as badges */}
+                {selectedGroups.length > 0 && (
+                  <div className="mb-2 flex flex-wrap gap-1.5">
+                    {selectedGroups.map((group) => (
+                      <Badge
+                        key={group.id}
+                        variant="secondary"
+                        className="gap-1 pr-1"
+                      >
+                        {group.name}
+                        <span className="text-muted-foreground">
+                          ({group.emails.length})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeVisitorGroup(group.id)}
+                          className="ml-0.5 rounded-full p-0.5 hover:bg-muted"
+                        >
+                          <XIcon className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start text-muted-foreground"
+                    >
+                      <UsersIcon className="mr-2 h-3.5 w-3.5" />
+                      {selectedGroups.length > 0
+                        ? `${selectedGroups.length} group${selectedGroups.length > 1 ? "s" : ""} selected`
+                        : "Select visitor groups..."}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-1" align="start">
+                    <div className="max-h-60 overflow-y-auto">
+                      {visitorGroups.map((group) => {
+                        const isSelected = visitorGroupIds?.includes(group.id);
+                        return (
+                          <button
+                            key={group.id}
+                            type="button"
+                            className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                            onClick={() => toggleVisitorGroup(group.id)}
+                          >
+                            <div
+                              className={`flex h-4 w-4 items-center justify-center rounded-sm border ${
+                                isSelected
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "border-muted-foreground/30"
+                              }`}
+                            >
+                              {isSelected && (
+                                <CheckIcon className="h-3 w-3" />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-medium">
+                                {group.name}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {group.emails.length}{" "}
+                                {group.emails.length === 1
+                                  ? "entry"
+                                  : "entries"}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                <div className="my-2 flex items-center gap-2">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs text-muted-foreground">
+                    plus individual emails
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+              </div>
+            )}
+
             <Textarea
               className="focus:ring-inset"
               rows={5}

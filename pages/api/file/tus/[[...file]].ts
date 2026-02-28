@@ -2,12 +2,12 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { MultiRegionS3Store } from "@/ee/features/storage/s3-store";
 import { CopyObjectCommand } from "@aws-sdk/client-s3";
-import slugify from "@sindresorhus/slugify";
 import { Server } from "@tus/server";
 import { getServerSession } from "next-auth/next";
 import path from "node:path";
 
 import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
+import { safeSlugify } from "@/lib/utils";
 import { RedisLocker } from "@/lib/files/tus-redis-locker";
 import { newId } from "@/lib/id-helper";
 import { lockerRedisClient } from "@/lib/redis";
@@ -40,7 +40,7 @@ const tusServer = new Server({
     };
     const docId = newId("doc");
     const { name, ext } = path.parse(fileName);
-    const newName = `${teamId}/${docId}/${slugify(name)}${ext}`;
+    const newName = `${teamId}/${docId}/${safeSlugify(name)}${ext}`;
     return newName;
   },
   generateUrl(req, { proto, host, path, id }) {
@@ -65,7 +65,8 @@ const tusServer = new Server({
       const metadata = upload.metadata || {};
       const contentType = metadata.contentType || "application/octet-stream";
       const { name, ext } = path.parse(metadata.fileName!);
-      const contentDisposition = `attachment; filename="${slugify(name)}${ext}"`;
+      const originalFileName = `${name}${ext}`;
+      const contentDisposition = `attachment; filename="${safeSlugify(name)}${ext}"; filename*=UTF-8''${encodeURIComponent(originalFileName)}`;
 
       // The Key (object path) where the file was uploaded
       const objectKey = upload.id;

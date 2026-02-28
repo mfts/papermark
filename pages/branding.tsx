@@ -20,6 +20,7 @@ import AppLayout from "@/components/layouts/app";
 import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import {
@@ -47,6 +48,8 @@ export default function Branding() {
   const [welcomeMessage, setWelcomeMessage] = useState<string>(
     "Your action is requested to continue",
   );
+  const [applyAccentColorToDataroomView, setApplyAccentColorToDataroomView] =
+    useState<boolean>(false);
   const [debouncedBrandColor] = useDebounce(brandColor, 300);
   const [debouncedAccentColor] = useDebounce(accentColor, 300);
   const [debouncedWelcomeMessage] = useDebounce(welcomeMessage, 500);
@@ -147,6 +150,9 @@ export default function Branding() {
       setAccentColor(brand.accentColor || "#FFFFFF");
       setLogo(brand.logo || null);
       setBanner(brand.banner || null);
+      setApplyAccentColorToDataroomView(
+        (brand as any)?.applyAccentColorToDataroomView ?? false,
+      );
       const message =
         brand.welcomeMessage || "Your action is requested to continue";
       setWelcomeMessage(message);
@@ -196,6 +202,7 @@ export default function Branding() {
         welcomeMessage.trim() || "Your action is requested to continue",
       brandColor: brandColor,
       accentColor: accentColor,
+      applyAccentColorToDataroomView,
       logo: logoBlobUrl,
       // Only include banner if user has dataroom access (Business+)
       ...(hasDataroomAccess && { banner: bannerBlobUrl }),
@@ -241,6 +248,7 @@ export default function Branding() {
       setBanner(null);
       setBrandColor("#000000");
       setAccentColor("#030712");
+      setApplyAccentColorToDataroomView(false);
       setWelcomeMessage("Your action is requested to continue");
       setWelcomeMessageError(null);
       setIsLoading(false);
@@ -652,6 +660,35 @@ export default function Branding() {
                           )}
                         </div>
                       </div>
+                      {hasDataroomAccess && (
+                        <div className="rounded-md border border-border/70 p-3">
+                          <div className="flex items-start space-x-3">
+                            <Checkbox
+                              id="global-apply-accent-to-dataroom-view"
+                              checked={applyAccentColorToDataroomView}
+                              onCheckedChange={(checked) =>
+                                setApplyAccentColorToDataroomView(
+                                  checked === true,
+                                )
+                              }
+                              className="mt-0.5"
+                            />
+                            <div className="space-y-1">
+                              <Label
+                                htmlFor="global-apply-accent-to-dataroom-view"
+                                className="cursor-pointer text-sm font-medium"
+                              >
+                                Apply background color to dataroom view by
+                                default
+                              </Label>
+                              <p className="text-xs text-muted-foreground">
+                                Dataroom-specific branding can still override
+                                this.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -876,10 +913,10 @@ export default function Branding() {
                           <div className="relative min-h-0 flex-1 overflow-x-auto">
                             <div className="relative h-full max-w-[1396px]">
                               <iframe
-                                key={`dataroom-view-${debouncedBrandColor}-${debouncedAccentColor}-${banner}`}
+                                key={`dataroom-view-${debouncedBrandColor}-${debouncedAccentColor}-${banner}-${applyAccentColorToDataroomView}`}
                                 name="dataroom-view"
                                 id="dataroom-view"
-                                src={`/room_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${banner === "no-banner" ? encodeURIComponent("no-banner") : bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
+                                src={`/room_ppreview_demo?brandColor=${encodeURIComponent(debouncedBrandColor)}&accentColor=${encodeURIComponent(debouncedAccentColor)}&applyAccentColorToDataroomView=${applyAccentColorToDataroomView ? "1" : "0"}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${banner === "no-banner" ? encodeURIComponent("no-banner") : bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
                                 className="absolute left-0 top-0 h-full w-full origin-top-left scale-50 overflow-hidden rounded-b-lg border-0 bg-white"
                                 style={{
                                   width: "200%",

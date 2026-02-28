@@ -1,4 +1,4 @@
-import slugify from "@sindresorhus/slugify";
+import { safeSlugify } from "@/lib/utils";
 
 export interface FolderInput {
   id: string;
@@ -28,7 +28,7 @@ export function buildFolderPathsFromHierarchy(
     // Prevent infinite loops from circular parentId references
     if (visited.has(folderId)) {
       const folder = folderById.get(folderId);
-      const fallbackPath = `/${slugify(folder?.name ?? folderId)}`;
+      const fallbackPath = `/${safeSlugify(folder?.name ?? folderId)}`;
       pathCache.set(folderId, fallbackPath);
       return fallbackPath;
     }
@@ -42,7 +42,7 @@ export function buildFolderPathsFromHierarchy(
       parentPath = computePath(folder.parentId, visited);
     }
 
-    const path = `${parentPath}/${slugify(folder.name)}`;
+    const path = `${parentPath}/${safeSlugify(folder.name)}`;
     pathCache.set(folderId, path);
     return path;
   }

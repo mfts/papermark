@@ -234,6 +234,9 @@ export default async function handle(
               banner: dataroomContents.brand?.banner,
               logo: dataroomContents.brand?.logo,
               accentColor: dataroomContents.brand?.accentColor,
+              applyAccentColorToDataroomView:
+                (dataroomContents.brand as any)?.applyAccentColorToDataroomView ??
+                false,
               brandColor: dataroomContents.brand?.brandColor,
             },
           },

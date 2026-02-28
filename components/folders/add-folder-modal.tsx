@@ -4,7 +4,6 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
-import slugify from "@sindresorhus/slugify";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { z } from "zod";
@@ -15,6 +14,7 @@ import {
   FolderColorId,
   FolderIconId,
 } from "@/lib/constants/folder-constants";
+import { safeSlugify } from "@/lib/utils";
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 
@@ -65,8 +65,8 @@ export function AddFolderModal({
 
   const folderPath =
     isDataroom && dataroomId
-      ? `/datarooms/${dataroomId}/documents/${currentFolderPath ? currentFolderPath?.join("/") : ""}/${"/" + slugify(folderName.trim())}`
-      : `/documents/tree/${currentFolderPath ? currentFolderPath?.join("/") : ""}${"/" + slugify(folderName.trim())}`;
+      ? `/datarooms/${dataroomId}/documents/${currentFolderPath ? currentFolderPath?.join("/") : ""}/${"/" + safeSlugify(folderName.trim())}`
+      : `/documents/tree/${currentFolderPath ? currentFolderPath?.join("/") : ""}${"/" + safeSlugify(folderName.trim())}`;
 
   const addFolderSchema = z.object({
     name: z

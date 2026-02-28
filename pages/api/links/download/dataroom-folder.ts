@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { ItemType, ViewType } from "@prisma/client";
-import slugify from "@sindresorhus/slugify";
 
 import { verifyDataroomSessionInPagesRouter } from "@/lib/auth/dataroom-auth";
 import {
@@ -13,6 +12,7 @@ import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { downloadJobStore } from "@/lib/redis-download-job-store";
 import { bulkDownloadTask } from "@/lib/trigger/bulk-download";
+import { safeSlugify } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
 
 export const config = {
@@ -272,7 +272,7 @@ export default async function handler(
         relativePath = match ? match[1] : "";
       }
 
-      const pathParts = [slugify(rootFolderInfo.name)];
+      const pathParts = [safeSlugify(rootFolderInfo.name)];
       if (relativePath) {
         pathParts.push(...relativePath.split("/").filter(Boolean));
       }
@@ -357,10 +357,10 @@ export default async function handler(
       }
     }
 
-    const rootPath = "/" + slugify(rootFolder.name);
+    const rootPath = "/" + safeSlugify(rootFolder.name);
     if (!folderStructure[rootPath]) {
       folderStructure[rootPath] = {
-        name: slugify(rootFolder.name),
+        name: safeSlugify(rootFolder.name),
         path: rootPath,
         files: [],
       };

@@ -3,6 +3,7 @@
 import { useRouter } from "next/router";
 
 import {
+  memo,
   forwardRef,
   useCallback,
   useEffect,
@@ -26,6 +27,8 @@ type SearchBoxProps = {
   onChangeDebounced?: (value: string) => void;
   debounceTimeoutMs?: number;
   inputClassName?: string;
+  leftIconClassName?: string;
+  clearIconClassName?: string;
   placeholder?: string;
 };
 
@@ -39,6 +42,8 @@ const SearchBox = forwardRef(
       onChangeDebounced,
       debounceTimeoutMs = 500,
       inputClassName,
+      leftIconClassName,
+      clearIconClassName,
       placeholder = "Search...",
     }: SearchBoxProps,
     forwardedRef,
@@ -77,14 +82,16 @@ const SearchBox = forwardRef(
           {loading && value.length > 0 ? (
             <LoadingSpinner className="h-4 w-4" />
           ) : (
-            <SearchIcon className="h-4 w-4 text-muted-foreground" />
+            <SearchIcon
+              className={cn("h-4 w-4 text-muted-foreground", leftIconClassName)}
+            />
           )}
         </div>
         <input
           ref={inputRef}
           type="text"
           className={cn(
-            "peer w-full rounded-md border border-border bg-white px-10 text-foreground outline-none placeholder:text-muted-foreground dark:bg-gray-800 sm:text-sm",
+            "peer w-full cursor-text rounded-md border border-border bg-white px-10 text-foreground outline-none placeholder:text-muted-foreground dark:bg-gray-800 sm:text-sm",
             "transition-all focus:border-gray-500 focus:ring-0",
             inputClassName,
           )}
@@ -104,7 +111,9 @@ const SearchBox = forwardRef(
             }}
             className="pointer-events-auto absolute inset-y-0 right-0 flex items-center pr-4"
           >
-            <CircleXIcon className="h-4 w-4 text-muted-foreground" />
+            <CircleXIcon
+              className={cn("h-4 w-4 text-muted-foreground", clearIconClassName)}
+            />
           </button>
         )}
       </div>
@@ -112,6 +121,7 @@ const SearchBox = forwardRef(
   },
 );
 SearchBox.displayName = "SearchBox";
+const MemoizedSearchBox = memo(SearchBox);
 
 export function SearchBoxPersisted({
   urlParam = "search",
@@ -148,6 +158,9 @@ export function SearchBoxPersisted({
       isCustomDomain ? `/${router.query.slug}` : undefined, // Preserve custom domain URL
       { shallow: true },
     );
+    // This is intentionally keyed only by debounced input value.
+    // Adding router/query deps can cause feedback loops with shallow routing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedValue]);
 
   useEffect(() => {
@@ -157,10 +170,12 @@ export function SearchBoxPersisted({
       setValue(queryValue);
       setDebouncedValue(queryValue);
     }
+    // Keep this tied to the specific URL param only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryParams[urlParam]]);
 
   return (
-    <SearchBox
+    <MemoizedSearchBox
       value={value}
       onChange={setValue}
       onChangeDebounced={setDebouncedValue}
