@@ -89,7 +89,8 @@ export default async function handle(
       if (Array.isArray(keywords) && keywords.length > 0) {
         const matchedKeyword = keywords.find(
           (keyword) =>
-            typeof keyword === "string" && validatedUrl.includes(keyword),
+            typeof keyword === "string" &&
+            validatedUrl.toLowerCase().includes(keyword.toLowerCase()),
         );
 
         if (matchedKeyword) {

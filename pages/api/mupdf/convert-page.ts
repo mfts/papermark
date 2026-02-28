@@ -179,7 +179,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             if (link.href) {
               const matchedKeyword = keywords.find(
                 (keyword) =>
-                  typeof keyword === "string" && link.href.includes(keyword),
+                  typeof keyword === "string" &&
+                  link.href.toLowerCase().includes(keyword.toLowerCase()),
               );
 
               if (matchedKeyword) {

@@ -42,7 +42,9 @@ export async function validateRedirectUrl(
       const keywords = await get("keywords");
       if (Array.isArray(keywords) && keywords.length > 0) {
         const matchedKeyword = keywords.find(
-          (keyword) => typeof keyword === "string" && trimmed.includes(keyword),
+          (keyword) =>
+            typeof keyword === "string" &&
+            trimmed.toLowerCase().includes(keyword.toLowerCase()),
         );
 
         if (matchedKeyword) {
