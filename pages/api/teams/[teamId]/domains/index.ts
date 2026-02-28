@@ -135,7 +135,16 @@ export default async function handle(
       await addDomainToVercel(sanitizedDomain);
 
       if (validatedRedirectUrl) {
-        await setDomainRedirectUrl(sanitizedDomain, validatedRedirectUrl);
+        try {
+          await setDomainRedirectUrl(sanitizedDomain, validatedRedirectUrl);
+        } catch {
+          // Domain is functional but redirect failed to persist in Redis.
+          // Remove redirectUrl from DB so the two stores stay consistent.
+          await prisma.domain.update({
+            where: { id: response.id },
+            data: { redirectUrl: null },
+          });
+        }
       }
 
       return res.status(201).json(response);
