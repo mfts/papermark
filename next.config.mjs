@@ -170,6 +170,14 @@ const nextConfig = {
       ...config.resolve.alias,
       "@google-cloud/kms": false,
       "@google-cloud/secret-manager": false,
+      // Jackson pulls TypeORM/Mongo optional drivers we don't use (Postgres-only setup).
+      // Aliasing prevents noisy module resolution warnings in dev/build.
+      mysql: false,
+      "react-native-sqlite-storage": false,
+      aws4: false,
+      "@sap/hana-client": false,
+      "@sap/hana-client/extension/Stream": false,
+      "hdb-pool": false,
     };
 
     // Suppress critical dependency warnings from Jackson's dynamic requires
