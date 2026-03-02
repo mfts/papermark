@@ -43,8 +43,7 @@ export default function DataroomDigestNotification({
     <Html>
       <Head />
       <Preview>
-        {count} new document{count !== 1 ? "s" : ""} in {dataroomName}{" "}
-        {periodLabel}
+        {`${count} new document${count !== 1 ? "s" : ""} in ${dataroomName} ${periodLabel}`}
       </Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
