@@ -1,10 +1,14 @@
 import { z } from "zod";
 
+export const NotificationFrequency = z.enum(["instant", "daily", "weekly"]);
+export type NotificationFrequency = z.infer<typeof NotificationFrequency>;
+
 export const ZViewerNotificationPreferencesSchema = z
   .object({
     dataroom: z.record(
       z.object({
         enabled: z.boolean(),
+        frequency: NotificationFrequency.optional().default("instant"),
       }),
     ),
   })

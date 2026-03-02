@@ -1,6 +1,7 @@
 import { logger, task } from "@trigger.dev/sdk/v3";
 
 import prisma from "@/lib/prisma";
+import { queueNotification } from "@/lib/redis/dataroom-notification-queue";
 import { ZViewerNotificationPreferencesSchema } from "@/lib/zod/schemas/notifications";
 
 type NotificationPayload = {
@@ -14,7 +15,6 @@ export const sendDataroomChangeNotificationTask = task({
   id: "send-dataroom-change-notification",
   retry: { maxAttempts: 3 },
   run: async (payload: NotificationPayload) => {
-    // Get all verified viewers for this dataroom
     const viewers = await prisma.viewer.findMany({
       where: {
         teamId: payload.teamId,
@@ -62,13 +62,11 @@ export const sendDataroomChangeNotificationTask = task({
       return;
     }
 
-    // Construct simplified viewer objects with email and link info, excluding expired/archived links
     const viewersWithLinks = viewers
       .map((viewer) => {
         const view = viewer.views[0];
         const link = view?.link;
 
-        // Skip if link is expired or archived
         if (
           !link ||
           link.isArchived ||
@@ -77,17 +75,23 @@ export const sendDataroomChangeNotificationTask = task({
           return null;
         }
 
-        // Skip if notifications are disabled for this dataroom
         const parsedPreferences =
           ZViewerNotificationPreferencesSchema.safeParse(
             viewer.notificationPreferences,
           );
+
         if (
           parsedPreferences.success &&
           parsedPreferences.data.dataroom[payload.dataroomId]?.enabled === false
         ) {
           return null;
         }
+
+        const frequency =
+          parsedPreferences.success
+            ? (parsedPreferences.data.dataroom[payload.dataroomId]?.frequency ??
+              "instant")
+            : "instant";
 
         let linkUrl = "";
         if (link.domainId && link.domainSlug && link.slug) {
@@ -99,19 +103,42 @@ export const sendDataroomChangeNotificationTask = task({
         return {
           id: viewer.id,
           linkUrl,
+          frequency,
         };
       })
       .filter(
-        (viewer): viewer is { id: string; linkUrl: string } => viewer !== null,
+        (
+          viewer,
+        ): viewer is {
+          id: string;
+          linkUrl: string;
+          frequency: "instant" | "daily" | "weekly";
+        } => viewer !== null,
       );
 
     logger.info("Processed viewer links", {
       viewerCount: viewersWithLinks.length,
     });
 
-    // Send notification to each viewer
     for (const viewer of viewersWithLinks) {
       try {
+        if (viewer.frequency === "daily" || viewer.frequency === "weekly") {
+          await queueNotification({
+            frequency: viewer.frequency,
+            viewerId: viewer.id,
+            dataroomId: payload.dataroomId,
+            teamId: payload.teamId,
+            dataroomDocumentId: payload.dataroomDocumentId,
+            senderUserId: payload.senderUserId,
+          });
+
+          logger.info("Queued notification for digest", {
+            viewerId: viewer.id,
+            frequency: viewer.frequency,
+          });
+          continue;
+        }
+
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/jobs/send-dataroom-new-document-notification`,
           {

@@ -69,7 +69,12 @@ export const sendEmail = async ({
       text: plainText,
       headers: {
         "X-Entity-Ref-ID": nanoid(),
-        ...(unsubscribeUrl ? { "List-Unsubscribe": unsubscribeUrl } : {}),
+        ...(unsubscribeUrl
+          ? {
+              "List-Unsubscribe": `<${unsubscribeUrl}>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            }
+          : {}),
       },
     });
 

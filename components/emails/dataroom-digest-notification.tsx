@@ -13,23 +13,39 @@ import {
   Text,
 } from "@react-email/components";
 
-export default function DataroomNotification({
+type DocumentChange = {
+  documentName: string;
+};
+
+export default function DataroomDigestNotification({
   dataroomName = "Example Data Room",
-  documentName = "Example Document",
+  documents = [
+    { documentName: "Document A" },
+    { documentName: "Document B" },
+    { documentName: "Document C" },
+  ],
   senderEmail = "example@example.com",
   url = "https://app.papermark.com/datarooms/123",
-  unsubscribeUrl = "https://app.papermark.com/datarooms/123/unsubscribe",
+  preferencesUrl = "https://app.papermark.com/notification-preferences?token=abc",
+  frequency = "daily",
 }: {
   dataroomName: string;
-  documentName: string | undefined;
+  documents: DocumentChange[];
   senderEmail: string;
   url: string;
-  unsubscribeUrl: string;
+  preferencesUrl: string;
+  frequency: "daily" | "weekly";
 }) {
+  const count = documents.length;
+  const periodLabel = frequency === "daily" ? "today" : "this week";
+
   return (
     <Html>
       <Head />
-      <Preview>Dataroom update available</Preview>
+      <Preview>
+        {count} new document{count !== 1 ? "s" : ""} in {dataroomName}{" "}
+        {periodLabel}
+      </Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
@@ -37,18 +53,27 @@ export default function DataroomNotification({
               <span className="font-bold tracking-tighter">Papermark</span>
             </Text>
             <Text className="font-seminbold mb-8 mt-4 text-center text-xl">
-              {`New document available for ${dataroomName}`}
+              {`${count} new document${count !== 1 ? "s" : ""} in ${dataroomName}`}
             </Text>
             <Text className="text-sm leading-6 text-black">
-              A new document{" "}
-              <span className="font-semibold">{documentName}</span> has been
-              added to <span className="font-semibold">{dataroomName}</span>{" "}
-              dataroom on Papermark.
+              The following document{count !== 1 ? "s have" : " has"} been added
+              to <span className="font-semibold">{dataroomName}</span>{" "}
+              {periodLabel}:
             </Text>
+            <Section className="my-4">
+              {documents.map((doc, i) => (
+                <Text
+                  key={i}
+                  className="my-1 text-sm leading-6 text-black"
+                >
+                  • <span className="font-semibold">{doc.documentName}</span>
+                </Text>
+              ))}
+            </Section>
             <Section className="my-8 text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`${url}`}
+                href={url}
                 style={{ padding: "12px 20px" }}
               >
                 View the dataroom
@@ -56,7 +81,7 @@ export default function DataroomNotification({
             </Section>
             <Text className="text-sm text-black">
               or copy and paste this URL into your browser: <br />
-              {`${url}`}
+              {url}
             </Text>
             <Text className="text-sm text-gray-400">Papermark</Text>
 
@@ -67,14 +92,14 @@ export default function DataroomNotification({
                 reserved.
               </Text>
               <Text className="text-xs">
-                You received this email from{" "}
+                You received this {frequency} digest from{" "}
                 <span className="font-semibold">{senderEmail}</span> because you
                 viewed the dataroom{" "}
                 <span className="font-semibold">{dataroomName}</span> on
                 Papermark. If you have any feedback or questions about this
                 email, simply reply to it.{" "}
                 <a
-                  href={unsubscribeUrl}
+                  href={preferencesUrl}
                   className="text-gray-400 underline underline-offset-2"
                 >
                   Manage your notification preferences
