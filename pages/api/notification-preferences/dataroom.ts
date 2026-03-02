@@ -91,15 +91,24 @@ export default async function handle(
       viewer.notificationPreferences,
     );
 
-    const existingPrefs = parsedPreferences.success
-      ? parsedPreferences.data
-      : { dataroom: {} };
+    const rawPrefs =
+      typeof viewer.notificationPreferences === "object" &&
+      viewer.notificationPreferences !== null
+        ? (viewer.notificationPreferences as Record<string, unknown>)
+        : {};
+
+    const base = {
+      ...rawPrefs,
+      ...(parsedPreferences.success ? parsedPreferences.data : {}),
+    };
 
     const isDisabled = frequency === "disabled";
     const updatedPreferences = {
-      ...existingPrefs,
+      ...base,
       dataroom: {
-        ...existingPrefs.dataroom,
+        ...(base.dataroom && typeof base.dataroom === "object"
+          ? base.dataroom
+          : {}),
         [dataroomId]: {
           enabled: !isDisabled,
           frequency: isDisabled ? "instant" : frequency,
@@ -119,6 +128,7 @@ export default async function handle(
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: "Invalid request body", errors: error.errors });
     }
-    return res.status(500).json({ message: (error as Error).message });
+    console.error("Failed to update notification preferences:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
