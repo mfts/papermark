@@ -85,7 +85,7 @@ export function AddDocumentModal({
     }[]
   >([]);
   const teamInfo = useTeam();
-  const { canAddDocuments } = useLimits();
+  const { canAddDocuments, limits } = useLimits();
   const { plan, isFree, isTrial, isPaused } = usePlan();
   const { dataroom } = useDataroom();
   const teamId = teamInfo?.currentTeam?.id as string;
@@ -229,7 +229,18 @@ export function AddDocumentModal({
     }
 
     if (!canAddDocuments) {
-      toast.error("You have reached the maximum number of documents.");
+      toast.error(
+        limits?.documents
+          ? `You've reached your plan's document limit (${limits.usage?.documents}/${limits.documents} documents). Upgrade your plan to upload more.`
+          : "You have reached the maximum number of documents.",
+        {
+          action: {
+            label: "Upgrade",
+            onClick: () => router.push("/settings/billing"),
+          },
+          duration: 8000,
+        },
+      );
       return;
     }
 
@@ -415,7 +426,18 @@ export function AddDocumentModal({
     }
 
     if (!canAddDocuments) {
-      toast.error("You have reached the maximum number of documents.");
+      toast.error(
+        limits?.documents
+          ? `You've reached your plan's document limit (${limits.usage?.documents}/${limits.documents} documents). Upgrade your plan to upload more.`
+          : "You have reached the maximum number of documents.",
+        {
+          action: {
+            label: "Upgrade",
+            onClick: () => router.push("/settings/billing"),
+          },
+          duration: 8000,
+        },
+      );
       return;
     }
 
@@ -566,7 +588,18 @@ export function AddDocumentModal({
     }
 
     if (!canAddDocuments) {
-      toast.error("You have reached the maximum number of documents.");
+      toast.error(
+        limits?.documents
+          ? `You've reached your plan's document limit (${limits.usage?.documents}/${limits.documents} documents). Upgrade your plan to upload more.`
+          : "You have reached the maximum number of documents.",
+        {
+          action: {
+            label: "Upgrade",
+            onClick: () => router.push("/settings/billing"),
+          },
+          duration: 8000,
+        },
+      );
       return;
     }
 
