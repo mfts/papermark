@@ -93,9 +93,21 @@ export async function popDigestQueue(
 
     if (!rawItems || rawItems.length === 0) continue;
 
-    const items: QueueItem[] = rawItems.map((raw) =>
-      typeof raw === "string" ? JSON.parse(raw) : raw,
-    );
+    const items: QueueItem[] = rawItems
+      .map((raw) => {
+        try {
+          return typeof raw === "string"
+            ? (JSON.parse(raw) as QueueItem)
+            : (raw as QueueItem);
+        } catch (error) {
+          console.warn(
+            `[dataroom-digest] Skipping corrupted queue item for viewer=${entry.viewerId} dataroom=${entry.dataroomId}:`,
+            { raw, error },
+          );
+          return null;
+        }
+      })
+      .filter((item): item is QueueItem => item !== null);
 
     batches.push({
       viewerId: entry.viewerId,
