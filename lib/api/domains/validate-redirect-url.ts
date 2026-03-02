@@ -25,8 +25,8 @@ export async function validateRedirectUrl(
     return { valid: false, message: "Invalid redirect URL" };
   }
 
-  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-    return { valid: false, message: "Redirect URL must use HTTP or HTTPS" };
+  if (parsed.protocol !== "https:") {
+    return { valid: false, message: "Redirect URL must use HTTPS" };
   }
 
   if (!validateUrlSecurity(trimmed)) {
