@@ -191,7 +191,7 @@ export default function DataroomDocumentCard({
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    if (isDragging) {
+    if (isDragging || menuOpen) {
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -288,7 +288,7 @@ export default function DataroomDocumentCard({
             <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
               <DropdownMenuTrigger asChild>
                 <Button
-                  // size="icon"
+                  onClick={(e) => e.stopPropagation()}
                   variant="outline"
                   className="z-10 h-8 w-8 border-gray-200 bg-transparent p-0 hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
                 >
