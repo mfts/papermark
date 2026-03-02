@@ -74,22 +74,6 @@ const tusServer = new Server({
       throw { status_code: 400, body: "Missing teamId in upload metadata" };
     }
 
-    const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-        users: {
-          some: {
-            userId,
-          },
-        },
-      },
-      select: { id: true },
-    });
-
-    if (!team) {
-      throw { status_code: 403, body: "Unauthorized to access this team" };
-    }
-
     const limits = await getLimits({ teamId, userId });
     if (
       limits &&
@@ -164,19 +148,16 @@ export default async function handler(
       const fileId = Buffer.from(fileIdSegment, "base64url").toString("utf-8");
       const teamId = fileId.split("/")[0];
       if (teamId) {
-        const team = await prisma.team.findUnique({
+        const userTeam = await prisma.userTeam.findUnique({
           where: {
-            id: teamId,
-            users: {
-              some: {
-                userId,
-              },
+            userId_teamId: {
+              userId,
+              teamId,
             },
           },
-          select: { id: true },
         });
 
-        if (!team) {
+        if (!userTeam) {
           return res
             .status(403)
             .json({ message: "Unauthorized to access this team" });
