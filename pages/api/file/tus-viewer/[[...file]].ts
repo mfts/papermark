@@ -25,13 +25,74 @@ const locker = new RedisLocker({
   redisClient: lockerRedisClient,
 });
 
+type TusErrorResponse = { status_code: number; body: string };
+
+type ViewerUploadMetadata = {
+  teamId?: string;
+  fileName?: string;
+  viewerId?: string;
+  linkId?: string;
+  dataroomId?: string;
+  [key: string]: string | undefined;
+};
+
+const viewerTusDatastore = new MultiRegionS3Store();
+
+const parseTusMetadataHeader = (
+  metadataHeader: string | string[] | undefined,
+): ViewerUploadMetadata => {
+  if (!metadataHeader) {
+    throw { status_code: 403, body: "Missing upload metadata" };
+  }
+
+  const metadata: ViewerUploadMetadata = {};
+  const headerString = Array.isArray(metadataHeader)
+    ? metadataHeader[0]
+    : metadataHeader;
+  headerString.split(",").forEach((item) => {
+    const [key, value] = item.trim().split(" ");
+    if (!key || !value) {
+      return;
+    }
+
+    metadata[key] = Buffer.from(value, "base64").toString();
+  });
+
+  return metadata;
+};
+
+const decodeUploadId = (uploadId: string) =>
+  uploadId.includes("/")
+    ? uploadId
+    : Buffer.from(uploadId, "base64url").toString("utf-8");
+
+const validateViewerDataroomSession = async (
+  req: NextApiRequest,
+  metadata: Pick<ViewerUploadMetadata, "linkId" | "dataroomId" | "viewerId">,
+) => {
+  const { linkId, dataroomId, viewerId } = metadata;
+
+  if (!linkId || !dataroomId || !viewerId) {
+    throw { status_code: 403, body: "Missing required metadata" };
+  }
+
+  const session = await verifyDataroomSessionInPagesRouter(req, linkId, dataroomId);
+  if (!session?.viewerId) {
+    throw { status_code: 403, body: "Unauthorized" };
+  }
+
+  if (session.viewerId !== viewerId) {
+    throw { status_code: 403, body: "Invalid viewer" };
+  }
+};
+
 const tusServer = new Server({
   // `path` needs to match the route declared by the next file router
   path: "/api/file/tus-viewer",
   maxSize: 1024 * 1024 * 1024 * 2, // 2 GiB
   respectForwardedHeaders: true,
   locker,
-  datastore: new MultiRegionS3Store(),
+  datastore: viewerTusDatastore,
   async namingFunction(req, metadata) {
     // Extract viewer data from metadata
     const { teamId, fileName, viewerId, linkId, dataroomId } = metadata as {
@@ -92,6 +153,20 @@ const tusServer = new Server({
     return Buffer.from(id, "base64url").toString("utf-8");
   },
   onResponseError(req, res, err) {
+    if (typeof err === "object" && err !== null) {
+      const tusError = err as { status_code?: unknown; body?: unknown };
+      if (
+        typeof tusError.status_code === "number" &&
+        typeof tusError.body === "string"
+      ) {
+        const errorResponse: TusErrorResponse = {
+          status_code: tusError.status_code,
+          body: tusError.body,
+        };
+        return errorResponse;
+      }
+    }
+
     log({
       message: "Error uploading a file via viewer. Error: \n\n" + err,
       type: "error",
@@ -181,49 +256,35 @@ const tusServer = new Server({
     }
   },
   async onIncomingRequest(req, res, uploadId) {
-    // Check if this is a new upload or continuation
     if (req.method === "POST" && !uploadId) {
-      // For new uploads, we need to parse the Upload-Metadata header to get linkId and dataroomId
-      const metadataHeader = req.headers["upload-metadata"];
-
-      if (!metadataHeader) {
-        throw { status_code: 403, body: "Missing upload metadata" };
-      }
-
-      // Parse TUS metadata (format: key base64value,key2 base64value2)
-      const metadata: Record<string, string> = {};
-      const headerString = Array.isArray(metadataHeader)
-        ? metadataHeader[0]
-        : metadataHeader;
-      headerString.split(",").forEach((item: string) => {
-        const [key, value] = item.trim().split(" ");
-        if (key && value) {
-          metadata[key] = Buffer.from(value, "base64").toString();
-        }
+      const metadata = parseTusMetadataHeader(req.headers["upload-metadata"]);
+      await validateViewerDataroomSession(req as NextApiRequest, {
+        linkId: metadata.linkId,
+        dataroomId: metadata.dataroomId,
+        viewerId: metadata.viewerId,
       });
-
-      const { linkId, dataroomId, viewerId } = metadata;
-
-      if (!linkId || !dataroomId) {
-        throw { status_code: 403, body: "Missing required metadata" };
-      }
-
-      // Verify the session
-      const session = await verifyDataroomSessionInPagesRouter(
-        req as NextApiRequest,
-        linkId,
-        dataroomId,
-      );
-
-      if (!session) {
-        throw { status_code: 403, body: "Unauthorized" };
-      }
-
-      // Optional: Verify that the viewerId in the request matches the session
-      if (viewerId && session.viewerId && viewerId !== session.viewerId) {
-        throw { status_code: 403, body: "Invalid viewer" };
-      }
+      return;
     }
+
+    if (!uploadId) {
+      throw { status_code: 400, body: "Invalid upload id" };
+    }
+
+    const decodedUploadId = decodeUploadId(uploadId);
+    const existingUpload = await viewerTusDatastore
+      .getUpload(decodedUploadId)
+      .catch(() => null);
+
+    if (!existingUpload) {
+      throw { status_code: 404, body: "Upload not found" };
+    }
+
+    const metadata = (existingUpload.metadata || {}) as ViewerUploadMetadata;
+    await validateViewerDataroomSession(req as NextApiRequest, {
+      linkId: metadata.linkId,
+      dataroomId: metadata.dataroomId,
+      viewerId: metadata.viewerId,
+    });
   },
 });
 
@@ -256,6 +317,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   // Set CORS headers for all requests
   setCorsHeaders(req, res);
 
-  // No session check - authentication is handled via viewer metadata
+  // Session validation is enforced in onIncomingRequest.
   return tusServer.handle(req, res);
 }
