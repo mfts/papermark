@@ -34,6 +34,8 @@ export async function processDataroomDigest(frequency: "daily" | "weekly") {
 }
 
 async function processBatch(batch: DigestBatch, frequency: "daily" | "weekly") {
+  if (batch.items.length === 0) return;
+
   const [viewer, dataroom, senderUser] = await Promise.all([
     prisma.viewer.findUnique({
       where: { id: batch.viewerId, teamId: batch.teamId },
