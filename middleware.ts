@@ -70,6 +70,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     !path.startsWith("/view/") &&
     !path.startsWith("/verify") &&
     !path.startsWith("/unsubscribe") &&
+    !path.startsWith("/notification-preferences") &&
     !path.startsWith("/auth/email")
   ) {
     return AppMiddleware(req);
