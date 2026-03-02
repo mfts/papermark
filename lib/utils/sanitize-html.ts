@@ -19,7 +19,9 @@ export function sanitizePlainText(content: string) {
     .trim();
 }
 
-export function validateContent(html: string, length: number = 1000) {
+export const MAX_MESSAGE_LENGTH = 4000;
+
+export function validateContent(html: string, length: number = MAX_MESSAGE_LENGTH) {
   if (html.length > length) {
     throw new Error(`Content cannot be longer than ${length} characters`);
   }

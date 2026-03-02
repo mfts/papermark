@@ -203,12 +203,12 @@ export function FAQSection({
                     value={faq.id}
                     className="rounded-md border border-gray-200 bg-white"
                   >
-                    <AccordionTrigger className="px-3 py-2.5 hover:no-underline">
+                    <AccordionTrigger className="min-w-0 px-3 py-2.5 hover:no-underline">
                       <div className="flex w-full items-start justify-between gap-2">
                         <span className="flex-shrink-0 rounded bg-secondary px-1.5 py-0.5 text-xs font-medium text-secondary-foreground">
                           Q
                         </span>
-                        <div className="line-clamp-2 min-w-0 flex-1 text-left text-sm font-medium text-gray-900">
+                        <div className="line-clamp-2 min-w-0 flex-1 break-words text-left text-sm font-medium text-gray-900">
                           {faq.editedQuestion}
                         </div>
                       </div>
@@ -220,7 +220,7 @@ export function FAQSection({
                           <span className="flex-shrink-0 rounded bg-primary/80 px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
                             A
                           </span>
-                          <p className="whitespace-pre-wrap text-sm font-medium text-gray-700">
+                          <p className="min-w-0 break-words whitespace-pre-wrap text-sm font-medium text-gray-700">
                             {faq.answer}
                           </p>
                         </div>

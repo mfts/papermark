@@ -24,6 +24,7 @@ import z from "zod";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { CustomUser } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
+import { MAX_MESSAGE_LENGTH } from "@/lib/utils/sanitize-html";
 
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
@@ -334,7 +335,10 @@ export default function ConversationDetailPage() {
         },
       );
 
-      if (!response.ok) throw new Error("Failed to send message");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to send message");
+      }
 
       // Revalidate both the conversation and the summaries
       mutate(
@@ -347,7 +351,9 @@ export default function ConversationDetailPage() {
       toast.success("Message sent");
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send message",
+      );
     }
   };
 
@@ -705,10 +711,11 @@ function ConversationReplyForm({
 }) {
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const isOverLimit = newMessage.length > MAX_MESSAGE_LENGTH;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || isOverLimit) return;
 
     setIsSending(true);
     try {
@@ -724,15 +731,20 @@ function ConversationReplyForm({
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Textarea
           placeholder="Type your reply..."
-          className="min-h-[100px]"
+          className={`min-h-[100px] ${isOverLimit ? "border-destructive focus-visible:ring-destructive" : ""}`}
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
         />
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          <span
+            className={`text-xs ${isOverLimit ? "font-medium text-destructive" : "text-muted-foreground"}`}
+          >
+            {newMessage.length > 0 &&
+              `${newMessage.length} / ${MAX_MESSAGE_LENGTH}`}
+          </span>
           <Button
             type="submit"
-            disabled={!newMessage.trim() || isSending}
-            className="ml-auto"
+            disabled={!newMessage.trim() || isOverLimit || isSending}
           >
             {isSending ? (
               <>
