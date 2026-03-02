@@ -142,6 +142,23 @@ const getParentFolders = (
   return breadcrumbFolders;
 };
 
+const normalizePathname = (pathname: string): string => {
+  if (!pathname || pathname === "/") return "/";
+  return pathname.replace(/\/+$/, "");
+};
+
+const getFolderIdFromPathname = (pathname: string): string | null => {
+  const normalized = normalizePathname(pathname);
+  const match = normalized.match(/\/f\/([^/]+)$/);
+  if (!match?.[1]) return null;
+  return decodeURIComponent(match[1]);
+};
+
+const getBaseViewerPath = (pathname: string): string => {
+  const normalized = normalizePathname(pathname);
+  return normalized.replace(/\/f\/[^/]+$/, "") || "/";
+};
+
 export default function DataroomViewer({
   brand,
   viewId,
@@ -400,6 +417,38 @@ export default function DataroomViewer({
     });
   }, [allUploads, documents, updatePendingUpload]);
 
+  const navigateToFolder: React.Dispatch<
+    React.SetStateAction<string | null>
+  > = (value) => {
+    const nextFolderId =
+      typeof value === "function" ? value(folderId) : value;
+
+    setFolderId(nextFolderId);
+
+    if (typeof window === "undefined") return;
+
+    const currentPath = normalizePathname(window.location.pathname);
+    const basePath = getBaseViewerPath(currentPath);
+    const targetPath = nextFolderId
+      ? `${basePath}/f/${encodeURIComponent(nextFolderId)}`
+      : basePath;
+
+    if (targetPath !== currentPath) {
+      window.history.pushState(null, "", `${targetPath}${window.location.search}`);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handlePopState = () => {
+      setFolderId(getFolderIdFromPathname(window.location.pathname));
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [setFolderId]);
+
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
       const isProcessing =
@@ -426,7 +475,7 @@ export default function DataroomViewer({
         key={item.id}
         folder={item}
         dataroomId={dataroom?.id}
-        setFolderId={setFolderId}
+        setFolderId={navigateToFolder}
         isPreview={!!isPreview}
         linkId={linkId}
         viewId={viewId}
@@ -534,7 +583,7 @@ export default function DataroomViewer({
                 <ViewFolderTree
                   folders={folders}
                   documents={documents}
-                  setFolderId={setFolderId}
+                  setFolderId={navigateToFolder}
                   folderId={folderId}
                   dataroomIndexEnabled={dataroomIndexEnabled}
                 />
@@ -580,7 +629,7 @@ export default function DataroomViewer({
                               <ViewFolderTree
                                 folders={folders}
                                 documents={documents}
-                                setFolderId={setFolderId}
+                                setFolderId={navigateToFolder}
                                 folderId={folderId}
                                 dataroomIndexEnabled={dataroomIndexEnabled}
                               />
@@ -600,7 +649,7 @@ export default function DataroomViewer({
                       <BreadcrumbList className="text-[var(--viewer-muted-text)]">
                         <BreadcrumbItem key={"root"}>
                           <BreadcrumbLink
-                            onClick={() => setFolderId(null)}
+                            onClick={() => navigateToFolder(null)}
                             className="cursor-pointer text-[var(--viewer-muted-text)] hover:text-[var(--viewer-text)]"
                           >
                             Home
@@ -615,7 +664,7 @@ export default function DataroomViewer({
                             <BreadcrumbItem>
                               <ViewerBreadcrumbItem
                                 folder={folder}
-                                setFolderId={setFolderId}
+                                setFolderId={navigateToFolder}
                                 isLast={index === breadcrumbFolders.length - 1}
                                 dataroomIndexEnabled={dataroomIndexEnabled}
                               />
@@ -735,7 +784,7 @@ export default function DataroomViewer({
                             linkId={linkId}
                             showFolderPath
                             onNavigateToFolder={(id) => {
-                              setFolderId(id);
+                              navigateToFolder(id);
                               setActiveTab("documents");
                             }}
                           />

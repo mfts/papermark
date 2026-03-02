@@ -73,6 +73,8 @@ export interface ViewPageProps {
   dataroomIndexEnabled?: boolean;
   annotationsEnabled?: boolean;
   textSelectionEnabled?: boolean;
+  initialFolderId?: string | null;
+  hasServerValidatedSession?: boolean;
 }
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
@@ -342,6 +344,8 @@ export default function ViewPage({
   dataroomIndexEnabled,
   annotationsEnabled,
   textSelectionEnabled,
+  initialFolderId,
+  hasServerValidatedSession,
   error,
   notionError,
 }: ViewPageProps & { error?: boolean; notionError?: boolean }) {
@@ -576,6 +580,8 @@ export default function ViewPage({
           preview={!!preview}
           dataroomIndexEnabled={dataroomIndexEnabled}
           textSelectionEnabled={textSelectionEnabled}
+          initialFolderId={initialFolderId}
+          hasServerValidatedSession={hasServerValidatedSession}
         />
       </>
     );

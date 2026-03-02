@@ -1,17 +1,18 @@
-import { GetStaticPropsContext } from "next";
+import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
+import { NextApiRequest } from "next";
 
 import React, { useEffect, useState } from "react";
 
 import NotFound from "@/pages/404";
 import { DataroomBrand } from "@prisma/client";
-import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 import z from "zod";
 
 import { fetchLinkDataByDomainSlug } from "@/lib/api/links/link-data";
+import { verifyDataroomSessionInPagesRouter } from "@/lib/auth/dataroom-auth";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import notion from "@/lib/notion";
 import {
@@ -52,6 +53,7 @@ type DataroomDocumentProps = {
   useCustomAccessForm: boolean;
   logoOnAccessForm: boolean;
   textSelectionEnabled?: boolean;
+  hasServerValidatedSession?: boolean;
   error?: boolean;
 };
 
@@ -65,25 +67,19 @@ export default function DataroomDocumentViewPage({
   useCustomAccessForm,
   logoOnAccessForm,
   textSelectionEnabled,
+  hasServerValidatedSession,
   error,
 }: DataroomDocumentProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [storedToken, setStoredToken] = useState<string | undefined>(undefined);
   const [storedEmail, setStoredEmail] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    // Retrieve token from cookie on component mount
-    const cookieToken =
-      Cookies.get("pm_vft") || Cookies.get(`pm_drs_flag_${router.query.slug}`);
     const storedEmail = window.localStorage.getItem("papermark.email");
-    if (cookieToken) {
-      setStoredToken(cookieToken);
-      if (storedEmail) {
-        setStoredEmail(storedEmail.toLowerCase());
-      }
+    if (storedEmail) {
+      setStoredEmail(storedEmail.toLowerCase());
     }
-  }, [router.query.slug]);
+  }, []);
 
   if (router.isFallback) {
     return (
@@ -183,7 +179,7 @@ export default function DataroomDocumentViewPage({
         previewToken={previewToken}
         disableEditEmail={!!disableEditEmail}
         useCustomAccessForm={useCustomAccessForm}
-        token={storedToken}
+        hasServerValidatedSession={hasServerValidatedSession}
         verifiedEmail={verifiedEmail}
         preview={!!preview}
         logoOnAccessForm={logoOnAccessForm}
@@ -193,7 +189,7 @@ export default function DataroomDocumentViewPage({
   );
 }
 
-export async function getStaticProps(context: GetStaticPropsContext) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const {
     domain: domainParam,
     slug: slugParam,
@@ -233,6 +229,12 @@ export async function getStaticProps(context: GetStaticPropsContext) {
     if (linkType !== "DATAROOM_LINK") {
       return { notFound: true };
     }
+
+    const dataroomSession = await verifyDataroomSessionInPagesRouter(
+      context.req as NextApiRequest,
+      link.id,
+      link.dataroomId,
+    );
 
     let pageId = null;
     let recordMap = null;
@@ -310,19 +312,12 @@ export async function getStaticProps(context: GetStaticPropsContext) {
           teamId === "cmk2hnmqh0000k304zcoezt6n",
         logoOnAccessForm: teamId === "cm7nlkrhm0000qgh0nvyrrywr",
         textSelectionEnabled,
+        hasServerValidatedSession: !!dataroomSession,
       },
-      revalidate: brand || recordMap ? 10 : 60,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("Fetching error:", message);
-    return { props: { error: true }, revalidate: 30 };
+    return { props: { error: true } };
   }
-}
-
-export async function getStaticPaths() {
-  return {
-    paths: [],
-    fallback: true,
-  };
 }

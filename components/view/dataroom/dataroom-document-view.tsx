@@ -85,6 +85,7 @@ export default function DataroomDocumentView({
   preview,
   logoOnAccessForm,
   textSelectionEnabled,
+  hasServerValidatedSession,
 }: {
   link: LinkWithDataroomDocument;
   userEmail: string | null | undefined;
@@ -106,6 +107,7 @@ export default function DataroomDocumentView({
   preview?: boolean;
   logoOnAccessForm?: boolean;
   textSelectionEnabled?: boolean;
+  hasServerValidatedSession?: boolean;
 }) {
   useDisablePrint();
   const {
@@ -272,7 +274,8 @@ export default function DataroomDocumentView({
         token ||
         preview ||
         viewData.dataroomViewId ||
-        previewToken
+        previewToken ||
+        hasServerValidatedSession
       ) {
         handleSubmission();
         didMount.current = true;
@@ -285,6 +288,7 @@ export default function DataroomDocumentView({
     preview,
     viewData.dataroomViewId,
     previewToken,
+    hasServerValidatedSession,
   ]);
 
   // Components to render when email is submitted but verification is pending
@@ -300,6 +304,15 @@ export default function DataroomDocumentView({
         setIsInvalidCode={setIsInvalidCode}
         brand={brand}
       />
+    );
+  }
+
+  // If link is not submitted and does not have email / password protection, show the access form
+  if (!submitted && isProtected && hasServerValidatedSession) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <LoadingSpinner className="h-20 w-20" />
+      </div>
     );
   }
 

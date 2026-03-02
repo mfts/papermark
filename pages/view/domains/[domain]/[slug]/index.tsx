@@ -300,18 +300,7 @@ export async function getStaticPaths() {
   };
 }
 
-export default function ViewPage({
-  linkData,
-  notionData,
-  meta,
-  showAccountCreationSlide,
-  useAdvancedExcelViewer,
-  useCustomAccessForm,
-  logoOnAccessForm,
-  dataroomIndexEnabled,
-  textSelectionEnabled,
-  error,
-}: {
+export type DomainViewPageProps = {
   linkData: DocumentLinkData | DataroomLinkData | WorkflowLinkData;
   notionData: {
     rootNotionPageId: string | null;
@@ -332,8 +321,25 @@ export default function ViewPage({
   logoOnAccessForm: boolean;
   dataroomIndexEnabled?: boolean;
   textSelectionEnabled?: boolean;
+  initialFolderId?: string | null;
+  hasServerValidatedSession?: boolean;
   error?: boolean;
-}) {
+};
+
+export default function ViewPage({
+  linkData,
+  notionData,
+  meta,
+  showAccountCreationSlide,
+  useAdvancedExcelViewer,
+  useCustomAccessForm,
+  logoOnAccessForm,
+  dataroomIndexEnabled,
+  textSelectionEnabled,
+  initialFolderId,
+  hasServerValidatedSession,
+  error,
+}: DomainViewPageProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [storedToken, setStoredToken] = useState<string | undefined>(undefined);
@@ -560,6 +566,8 @@ export default function ViewPage({
           logoOnAccessForm={logoOnAccessForm}
           dataroomIndexEnabled={dataroomIndexEnabled}
           textSelectionEnabled={textSelectionEnabled}
+          initialFolderId={initialFolderId}
+          hasServerValidatedSession={hasServerValidatedSession}
         />
       </>
     );

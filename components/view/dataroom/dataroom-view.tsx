@@ -64,6 +64,8 @@ export default function DataroomView({
   preview,
   dataroomIndexEnabled,
   textSelectionEnabled,
+  initialFolderId,
+  hasServerValidatedSession,
 }: {
   link: LinkWithDataroom;
   userEmail: string | null | undefined;
@@ -80,6 +82,8 @@ export default function DataroomView({
   logoOnAccessForm?: boolean;
   dataroomIndexEnabled?: boolean;
   textSelectionEnabled?: boolean;
+  initialFolderId?: string | null;
+  hasServerValidatedSession?: boolean;
 }) {
   useDisablePrint();
   const {
@@ -93,7 +97,7 @@ export default function DataroomView({
 
   const analytics = useAnalytics();
   const router = useRouter();
-  const [folderId, setFolderId] = useState<string | null>(null);
+  const [folderId, setFolderId] = useState<string | null>(initialFolderId ?? null);
 
   const didMount = useRef<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
@@ -117,6 +121,10 @@ export default function DataroomView({
   const dataroomViewBackgroundColor = shouldApplyAccentToDataroomView
     ? brand?.accentColor
     : "#ffffff";
+
+  useEffect(() => {
+    setFolderId(initialFolderId ?? null);
+  }, [initialFolderId]);
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
@@ -227,12 +235,25 @@ export default function DataroomView({
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
     if (!didMount.current) {
-      if ((!submitted && !isProtected) || token || preview || previewToken) {
+      if (
+        (!submitted && !isProtected) ||
+        token ||
+        preview ||
+        previewToken ||
+        hasServerValidatedSession
+      ) {
         handleSubmission();
         didMount.current = true;
       }
     }
-  }, [submitted, isProtected, token, preview, previewToken]);
+  }, [
+    submitted,
+    isProtected,
+    token,
+    preview,
+    previewToken,
+    hasServerValidatedSession,
+  ]);
 
   // Components to render when email is submitted but verification is pending
   if (verificationRequested) {
@@ -247,6 +268,15 @@ export default function DataroomView({
         setIsInvalidCode={setIsInvalidCode}
         brand={brand}
       />
+    );
+  }
+
+  // If link is not submitted and does not have email / password protection, show the access form
+  if (!submitted && isProtected && hasServerValidatedSession) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <LoadingSpinner className="h-20 w-20" />
+      </div>
     );
   }
 
