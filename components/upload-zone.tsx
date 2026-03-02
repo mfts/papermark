@@ -114,6 +114,7 @@ export default function UploadZone({
   // Using promise-lock pattern to prevent race conditions during concurrent folder creation
   const dataroomFolderPathRef = useRef<string | null>(null);
   const dataroomFolderCreationPromiseRef = useRef<Promise<string> | null>(null);
+  const fileLimitTruncatedRef = useRef(false);
 
   // Reset the cached dataroom folder path when the replication setting changes
   // This ensures we don't use stale cached paths if the setting is toggled
@@ -292,7 +293,23 @@ export default function UploadZone({
 
       let filesToUpload = acceptedFiles;
 
-      if (hasDocumentLimit && acceptedFiles.length > remainingDocuments) {
+      if (fileLimitTruncatedRef.current) {
+        // Folder traversal was already capped at remainingDocuments –
+        // no extra folders were created, just show the warning.
+        fileLimitTruncatedRef.current = false;
+        toast.warning(
+          `Your upload was limited to ${acceptedFiles.length} file${acceptedFiles.length === 1 ? "" : "s"} because your plan only allows ${remainingDocuments} more document${remainingDocuments === 1 ? "" : "s"} (${limits?.usage?.documents}/${limits?.documents} used).`,
+          {
+            action: {
+              label: "Upgrade",
+              onClick: () => router.push("/settings/billing"),
+            },
+            duration: 10000,
+          },
+        );
+      } else if (hasDocumentLimit && acceptedFiles.length > remainingDocuments) {
+        // Safety net for the file-picker path (no folder traversal) or
+        // race conditions where the cap was slightly exceeded.
         const skippedCount = acceptedFiles.length - remainingDocuments;
         toast.warning(
           `You're trying to upload ${acceptedFiles.length} files, but your plan only allows ${remainingDocuments} more document${remainingDocuments === 1 ? "" : "s"} (${limits?.usage?.documents}/${limits?.documents} used). ${skippedCount} file${skippedCount === 1 ? "" : "s"} will be skipped.`,
@@ -588,8 +605,15 @@ export default function UploadZone({
         return [];
       }
 
+      fileLimitTruncatedRef.current = false;
+      const fileLimit =
+        hasDocumentLimit && isFinite(remainingDocuments)
+          ? Math.max(0, remainingDocuments)
+          : Infinity;
+      let collectedFileCount = 0;
+
       // Early check: skip folder traversal (and folder creation) if document limit is already reached
-      if (hasDocumentLimit && remainingDocuments <= 0) {
+      if (fileLimit <= 0) {
         return [];
       }
 
@@ -611,6 +635,10 @@ export default function UploadZone({
         let files: FileWithPaths[] = [];
 
         if (isSystemFile(entry.name)) {
+          return files;
+        }
+
+        if (collectedFileCount >= fileLimit) {
           return files;
         }
 
@@ -759,6 +787,10 @@ export default function UploadZone({
             return files;
           }
 
+          if (collectedFileCount >= fileLimit) {
+            return files;
+          }
+
           let file = await new Promise<FileWithPaths>((resolve) =>
             (entry as FileSystemFileEntry).file(resolve),
           );
@@ -813,6 +845,7 @@ export default function UploadZone({
           file.dataroomUploadPath = dataroomParentPath;
 
           files.push(file);
+          collectedFileCount++;
         }
 
         return files;
@@ -856,6 +889,10 @@ export default function UploadZone({
           file.dataroomUploadPath = folderPathName;
           filesToBePassedToOnDrop.push(event.target.files[i]);
         }
+      }
+
+      if (isFinite(fileLimit) && collectedFileCount >= fileLimit) {
+        fileLimitTruncatedRef.current = true;
       }
 
       return filesToBePassedToOnDrop;
