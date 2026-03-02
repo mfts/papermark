@@ -123,7 +123,7 @@ async function processBatch(batch: DigestBatch, frequency: "daily" | "weekly") {
   } catch (error) {
     throw new Error(
       `Failed to send ${frequency} digest for dataroom "${dataroom?.name}" ` +
-        `from ${senderUser?.email ?? "unknown sender"} to ${viewer.email}: ` +
+        `(viewerId: ${batch.viewerId}, dataroomId: ${batch.dataroomId}): ` +
         `${(error as Error).message}`,
     );
   }
