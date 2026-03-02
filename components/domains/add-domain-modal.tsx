@@ -1,13 +1,9 @@
-import { useEffect, useRef, useState, type ElementType } from "react";
+import { type ElementType, useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkType } from "@prisma/client";
-import {
-  AlertTriangleIcon,
-  CircleCheckIcon,
-  InfoIcon,
-} from "lucide-react";
+import { AlertTriangleIcon, CircleCheckIcon, InfoIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 
@@ -211,25 +207,21 @@ export function AddDomainModal({
 
     if (saveDisabled) {
       return toast.error(
-        statusMessageOverride ??
-          "Please enter a valid domain before adding.",
+        statusMessageOverride ?? "Please enter a valid domain before adding.",
       );
     }
 
     setSubmitting(true);
     try {
-      const response = await fetch(
-        `/api/teams/${teamId}/domains`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            domain: normalizedDomain,
-          }),
+      const response = await fetch(`/api/teams/${teamId}/domains`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          domain: normalizedDomain,
+        }),
+      });
 
       if (!response.ok) {
         const { message } = await response.json();
@@ -370,9 +362,7 @@ export function AddDomainModal({
                       "Enter a valid domain to check availability."
                     )}
                   </p>
-                  {StatusIcon && (
-                    <StatusIcon className="h-5 w-5 shrink-0" />
-                  )}
+                  {StatusIcon && <StatusIcon className="h-5 w-5 shrink-0" />}
                 </div>
               </div>
             );
