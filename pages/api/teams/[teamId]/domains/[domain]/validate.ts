@@ -6,15 +6,11 @@ import { getServerSession } from "next-auth/next";
 import { validDomainRegex } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithDomain } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 
-type DomainValidationStatus =
-  | "invalid"
-  | "has site"
-  | "available";
+type DomainValidationStatus = "invalid" | "has site" | "available";
 
 const sanitizeDomain = (value: string) =>
   value
@@ -49,7 +45,17 @@ export default async function handle(
   const userId = (session.user as CustomUser).id;
 
   try {
-    await getTeamWithDomain({ teamId, userId });
+    const hasTeamAccess = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId,
+          teamId,
+        },
+      },
+    });
+    if (!hasTeamAccess) {
+      return res.status(401).end("Unauthorized");
+    }
 
     const sanitizedDomain = sanitizeDomain(rawDomain);
 

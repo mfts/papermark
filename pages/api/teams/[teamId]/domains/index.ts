@@ -2,15 +2,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import {
-  planSupportsRedirects,
-  setDomainRedirectUrl,
-} from "@/lib/api/domains/redis";
+import { setDomainRedirectUrl } from "@/lib/api/domains/redis";
 import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
 import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithDomain } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
@@ -32,23 +28,33 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const { team } = await getTeamWithDomain({
-        teamId,
-        userId,
-        options: {
-          select: {
-            slug: true,
-            verified: true,
-            isDefault: true,
-            redirectUrl: true,
-          },
-          orderBy: {
-            createdAt: "asc",
+      const hasTeamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId,
+            teamId,
           },
         },
       });
+      if (!hasTeamAccess) {
+        return res.status(401).end("Unauthorized");
+      }
 
-      const domains = team.domains;
+      const domains = await prisma.domain.findMany({
+        where: {
+          teamId,
+        },
+        select: {
+          slug: true,
+          verified: true,
+          isDefault: true,
+          redirectUrl: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+
       return res.status(200).json(domains);
     } catch (error) {
       errorhandler(error, res);
@@ -69,10 +75,17 @@ export default async function handle(
     }
 
     try {
-      const { team } = await getTeamWithDomain({
-        teamId,
-        userId,
+      const hasTeamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId,
+            teamId,
+          },
+        },
       });
+      if (!hasTeamAccess) {
+        return res.status(401).end("Unauthorized");
+      }
 
       const { domain, redirectUrl } = req.body;
 
@@ -104,19 +117,13 @@ export default async function handle(
       });
 
       if (existingDomain) {
-        return res
-          .status(400)
-          .json({ message: "Unable to add this domain. Please try a different one." });
+        return res.status(400).json({
+          message: "Unable to add this domain. Please try a different one.",
+        });
       }
 
       let validatedRedirectUrl: string | undefined;
       if (redirectUrl) {
-        if (!planSupportsRedirects(team.plan)) {
-          return res.status(403).json({
-            message:
-              "Root domain redirects require a Business plan or higher",
-          });
-        }
         const result = await validateRedirectUrl(redirectUrl, teamId);
         if (!result.valid) {
           return res.status(422).json({ message: result.message });

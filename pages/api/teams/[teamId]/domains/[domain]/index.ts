@@ -6,14 +6,12 @@ import { z } from "zod";
 
 import {
   deleteDomainRedirectUrl,
-  planSupportsRedirects,
   setDomainRedirectUrl,
 } from "@/lib/api/domains/redis";
 import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
 import { getApexDomain, removeDomainFromVercel } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithDomain } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
@@ -42,11 +40,30 @@ export default async function handle(
     }
 
     try {
-      const { domain: domainToBeDeleted } = await getTeamWithDomain({
-        teamId,
-        userId,
-        domain,
+      const hasTeamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId,
+            teamId,
+          },
+        },
       });
+      if (!hasTeamAccess) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      const domainToBeDeleted = await prisma.domain.findUnique({
+        where: {
+          slug: domain,
+          teamId,
+        },
+        select: {
+          id: true,
+        },
+      });
+      if (!domainToBeDeleted) {
+        return res.status(404).json("Domain not found");
+      }
 
       // calculate the domainCount
       const apexDomain = getApexDomain(`https://${domain}`);
@@ -69,7 +86,7 @@ export default async function handle(
         removeDomainFromVercel(domain, domainCount),
         prisma.domain.delete({
           where: {
-            id: domainToBeDeleted?.id,
+            id: domainToBeDeleted.id,
           },
         }),
         deleteDomainRedirectUrl(domain),
@@ -101,12 +118,27 @@ export default async function handle(
     }
 
     try {
-      const { domain: domainToBeUpdated } = await getTeamWithDomain({
-        teamId,
-        userId,
-        domain,
+      const hasTeamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId,
+            teamId,
+          },
+        },
       });
+      if (!hasTeamAccess) {
+        return res.status(401).end("Unauthorized");
+      }
 
+      const domainToBeUpdated = await prisma.domain.findUnique({
+        where: {
+          slug: domain,
+          teamId,
+        },
+        select: {
+          id: true,
+        },
+      });
       if (!domainToBeUpdated) {
         return res.status(404).json("Domain not found");
       }
@@ -159,12 +191,27 @@ export default async function handle(
     }
 
     try {
-      const { team, domain: domainToBeUpdated } = await getTeamWithDomain({
-        teamId,
-        userId,
-        domain,
+      const hasTeamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId,
+            teamId,
+          },
+        },
       });
+      if (!hasTeamAccess) {
+        return res.status(401).end("Unauthorized");
+      }
 
+      const domainToBeUpdated = await prisma.domain.findUnique({
+        where: {
+          slug: domain,
+          teamId,
+        },
+        select: {
+          id: true,
+        },
+      });
       if (!domainToBeUpdated) {
         return res.status(404).json("Domain not found");
       }
@@ -178,13 +225,6 @@ export default async function handle(
 
       const hasRedirectUrl = "redirectUrl" in parsed.data;
       const redirectUrl = parsed.data.redirectUrl;
-
-      if (hasRedirectUrl && redirectUrl && !planSupportsRedirects(team.plan)) {
-        return res.status(403).json({
-          message:
-            "Root domain redirects require a Business plan or higher",
-        });
-      }
 
       let normalizedUrl: string | null | undefined;
       if (hasRedirectUrl) {
