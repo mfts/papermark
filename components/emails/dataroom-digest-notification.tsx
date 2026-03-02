@@ -51,7 +51,7 @@ export default function DataroomDigestNotification({
             <Text className="mb-8 mt-4 text-center text-2xl font-normal">
               <span className="font-bold tracking-tighter">Papermark</span>
             </Text>
-            <Text className="font-seminbold mb-8 mt-4 text-center text-xl">
+            <Text className="font-semibold mb-8 mt-4 text-center text-xl">
               {`${count} new document${count !== 1 ? "s" : ""} in ${dataroomName}`}
             </Text>
             <Text className="text-sm leading-6 text-black">
