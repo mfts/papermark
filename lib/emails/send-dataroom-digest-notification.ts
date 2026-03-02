@@ -40,5 +40,6 @@ export const sendDataroomDigestNotification = async ({
     });
   } catch (e) {
     console.error(e);
+    throw e;
   }
 };

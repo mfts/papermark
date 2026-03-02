@@ -110,13 +110,21 @@ async function processBatch(batch: DigestBatch, frequency: "daily" | "weekly") {
     teamId: batch.teamId,
   });
 
-  await sendDataroomDigestNotification({
-    dataroomName: dataroom?.name ?? "Unknown Dataroom",
-    documents,
-    senderEmail: senderUser?.email ?? "noreply@papermark.com",
-    to: viewer.email,
-    url: linkUrl,
-    preferencesUrl,
-    frequency,
-  });
+  try {
+    await sendDataroomDigestNotification({
+      dataroomName: dataroom?.name ?? "Unknown Dataroom",
+      documents,
+      senderEmail: senderUser?.email ?? "noreply@papermark.com",
+      to: viewer.email,
+      url: linkUrl,
+      preferencesUrl,
+      frequency,
+    });
+  } catch (error) {
+    throw new Error(
+      `Failed to send ${frequency} digest for dataroom "${dataroom?.name}" ` +
+        `from ${senderUser?.email ?? "unknown sender"} to ${viewer.email}: ` +
+        `${(error as Error).message}`,
+    );
+  }
 }
