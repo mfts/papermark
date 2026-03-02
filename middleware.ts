@@ -41,9 +41,9 @@ export const config = {
      * 2. /_next/ (Next.js internals)
      * 3. /_static (inside /public)
      * 4. /_vercel (Vercel internals)
-     * 5. /favicon.ico, /sitemap.xml (static files)
+     * 5. /favicon.ico, /sitemap.xml, /robots.txt (static files)
      */
-    "/((?!api/|_next/|_static|vendor|_icons|_vercel|favicon.ico|sitemap.xml).*)",
+    "/((?!api/|_next/|_static|vendor|_icons|_vercel|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };
 
@@ -70,6 +70,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     !path.startsWith("/view/") &&
     !path.startsWith("/verify") &&
     !path.startsWith("/unsubscribe") &&
+    !path.startsWith("/notification-preferences") &&
     !path.startsWith("/auth/email")
   ) {
     return AppMiddleware(req);

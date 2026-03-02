@@ -10,6 +10,107 @@ import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 import { runs } from "@trigger.dev/sdk/v3";
 import { waitUntil } from "@vercel/functions";
 
+/**
+ * GET /api/links/[id]/upload?dataroomId=xxx
+ * Returns the viewer's previously uploaded documents for this dataroom.
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  try {
+    const linkId = params.id;
+    const dataroomId = request.nextUrl.searchParams.get("dataroomId");
+
+    if (!linkId || !dataroomId) {
+      return NextResponse.json(
+        { message: "Missing required parameters" },
+        { status: 400 },
+      );
+    }
+
+    // Verify the dataroom session
+    const dataroomSession = await verifyDataroomSession(
+      request,
+      linkId,
+      dataroomId,
+    );
+
+    if (!dataroomSession || !dataroomSession.viewerId) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
+    const { viewerId } = dataroomSession;
+
+    // Fetch the viewer's uploads for this dataroom
+    const uploads = await prisma.documentUpload.findMany({
+      where: {
+        viewerId,
+        dataroomId,
+        linkId,
+      },
+      select: {
+        id: true,
+        documentId: true,
+        dataroomDocumentId: true,
+        originalFilename: true,
+        uploadedAt: true,
+        document: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            versions: {
+              where: { isPrimary: true },
+              select: {
+                id: true,
+                hasPages: true,
+              },
+              take: 1,
+            },
+          },
+        },
+        dataroomDocument: {
+          select: {
+            folderId: true,
+          },
+        },
+      },
+      orderBy: { uploadedAt: "desc" },
+    });
+
+    const formattedUploads = uploads.map((upload) => {
+      const fileType = upload.document?.type ?? "";
+      const hasPages = upload.document?.versions?.[0]?.hasPages ?? false;
+      const needsProcessing = ["pdf", "docs", "slides"].includes(fileType);
+      const isComplete = !needsProcessing || hasPages;
+
+      return {
+        id: upload.id,
+        documentId: upload.documentId,
+        dataroomDocumentId: upload.dataroomDocumentId,
+        documentVersionId: upload.document?.versions?.[0]?.id ?? null,
+        name: upload.originalFilename ?? upload.document?.name ?? "Unknown",
+        fileType,
+        folderId: upload.dataroomDocument?.folderId ?? null,
+        uploadedAt: upload.uploadedAt,
+        status: isComplete ? "complete" : "processing",
+      };
+    });
+
+    return NextResponse.json({ uploads: formattedUploads });
+  } catch (error) {
+    console.error("Error fetching viewer uploads:", error);
+    return NextResponse.json(
+      { message: "Error fetching uploads" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } },
@@ -167,7 +268,7 @@ export async function POST(
         viewId: viewId,
         linkId: linkId,
         originalFilename: document.name,
-        fileSize: document.versions[0].fileSize,
+        fileSize: documentData.fileSize ?? 0,
         numPages: document.numPages,
         mimeType: document.contentType,
         dataroomId: dataroomId,
@@ -226,7 +327,20 @@ export async function POST(
       }
     }
 
-    return NextResponse.json({ success: true });
+    // Return document data for optimistic UI rendering
+    return NextResponse.json({
+      success: true,
+      document: {
+        id: document.id,
+        name: document.name,
+        dataroomDocumentId: newDataroomDocument.id,
+        documentVersionId: document.versions[0]?.id,
+        folderId: dataroomFolderId,
+        fileType: document.type,
+        hasPages: (document.numPages ?? 0) > 0,
+        createdAt: document.createdAt,
+      },
+    });
   } catch (error) {
     console.error("Error uploading document:", error);
     return NextResponse.json(

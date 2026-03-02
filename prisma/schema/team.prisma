@@ -54,6 +54,9 @@ model Team {
   ssoEmailDomain String?   @unique // Email domain enforced for SSO (e.g. "acme.com")
   ssoEnforcedAt  DateTime? // When set, all users with this domain MUST use SSO
 
+  // Survey data (stored as JSON for flexibility)
+  surveyData Json? // { dealType?: string, dealSize?: string, ... }
+
   // AI agents
   agentsEnabled Boolean @default(false) // Enable AI agents for the team
   vectorStoreId String? // OpenAI vector store ID for team-level document search

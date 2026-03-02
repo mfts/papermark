@@ -11,16 +11,18 @@ type UnsubscribePayload = {
 };
 
 export function generateUnsubscribeUrl(payload: UnsubscribePayload): string {
-  // Add expiration of 3 months
   const tokenPayload = {
     ...payload,
     exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 90,
   };
 
   const token = jwt.sign(tokenPayload, JWT_SECRET);
-  return `${UNSUBSCRIBE_BASE_URL}/api/unsubscribe/${
-    payload.dataroomId ? "dataroom" : "yir"
-  }?token=${token}`;
+
+  if (payload.dataroomId) {
+    return `${UNSUBSCRIBE_BASE_URL}/api/notification-preferences/dataroom?token=${token}`;
+  }
+
+  return `${UNSUBSCRIBE_BASE_URL}/api/unsubscribe/yir?token=${token}`;
 }
 
 export function verifyUnsubscribeToken(

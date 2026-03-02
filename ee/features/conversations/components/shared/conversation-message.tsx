@@ -29,7 +29,7 @@ export function ConversationMessage({
   return (
     <div className="group relative">
       <div
-        className={`flex w-max max-w-[80%] cursor-pointer flex-col rounded-lg px-4 py-2 transition-all ${
+        className={`flex w-fit max-w-[80%] cursor-pointer flex-col rounded-lg px-4 py-2 transition-all ${
           isAuthor ? "ml-auto bg-primary text-primary-foreground" : "bg-muted"
         } ${
           isSelected
@@ -41,7 +41,9 @@ export function ConversationMessage({
         onClick={() => canBeSelected && onSelect?.(message.id, isVisitor)}
       >
         <div className="flex items-start justify-between gap-2">
-          <p className="flex-1 text-sm">{message.content}</p>
+          <p className="min-w-0 flex-1 break-words text-sm">
+            {message.content}
+          </p>
           <div className="mt-0.5 flex items-center gap-1">
             {isPublished && (
               <div className="flex items-center text-xs opacity-60">

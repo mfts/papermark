@@ -57,7 +57,7 @@ export const BLOCKED_PATHNAMES = [
 ];
 
 // list of paths that should be excluded from team checks
-export const EXCLUDED_PATHS = ["/", "/register", "/privacy", "/view"];
+export const EXCLUDED_PATHS = ["/", "/register", "/privacy", "/view", "/notification-preferences"];
 
 // free limits
 export const LIMITS = {

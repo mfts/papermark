@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import React from "react";
 
 import { ViewerChatPanel } from "@/ee/features/ai/components/viewer-chat-panel";
@@ -16,8 +16,9 @@ import {
   ViewerGroupAccessControls,
 } from "@prisma/client";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { PanelLeftIcon, XIcon } from "lucide-react";
+import { PanelLeftIcon, UploadIcon, XIcon } from "lucide-react";
 
+import { usePendingUploads } from "@/context/pending-uploads-context";
 import { cn } from "@/lib/utils";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
@@ -53,6 +54,7 @@ import {
   IntroductionProvider,
 } from "../dataroom/introduction-modal";
 import DataroomNav from "../dataroom/nav-dataroom";
+import PendingDocumentCard from "../dataroom/pending-document-card";
 import {
   ViewerSurfaceThemeProvider,
   createViewerSurfaceTheme,
@@ -181,6 +183,21 @@ export default function DataroomViewer({
 
   const router = useRouter();
   const searchQuery = (router.query.search as string)?.toLowerCase() || "";
+
+  // Tab state: "documents" (normal view) or "my-uploads" (visitor's uploads)
+  const [activeTab, setActiveTab] = useState<"documents" | "my-uploads">(
+    "documents",
+  );
+
+  // Get pending uploads (in-flight + persisted from server)
+  const {
+    getPendingUploadsForFolder,
+    getAllUploads,
+    hasUploads,
+    updatePendingUpload,
+  } = usePendingUploads();
+  const pendingUploadsForFolder = getPendingUploadsForFolder(folderId);
+  const allUploads = getAllUploads();
 
   const breadcrumbFolders = useMemo(
     () => getParentFolders(folderId, folders),
@@ -348,6 +365,40 @@ export default function DataroomViewer({
     folderEffectiveUpdatedAt,
     searchQuery,
   ]);
+
+  const filteredPendingUploads = useMemo(
+    () =>
+      pendingUploadsForFolder.filter((u) => {
+        if (!u.documentId) return true;
+        return !mixedItems.some(
+          (item) => "versions" in item && item.id === u.documentId,
+        );
+      }),
+    [pendingUploadsForFolder, mixedItems],
+  );
+
+  // Fallback reconciliation: if the document is already visible and ready,
+  // mark its pending upload as complete even if realtime status was missed.
+  useEffect(() => {
+    allUploads.forEach((upload) => {
+      if (upload.status !== "processing" || !upload.documentId) return;
+
+      const matchingDocument = documents.find((doc) => doc.id === upload.documentId);
+      if (!matchingDocument) return;
+
+      const primaryVersion = matchingDocument.versions[0];
+      if (!primaryVersion) return;
+
+      const needsProcessing = ["pdf", "docs", "slides"].includes(
+        primaryVersion.type,
+      );
+      const isReady = !needsProcessing || primaryVersion.hasPages;
+
+      if (isReady) {
+        updatePendingUpload(upload.id, { status: "complete" });
+      }
+    });
+  }, [allUploads, documents, updatePendingUpload]);
 
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
@@ -597,14 +648,60 @@ export default function DataroomViewer({
                           dataroomId={dataroom?.id}
                           viewerId={viewerId}
                           folderId={folderId ?? undefined}
+                          folderName={
+                            folderId
+                              ? folders.find((f) => f.id === folderId)?.name
+                              : undefined
+                          }
                         />
                       )}
                     </div>
                   </div>
                 </div>
 
+                {/* Tabs: Documents / My Uploads */}
+                {viewData?.enableVisitorUpload && hasUploads && (
+                  <div
+                    className="mt-4 flex items-center gap-1 border-b"
+                    style={{ borderColor: viewerSurfaceTheme.palette.panelBorderColor }}
+                  >
+                    <button
+                      onClick={() => setActiveTab("documents")}
+                      className={cn(
+                        "-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+                        activeTab === "documents"
+                          ? "border-[var(--viewer-text)] text-[var(--viewer-text)]"
+                          : "border-transparent text-[var(--viewer-subtle-text)] hover:border-[var(--viewer-panel-border-hover)] hover:text-[var(--viewer-text)]",
+                      )}
+                    >
+                      Documents
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("my-uploads")}
+                      className={cn(
+                        "-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+                        activeTab === "my-uploads"
+                          ? "border-[var(--viewer-text)] text-[var(--viewer-text)]"
+                          : "border-transparent text-[var(--viewer-subtle-text)] hover:border-[var(--viewer-panel-border-hover)] hover:text-[var(--viewer-text)]",
+                      )}
+                    >
+                      <UploadIcon className="h-3.5 w-3.5" />
+                      My Uploads
+                      <span
+                        className="inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-medium"
+                        style={{
+                          backgroundColor: viewerSurfaceTheme.palette.controlBgColor,
+                          color: viewerSurfaceTheme.palette.mutedTextColor,
+                        }}
+                      >
+                        {allUploads.length}
+                      </span>
+                    </button>
+                  </div>
+                )}
+
                 {/* Search results banner */}
-                {searchQuery && (
+                {searchQuery && activeTab === "documents" && (
                   <div className="mt-4 rounded-md border border-[var(--viewer-panel-border)] bg-[var(--viewer-control-bg)] px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="text-sm font-medium text-[var(--viewer-muted-text)]">
@@ -618,19 +715,64 @@ export default function DataroomViewer({
                   </div>
                 )}
 
-                <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
-                  {mixedItems.length === 0 ? (
-                    <li className="py-6 text-center text-[var(--viewer-subtle-text)]">
-                      {searchQuery
-                        ? "No documents match your search."
-                        : "No items available."}
-                    </li>
-                  ) : (
-                    mixedItems.map((item) => (
-                      <li key={item.id}>{renderItem(item)}</li>
-                    ))
-                  )}
-                </ul>
+                {activeTab === "my-uploads" ? (
+                  /* My Uploads tab - show all uploads across all folders */
+                  <ul
+                    role="list"
+                    className="-mx-4 space-y-4 overflow-auto p-4"
+                  >
+                    {allUploads.length === 0 ? (
+                      <li className="py-6 text-center text-[var(--viewer-subtle-text)]">
+                        No uploads yet. Upload documents using the &quot;Add
+                        Document&quot; button.
+                      </li>
+                    ) : (
+                      allUploads.map((pendingUpload) => (
+                        <li key={pendingUpload.id}>
+                          <PendingDocumentCard
+                            pendingUpload={pendingUpload}
+                            folders={folders}
+                            linkId={linkId}
+                            showFolderPath
+                            onNavigateToFolder={(id) => {
+                              setFolderId(id);
+                              setActiveTab("documents");
+                            }}
+                          />
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                ) : (
+                  /* Documents tab - normal folder view */
+                  <ul
+                    role="list"
+                    className="-mx-4 space-y-4 overflow-auto p-4"
+                  >
+                    {!searchQuery &&
+                      filteredPendingUploads.map((pendingUpload) => (
+                        <li key={pendingUpload.id}>
+                          <PendingDocumentCard
+                            pendingUpload={pendingUpload}
+                            linkId={linkId}
+                          />
+                        </li>
+                      ))}
+
+                    {mixedItems.length === 0 &&
+                    filteredPendingUploads.length === 0 ? (
+                      <li className="py-6 text-center text-[var(--viewer-subtle-text)]">
+                        {searchQuery
+                          ? "No documents match your search."
+                          : "No items available."}
+                      </li>
+                    ) : (
+                      mixedItems.map((item) => (
+                        <li key={item.id}>{renderItem(item)}</li>
+                      ))
+                    )}
+                  </ul>
+                )}
               </div>
               <ScrollBar orientation="vertical" />
               <ScrollBar orientation="horizontal" />
