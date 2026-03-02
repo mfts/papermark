@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
 import { fetcher } from "@/lib/utils";
+import { MAX_MESSAGE_LENGTH } from "@/lib/utils/sanitize-html";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -342,6 +343,7 @@ export function ConversationViewSidebar({
                           type="text"
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
+                          maxLength={MAX_MESSAGE_LENGTH}
                           className="flex-1 rounded-md border border-input px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           placeholder="Type your message..."
                         />
@@ -382,6 +384,7 @@ export function ConversationViewSidebar({
                           id="message"
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
+                          maxLength={MAX_MESSAGE_LENGTH}
                           placeholder="Type your question..."
                           className="min-h-[100px] w-full rounded-md border border-input px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           required

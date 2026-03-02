@@ -564,6 +564,12 @@ const routeHandlers = {
       return res.status(201).json(message);
     } catch (error) {
       console.error("Error adding message:", error);
+      if (
+        error instanceof Error &&
+        error.message.startsWith("Content cannot be")
+      ) {
+        return res.status(400).json({ error: error.message });
+      }
       return res.status(500).json({ error: "Internal server error" });
     }
   },
