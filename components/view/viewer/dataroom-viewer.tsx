@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import React from "react";
 
 import { ViewerChatPanel } from "@/ee/features/ai/components/viewer-chat-panel";
@@ -62,12 +62,12 @@ import {
 
 const ViewerBreadcrumbItem = ({
   folder,
-  setFolderId,
+  onNavigate,
   isLast,
   dataroomIndexEnabled,
 }: {
   folder: any;
-  setFolderId: (id: string | null) => void;
+  onNavigate: (id: string | null) => void;
   isLast: boolean;
   dataroomIndexEnabled?: boolean;
 }) => {
@@ -90,7 +90,7 @@ const ViewerBreadcrumbItem = ({
 
   return (
     <BreadcrumbLink
-      onClick={() => setFolderId(folder.id)}
+      onClick={() => onNavigate(folder.id)}
       className="cursor-pointer capitalize text-[var(--viewer-muted-text)] hover:text-[var(--viewer-text)]"
       style={HIERARCHICAL_DISPLAY_STYLE}
     >
@@ -183,6 +183,63 @@ export default function DataroomViewer({
 
   const router = useRouter();
   const searchQuery = (router.query.search as string)?.toLowerCase() || "";
+
+  const { domain, slug, previewToken: queryPreviewToken } = router.query as {
+    domain?: string;
+    slug?: string;
+    previewToken?: string;
+  };
+
+  const buildFolderUrl = useCallback(
+    (targetFolderId: string | null) => {
+      const queryString = queryPreviewToken
+        ? `?previewToken=${queryPreviewToken}&preview=1`
+        : "";
+
+      if (domain && slug) {
+        return targetFolderId
+          ? `/${slug}/f/${targetFolderId}${queryString}`
+          : `/${slug}${queryString}`;
+      }
+      return targetFolderId
+        ? `/view/${linkId}/f/${targetFolderId}${queryString}`
+        : `/view/${linkId}${queryString}`;
+    },
+    [linkId, domain, slug, queryPreviewToken],
+  );
+
+  const handleFolderChange = useCallback(
+    (newFolderId: string | null) => {
+      setFolderId(newFolderId);
+      window.history.pushState(
+        { folderId: newFolderId },
+        "",
+        buildFolderUrl(newFolderId),
+      );
+    },
+    [setFolderId, buildFolderUrl],
+  );
+
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const stateFolderId = event.state?.folderId ?? null;
+      setFolderId(stateFolderId);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [setFolderId]);
+
+  // Replace the initial history entry so back-button state is consistent
+  useEffect(() => {
+    if (folderId) {
+      window.history.replaceState(
+        { folderId },
+        "",
+        buildFolderUrl(folderId),
+      );
+    }
+  }, []);
 
   // Tab state: "documents" (normal view) or "my-uploads" (visitor's uploads)
   const [activeTab, setActiveTab] = useState<"documents" | "my-uploads">(
@@ -426,7 +483,7 @@ export default function DataroomViewer({
         key={item.id}
         folder={item}
         dataroomId={dataroom?.id}
-        setFolderId={setFolderId}
+        setFolderId={handleFolderChange}
         isPreview={!!isPreview}
         linkId={linkId}
         viewId={viewId}
@@ -534,7 +591,7 @@ export default function DataroomViewer({
                 <ViewFolderTree
                   folders={folders}
                   documents={documents}
-                  setFolderId={setFolderId}
+                  setFolderId={handleFolderChange}
                   folderId={folderId}
                   dataroomIndexEnabled={dataroomIndexEnabled}
                 />
@@ -580,7 +637,7 @@ export default function DataroomViewer({
                               <ViewFolderTree
                                 folders={folders}
                                 documents={documents}
-                                setFolderId={setFolderId}
+                                setFolderId={handleFolderChange}
                                 folderId={folderId}
                                 dataroomIndexEnabled={dataroomIndexEnabled}
                               />
@@ -600,7 +657,7 @@ export default function DataroomViewer({
                       <BreadcrumbList className="text-[var(--viewer-muted-text)]">
                         <BreadcrumbItem key={"root"}>
                           <BreadcrumbLink
-                            onClick={() => setFolderId(null)}
+                            onClick={() => handleFolderChange(null)}
                             className="cursor-pointer text-[var(--viewer-muted-text)] hover:text-[var(--viewer-text)]"
                           >
                             Home
@@ -615,7 +672,7 @@ export default function DataroomViewer({
                             <BreadcrumbItem>
                               <ViewerBreadcrumbItem
                                 folder={folder}
-                                setFolderId={setFolderId}
+                                onNavigate={handleFolderChange}
                                 isLast={index === breadcrumbFolders.length - 1}
                                 dataroomIndexEnabled={dataroomIndexEnabled}
                               />
@@ -735,7 +792,7 @@ export default function DataroomViewer({
                             linkId={linkId}
                             showFolderPath
                             onNavigateToFolder={(id) => {
-                              setFolderId(id);
+                              handleFolderChange(id);
                               setActiveTab("documents");
                             }}
                           />
