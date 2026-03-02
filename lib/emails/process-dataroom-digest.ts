@@ -95,12 +95,14 @@ async function processBatch(batch: DigestBatch, frequency: "daily" | "weekly") {
   }));
 
   const link = viewer.views[0]?.link;
-  let linkUrl = "";
+  let linkUrl: string | undefined;
   if (link?.domainId && link.domainSlug && link.slug) {
     linkUrl = `https://${link.domainSlug}/${link.slug}`;
   } else if (link) {
     linkUrl = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`;
   }
+
+  if (!linkUrl) return;
 
   const preferencesUrl = generateUnsubscribeUrl({
     viewerId: batch.viewerId,
