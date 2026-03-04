@@ -31,7 +31,7 @@ import { mutate } from "swr";
 import { moveDocumentToFolder } from "@/lib/documents/move-documents";
 import { moveFolderToFolder } from "@/lib/documents/move-folder";
 import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
-import { FolderWithCount } from "@/lib/swr/use-documents";
+import { FolderWithCount, FolderWithCountAndPath } from "@/lib/swr/use-documents";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
@@ -75,7 +75,7 @@ export function DocumentsList({
   loading,
   foldersLoading,
 }: {
-  folders: FolderWithCount[] | undefined;
+  folders: FolderWithCount[] | FolderWithCountAndPath[] | undefined;
   documents: DocumentWithLinksAndLinkCountAndViewCount[] | undefined;
   teamInfo: TeamContextType | null;
   folderPathName?: string[];

@@ -29,6 +29,7 @@ export default function useDocuments() {
 
   const { data, isValidating, error } = useSWR<{
     documents: DocumentWithLinksAndLinkCountAndViewCount[];
+    folders?: FolderWithCountAndPath[];
     pagination?: {
       total: number;
       pages: number;
@@ -47,6 +48,7 @@ export default function useDocuments() {
 
   return {
     documents: data?.documents || [],
+    searchFolders: data?.folders,
     pagination: data?.pagination,
     isValidating,
     loading: !data && !error,
@@ -83,6 +85,10 @@ export type FolderWithCount = Folder & {
     documents: number;
     childFolders: number;
   };
+};
+
+export type FolderWithCountAndPath = FolderWithCount & {
+  folderList: string[];
 };
 
 export function useFolder({ name }: { name: string[] }) {

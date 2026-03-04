@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { useEffect, useRef, useState } from "react";
@@ -5,9 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import { TeamContextType } from "@/context/team-context";
 import {
   BetweenHorizontalStartIcon,
+  ChevronRight,
   ClipboardCopyIcon,
   CopyIcon,
   EyeOffIcon,
+  FolderIcon,
   FolderInputIcon,
   FolderPenIcon,
   MoreVertical,
@@ -19,8 +22,8 @@ import { mutate } from "swr";
 
 import { getFolderColorClasses, getFolderIcon } from "@/lib/constants/folder-constants";
 import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
-import { FolderWithCount } from "@/lib/swr/use-documents";
-import { timeAgo } from "@/lib/utils";
+import { FolderWithCount, FolderWithCountAndPath } from "@/lib/swr/use-documents";
+import { getBreadcrumbPath, timeAgo } from "@/lib/utils";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
   useHierarchicalDisplayName,
@@ -42,7 +45,7 @@ import { AddFolderToDataroomModal } from "./add-folder-to-dataroom-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
 
 type FolderCardProps = {
-  folder: FolderWithCount | DataroomFolderWithCount;
+  folder: FolderWithCount | FolderWithCountAndPath | DataroomFolderWithCount;
   teamInfo: TeamContextType | null;
   isDataroom?: boolean;
   dataroomId?: string;
@@ -65,6 +68,10 @@ export default function FolderCard({
   onDelete,
 }: FolderCardProps) {
   const router = useRouter();
+  const queryParams = router.query;
+  const searchQuery = queryParams["search"];
+  const sortQuery = queryParams["sort"];
+  const folderList = "folderList" in folder ? folder.folderList : undefined;
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const [openFolder, setOpenFolder] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -237,6 +244,37 @@ export default function FolderCard({
                 {folder._count.childFolders === 1 ? "Folder" : "Folders"}
               </p>
             </div>
+            {searchQuery && folderList !== undefined ? (
+              <div className="relative z-10 mt-1 flex flex-wrap items-center space-x-1 text-xs leading-5 text-muted-foreground">
+                {getBreadcrumbPath(folderList).map((segment, index) => (
+                  <p
+                    className="inset-2 flex items-center gap-x-1 truncate"
+                    key={segment.pathLink}
+                  >
+                    {index !== 0 && <ChevronRight className="h-3 w-3" />}
+                    <FolderIcon className="h-3 w-3" />
+                    <Link
+                      href={segment.pathLink}
+                      onClick={(e) => e.stopPropagation()}
+                      className="relative z-10 hover:underline"
+                    >
+                      {segment.name}
+                    </Link>
+                  </p>
+                ))}
+                <p className="inset-2 flex items-center gap-x-1 truncate">
+                  <ChevronRight className="h-3 w-3" />
+                  <FolderIcon className="h-3 w-3" />
+                  <Link
+                    href={folderPath}
+                    onClick={(e) => e.stopPropagation()}
+                    className="relative z-10 hover:underline"
+                  >
+                    {folder.name}
+                  </Link>
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
 
