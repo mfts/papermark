@@ -20,8 +20,9 @@ model Team {
   incomingWebhooks  IncomingWebhook[]
   restrictedTokens  RestrictedToken[]
   webhooks          Webhook[]
-  conversations     Conversation[]
-  dataroomFaqItems  DataroomFaqItem[]
+  conversations        Conversation[]
+  dataroomFaqItems     DataroomFaqItem[]
+  proposedQuestions    DataroomProposedQuestion[]
   uploadedDocuments DocumentUpload[]
   Tag               Tag[]
   annotations       DocumentAnnotation[] // Annotations created by team members

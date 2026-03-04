@@ -73,6 +73,9 @@ model Link {
   // FAQ system
   dataroomFaqItems DataroomFaqItem[]
 
+  // Proposed questions
+  proposedQuestions DataroomProposedQuestion[]
+
   // AI chats
   enableAIAgents Boolean? @default(false) // Enable AI agents for this link
   chats          Chat[]

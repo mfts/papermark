@@ -70,6 +70,12 @@ const routeHandlers = {
               document: true,
             },
           },
+          proposedQuestion: {
+            select: {
+              id: true,
+              question: true,
+            },
+          },
           _count: {
             select: {
               messages: {
@@ -131,6 +137,7 @@ const routeHandlers = {
           documentVersionNumber: conversation.dataroomDocumentId
             ? conversation.documentVersionNumber
             : undefined,
+          proposedQuestion: conversation.proposedQuestion || null,
         };
       });
 
@@ -390,6 +397,12 @@ const routeHandlers = {
           dataroomDocument: {
             include: {
               document: true,
+            },
+          },
+          proposedQuestion: {
+            select: {
+              id: true,
+              question: true,
             },
           },
         },

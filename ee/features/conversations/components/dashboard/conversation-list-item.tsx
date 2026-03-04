@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
+import { ClipboardListIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -66,8 +67,17 @@ export function ConversationListItem({
         </div>
       </div>
 
+      {conversation.proposedQuestion && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <ClipboardListIcon className="h-3 w-3" />
+          <span className="truncate">
+            Re: {conversation.proposedQuestion.question}
+          </span>
+        </div>
+      )}
+
       <div className="line-clamp-2 text-xs text-muted-foreground">
-        {conversation.lastMessage.content}
+        {conversation.lastMessage?.content}
       </div>
 
       {conversation.unreadCount > 0 && (

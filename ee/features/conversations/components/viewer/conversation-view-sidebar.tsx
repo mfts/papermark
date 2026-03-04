@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ConversationDocumentContext } from "@/ee/features/conversations/components/shared/conversation-document-context";
 import { ConversationMessage } from "@/ee/features/conversations/components/shared/conversation-message";
 import { FAQSection } from "@/ee/features/conversations/components/viewer/faq-section";
+import { ProposedQuestionsSection } from "@/ee/features/conversations/components/viewer/proposed-questions-section";
 import { format } from "date-fns";
 import { ArrowLeftIcon, BellIcon, BellOffIcon, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -47,9 +48,20 @@ interface Conversation {
   receiveNotifications: boolean;
 }
 
+interface ProposedQuestion {
+  id: string;
+  question: string;
+  description: string | null;
+  orderIndex: number;
+  hasResponded: boolean;
+  conversationId: string | null;
+  createdAt: string;
+}
+
 interface CreateConversationData {
   title?: string;
   initialMessage: string;
+  proposedQuestionId?: string;
 }
 
 export type ConversationSidebarProps = {
@@ -79,6 +91,8 @@ export function ConversationViewSidebar({
     useState<Conversation | null>(null);
   const [isNewConversationFormOpen, setIsNewConversationFormOpen] =
     useState(false);
+  const [answeringQuestion, setAnsweringQuestion] =
+    useState<ProposedQuestion | null>(null);
   const [newMessage, setNewMessage] = useState("");
 
   // SWR hook for fetching conversations
@@ -102,7 +116,6 @@ export function ConversationViewSidebar({
 
   // Create a new conversation
   const handleCreateConversation = async (data: CreateConversationData) => {
-    console.log("Creating conversation", data);
     try {
       const response = await fetch("/api/conversations", {
         method: "POST",
@@ -137,10 +150,35 @@ export function ConversationViewSidebar({
 
       setActiveConversation(newConversation);
       setIsNewConversationFormOpen(false);
+      setAnsweringQuestion(null);
 
-      toast.success("Conversation created successfully");
+      // Revalidate proposed questions to update the hasResponded flag
+      if (data.proposedQuestionId) {
+        const params = new URLSearchParams();
+        if (dataroomId) params.set("dataroomId", dataroomId);
+        if (linkId) params.set("linkId", linkId);
+        if (documentId) params.set("documentId", documentId);
+        if (viewerId) params.set("viewerId", viewerId);
+        mutate(`/api/proposed-questions?${params.toString()}`);
+      }
+
+      toast.success("Response submitted");
     } catch (error) {
       toast.error("Failed to create conversation");
+    }
+  };
+
+  // Handle answering a proposed question
+  const handleAnswerProposedQuestion = (question: ProposedQuestion) => {
+    setAnsweringQuestion(question);
+    setNewMessage("");
+  };
+
+  // Handle viewing a conversation from a proposed question
+  const handleViewProposedQuestionConversation = (conversationId: string) => {
+    const conversation = conversations.find((c) => c.id === conversationId);
+    if (conversation) {
+      setActiveConversation(conversation);
     }
   };
 
@@ -224,6 +262,18 @@ export function ConversationViewSidebar({
                   documentId={documentId}
                   viewerId={viewerId}
                 />
+
+                {/* Proposed Questions Section */}
+                {!activeConversation && !isNewConversationFormOpen && !answeringQuestion && (
+                  <ProposedQuestionsSection
+                    dataroomId={dataroomId}
+                    linkId={linkId}
+                    documentId={documentId}
+                    viewerId={viewerId}
+                    onAnswerQuestion={handleAnswerProposedQuestion}
+                    onViewConversation={handleViewProposedQuestionConversation}
+                  />
+                )}
 
                 {activeConversation ? (
                   <div className="flex flex-1 flex-col overflow-hidden">
@@ -349,6 +399,76 @@ export function ConversationViewSidebar({
                         />
                         <Button type="submit" disabled={!newMessage.trim()}>
                           Send
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                ) : answeringQuestion ? (
+                  <div className="flex-1 p-4">
+                    <div className="mb-4 flex items-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setAnsweringQuestion(null);
+                          setNewMessage("");
+                        }}
+                        className="-ml-2 mr-2"
+                      >
+                        <ArrowLeftIcon className="h-5 w-5" />
+                      </Button>
+                      <h3 className="font-medium">Answer Question</h3>
+                    </div>
+
+                    <div className="mb-4 rounded-md border bg-muted/50 p-3">
+                      <p className="text-sm font-medium">
+                        {answeringQuestion.question}
+                      </p>
+                      {answeringQuestion.description && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {answeringQuestion.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <form
+                      onSubmit={(e: React.FormEvent) => {
+                        e.preventDefault();
+                        if (!newMessage.trim()) return;
+
+                        handleCreateConversation({
+                          initialMessage: newMessage,
+                          proposedQuestionId: answeringQuestion.id,
+                        });
+                        setNewMessage("");
+                      }}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <textarea
+                          id="answer"
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          maxLength={MAX_MESSAGE_LENGTH}
+                          placeholder="Type your answer..."
+                          className="min-h-[100px] w-full rounded-md border border-input px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          required
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setAnsweringQuestion(null);
+                            setNewMessage("");
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={!newMessage.trim()}>
+                          Submit Answer
                         </Button>
                       </div>
                     </form>

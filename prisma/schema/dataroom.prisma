@@ -23,6 +23,9 @@ model Dataroom {
   // FAQ system
   faqItems DataroomFaqItem[]
 
+  // Proposed questions
+  proposedQuestions DataroomProposedQuestion[]
+
   // AI agents
   agentsEnabled Boolean @default(false) // Enable AI agents for this dataroom
   vectorStoreId String? // OpenAI vector store ID for AI search
@@ -71,6 +74,9 @@ model DataroomDocument {
 
   // FAQ system
   dataroomFAQs DataroomFaqItem[]
+
+  // Proposed questions
+  proposedQuestions DataroomProposedQuestion[]
 
   uploadedDocuments DocumentUpload[]
 

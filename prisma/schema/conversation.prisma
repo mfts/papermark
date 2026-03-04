@@ -44,6 +44,10 @@ model Conversation {
   // Published FAQs created from this conversation
   faqItems DataroomFaqItem[]
 
+  // Optional link to a proposed question this conversation is responding to
+  proposedQuestionId String?
+  proposedQuestion   DataroomProposedQuestion? @relation(fields: [proposedQuestionId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -53,6 +57,7 @@ model Conversation {
   @@index([teamId])
   @@index([viewerGroupId])
   @@index([initialViewId])
+  @@index([proposedQuestionId])
 }
 
 // Define conversation visibility options
@@ -224,4 +229,47 @@ enum FaqStatus {
   DRAFT // Not yet published
   PUBLISHED // Live and visible to visitors
   ARCHIVED // No longer visible but kept for reference
+}
+
+// Admin-proposed questions for data rooms
+model DataroomProposedQuestion {
+  id          String  @id @default(cuid())
+  question    String
+  description String?
+
+  // Core relationship
+  dataroomId String
+  dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+
+  // Optional scoping (same pattern as Conversation / DataroomFaqItem)
+  linkId String?
+  link   Link?   @relation(fields: [linkId], references: [id], onDelete: SetNull)
+
+  dataroomDocumentId String?
+  dataroomDocument   DataroomDocument? @relation(fields: [dataroomDocumentId], references: [id], onDelete: SetNull)
+
+  teamId String
+  team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdByUserId String
+  createdByUser   User @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  orderIndex Int @default(0)
+  status     ProposedQuestionStatus @default(ACTIVE)
+
+  conversations Conversation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dataroomId])
+  @@index([linkId])
+  @@index([dataroomDocumentId])
+  @@index([teamId])
+  @@index([createdByUserId])
+}
+
+enum ProposedQuestionStatus {
+  ACTIVE
+  ARCHIVED
 }

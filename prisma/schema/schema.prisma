@@ -65,6 +65,10 @@ model User {
 
   // FAQ system
   publishedFaqItems DataroomFaqItem[]
+
+  // Proposed questions
+  createdProposedQuestions DataroomProposedQuestion[]
+
   createdAnnotations DocumentAnnotation[] // Annotations created by this user
 
   installedIntegrations InstalledIntegration[]

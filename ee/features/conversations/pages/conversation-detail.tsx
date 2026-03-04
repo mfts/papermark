@@ -9,6 +9,7 @@ import { ConversationDocumentContext } from "@/ee/features/conversations/compone
 import { ConversationMessage } from "@/ee/features/conversations/components/shared/conversation-message";
 import {
   BookOpenCheckIcon,
+  ClipboardListIcon,
   Loader2,
   MessageSquare,
   SearchIcon,
@@ -561,6 +562,21 @@ export default function ConversationDetailPage() {
                             showVersionNumber={true} // Admin sees full context
                             className="mb-2"
                           />
+
+                          {/* Proposed Question Context */}
+                          {(conversation as any).proposedQuestion && (
+                            <div className="mb-2 flex items-start gap-2 rounded-md border bg-muted/50 p-3 text-sm">
+                              <ClipboardListIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                              <div>
+                                <p className="text-xs font-medium text-muted-foreground">
+                                  Response to proposed question
+                                </p>
+                                <p className="font-medium">
+                                  {(conversation as any).proposedQuestion.question}
+                                </p>
+                              </div>
+                            </div>
+                          )}
 
                           {/* Selection Guidance */}
                           {/* {conversation.messages.length > 1 && (

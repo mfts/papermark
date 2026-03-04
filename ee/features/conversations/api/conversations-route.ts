@@ -101,6 +101,44 @@ const routeHandlers = {
       return res.status(400).json({ error: "Viewer is required" });
     }
 
+    // If responding to a proposed question, prevent duplicates
+    if (data.proposedQuestionId && viewerId) {
+      const existingConversation = await prisma.conversation.findFirst({
+        where: {
+          proposedQuestionId: data.proposedQuestionId,
+          participants: { some: { viewerId } },
+        },
+        include: {
+          messages: { orderBy: { createdAt: "asc" } },
+          participants: {
+            where: { viewerId },
+            select: { receiveNotifications: true },
+            take: 1,
+          },
+          dataroomDocument: { include: { document: true } },
+          dataroom: true,
+        },
+      });
+
+      if (existingConversation) {
+        return res.status(200).json({
+          ...existingConversation,
+          receiveNotifications:
+            existingConversation.participants[0]?.receiveNotifications ?? false,
+        });
+      }
+
+      // Auto-set title from the proposed question
+      const proposedQuestion =
+        await prisma.dataroomProposedQuestion.findUnique({
+          where: { id: data.proposedQuestionId },
+          select: { question: true },
+        });
+      if (proposedQuestion && !data.title) {
+        data.title = proposedQuestion.question.slice(0, 100);
+      }
+    }
+
     const team = await prisma.team.findFirst({
       where: {
         datarooms: {

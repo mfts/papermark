@@ -11,6 +11,7 @@ export type CreateConversationInput = {
   linkId?: string;
   viewerGroupId?: string;
   initialMessage?: string;
+  proposedQuestionId?: string;
 };
 
 export const conversationService = {
@@ -77,6 +78,7 @@ export const conversationService = {
         documentVersionNumber: data.documentVersionNumber,
         linkId: data.linkId,
         viewerGroupId: data.viewerGroupId,
+        proposedQuestionId: data.proposedQuestionId,
         initialViewId: viewId,
         visibilityMode: "PRIVATE" as ConversationVisibility,
         lastMessageAt: new Date(),

@@ -6,8 +6,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { ConversationListItem } from "@/ee/features/conversations/components/dashboard/conversation-list-item";
 import { ConversationsNotEnabledBanner } from "@/ee/features/conversations/components/dashboard/conversations-not-enabled-banner";
+import { ProposedQuestionList } from "@/ee/features/conversations/components/dashboard/proposed-question-list";
 import {
   BookOpenCheckIcon,
+  ClipboardListIcon,
   Loader2,
   MessageSquare,
   Search,
@@ -116,6 +118,19 @@ export default function DataroomConversationsPage() {
   const { data: faqs = [] } = useSWR<PublishedFAQ[]>(
     dataroom && teamId
       ? `/api/teams/${teamId}/datarooms/${dataroom.id}/faqs`
+      : null,
+    fetcher,
+    {
+      revalidateOnFocus: true,
+      dedupingInterval: 10000,
+      keepPreviousData: true,
+    },
+  );
+
+  // Fetch proposed questions count
+  const { data: proposedQuestions = [] } = useSWR<any[]>(
+    dataroom && teamId
+      ? `/api/teams/${teamId}/datarooms/${dataroom.id}/proposed-questions`
       : null,
     fetcher,
     {
@@ -241,6 +256,14 @@ export default function DataroomConversationsPage() {
                 <Badge variant="notification">{faqs.length}</Badge>
               </Link>
             </TabsTrigger>
+            <TabsTrigger
+              value="proposed-questions"
+              className="flex items-center gap-2"
+            >
+              <ClipboardListIcon className="h-4 w-4" />
+              Proposed Questions
+              <Badge variant="notification">{proposedQuestions.length}</Badge>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="conversations" className="space-y-0">
@@ -317,6 +340,13 @@ export default function DataroomConversationsPage() {
                 </div>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="proposed-questions" className="space-y-0">
+            <ProposedQuestionList
+              teamId={teamId as string}
+              dataroomId={dataroom.id}
+            />
           </TabsContent>
         </Tabs>
       </div>
