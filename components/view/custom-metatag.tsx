@@ -1,5 +1,7 @@
 import Head from "next/head";
 
+const DEFAULT_META_IMAGE = "https://www.papermark.com/_static/meta-image.png";
+
 const CustomMetaTag = ({
   enableBranding,
   title,
@@ -15,6 +17,8 @@ const CustomMetaTag = ({
   favicon: string | null;
   url: string | null;
 }) => {
+  const resolvedMetaImage = enableBranding && imageUrl ? imageUrl : DEFAULT_META_IMAGE;
+
   return (
     <Head>
       {/* meta URL */}
@@ -68,12 +72,9 @@ const CustomMetaTag = ({
       )}
 
       {/* meta image */}
-      {enableBranding && imageUrl && (
-        <>
-          <meta property="og:image" content={imageUrl} key="og-image" />
-          <meta name="twitter:image" content={imageUrl} key="tw-image" />
-        </>
-      )}
+      <meta property="og:image" content={resolvedMetaImage} key="og-image" />
+      <meta name="twitter:image" content={resolvedMetaImage} key="tw-image" />
+      <meta name="twitter:card" content="summary_large_image" key="tw-card" />
     </Head>
   );
 };
