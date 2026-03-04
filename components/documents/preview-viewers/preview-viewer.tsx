@@ -2,6 +2,7 @@ import { DocumentPreviewData } from "@/lib/types/document-preview";
 
 import { PreviewImageViewer } from "./preview-image-viewer";
 import { PreviewPagesViewer } from "./preview-pages-viewer";
+import { PreviewTextViewer } from "./preview-text-viewer";
 
 interface PreviewViewerProps {
   documentData: DocumentPreviewData;
@@ -21,6 +22,13 @@ export function PreviewViewer({ documentData, onClose }: PreviewViewerProps) {
     if (documentData.fileType === "image" && documentData.file) {
       return (
         <PreviewImageViewer documentData={documentData} onClose={onClose} />
+      );
+    }
+
+    // Plain text files
+    if (documentData.fileType === "text" && documentData.file) {
+      return (
+        <PreviewTextViewer documentData={documentData} onClose={onClose} />
       );
     }
 
