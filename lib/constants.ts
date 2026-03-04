@@ -184,6 +184,7 @@ export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "video",
   "map",
   "email",
+  "text",
 ] as const;
 
 export const VIDEO_EVENT_TYPES = [

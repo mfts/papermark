@@ -15,7 +15,7 @@ export function getSupportedContentType(contentType: string): string | null {
     case "application/rtf":
     case "text/rtf":
     case "text/plain":
-      return "docs";
+      return "text";
     case "application/vnd.ms-powerpoint":
     case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
     case "application/vnd.oasis.opendocument.presentation":
