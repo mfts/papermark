@@ -6,8 +6,11 @@ import {
   AtSignIcon,
   FileTextIcon,
   Loader2,
+  MessageSquareTextIcon,
   Plus,
   PlusIcon,
+  SearchIcon,
+  ShieldCheckIcon,
   SparklesIcon,
   XIcon,
 } from "lucide-react";
@@ -36,6 +39,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import type {
+  ChatStreamMetadata,
+  ChatStreamSource,
+} from "../lib/chat/send-message";
+import {
+  CHAT_METADATA_PREFIX,
+  CHAT_METADATA_SUFFIX,
+} from "../lib/chat/send-message";
 import { parseTextStream } from "../lib/stream/parse-text-stream";
 import ChatMessage from "./chat-message";
 import {
@@ -52,6 +63,67 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   isStreaming?: boolean;
+  sources?: ChatStreamSource[];
+  suggestedQuestions?: string[];
+}
+
+function extractStreamMetadata(content: string): {
+  text: string;
+  metadata?: ChatStreamMetadata;
+} {
+  const prefixIdx = content.indexOf(CHAT_METADATA_PREFIX);
+  if (prefixIdx === -1) return { text: content };
+
+  const jsonStart = prefixIdx + CHAT_METADATA_PREFIX.length;
+  const suffixIdx = content.indexOf(CHAT_METADATA_SUFFIX, jsonStart);
+  if (suffixIdx === -1) return { text: content };
+
+  try {
+    const jsonStr = content.slice(jsonStart, suffixIdx);
+    const metadata = JSON.parse(jsonStr) as ChatStreamMetadata;
+    const text = content.slice(0, prefixIdx).trim();
+    return { text, metadata };
+  } catch {
+    return { text: content };
+  }
+}
+
+const REFERENCES_REGEX =
+  /\n\n(?:#{1,6}\s*)?References\s*\n(?:\s*\n)?((?:[-*]\s.*(?:\n|$))+)$/i;
+const REFERENCE_LINE_REGEX = /[-*]\s*\[(.+?)]\((.+?)\)(?:\s*-\s*p\.\s*(\d+))?/;
+
+interface ResolvedRef {
+  dataroomDocumentId: string;
+  documentName: string;
+  url: string;
+  page?: number;
+  folderPath?: string;
+}
+
+function parseMarkdownReferences(content: string): {
+  text: string;
+  sources?: ChatStreamSource[];
+} {
+  const match = content.match(REFERENCES_REGEX);
+  if (!match) return { text: content };
+
+  const text = content.replace(REFERENCES_REGEX, "").trim();
+  const lines = match[1].trim().split("\n").filter(Boolean);
+  const sources: ChatStreamSource[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const lineMatch = lines[i].match(REFERENCE_LINE_REGEX);
+    if (lineMatch) {
+      sources.push({
+        id: `D-${i + 1}`,
+        name: lineMatch[1].replace(/\\([\[\]])/g, "$1"),
+        url: lineMatch[2],
+        page: lineMatch[3] ? parseInt(lineMatch[3]) : undefined,
+      });
+    }
+  }
+
+  return { text, sources: sources.length > 0 ? sources : undefined };
 }
 
 interface ViewerChatPanelProps {
@@ -246,12 +318,43 @@ function ViewerChatPanelContent({
         setChatId(selectedChatId);
         setChatTitle(data.title);
 
-        // Convert messages to the format expected by the UI
-        const loadedMessages: Message[] = data.messages.map((msg: any) => ({
-          id: msg.id,
-          role: msg.role,
-          content: msg.content,
-        }));
+        const loadedMessages: Message[] = data.messages.map((msg: any) => {
+          if (msg.role === "assistant") {
+            const meta = msg.metadata as Record<string, any> | null;
+            const storedSuggestions = meta?.suggestedQuestions as
+              | string[]
+              | undefined;
+            const storedRefs = meta?.references as ResolvedRef[] | undefined;
+
+            if (storedRefs && storedRefs.length > 0) {
+              const { text } = parseMarkdownReferences(msg.content);
+              return {
+                id: msg.id,
+                role: msg.role,
+                content: text,
+                sources: storedRefs.map((ref: ResolvedRef, idx: number) => ({
+                  id: `D-${idx + 1}`,
+                  name: ref.documentName,
+                  url: ref.url,
+                  dataroomDocumentId: ref.dataroomDocumentId,
+                  page: ref.page,
+                  folderPath: ref.folderPath,
+                })),
+                suggestedQuestions: storedSuggestions,
+              };
+            }
+
+            const { text, sources } = parseMarkdownReferences(msg.content);
+            return {
+              id: msg.id,
+              role: msg.role,
+              content: text,
+              sources,
+              suggestedQuestions: storedSuggestions,
+            };
+          }
+          return { id: msg.id, role: msg.role, content: msg.content };
+        });
 
         setMessages(loadedMessages);
       } catch (error) {
@@ -355,20 +458,27 @@ function ViewerChatPanelContent({
       };
       setMessages((prev) => [...prev, assistantMessage]);
 
-      // Parse the text stream
       await parseTextStream(reader, {
         onTextDelta: (_delta, accumulated) => {
+          const { text: visibleText } = extractStreamMetadata(accumulated);
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === assistantMessageId ? { ...m, content: accumulated } : m,
+              m.id === assistantMessageId ? { ...m, content: visibleText } : m,
             ),
           );
         },
-        onTextEnd: (content) => {
+        onTextEnd: (rawContent) => {
+          const { text, metadata } = extractStreamMetadata(rawContent);
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantMessageId
-                ? { ...m, content, isStreaming: false }
+                ? {
+                    ...m,
+                    content: text,
+                    isStreaming: false,
+                    sources: metadata?.sources,
+                    suggestedQuestions: metadata?.suggestedQuestions,
+                  }
                 : m,
             ),
           );
@@ -407,6 +517,11 @@ function ViewerChatPanelContent({
       setIsLoading(false);
       abortControllerRef.current = null;
     }
+  };
+
+  const handleSuggestedQuestion = (question: string) => {
+    if (isLoading) return;
+    handleSubmit({ text: question, files: [] });
   };
 
   return (
@@ -463,28 +578,73 @@ function ViewerChatPanelContent({
       <Conversation className="flex-1">
         <ConversationContent className="gap-4 p-4">
           {messages.length === 0 ? (
-            <ConversationEmptyState
-              icon={
-                <div className="flex size-12 items-center justify-center rounded-full bg-primary/10">
-                  <SparklesIcon className="size-6 text-primary" />
+            <ConversationEmptyState className="items-start text-left">
+              <div className="flex w-full flex-col items-start gap-5 px-2">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                      <SparklesIcon className="size-4 text-primary" />
+                    </div>
+                    <h3 className="text-base font-semibold text-gray-900">
+                      Welcome
+                    </h3>
+                  </div>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Your AI Data Room Agent is ready to help.
+                  </p>
                 </div>
-              }
-              title="Ask me anything"
-              description={`I can help you understand and analyze the content of this ${dataroomId ? "data room" : "document"}.`}
-            />
+
+                <div className="w-full space-y-3">
+                  <div className="flex items-start gap-2.5">
+                    <SearchIcon className="mt-0.5 size-3.5 shrink-0 text-gray-400" />
+                    <p className="text-xs leading-relaxed text-gray-500">
+                      Get answers to questions about your{" "}
+                      {dataroomId ? "data room" : "document"} files. Open a
+                      specific document to ask targeted questions.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <MessageSquareTextIcon className="mt-0.5 size-3.5 shrink-0 text-gray-400" />
+                    <p className="text-xs leading-relaxed text-gray-500">
+                      Ask clear, specific questions for more accurate results.
+                      Multiple languages and document types are supported.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0 text-gray-400" />
+                    <p className="text-xs leading-relaxed text-gray-500">
+                      All conversations are private and confidential.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ConversationEmptyState>
           ) : (
             <>
-              {messages.map((message) => (
-                <div key={message.id} className="space-y-2">
-                  <ChatMessage
-                    role={message.role}
-                    content={message.content}
-                    isStreaming={message.isStreaming}
-                  />
-                </div>
-              ))}
+              {(() => {
+                const lastAssistantIdx = messages.reduce(
+                  (acc, m, i) => (m.role === "assistant" ? i : acc),
+                  -1,
+                );
+                return messages.map((message, idx) => (
+                  <div key={message.id} className="space-y-2">
+                    <ChatMessage
+                      role={message.role}
+                      content={message.content}
+                      isStreaming={message.isStreaming}
+                      sources={message.sources}
+                      suggestedQuestions={message.suggestedQuestions}
+                      onSuggestedQuestionClick={handleSuggestedQuestion}
+                      isLastAssistantMessage={
+                        message.role === "assistant" &&
+                        idx === lastAssistantIdx &&
+                        !isLoading
+                      }
+                    />
+                  </div>
+                ));
+              })()}
 
-              {/* Show loading indicator while waiting for response */}
               {isLoading && messages[messages.length - 1]?.role === "user" && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="size-4 animate-spin" />
