@@ -58,8 +58,8 @@ function buildDocumentUrl(
   page?: number,
 ): string {
   const base = getViewerBasePath();
-  const hash = page ? `#page=${page}` : "";
-  return `${base}/d/${dataroomDocumentId}${hash}`;
+  const query = page ? `?p=${page}` : "";
+  return `${base}/d/${dataroomDocumentId}${query}`;
 }
 
 function normalizeAssistantLinkHref(href?: string): string | undefined {
