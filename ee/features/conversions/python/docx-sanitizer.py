@@ -32,8 +32,11 @@ import zipfile
 import tempfile
 import argparse
 import shutil
+import xml.etree.ElementTree as ET
 
 log = logging.getLogger("docx-sanitizer")
+
+W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 
 
 def has_rtl_content(doc_content: str) -> bool:
@@ -100,9 +103,17 @@ NUMPAGES_FIELD_RE = re.compile(
     re.IGNORECASE,
 )
 
-PARA_RE = re.compile(r'<w:p[\s>].*?</w:p>', re.DOTALL)
-PPR_RE = re.compile(r'<w:pPr\b[^>]*/>', re.DOTALL)
-PPR_BLOCK_RE = re.compile(r'<w:pPr\b.*?</w:pPr>', re.DOTALL)
+_NUMPAGES_TEXT_RE = re.compile(r'\b(?:numpages|sectionpages)\b', re.IGNORECASE)
+
+
+def _register_all_namespaces(path: str):
+    """Register every namespace prefix declared in *path* so ET.write() preserves them."""
+    for _event, ns in ET.iterparse(path, events=['start-ns']):
+        prefix, uri = ns
+        try:
+            ET.register_namespace(prefix, uri)
+        except ValueError:
+            pass
 
 
 def strip_numpages_fields_in_hf(tmp_dir: str) -> int:
@@ -115,7 +126,9 @@ def strip_numpages_fields_in_hf(tmp_dir: str) -> int:
 
     The fix: for each header/footer XML, find <w:p> elements whose field
     instructions mention NUMPAGES or SECTIONPAGES, and replace them with an
-    empty paragraph so the layout loop is broken.
+    empty paragraph (preserving the original <w:pPr>) so the layout loop is
+    broken.  Uses proper XML tree parsing instead of regex to safely handle
+    arbitrarily nested paragraph-property structures.
     """
     import glob as _glob
 
@@ -124,25 +137,39 @@ def strip_numpages_fields_in_hf(tmp_dir: str) -> int:
     for pattern in ('header*.xml', 'footer*.xml'):
         for path in _glob.glob(os.path.join(word_dir, pattern)):
             with open(path, 'r', encoding='utf-8') as f:
-                content = f.read()
+                raw = f.read()
 
-            if not NUMPAGES_FIELD_RE.search(content):
+            if not NUMPAGES_FIELD_RE.search(raw):
                 continue
 
-            def _replace_para(m):
-                nonlocal count
-                para = m.group(0)
-                if NUMPAGES_FIELD_RE.search(para):
-                    count += 1
-                    ppr = PPR_BLOCK_RE.search(para) or PPR_RE.search(para)
-                    ppr_xml = ppr.group(0) if ppr else '<w:pPr/>'
-                    return f'<w:p>{ppr_xml}</w:p>'
-                return para
+            _register_all_namespaces(path)
+            tree = ET.parse(path)
+            root = tree.getroot()
+            modified = False
 
-            new_content = PARA_RE.sub(_replace_para, content)
-            if new_content != content:
-                with open(path, 'w', encoding='utf-8') as f:
-                    f.write(new_content)
+            for p_elem in root.iter(f'{{{W_NS}}}p'):
+                has_numpages = False
+                for instr in p_elem.iter(f'{{{W_NS}}}instrText'):
+                    if instr.text and _NUMPAGES_TEXT_RE.search(instr.text):
+                        has_numpages = True
+                        break
+                if not has_numpages:
+                    continue
+
+                count += 1
+                modified = True
+
+                ppr = p_elem.find(f'{{{W_NS}}}pPr')
+                for child in list(p_elem):
+                    p_elem.remove(child)
+
+                if ppr is not None:
+                    p_elem.insert(0, ppr)
+                else:
+                    ET.SubElement(p_elem, f'{{{W_NS}}}pPr')
+
+            if modified:
+                tree.write(path, xml_declaration=True, encoding='UTF-8')
                 log.info("Stripped NUMPAGES field paragraph(s) from %s",
                          os.path.basename(path))
 
