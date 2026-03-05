@@ -101,6 +101,8 @@ NUMPAGES_FIELD_RE = re.compile(
 )
 
 PARA_RE = re.compile(r'<w:p[\s>].*?</w:p>', re.DOTALL)
+PPR_RE = re.compile(r'<w:pPr\b[^>]*/>', re.DOTALL)
+PPR_BLOCK_RE = re.compile(r'<w:pPr\b.*?</w:pPr>', re.DOTALL)
 
 
 def strip_numpages_fields_in_hf(tmp_dir: str) -> int:
@@ -132,7 +134,9 @@ def strip_numpages_fields_in_hf(tmp_dir: str) -> int:
                 para = m.group(0)
                 if NUMPAGES_FIELD_RE.search(para):
                     count += 1
-                    return '<w:p><w:pPr><w:pStyle w:val="Footer"/></w:pPr></w:p>'
+                    ppr = PPR_BLOCK_RE.search(para) or PPR_RE.search(para)
+                    ppr_xml = ppr.group(0) if ppr else '<w:pPr/>'
+                    return f'<w:p>{ppr_xml}</w:p>'
                 return para
 
             new_content = PARA_RE.sub(_replace_para, content)
