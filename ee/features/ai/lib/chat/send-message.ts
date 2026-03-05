@@ -50,18 +50,20 @@ export interface ChatStreamMetadata {
   suggestedQuestions: string[];
 }
 
-function normalizePageNumber(value: unknown): number | undefined {
+function validatePageValue(value: unknown): number | undefined {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return undefined;
   }
 
   const rounded = Math.round(value);
-  if (rounded <= 0) {
-    // Some providers report first page as 0-indexed.
-    return rounded === 0 ? 1 : undefined;
-  }
+  return rounded < 0 ? undefined : rounded;
+}
 
-  return rounded;
+function normalizePageNumber(value: unknown): number | undefined {
+  const validated = validatePageValue(value);
+  if (validated === undefined) return undefined;
+  // Treat 0 as first page for 1-based page_number / page fields.
+  return validated === 0 ? 1 : validated;
 }
 
 function extractPageNumberFromRecord(
@@ -75,7 +77,7 @@ function extractPageNumberFromRecord(
   }
 
   // Some payloads expose 0-based page index.
-  const pageIndex = normalizePageNumber(record.page_index ?? record.pageIndex);
+  const pageIndex = validatePageValue(record.page_index ?? record.pageIndex);
   if (pageIndex !== undefined) {
     return pageIndex + 1;
   }
@@ -92,7 +94,7 @@ function extractPageNumberFromRecord(
       return locationPage;
     }
 
-    const locationPageIndex = normalizePageNumber(
+    const locationPageIndex = validatePageValue(
       location.page_index ?? location.pageIndex,
     );
     if (locationPageIndex !== undefined) {
@@ -191,6 +193,16 @@ async function resolveReferencesFromCitations({
   if (!dataroomId || !linkId || citations.length === 0) {
     return [];
   }
+
+  const link = await prisma.link.findUnique({
+    where: { id: linkId },
+    select: { domainId: true, domainSlug: true, slug: true },
+  });
+
+  const isCustomDomain = Boolean(link?.domainId && link.domainSlug && link.slug);
+  const viewerBasePath = isCustomDomain
+    ? `/${link!.slug}`
+    : `/view/${linkId}`;
 
   const citedFileIds = Array.from(
     new Set(
@@ -331,8 +343,8 @@ async function resolveReferencesFromCitations({
     references.push({
       dataroomDocumentId: mapped.dataroomDocumentId,
       documentName: mapped.documentName,
-      url: `/view/${linkId}/d/${mapped.dataroomDocumentId}${
-        citation.page ? `#page=${citation.page}` : ""
+      url: `${viewerBasePath}/d/${mapped.dataroomDocumentId}${
+        citation.page ? `?p=${citation.page}` : ""
       }`,
       page: citation.page,
       folderPath: mapped.folderPath,
