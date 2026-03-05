@@ -188,10 +188,13 @@ async function resolveReferencesFromCitations({
   dataroomId,
   linkId,
   citations,
+  allowedDocumentIds,
 }: {
   dataroomId?: string;
   linkId?: string;
   citations: CitationCandidate[];
+  /** Permission-scoped dataroom document IDs; when set, only these documents are considered */
+  allowedDocumentIds?: string[];
 }): Promise<ResolvedReference[]> {
   if (!dataroomId || !linkId || citations.length === 0) {
     return [];
@@ -224,6 +227,7 @@ async function resolveReferencesFromCitations({
     const dataroomDocuments = await prisma.dataroomDocument.findMany({
       where: {
         dataroomId,
+        ...(allowedDocumentIds && { id: { in: allowedDocumentIds } }),
         document: {
           versions: {
             some: {
@@ -284,6 +288,7 @@ async function resolveReferencesFromCitations({
     const namedDataroomDocuments = await prisma.dataroomDocument.findMany({
       where: {
         dataroomId,
+        ...(allowedDocumentIds && { id: { in: allowedDocumentIds } }),
         document: {
           name: { in: citedFilenames },
         },
@@ -578,6 +583,7 @@ If you cannot find the answer in the documents, say so clearly.`,
             dataroomId,
             linkId,
             citations,
+            allowedDocumentIds: filteredDataroomDocumentIds,
           }),
           generateSuggestedQuestions(content, text),
         ]);
