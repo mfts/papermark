@@ -8,6 +8,8 @@ Supported fixes:
   - Glossary removal: Remove corrupt glossary parts (0-byte fontTable.xml etc.)
   - SDT unwrap: Unwrap <w:sdt> blocks from Google Docs exports that crash
     LibreOffice.
+  - Footer field fix: Strip nested IF/NUMPAGES field codes from headers/footers
+    that cause infinite layout loops in LibreOffice's UNO API.
 
 Usage:
     python docx-sanitizer.py input.docx [output.docx]
@@ -91,6 +93,56 @@ def remove_glossary(tmp_dir: str) -> bool:
             log.info("Removed glossary overrides from [Content_Types].xml")
 
     return True
+
+
+NUMPAGES_FIELD_RE = re.compile(
+    r'<w:instrText[^>]*>[^<]*\b(?:numpages|sectionpages)\b[^<]*</w:instrText>',
+    re.IGNORECASE,
+)
+
+PARA_RE = re.compile(r'<w:p[\s>].*?</w:p>', re.DOTALL)
+
+
+def strip_numpages_fields_in_hf(tmp_dir: str) -> int:
+    """Remove paragraphs in headers/footers that contain NUMPAGES-based fields.
+
+    Nested IF fields that reference NUMPAGES inside headers/footers cause an
+    infinite layout recalculation loop in LibreOffice's UNO API
+    (loadComponentFromURL hangs).  The CLI converter (--headless --convert-to)
+    caps its layout passes so it completes, but the UNO pathway does not.
+
+    The fix: for each header/footer XML, find <w:p> elements whose field
+    instructions mention NUMPAGES or SECTIONPAGES, and replace them with an
+    empty paragraph so the layout loop is broken.
+    """
+    import glob as _glob
+
+    count = 0
+    word_dir = os.path.join(tmp_dir, 'word')
+    for pattern in ('header*.xml', 'footer*.xml'):
+        for path in _glob.glob(os.path.join(word_dir, pattern)):
+            with open(path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            if not NUMPAGES_FIELD_RE.search(content):
+                continue
+
+            def _replace_para(m):
+                nonlocal count
+                para = m.group(0)
+                if NUMPAGES_FIELD_RE.search(para):
+                    count += 1
+                    return '<w:p><w:pPr><w:pStyle w:val="Footer"/></w:pPr></w:p>'
+                return para
+
+            new_content = PARA_RE.sub(_replace_para, content)
+            if new_content != content:
+                with open(path, 'w', encoding='utf-8') as f:
+                    f.write(new_content)
+                log.info("Stripped NUMPAGES field paragraph(s) from %s",
+                         os.path.basename(path))
+
+    return count
 
 
 def unwrap_sdt(content: str) -> tuple:
@@ -185,6 +237,15 @@ def sanitize_docx(input_path: str, output_path: str, mode: str = 'all') -> bool:
                         log.info("No word/settings.xml found — skipping compat fix")
                 else:
                     log.info("No RTL content detected — skipping compat downgrade")
+
+            # --- Header/footer NUMPAGES field fix ---
+            if mode == 'all':
+                nf_count = strip_numpages_fields_in_hf(tmp)
+                if nf_count:
+                    log.info("Stripped %d NUMPAGES field paragraph(s) from headers/footers",
+                             nf_count)
+                else:
+                    log.info("No NUMPAGES fields found in headers/footers")
 
             # --- SDT unwrap ---
             if mode in ('sdt', 'all'):
