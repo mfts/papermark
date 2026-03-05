@@ -104,6 +104,7 @@ model Domain {
   Team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   verified    Boolean  @default(false) // Whether the domain has been verified
   isDefault   Boolean  @default(false) // Whether the domain is the primary domain
+  redirectUrl String?  // URL to redirect to when visiting the root of this domain
   lastChecked DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

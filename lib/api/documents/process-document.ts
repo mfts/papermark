@@ -88,7 +88,9 @@ export const processDocument = async ({
         const keywords = await get("keywords");
         if (Array.isArray(keywords) && keywords.length > 0) {
           const matchedKeyword = keywords.find(
-            (keyword) => typeof keyword === "string" && key.includes(keyword),
+            (keyword) =>
+              typeof keyword === "string" &&
+              key.toLowerCase().includes(keyword.toLowerCase()),
           );
 
           if (matchedKeyword) {

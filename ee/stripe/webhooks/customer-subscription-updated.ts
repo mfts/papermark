@@ -9,6 +9,8 @@ import {
 } from "@/ee/limits/constants";
 import Stripe from "stripe";
 
+import { clearTeamDomainRedirects } from "@/lib/api/domains/clear-team-redirects";
+import { planSupportsRedirects } from "@/lib/api/domains/redis";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 
@@ -98,6 +100,10 @@ export async function customerSubsciptionUpdated(
         limits: planLimits,
       },
     });
+
+    if (!planSupportsRedirects(newPlan)) {
+      await clearTeamDomainRedirects(team.id);
+    }
   }
 
   // If new account, and the plan is the same, but the quantity is different, update the quantity

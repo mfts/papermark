@@ -2,10 +2,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
+import { setDomainRedirectUrl } from "@/lib/api/domains/redis";
+import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
 import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithDomain } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
@@ -27,22 +28,33 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const { team } = await getTeamWithDomain({
-        teamId,
-        userId,
-        options: {
-          select: {
-            slug: true,
-            verified: true,
-            isDefault: true,
-          },
-          orderBy: {
-            createdAt: "asc",
+      const hasTeamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId,
+            teamId,
           },
         },
       });
+      if (!hasTeamAccess) {
+        return res.status(401).end("Unauthorized");
+      }
 
-      const domains = team.domains;
+      const domains = await prisma.domain.findMany({
+        where: {
+          teamId,
+        },
+        select: {
+          slug: true,
+          verified: true,
+          isDefault: true,
+          redirectUrl: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+
       return res.status(200).json(domains);
     } catch (error) {
       errorhandler(error, res);
@@ -63,13 +75,19 @@ export default async function handle(
     }
 
     try {
-      await getTeamWithDomain({
-        teamId,
-        userId,
+      const hasTeamAccess = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId,
+            teamId,
+          },
+        },
       });
+      if (!hasTeamAccess) {
+        return res.status(401).end("Unauthorized");
+      }
 
-      // Assuming data is an object with `domain` properties
-      const { domain } = req.body;
+      const { domain, redirectUrl } = req.body;
 
       // Sanitize domain by removing whitespace, protocol, and paths
       const sanitizedDomain = domain
@@ -99,9 +117,18 @@ export default async function handle(
       });
 
       if (existingDomain) {
-        return res
-          .status(400)
-          .json({ message: "Unable to add this domain. Please try a different one." });
+        return res.status(400).json({
+          message: "Unable to add this domain. Please try a different one.",
+        });
+      }
+
+      let validatedRedirectUrl: string | undefined;
+      if (redirectUrl) {
+        const result = await validateRedirectUrl(redirectUrl, teamId);
+        if (!result.valid) {
+          return res.status(422).json({ message: result.message });
+        }
+        validatedRedirectUrl = result.url || undefined;
       }
 
       const response = await prisma.domain.create({
@@ -109,9 +136,23 @@ export default async function handle(
           slug: sanitizedDomain,
           userId,
           teamId,
+          ...(validatedRedirectUrl && { redirectUrl: validatedRedirectUrl }),
         },
       });
       await addDomainToVercel(sanitizedDomain);
+
+      if (validatedRedirectUrl) {
+        try {
+          await setDomainRedirectUrl(sanitizedDomain, validatedRedirectUrl);
+        } catch {
+          // Domain is functional but redirect failed to persist in Redis.
+          // Remove redirectUrl from DB so the two stores stay consistent.
+          await prisma.domain.update({
+            where: { id: response.id },
+            data: { redirectUrl: null },
+          });
+        }
+      }
 
       return res.status(201).json(response);
     } catch (error) {
