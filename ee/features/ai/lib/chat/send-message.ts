@@ -176,7 +176,10 @@ function stripTrailingReferencesSection(text: string): string {
 }
 
 function escapeMarkdownLinkText(value: string): string {
-  return value.replace(/\[/g, "\\[").replace(/\]/g, "\\]");
+  return value
+    .replace(/\\/g, "\\\\")
+    .replace(/\[/g, "\\[")
+    .replace(/\]/g, "\\]");
 }
 
 async function resolveReferencesFromCitations({
