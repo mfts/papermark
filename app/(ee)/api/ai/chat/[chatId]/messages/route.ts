@@ -35,8 +35,11 @@ export async function POST(
       );
     }
 
-    const { content, filterDocumentId, filterDataroomDocumentIds } =
-      validation.data;
+    const {
+      content,
+      filterDocumentId,
+      filterDataroomDocumentIds,
+    } = validation.data;
 
     const session = await getServerSession(authOptions);
     const searchParams = req.nextUrl.searchParams;
@@ -133,16 +136,49 @@ export async function POST(
     }
 
     // Send message and get streaming response
-    const result = await sendMessage({
+    const { result, referencesForStream } = await sendMessage({
       chatId,
       content,
       vectorStoreId: chat.vectorStoreId,
       filteredDataroomDocumentIds,
       filterDocumentId,
       userSelectedDataroomDocumentIds: filterDataroomDocumentIds,
+      dataroomId: chat.dataroomId || undefined,
+      linkId: chat.linkId || undefined,
     });
 
-    return result.toTextStreamResponse();
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        try {
+          for await (const chunk of result.textStream) {
+            controller.enqueue(encoder.encode(chunk));
+          }
+
+          const referencesSection = await Promise.race([
+            referencesForStream,
+            new Promise<string>((resolve) =>
+              setTimeout(() => resolve(""), 5000),
+            ),
+          ]);
+
+          if (referencesSection) {
+            controller.enqueue(encoder.encode(referencesSection));
+          }
+
+          controller.close();
+        } catch (error) {
+          console.error("Error streaming AI response:", error);
+          controller.error(error);
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    });
   } catch (error) {
     console.error("Error sending message:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
