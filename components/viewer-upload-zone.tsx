@@ -23,7 +23,7 @@ export default function ViewerUploadZone({
   onUploadRejected,
   viewerData,
   teamId,
-  maxFileSize = 30, // 30 MB default
+  maxFileSize = 350, // 350 MB default, matches paid admin document limits
   disabled = false,
 }: {
   children: React.ReactNode;
@@ -49,7 +49,7 @@ export default function ViewerUploadZone({
         if (errors.find(({ code }) => code === "file-too-large")) {
           message = `File size too big (max. ${maxFileSize} MB).`;
         } else if (errors.find(({ code }) => code === "file-invalid-type")) {
-          message = `File type not supported. Please upload PDF, Word, or Excel files.`;
+          message = `File type not supported.`;
         }
         return { fileName: file.name, message };
       });
@@ -186,7 +186,7 @@ export default function ViewerUploadZone({
                 Drop your file(s) here
               </span>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Only *.pdf, *.xls, *.xlsx, *.csv, *.tsv, *.ods files
+                PDF, Office, images, CAD, ZIP, and more
               </p>
             </div>
           </div>
