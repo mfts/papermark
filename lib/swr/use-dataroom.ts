@@ -293,6 +293,7 @@ export type DataroomFolderDocument = DataroomDocument & {
     id: string;
     name: string;
     type: string;
+    advancedExcelEnabled?: boolean;
     versions?: { id: string; hasPages: boolean }[];
     isExternalUpload?: boolean;
     _count: {

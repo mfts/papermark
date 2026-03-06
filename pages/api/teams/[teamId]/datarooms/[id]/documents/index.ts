@@ -84,6 +84,7 @@ export default async function handle(
               id: true,
               name: true,
               type: true,
+              advancedExcelEnabled: true,
               versions: {
                 select: { id: true, hasPages: true },
               },
