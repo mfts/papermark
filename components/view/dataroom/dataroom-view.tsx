@@ -48,6 +48,17 @@ export type DEFAULT_DATAROOM_VIEW_TYPE = {
   dataroomName?: string;
 };
 
+export type PreValidatedSession = {
+  viewId: string;
+  viewerEmail?: string;
+  viewerId?: string;
+  conversationsEnabled?: boolean;
+  enableVisitorUpload?: boolean;
+  isTeamMember?: boolean;
+  agentsEnabled?: boolean;
+  dataroomName?: string;
+};
+
 export default function DataroomView({
   link,
   userEmail,
@@ -64,6 +75,8 @@ export default function DataroomView({
   preview,
   dataroomIndexEnabled,
   textSelectionEnabled,
+  initialFolderId,
+  preValidatedSession,
 }: {
   link: LinkWithDataroom;
   userEmail: string | null | undefined;
@@ -80,6 +93,8 @@ export default function DataroomView({
   logoOnAccessForm?: boolean;
   dataroomIndexEnabled?: boolean;
   textSelectionEnabled?: boolean;
+  initialFolderId?: string | null;
+  preValidatedSession?: PreValidatedSession | null;
 }) {
   useDisablePrint();
   const {
@@ -93,14 +108,28 @@ export default function DataroomView({
 
   const analytics = useAnalytics();
   const router = useRouter();
-  const [folderId, setFolderId] = useState<string | null>(null);
+  const hasPreValidatedSession = !!preValidatedSession;
+  const [folderId, setFolderId] = useState<string | null>(
+    initialFolderId ?? null,
+  );
 
   const didMount = useRef<boolean>(false);
-  const [submitted, setSubmitted] = useState<boolean>(false);
+  const [submitted, setSubmitted] = useState<boolean>(hasPreValidatedSession);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [viewData, setViewData] = useState<DEFAULT_DATAROOM_VIEW_TYPE>({
-    viewId: "",
-  });
+  const [viewData, setViewData] = useState<DEFAULT_DATAROOM_VIEW_TYPE>(
+    hasPreValidatedSession
+      ? {
+          viewId: preValidatedSession.viewId,
+          viewerEmail: preValidatedSession.viewerEmail,
+          viewerId: preValidatedSession.viewerId,
+          conversationsEnabled: preValidatedSession.conversationsEnabled,
+          enableVisitorUpload: preValidatedSession.enableVisitorUpload,
+          isTeamMember: preValidatedSession.isTeamMember,
+          agentsEnabled: preValidatedSession.agentsEnabled,
+          dataroomName: preValidatedSession.dataroomName,
+        }
+      : { viewId: "" },
+  );
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
     DEFAULT_ACCESS_FORM_DATA,
   );
@@ -118,8 +147,8 @@ export default function DataroomView({
     ? brand?.accentColor
     : "#ffffff";
 
-  const handleSubmission = async (): Promise<void> => {
-    setIsLoading(true);
+  const handleSubmission = async (background = false): Promise<void> => {
+    if (!background) setIsLoading(true);
     const response = await fetch("/api/views-dataroom", {
       method: "POST",
       headers: {
@@ -144,8 +173,10 @@ export default function DataroomView({
       const fetchData = await response.json();
 
       if (fetchData.type === "email-verification") {
-        setVerificationRequested(true);
-        setIsLoading(false);
+        if (!background) {
+          setVerificationRequested(true);
+          setIsLoading(false);
+        }
       } else {
         const {
           viewId,
@@ -174,14 +205,7 @@ export default function DataroomView({
           teamId: link.teamId,
         });
 
-        // set the verification token to the cookie
         if (verificationToken) {
-          // Cookies.set("pm_vft", verificationToken, {
-          //   path: router.asPath.split("?")[0],
-          //   expires: 1,
-          //   sameSite: "strict",
-          //   secure: true,
-          // });
           setCode(null);
         }
 
@@ -196,23 +220,27 @@ export default function DataroomView({
           agentsEnabled,
           dataroomName,
         });
-        setSubmitted(true);
-        setVerificationRequested(false);
-        setIsLoading(false);
+        if (!background) {
+          setSubmitted(true);
+          setVerificationRequested(false);
+          setIsLoading(false);
+        }
       }
     } else {
-      const data = await response.json();
-      toast.error(data.message);
+      const responseData = await response.json();
+      if (!background) {
+        toast.error(responseData.message);
+      }
 
-      if (data.resetVerification) {
+      if (responseData.resetVerification) {
         const currentPath = router.asPath.split("?")[0];
 
         Cookies.remove("pm_vft", { path: currentPath });
         setVerificationToken(null);
         setCode(null);
-        setIsInvalidCode(true);
+        if (!background) setIsInvalidCode(true);
       }
-      setIsLoading(false);
+      if (!background) setIsLoading(false);
     }
   };
 
@@ -223,10 +251,18 @@ export default function DataroomView({
     await handleSubmission();
   };
 
-  // If token is present, run handle submit which will verify token and get document
-  // If link is not submitted and does not have email / password protection, show the access form
+  // For pre-validated sessions: fire background API call to record the view
+  // without blocking the UI (content is already visible)
   useEffect(() => {
-    if (!didMount.current) {
+    if (hasPreValidatedSession && !didMount.current) {
+      didMount.current = true;
+      handleSubmission(true);
+    }
+  }, [hasPreValidatedSession]);
+
+  // Normal flow: verify token or auto-submit when not protected
+  useEffect(() => {
+    if (!hasPreValidatedSession && !didMount.current) {
       if ((!submitted && !isProtected) || token || preview || previewToken) {
         handleSubmission();
         didMount.current = true;
@@ -250,8 +286,8 @@ export default function DataroomView({
     );
   }
 
-  // If link is not submitted and does not have email / password protection, show the access form
-  if (!submitted && isProtected) {
+  // Show access form if not submitted, not pre-validated, and link is protected
+  if (!submitted && !hasPreValidatedSession && isProtected) {
     return (
       <AccessForm
         data={data}
