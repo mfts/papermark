@@ -104,25 +104,9 @@ export default function ViewerUploadZone({
         let contentType = uploadResult.fileType;
         let supportedFileType = getSupportedContentType(contentType) ?? "";
 
-        if (
-          uploadResult.fileName.endsWith(".dwg") ||
-          uploadResult.fileName.endsWith(".dxf")
-        ) {
-          supportedFileType = "cad";
-          contentType = `image/vnd.${uploadResult.fileName.split(".").pop()}`;
-        }
-
         if (uploadResult.fileName.endsWith(".xlsm")) {
           supportedFileType = "sheet";
           contentType = "application/vnd.ms-excel.sheet.macroEnabled.12";
-        }
-
-        if (
-          uploadResult.fileName.endsWith(".kml") ||
-          uploadResult.fileName.endsWith(".kmz")
-        ) {
-          supportedFileType = "map";
-          contentType = `application/vnd.google-earth.${uploadResult.fileName.endsWith(".kml") ? "kml+xml" : "kmz"}`;
         }
 
         const documentData: DocumentData = {
@@ -186,7 +170,7 @@ export default function ViewerUploadZone({
                 Drop your file(s) here
               </span>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                PDF, Office, images, CAD, ZIP, and more
+                PDF, Office, images, ZIP, and more
               </p>
             </div>
           </div>

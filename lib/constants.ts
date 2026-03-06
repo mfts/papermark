@@ -178,16 +178,11 @@ export const VIEWER_ACCEPTED_FILE_TYPES = {
   "application/rtf": [], // ".rtf"
   "text/rtf": [], // ".rtf"
   "text/plain": [], // ".txt"
-  "text/markdown": [".md"], // ".md"
-  "image/vnd.dwg": [".dwg"], // ".dwg"
-  "image/vnd.dxf": [".dxf"], // ".dxf"
   "image/png": [], // ".png"
   "image/jpeg": [], // ".jpeg"
   "image/jpg": [], // ".jpg"
   "application/zip": [], // ".zip"
   "application/x-zip-compressed": [], // ".zip"
-  "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
-  "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
   "application/vnd.ms-outlook": [".msg"], // ".msg"
 };
 
