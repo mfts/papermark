@@ -248,8 +248,68 @@ export default async function handle(
         );
       }
 
+      let matchingFolders: any[] = [];
+      if (query) {
+        const folders = await prisma.folder.findMany({
+          where: {
+            teamId,
+            hiddenInAllDocuments: false,
+            name: {
+              contains: query,
+              mode: "insensitive",
+            },
+            OR: [
+              { parentId: null },
+              {
+                parentFolder: {
+                  hiddenInAllDocuments: false,
+                },
+              },
+            ],
+          },
+          include: {
+            _count: {
+              select: {
+                documents: true,
+                childFolders: true,
+              },
+            },
+          },
+          orderBy: { name: "asc" },
+        });
+
+        matchingFolders = await Promise.all(
+          folders.map(async (folder) => {
+            const folderNames: string[] = [];
+            const parentPath = folder.path.substring(
+              0,
+              folder.path.lastIndexOf("/"),
+            );
+            if (parentPath) {
+              const pathSegments = parentPath.split("/").filter(Boolean);
+              if (pathSegments.length > 0) {
+                const parentPaths = pathSegments.map((_, index) =>
+                  "/" + pathSegments.slice(0, index + 1).join("/"),
+                );
+                const parentFolders = await prisma.folder.findMany({
+                  where: {
+                    teamId,
+                    path: { in: parentPaths },
+                  },
+                  select: { path: true, name: true },
+                  orderBy: { path: "asc" },
+                });
+                folderNames.push(...parentFolders.map((f) => f.name));
+              }
+            }
+            return { ...folder, folderList: folderNames };
+          }),
+        );
+      }
+
       return res.status(200).json({
         documents: documentsWithFolderList,
+        ...(query && { folders: matchingFolders }),
         ...(usePagination && {
           pagination: {
             total: totalDocuments,
