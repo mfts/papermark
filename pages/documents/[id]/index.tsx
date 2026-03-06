@@ -167,6 +167,7 @@ export default function DocumentPage() {
               key={"preview"}
               documentId={prismaDocument.id}
               primaryVersion={primaryVersion}
+              advancedExcelEnabled={prismaDocument.advancedExcelEnabled}
               variant="outline"
               size="default"
               showTooltip={false}
