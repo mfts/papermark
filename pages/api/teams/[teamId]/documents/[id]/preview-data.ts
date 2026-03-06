@@ -123,6 +123,12 @@ export default async function handle(
         type: primaryVersion.storageType,
       });
       returnData.numPages = 1;
+    } else if (primaryVersion.type === "text") {
+      // Plain text files - return the raw file URL for client-side rendering
+      returnData.file = await getFile({
+        data: primaryVersion.file,
+        type: primaryVersion.storageType,
+      });
     } else if (primaryVersion.type === "sheet") {
       // Excel/CSV files - preview not supported
       return res.status(400).json({

@@ -34,6 +34,7 @@ import DownloadOnlyViewer from "./viewer/download-only-viewer";
 import ImageViewer from "./viewer/image-viewer";
 import PagesHorizontalViewer from "./viewer/pages-horizontal-viewer";
 import PagesVerticalViewer from "./viewer/pages-vertical-viewer";
+import TextViewer from "./viewer/text-viewer";
 import VideoViewer from "./viewer/video-viewer";
 
 const ExcelViewer = dynamic(
@@ -169,6 +170,22 @@ export default function ViewData({
           />
         ) : viewData.fileType === "image" ? (
           <ImageViewer
+            file={viewData.file!}
+            screenshotProtectionEnabled={link.enableScreenshotProtection!}
+            versionNumber={document.versions[0].versionNumber}
+            showPoweredByBanner={showPoweredByBanner}
+            viewerEmail={viewerEmail}
+            watermarkConfig={
+              link.enableWatermark
+                ? (link.watermarkConfig as WatermarkConfig)
+                : null
+            }
+            ipAddress={viewData.ipAddress}
+            linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+            navData={navData}
+          />
+        ) : viewData.fileType === "text" ? (
+          <TextViewer
             file={viewData.file!}
             screenshotProtectionEnabled={link.enableScreenshotProtection!}
             versionNumber={document.versions[0].versionNumber}

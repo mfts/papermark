@@ -640,6 +640,7 @@ export async function POST(request: NextRequest) {
         if (
           documentVersion.type === "pdf" ||
           documentVersion.type === "image" ||
+          documentVersion.type === "text" ||
           documentVersion.type === "video"
         ) {
           documentVersion.file = await getFile({
@@ -719,6 +720,7 @@ export async function POST(request: NextRequest) {
           (documentVersion &&
             (documentVersion.type === "pdf" ||
               documentVersion.type === "image" ||
+              documentVersion.type === "text" ||
               documentVersion.type === "zip" ||
               documentVersion.type === "video" ||
               documentVersion.type === "link")) ||
