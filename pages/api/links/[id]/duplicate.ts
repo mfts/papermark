@@ -71,6 +71,8 @@ export default async function handle(
               accessControls: true,
             },
           },
+          customFields: true,
+          visitorGroups: true,
         },
       });
 
@@ -82,7 +84,14 @@ export default async function handle(
         return res.status(404).json({ error: "Link has been deleted" });
       }
 
-      const { tags, permissionGroup, permissionGroupId, ...rest } = link;
+      const {
+        tags,
+        permissionGroup,
+        permissionGroupId,
+        customFields,
+        visitorGroups,
+        ...rest
+      } = link;
       const linkTags = tags.map((t) => t.tag.id);
 
       const newLinkName = link.name
@@ -131,6 +140,34 @@ export default async function handle(
             updatedAt: undefined,
             permissionGroupId: newPermissionGroupId,
             ownerId: userId,
+            ...(customFields.length > 0 && {
+              customFields: {
+                createMany: {
+                  data: customFields.map((field) => ({
+                    type: field.type,
+                    identifier: field.identifier,
+                    label: field.label,
+                    placeholder: field.placeholder,
+                    required: field.required,
+                    disabled: field.disabled,
+                    orderIndex: field.orderIndex,
+                  })),
+                },
+              },
+            }),
+            ...(visitorGroups.length > 0 && {
+              visitorGroups: {
+                createMany: {
+                  data: visitorGroups.map((vg) => ({
+                    visitorGroupId: vg.visitorGroupId,
+                  })),
+                },
+              },
+            }),
+          },
+          include: {
+            customFields: true,
+            visitorGroups: true,
           },
         });
 
