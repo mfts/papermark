@@ -83,7 +83,7 @@ export function AddDataroomModal({
   const [editingFolderName, setEditingFolderName] = useState<string>("");
 
   const teamInfo = useTeam();
-  const { isFree, isPro } = usePlan();
+  const { isFree, isPro, isTrial } = usePlan();
   const analytics = useAnalytics();
 
   const useTemplate = activeTab === "generate";
@@ -346,8 +346,7 @@ export function AddDataroomModal({
     }
   };
 
-  // If the team is on a free plan, show the upgrade modal
-  if (isFree || isPro) {
+  if ((isFree || isPro) && !isTrial) {
     if (children) {
       return (
         <UpgradePlanModal
