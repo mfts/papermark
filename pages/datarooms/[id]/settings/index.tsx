@@ -34,7 +34,7 @@ export default function Settings() {
   const teamId = teamInfo?.currentTeam?.id;
   const [isCopied, setIsCopied] = useState(false);
 
-  const { isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
+  const { isBusiness, isDatarooms, isDataroomsPlus, isTrial } = usePlan();
 
   if (!dataroom) {
     return <div>Loading...</div>;
@@ -219,7 +219,7 @@ export default function Settings() {
               </CardFooter>
             </Card>
 
-            {isBusiness || isDatarooms || isDataroomsPlus ? (
+            {isBusiness || isDatarooms || isDataroomsPlus || isTrial ? (
               <DeleteDataroom
                 dataroomId={dataroom.id}
                 dataroomName={dataroom.name}
