@@ -11,6 +11,8 @@ import { hashToken } from "@/lib/api/auth/token";
 import {
   DataroomSession,
   createDataroomSession,
+  getDataroomSessionBindingCookieName,
+  getDataroomSessionCookieName,
 } from "@/lib/auth/dataroom-auth";
 import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
 import { PreviewSession, verifyPreviewSession } from "@/lib/auth/preview-auth";
@@ -763,7 +765,8 @@ export async function POST(request: NextRequest) {
           );
 
           let basePath = `/view/${linkId}`;
-          const cookieId = `pm_drs_${linkId}`;
+          const cookieId = getDataroomSessionCookieName(linkId);
+          const bindingCookieId = getDataroomSessionBindingCookieName(linkId);
           let flagCookieId = `pm_drs_flag_${linkId}`;
 
           if (link.domainId) {
@@ -774,6 +777,12 @@ export async function POST(request: NextRequest) {
           response.cookies.set(cookieId, newDataroomSession?.token, {
             path: "/",
             expires: new Date(newDataroomSession?.expiresAt),
+            httpOnly: true,
+            sameSite: "strict",
+          });
+          response.cookies.set(bindingCookieId, newDataroomSession.bindingToken, {
+            path: "/",
+            expires: new Date(newDataroomSession.expiresAt),
             httpOnly: true,
             sameSite: "strict",
           });
@@ -1077,7 +1086,8 @@ export async function POST(request: NextRequest) {
         );
 
         let basePath = `/view/${linkId}`;
-        const cookieId = `pm_drs_${linkId}`;
+        const cookieId = getDataroomSessionCookieName(linkId);
+        const bindingCookieId = getDataroomSessionBindingCookieName(linkId);
         let flagCookieId = `pm_drs_flag_${linkId}`;
         if (link.domainId) {
           basePath = `/${link.slug}`;
@@ -1087,6 +1097,12 @@ export async function POST(request: NextRequest) {
         response.cookies.set(cookieId, newDataroomSession?.token, {
           path: "/",
           expires: new Date(newDataroomSession?.expiresAt),
+          httpOnly: true,
+          sameSite: "strict",
+        });
+        response.cookies.set(bindingCookieId, newDataroomSession.bindingToken, {
+          path: "/",
+          expires: new Date(newDataroomSession.expiresAt),
           httpOnly: true,
           sameSite: "strict",
         });

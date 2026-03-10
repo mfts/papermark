@@ -13,6 +13,8 @@ import { LOCALHOST_IP } from "../utils/geo";
 import { getIpAddress } from "../utils/ip";
 
 const COOKIE_EXPIRATION_TIME = 23 * 60 * 60 * 1000; // 23 hours
+const DATAROOM_SESSION_COOKIE_PREFIX = "pm_drs_";
+const DATAROOM_SESSION_BINDING_COOKIE_PREFIX = "pm_drs_bind_";
 
 /**
  * Normalize IP addresses so that IPv6 loopback (::1),
@@ -32,6 +34,33 @@ function normalizeIp(ip: string): string {
   return trimmed;
 }
 
+function getDataroomSessionCookieName(linkId: string): string {
+  return `${DATAROOM_SESSION_COOKIE_PREFIX}${linkId}`;
+}
+
+function getDataroomSessionBindingCookieName(linkId: string): string {
+  return `${DATAROOM_SESSION_BINDING_COOKIE_PREFIX}${linkId}`;
+}
+
+function hashBindingToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+function verifyBindingTokenHash(
+  expectedHash: string,
+  presentedToken: string,
+): boolean {
+  const expected = Buffer.from(expectedHash, "hex");
+  const presented = Buffer.from(hashBindingToken(presentedToken), "hex");
+  if (expected.length !== presented.length) return false;
+  return crypto.timingSafeEqual(expected, presented);
+}
+
+function parseDataroomSession(raw: unknown): DataroomSession {
+  const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+  return DataroomSessionSchema.parse(parsed);
+}
+
 // Define the Zod schema for session data
 export const DataroomSessionSchema = z.object({
   linkId: z.string(),
@@ -40,6 +69,7 @@ export const DataroomSessionSchema = z.object({
   viewerId: z.string().optional(),
   expiresAt: z.number(),
   ipAddress: z.string(),
+  clientBindingHash: z.string().optional(),
   verified: z.boolean(),
 });
 
@@ -53,8 +83,9 @@ async function createDataroomSession(
   ipAddress: string,
   verified: boolean,
   viewerId?: string,
-): Promise<{ token: string; expiresAt: number }> {
+): Promise<{ token: string; bindingToken: string; expiresAt: number }> {
   const sessionToken = crypto.randomBytes(32).toString("hex");
+  const bindingToken = crypto.randomBytes(32).toString("base64url");
   const expiresAt = Date.now() + COOKIE_EXPIRATION_TIME;
 
   const sessionData: DataroomSession = {
@@ -64,6 +95,7 @@ async function createDataroomSession(
     viewerId,
     expiresAt,
     ipAddress: normalizeIp(ipAddress),
+    clientBindingHash: hashBindingToken(bindingToken),
     verified,
   };
 
@@ -79,6 +111,7 @@ async function createDataroomSession(
 
   return {
     token: sessionToken,
+    bindingToken,
     expiresAt,
   };
 }
@@ -90,14 +123,17 @@ async function verifyDataroomSession(
 ): Promise<DataroomSession | null> {
   if (!dataroomId) return null;
 
-  const sessionToken = cookies().get(`pm_drs_${linkId}`)?.value;
+  const sessionToken = cookies().get(getDataroomSessionCookieName(linkId))?.value;
+  const bindingToken = cookies().get(
+    getDataroomSessionBindingCookieName(linkId),
+  )?.value;
   if (!sessionToken) return null;
 
   const session = await redis.get(`dataroom_session:${sessionToken}`);
   if (!session) return null;
 
   try {
-    const sessionData = DataroomSessionSchema.parse(session);
+    const sessionData = parseDataroomSession(session);
 
     // Check if session is expired
     if (sessionData.expiresAt < Date.now()) {
@@ -105,11 +141,24 @@ async function verifyDataroomSession(
       return null;
     }
 
-    const ipAddressValue = normalizeIp(ipAddress(request) ?? LOCALHOST_IP);
-
-    if (ipAddressValue !== sessionData.ipAddress) {
+    if (
+      sessionData.clientBindingHash &&
+      (!bindingToken ||
+        !verifyBindingTokenHash(sessionData.clientBindingHash, bindingToken))
+    ) {
       await redis.del(`dataroom_session:${sessionToken}`);
       return null;
+    }
+
+    // Keep IP for telemetry/watermark context only; do not invalidate session on IP rotation.
+    const ipAddressValue = normalizeIp(ipAddress(request) ?? LOCALHOST_IP);
+    if (ipAddressValue !== sessionData.ipAddress) {
+      await redis.set(
+        `dataroom_session:${sessionToken}`,
+        JSON.stringify({ ...sessionData, ipAddress: ipAddressValue }),
+        { pxat: sessionData.expiresAt },
+      );
+      sessionData.ipAddress = ipAddressValue;
     }
 
     // Check if the session is for the correct link and dataroom
@@ -154,7 +203,8 @@ export async function getDataroomSessionByLinkIdInPagesRouter(
   if (!linkId) return null;
 
   const cookies = parse(req.headers.cookie || "");
-  const sessionToken = cookies[`pm_drs_${linkId}`];
+  const sessionToken = cookies[getDataroomSessionCookieName(linkId)];
+  const bindingToken = cookies[getDataroomSessionBindingCookieName(linkId)];
   if (!sessionToken) {
     return null;
   }
@@ -163,7 +213,7 @@ export async function getDataroomSessionByLinkIdInPagesRouter(
   if (!session) return null;
 
   try {
-    const sessionData = DataroomSessionSchema.parse(session);
+    const sessionData = parseDataroomSession(session);
 
     // Check if session is expired
     if (sessionData.expiresAt < Date.now()) {
@@ -171,11 +221,24 @@ export async function getDataroomSessionByLinkIdInPagesRouter(
       return null;
     }
 
-    // Get IP address from request
-    const ipAddressValue = normalizeIp(getIpAddress(req.headers) ?? LOCALHOST_IP);
-    if (ipAddressValue !== sessionData.ipAddress) {
+    if (
+      sessionData.clientBindingHash &&
+      (!bindingToken ||
+        !verifyBindingTokenHash(sessionData.clientBindingHash, bindingToken))
+    ) {
       await redis.del(`dataroom_session:${sessionToken}`);
       return null;
+    }
+
+    // Keep IP for telemetry/watermark context only; do not invalidate session on IP rotation.
+    const ipAddressValue = normalizeIp(getIpAddress(req.headers) ?? LOCALHOST_IP);
+    if (ipAddressValue !== sessionData.ipAddress) {
+      await redis.set(
+        `dataroom_session:${sessionToken}`,
+        JSON.stringify({ ...sessionData, ipAddress: ipAddressValue }),
+        { pxat: sessionData.expiresAt },
+      );
+      sessionData.ipAddress = ipAddressValue;
     }
 
     if (sessionData.linkId !== linkId) {
@@ -205,9 +268,7 @@ export async function updateDataroomSessionVerified(
   if (!raw) return false;
 
   try {
-    const sessionData = DataroomSessionSchema.parse(
-      typeof raw === "string" ? JSON.parse(raw) : raw,
-    );
+    const sessionData = parseDataroomSession(raw);
     if (sessionData.expiresAt < Date.now()) {
       await redis.del(`dataroom_session:${sessionToken}`);
       return false;
@@ -228,3 +289,7 @@ export async function updateDataroomSessionVerified(
 }
 
 export { createDataroomSession, verifyDataroomSession };
+export {
+  getDataroomSessionCookieName,
+  getDataroomSessionBindingCookieName,
+};

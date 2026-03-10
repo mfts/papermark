@@ -9,7 +9,11 @@ import {
 import { ipAddress, waitUntil } from "@vercel/functions";
 import { z } from "zod";
 
-import { createDataroomSession } from "@/lib/auth/dataroom-auth";
+import {
+  createDataroomSession,
+  getDataroomSessionBindingCookieName,
+  getDataroomSessionCookieName,
+} from "@/lib/auth/dataroom-auth";
 import { createLinkSession } from "@/lib/auth/link-session";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import prisma from "@/lib/prisma";
@@ -365,8 +369,20 @@ async function handleAccess(req: NextRequest, link: any) {
     );
 
     cookies().set(
-      `pm_drs_${executionResult.targetLinkId}`,
+      getDataroomSessionCookieName(executionResult.targetLinkId!),
       dataroomSession.token,
+      {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        expires: new Date(dataroomSession.expiresAt),
+        path: "/",
+      },
+    );
+
+    cookies().set(
+      getDataroomSessionBindingCookieName(executionResult.targetLinkId!),
+      dataroomSession.bindingToken,
       {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",

@@ -4,6 +4,8 @@ import { parse } from "cookie";
 
 import {
   createDataroomSession,
+  getDataroomSessionBindingCookieName,
+  getDataroomSessionCookieName,
   getDataroomSessionByLinkIdInPagesRouter,
   updateDataroomSessionVerified,
 } from "@/lib/auth/dataroom-auth";
@@ -180,12 +182,12 @@ export default async function handler(
   });
 
   const cookies = parse(req.headers.cookie || "");
-  let sessionToken = cookies[`pm_drs_${linkId}`];
+  let sessionToken = cookies[getDataroomSessionCookieName(linkId)];
 
   const needNewSession = async () => {
     if (!view.dataroomId) return;
     const ipAddressValue = getIpAddress(req.headers) ?? "unknown";
-    const { token, expiresAt } = await createDataroomSession(
+    const { token, bindingToken, expiresAt } = await createDataroomSession(
       view.dataroomId,
       linkId,
       viewId,
@@ -195,8 +197,10 @@ export default async function handler(
     );
     sessionToken = token;
     const maxAge = Math.floor((expiresAt - Date.now()) / 1000);
+    const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
     res.setHeader("Set-Cookie", [
-      `pm_drs_${linkId}=${token}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Lax`,
+      `${getDataroomSessionCookieName(linkId)}=${token}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Lax${secure}`,
+      `${getDataroomSessionBindingCookieName(linkId)}=${bindingToken}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Lax${secure}`,
     ]);
   };
 
