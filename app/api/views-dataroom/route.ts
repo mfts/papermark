@@ -10,6 +10,7 @@ import { getServerSession } from "next-auth";
 import { hashToken } from "@/lib/api/auth/token";
 import {
   DataroomSession,
+  collectFingerprintHeaders,
   createDataroomSession,
   generateSessionFingerprint,
 } from "@/lib/auth/dataroom-auth";
@@ -755,8 +756,7 @@ export async function POST(request: NextRequest) {
         // Create a dataroom session token if a dataroom session doesn't exist yet
         if (!dataroomSession && !isPreview) {
           const fingerprint = generateSessionFingerprint(
-            request.headers.get("user-agent") ?? "unknown",
-            request.headers.get("accept-language") ?? undefined,
+            collectFingerprintHeaders(request.headers),
           );
           const newDataroomSession = await createDataroomSession(
             link.dataroomId!,
@@ -1074,8 +1074,7 @@ export async function POST(request: NextRequest) {
       // Create a dataroom session token if a dataroom session doesn't exist yet
       if (!dataroomSession && !isPreview) {
         const fingerprint = generateSessionFingerprint(
-          request.headers.get("user-agent") ?? "unknown",
-          request.headers.get("accept-language") ?? undefined,
+          collectFingerprintHeaders(request.headers),
         );
         const newDataroomSession = await createDataroomSession(
           link.dataroomId!,

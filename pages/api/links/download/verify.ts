@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { parse } from "cookie";
 
 import {
+  collectFingerprintHeaders,
   createDataroomSession,
   generateSessionFingerprint,
   getDataroomSessionByLinkIdInPagesRouter,
@@ -186,15 +187,13 @@ export default async function handler(
   const needNewSession = async () => {
     if (!view.dataroomId) return;
     const ipAddressValue = getIpAddress(req.headers) ?? "unknown";
-    const ua =
-      (Array.isArray(req.headers["user-agent"])
-        ? req.headers["user-agent"][0]
-        : req.headers["user-agent"]) ?? "unknown";
-    const lang =
-      (Array.isArray(req.headers["accept-language"])
-        ? req.headers["accept-language"][0]
-        : req.headers["accept-language"]) ?? undefined;
-    const fingerprint = generateSessionFingerprint(ua, lang);
+    const pagesHeader = (name: string) => {
+      const v = req.headers[name];
+      return (Array.isArray(v) ? v[0] : v) ?? null;
+    };
+    const fingerprint = generateSessionFingerprint(
+      collectFingerprintHeaders({ get: pagesHeader }),
+    );
     const { token, expiresAt } = await createDataroomSession(
       view.dataroomId,
       linkId,

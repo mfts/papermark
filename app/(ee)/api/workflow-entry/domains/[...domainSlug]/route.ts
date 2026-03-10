@@ -10,6 +10,7 @@ import { ipAddress, waitUntil } from "@vercel/functions";
 import { z } from "zod";
 
 import {
+  collectFingerprintHeaders,
   createDataroomSession,
   generateSessionFingerprint,
 } from "@/lib/auth/dataroom-auth";
@@ -359,8 +360,7 @@ async function handleAccess(req: NextRequest, link: any) {
     viewer
   ) {
     const fingerprint = generateSessionFingerprint(
-      userAgent,
-      req.headers.get("accept-language") ?? undefined,
+      collectFingerprintHeaders(req.headers),
     );
     const dataroomSession = await createDataroomSession(
       executionResult.targetDataroomId,

@@ -32,33 +32,54 @@ function normalizeIp(ip: string): string {
 
 /**
  * Generate a stable browser fingerprint from request headers.
- * Uses User-Agent and Accept-Language which remain constant across IP changes
- * but differ between browsers/devices, preventing session sharing.
+ * Combines User-Agent, Accept-Language, and Sec-CH-UA client hints
+ * which remain constant across IP changes but differ between
+ * browsers/devices, making session sharing significantly harder.
+ *
+ * Sec-CH-UA headers are automatically sent by Chromium browsers and
+ * cannot be overridden by simple cookie-copy tools or browser extensions.
  */
-export function generateSessionFingerprint(
-  userAgent: string,
-  acceptLanguage?: string,
-): string {
-  const raw = `${userAgent}|${acceptLanguage ?? ""}`;
-  return crypto.createHash("sha256").update(raw).digest("hex");
+export function generateSessionFingerprint(headers: {
+  userAgent: string;
+  acceptLanguage?: string;
+  secChUa?: string;
+  secChUaPlatform?: string;
+  secChUaMobile?: string;
+}): string {
+  const parts = [
+    headers.userAgent,
+    headers.acceptLanguage ?? "",
+    headers.secChUa ?? "",
+    headers.secChUaPlatform ?? "",
+    headers.secChUaMobile ?? "",
+  ];
+  return crypto.createHash("sha256").update(parts.join("|")).digest("hex");
+}
+
+export function collectFingerprintHeaders(h: {
+  get(name: string): string | null;
+}): Parameters<typeof generateSessionFingerprint>[0] {
+  return {
+    userAgent: h.get("user-agent") ?? "unknown",
+    acceptLanguage: h.get("accept-language") ?? undefined,
+    secChUa: h.get("sec-ch-ua") ?? undefined,
+    secChUaPlatform: h.get("sec-ch-ua-platform") ?? undefined,
+    secChUaMobile: h.get("sec-ch-ua-mobile") ?? undefined,
+  };
 }
 
 function getFingerprintFromNextRequest(request: NextRequest): string {
-  const ua = request.headers.get("user-agent") ?? "unknown";
-  const lang = request.headers.get("accept-language") ?? undefined;
-  return generateSessionFingerprint(ua, lang);
+  return generateSessionFingerprint(collectFingerprintHeaders(request.headers));
 }
 
 function getFingerprintFromPagesRequest(req: NextApiRequest): string {
-  const ua =
-    (Array.isArray(req.headers["user-agent"])
-      ? req.headers["user-agent"][0]
-      : req.headers["user-agent"]) ?? "unknown";
-  const lang =
-    (Array.isArray(req.headers["accept-language"])
-      ? req.headers["accept-language"][0]
-      : req.headers["accept-language"]) ?? undefined;
-  return generateSessionFingerprint(ua, lang);
+  const header = (name: string) => {
+    const v = req.headers[name];
+    return (Array.isArray(v) ? v[0] : v) ?? null;
+  };
+  return generateSessionFingerprint(
+    collectFingerprintHeaders({ get: header }),
+  );
 }
 
 // Define the Zod schema for session data

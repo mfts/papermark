@@ -7,6 +7,7 @@ import { ipAddress } from "@vercel/functions";
 import { z } from "zod";
 
 import {
+  collectFingerprintHeaders,
   createDataroomSession,
   generateSessionFingerprint,
 } from "@/lib/auth/dataroom-auth";
@@ -241,8 +242,7 @@ export async function POST(
       viewer
     ) {
       const fingerprint = generateSessionFingerprint(
-        userAgent,
-        req.headers.get("accept-language") ?? undefined,
+        collectFingerprintHeaders(req.headers),
       );
       const dataroomSession = await createDataroomSession(
         executionResult.targetDataroomId,
