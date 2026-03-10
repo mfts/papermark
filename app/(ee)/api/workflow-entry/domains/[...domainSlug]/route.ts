@@ -9,7 +9,10 @@ import {
 import { ipAddress, waitUntil } from "@vercel/functions";
 import { z } from "zod";
 
-import { createDataroomSession } from "@/lib/auth/dataroom-auth";
+import {
+  createDataroomSession,
+  generateSessionFingerprint,
+} from "@/lib/auth/dataroom-auth";
 import { createLinkSession } from "@/lib/auth/link-session";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import prisma from "@/lib/prisma";
@@ -355,6 +358,10 @@ async function handleAccess(req: NextRequest, link: any) {
     executionResult.targetDataroomId &&
     viewer
   ) {
+    const fingerprint = generateSessionFingerprint(
+      userAgent,
+      req.headers.get("accept-language") ?? undefined,
+    );
     const dataroomSession = await createDataroomSession(
       executionResult.targetDataroomId,
       executionResult.targetLinkId!,
@@ -362,6 +369,7 @@ async function handleAccess(req: NextRequest, link: any) {
       ipAddressValue,
       true, // verified
       viewer.id,
+      fingerprint,
     );
 
     cookies().set(

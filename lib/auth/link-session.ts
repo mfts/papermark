@@ -2,12 +2,10 @@
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 
-import { ipAddress } from "@vercel/functions";
 import crypto from "crypto";
 import { z } from "zod";
 
 import { redis } from "@/lib/redis";
-import { LOCALHOST_IP } from "@/lib/utils/geo";
 
 const COOKIE_EXPIRATION_TIME = 23 * 60 * 60 * 1000; // 23 hours
 
@@ -105,14 +103,7 @@ export async function verifyLinkSession(
       return null;
     }
 
-    // Verify IP address
-    const currentIp = ipAddress(request) ?? LOCALHOST_IP;
-    if (currentIp !== sessionData.ipAddress) {
-      await deleteLinkSession(sessionToken, sessionData.viewerId);
-      return null;
-    }
-
-    // Verify User Agent
+    // Verify User Agent (stable across IP changes, prevents session sharing)
     const currentUserAgent = request.headers.get("user-agent") ?? "unknown";
     if (currentUserAgent !== sessionData.userAgent) {
       await deleteLinkSession(sessionToken, sessionData.viewerId);

@@ -6,7 +6,10 @@ import { AccessRequestSchema } from "@/ee/features/workflows/lib/types";
 import { ipAddress } from "@vercel/functions";
 import { z } from "zod";
 
-import { createDataroomSession } from "@/lib/auth/dataroom-auth";
+import {
+  createDataroomSession,
+  generateSessionFingerprint,
+} from "@/lib/auth/dataroom-auth";
 import { createLinkSession } from "@/lib/auth/link-session";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
@@ -237,6 +240,10 @@ export async function POST(
       executionResult.targetDataroomId &&
       viewer
     ) {
+      const fingerprint = generateSessionFingerprint(
+        userAgent,
+        req.headers.get("accept-language") ?? undefined,
+      );
       const dataroomSession = await createDataroomSession(
         executionResult.targetDataroomId,
         executionResult.targetLinkId!,
@@ -244,6 +251,7 @@ export async function POST(
         ipAddressValue,
         true, // verified
         viewer.id,
+        fingerprint,
       );
 
       cookies().set(

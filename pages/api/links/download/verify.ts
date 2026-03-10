@@ -4,6 +4,7 @@ import { parse } from "cookie";
 
 import {
   createDataroomSession,
+  generateSessionFingerprint,
   getDataroomSessionByLinkIdInPagesRouter,
   updateDataroomSessionVerified,
 } from "@/lib/auth/dataroom-auth";
@@ -185,6 +186,15 @@ export default async function handler(
   const needNewSession = async () => {
     if (!view.dataroomId) return;
     const ipAddressValue = getIpAddress(req.headers) ?? "unknown";
+    const ua =
+      (Array.isArray(req.headers["user-agent"])
+        ? req.headers["user-agent"][0]
+        : req.headers["user-agent"]) ?? "unknown";
+    const lang =
+      (Array.isArray(req.headers["accept-language"])
+        ? req.headers["accept-language"][0]
+        : req.headers["accept-language"]) ?? undefined;
+    const fingerprint = generateSessionFingerprint(ua, lang);
     const { token, expiresAt } = await createDataroomSession(
       view.dataroomId,
       linkId,
@@ -192,6 +202,7 @@ export default async function handler(
       ipAddressValue,
       true,
       view.viewerId ?? undefined,
+      fingerprint,
     );
     sessionToken = token;
     const maxAge = Math.floor((expiresAt - Date.now()) / 1000);

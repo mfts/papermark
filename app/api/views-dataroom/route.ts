@@ -11,6 +11,7 @@ import { hashToken } from "@/lib/api/auth/token";
 import {
   DataroomSession,
   createDataroomSession,
+  generateSessionFingerprint,
 } from "@/lib/auth/dataroom-auth";
 import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
 import { PreviewSession, verifyPreviewSession } from "@/lib/auth/preview-auth";
@@ -753,6 +754,10 @@ export async function POST(request: NextRequest) {
 
         // Create a dataroom session token if a dataroom session doesn't exist yet
         if (!dataroomSession && !isPreview) {
+          const fingerprint = generateSessionFingerprint(
+            request.headers.get("user-agent") ?? "unknown",
+            request.headers.get("accept-language") ?? undefined,
+          );
           const newDataroomSession = await createDataroomSession(
             link.dataroomId!,
             linkId,
@@ -760,6 +765,7 @@ export async function POST(request: NextRequest) {
             ipAddress(request) ?? LOCALHOST_IP,
             isEmailVerified,
             viewer?.id,
+            fingerprint,
           );
 
           let basePath = `/view/${linkId}`;
@@ -1067,6 +1073,10 @@ export async function POST(request: NextRequest) {
 
       // Create a dataroom session token if a dataroom session doesn't exist yet
       if (!dataroomSession && !isPreview) {
+        const fingerprint = generateSessionFingerprint(
+          request.headers.get("user-agent") ?? "unknown",
+          request.headers.get("accept-language") ?? undefined,
+        );
         const newDataroomSession = await createDataroomSession(
           link.dataroomId!,
           linkId,
@@ -1074,6 +1084,7 @@ export async function POST(request: NextRequest) {
           ipAddress(request) ?? LOCALHOST_IP,
           isEmailVerified,
           viewer?.id,
+          fingerprint,
         );
 
         let basePath = `/view/${linkId}`;
