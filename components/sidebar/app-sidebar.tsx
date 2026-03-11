@@ -4,11 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 
 import * as React from "react";
-import { useEffect, useState } from "react";
 
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
-import Cookies from "js-cookie";
 import {
   BrushIcon,
   CogIcon,
@@ -18,7 +16,6 @@ import {
   Loader,
   PauseCircleIcon,
   ServerIcon,
-  Sparkles as SparklesIcon,
   WorkflowIcon,
 } from "lucide-react";
 
@@ -28,6 +25,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
 import useLimits from "@/lib/swr/use-limits";
 import { useSlackIntegration } from "@/lib/swr/use-slack-integration";
+import { useSurveyStatus } from "@/lib/swr/use-survey";
 import { nFormatter } from "@/lib/utils";
 
 import { NavMain } from "@/components/sidebar/nav-main";
@@ -42,15 +40,12 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-import ProBanner from "../billing/pro-banner";
 import { Progress } from "../ui/progress";
 import { BadgeTooltip } from "../ui/tooltip";
-import SlackBanner from "./banners/slack-banner";
+import { SidebarCards, useSidebarCards } from "./sidebar-cards";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
-  const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
-  const [showSlackBanner, setShowSlackBanner] = useState<boolean | null>(null);
   const { currentTeam, teams, setCurrentTeam, isLoading }: TeamContextType =
     useTeam() || initialState;
   const {
@@ -84,18 +79,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Fetch datarooms for the current team (simple mode - no filters or extra data)
   const { datarooms } = useDataroomsSimple();
 
-  useEffect(() => {
-    if (Cookies.get("hideProBanner") !== "pro-banner") {
-      setShowProBanner(true);
-    } else {
-      setShowProBanner(false);
-    }
-    if (Cookies.get("hideSlackBanner") !== "slack-banner") {
-      setShowSlackBanner(true);
-    } else {
-      setShowSlackBanner(false);
-    }
-  }, []);
+  const { isComplete: surveyComplete } = useSurveyStatus({
+    enabled: !!currentTeam?.id,
+  });
+
+  const sidebarCards = useSidebarCards({
+    isFree: !!isFree,
+    hasSlackIntegration: !!slackIntegration,
+    hasSurvey: surveyComplete,
+  });
 
   // Prepare datarooms items for sidebar (limit to first 5, sorted by most recent)
   const dataroomItems =
@@ -309,19 +301,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu className="group-data-[collapsible=icon]:hidden">
           <SidebarMenuItem>
             <div>
-              {/*
-               * Show Slack banner to all users if they haven't dismissed it and don't have Slack connected
-               */}
-              {!slackIntegration && showSlackBanner ? (
-                <SlackBanner setShowSlackBanner={setShowSlackBanner} />
-              ) : null}
-              {/*
-               * if user is free and showProBanner is true show pro banner
-               */}
-              {isFree && showProBanner ? (
-                <ProBanner setShowProBanner={setShowProBanner} />
-              ) : null}
-
               <div className="mb-2">
                 {linksLimit ? (
                   <UsageProgress
@@ -345,6 +324,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </p>
                 ) : null}
               </div>
+              <SidebarCards cards={sidebarCards} />
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
