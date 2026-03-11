@@ -135,7 +135,7 @@ export default function DataroomsPage() {
                     })()}
                   </span>
                 </div>
-                {datarooms.length === 0 ? (
+                {totalDatarooms < limitDatarooms ? (
                   <AddDataroomModal>
                     <Button
                       className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
