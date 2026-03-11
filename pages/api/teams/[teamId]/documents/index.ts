@@ -270,41 +270,73 @@ export default async function handle(
           include: {
             _count: {
               select: {
-                documents: true,
-                childFolders: true,
+                documents: {
+                  where: {
+                    hiddenInAllDocuments: false,
+                  },
+                },
+                childFolders: {
+                  where: {
+                    hiddenInAllDocuments: false,
+                  },
+                },
               },
             },
           },
           orderBy: { name: "asc" },
         });
 
-        matchingFolders = await Promise.all(
-          folders.map(async (folder) => {
-            const folderNames: string[] = [];
-            const parentPath = folder.path.substring(
-              0,
-              folder.path.lastIndexOf("/"),
+        const allParentPaths = new Set<string>();
+        for (const folder of folders) {
+          const parentPath = folder.path.substring(
+            0,
+            folder.path.lastIndexOf("/"),
+          );
+          if (!parentPath) continue;
+
+          const pathSegments = parentPath.split("/").filter(Boolean);
+          for (let index = 0; index < pathSegments.length; index++) {
+            allParentPaths.add(
+              `/${pathSegments.slice(0, index + 1).join("/")}`,
             );
-            if (parentPath) {
-              const pathSegments = parentPath.split("/").filter(Boolean);
-              if (pathSegments.length > 0) {
-                const parentPaths = pathSegments.map((_, index) =>
-                  "/" + pathSegments.slice(0, index + 1).join("/"),
-                );
-                const parentFolders = await prisma.folder.findMany({
-                  where: {
-                    teamId,
-                    path: { in: parentPaths },
-                  },
-                  select: { path: true, name: true },
-                  orderBy: { path: "asc" },
-                });
-                folderNames.push(...parentFolders.map((f) => f.name));
+          }
+        }
+
+        const parentFolders = allParentPaths.size
+          ? await prisma.folder.findMany({
+              where: {
+                teamId,
+                path: { in: Array.from(allParentPaths) },
+              },
+              select: { path: true, name: true },
+            })
+          : [];
+
+        const parentFolderNameByPath = new Map(
+          parentFolders.map((folder) => [folder.path, folder.name]),
+        );
+
+        matchingFolders = folders.map((folder) => {
+          const folderNames: string[] = [];
+          const parentPath = folder.path.substring(
+            0,
+            folder.path.lastIndexOf("/"),
+          );
+
+          if (parentPath) {
+            const pathSegments = parentPath.split("/").filter(Boolean);
+            for (let index = 0; index < pathSegments.length; index++) {
+              const path = `/${pathSegments.slice(0, index + 1).join("/")}`;
+              const parentFolderName = parentFolderNameByPath.get(path);
+
+              if (parentFolderName) {
+                folderNames.push(parentFolderName);
               }
             }
-            return { ...folder, folderList: folderNames };
-          }),
-        );
+          }
+
+          return { ...folder, folderList: folderNames };
+        });
       }
 
       return res.status(200).json({
