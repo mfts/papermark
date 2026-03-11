@@ -136,12 +136,9 @@ export default async function handle(
           returnData.file = primaryVersion.file;
         }
         returnData.numPages = 1;
-      } else {
-        return res.status(400).json({
-          message:
-            "Sheet preview requires advanced Excel mode. Enable it from the document settings.",
-        });
       }
+      // Non-advanced sheets: return 200 with advancedExcelEnabled=false so
+      // PreviewViewer renders its inline fallback instead of showing an error.
     } else if (primaryVersion.type === "notion") {
       // Notion documents - preview not supported
       return res.status(400).json({
