@@ -154,6 +154,18 @@ export default function DocumentView({
       const fetchData = await response.json();
 
       if (fetchData.type === "email-verification") {
+        const verificationEmail = data.email ?? verifiedEmail ?? userEmail;
+        if (verificationEmail) {
+          analytics.identify(verificationEmail);
+        }
+        analytics.capture("Email Verification Requested", {
+          linkId: link.id,
+          documentId: document.id,
+          documentName: document.name,
+          linkType: "DOCUMENT_LINK",
+          viewerEmail: verificationEmail,
+          teamId: link.teamId,
+        });
         setVerificationRequested(true);
         setIsLoading(false);
       } else {

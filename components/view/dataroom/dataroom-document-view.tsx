@@ -168,6 +168,19 @@ export default function DataroomDocumentView({
       const fetchData = await response.json();
 
       if (fetchData.type === "email-verification") {
+        const verificationEmail = data.email ?? verifiedEmail ?? userEmail;
+        if (verificationEmail) {
+          analytics.identify(verificationEmail);
+        }
+        analytics.capture("Email Verification Requested", {
+          linkId: link.id,
+          documentId: link.dataroomDocument.document.id,
+          documentName: link.dataroomDocument.document.name,
+          dataroomId: link.dataroomId,
+          linkType: "DATAROOM_LINK",
+          viewerEmail: verificationEmail,
+          teamId: link.teamId,
+        });
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
