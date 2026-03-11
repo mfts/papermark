@@ -135,17 +135,29 @@ export default function DataroomsPage() {
                     })()}
                   </span>
                 </div>
-                <UpgradePlanModal
-                  clickedPlan={PlanEnum.DataRooms}
-                  trigger="datarooms"
-                >
-                  <Button
-                    className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
-                    title="Upgrade to Add Data Room"
+                {totalDatarooms < limitDatarooms ? (
+                  <AddDataroomModal>
+                    <Button
+                      className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
+                      title="Create New Dataroom"
+                    >
+                      <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                      <span>Create New Dataroom</span>
+                    </Button>
+                  </AddDataroomModal>
+                ) : (
+                  <UpgradePlanModal
+                    clickedPlan={PlanEnum.DataRooms}
+                    trigger="datarooms"
                   >
-                    <span>Upgrade to Add Data Room</span>
-                  </Button>
-                </UpgradePlanModal>
+                    <Button
+                      className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
+                      title="Upgrade to Add Data Room"
+                    >
+                      <span>Upgrade to Add Data Room</span>
+                    </Button>
+                  </UpgradePlanModal>
+                )}
               </div>
             ) : isBusiness || isDatarooms || isDataroomsPlus ? (
               <AddDataroomModal>
