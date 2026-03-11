@@ -204,67 +204,21 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     }
 
     // Manage the data for the dataroom link
+    // Only pass the access shell (no documents/folders) to prevent data leakage
+    // in __NEXT_DATA__. Dataroom content is loaded post-auth via API.
     if (linkType === "DATAROOM_LINK") {
-      // iterate the link.documents and extract type and file and rest of the props
-      let documents = [];
-      for (const document of link.dataroom.documents) {
-        const primaryVersion = document.document.versions[0];
-        if (!primaryVersion) {
-          console.warn(
-            `Skipping document ${document.document.id} (${document.document.name}): no primary version`,
-          );
-          continue;
-        }
-
-        const { file, updatedAt, ...versionWithoutFile } = primaryVersion;
-
-        const newDocument = {
-          ...document.document,
-          dataroomDocumentId: document.id,
-          folderId: document.folderId,
-          orderIndex: document.orderIndex,
-          hierarchicalIndex: document.hierarchicalIndex,
-          versions: [
-            {
-              ...versionWithoutFile,
-              updatedAt:
-                document.updatedAt > updatedAt ? document.updatedAt : updatedAt, // use the latest updatedAt
-            },
-          ],
-        };
-
-        documents.push(newDocument);
-      }
-
-      const { teamId } = link.dataroom;
+      const teamId = link.teamId;
 
       // Check feature flags
       const featureFlags = await getFeatureFlags({ teamId });
       const dataroomIndexEnabled = featureFlags.dataroomIndex;
       const textSelectionEnabled = featureFlags.textSelection;
 
-      const lastUpdatedAt = link.dataroom.documents.reduce(
-        (max: number, doc: any) => {
-          const version = doc.document.versions[0];
-          if (!version) return max;
-          return Math.max(max, new Date(version.updatedAt).getTime());
-        },
-        new Date(link.dataroom.createdAt).getTime(),
-      );
-
       return {
         props: {
           linkData: {
             linkType: "DATAROOM_LINK",
-            link: {
-              ...link,
-              teamId: teamId || null,
-              dataroom: {
-                ...link.dataroom,
-                documents,
-                lastUpdatedAt: lastUpdatedAt,
-              },
-            },
+            link,
             brand,
           },
           meta: {
@@ -277,7 +231,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           },
           showPoweredByBanner: false,
           showAccountCreationSlide: false,
-          useAdvancedExcelViewer: false, // INFO: this is managed in the API route
+          useAdvancedExcelViewer: false,
           useCustomAccessForm:
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
             teamId === "clup33by90000oewh4rfvp2eg" ||
@@ -502,7 +456,7 @@ export default function ViewPage({
             favicon={meta.metaFavicon}
             enableBranding={meta.enableCustomMetatag ?? false}
             title={
-              meta.metaTitle ?? `${link?.dataroom?.name} | Powered by Papermark`
+              meta.metaTitle ?? "Secure Dataroom | Powered by Papermark"
             }
             description={meta.metaDescription ?? null}
             imageUrl={meta.metaImage ?? null}
@@ -546,7 +500,7 @@ export default function ViewPage({
           favicon={meta.metaFavicon}
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
-            meta.metaTitle ?? `${link?.dataroom?.name} | Powered by Papermark`
+            meta.metaTitle ?? "Secure Dataroom | Powered by Papermark"
           }
           description={meta.metaDescription ?? null}
           imageUrl={meta.metaImage ?? null}
