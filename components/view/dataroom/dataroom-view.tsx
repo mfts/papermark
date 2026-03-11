@@ -144,6 +144,14 @@ export default function DataroomView({
       const fetchData = await response.json();
 
       if (fetchData.type === "email-verification") {
+        analytics.capture("Email Verification Requested", {
+          linkId: link.id,
+          dataroomId: dataroom?.id,
+          dataroomName: dataroom?.name,
+          linkType: "DATAROOM_LINK",
+          viewerEmail: data.email ?? verifiedEmail ?? userEmail,
+          teamId: link.teamId,
+        });
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
