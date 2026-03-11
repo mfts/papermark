@@ -278,8 +278,11 @@ export default function DataroomDocumentCard({
                 hasPages:
                   dataroomDocument.document.versions?.[0]?.hasPages || false,
                 type: dataroomDocument.document.type,
-                numPages: null, // Not available in this context
+                numPages: null,
               }}
+              advancedExcelEnabled={
+                dataroomDocument.document.advancedExcelEnabled
+              }
               variant="outline"
               size="icon"
               className="z-10 h-8 w-8 border-gray-200 bg-transparent hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"

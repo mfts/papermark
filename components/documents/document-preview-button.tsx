@@ -14,6 +14,7 @@ interface DocumentPreviewButtonProps {
     type?: string | null;
     numPages?: number | null;
   };
+  advancedExcelEnabled?: boolean;
   isProcessing?: boolean;
   variant?: "ghost" | "outline" | "default";
   size?: "sm" | "default" | "lg" | "icon";
@@ -25,6 +26,7 @@ interface DocumentPreviewButtonProps {
 export function DocumentPreviewButton({
   documentId,
   primaryVersion,
+  advancedExcelEnabled = false,
   isProcessing = false,
   variant = "ghost",
   size = "icon",
@@ -44,7 +46,9 @@ export function DocumentPreviewButton({
     // Support image documents
     if (primaryVersion.type === "image") return true;
 
-    // Don't support sheets, notion, videos, etc.
+    // Support Excel sheets with advanced mode enabled
+    if (primaryVersion.type === "sheet" && advancedExcelEnabled) return true;
+
     return false;
   };
 

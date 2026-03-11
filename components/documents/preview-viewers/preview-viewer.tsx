@@ -1,5 +1,6 @@
 import { DocumentPreviewData } from "@/lib/types/document-preview";
 
+import { PreviewExcelViewer } from "./preview-excel-viewer";
 import { PreviewImageViewer } from "./preview-image-viewer";
 import { PreviewPagesViewer } from "./preview-pages-viewer";
 
@@ -24,13 +25,24 @@ export function PreviewViewer({ documentData, onClose }: PreviewViewerProps) {
       );
     }
 
-    // Excel/CSV files
-    if (documentData.fileType === "sheet" && documentData.sheetData) {
+    // Excel/CSV files with advanced mode
+    if (
+      documentData.fileType === "sheet" &&
+      documentData.advancedExcelEnabled &&
+      documentData.file
+    ) {
+      return (
+        <PreviewExcelViewer documentData={documentData} onClose={onClose} />
+      );
+    }
+
+    // Excel/CSV files without advanced mode
+    if (documentData.fileType === "sheet") {
       return (
         <div className="flex h-full w-full items-center justify-center">
           <div className="text-center">
             <p className="text-gray-400">
-              Sheet preview coming soon. Please preview via a shared link.
+              Enable advanced Excel mode to preview this document.
             </p>
           </div>
         </div>

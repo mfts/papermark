@@ -5,6 +5,7 @@ export interface DocumentPreviewData {
   fileType: string;
   isVertical: boolean;
   numPages: number;
+  advancedExcelEnabled?: boolean;
   pages?: {
     file: string;
     pageNumber: string;
