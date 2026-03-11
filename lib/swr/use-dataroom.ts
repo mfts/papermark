@@ -443,3 +443,43 @@ export function useDataroomVisitHistory({
     error,
   };
 }
+
+export type DataroomFolderWithCountAndPath = DataroomFolderWithCount & {
+  folderPath: string[];
+};
+
+export type DataroomFolderDocumentWithPath = DataroomFolderDocument & {
+  folderPath: string[];
+};
+
+export function useDataroomSearch({ query }: { query: string }) {
+  const router = useRouter();
+  const { id } = router.query as { id: string };
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
+
+  const { data, error } = useSWR<{
+    documents: DataroomFolderDocumentWithPath[];
+    folders: DataroomFolderWithCountAndPath[];
+  }>(
+    teamId &&
+      id &&
+      query &&
+      query.trim().length > 0 &&
+      `/api/teams/${teamId}/datarooms/${id}/search?query=${encodeURIComponent(query.trim())}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 10000,
+    },
+  );
+
+  const isLoading = query.trim().length > 0 && !data && !error;
+
+  return {
+    documents: data?.documents || [],
+    folders: data?.folders || [],
+    isLoading,
+    error,
+  };
+}

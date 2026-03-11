@@ -1,9 +1,15 @@
+import { useRouter } from "next/router";
+
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { ArrowUpDownIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
 
-import { useDataroom, useDataroomItems } from "@/lib/swr/use-dataroom";
+import {
+  useDataroom,
+  useDataroomItems,
+  useDataroomSearch,
+} from "@/lib/swr/use-dataroom";
 
 import DownloadDataroomButton from "@/components/datarooms/actions/download-dataroom";
 import GenerateIndexButton from "@/components/datarooms/actions/generate-index-button";
@@ -11,24 +17,36 @@ import RebuildIndexButton from "@/components/datarooms/actions/rebuild-index-but
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomItemsList } from "@/components/datarooms/dataroom-items-list";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
+import { DataroomSearchResults } from "@/components/datarooms/dataroom-search-results";
 import { SidebarFolderTree } from "@/components/datarooms/folders";
 import { DataroomSortableList } from "@/components/datarooms/sortable/sortable-list";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { LoadingDocuments } from "@/components/documents/loading-document";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
+import { SearchBoxPersisted } from "@/components/search-box";
 import { Button } from "@/components/ui/button";
 import { ResponsiveButton } from "@/components/ui/responsive-button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function Documents() {
+  const router = useRouter();
+  const searchQuery = (router.query.search as string) || "";
+
   const { dataroom } = useDataroom();
   const { items, folderCount, documentCount, isLoading } = useDataroomItems({
     root: true,
   });
+  const {
+    documents: searchDocuments,
+    folders: searchFolders,
+    isLoading: isSearching,
+  } = useDataroomSearch({ query: searchQuery });
+
   const teamInfo = useTeam();
 
   const [isReordering, setIsReordering] = useState<boolean>(false);
+  const isSearchActive = searchQuery.trim().length > 0;
 
   return (
     <AppLayout>
@@ -106,25 +124,48 @@ export default function Documents() {
             </ScrollArea>
           </div>
           <div className="space-y-4 md:col-span-3">
-            <section id="documents-header-count" className="min-h-8" />
+            <SearchBoxPersisted
+              inputClassName="h-9"
+              placeholder="Search documents and folders..."
+            />
 
-            {isLoading ? <LoadingDocuments count={3} /> : null}
-
-            {isReordering ? (
-              <DataroomSortableList
-                mixedItems={items}
-                teamInfo={teamInfo}
-                dataroomId={dataroom?.id!}
-                setIsReordering={setIsReordering}
-              />
+            {isSearchActive ? (
+              <>
+                {isSearching ? (
+                  <LoadingDocuments count={3} />
+                ) : (
+                  <DataroomSearchResults
+                    documents={searchDocuments}
+                    folders={searchFolders}
+                    teamInfo={teamInfo}
+                    dataroomId={dataroom?.id!}
+                    searchQuery={searchQuery}
+                  />
+                )}
+              </>
             ) : (
-              <DataroomItemsList
-                mixedItems={items}
-                teamInfo={teamInfo}
-                dataroomId={dataroom?.id!}
-                folderCount={folderCount}
-                documentCount={documentCount}
-              />
+              <>
+                <section id="documents-header-count" className="min-h-8" />
+
+                {isLoading ? <LoadingDocuments count={3} /> : null}
+
+                {isReordering ? (
+                  <DataroomSortableList
+                    mixedItems={items}
+                    teamInfo={teamInfo}
+                    dataroomId={dataroom?.id!}
+                    setIsReordering={setIsReordering}
+                  />
+                ) : (
+                  <DataroomItemsList
+                    mixedItems={items}
+                    teamInfo={teamInfo}
+                    dataroomId={dataroom?.id!}
+                    folderCount={folderCount}
+                    documentCount={documentCount}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>
