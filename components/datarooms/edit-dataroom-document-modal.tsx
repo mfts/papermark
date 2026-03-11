@@ -24,6 +24,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+type DataroomIncludeDocumentsItem =
+  | DataroomFolderWithDocuments
+  | {
+      id: string;
+      folderId: string | null;
+      hierarchicalIndex: string | null;
+      document: {
+        id: string;
+        name: string;
+        type: string;
+      };
+    };
+
 function updateDocNameInDocuments(
   _: null,
   docs: DataroomFolderDocument[] | undefined,
@@ -57,6 +70,36 @@ function updateDocNameInFolderTree(
     childFolders: (folder.childFolders ?? []).map(updateFolder),
   });
   return folders.map(updateFolder);
+}
+
+function updateDocNameInIncludeDocumentsTree(
+  _: null,
+  items: DataroomIncludeDocumentsItem[] | undefined,
+  docId: string,
+  newName: string,
+): DataroomIncludeDocumentsItem[] | undefined {
+  if (!items) return items;
+  const updateFolder = (
+    folder: DataroomFolderWithDocuments,
+  ): DataroomFolderWithDocuments => ({
+    ...folder,
+    documents: (folder.documents ?? []).map((doc) =>
+      doc.document.id === docId
+        ? { ...doc, document: { ...doc.document, name: newName } }
+        : doc,
+    ),
+    childFolders: (folder.childFolders ?? []).map(updateFolder),
+  });
+
+  return items.map((item) => {
+    if ("childFolders" in item) {
+      return updateFolder(item);
+    }
+
+    return item.document.id === docId
+      ? { ...item, document: { ...item.document, name: newName } }
+      : item;
+  });
 }
 
 export function EditDataroomDocumentModal({
@@ -94,14 +137,14 @@ export function EditDataroomDocumentModal({
     event.preventDefault();
     event.stopPropagation();
 
-    const validation = editDocumentNameSchema.safeParse({ name });
+    const trimmedName = name.trim();
+    const validation = editDocumentNameSchema.safeParse({ name: trimmedName });
     if (!validation.success) {
       return toast.error(validation.error.errors[0].message);
     }
 
     setLoading(true);
 
-    const trimmedName = name.trim();
     const teamId = teamInfo?.currentTeam?.id;
     const baseKey = `/api/teams/${teamId}/datarooms/${dataroomId}`;
 
@@ -152,8 +195,13 @@ export function EditDataroomDocumentModal({
         revalidate: false,
       });
       mutate(`${baseKey}/folders?include_documents=true`, null, {
-        populateCache: (_, folders) =>
-          updateDocNameInFolderTree(_, folders, documentId, trimmedName),
+        populateCache: (_, items) =>
+          updateDocNameInIncludeDocumentsTree(
+            _,
+            items,
+            documentId,
+            trimmedName,
+          ),
         revalidate: false,
       });
     } catch (error) {
