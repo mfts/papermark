@@ -220,7 +220,7 @@ export function ViewerUploadComponent({
             Drag & drop files here, or click to select files
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Supported file types: PDF, Excel, CSV, Images
+            Supported: PDF, Office, spreadsheets, images, ZIP, and more
           </p>
         </div>
       )}
