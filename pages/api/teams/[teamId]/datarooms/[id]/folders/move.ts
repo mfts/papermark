@@ -60,10 +60,32 @@ export default async function handle(
           },
         });
 
+        // Prevent moving a folder into itself or one of its descendants
+        if (selectedFolder) {
+          const folderIdSet = new Set(folderIds);
+          let currentId: string | null = selectedFolder;
+          const visited = new Set<string>();
+          while (currentId) {
+            if (folderIdSet.has(currentId)) {
+              return res.status(400).json({
+                message:
+                  "Cannot move a folder into itself or one of its subfolders",
+              });
+            }
+            if (visited.has(currentId)) break;
+            visited.add(currentId);
+            const parent = await prisma.dataroomFolder.findUnique({
+              where: { id: currentId, dataroomId },
+              select: { parentId: true },
+            });
+            currentId = parent?.parentId ?? null;
+          }
+        }
+
         const existingFolders = await prisma.dataroomFolder.findMany({
           where: {
             dataroomId: dataroomId,
-            parentId: selectedFolder, // Check only inside the target folder can be null
+            parentId: selectedFolder,
           },
           select: { name: true },
         });

@@ -130,9 +130,11 @@ const getParentFolders = (
   folders: DataroomFolder[],
 ): DataroomFolder[] => {
   const breadcrumbFolders: DataroomFolder[] = [];
+  const visited = new Set<string>();
   let currentFolder = folders.find((folder) => folder.id === folderId);
 
-  while (currentFolder) {
+  while (currentFolder && !visited.has(currentFolder.id)) {
+    visited.add(currentFolder.id);
     breadcrumbFolders.unshift(currentFolder);
     currentFolder = folders.find(
       (folder) => folder.id === currentFolder!.parentId,
@@ -221,11 +223,9 @@ export default function DataroomViewer({
   const folderEffectiveUpdatedAt = useMemo(() => {
     const effectiveUpdatedAt = new Map<string, Date>();
 
-    // Create maps for fast lookups
     const folderChildren = new Map<string, string[]>();
     const folderDocuments = new Map<string, DataroomDocument[]>();
 
-    // Build folder hierarchy map
     folders.forEach((folder) => {
       const parentId = folder.parentId || "root";
       if (!folderChildren.has(parentId)) {
@@ -234,7 +234,6 @@ export default function DataroomViewer({
       folderChildren.get(parentId)!.push(folder.id);
     });
 
-    // Build document map
     documents.forEach((doc) => {
       const folderId = doc.folderId || "root";
       if (!folderDocuments.has(folderId)) {
@@ -243,19 +242,25 @@ export default function DataroomViewer({
       folderDocuments.get(folderId)!.push(doc);
     });
 
-    // Calculate effective updatedAt bottom-up (post-order traversal)
-    const calculateEffectiveUpdatedAt = (folderId: string): Date => {
-      // Return cached result if already calculated
+    // Track ancestors on the current recursion stack to detect cycles
+    const calculateEffectiveUpdatedAt = (
+      folderId: string,
+      ancestors: Set<string>,
+    ): Date => {
       if (effectiveUpdatedAt.has(folderId)) {
         return effectiveUpdatedAt.get(folderId)!;
+      }
+
+      if (ancestors.has(folderId)) {
+        return new Date(0);
       }
 
       const folder = folders.find((f) => f.id === folderId);
       if (!folder) return new Date(0);
 
       let maxDate = new Date(folder.updatedAt);
+      ancestors.add(folderId);
 
-      // Check documents in this folder
       const docsInFolder = folderDocuments.get(folderId) || [];
       docsInFolder.forEach((doc) => {
         if (doc.versions && doc.versions.length > 0) {
@@ -264,21 +269,19 @@ export default function DataroomViewer({
         }
       });
 
-      // Check child folders recursively
       const childFolderIds = folderChildren.get(folderId) || [];
       childFolderIds.forEach((childId) => {
-        const childDate = calculateEffectiveUpdatedAt(childId);
+        const childDate = calculateEffectiveUpdatedAt(childId, ancestors);
         if (childDate > maxDate) maxDate = childDate;
       });
 
-      // Cache and return result
+      ancestors.delete(folderId);
       effectiveUpdatedAt.set(folderId, maxDate);
       return maxDate;
     };
 
-    // Calculate for all folders
     folders.forEach((folder) => {
-      calculateEffectiveUpdatedAt(folder.id);
+      calculateEffectiveUpdatedAt(folder.id, new Set());
     });
 
     return effectiveUpdatedAt;

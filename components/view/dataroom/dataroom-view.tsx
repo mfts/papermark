@@ -120,106 +120,119 @@ export default function DataroomView({
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
-    const response = await fetch("/api/views-dataroom", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        ...data,
-        email: data.email ?? verifiedEmail ?? userEmail ?? null,
-        linkId: link.id,
-        userId: userId ?? null,
-        dataroomId: dataroom?.id,
-        linkType: "DATAROOM_LINK",
-        viewType: "DATAROOM_VIEW",
-        previewToken,
-        code: code ?? undefined,
-        token: verificationToken ?? undefined,
-        verifiedEmail: verifiedEmail ?? undefined,
-      }),
-    });
-
-    if (response.ok) {
-      const fetchData = await response.json();
-
-      if (fetchData.type === "email-verification") {
-        analytics.capture("Email Verification Requested", {
+    try {
+      const response = await fetch("/api/views-dataroom", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...data,
+          email: data.email ?? verifiedEmail ?? userEmail ?? null,
           linkId: link.id,
+          userId: userId ?? null,
           dataroomId: dataroom?.id,
-          dataroomName: dataroom?.name,
           linkType: "DATAROOM_LINK",
-          viewerEmail: data.email ?? verifiedEmail ?? userEmail,
-          teamId: link.teamId,
-        });
-        setVerificationRequested(true);
-        setIsLoading(false);
-      } else {
-        const {
-          viewId,
-          isPreview,
-          verificationToken,
-          viewerEmail,
-          viewerId,
-          conversationsEnabled,
-          enableVisitorUpload,
-          isTeamMember,
-          agentsEnabled,
-          dataroomName,
-        } = fetchData as DEFAULT_DATAROOM_VIEW_TYPE;
+          viewType: "DATAROOM_VIEW",
+          previewToken,
+          code: code ?? undefined,
+          token: verificationToken ?? undefined,
+          verifiedEmail: verifiedEmail ?? undefined,
+        }),
+      });
 
-        analytics.identify(
-          userEmail ?? viewerEmail ?? verifiedEmail ?? data.email ?? undefined,
-        );
-        analytics.capture("Link Viewed", {
-          linkId: link.id,
-          dataroomId: dataroom?.id,
-          linkType: linkType,
-          viewerId: viewerId,
-          viewerEmail: viewerEmail ?? data.email ?? verifiedEmail ?? userEmail,
-          isEmbedded,
-          isTeamMember,
-          teamId: link.teamId,
-        });
+      if (response.ok) {
+        const fetchData = await response.json();
 
-        // set the verification token to the cookie
-        if (verificationToken) {
-          // Cookies.set("pm_vft", verificationToken, {
-          //   path: router.asPath.split("?")[0],
-          //   expires: 1,
-          //   sameSite: "strict",
-          //   secure: true,
-          // });
-          setCode(null);
+        if (fetchData.type === "email-verification") {
+          analytics.capture("Email Verification Requested", {
+            linkId: link.id,
+            dataroomId: dataroom?.id,
+            dataroomName: dataroom?.name,
+            linkType: "DATAROOM_LINK",
+            viewerEmail: data.email ?? verifiedEmail ?? userEmail,
+            teamId: link.teamId,
+          });
+          setVerificationRequested(true);
+          setIsLoading(false);
+        } else {
+          const {
+            viewId,
+            isPreview,
+            verificationToken,
+            viewerEmail,
+            viewerId,
+            conversationsEnabled,
+            enableVisitorUpload,
+            isTeamMember,
+            agentsEnabled,
+            dataroomName,
+          } = fetchData as DEFAULT_DATAROOM_VIEW_TYPE;
+
+          analytics.identify(
+            userEmail ??
+              viewerEmail ??
+              verifiedEmail ??
+              data.email ??
+              undefined,
+          );
+          analytics.capture("Link Viewed", {
+            linkId: link.id,
+            dataroomId: dataroom?.id,
+            linkType: linkType,
+            viewerId: viewerId,
+            viewerEmail:
+              viewerEmail ?? data.email ?? verifiedEmail ?? userEmail,
+            isEmbedded,
+            isTeamMember,
+            teamId: link.teamId,
+          });
+
+          // set the verification token to the cookie
+          if (verificationToken) {
+            // Cookies.set("pm_vft", verificationToken, {
+            //   path: router.asPath.split("?")[0],
+            //   expires: 1,
+            //   sameSite: "strict",
+            //   secure: true,
+            // });
+            setCode(null);
+          }
+
+          setViewData({
+            viewId,
+            isPreview,
+            viewerEmail,
+            viewerId,
+            conversationsEnabled,
+            enableVisitorUpload,
+            isTeamMember,
+            agentsEnabled,
+            dataroomName,
+          });
+          setSubmitted(true);
+          setVerificationRequested(false);
+          setIsLoading(false);
         }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        toast.error(
+          errorData.message || errorData.error || "An error occurred.",
+        );
 
-        setViewData({
-          viewId,
-          isPreview,
-          viewerEmail,
-          viewerId,
-          conversationsEnabled,
-          enableVisitorUpload,
-          isTeamMember,
-          agentsEnabled,
-          dataroomName,
-        });
-        setSubmitted(true);
-        setVerificationRequested(false);
+        if (errorData.resetVerification) {
+          const currentPath = router.asPath.split("?")[0];
+
+          Cookies.remove("pm_vft", { path: currentPath });
+          setVerificationToken(null);
+          setCode(null);
+          setIsInvalidCode(true);
+        }
         setIsLoading(false);
       }
-    } else {
-      const data = await response.json();
-      toast.error(data.message);
-
-      if (data.resetVerification) {
-        const currentPath = router.asPath.split("?")[0];
-
-        Cookies.remove("pm_vft", { path: currentPath });
-        setVerificationToken(null);
-        setCode(null);
-        setIsInvalidCode(true);
-      }
+    } catch (error) {
+      console.error("[DataroomView] handleSubmission error:", error);
+      toast.error("Failed to load the dataroom. Please try refreshing.");
       setIsLoading(false);
     }
   };

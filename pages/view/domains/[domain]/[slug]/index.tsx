@@ -27,6 +27,7 @@ import {
   NotionTheme,
 } from "@/lib/types";
 
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomMetaTag from "@/components/view/custom-metatag";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
@@ -207,8 +208,15 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       // iterate the link.documents and extract type and file and rest of the props
       let documents = [];
       for (const document of link.dataroom.documents) {
-        const { file, updatedAt, ...versionWithoutTypeAndFile } =
-          document.document.versions[0];
+        const primaryVersion = document.document.versions[0];
+        if (!primaryVersion) {
+          console.warn(
+            `Skipping document ${document.document.id} (${document.document.name}): no primary version`,
+          );
+          continue;
+        }
+
+        const { file, updatedAt, ...versionWithoutFile } = primaryVersion;
 
         const newDocument = {
           ...document.document,
@@ -218,7 +226,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           hierarchicalIndex: document.hierarchicalIndex,
           versions: [
             {
-              ...versionWithoutTypeAndFile,
+              ...versionWithoutFile,
               updatedAt:
                 document.updatedAt > updatedAt ? document.updatedAt : updatedAt, // use the latest updatedAt
             },
@@ -237,10 +245,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 
       const lastUpdatedAt = link.dataroom.documents.reduce(
         (max: number, doc: any) => {
-          return Math.max(
-            max,
-            new Date(doc.document.versions[0].updatedAt).getTime(),
-          );
+          const version = doc.document.versions[0];
+          if (!version) return max;
+          return Math.max(max, new Date(version.updatedAt).getTime());
         },
         new Date(link.dataroom.createdAt).getTime(),
       );
@@ -545,22 +552,24 @@ export default function ViewPage({
           imageUrl={meta.metaImage ?? null}
           url={meta.metaUrl ?? ""}
         />
-        <DataroomView
-          link={link}
-          userEmail={verifiedEmail ?? storedEmail ?? userEmail}
-          userId={userId}
-          isProtected={!!(emailProtected || linkPassword || enableAgreement)}
-          brand={brand}
-          disableEditEmail={!!disableEditEmail}
-          useCustomAccessForm={useCustomAccessForm}
-          token={storedToken}
-          verifiedEmail={verifiedEmail}
-          previewToken={previewToken}
-          preview={!!preview}
-          logoOnAccessForm={logoOnAccessForm}
-          dataroomIndexEnabled={dataroomIndexEnabled}
-          textSelectionEnabled={textSelectionEnabled}
-        />
+        <ErrorBoundary>
+          <DataroomView
+            link={link}
+            userEmail={verifiedEmail ?? storedEmail ?? userEmail}
+            userId={userId}
+            isProtected={!!(emailProtected || linkPassword || enableAgreement)}
+            brand={brand}
+            disableEditEmail={!!disableEditEmail}
+            useCustomAccessForm={useCustomAccessForm}
+            token={storedToken}
+            verifiedEmail={verifiedEmail}
+            previewToken={previewToken}
+            preview={!!preview}
+            logoOnAccessForm={logoOnAccessForm}
+            dataroomIndexEnabled={dataroomIndexEnabled}
+            textSelectionEnabled={textSelectionEnabled}
+          />
+        </ErrorBoundary>
       </>
     );
   }
