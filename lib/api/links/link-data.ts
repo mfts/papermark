@@ -134,6 +134,83 @@ async function getAllParentFolderIds(
 // Data Fetchers (used by both API routes and getStaticProps)
 // ============================================================================
 
+/**
+ * Lightweight fetch for dataroom link shell data (no documents/folders).
+ * Used by getStaticProps to avoid leaking dataroom content in __NEXT_DATA__.
+ */
+export async function fetchDataroomLinkShellData({
+  linkId,
+  teamId,
+}: {
+  linkId: string;
+  teamId: string;
+}) {
+  const linkData = await prisma.link.findUnique({
+    where: { id: linkId, teamId },
+    select: {
+      dataroom: {
+        select: {
+          id: true,
+          teamId: true,
+          createdAt: true,
+        },
+      },
+      group: {
+        select: {
+          accessControls: true,
+        },
+      },
+      permissionGroup: {
+        select: {
+          accessControls: true,
+        },
+      },
+    },
+  });
+
+  if (!linkData?.dataroom) {
+    throw new Error("Dataroom not found");
+  }
+
+  const dataroomBrand = await prisma.dataroomBrand.findFirst({
+    where: { dataroomId: linkData.dataroom.id },
+    select: {
+      logo: true,
+      banner: true,
+      brandColor: true,
+      accentColor: true,
+      applyAccentColorToDataroomView: true,
+      welcomeMessage: true,
+    },
+  });
+
+  const teamBrand = await prisma.brand.findFirst({
+    where: { teamId: linkData.dataroom.teamId },
+    select: {
+      logo: true,
+      banner: true,
+      brandColor: true,
+      accentColor: true,
+      applyAccentColorToDataroomView: true,
+      welcomeMessage: true,
+    },
+  });
+
+  const brand = {
+    logo: dataroomBrand?.logo || teamBrand?.logo,
+    banner: dataroomBrand?.banner || teamBrand?.banner || null,
+    brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
+    accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
+    applyAccentColorToDataroomView:
+      dataroomBrand?.applyAccentColorToDataroomView ??
+      teamBrand?.applyAccentColorToDataroomView ??
+      false,
+    welcomeMessage: dataroomBrand?.welcomeMessage || teamBrand?.welcomeMessage,
+  };
+
+  return { linkData, brand };
+}
+
 export async function fetchDataroomLinkData({
   linkId,
   dataroomId,
@@ -641,21 +718,15 @@ async function processLinkData(
         return { status: "not_found" };
       }
     } else {
-      // Fetching full dataroom
+      // For full dataroom views, only fetch the shell data (no documents/folders).
+      // Dataroom content is loaded post-auth via /api/links/[linkId]/dataroom-content.
       try {
-        const data = await fetchDataroomLinkData({
+        const data = await fetchDataroomLinkShellData({
           linkId: link.id,
-          dataroomId: link.dataroomId,
           teamId: link.teamId,
-          permissionGroupId: link.permissionGroupId || undefined,
-          ...(link.audienceType === LinkAudienceType.GROUP &&
-            link.groupId && {
-              groupId: link.groupId,
-            }),
         });
         linkData = data.linkData;
         brand = data.brand;
-        linkData.accessControls = data.accessControls;
       } catch {
         return { status: "not_found" };
       }
@@ -708,6 +779,10 @@ async function processLinkData(
     }),
   };
 
+  // For dataroom shell (full view, no dataroomDocumentId), strip content and internal fields
+  const isDataroomShell =
+    linkType === "DATAROOM_LINK" && !dataroomDocumentId;
+
   const returnLink = {
     ...sanitizedLink,
     ...linkData,
@@ -720,6 +795,18 @@ async function processLinkData(
         ? link.dataroomId || linkData?.dataroom?.id
         : undefined,
     dataroomDocument: linkData?.dataroom?.documents?.[0] || undefined,
+    // For the shell case, strip dataroom content and internal config not needed pre-auth
+    ...(isDataroomShell && {
+      dataroom: {
+        id: linkData?.dataroom?.id,
+      },
+      group: undefined,
+      permissionGroup: undefined,
+      accessControls: undefined,
+      groupId: undefined,
+      permissionGroupId: undefined,
+      audienceType: undefined,
+    }),
   };
 
   // Serialize to convert Date objects to strings (required for Next.js getStaticProps)

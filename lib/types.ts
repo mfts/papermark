@@ -126,9 +126,9 @@ export interface LinkWithDataroomDocument extends Link {
 export interface LinkWithDataroom extends Link {
   dataroom: {
     id: string;
-    name: string;
-    teamId: string;
-    documents: {
+    name?: string;
+    teamId?: string;
+    documents?: {
       id: string;
       folderId: string | null;
       updatedAt: Date;
@@ -148,9 +148,9 @@ export interface LinkWithDataroom extends Link {
         }[];
       };
     }[];
-    folders: DataroomFolder[];
-    lastUpdatedAt: Date;
-    createdAt: Date;
+    folders?: DataroomFolder[];
+    lastUpdatedAt?: Date;
+    createdAt?: Date;
   };
   group?: {
     accessControls: ViewerGroupAccessControls[];

@@ -52,10 +52,12 @@ export async function generateDataroomIndex(
 ): Promise<{ data: Buffer; filename: string; mimeType: string }> {
   const { format = "excel", baseUrl, showHierarchicalIndex = false } = options;
 
+  const { dataroom } = link;
+
   // Generate the index data structure
   const indexData: DataroomIndex = {
-    dataroomId: link.dataroom.id,
-    dataroomName: link.dataroom.name,
+    dataroomId: dataroom.id,
+    dataroomName: dataroom.name!,
     linkId: link.id,
     generatedAt: new Date(),
     entries: [],
@@ -89,7 +91,7 @@ export async function generateDataroomIndex(
 
     // Process documents in the folder
     const documents = (
-      link.dataroom?.documents as DataroomDocumentWithVersion[]
+      dataroom.documents as DataroomDocumentWithVersion[]
     ).filter((doc) => doc.folderId === folder.id);
 
     for (const doc of documents) {
@@ -116,7 +118,7 @@ export async function generateDataroomIndex(
     }
 
     // Process subfolders recursively
-    const childFolders = link.dataroom.folders.filter(
+    const childFolders = dataroom.folders!.filter(
       (f: DataroomFolder) => f.parentId === folder.id,
     );
     for (const childFolder of childFolders) {
@@ -127,21 +129,21 @@ export async function generateDataroomIndex(
   }
 
   // Process root level items
-  const rootFolders = link.dataroom.folders.filter(
+  const rootFolders = dataroom.folders!.filter(
     (f: DataroomFolder) => !f.parentId,
   );
   const rootDocuments = (
-    link.dataroom.documents as DataroomDocumentWithVersion[]
+    dataroom.documents as DataroomDocumentWithVersion[]
   ).filter((d) => !d.folderId);
 
   // Add root dataroom entry
   indexData.entries.push({
     hierarchicalIndex: showHierarchicalIndex ? "0" : undefined,
-    name: link.dataroom.name,
+    name: dataroom.name!,
     type: "Root Folder",
     path: "",
-    lastUpdated: link.dataroom.lastUpdatedAt,
-    createdAt: link.dataroom.createdAt,
+    lastUpdated: dataroom.lastUpdatedAt!,
+    createdAt: dataroom.createdAt!,
     onlineUrl: `${baseUrl}`,
   });
 
@@ -184,7 +186,7 @@ export async function generateDataroomIndex(
       day: "numeric",
     })
     .replace(",", ""); // Remove the comma that might appear between day and year
-  const safeFilename = `${link.dataroom.name.replace(/[^a-zA-Z0-9-_]/g, "_")}_Index_${date.replace(/[^a-zA-Z0-9]/g, "_")}`;
+  const safeFilename = `${dataroom.name!.replace(/[^a-zA-Z0-9-_]/g, "_")}_Index_${date.replace(/[^a-zA-Z0-9]/g, "_")}`;
 
   // Generate the output file based on the requested format
   switch (format) {
