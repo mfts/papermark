@@ -1,4 +1,4 @@
-import { FileIcon, Link as LinkIcon, MailIcon } from "lucide-react";
+import { FileIcon, FileTextIcon, Link as LinkIcon, MailIcon } from "lucide-react";
 
 import CadIcon from "@/components/shared/icons/files/cad";
 import DocsIcon from "@/components/shared/icons/files/docs";
@@ -71,6 +71,9 @@ export function fileIcon({
     case "application/vnd.ms-outlook":
     case "email":
       return <MailIcon className={className} />;
+    case "text/plain":
+    case "text":
+      return <FileTextIcon className={className} />;
     default:
       return <FileIcon className={className} />;
   }
