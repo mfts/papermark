@@ -60,10 +60,36 @@ export default async function handle(
           },
         });
 
+        // Prevent moving a folder into itself or one of its descendants.
+        // Single query to fetch the full parentId map, then walk in memory.
+        if (selectedFolder) {
+          const allFolders = await prisma.dataroomFolder.findMany({
+            where: { dataroomId },
+            select: { id: true, parentId: true },
+          });
+          const parentMap = new Map(
+            allFolders.map((f) => [f.id, f.parentId]),
+          );
+          const folderIdSet = new Set(folderIds);
+          const visited = new Set<string>();
+          let currentId: string | null = selectedFolder;
+          while (currentId) {
+            if (folderIdSet.has(currentId)) {
+              return res.status(400).json({
+                message:
+                  "Cannot move a folder into itself or one of its subfolders",
+              });
+            }
+            if (visited.has(currentId)) break;
+            visited.add(currentId);
+            currentId = parentMap.get(currentId) ?? null;
+          }
+        }
+
         const existingFolders = await prisma.dataroomFolder.findMany({
           where: {
             dataroomId: dataroomId,
-            parentId: selectedFolder, // Check only inside the target folder can be null
+            parentId: selectedFolder,
           },
           select: { name: true },
         });
