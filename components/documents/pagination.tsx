@@ -24,6 +24,7 @@ interface PaginationProps {
   onPageSizeChange: (size: number) => void;
   totalShownItems: number;
   itemName: string;
+  extraInfo?: string;
 }
 
 export function Pagination({
@@ -35,6 +36,7 @@ export function Pagination({
   onPageSizeChange,
   totalShownItems,
   itemName,
+  extraInfo,
 }: PaginationProps) {
   return (
     <Card className="mt-4 p-4">
@@ -42,6 +44,7 @@ export function Pagination({
         <div className="flex-1 text-sm text-muted-foreground">
           Showing <span className="font-bold">{totalShownItems}</span> of{" "}
           {totalItems} {itemName}
+          {extraInfo && <span className="ml-2">· {extraInfo}</span>}
         </div>
         <div className="flex items-center space-x-6 lg:space-x-8">
           <div className="hidden items-center space-x-2 sm:flex">

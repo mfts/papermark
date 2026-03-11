@@ -32,8 +32,14 @@ export default function Documents() {
   }
 
   const { folders, loading: foldersLoading } = useRootFolders();
-  const { documents, pagination, isValidating, isFiltered, loading } =
-    useDocuments();
+  const {
+    documents,
+    searchFolders,
+    pagination,
+    isValidating,
+    isFiltered,
+    loading,
+  } = useDocuments();
   const { folders: hiddenFolders, documents: hiddenDocuments } =
     useHiddenDocuments();
 
@@ -55,7 +61,7 @@ export default function Documents() {
     });
   };
 
-  const displayFolders = isFiltered ? [] : folders;
+  const displayFolders = isFiltered ? searchFolders ?? [] : folders;
 
   return (
     <AppLayout>
@@ -121,7 +127,7 @@ export default function Documents() {
           folders={displayFolders}
           teamInfo={teamInfo}
           loading={loading}
-          foldersLoading={foldersLoading}
+          foldersLoading={isFiltered ? loading : foldersLoading}
         />
 
         {isFiltered && pagination && (
@@ -134,6 +140,11 @@ export default function Documents() {
             onPageChange={updatePagination}
             onPageSizeChange={(size) => updatePagination(undefined, size)}
             itemName="documents"
+            extraInfo={
+              searchFolders && searchFolders.length > 0
+                ? `${searchFolders.length} folder${searchFolders.length > 1 ? "s" : ""} found`
+                : undefined
+            }
           />
         )}
       </div>

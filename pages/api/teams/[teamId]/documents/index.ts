@@ -248,8 +248,100 @@ export default async function handle(
         );
       }
 
+      let matchingFolders: any[] = [];
+      if (query) {
+        const folders = await prisma.folder.findMany({
+          where: {
+            teamId,
+            hiddenInAllDocuments: false,
+            name: {
+              contains: query,
+              mode: "insensitive",
+            },
+            OR: [
+              { parentId: null },
+              {
+                parentFolder: {
+                  hiddenInAllDocuments: false,
+                },
+              },
+            ],
+          },
+          include: {
+            _count: {
+              select: {
+                documents: {
+                  where: {
+                    hiddenInAllDocuments: false,
+                  },
+                },
+                childFolders: {
+                  where: {
+                    hiddenInAllDocuments: false,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: { name: "asc" },
+        });
+
+        const allParentPaths = new Set<string>();
+        for (const folder of folders) {
+          const parentPath = folder.path.substring(
+            0,
+            folder.path.lastIndexOf("/"),
+          );
+          if (!parentPath) continue;
+
+          const pathSegments = parentPath.split("/").filter(Boolean);
+          for (let index = 0; index < pathSegments.length; index++) {
+            allParentPaths.add(
+              `/${pathSegments.slice(0, index + 1).join("/")}`,
+            );
+          }
+        }
+
+        const parentFolders = allParentPaths.size
+          ? await prisma.folder.findMany({
+              where: {
+                teamId,
+                path: { in: Array.from(allParentPaths) },
+              },
+              select: { path: true, name: true },
+            })
+          : [];
+
+        const parentFolderNameByPath = new Map(
+          parentFolders.map((folder) => [folder.path, folder.name]),
+        );
+
+        matchingFolders = folders.map((folder) => {
+          const folderNames: string[] = [];
+          const parentPath = folder.path.substring(
+            0,
+            folder.path.lastIndexOf("/"),
+          );
+
+          if (parentPath) {
+            const pathSegments = parentPath.split("/").filter(Boolean);
+            for (let index = 0; index < pathSegments.length; index++) {
+              const path = `/${pathSegments.slice(0, index + 1).join("/")}`;
+              const parentFolderName = parentFolderNameByPath.get(path);
+
+              if (parentFolderName) {
+                folderNames.push(parentFolderName);
+              }
+            }
+          }
+
+          return { ...folder, folderList: folderNames };
+        });
+      }
+
       return res.status(200).json({
         documents: documentsWithFolderList,
+        ...(query && { folders: matchingFolders }),
         ...(usePagination && {
           pagination: {
             total: totalDocuments,
