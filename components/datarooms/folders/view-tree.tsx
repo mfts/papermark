@@ -96,7 +96,7 @@ const FolderComponent = memo(
   }: {
     folder: DataroomFolderWithDocuments;
     folderId: string | null;
-    setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
+    setFolderId: (id: string | null) => void;
     folderPath: Set<string> | null;
     dataroomIndexEnabled?: boolean;
   }) => {
@@ -182,7 +182,7 @@ const HomeLink = memo(
     setFolderId,
   }: {
     folderId: string | null;
-    setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
+    setFolderId: (id: string | null) => void;
   }) => {
     const { usesLightText, palette } = useViewerSurfaceTheme();
 
@@ -238,7 +238,7 @@ const SidebarFolders = ({
   folders: DataroomFolder[];
   documents: DataroomDocumentWithVersion[];
   folderId: string | null;
-  setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
+  setFolderId: (id: string | null) => void;
   dataroomIndexEnabled?: boolean;
 }) => {
   const { usesLightText, palette } = useViewerSurfaceTheme();
@@ -303,7 +303,7 @@ export function ViewFolderTree({
 }: {
   folders: DataroomFolder[];
   documents: DataroomDocumentWithVersion[];
-  setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
+  setFolderId: (id: string | null) => void;
   folderId: string | null;
   dataroomIndexEnabled?: boolean;
 }) {
