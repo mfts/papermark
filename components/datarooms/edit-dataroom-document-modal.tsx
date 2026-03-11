@@ -7,6 +7,11 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 import { z } from "zod";
 
+import {
+  type DataroomFolderDocument,
+  type DataroomFolderWithDocuments,
+} from "@/lib/swr/use-dataroom";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,6 +23,84 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+type DataroomIncludeDocumentsItem =
+  | DataroomFolderWithDocuments
+  | {
+      id: string;
+      folderId: string | null;
+      hierarchicalIndex: string | null;
+      document: {
+        id: string;
+        name: string;
+        type: string;
+      };
+    };
+
+function updateDocNameInDocuments(
+  _: null,
+  docs: DataroomFolderDocument[] | undefined,
+  docId: string,
+  newName: string,
+): DataroomFolderDocument[] | undefined {
+  if (!docs) return docs;
+  return docs.map((doc) =>
+    doc.document.id === docId
+      ? { ...doc, document: { ...doc.document, name: newName } }
+      : doc,
+  );
+}
+
+function updateDocNameInFolderTree(
+  _: null,
+  folders: DataroomFolderWithDocuments[] | undefined,
+  docId: string,
+  newName: string,
+): DataroomFolderWithDocuments[] | undefined {
+  if (!folders) return folders;
+  const updateFolder = (
+    folder: DataroomFolderWithDocuments,
+  ): DataroomFolderWithDocuments => ({
+    ...folder,
+    documents: (folder.documents ?? []).map((doc) =>
+      doc.document.id === docId
+        ? { ...doc, document: { ...doc.document, name: newName } }
+        : doc,
+    ),
+    childFolders: (folder.childFolders ?? []).map(updateFolder),
+  });
+  return folders.map(updateFolder);
+}
+
+function updateDocNameInIncludeDocumentsTree(
+  _: null,
+  items: DataroomIncludeDocumentsItem[] | undefined,
+  docId: string,
+  newName: string,
+): DataroomIncludeDocumentsItem[] | undefined {
+  if (!items) return items;
+  const updateFolder = (
+    folder: DataroomFolderWithDocuments,
+  ): DataroomFolderWithDocuments => ({
+    ...folder,
+    documents: (folder.documents ?? []).map((doc) =>
+      doc.document.id === docId
+        ? { ...doc, document: { ...doc.document, name: newName } }
+        : doc,
+    ),
+    childFolders: (folder.childFolders ?? []).map(updateFolder),
+  });
+
+  return items.map((item) => {
+    if ("childFolders" in item) {
+      return updateFolder(item);
+    }
+
+    return item.document.id === docId
+      ? { ...item, document: { ...item.document, name: newName } }
+      : item;
+  });
+}
 
 export function EditDataroomDocumentModal({
   open,
@@ -54,23 +137,27 @@ export function EditDataroomDocumentModal({
     event.preventDefault();
     event.stopPropagation();
 
-    const validation = editDocumentNameSchema.safeParse({ name });
+    const trimmedName = name.trim();
+    const validation = editDocumentNameSchema.safeParse({ name: trimmedName });
     if (!validation.success) {
       return toast.error(validation.error.errors[0].message);
     }
 
     setLoading(true);
 
+    const teamId = teamInfo?.currentTeam?.id;
+    const baseKey = `/api/teams/${teamId}/datarooms/${dataroomId}`;
+
     try {
       const response = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}/update-name`,
+        `/api/teams/${teamId}/documents/${documentId}/update-name`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: name.trim(),
+            name: trimmedName,
           }),
         },
       );
@@ -84,20 +171,39 @@ export function EditDataroomDocumentModal({
 
       toast.success("Document name updated successfully!");
 
-      // Revalidate the dataroom documents cache
-      mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
-      );
-      // Revalidate folder documents if the document is in a folder
+      mutate(`${baseKey}/documents`, null, {
+        populateCache: (_, docs) =>
+          updateDocNameInDocuments(_, docs, documentId, trimmedName),
+        revalidate: false,
+      });
+
       if (currentFolderPath) {
         mutate(
-          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders/documents/${currentFolderPath.join("/")}`,
+          `${baseKey}/folders/documents/${currentFolderPath.join("/")}`,
+          null,
+          {
+            populateCache: (_, docs) =>
+              updateDocNameInDocuments(_, docs, documentId, trimmedName),
+            revalidate: false,
+          },
         );
       }
-      // Revalidate the dataroom folders tree for sidebar
-      mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders?tree=true`,
-      );
+
+      mutate(`${baseKey}/folders`, null, {
+        populateCache: (_, folders) =>
+          updateDocNameInFolderTree(_, folders, documentId, trimmedName),
+        revalidate: false,
+      });
+      mutate(`${baseKey}/folders?include_documents=true`, null, {
+        populateCache: (_, items) =>
+          updateDocNameInIncludeDocumentsTree(
+            _,
+            items,
+            documentId,
+            trimmedName,
+          ),
+        revalidate: false,
+      });
     } catch (error) {
       setLoading(false);
       toast.error("Error updating document name. Please try again.");
