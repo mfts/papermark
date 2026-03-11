@@ -49,12 +49,12 @@ function updateDocNameInFolderTree(
     folder: DataroomFolderWithDocuments,
   ): DataroomFolderWithDocuments => ({
     ...folder,
-    documents: folder.documents.map((doc) =>
+    documents: (folder.documents ?? []).map((doc) =>
       doc.document.id === docId
         ? { ...doc, document: { ...doc.document, name: newName } }
         : doc,
     ),
-    childFolders: folder.childFolders.map(updateFolder),
+    childFolders: (folder.childFolders ?? []).map(updateFolder),
   });
   return folders.map(updateFolder);
 }
