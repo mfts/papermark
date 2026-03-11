@@ -84,7 +84,7 @@ export default function DataroomView({
   useDisablePrint();
   const {
     linkType,
-    dataroom,
+    dataroom: dataroomShell,
     emailProtected,
     password: linkPassword,
     enableAgreement,
@@ -110,6 +110,13 @@ export default function DataroomView({
     token ?? null,
   );
 
+  // Post-auth: dataroom content fetched from API
+  const [dataroomContent, setDataroomContent] = useState<any>(null);
+  const [dataroomAccessControls, setDataroomAccessControls] = useState<any[]>(
+    [],
+  );
+  const [isLoadingContent, setIsLoadingContent] = useState<boolean>(false);
+
   const [code, setCode] = useState<string | null>(null);
   const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
   const shouldApplyAccentToDataroomView = !!(brand as any)
@@ -117,6 +124,35 @@ export default function DataroomView({
   const dataroomViewBackgroundColor = shouldApplyAccentToDataroomView
     ? brand?.accentColor
     : "#ffffff";
+
+  const fetchDataroomContent = async (): Promise<void> => {
+    setIsLoadingContent(true);
+    try {
+      const params = new URLSearchParams();
+      if (previewToken) params.set("previewToken", previewToken);
+      if (preview) params.set("preview", "true");
+      const qs = params.toString();
+      const url = `/api/links/${link.id}/dataroom-content${qs ? `?${qs}` : ""}`;
+
+      const response = await fetch(url);
+      if (response.ok) {
+        const { dataroom, accessControls } = await response.json();
+        setDataroomContent(dataroom);
+        setDataroomAccessControls(accessControls || []);
+      } else {
+        console.error(
+          "[DataroomView] Failed to fetch dataroom content:",
+          response.status,
+        );
+        toast.error("Failed to load the dataroom content. Please try refreshing.");
+      }
+    } catch (error) {
+      console.error("[DataroomView] fetchDataroomContent error:", error);
+      toast.error("Failed to load the dataroom content. Please try refreshing.");
+    } finally {
+      setIsLoadingContent(false);
+    }
+  };
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
@@ -131,7 +167,7 @@ export default function DataroomView({
           email: data.email ?? verifiedEmail ?? userEmail ?? null,
           linkId: link.id,
           userId: userId ?? null,
-          dataroomId: dataroom?.id,
+          dataroomId: dataroomShell?.id,
           linkType: "DATAROOM_LINK",
           viewType: "DATAROOM_VIEW",
           previewToken,
@@ -147,8 +183,7 @@ export default function DataroomView({
         if (fetchData.type === "email-verification") {
           analytics.capture("Email Verification Requested", {
             linkId: link.id,
-            dataroomId: dataroom?.id,
-            dataroomName: dataroom?.name,
+            dataroomId: dataroomShell?.id,
             linkType: "DATAROOM_LINK",
             viewerEmail: data.email ?? verifiedEmail ?? userEmail,
             teamId: link.teamId,
@@ -178,7 +213,7 @@ export default function DataroomView({
           );
           analytics.capture("Link Viewed", {
             linkId: link.id,
-            dataroomId: dataroom?.id,
+            dataroomId: dataroomShell?.id,
             linkType: linkType,
             viewerId: viewerId,
             viewerEmail:
@@ -190,12 +225,6 @@ export default function DataroomView({
 
           // set the verification token to the cookie
           if (verificationToken) {
-            // Cookies.set("pm_vft", verificationToken, {
-            //   path: router.asPath.split("?")[0],
-            //   expires: 1,
-            //   sameSite: "strict",
-            //   secure: true,
-            // });
             setCode(null);
           }
 
@@ -213,6 +242,9 @@ export default function DataroomView({
           setSubmitted(true);
           setVerificationRequested(false);
           setIsLoading(false);
+
+          // Fetch dataroom content now that session cookie is set
+          fetchDataroomContent();
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -306,19 +338,32 @@ export default function DataroomView({
   }
 
   if (submitted) {
+    if (isLoadingContent || !dataroomContent) {
+      return (
+        <div
+          className="min-h-screen bg-white"
+          style={{ backgroundColor: dataroomViewBackgroundColor ?? undefined }}
+        >
+          <div className="flex h-screen items-center justify-center">
+            <LoadingSpinner className="h-20 w-20" />
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <PendingUploadsProvider linkId={link.id} dataroomId={dataroom?.id}>
+      <PendingUploadsProvider linkId={link.id} dataroomId={dataroomContent?.id}>
         <div
           className="min-h-screen bg-white"
           style={{ backgroundColor: dataroomViewBackgroundColor ?? undefined }}
         >
           <DataroomViewer
-            accessControls={link.accessControls || group?.accessControls || []}
+            accessControls={dataroomAccessControls}
             brand={brand!}
             viewId={viewData.viewId}
             isPreview={viewData.isPreview}
             linkId={link.id}
-            dataroom={dataroom}
+            dataroom={dataroomContent}
             allowDownload={link.allowDownload!}
             enableIndexFile={link.enableIndexFile}
             folderId={folderId}
