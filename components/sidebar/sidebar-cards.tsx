@@ -91,38 +91,42 @@ export function SidebarCards({ cards, onDismiss }: SidebarCardsProps) {
   return (
     <div className="group/cards overflow-hidden border-t border-gray-200 p-3 pt-4 transition-all duration-200 hover:pt-6 dark:border-gray-800">
       <div className="relative size-full">
-        {[...visibleCards].reverse().map((card, idx) => (
-          <div
-            key={card.id}
-            className={cn(
-              "absolute left-0 top-0 size-full scale-[var(--scale)] transition-[opacity,transform] duration-200",
-              cardCount - idx > 3
-                ? [
-                    "opacity-0 sm:group-hover/cards:translate-y-[var(--y)] sm:group-hover/cards:opacity-[var(--opacity)]",
-                    "sm:group-has-[*[data-dragging=true]]/cards:translate-y-[var(--y)] sm:group-has-[*[data-dragging=true]]/cards:opacity-[var(--opacity)]",
-                  ]
-                : "translate-y-[var(--y)] opacity-[var(--opacity)]",
-            )}
-            style={
-              {
-                "--y": `-${(cardCount - (idx + 1)) * OFFSET_FACTOR}%`,
-                "--scale": 1 - (cardCount - (idx + 1)) * SCALE_FACTOR,
-                "--opacity":
-                  cardCount - (idx + 1) >= 6
-                    ? 0
-                    : 1 - (cardCount - (idx + 1)) * OPACITY_FACTOR,
-              } as CSSProperties
-            }
-            aria-hidden={idx !== cardCount - 1}
-          >
-            <SidebarCardItem
-              card={card}
-              hideContent={cardCount - idx > 2}
-              active={idx === cardCount - 1}
-              onDismiss={() => handleDismiss(card.id)}
-            />
-          </div>
-        ))}
+        {[...visibleCards].reverse().map((card, idx) => {
+          const isTopCard = idx === cardCount - 1;
+
+          return (
+            <div
+              key={card.id}
+              className={cn(
+                "absolute left-0 top-0 size-full scale-[var(--scale)] transition-[opacity,transform] duration-200",
+                cardCount - idx > 3
+                  ? [
+                      "opacity-0 sm:group-hover/cards:translate-y-[var(--y)] sm:group-hover/cards:opacity-[var(--opacity)]",
+                      "sm:group-has-[*[data-dragging=true]]/cards:translate-y-[var(--y)] sm:group-has-[*[data-dragging=true]]/cards:opacity-[var(--opacity)]",
+                    ]
+                  : "translate-y-[var(--y)] opacity-[var(--opacity)]",
+              )}
+              style={
+                {
+                  "--y": `-${(cardCount - (idx + 1)) * OFFSET_FACTOR}%`,
+                  "--scale": 1 - (cardCount - (idx + 1)) * SCALE_FACTOR,
+                  "--opacity":
+                    cardCount - (idx + 1) >= 6
+                      ? 0
+                      : 1 - (cardCount - (idx + 1)) * OPACITY_FACTOR,
+                } as CSSProperties
+              }
+              aria-hidden={!isTopCard}
+            >
+              <SidebarCardItem
+                card={card}
+                hideContent={!isTopCard}
+                active={isTopCard}
+                onDismiss={() => handleDismiss(card.id)}
+              />
+            </div>
+          );
+        })}
 
         {/* Invisible spacer to maintain height */}
         <div className="pointer-events-none invisible" aria-hidden>
@@ -132,6 +136,7 @@ export function SidebarCards({ cards, onDismiss }: SidebarCardsProps) {
               type: "changelog",
               title: "Title",
               description: "Description placeholder",
+              image: "data:,",
             }}
           />
         </div>
@@ -268,15 +273,17 @@ function SidebarCardItem({
     <div
       ref={ref}
       className={cn(
-        "relative select-none rounded-lg border border-gray-200 bg-white p-3 text-[0.8125rem] dark:border-gray-700 dark:bg-gray-900",
+        "relative h-full select-none rounded-lg border border-gray-200 bg-white p-3 text-[0.8125rem] dark:border-gray-700 dark:bg-gray-900",
         "translate-x-[calc(var(--dx,0)*1px)] rotate-[calc(var(--dx,0)*0.05deg)] opacity-[calc(1-max(var(--dx,0),-1*var(--dx,0))/var(--w,1)/2)]",
         "transition-shadow data-[dragging=true]:shadow-md",
       )}
       data-dragging={dragging}
       onPointerDown={onPointerDown}
     >
-      <div className={cn(hideContent && "invisible")}>
-        <CardContent card={card} />
+      <div className={cn("flex h-full flex-col", hideContent && "invisible")}>
+        <div className="flex-1">
+          <CardContent card={card} />
+        </div>
         <div
           className={cn(
             "h-0 overflow-hidden opacity-0 transition-[height,opacity] duration-200",
