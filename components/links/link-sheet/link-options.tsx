@@ -213,7 +213,13 @@ export const LinkOptions = ({
           />
           <CustomFieldsSection
             {...{ data, setData }}
-            isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
+            isAllowed={
+              isTrial ||
+              isBusiness ||
+              isDatarooms ||
+              isDataroomsPlus ||
+              (limits?.linkCustomFields ?? 0) > 0
+            }
             handleUpgradeStateChange={handleUpgradeStateChange}
             presets={currentPreset}
           />
