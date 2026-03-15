@@ -304,6 +304,9 @@ async function handleAccess(req: NextRequest, link: any) {
   });
 
   // Create link session for the target link
+  const linkFingerprint = generateSessionFingerprint(
+    collectFingerprintHeaders(req.headers),
+  );
   const { token: sessionToken, expiresAt } = await createLinkSession(
     executionResult.targetLinkId!,
     executionResult.targetLinkType!,
@@ -315,6 +318,7 @@ async function handleAccess(req: NextRequest, link: any) {
     viewer.id, // viewerId
     executionResult.targetDocumentId,
     executionResult.targetDataroomId,
+    linkFingerprint,
   );
 
   // Parse target URL safely with fallback
