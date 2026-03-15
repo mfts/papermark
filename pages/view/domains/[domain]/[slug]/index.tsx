@@ -72,6 +72,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     if (result.status !== "ok") {
       return {
         notFound: true,
+        revalidate: 10,
       };
     }
 
@@ -80,6 +81,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     if (!linkType) {
       return {
         notFound: true,
+        revalidate: 10,
       };
     }
 
@@ -120,6 +122,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     if (!link) {
       return {
         notFound: true,
+        revalidate: 10,
       };
     }
 
@@ -138,6 +141,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         if (!notionPageId) {
           return {
             notFound: true,
+            revalidate: 10,
           };
         }
 
