@@ -46,6 +46,7 @@ export const configSchema = z.object({
   watermarkOnBusiness: z.boolean().nullish(),
   agreementOnBusiness: z.boolean().nullish(),
   conversationsInDataroom: z.boolean().nullish(),
+  linkCustomFields: z.number().nullish(),
   fileSizeLimits: z
     .object({
       video: z.number().optional(), // in MB
