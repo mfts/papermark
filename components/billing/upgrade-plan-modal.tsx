@@ -11,7 +11,7 @@ import {
   getPriceIdFromPlan,
   getPerSeatPriceIdFromPlan,
 } from "@/ee/stripe/functions/get-price-id-from-plan";
-import { PLANS } from "@/ee/stripe/utils";
+import { Currency, PLANS, currencySymbol } from "@/ee/stripe/utils";
 import { CheckIcon, CircleHelpIcon, Users2Icon, XIcon } from "lucide-react";
 
 import { useAnalytics } from "@/lib/analytics";
@@ -163,6 +163,7 @@ export function UpgradePlanModal({
 }) {
   const router = useRouter();
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
+  const [currency, setCurrency] = useState<Currency>("eur");
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
@@ -225,17 +226,45 @@ export function UpgradePlanModal({
           maxWidth: "900px",
         }}
       >
-        <div className="flex items-center justify-center">
-          <span className="mr-2 text-sm">Monthly</span>
-          <Switch
-            checked={period === "yearly"}
-            onCheckedChange={() =>
-              setPeriod(period === "monthly" ? "yearly" : "monthly")
-            }
-          />
-          <span className="ml-2 text-sm">
-            Annually <span className="text-[#fb7a00]">(Save up to 35%)</span>
-          </span>
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <div className="flex items-center">
+            <span className="mr-2 text-sm">Monthly</span>
+            <Switch
+              checked={period === "yearly"}
+              onCheckedChange={() =>
+                setPeriod(period === "monthly" ? "yearly" : "monthly")
+              }
+            />
+            <span className="ml-2 text-sm">
+              Annually <span className="text-[#fb7a00]">(Save up to 35%)</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-1 rounded-lg border border-gray-200 p-1 dark:border-gray-700">
+            <button
+              type="button"
+              className={cn(
+                "rounded-md px-3 py-1 text-sm transition-colors",
+                currency === "eur"
+                  ? "bg-gray-200 text-foreground dark:bg-gray-600 dark:text-white"
+                  : "text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white",
+              )}
+              onClick={() => setCurrency("eur")}
+            >
+              EUR
+            </button>
+            <button
+              type="button"
+              className={cn(
+                "rounded-md px-3 py-1 text-sm transition-colors",
+                currency === "usd"
+                  ? "bg-gray-200 text-foreground dark:bg-gray-600 dark:text-white"
+                  : "text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white",
+              )}
+              onClick={() => setCurrency("usd")}
+            >
+              USD
+            </button>
+          </div>
         </div>
 
         <div className="isolate grid grid-cols-1 gap-4 overflow-hidden rounded-xl p-4 md:grid-cols-2">
@@ -258,6 +287,7 @@ export function UpgradePlanModal({
 
             const planFeatures = getPlanFeatures(effectivePlan, {
               period,
+              currency,
             });
 
             return (
@@ -293,11 +323,11 @@ export function UpgradePlanModal({
 
                 <div className="mb-2">
                   <span className="text-balance text-4xl font-medium tabular-nums text-gray-900 dark:text-white">
-                    €
+                    {currencySymbol(currency)}
                     {
                       PLANS.find((p) => p.name === displayPlanName)?.price[
                         period
-                      ].amount
+                      ]?.[currency]?.amount
                     }
                   </span>
                   <span className="text-gray-500 dark:text-white/75">
@@ -305,13 +335,13 @@ export function UpgradePlanModal({
                   </span>
                   {PLANS.find((p) => p.name === displayPlanName)?.price[
                     period
-                  ].perSeat && (
+                  ]?.perSeat?.[currency] && (
                     <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
-                      +€
+                      +{currencySymbol(currency)}
                       {
                         PLANS.find((p) => p.name === displayPlanName)?.price[
                           period
-                        ].perSeat?.amount
+                        ].perSeat?.[currency]?.amount
                       }
                       /mo per additional user
                     </p>
@@ -360,11 +390,13 @@ export function UpgradePlanModal({
                       const priceId = getPriceIdFromPlan({
                         planName: displayPlanName,
                         period,
+                        currency,
                         isOld: isOldAccount,
                       });
                       const perSeatPriceId = getPerSeatPriceIdFromPlan({
                         planName: displayPlanName,
                         period,
+                        currency,
                         isOld: isOldAccount,
                       });
 

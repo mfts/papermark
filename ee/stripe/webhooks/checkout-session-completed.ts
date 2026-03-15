@@ -3,6 +3,7 @@ import {
   DATAROOMS_PLAN_LIMITS,
   DATAROOMS_PLUS_PLAN_LIMITS,
   DATAROOMS_PREMIUM_PLAN_LIMITS,
+  DATAROOMS_UNLIMITED_PLAN_LIMITS,
   PRO_PLAN_LIMITS,
 } from "@/ee/limits/constants";
 import { stripeInstance } from "@/ee/stripe";
@@ -64,23 +65,17 @@ export async function checkoutSessionCompleted(
   const stripeId = checkoutSession.customer.toString();
   const teamId = checkoutSession.client_reference_id;
 
-  let planLimits:
-    | typeof PRO_PLAN_LIMITS
-    | typeof BUSINESS_PLAN_LIMITS
-    | typeof DATAROOMS_PLAN_LIMITS
-    | typeof DATAROOMS_PLUS_PLAN_LIMITS
-    | typeof DATAROOMS_PREMIUM_PLAN_LIMITS = structuredClone(PRO_PLAN_LIMITS);
-  if (plan.slug === "pro") {
-    planLimits = structuredClone(PRO_PLAN_LIMITS);
-  } else if (plan.slug === "business") {
-    planLimits = structuredClone(BUSINESS_PLAN_LIMITS);
-  } else if (plan.slug === "datarooms") {
-    planLimits = structuredClone(DATAROOMS_PLAN_LIMITS);
-  } else if (plan.slug === "datarooms-plus") {
-    planLimits = structuredClone(DATAROOMS_PLUS_PLAN_LIMITS);
-  } else if (plan.slug === "datarooms-premium") {
-    planLimits = structuredClone(DATAROOMS_PREMIUM_PLAN_LIMITS);
-  }
+  const PLAN_LIMITS_MAP: Record<string, any> = {
+    pro: PRO_PLAN_LIMITS,
+    business: BUSINESS_PLAN_LIMITS,
+    datarooms: DATAROOMS_PLAN_LIMITS,
+    "datarooms-plus": DATAROOMS_PLUS_PLAN_LIMITS,
+    "datarooms-premium": DATAROOMS_PREMIUM_PLAN_LIMITS,
+    "datarooms-unlimited": DATAROOMS_UNLIMITED_PLAN_LIMITS,
+  };
+  const planLimits = structuredClone(
+    PLAN_LIMITS_MAP[plan.slug] ?? PRO_PLAN_LIMITS,
+  );
 
   planLimits.users = Math.max(totalUsers, planLimits.users);
 

@@ -182,7 +182,7 @@ export function UpgradePlanModal({
                   variant="outline"
                   className="text-sm font-normal normal-case"
                 >
-                  {`€${PLANS.find((p) => p.name === plan)!.price[period].amount}/month`}
+                  {`€${PLANS.find((p) => p.name === plan)!.price[period].eur.amount}/month`}
                   {period === "yearly" && (
                     <span className="ml-1 text-xs">(billed yearly)</span>
                   )}
@@ -248,7 +248,7 @@ export function UpgradePlanModal({
                 `/api/teams/${
                   teamInfo?.currentTeam?.id
                 }/billing/upgrade?priceId=${
-                  PLANS.find((p) => p.name === plan)!.price[period].priceIds[
+                  PLANS.find((p) => p.name === plan)!.price[period].eur.priceIds[
                     process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
                       ? "production"
                       : "test"

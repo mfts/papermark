@@ -1,15 +1,17 @@
-import { PLANS, isOldAccount, planHasDualPricing } from "../utils";
+import { Currency, PLANS, isOldAccount, planHasDualPricing } from "../utils";
 
 function resolvePlan({
   planSlug,
   planName,
   isOld,
   period,
+  currency = "eur",
 }: {
   planSlug?: string;
   planName?: string;
   isOld?: boolean;
   period: "monthly" | "yearly";
+  currency?: Currency;
 }) {
   if (!planSlug && !planName) {
     throw new Error("Either planSlug or planName must be provided");
@@ -34,48 +36,56 @@ function resolvePlan({
     return null;
   }
 
-  return { plan, env: env as "test" | "production", accountType: accountType as "old" | "new", period };
+  return {
+    plan,
+    env: env as "test" | "production",
+    accountType: accountType as "old" | "new",
+    period,
+    currency,
+  };
 }
 
 /**
- * Returns the base (flat) price ID for a plan.
- * For dual-pricing plans this is the flat plan charge;
- * for single-price plans (Pro) this is the per-user price.
+ * Returns the base (flat) price ID for a plan in the given currency.
  */
 export function getPriceIdFromPlan({
   planSlug,
   planName,
   isOld,
   period,
+  currency = "eur",
 }: {
   planSlug?: string;
   planName?: string;
   isOld?: boolean;
   period: "monthly" | "yearly";
+  currency?: Currency;
 }) {
-  const result = resolvePlan({ planSlug, planName, isOld, period });
+  const result = resolvePlan({ planSlug, planName, isOld, period, currency });
   if (!result) return undefined;
-  const { plan, env, accountType, period: p } = result;
-  return plan.price[p].priceIds[env][accountType];
+  const { plan, env, accountType, period: p, currency: c } = result;
+  return plan.price[p][c].priceIds[env][accountType];
 }
 
 /**
  * Returns the per-seat addon price ID for plans with dual pricing.
- * Returns undefined for single-price plans (Pro).
+ * Returns undefined for single-price plans (Pro) or plans without per-seat.
  */
 export function getPerSeatPriceIdFromPlan({
   planSlug,
   planName,
   isOld,
   period,
+  currency = "eur",
 }: {
   planSlug?: string;
   planName?: string;
   isOld?: boolean;
   period: "monthly" | "yearly";
+  currency?: Currency;
 }): string | undefined {
-  const result = resolvePlan({ planSlug, planName, isOld, period });
+  const result = resolvePlan({ planSlug, planName, isOld, period, currency });
   if (!result) return undefined;
-  const { plan, env, accountType, period: p } = result;
-  return plan.price[p].perSeat?.priceIds[env][accountType];
+  const { plan, env, accountType, period: p, currency: c } = result;
+  return plan.price[p].perSeat?.[c].priceIds[env][accountType];
 }

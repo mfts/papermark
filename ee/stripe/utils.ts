@@ -7,25 +7,24 @@ const HISTORICAL_PRICE_IDS: Record<string, Record<string, string>> = {
   production: {
     price_1OuYeIFJyGSZ96lhwH58Y1kU: "business",
     // Legacy per-user price IDs (pre dual-pricing refactor)
-    price_1Q3gbVFJyGSZ96lhf7hsZciQ: "business", // old account monthly
-    price_1Q8egwBYvhH6u7U7XKLGjgHL: "business", // new account monthly
-    price_1Q3gbVFJyGSZ96lhqqLhBNDv: "business", // old account yearly
-    price_1Q8egwBYvhH6u7U7wRU6iPcW: "business", // new account yearly
-    price_1Q3gbbFJyGSZ96lhvmEwjZtm: "datarooms", // old account monthly
-    price_1Q8egzBYvhH6u7U7IQUGzwoZ: "datarooms", // new account monthly
-    price_1Q3gbbFJyGSZ96lhnk1CtnIZ: "datarooms", // old account yearly
-    price_1Q8egzBYvhH6u7U7M2uoROMa: "datarooms", // new account yearly
-    price_1QwMmmFJyGSZ96lhhaDXmzkY: "datarooms-plus", // old account monthly
-    price_1QwMkABYvhH6u7U74ccUfWkq: "datarooms-plus", // new account monthly
-    price_1QwMmeFJyGSZ96lh934mFNPA: "datarooms-plus", // old account yearly
-    price_1QwMjABYvhH6u7U7ccxGJXKN: "datarooms-plus", // new account yearly
+    price_1Q3gbVFJyGSZ96lhf7hsZciQ: "business",
+    price_1Q8egwBYvhH6u7U7XKLGjgHL: "business",
+    price_1Q3gbVFJyGSZ96lhqqLhBNDv: "business",
+    price_1Q8egwBYvhH6u7U7wRU6iPcW: "business",
+    price_1Q3gbbFJyGSZ96lhvmEwjZtm: "datarooms",
+    price_1Q8egzBYvhH6u7U7IQUGzwoZ: "datarooms",
+    price_1Q3gbbFJyGSZ96lhnk1CtnIZ: "datarooms",
+    price_1Q8egzBYvhH6u7U7M2uoROMa: "datarooms",
+    price_1QwMmmFJyGSZ96lhhaDXmzkY: "datarooms-plus",
+    price_1QwMkABYvhH6u7U74ccUfWkq: "datarooms-plus",
+    price_1QwMmeFJyGSZ96lh934mFNPA: "datarooms-plus",
+    price_1QwMjABYvhH6u7U7ccxGJXKN: "datarooms-plus",
     price_placeholder_prod_old: "datarooms-premium",
     price_1SUWXqBYvhH6u7U7SJKKOCKU: "datarooms-premium",
     price_placeholder_prod_yearly_old: "datarooms-premium",
     price_1SUWWqBYvhH6u7U7I5MpZ43K: "datarooms-premium",
   },
   test: {
-    // Legacy per-user price IDs (pre dual-pricing refactor)
     price_1Q3bPhFJyGSZ96lhnxpiJMwz: "business",
     price_1Q8aWlBYvhH6u7U7gTeKJJ0Y: "business",
     price_1Q3bQ5FJyGSZ96lhoS8QbYXr: "business",
@@ -47,19 +46,20 @@ const HISTORICAL_PRICE_IDS: Record<string, Record<string, string>> = {
 
 function getHistoricalPlanFromPriceId(priceId: string, env: string) {
   const planSlug = HISTORICAL_PRICE_IDS[env]?.[priceId];
-  if (!planSlug) {
-    return null;
-  }
-
+  if (!planSlug) return null;
   const currentPlan = PLANS.find((plan) => plan.slug === planSlug);
-  if (!currentPlan) {
-    return null;
-  }
+  if (!currentPlan) return null;
+  return { ...currentPlan, _historical: true };
+}
 
-  return {
-    ...currentPlan,
-    _historical: true,
-  };
+// ── Types ────────────────────────────────────────────────────────────────────
+
+export type Currency = "eur" | "usd";
+
+export const CURRENCIES: Currency[] = ["eur", "usd"];
+
+export function currencySymbol(c: Currency): string {
+  return c === "usd" ? "$" : "€";
 }
 
 export type PriceIds = {
@@ -67,13 +67,20 @@ export type PriceIds = {
   production: { old: string; new: string };
 };
 
-export type PlanPrice = {
+export type CurrencyPrice = {
   amount: number;
   priceIds: PriceIds;
-  perSeat?: {
-    amount: number;
-    priceIds: PriceIds;
-  };
+};
+
+export type PerSeatPricing = {
+  eur: CurrencyPrice;
+  usd: CurrencyPrice;
+};
+
+export type PlanPrice = {
+  eur: CurrencyPrice;
+  usd: CurrencyPrice;
+  perSeat?: PerSeatPricing;
 };
 
 export type Plan = {
@@ -87,11 +94,8 @@ export type Plan = {
   _historical?: boolean;
 };
 
-/**
- * Returns true if the plan uses dual pricing (flat base + per-seat addon).
- * Plans with perSeat pricing show a flat base charge on the invoice
- * instead of a confusing per-user × quantity line item.
- */
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
 export function planHasDualPricing(plan: Plan): boolean {
   return !!plan.price.monthly.perSeat;
 }
@@ -103,13 +107,21 @@ export function getPlanFromPriceId(
   const env =
     process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "production" : "test";
   const accountType = isOldAccount ? "old" : "new";
-  const plan = PLANS.find(
-    (plan) =>
-      plan.price.monthly.priceIds[env][accountType] === priceId ||
-      plan.price.yearly.priceIds[env][accountType] === priceId ||
-      plan.price.monthly.perSeat?.priceIds[env][accountType] === priceId ||
-      plan.price.yearly.perSeat?.priceIds[env][accountType] === priceId,
-  );
+
+  const plan = PLANS.find((plan) => {
+    for (const period of ["monthly", "yearly"] as const) {
+      for (const cur of CURRENCIES) {
+        if (plan.price[period][cur].priceIds[env][accountType] === priceId)
+          return true;
+        if (
+          plan.price[period].perSeat?.[cur].priceIds[env][accountType] ===
+          priceId
+        )
+          return true;
+      }
+    }
+    return false;
+  });
 
   if (!plan) {
     const historicalPlan = getHistoricalPlanFromPriceId(priceId, env);
@@ -119,19 +131,14 @@ export function getPlanFromPriceId(
       );
       return historicalPlan;
     }
-
     console.error(
       `Plan not found for priceId: ${priceId}, isOldAccount: ${isOldAccount}, env: ${env}`,
     );
     return null;
   }
-
   return plan;
 }
 
-/**
- * Checks if a given priceId is a per-seat addon price (not a base price).
- */
 export function isPerSeatPriceId(
   priceId: string,
   isOldAccount: boolean = false,
@@ -139,11 +146,18 @@ export function isPerSeatPriceId(
   const env =
     process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "production" : "test";
   const accountType = isOldAccount ? "old" : "new";
-  return PLANS.some(
-    (plan) =>
-      plan.price.monthly.perSeat?.priceIds[env][accountType] === priceId ||
-      plan.price.yearly.perSeat?.priceIds[env][accountType] === priceId,
-  );
+  return PLANS.some((plan) => {
+    for (const period of ["monthly", "yearly"] as const) {
+      for (const cur of CURRENCIES) {
+        if (
+          plan.price[period].perSeat?.[cur].priceIds[env][accountType] ===
+          priceId
+        )
+          return true;
+      }
+    }
+    return false;
+  });
 }
 
 // custom type coercion because Stripe's types are wrong
@@ -152,10 +166,7 @@ export function isNewCustomer(
 ) {
   let isNewCustomer = false;
   try {
-    if (
-      // if the user is upgrading from free to pro
-      previousAttributes?.default_payment_method === null
-    ) {
+    if (previousAttributes?.default_payment_method === null) {
       isNewCustomer = true;
     }
   } catch (error) {
@@ -169,10 +180,7 @@ export function isUpgradedCustomer(
 ) {
   let isUpgradedUser = false;
   try {
-    if (
-      // if user has items in their subscription
-      previousAttributes?.items !== undefined
-    ) {
+    if (previousAttributes?.items !== undefined) {
       isUpgradedUser = true;
     }
   } catch (error) {
@@ -181,285 +189,172 @@ export function isUpgradedCustomer(
   return isUpgradedUser;
 }
 
-// TODO: Create the following Stripe Prices before going live:
-//
-// For each plan with dual pricing (Business, Data Rooms, DR Plus, DR Premium):
-//   1. A FLAT recurring price for the base plan (not per-unit)
-//      - e.g. Business Monthly: €79/mo flat
-//   2. A PER-UNIT recurring price for additional seats
-//      - e.g. Business Monthly: €26.50/mo per unit
-//
-// Replace the price_TODO_* placeholders below with real Stripe Price IDs.
-// The old per-user price IDs have been moved to HISTORICAL_PRICE_IDS for
-// backward compatibility with existing subscriptions.
+// ── Placeholder helper ───────────────────────────────────────────────────────
+// TODO: Replace all price_TODO_* values with real Stripe Price IDs.
+// For each plan × period × currency (EUR/USD) × account type (old/new), create:
+//   1. A FLAT recurring price for the base plan charge
+//   2. A PER-UNIT recurring price for additional seats (dual-pricing plans only)
+function pid(label: string): string {
+  return `price_TODO_${label}`;
+}
+
+// ── PLANS ────────────────────────────────────────────────────────────────────
 
 export const PLANS: Plan[] = [
+  // ─── Pro (single-price per-user, no per-seat addon) ───────────────────────
   {
     name: "Pro",
     slug: "pro",
     includedUsers: 1,
     price: {
       monthly: {
-        amount: 29,
-        priceIds: {
-          test: {
-            old: "price_1Q3bcHFJyGSZ96lhElXBA5C1",
-            new: "price_1QvgdNBYvhH6u7U7drrXAXM3",
+        eur: {
+          amount: 29,
+          priceIds: {
+            test: { old: "price_1Q3bcHFJyGSZ96lhElXBA5C1", new: "price_1QvgdNBYvhH6u7U7drrXAXM3" },
+            production: { old: "price_1P3FK4FJyGSZ96lhD67yF3lj", new: "price_1Qvk3LBYvhH6u7U7JE4V6JY0" },
           },
-          production: {
-            old: "price_1P3FK4FJyGSZ96lhD67yF3lj",
-            new: "price_1Qvk3LBYvhH6u7U7JE4V6JY0",
+        },
+        usd: {
+          amount: 34,
+          priceIds: {
+            test: { old: pid("PRO_USD_MO_TEST_OLD"), new: pid("PRO_USD_MO_TEST_NEW") },
+            production: { old: pid("PRO_USD_MO_PROD_OLD"), new: pid("PRO_USD_MO_PROD_NEW") },
           },
         },
       },
       yearly: {
-        amount: 24,
-        priceIds: {
-          test: {
-            old: "price_1Q3bV9FJyGSZ96lhCYWIcmg5",
-            new: "price_1QviTtBYvhH6u7U79PQ2rzMI",
+        eur: {
+          amount: 24,
+          priceIds: {
+            test: { old: "price_1Q3bV9FJyGSZ96lhCYWIcmg5", new: "price_1QviTtBYvhH6u7U79PQ2rzMI" },
+            production: { old: "price_1Q3gfNFJyGSZ96lh2jGhEadm", new: "price_1Qvk3LBYvhH6u7U7kppryTjV" },
           },
-          production: {
-            old: "price_1Q3gfNFJyGSZ96lh2jGhEadm",
-            new: "price_1Qvk3LBYvhH6u7U7kppryTjV",
+        },
+        usd: {
+          amount: 29,
+          priceIds: {
+            test: { old: pid("PRO_USD_YR_TEST_OLD"), new: pid("PRO_USD_YR_TEST_NEW") },
+            production: { old: pid("PRO_USD_YR_PROD_OLD"), new: pid("PRO_USD_YR_PROD_NEW") },
           },
         },
       },
     },
   },
+
+  // ─── Business ─────────────────────────────────────────────────────────────
   {
     name: "Business",
     slug: "business",
     includedUsers: 1,
     price: {
       monthly: {
-        amount: 79,
-        priceIds: {
-          test: {
-            old: "price_TODO_BUSINESS_BASE_MONTHLY_TEST_OLD",
-            new: "price_TODO_BUSINESS_BASE_MONTHLY_TEST_NEW",
-          },
-          production: {
-            old: "price_TODO_BUSINESS_BASE_MONTHLY_PROD_OLD",
-            new: "price_TODO_BUSINESS_BASE_MONTHLY_PROD_NEW",
-          },
-        },
+        eur: { amount: 79, priceIds: { test: { old: pid("BIZ_EUR_BASE_MO_TEST_OLD"), new: pid("BIZ_EUR_BASE_MO_TEST_NEW") }, production: { old: pid("BIZ_EUR_BASE_MO_PROD_OLD"), new: pid("BIZ_EUR_BASE_MO_PROD_NEW") } } },
+        usd: { amount: 89, priceIds: { test: { old: pid("BIZ_USD_BASE_MO_TEST_OLD"), new: pid("BIZ_USD_BASE_MO_TEST_NEW") }, production: { old: pid("BIZ_USD_BASE_MO_PROD_OLD"), new: pid("BIZ_USD_BASE_MO_PROD_NEW") } } },
         perSeat: {
-          amount: 26.5,
-          priceIds: {
-            test: {
-              old: "price_TODO_BUSINESS_SEAT_MONTHLY_TEST_OLD",
-              new: "price_TODO_BUSINESS_SEAT_MONTHLY_TEST_NEW",
-            },
-            production: {
-              old: "price_TODO_BUSINESS_SEAT_MONTHLY_PROD_OLD",
-              new: "price_TODO_BUSINESS_SEAT_MONTHLY_PROD_NEW",
-            },
-          },
+          eur: { amount: 26.5, priceIds: { test: { old: pid("BIZ_EUR_SEAT_MO_TEST_OLD"), new: pid("BIZ_EUR_SEAT_MO_TEST_NEW") }, production: { old: pid("BIZ_EUR_SEAT_MO_PROD_OLD"), new: pid("BIZ_EUR_SEAT_MO_PROD_NEW") } } },
+          usd: { amount: 30, priceIds: { test: { old: pid("BIZ_USD_SEAT_MO_TEST_OLD"), new: pid("BIZ_USD_SEAT_MO_TEST_NEW") }, production: { old: pid("BIZ_USD_SEAT_MO_PROD_OLD"), new: pid("BIZ_USD_SEAT_MO_PROD_NEW") } } },
         },
       },
       yearly: {
-        amount: 59,
-        priceIds: {
-          test: {
-            old: "price_TODO_BUSINESS_BASE_YEARLY_TEST_OLD",
-            new: "price_TODO_BUSINESS_BASE_YEARLY_TEST_NEW",
-          },
-          production: {
-            old: "price_TODO_BUSINESS_BASE_YEARLY_PROD_OLD",
-            new: "price_TODO_BUSINESS_BASE_YEARLY_PROD_NEW",
-          },
-        },
+        eur: { amount: 59, priceIds: { test: { old: pid("BIZ_EUR_BASE_YR_TEST_OLD"), new: pid("BIZ_EUR_BASE_YR_TEST_NEW") }, production: { old: pid("BIZ_EUR_BASE_YR_PROD_OLD"), new: pid("BIZ_EUR_BASE_YR_PROD_NEW") } } },
+        usd: { amount: 69, priceIds: { test: { old: pid("BIZ_USD_BASE_YR_TEST_OLD"), new: pid("BIZ_USD_BASE_YR_TEST_NEW") }, production: { old: pid("BIZ_USD_BASE_YR_PROD_OLD"), new: pid("BIZ_USD_BASE_YR_PROD_NEW") } } },
         perSeat: {
-          amount: 19,
-          priceIds: {
-            test: {
-              old: "price_TODO_BUSINESS_SEAT_YEARLY_TEST_OLD",
-              new: "price_TODO_BUSINESS_SEAT_YEARLY_TEST_NEW",
-            },
-            production: {
-              old: "price_TODO_BUSINESS_SEAT_YEARLY_PROD_OLD",
-              new: "price_TODO_BUSINESS_SEAT_YEARLY_PROD_NEW",
-            },
-          },
+          eur: { amount: 19, priceIds: { test: { old: pid("BIZ_EUR_SEAT_YR_TEST_OLD"), new: pid("BIZ_EUR_SEAT_YR_TEST_NEW") }, production: { old: pid("BIZ_EUR_SEAT_YR_PROD_OLD"), new: pid("BIZ_EUR_SEAT_YR_PROD_NEW") } } },
+          usd: { amount: 22, priceIds: { test: { old: pid("BIZ_USD_SEAT_YR_TEST_OLD"), new: pid("BIZ_USD_SEAT_YR_TEST_NEW") }, production: { old: pid("BIZ_USD_SEAT_YR_PROD_OLD"), new: pid("BIZ_USD_SEAT_YR_PROD_NEW") } } },
         },
       },
     },
   },
+
+  // ─── Data Rooms ───────────────────────────────────────────────────────────
   {
     name: "Data Rooms",
     slug: "datarooms",
     includedUsers: 1,
     price: {
       monthly: {
-        amount: 149,
-        priceIds: {
-          test: {
-            old: "price_TODO_DATAROOMS_BASE_MONTHLY_TEST_OLD",
-            new: "price_TODO_DATAROOMS_BASE_MONTHLY_TEST_NEW",
-          },
-          production: {
-            old: "price_TODO_DATAROOMS_BASE_MONTHLY_PROD_OLD",
-            new: "price_TODO_DATAROOMS_BASE_MONTHLY_PROD_NEW",
-          },
-        },
+        eur: { amount: 149, priceIds: { test: { old: pid("DR_EUR_BASE_MO_TEST_OLD"), new: pid("DR_EUR_BASE_MO_TEST_NEW") }, production: { old: pid("DR_EUR_BASE_MO_PROD_OLD"), new: pid("DR_EUR_BASE_MO_PROD_NEW") } } },
+        usd: { amount: 179, priceIds: { test: { old: pid("DR_USD_BASE_MO_TEST_OLD"), new: pid("DR_USD_BASE_MO_TEST_NEW") }, production: { old: pid("DR_USD_BASE_MO_PROD_OLD"), new: pid("DR_USD_BASE_MO_PROD_NEW") } } },
         perSeat: {
-          amount: 49,
-          priceIds: {
-            test: {
-              old: "price_TODO_DATAROOMS_SEAT_MONTHLY_TEST_OLD",
-              new: "price_TODO_DATAROOMS_SEAT_MONTHLY_TEST_NEW",
-            },
-            production: {
-              old: "price_TODO_DATAROOMS_SEAT_MONTHLY_PROD_OLD",
-              new: "price_TODO_DATAROOMS_SEAT_MONTHLY_PROD_NEW",
-            },
-          },
+          eur: { amount: 49, priceIds: { test: { old: pid("DR_EUR_SEAT_MO_TEST_OLD"), new: pid("DR_EUR_SEAT_MO_TEST_NEW") }, production: { old: pid("DR_EUR_SEAT_MO_PROD_OLD"), new: pid("DR_EUR_SEAT_MO_PROD_NEW") } } },
+          usd: { amount: 57, priceIds: { test: { old: pid("DR_USD_SEAT_MO_TEST_OLD"), new: pid("DR_USD_SEAT_MO_TEST_NEW") }, production: { old: pid("DR_USD_SEAT_MO_PROD_OLD"), new: pid("DR_USD_SEAT_MO_PROD_NEW") } } },
         },
       },
       yearly: {
-        amount: 99,
-        priceIds: {
-          test: {
-            old: "price_TODO_DATAROOMS_BASE_YEARLY_TEST_OLD",
-            new: "price_TODO_DATAROOMS_BASE_YEARLY_TEST_NEW",
-          },
-          production: {
-            old: "price_TODO_DATAROOMS_BASE_YEARLY_PROD_OLD",
-            new: "price_TODO_DATAROOMS_BASE_YEARLY_PROD_NEW",
-          },
-        },
+        eur: { amount: 99, priceIds: { test: { old: pid("DR_EUR_BASE_YR_TEST_OLD"), new: pid("DR_EUR_BASE_YR_TEST_NEW") }, production: { old: pid("DR_EUR_BASE_YR_PROD_OLD"), new: pid("DR_EUR_BASE_YR_PROD_NEW") } } },
+        usd: { amount: 119, priceIds: { test: { old: pid("DR_USD_BASE_YR_TEST_OLD"), new: pid("DR_USD_BASE_YR_TEST_NEW") }, production: { old: pid("DR_USD_BASE_YR_PROD_OLD"), new: pid("DR_USD_BASE_YR_PROD_NEW") } } },
         perSeat: {
-          amount: 33,
-          priceIds: {
-            test: {
-              old: "price_TODO_DATAROOMS_SEAT_YEARLY_TEST_OLD",
-              new: "price_TODO_DATAROOMS_SEAT_YEARLY_TEST_NEW",
-            },
-            production: {
-              old: "price_TODO_DATAROOMS_SEAT_YEARLY_PROD_OLD",
-              new: "price_TODO_DATAROOMS_SEAT_YEARLY_PROD_NEW",
-            },
-          },
+          eur: { amount: 33, priceIds: { test: { old: pid("DR_EUR_SEAT_YR_TEST_OLD"), new: pid("DR_EUR_SEAT_YR_TEST_NEW") }, production: { old: pid("DR_EUR_SEAT_YR_PROD_OLD"), new: pid("DR_EUR_SEAT_YR_PROD_NEW") } } },
+          usd: { amount: 39, priceIds: { test: { old: pid("DR_USD_SEAT_YR_TEST_OLD"), new: pid("DR_USD_SEAT_YR_TEST_NEW") }, production: { old: pid("DR_USD_SEAT_YR_PROD_OLD"), new: pid("DR_USD_SEAT_YR_PROD_NEW") } } },
         },
       },
     },
   },
+
+  // ─── Data Rooms Plus ──────────────────────────────────────────────────────
   {
     name: "Data Rooms Plus",
     slug: "datarooms-plus",
     includedUsers: 1,
     price: {
       monthly: {
-        amount: 349,
-        priceIds: {
-          test: {
-            old: "price_TODO_DRPLUS_BASE_MONTHLY_TEST_OLD",
-            new: "price_TODO_DRPLUS_BASE_MONTHLY_TEST_NEW",
-          },
-          production: {
-            old: "price_TODO_DRPLUS_BASE_MONTHLY_PROD_OLD",
-            new: "price_TODO_DRPLUS_BASE_MONTHLY_PROD_NEW",
-          },
-        },
+        eur: { amount: 349, priceIds: { test: { old: pid("DRP_EUR_BASE_MO_TEST_OLD"), new: pid("DRP_EUR_BASE_MO_TEST_NEW") }, production: { old: pid("DRP_EUR_BASE_MO_PROD_OLD"), new: pid("DRP_EUR_BASE_MO_PROD_NEW") } } },
+        usd: { amount: 399, priceIds: { test: { old: pid("DRP_USD_BASE_MO_TEST_OLD"), new: pid("DRP_USD_BASE_MO_TEST_NEW") }, production: { old: pid("DRP_USD_BASE_MO_PROD_OLD"), new: pid("DRP_USD_BASE_MO_PROD_NEW") } } },
         perSeat: {
-          amount: 69,
-          priceIds: {
-            test: {
-              old: "price_TODO_DRPLUS_SEAT_MONTHLY_TEST_OLD",
-              new: "price_TODO_DRPLUS_SEAT_MONTHLY_TEST_NEW",
-            },
-            production: {
-              old: "price_TODO_DRPLUS_SEAT_MONTHLY_PROD_OLD",
-              new: "price_TODO_DRPLUS_SEAT_MONTHLY_PROD_NEW",
-            },
-          },
+          eur: { amount: 69, priceIds: { test: { old: pid("DRP_EUR_SEAT_MO_TEST_OLD"), new: pid("DRP_EUR_SEAT_MO_TEST_NEW") }, production: { old: pid("DRP_EUR_SEAT_MO_PROD_OLD"), new: pid("DRP_EUR_SEAT_MO_PROD_NEW") } } },
+          usd: { amount: 79, priceIds: { test: { old: pid("DRP_USD_SEAT_MO_TEST_OLD"), new: pid("DRP_USD_SEAT_MO_TEST_NEW") }, production: { old: pid("DRP_USD_SEAT_MO_PROD_OLD"), new: pid("DRP_USD_SEAT_MO_PROD_NEW") } } },
         },
       },
       yearly: {
-        amount: 249,
-        priceIds: {
-          test: {
-            old: "price_TODO_DRPLUS_BASE_YEARLY_TEST_OLD",
-            new: "price_TODO_DRPLUS_BASE_YEARLY_TEST_NEW",
-          },
-          production: {
-            old: "price_TODO_DRPLUS_BASE_YEARLY_PROD_OLD",
-            new: "price_TODO_DRPLUS_BASE_YEARLY_PROD_NEW",
-          },
-        },
+        eur: { amount: 249, priceIds: { test: { old: pid("DRP_EUR_BASE_YR_TEST_OLD"), new: pid("DRP_EUR_BASE_YR_TEST_NEW") }, production: { old: pid("DRP_EUR_BASE_YR_PROD_OLD"), new: pid("DRP_EUR_BASE_YR_PROD_NEW") } } },
+        usd: { amount: 289, priceIds: { test: { old: pid("DRP_USD_BASE_YR_TEST_OLD"), new: pid("DRP_USD_BASE_YR_TEST_NEW") }, production: { old: pid("DRP_USD_BASE_YR_PROD_OLD"), new: pid("DRP_USD_BASE_YR_PROD_NEW") } } },
         perSeat: {
-          amount: 49,
-          priceIds: {
-            test: {
-              old: "price_TODO_DRPLUS_SEAT_YEARLY_TEST_OLD",
-              new: "price_TODO_DRPLUS_SEAT_YEARLY_TEST_NEW",
-            },
-            production: {
-              old: "price_TODO_DRPLUS_SEAT_YEARLY_PROD_OLD",
-              new: "price_TODO_DRPLUS_SEAT_YEARLY_PROD_NEW",
-            },
-          },
+          eur: { amount: 49, priceIds: { test: { old: pid("DRP_EUR_SEAT_YR_TEST_OLD"), new: pid("DRP_EUR_SEAT_YR_TEST_NEW") }, production: { old: pid("DRP_EUR_SEAT_YR_PROD_OLD"), new: pid("DRP_EUR_SEAT_YR_PROD_NEW") } } },
+          usd: { amount: 57, priceIds: { test: { old: pid("DRP_USD_SEAT_YR_TEST_OLD"), new: pid("DRP_USD_SEAT_YR_TEST_NEW") }, production: { old: pid("DRP_USD_SEAT_YR_PROD_OLD"), new: pid("DRP_USD_SEAT_YR_PROD_NEW") } } },
         },
       },
     },
   },
+
+  // ─── Data Rooms Premium ───────────────────────────────────────────────────
   {
     name: "Data Rooms Premium",
     slug: "datarooms-premium",
     includedUsers: 1,
     price: {
       monthly: {
-        amount: 699,
-        priceIds: {
-          test: {
-            old: "price_TODO_DRPREMIUM_BASE_MONTHLY_TEST_OLD",
-            new: "price_TODO_DRPREMIUM_BASE_MONTHLY_TEST_NEW",
-          },
-          production: {
-            old: "price_TODO_DRPREMIUM_BASE_MONTHLY_PROD_OLD",
-            new: "price_TODO_DRPREMIUM_BASE_MONTHLY_PROD_NEW",
-          },
-        },
+        eur: { amount: 699, priceIds: { test: { old: pid("DRPR_EUR_BASE_MO_TEST_OLD"), new: pid("DRPR_EUR_BASE_MO_TEST_NEW") }, production: { old: pid("DRPR_EUR_BASE_MO_PROD_OLD"), new: pid("DRPR_EUR_BASE_MO_PROD_NEW") } } },
+        usd: { amount: 799, priceIds: { test: { old: pid("DRPR_USD_BASE_MO_TEST_OLD"), new: pid("DRPR_USD_BASE_MO_TEST_NEW") }, production: { old: pid("DRPR_USD_BASE_MO_PROD_OLD"), new: pid("DRPR_USD_BASE_MO_PROD_NEW") } } },
         perSeat: {
-          amount: 70,
-          priceIds: {
-            test: {
-              old: "price_TODO_DRPREMIUM_SEAT_MONTHLY_TEST_OLD",
-              new: "price_TODO_DRPREMIUM_SEAT_MONTHLY_TEST_NEW",
-            },
-            production: {
-              old: "price_TODO_DRPREMIUM_SEAT_MONTHLY_PROD_OLD",
-              new: "price_TODO_DRPREMIUM_SEAT_MONTHLY_PROD_NEW",
-            },
-          },
+          eur: { amount: 70, priceIds: { test: { old: pid("DRPR_EUR_SEAT_MO_TEST_OLD"), new: pid("DRPR_EUR_SEAT_MO_TEST_NEW") }, production: { old: pid("DRPR_EUR_SEAT_MO_PROD_OLD"), new: pid("DRPR_EUR_SEAT_MO_PROD_NEW") } } },
+          usd: { amount: 80, priceIds: { test: { old: pid("DRPR_USD_SEAT_MO_TEST_OLD"), new: pid("DRPR_USD_SEAT_MO_TEST_NEW") }, production: { old: pid("DRPR_USD_SEAT_MO_PROD_OLD"), new: pid("DRPR_USD_SEAT_MO_PROD_NEW") } } },
         },
       },
       yearly: {
-        amount: 549,
-        priceIds: {
-          test: {
-            old: "price_TODO_DRPREMIUM_BASE_YEARLY_TEST_OLD",
-            new: "price_TODO_DRPREMIUM_BASE_YEARLY_TEST_NEW",
-          },
-          production: {
-            old: "price_TODO_DRPREMIUM_BASE_YEARLY_PROD_OLD",
-            new: "price_TODO_DRPREMIUM_BASE_YEARLY_PROD_NEW",
-          },
-        },
+        eur: { amount: 549, priceIds: { test: { old: pid("DRPR_EUR_BASE_YR_TEST_OLD"), new: pid("DRPR_EUR_BASE_YR_TEST_NEW") }, production: { old: pid("DRPR_EUR_BASE_YR_PROD_OLD"), new: pid("DRPR_EUR_BASE_YR_PROD_NEW") } } },
+        usd: { amount: 639, priceIds: { test: { old: pid("DRPR_USD_BASE_YR_TEST_OLD"), new: pid("DRPR_USD_BASE_YR_TEST_NEW") }, production: { old: pid("DRPR_USD_BASE_YR_PROD_OLD"), new: pid("DRPR_USD_BASE_YR_PROD_NEW") } } },
         perSeat: {
-          amount: 55,
-          priceIds: {
-            test: {
-              old: "price_TODO_DRPREMIUM_SEAT_YEARLY_TEST_OLD",
-              new: "price_TODO_DRPREMIUM_SEAT_YEARLY_TEST_NEW",
-            },
-            production: {
-              old: "price_TODO_DRPREMIUM_SEAT_YEARLY_PROD_OLD",
-              new: "price_TODO_DRPREMIUM_SEAT_YEARLY_PROD_NEW",
-            },
-          },
+          eur: { amount: 55, priceIds: { test: { old: pid("DRPR_EUR_SEAT_YR_TEST_OLD"), new: pid("DRPR_EUR_SEAT_YR_TEST_NEW") }, production: { old: pid("DRPR_EUR_SEAT_YR_PROD_OLD"), new: pid("DRPR_EUR_SEAT_YR_PROD_NEW") } } },
+          usd: { amount: 65, priceIds: { test: { old: pid("DRPR_USD_SEAT_YR_TEST_OLD"), new: pid("DRPR_USD_SEAT_YR_TEST_NEW") }, production: { old: pid("DRPR_USD_SEAT_YR_PROD_OLD"), new: pid("DRPR_USD_SEAT_YR_PROD_NEW") } } },
         },
+      },
+    },
+  },
+
+  // ─── Data Rooms Unlimited (no per-seat, users are unlimited) ──────────────
+  {
+    name: "Data Rooms Unlimited",
+    slug: "datarooms-unlimited",
+    includedUsers: 100,
+    price: {
+      monthly: {
+        eur: { amount: 2800, priceIds: { test: { old: pid("DRU_EUR_BASE_MO_TEST_OLD"), new: pid("DRU_EUR_BASE_MO_TEST_NEW") }, production: { old: pid("DRU_EUR_BASE_MO_PROD_OLD"), new: pid("DRU_EUR_BASE_MO_PROD_NEW") } } },
+        usd: { amount: 3199, priceIds: { test: { old: pid("DRU_USD_BASE_MO_TEST_OLD"), new: pid("DRU_USD_BASE_MO_TEST_NEW") }, production: { old: pid("DRU_USD_BASE_MO_PROD_OLD"), new: pid("DRU_USD_BASE_MO_PROD_NEW") } } },
+      },
+      yearly: {
+        eur: { amount: 2800, priceIds: { test: { old: pid("DRU_EUR_BASE_YR_TEST_OLD"), new: pid("DRU_EUR_BASE_YR_TEST_NEW") }, production: { old: pid("DRU_EUR_BASE_YR_PROD_OLD"), new: pid("DRU_EUR_BASE_YR_PROD_NEW") } } },
+        usd: { amount: 3199, priceIds: { test: { old: pid("DRU_USD_BASE_YR_TEST_OLD"), new: pid("DRU_USD_BASE_YR_TEST_NEW") }, production: { old: pid("DRU_USD_BASE_YR_PROD_OLD"), new: pid("DRU_USD_BASE_YR_PROD_NEW") } } },
       },
     },
   },

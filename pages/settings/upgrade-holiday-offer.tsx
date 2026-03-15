@@ -10,7 +10,7 @@ import {
   getPriceIdFromPlan,
   getPerSeatPriceIdFromPlan,
 } from "@/ee/stripe/functions/get-price-id-from-plan";
-import { PLANS } from "@/ee/stripe/utils";
+import { Currency, PLANS, currencySymbol } from "@/ee/stripe/utils";
 import { CheckIcon, Users2Icon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -143,6 +143,7 @@ const PlanTypeSelector = ({
 export default function UpgradeHolidayOfferPage() {
   const router = useRouter();
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
+  const [currency, setCurrency] = useState<Currency>("eur");
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const teamInfo = useTeam();
   const { plan: teamPlan, trial, isCustomer, isOldAccount } = usePlan();
@@ -185,20 +186,44 @@ export default function UpgradeHolidayOfferPage() {
         Additional 30% off on annual plans. New Year&apos;s offer. Ends Jan 15 2026
       </p>
 
-      <div className="mb-8 flex items-center justify-center">
-        <span className="mr-2 text-sm">
-          Monthly{" "}
-          {period === "monthly" && <span className="text-[#fb7a00]"></span>}
-        </span>
-        <Switch
-          checked={period === "yearly"}
-          onCheckedChange={() =>
-            setPeriod(period === "monthly" ? "yearly" : "monthly")
-          }
-        />
-        <span className="ml-2 text-sm">
-          Annually <span className="text-[#fb7a00]">(Save 50%)</span>
-        </span>
+      <div className="mb-8 flex flex-col items-center gap-4">
+        <div className="flex items-center justify-center">
+          <span className="mr-2 text-sm">
+            Monthly{" "}
+            {period === "monthly" && <span className="text-[#fb7a00]"></span>}
+          </span>
+          <Switch
+            checked={period === "yearly"}
+            onCheckedChange={() =>
+              setPeriod(period === "monthly" ? "yearly" : "monthly")
+            }
+          />
+          <span className="ml-2 text-sm">
+            Annually <span className="text-[#fb7a00]">(Save 50%)</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-2 rounded-lg border border-gray-200 p-1 dark:border-gray-700">
+          <button
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              currency === "eur"
+                ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+                : "text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white"
+            }`}
+            onClick={() => setCurrency("eur")}
+          >
+            EUR (€)
+          </button>
+          <button
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              currency === "usd"
+                ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+                : "text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white"
+            }`}
+            onClick={() => setCurrency("usd")}
+          >
+            USD ($)
+          </button>
+        </div>
       </div>
 
       {/* Plan Type Selector */}
@@ -213,12 +238,12 @@ export default function UpgradeHolidayOfferPage() {
       {planType === "documents" && (
         <div className="mb-8 grid grid-cols-1 gap-2 md:grid-cols-3">
           {documentSharingPlans.map((planOption) => {
-            const planFeatures = getPlanFeatures(planOption, { period });
+            const planFeatures = getPlanFeatures(planOption, { period, currency });
             const planData = PLANS.find((p) => p.name === planOption);
             if (!planData) return null;
 
-            const monthlyPrice = planData.price.monthly.amount;
-            const yearlyPrice = planData.price.yearly.amount;
+            const monthlyPrice = planData.price.monthly[currency].amount;
+            const yearlyPrice = planData.price.yearly[currency].amount;
             const discountedYearlyPrice =
               period === "yearly"
                 ? getDiscountedYearlyPrice(yearlyPrice)
@@ -246,7 +271,7 @@ export default function UpgradeHolidayOfferPage() {
                   </h3>
                   {period === "yearly" && savings > 0 && (
                     <span className="absolute right-2 top-2 rounded bg-[#fb7a00]/10 px-2 py-1 text-xs font-medium text-[#fb7a00]">
-                      Save €{savings}/year
+                      Save {currencySymbol(currency)}{savings}/year
                     </span>
                   )}
                   {period === "monthly" &&
@@ -267,7 +292,7 @@ export default function UpgradeHolidayOfferPage() {
                 </div>
 
                 <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
-                  €{period === "yearly" ? discountedYearlyPrice : monthlyPrice}
+                  {currencySymbol(currency)}{period === "yearly" ? discountedYearlyPrice : monthlyPrice}
                   <span className="text-base font-normal dark:text-white/75">
                     /month{period === "yearly" && ", billed annually"}
                   </span>
@@ -276,7 +301,7 @@ export default function UpgradeHolidayOfferPage() {
                   <>
                     <div className="mb-2 flex items-center gap-2">
                       <span className="text-sm text-gray-500 line-through">
-                        €{yearlyPrice}/month
+                        {currencySymbol(currency)}{yearlyPrice}/month
                       </span>
                       <span className="rounded bg-[#fb7a00]/10 px-2 py-0.5 text-xs font-medium text-[#fb7a00]">
                         30% OFF
@@ -317,11 +342,13 @@ export default function UpgradeHolidayOfferPage() {
                       const priceId = getPriceIdFromPlan({
                         planName: planOption,
                         period,
+                        currency,
                         isOld: isOldAccount,
                       });
                       const perSeatPriceId = getPerSeatPriceIdFromPlan({
                         planName: planOption,
                         period,
+                        currency,
                         isOld: isOldAccount,
                       });
 
@@ -415,12 +442,12 @@ export default function UpgradeHolidayOfferPage() {
             PlanEnum.DataRoomsPlus,
             PlanEnum.DataRoomsPremium,
           ].map((planOption) => {
-            const planFeatures = getPlanFeatures(planOption, { period });
+            const planFeatures = getPlanFeatures(planOption, { period, currency });
             const planData = PLANS.find((p) => p.name === planOption);
             if (!planData) return null;
 
-            const monthlyPrice = planData.price.monthly.amount;
-            const yearlyPrice = planData.price.yearly.amount;
+            const monthlyPrice = planData.price.monthly[currency].amount;
+            const yearlyPrice = planData.price.yearly[currency].amount;
             const discountedYearlyPrice =
               period === "yearly"
                 ? getDiscountedYearlyPrice(yearlyPrice)
@@ -458,13 +485,13 @@ export default function UpgradeHolidayOfferPage() {
                     )}
                   {period === "yearly" && savings > 0 && (
                     <span className="absolute right-2 top-2 rounded bg-[#fb7a00]/10 px-2 py-1 text-xs font-medium text-[#fb7a00]">
-                      Save €{savings}/year
+                      Save {currencySymbol(currency)}{savings}/year
                     </span>
                   )}
                 </div>
 
                 <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
-                  €{period === "yearly" ? discountedYearlyPrice : monthlyPrice}
+                  {currencySymbol(currency)}{period === "yearly" ? discountedYearlyPrice : monthlyPrice}
                   <span className="text-base font-normal dark:text-white/75">
                     /month{period === "yearly" && ", billed annually"}
                   </span>
@@ -473,7 +500,7 @@ export default function UpgradeHolidayOfferPage() {
                   <>
                     <div className="mb-2 flex items-center gap-2">
                       <span className="text-sm text-gray-500 line-through">
-                        €{yearlyPrice}/month
+                        {currencySymbol(currency)}{yearlyPrice}/month
                       </span>
                       <span className="rounded bg-[#fb7a00]/10 px-2 py-0.5 text-xs font-medium text-[#fb7a00]">
                         30% OFF
@@ -514,11 +541,13 @@ export default function UpgradeHolidayOfferPage() {
                       const priceId = getPriceIdFromPlan({
                         planName: planOption,
                         period,
+                        currency,
                         isOld: isOldAccount,
                       });
                       const perSeatPriceId = getPerSeatPriceIdFromPlan({
                         planName: planOption,
                         period,
+                        currency,
                         isOld: isOldAccount,
                       });
 
@@ -611,12 +640,12 @@ export default function UpgradeHolidayOfferPage() {
             PlanEnum.DataRoomsPlus,
             PlanEnum.DataRoomsPremium,
           ].map((planOption) => {
-            const planFeatures = getPlanFeatures(planOption, { period });
+            const planFeatures = getPlanFeatures(planOption, { period, currency });
             const planData = PLANS.find((p) => p.name === planOption);
             if (!planData) return null;
 
-            const monthlyPrice = planData.price.monthly.amount;
-            const yearlyPrice = planData.price.yearly.amount;
+            const monthlyPrice = planData.price.monthly[currency].amount;
+            const yearlyPrice = planData.price.yearly[currency].amount;
             const discountedYearlyPrice =
               period === "yearly"
                 ? getDiscountedYearlyPrice(yearlyPrice)
@@ -645,7 +674,7 @@ export default function UpgradeHolidayOfferPage() {
                   </h3>
                   {period === "yearly" && savings > 0 && (
                     <span className="absolute right-2 top-2 rounded bg-[#fb7a00]/10 px-2 py-1 text-xs font-medium text-[#fb7a00]">
-                      Save €{savings}/year
+                      Save {currencySymbol(currency)}{savings}/year
                     </span>
                   )}
                   {period === "monthly" &&
@@ -660,7 +689,7 @@ export default function UpgradeHolidayOfferPage() {
                 </div>
 
                 <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
-                  €{period === "yearly" ? discountedYearlyPrice : monthlyPrice}
+                  {currencySymbol(currency)}{period === "yearly" ? discountedYearlyPrice : monthlyPrice}
                   <span className="text-base font-normal dark:text-white/75">
                     /month{period === "yearly" && ", billed annually"}
                   </span>
@@ -669,7 +698,7 @@ export default function UpgradeHolidayOfferPage() {
                   <>
                     <div className="mb-2 flex items-center gap-2">
                       <span className="text-sm text-gray-500 line-through">
-                        €{yearlyPrice}/month
+                        {currencySymbol(currency)}{yearlyPrice}/month
                       </span>
                       <span className="rounded bg-[#fb7a00]/10 px-2 py-0.5 text-xs font-medium text-[#fb7a00]">
                         30% OFF
@@ -711,11 +740,13 @@ export default function UpgradeHolidayOfferPage() {
                       const priceId = getPriceIdFromPlan({
                         planName: planOption,
                         period,
+                        currency,
                         isOld: isOldAccount,
                       });
                       const perSeatPriceId = getPerSeatPriceIdFromPlan({
                         planName: planOption,
                         period,
+                        currency,
                         isOld: isOldAccount,
                       });
 

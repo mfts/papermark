@@ -51,17 +51,15 @@ export function RetentionOfferModal({
     const durationMonths = isAnnualPlan ? 12 : 3;
     const period = isAnnualPlan ? "yearly" : "monthly";
     const pricing = currentPlan.price[period];
+    const cur = "eur" as const;
 
-    // Base plan amount (flat price in euros)
-    let monthlyTotal = pricing.amount;
+    let monthlyTotal = pricing[cur].amount;
 
-    // Add per-seat cost for additional users beyond the included count
     const additionalUsers = Math.max(0, currentQuantity - currentPlan.includedUsers);
     if (pricing.perSeat && additionalUsers > 0) {
-      monthlyTotal += pricing.perSeat.amount * additionalUsers;
+      monthlyTotal += pricing.perSeat[cur].amount * additionalUsers;
     } else if (!pricing.perSeat) {
-      // Legacy single-price plan: amount is per-user
-      monthlyTotal = pricing.amount * currentQuantity;
+      monthlyTotal = pricing[cur].amount * currentQuantity;
     }
 
     const totalSavings = Math.round(monthlyTotal * durationMonths * discountPercent);

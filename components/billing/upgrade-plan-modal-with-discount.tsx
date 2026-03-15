@@ -331,8 +331,8 @@ export function UpgradePlanModalWithDiscount({
                 });
 
                 const planData = PLANS.find((p) => p.name === displayPlanName);
-                const monthlyPrice = planData?.price.monthly.amount || 0;
-                const yearlyPrice = planData?.price.yearly.amount || 0;
+                const monthlyPrice = planData?.price.monthly.eur.amount || 0;
+                const yearlyPrice = planData?.price.yearly.eur.amount || 0;
                 const discountedYearlyPrice =
                   getDiscountedYearlyPrice(yearlyPrice);
 

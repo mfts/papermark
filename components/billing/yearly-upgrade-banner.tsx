@@ -87,8 +87,8 @@ export default function YearlyUpgradeBanner({
           const planData = PLANS.find((p) => p.name === nextPlan);
           if (!planData) return null;
 
-          const yearlyPrice = planData.price.yearly.amount;
-          const monthlyPrice = planData.price.monthly.amount;
+          const yearlyPrice = planData.price.yearly.eur.amount;
+          const monthlyPrice = planData.price.monthly.eur.amount;
           const monthlyForYear = monthlyPrice * 12;
           const yearlyForYear = yearlyPrice * 12;
           const savings = monthlyForYear - yearlyForYear;
