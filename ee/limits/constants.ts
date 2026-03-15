@@ -11,7 +11,7 @@ export type TPlanLimits = {
   advancedLinkControlsOnPro: boolean | null;
   watermarkOnBusiness?: boolean | null;
   agreementOnBusiness?: boolean | null;
-  linkCustomFields?: number;
+  linkCustomFields?: number | null;
 };
 
 export const FREE_PLAN_LIMITS = {
