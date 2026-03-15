@@ -221,17 +221,17 @@ export async function getStaticProps(context: GetStaticPropsContext) {
       dataroomDocumentId: documentId,
     });
     if (result.status !== "ok") {
-      return { notFound: true };
+      return { notFound: true, revalidate: 10 };
     }
 
     const { linkType, link, brand } = result;
 
     if (!link || !linkType) {
-      return { notFound: true };
+      return { notFound: true, revalidate: 10 };
     }
 
     if (linkType !== "DATAROOM_LINK") {
-      return { notFound: true };
+      return { notFound: true, revalidate: 10 };
     }
 
     let pageId = null;
@@ -247,6 +247,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
       if (!notionPageId) {
         return {
           notFound: true,
+          revalidate: 10,
         };
       }
 
