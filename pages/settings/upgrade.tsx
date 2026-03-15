@@ -10,7 +10,7 @@ import {
   getPriceIdFromPlan,
   getPerSeatPriceIdFromPlan,
 } from "@/ee/stripe/functions/get-price-id-from-plan";
-import { PLANS } from "@/ee/stripe/utils";
+import { Currency, currencySymbol, PLANS } from "@/ee/stripe/utils";
 import { CheckIcon, Users2Icon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -135,6 +135,7 @@ const PlanTypeSelector = ({
 export default function UpgradePage() {
   const router = useRouter();
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
+  const [currency, setCurrency] = useState<Currency>("eur");
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const teamInfo = useTeam();
   const { plan: teamPlan, trial, isCustomer, isOldAccount } = usePlan();
@@ -172,17 +173,43 @@ export default function UpgradePage() {
         Select best plan for your business
       </h1>
 
-      <div className="mb-8 flex items-center justify-center">
-        <span className="mr-2 text-sm">Monthly</span>
-        <Switch
-          checked={period === "yearly"}
-          onCheckedChange={() =>
-            setPeriod(period === "monthly" ? "yearly" : "monthly")
-          }
-        />
-        <span className="ml-2 text-sm">
-          Annually <span className="text-[#fb7a00]">(Save up to 35%)</span>
-        </span>
+      <div className="mb-8 flex flex-wrap items-center justify-center gap-6">
+        <div className="flex items-center">
+          <span className="mr-2 text-sm">Monthly</span>
+          <Switch
+            checked={period === "yearly"}
+            onCheckedChange={() =>
+              setPeriod(period === "monthly" ? "yearly" : "monthly")
+            }
+          />
+          <span className="ml-2 text-sm">
+            Annually <span className="text-[#fb7a00]">(Save up to 35%)</span>
+          </span>
+        </div>
+        <div className="flex rounded-lg border border-gray-200 p-1">
+          <button
+            type="button"
+            onClick={() => setCurrency("eur")}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              currency === "eur"
+                ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+                : "text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white"
+            }`}
+          >
+            € EUR
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrency("usd")}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              currency === "usd"
+                ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+                : "text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white"
+            }`}
+          >
+            $ USD
+          </button>
+        </div>
       </div>
 
       {/* Plan Type Selector */}
@@ -197,7 +224,7 @@ export default function UpgradePage() {
       {planType === "documents" && (
         <div className="grid grid-cols-1 gap-2 md:grid-cols-3 mb-8">
           {documentSharingPlans.map((planOption) => {
-          const planFeatures = getPlanFeatures(planOption, { period });
+          const planFeatures = getPlanFeatures(planOption, { period, currency });
 
           return (
             <div
@@ -233,8 +260,8 @@ export default function UpgradePage() {
               </div>
 
               <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
-                €
-                {PLANS.find((p) => p.name === planOption)!.price[period].amount}
+                {currencySymbol(currency)}
+                {PLANS.find((p) => p.name === planOption)!.price[period][currency].amount}
                 <span className="text-base font-normal dark:text-white/75">
                   /month{period === "yearly" && ", billed annually"}
                 </span>
@@ -242,10 +269,10 @@ export default function UpgradePage() {
               {PLANS.find((p) => p.name === planOption)?.price[period]
                 .perSeat && (
                 <p className="text-sm text-gray-500 dark:text-white/60">
-                  +€
+                  +{currencySymbol(currency)}
                   {
                     PLANS.find((p) => p.name === planOption)?.price[period]
-                      .perSeat?.amount
+                      .perSeat?.[currency].amount
                   }
                   /mo per additional user
                 </p>
@@ -307,11 +334,13 @@ export default function UpgradePage() {
                       const basePriceId = getPriceIdFromPlan({
                         planName: planOption,
                         period,
+                        currency,
                         isOld: isOldAccount,
                       });
                       const seatPriceId = getPerSeatPriceIdFromPlan({
                         planName: planOption,
                         period,
+                        currency,
                         isOld: isOldAccount,
                       });
                       const params = new URLSearchParams({
@@ -370,7 +399,7 @@ export default function UpgradePage() {
             PlanEnum.DataRoomsPlus,
             PlanEnum.DataRoomsPremium,
           ].map((planOption) => {
-            const planFeatures = getPlanFeatures(planOption, { period });
+            const planFeatures = getPlanFeatures(planOption, { period, currency });
 
             return (
               <div
@@ -406,9 +435,8 @@ export default function UpgradePage() {
                 </div>
 
                 <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
-                  €
-                  {PLANS.find((p) => p.name === planOption)!.price[period]
-                    .amount}
+                  {currencySymbol(currency)}
+                  {PLANS.find((p) => p.name === planOption)!.price[period][currency].amount}
                   <span className="text-base font-normal dark:text-white/75">
                     /month{period === "yearly" && ", billed annually"}
                   </span>
@@ -416,10 +444,10 @@ export default function UpgradePage() {
                 {PLANS.find((p) => p.name === planOption)?.price[period]
                   .perSeat && (
                   <p className="text-sm text-gray-500 dark:text-white/60">
-                    +€
+                    +{currencySymbol(currency)}
                     {
                       PLANS.find((p) => p.name === planOption)?.price[period]
-                        .perSeat?.amount
+                        .perSeat?.[currency].amount
                     }
                     /mo per additional user
                   </p>
@@ -481,11 +509,13 @@ export default function UpgradePage() {
                         const basePriceId = getPriceIdFromPlan({
                           planName: planOption,
                           period,
+                          currency,
                           isOld: isOldAccount,
                         });
                         const seatPriceId = getPerSeatPriceIdFromPlan({
                           planName: planOption,
                           period,
+                          currency,
                           isOld: isOldAccount,
                         });
                         const params = new URLSearchParams({
@@ -543,7 +573,7 @@ export default function UpgradePage() {
             PlanEnum.DataRoomsPlus,
             PlanEnum.DataRoomsPremium,
           ].map((planOption) => {
-            const planFeatures = getPlanFeatures(planOption, { period });
+            const planFeatures = getPlanFeatures(planOption, { period, currency });
 
               return (
                 <div
@@ -578,41 +608,41 @@ export default function UpgradePage() {
                     )}
                   </div>
 
-                  <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
-                    €
-                    {PLANS.find((p) => p.name === planOption)!.price[period]
-                      .amount}
-                    <span className="text-base font-normal dark:text-white/75">
-                      /month{period === "yearly" && ", billed annually"}
-                    </span>
-                  </div>
-                  {PLANS.find((p) => p.name === planOption)?.price[period]
-                    .perSeat && (
-                    <p className="text-sm text-gray-500 dark:text-white/60">
-                      +€
-                      {
-                        PLANS.find((p) => p.name === planOption)?.price[period]
-                          .perSeat?.amount
-                      }
-                      /mo per additional user
-                    </p>
-                  )}
-                  <p className="mt-4 text-sm text-gray-600 dark:text-white">
-                    {planFeatures.featureIntro}
+                <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
+                  {currencySymbol(currency)}
+                  {PLANS.find((p) => p.name === planOption)!.price[period][currency]
+                    .amount}
+                  <span className="text-base font-normal dark:text-white/75">
+                    /month{period === "yearly" && ", billed annually"}
+                  </span>
+                </div>
+                {PLANS.find((p) => p.name === planOption)?.price[period]
+                  .perSeat && (
+                  <p className="text-sm text-gray-500 dark:text-white/60">
+                    +{currencySymbol(currency)}
+                    {
+                      PLANS.find((p) => p.name === planOption)?.price[period]
+                        .perSeat?.[currency].amount
+                    }
+                    /mo per additional user
                   </p>
+                )}
+                <p className="mt-4 text-sm text-gray-600 dark:text-white">
+                  {planFeatures.featureIntro}
+                </p>
 
-                  <ul
-                    role="list"
-                    className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600"
-                  >
-                    {planFeatures.features.map((feature, i) => (
-                      <li key={i}>
-                        <FeatureItem feature={feature} period={period} />
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-auto">
-                    <Button
+                <ul
+                  role="list"
+                  className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600"
+                >
+                  {planFeatures.features.map((feature, i) => (
+                    <li key={i}>
+                      <FeatureItem feature={feature} period={period} />
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-auto">
+                  <Button
                       variant={
                         planOption === PlanEnum.Business ? "default" : "default"
                       }
@@ -651,16 +681,18 @@ export default function UpgradePage() {
                               setSelectedPlan(null);
                             });
                         } else {
-                          const basePriceId = getPriceIdFromPlan({
-                            planName: planOption,
-                            period,
-                            isOld: isOldAccount,
-                          });
-                          const seatPriceId = getPerSeatPriceIdFromPlan({
-                            planName: planOption,
-                            period,
-                            isOld: isOldAccount,
-                          });
+const basePriceId = getPriceIdFromPlan({
+                          planName: planOption,
+                          period,
+                          currency,
+                          isOld: isOldAccount,
+                        });
+                        const seatPriceId = getPerSeatPriceIdFromPlan({
+                          planName: planOption,
+                          period,
+                          currency,
+                          isOld: isOldAccount,
+                        });
                           const params = new URLSearchParams({
                             priceId: basePriceId!,
                           });
