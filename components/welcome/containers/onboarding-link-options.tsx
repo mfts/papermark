@@ -64,6 +64,7 @@ export const OnboardingLinkOptions = ({
     ? limits?.advancedLinkControlsOnPro
     : false;
   const allowWatermarkOnBusiness = limits?.watermarkOnBusiness ?? false;
+  const allowAgreementOnBusiness = limits?.agreementOnBusiness ?? false;
 
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
@@ -204,7 +205,7 @@ export const OnboardingLinkOptions = ({
       <AgreementSection
         {...{ data, setData }}
         isAllowed={
-          isTrial || isDatarooms || isDataroomsPlus || allowWatermarkOnBusiness
+          isTrial || isDatarooms || isDataroomsPlus || allowAgreementOnBusiness
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
