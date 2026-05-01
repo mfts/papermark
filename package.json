@@ -196,6 +196,7 @@
     "prisma": "6.5.0",
     "tsx": "^4.21.0",
     "typescript": "^5",
+    "vitest": "^4.1.5",
     "zod-openapi": "^4.2.4"
   },
   "prisma": {
