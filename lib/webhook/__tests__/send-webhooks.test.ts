@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // vi.hoisted ensures the mock fn is available when vi.mock factories run (hoisted above imports)
 const { mockPublishJSON } = vi.hoisted(() => ({
@@ -26,9 +26,6 @@ vi.mock("@/lib/zod/schemas/webhooks", () => ({
   },
 }));
 
-// Set env var needed by publishWebhookEventToQStash for URL construction
-process.env.NEXT_PUBLIC_BASE_URL = "https://app.papermark.io";
-
 import { sendWebhooks } from "../send-webhooks";
 
 const makeWebhook = (id: string) => ({
@@ -37,10 +34,18 @@ const makeWebhook = (id: string) => ({
   secret: "whsec_test",
 });
 
+const originalBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
 describe("sendWebhooks", () => {
   beforeEach(() => {
+    process.env.NEXT_PUBLIC_BASE_URL = "https://app.papermark.io";
     mockPublishJSON.mockReset();
     vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    process.env.NEXT_PUBLIC_BASE_URL = originalBaseUrl;
+    vi.restoreAllMocks();
   });
 
   it("delivers to all webhooks when all endpoints are healthy", async () => {
