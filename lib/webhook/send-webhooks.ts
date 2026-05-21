@@ -1,7 +1,5 @@
 import { Webhook } from "@prisma/client";
 
-import { qstash } from "@/lib/cron";
-
 import { createWebhookSignature } from "./signature";
 import { prepareWebhookPayload } from "./transform";
 import { EventDataProps, WebhookPayload, WebhookTrigger } from "./types";
@@ -33,17 +31,17 @@ export const sendWebhooks = async ({
 
   const payload = prepareWebhookPayload(trigger, data);
 
-  // Use allSettled so that a single QStash failure (e.g. transient network
-  // error or rate limit on one endpoint) does not prevent the remaining
+  const deliverFn = process.env.QSTASH_TOKEN
+    ? publishWebhookEventToQStash
+    : publishWebhookEventDirect;
+
+  // Use allSettled so a single failure does not prevent the remaining
   // webhooks in the batch from being delivered.
   const results = await Promise.allSettled(
-    webhooks.map((webhook) =>
-      publishWebhookEventToQStash({ webhook, payload }),
-    ),
+    webhooks.map((webhook) => deliverFn({ webhook, payload })),
   );
 
-  const fulfilled: Awaited<ReturnType<typeof publishWebhookEventToQStash>>[] =
-    [];
+  const fulfilled: Awaited<ReturnType<typeof deliverFn>>[] = [];
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
     if (result.status === "fulfilled") {
@@ -65,7 +63,50 @@ export const sendWebhooks = async ({
   return fulfilled;
 };
 
-// Publish webhook event to QStash
+// Deliver webhook event directly via fetch (used when QSTASH_TOKEN is not set,
+// e.g. self-hosted deployments that don't use Upstash).
+const publishWebhookEventDirect = async ({
+  webhook,
+  payload,
+}: {
+  webhook: Pick<Webhook, "pId" | "url" | "secret">;
+  payload: WebhookPayload;
+}) => {
+  const signature = await createWebhookSignature(webhook.secret, payload);
+
+  try {
+    const response = await fetch(webhook.url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Papermark-Signature": signature,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      console.error(
+        `Webhook ${webhook.pId} (${redactUrl(webhook.url)}) responded ${response.status}: ${text}`,
+      );
+    }
+
+    return { ok: response.ok, status: response.status };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : typeof error === "string"
+          ? error
+          : "Unknown error";
+    console.error(
+      `Failed to deliver webhook ${webhook.pId} to ${redactUrl(webhook.url)}: ${errorMessage}`,
+    );
+    throw error;
+  }
+};
+
+// Publish webhook event to QStash (used when QSTASH_TOKEN is configured).
 const publishWebhookEventToQStash = async ({
   webhook,
   payload,
@@ -73,6 +114,10 @@ const publishWebhookEventToQStash = async ({
   webhook: Pick<Webhook, "pId" | "url" | "secret">;
   payload: WebhookPayload;
 }) => {
+  // Dynamic import so self-hosted builds without QSTASH_TOKEN never initialise
+  // the QStash client (which throws on missing token).
+  const { qstash } = await import("@/lib/cron");
+
   const callbackUrl = new URL(
     `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhooks/callback`,
   );
@@ -100,8 +145,6 @@ const publishWebhookEventToQStash = async ({
 
     return response;
   } catch (error) {
-    // Surface which webhook failed so the caller's allSettled handler and
-    // logs make it easy to identify the broken endpoint.
     const errorMessage =
       error instanceof Error
         ? error.message

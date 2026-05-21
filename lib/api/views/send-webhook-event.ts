@@ -1,5 +1,6 @@
 import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 
+import { sendGhlViewEvent } from "@/lib/integrations/ghl/send-ghl-event";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { sendWebhooks } from "@/lib/webhook/send-webhooks";
@@ -23,22 +24,21 @@ export async function sendLinkViewWebhook({
       throw new Error("Missing required parameters");
     }
 
-    // check if team is on paid plan
-    const team = await prisma.team.findUnique({
-      where: { id: teamId },
-      select: { plan: true },
-    });
+    // On self-hosted deployments all plans are webhook-eligible.
+    if (process.env.NEXT_PUBLIC_SELF_HOSTED !== "true") {
+      const team = await prisma.team.findUnique({
+        where: { id: teamId },
+        select: { plan: true },
+      });
 
-    if (team?.plan === "free" || team?.plan === "pro") {
-      // team is not on a webhook-eligible plan, so we don't send webhooks
-      return;
-    }
+      if (team?.plan === "free" || team?.plan === "pro") {
+        return;
+      }
 
-    // check if team is paused
-    const teamIsPaused = await isTeamPausedById(teamId);
-    if (teamIsPaused) {
-      // team is paused, so we don't send webhooks
-      return;
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return;
+      }
     }
 
     // Get webhooks for team
@@ -182,14 +182,26 @@ export async function sendLinkViewWebhook({
       }),
     };
 
-    // Send webhooks
-    if (webhooks.length > 0) {
-      await sendWebhooks({
-        webhooks,
-        trigger: "link.viewed",
-        data: webhookData,
-      });
-    }
+    // Send Papermark webhooks and GHL event in parallel.
+    await Promise.all([
+      webhooks.length > 0
+        ? sendWebhooks({
+            webhooks,
+            trigger: "link.viewed",
+            data: webhookData,
+          })
+        : Promise.resolve(),
+      sendGhlViewEvent({
+        view: viewData,
+        link: linkData,
+        document: document
+          ? { name: document.name }
+          : null,
+        dataroom: dataroom
+          ? { name: dataroom.name }
+          : null,
+      }),
+    ]);
     return;
   } catch (error) {
     log({
