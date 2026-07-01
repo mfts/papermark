@@ -13,6 +13,7 @@ import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { lockerRedisClient } from "@/lib/redis";
 import { log } from "@/lib/utils";
+import { getAllowedOrigin } from "@/lib/files/cors-utils";
 
 export const config = {
   maxDuration: 60,
@@ -230,11 +231,22 @@ const tusServer = new Server({
   },
 });
 
-// CORS headers to allow custom domains
-const setCorsHeaders = (req: NextApiRequest, res: NextApiResponse) => {
-  // Set CORS headers
+// CORS headers to allow custom domains.
+const setCorsHeaders = (
+  req: NextApiRequest,
+  res: NextApiResponse,
+): boolean => {
+  const allowedOrigin = getAllowedOrigin(req.headers.origin);
+
+  if (!allowedOrigin) {
+    res.status(403).end("Forbidden: untrusted origin");
+    return false;
+  }
+
   res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  // Vary: Origin is required so caches do not reuse a response
+  res.setHeader("Vary", "Origin");
   res.setHeader(
     "Access-Control-Allow-Methods",
     "POST, GET, OPTIONS, DELETE, PATCH, HEAD",
@@ -247,18 +259,21 @@ const setCorsHeaders = (req: NextApiRequest, res: NextApiResponse) => {
     "Access-Control-Expose-Headers",
     "Upload-Offset, Location, Upload-Length, Tus-Version, Tus-Resumable, Tus-Max-Size, Tus-Extension, Upload-Metadata, Upload-Defer-Length, Upload-Concat",
   );
+  return true;
 };
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Handle CORS preflight requests
+  // Handle CORS preflight requests.
   if (req.method === "OPTIONS") {
-    setCorsHeaders(req, res);
+    const allowed = setCorsHeaders(req, res);
+    if (!allowed) return;
     return res.status(204).end();
   }
 
-  // Set CORS headers for all requests
-  setCorsHeaders(req, res);
+  // Set CORS headers for all non-preflight requests.
+  const allowed = setCorsHeaders(req, res);
+  if (!allowed) return;
 
-  // No session check - authentication is handled via viewer metadata
+  
   return tusServer.handle(req, res);
 }
