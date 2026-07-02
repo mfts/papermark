@@ -236,7 +236,15 @@ const setCorsHeaders = (
   req: NextApiRequest,
   res: NextApiResponse,
 ): boolean => {
-  const allowedOrigin = getAllowedOrigin(req.headers.origin);
+  const requestOrigin = req.headers.origin;
+  
+  // Let it through without adding CORS headers.
+  if (!requestOrigin) {
+    return true;
+  }
+
+  // Origin header is present — check if it is trusted.
+  const allowedOrigin = getAllowedOrigin(requestOrigin);
 
   if (!allowedOrigin) {
     res.status(403).end("Forbidden: untrusted origin");
@@ -245,7 +253,6 @@ const setCorsHeaders = (
 
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
-  // Vary: Origin is required so caches do not reuse a response
   res.setHeader("Vary", "Origin");
   res.setHeader(
     "Access-Control-Allow-Methods",
