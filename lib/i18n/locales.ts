@@ -20,7 +20,8 @@ export type SupportedLocaleCode =
   | "es"
   | "it"
   | "pt-BR"
-  | "ja";
+  | "ja"
+  | "ko";
 
 export type SupportedLocale = {
   code: SupportedLocaleCode;
@@ -36,6 +37,7 @@ export const SUPPORTED_LOCALES: readonly SupportedLocale[] = [
   { code: "it", nativeName: "Italiano", englishName: "Italian" },
   { code: "pt-BR", nativeName: "Português (Brasil)", englishName: "Portuguese (Brazil)" },
   { code: "ja", nativeName: "日本語", englishName: "Japanese" },
+  { code: "ko", nativeName: "한국어", englishName: "Korean" },
 ] as const;
 
 export const DEFAULT_LOCALE: SupportedLocaleCode = "en";

@@ -184,6 +184,16 @@ async function loadNamespaceFile(
           return (await import("../../locales/ja/viewer.json")).default;
       }
       break;
+    case "ko":
+      switch (namespace) {
+        case "access-form":
+          return (await import("../../locales/ko/access-form.json")).default;
+        case "dataroom":
+          return (await import("../../locales/ko/dataroom.json")).default;
+        case "viewer":
+          return (await import("../../locales/ko/viewer.json")).default;
+      }
+      break;
   }
   return {};
 }
