@@ -1,8 +1,8 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { DocumentStorageType } from "@prisma/client";
-import { put as putBlob } from "@vercel/blob";
 
 import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
+import { assertS3Transport } from "@/lib/files/transport";
 import prisma from "@/lib/prisma";
 import { buildContentDisposition, safeSlugify } from "@/lib/utils";
 
@@ -124,18 +124,7 @@ const uploadToS3 = async ({
   return { storageType: DocumentStorageType.S3_PATH, fileKey: key };
 };
 
-const uploadToBlob = async ({ key, body }: { key: string; body: Buffer }) => {
-  // `addRandomSuffix` makes the public blob URL unguessable; persist the returned URL (not the deterministic key) so `getFile` resolves the real object.
-  const blob = await putBlob(key, body, {
-    access: "public",
-    addRandomSuffix: true,
-    contentType: "application/pdf",
-  });
-
-  return { storageType: DocumentStorageType.VERCEL_BLOB, fileKey: blob.url };
-};
-
-/** Mirror a signed Documenso PDF into team storage (S3/Blob); idempotent and non-fatal — downloads fall back to a direct Documenso call when the mirror is missing. */
+/** Mirror a signed Documenso PDF into team S3 storage; idempotent and non-fatal — downloads fall back to a direct Documenso call when the mirror is missing. */
 export const mirrorSignedAgreementToStorage = async ({
   agreementResponseId,
 }: {
@@ -190,21 +179,14 @@ export const mirrorSignedAgreementToStorage = async ({
     agreementResponseId: response.id,
   });
 
-  const transport = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
+  assertS3Transport();
 
-  // Persist whatever the uploader returns as `fileKey`: S3 needs the key, VERCEL_BLOB needs the returned (random-suffixed) URL.
-  const { storageType, fileKey } =
-    transport === "s3"
-      ? await uploadToS3({
-          teamId,
-          key: signedFileKey,
-          contentDisposition: buildContentDisposition(
-            signedFileName,
-            signedFileName,
-          ),
-          body,
-        })
-      : await uploadToBlob({ key: signedFileKey, body });
+  const { storageType, fileKey } = await uploadToS3({
+    teamId,
+    key: signedFileKey,
+    contentDisposition: buildContentDisposition(signedFileName, signedFileName),
+    body,
+  });
 
   await prisma.agreementResponse.update({
     where: { id: response.id },

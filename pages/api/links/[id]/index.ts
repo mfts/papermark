@@ -1,13 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { Brand, DataroomBrand, LinkAudienceType } from "@prisma/client";
+import { LinkAudienceType } from "@prisma/client";
 import { customAlphabet } from "nanoid";
 import { getServerSession } from "next-auth/next";
 
-import {
-  fetchDataroomLinkData,
-  fetchDocumentLinkData,
-} from "@/lib/api/links/link-data";
 import { enforceLinkMemberScope } from "@/lib/api/rbac/guard";
 import prisma from "@/lib/prisma";
 import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
@@ -15,7 +11,6 @@ import {
   decryptEncrpytedPassword,
   generateEncrpytedPassword,
 } from "@/lib/utils";
-import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 
 import { DomainObject } from "..";
 import { authOptions } from "../../auth/[...nextauth]";
@@ -44,178 +39,7 @@ export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (req.method === "GET") {
-    // GET /api/links/:id
-    const { id } = req.query as { id: string };
-
-    try {
-      console.time("get-link");
-      const link = await prisma.link.findUnique({
-        where: {
-          id: id,
-        },
-        select: {
-          id: true,
-          expiresAt: true,
-          emailProtected: true,
-          emailAuthenticated: true,
-          allowDownload: true,
-          enableFeedback: true,
-          enableScreenshotProtection: true,
-          enableConfidentialView: true,
-          password: true,
-          isArchived: true,
-          deletedAt: true,
-          enableIndexFile: true,
-          enableCustomMetatag: true,
-          metaTitle: true,
-          metaDescription: true,
-          metaImage: true,
-          metaFavicon: true,
-          welcomeMessage: true,
-          enableQuestion: true,
-          linkType: true,
-          feedback: {
-            select: {
-              id: true,
-              data: true,
-            },
-          },
-          enableAgreement: true,
-          agreement: true,
-          showBanner: true,
-          enableWatermark: true,
-          watermarkConfig: true,
-          groupId: true,
-          permissionGroupId: true,
-          audienceType: true,
-          dataroomId: true,
-          teamId: true,
-          team: {
-            select: {
-              plan: true,
-              globalBlockList: true,
-            },
-          },
-          customFields: {
-            select: {
-              id: true,
-              type: true,
-              identifier: true,
-              label: true,
-              placeholder: true,
-              required: true,
-              disabled: true,
-              orderIndex: true,
-            },
-            orderBy: {
-              orderIndex: "asc",
-            },
-          },
-        },
-      });
-
-      console.timeEnd("get-link");
-
-      if (!link) {
-        return res.status(404).json({ error: "Link not found" });
-      }
-
-      if (link.deletedAt) {
-        return res.status(404).json({ error: "Link has been deleted" });
-      }
-
-      if (link.isArchived) {
-        return res.status(404).json({ error: "Link is archived" });
-      }
-
-      const { email } = req.query as { email?: string };
-      const globalBlockCheck = checkGlobalBlockList(
-        email,
-        link.team?.globalBlockList,
-      );
-      if (globalBlockCheck.error) {
-        return res.status(400).json({ message: globalBlockCheck.error });
-      }
-      if (globalBlockCheck.isBlocked) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      const linkType = link.linkType;
-
-      // Handle workflow links separately
-      if (linkType === "WORKFLOW_LINK") {
-        // For workflow links, fetch brand if available
-        let brand: Partial<Brand> | null = null;
-        if (link.teamId) {
-          const teamBrand = await prisma.brand.findUnique({
-            where: { teamId: link.teamId },
-            select: {
-              logo: true,
-              brandColor: true,
-              accentColor: true,
-            },
-          });
-          brand = teamBrand;
-        }
-
-        return res.status(200).json({ linkType, brand });
-      }
-
-      let brand: Partial<Brand> | Partial<DataroomBrand> | null = null;
-      let linkData: any;
-
-      if (linkType === "DOCUMENT_LINK") {
-        console.time("get-document-link-data");
-        const data = await fetchDocumentLinkData({
-          linkId: id,
-          teamId: link.teamId!,
-        });
-        linkData = data.linkData;
-        brand = data.brand;
-        console.timeEnd("get-document-link-data");
-      } else if (linkType === "DATAROOM_LINK") {
-        console.time("get-dataroom-link-data");
-        const data = await fetchDataroomLinkData({
-          linkId: id,
-          dataroomId: link.dataroomId,
-          teamId: link.teamId!,
-          permissionGroupId: link.permissionGroupId || undefined,
-          ...(link.audienceType === LinkAudienceType.GROUP &&
-            link.groupId && {
-              groupId: link.groupId,
-            }),
-        });
-        linkData = data.linkData;
-        brand = data.brand;
-        // Include access controls in the link data for the frontend
-        linkData.accessControls = data.accessControls;
-        console.timeEnd("get-dataroom-link-data");
-      }
-
-      const teamPlan = link.team?.plan || "free";
-
-      const returnLink = {
-        ...link,
-        ...linkData,
-        dataroomId: undefined,
-        ...(teamPlan === "free" && {
-          customFields: [], // reset custom fields for free plan
-          enableAgreement: false,
-          enableWatermark: false,
-          permissionGroupId: null,
-        }),
-      };
-
-      return res.status(200).json({ linkType, link: returnLink, brand });
-    } catch (error) {
-      console.error("Error fetching link data:", error);
-      return res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
-    }
-  } else if (req.method === "PUT") {
+  if (req.method === "PUT") {
     // PUT /api/links/:id
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
@@ -672,12 +496,10 @@ export default async function handle(
         // Create new associations
         if (linkData.visitorGroupIds?.length > 0) {
           await tx.linkVisitorGroup.createMany({
-            data: linkData.visitorGroupIds.map(
-              (visitorGroupId: string) => ({
-                linkId: id,
-                visitorGroupId,
-              }),
-            ),
+            data: linkData.visitorGroupIds.map((visitorGroupId: string) => ({
+              linkId: id,
+              visitorGroupId,
+            })),
             skipDuplicates: true,
           });
         }
@@ -867,7 +689,7 @@ export default async function handle(
     }
   }
 
-  // We only allow GET and PUT requests
-  res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
+  // We only allow PUT and DELETE requests
+  res.setHeader("Allow", ["PUT", "DELETE"]);
   return res.status(405).end(`Method ${req.method} Not Allowed`);
 }

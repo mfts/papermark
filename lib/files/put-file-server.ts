@@ -1,16 +1,15 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { DocumentStorageType } from "@prisma/client";
-import { put } from "@vercel/blob";
 import { createReadStream } from "node:fs";
 import path from "node:path";
-import { match } from "ts-pattern";
 
 import { newId } from "@/lib/id-helper";
 import { buildContentDisposition, safeSlugify } from "@/lib/utils";
 
 import { SUPPORTED_DOCUMENT_MIME_TYPES } from "../constants";
 import { getTeamS3ClientAndConfig } from "./aws-client";
+import { assertS3Transport } from "./transport";
 
 // `File` is a web API type and not available server-side, so we need to define our own type
 type File = {
@@ -32,36 +31,17 @@ export const putFileServer = async ({
   restricted?: boolean;
   subfolder?: string;
 }) => {
-  const NEXT_PUBLIC_UPLOAD_TRANSPORT = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
+  assertS3Transport();
 
-  const { type, data } = await match(NEXT_PUBLIC_UPLOAD_TRANSPORT)
-    .with("s3", async () =>
-      putFileInS3Server({ file, teamId, docId, restricted, subfolder }),
-    )
-    .with("vercel", async () => putFileInVercelServer(file))
-    .otherwise(() => {
-      return {
-        type: null,
-        data: null,
-        numPages: undefined,
-      };
-    });
-
-  return { type, data };
-};
-
-const putFileInVercelServer = async (file: File) => {
-  const contents = file.buffer;
-
-  const blob = await put(file.name, contents, {
-    access: "public",
-    addRandomSuffix: true,
+  const { type, data } = await putFileInS3Server({
+    file,
+    teamId,
+    docId,
+    restricted,
+    subfolder,
   });
 
-  return {
-    type: DocumentStorageType.VERCEL_BLOB,
-    data: blob.url,
-  };
+  return { type, data };
 };
 
 const putFileInS3Server = async ({
@@ -137,8 +117,8 @@ type StreamFile = {
 
 /**
  * Streaming counterpart to {@link putFileServer}. Reads the file from disk as a
- * stream and uploads it without buffering the whole payload in memory (S3 uses
- * multipart via lib-storage; Vercel Blob uses multipart streaming).
+ * stream and uploads it without buffering the whole payload in memory (via
+ * multipart S3 upload through lib-storage).
  */
 export const putFileServerStream = async ({
   file,
@@ -153,32 +133,17 @@ export const putFileServerStream = async ({
   restricted?: boolean;
   subfolder?: string;
 }) => {
-  const NEXT_PUBLIC_UPLOAD_TRANSPORT = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
+  assertS3Transport();
 
-  const { type, data } = await match(NEXT_PUBLIC_UPLOAD_TRANSPORT)
-    .with("s3", async () =>
-      putFileStreamInS3Server({ file, teamId, docId, restricted, subfolder }),
-    )
-    .with("vercel", async () => putFileStreamInVercelServer(file))
-    .otherwise(() => {
-      return { type: null, data: null };
-    });
-
-  return { type, data };
-};
-
-const putFileStreamInVercelServer = async (file: StreamFile) => {
-  const blob = await put(file.name, createReadStream(file.path), {
-    access: "public",
-    addRandomSuffix: true,
-    multipart: true,
-    contentType: file.type,
+  const { type, data } = await putFileStreamInS3Server({
+    file,
+    teamId,
+    docId,
+    restricted,
+    subfolder,
   });
 
-  return {
-    type: DocumentStorageType.VERCEL_BLOB,
-    data: blob.url,
-  };
+  return { type, data };
 };
 
 const putFileStreamInS3Server = async ({
