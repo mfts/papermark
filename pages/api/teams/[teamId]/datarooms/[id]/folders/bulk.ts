@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-
+import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
 import {
   BulkFolderInput,
   BulkValidationError,
@@ -35,6 +35,19 @@ const BulkSchema = z.object({
          * multiple requests. Ignored if `parentTempId` is set.
          */
         parentPath: z.string().min(1).max(2000).optional().nullable(),
+        /**
+         * Position among the folder's siblings within this request, counting
+         * from 0. Folders landing directly under `rootPath` get shifted past
+         * the items already there, so an import never reorders what the user
+         * already arranged. Omitted/null leaves orderIndex null.
+         */
+        orderIndex: z
+          .number()
+          .int()
+          .min(0)
+          .max(MAX_BULK_FOLDERS_PER_REQUEST)
+          .optional()
+          .nullable(),
       }),
     )
     .min(1)
@@ -80,6 +93,12 @@ export default async function handle(
   const inputFolders: BulkFolderInput[] = parsed.data.folders;
 
   try {
+    // Scoped members may only create folders within their assigned rooms,
+    // mirroring the single-folder POST in folders/index.ts.
+    if (await enforceDataroomMemberScope({ userId, teamId, dataroomId, res })) {
+      return;
+    }
+
     const team = await prisma.team.findUnique({
       where: {
         id: teamId,
@@ -106,30 +125,37 @@ export default async function handle(
       });
     }
 
-    const created = await prisma.$transaction(async (tx) => {
-      let rootParentId: string | null = null;
-      if (rootPath !== "/") {
-        const parent = await tx.dataroomFolder.findUnique({
-          where: { dataroomId_path: { dataroomId, path: rootPath } },
-          select: { id: true },
-        });
-        if (!parent) {
-          throw new BulkValidationError(
-            "UNKNOWN_ROOT_PATH",
-            "Parent folder does not exist",
-          );
+    const created = await prisma.$transaction(
+      async (tx) => {
+        let rootParentId: string | null = null;
+        if (rootPath !== "/") {
+          const parent = await tx.dataroomFolder.findUnique({
+            where: { dataroomId_path: { dataroomId, path: rootPath } },
+            select: { id: true },
+          });
+          if (!parent) {
+            throw new BulkValidationError(
+              "UNKNOWN_ROOT_PATH",
+              "Parent folder does not exist",
+            );
+          }
+          rootParentId = parent.id;
         }
-        rootParentId = parent.id;
-      }
 
-      return bulkCreateDataroomFolders({
-        tx,
-        dataroomId,
-        rootPath,
-        rootParentId,
-        folders: inputFolders,
-      });
-    });
+        return bulkCreateDataroomFolders({
+          tx,
+          dataroomId,
+          rootPath,
+          rootParentId,
+          folders: inputFolders,
+        });
+      },
+      // A full 500-folder batch runs one SELECT + one INSERT per tree level
+      // plus the ACL createMany. Prisma's 5s default leaves no headroom for
+      // that many round trips over a pooled connection, and blowing it rolls
+      // back the whole import.
+      { timeout: 20_000, maxWait: 10_000 },
+    );
 
     return res.status(201).json({ folders: created });
   } catch (error) {

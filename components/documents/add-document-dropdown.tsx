@@ -8,6 +8,7 @@ import {
   FolderUpIcon,
   LinkIcon,
   PlusIcon,
+  TablePropertiesIcon,
 } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
+import { ImportFoldersModal } from "@/components/folders/import-folders-modal";
 import NotionIcon from "@/components/shared/icons/files/notion";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,6 +63,7 @@ export function AddDocumentDropdown({
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [folderOpen, setFolderOpen] = useState(false);
+  const [importFoldersOpen, setImportFoldersOpen] = useState(false);
   const [docModal, setDocModal] = useState<DocModalState>({
     open: false,
     defaultTab: "document",
@@ -99,6 +102,18 @@ export function AddDocumentDropdown({
       return;
     }
     setFolderOpen(true);
+  }, [requiresUpgradeForFolders]);
+
+  const handleImportFolders = useCallback(() => {
+    if (requiresUpgradeForFolders) {
+      setUpgradeModal({
+        open: true,
+        trigger: "import_folders_button",
+        highlight: ["folder", "folder-sharing", "datarooms"],
+      });
+      return;
+    }
+    setImportFoldersOpen(true);
   }, [requiresUpgradeForFolders]);
 
   const handleUploadFiles = useCallback(() => {
@@ -293,6 +308,22 @@ export function AddDocumentDropdown({
             </DropdownMenuShortcut>
           </DropdownMenuItem>
 
+          {isDataroom && dataroomId ? (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                setMenuOpen(false);
+                handleImportFolders();
+              }}
+            >
+              <TablePropertiesIcon
+                className="h-4 w-4 -scale-x-100"
+                aria-hidden="true"
+              />
+              <span>Import folders from Excel</span>
+            </DropdownMenuItem>
+          ) : null}
+
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Upload from computer
@@ -357,6 +388,14 @@ export function AddDocumentDropdown({
         isDataroom={isDataroom}
         dataroomId={dataroomId}
       />
+
+      {isDataroom && dataroomId ? (
+        <ImportFoldersModal
+          open={importFoldersOpen}
+          setOpen={setImportFoldersOpen}
+          dataroomId={dataroomId}
+        />
+      ) : null}
 
       <AddDocumentModal
         key={docModalKey}

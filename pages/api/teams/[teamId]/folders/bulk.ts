@@ -87,30 +87,35 @@ export default async function handle(
       });
     }
 
-    const created = await prisma.$transaction(async (tx) => {
-      let rootParentId: string | null = null;
-      if (rootPath !== "/") {
-        const parent = await tx.folder.findUnique({
-          where: { teamId_path: { teamId, path: rootPath } },
-          select: { id: true },
-        });
-        if (!parent) {
-          throw new BulkValidationError(
-            "UNKNOWN_ROOT_PATH",
-            "Parent folder does not exist",
-          );
+    const created = await prisma.$transaction(
+      async (tx) => {
+        let rootParentId: string | null = null;
+        if (rootPath !== "/") {
+          const parent = await tx.folder.findUnique({
+            where: { teamId_path: { teamId, path: rootPath } },
+            select: { id: true },
+          });
+          if (!parent) {
+            throw new BulkValidationError(
+              "UNKNOWN_ROOT_PATH",
+              "Parent folder does not exist",
+            );
+          }
+          rootParentId = parent.id;
         }
-        rootParentId = parent.id;
-      }
 
-      return bulkCreateMainDocsFolders({
-        tx,
-        teamId,
-        rootPath,
-        rootParentId,
-        folders: inputFolders,
-      });
-    });
+        return bulkCreateMainDocsFolders({
+          tx,
+          teamId,
+          rootPath,
+          rootParentId,
+          folders: inputFolders,
+        });
+      },
+      // See the dataroom variant: Prisma's 5s default is too tight for a
+      // full 500-folder batch over a pooled connection.
+      { timeout: 20_000, maxWait: 10_000 },
+    );
 
     return res.status(201).json({ folders: created });
   } catch (error) {

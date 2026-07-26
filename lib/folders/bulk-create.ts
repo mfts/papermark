@@ -91,6 +91,15 @@ export interface BulkFolderInput {
    * Ignored if `parentTempId` is set.
    */
   parentPath?: string | null;
+  /**
+   * Position among this folder's siblings, counting from 0. Written straight
+   * to DataroomFolder.orderIndex, so callers that import into a parent which
+   * already has ordered children must offset first (see
+   * `appendRootChildrenAfterExisting`). Ignored by the all-documents Folder
+   * model, which has no orderIndex column. Null leaves orderIndex null, which
+   * sorts the folder after every numbered sibling.
+   */
+  orderIndex?: number | null;
 }
 
 export interface BulkFolderResult {
@@ -273,10 +282,15 @@ async function resolveExternalParentPaths(
 }
 
 /**
- * Resolves slug collisions for an entire level in a single SELECT instead of
- * up to MAX_SLUG_SUFFIX sequential findUniques per folder.
+ * Assigns every folder at one tree level its final, collision-free path.
  *
- * Returns the resolved final path per tempId.
+ * Asking for all MAX_SLUG_SUFFIX fallbacks up front costs 51 bind parameters
+ * per folder, which puts a 500-folder level over 25k parameters and near
+ * Postgres' 65535 limit. Almost no import actually collides, so this asks for
+ * the plain slugs first and only pays for fallbacks on the folders that can
+ * collide with something.
+ *
+ * Returns the resolved name and path per tempId.
  */
 async function resolveLevelPaths(args: {
   level: BulkFolderInput[];
@@ -291,30 +305,69 @@ async function resolveLevelPaths(args: {
   const candidatesPerFolder: {
     tempId: string;
     name: string;
+    basePathPrefix: string;
     basePath: string;
     candidates: string[];
   }[] = [];
-  const allCandidates = new Set<string>();
+  const indicesByBasePath = new Map<string, number[]>();
 
-  for (const f of level) {
+  for (const [index, f] of level.entries()) {
     const parentPath = parentPathOf(f);
-    const basePath = parentPath === "/" ? "/" : parentPath + "/";
-    const slug = safeSlugify(f.name);
-    const candidates: string[] = [basePath + slug];
-    for (let i = 1; i <= MAX_SLUG_SUFFIX; i++) {
-      candidates.push(basePath + safeSlugify(`${f.name} (${i})`));
-    }
+    const basePathPrefix = parentPath === "/" ? "/" : parentPath + "/";
+    const basePath = basePathPrefix + safeSlugify(f.name);
     candidatesPerFolder.push({
       tempId: f.tempId,
       name: f.name,
+      basePathPrefix,
       basePath,
-      candidates,
+      candidates: [basePath],
     });
-    for (const c of candidates) allCandidates.add(c);
+    const siblings = indicesByBasePath.get(basePath);
+    if (siblings) siblings.push(index);
+    else indicesByBasePath.set(basePath, [index]);
   }
 
-  const existingRows = await findExisting(Array.from(allCandidates));
-  const taken = new Set(existingRows.map((r) => r.path));
+  const taken = new Set(
+    (await findExisting(Array.from(indicesByBasePath.keys()))).map(
+      (r) => r.path,
+    ),
+  );
+
+  const needsSuffixes = new Set<number>();
+  const pending: number[] = [];
+  const markContested = (index: number) => {
+    if (needsSuffixes.has(index)) return;
+    needsSuffixes.add(index);
+    pending.push(index);
+  };
+
+  for (const [basePath, indices] of indicesByBasePath) {
+    // Only the first of N same-named siblings can keep the base path.
+    if (taken.has(basePath) || indices.length > 1) {
+      indices.forEach(markContested);
+    }
+  }
+
+  // A folder literally named "Foo (1)" is uncontested on its own, but becomes
+  // contested once some "Foo" in the same batch may claim that exact path.
+  const suffixCandidates = new Set<string>();
+  while (pending.length > 0) {
+    const entry = candidatesPerFolder[pending.pop()!];
+    for (let i = 1; i <= MAX_SLUG_SUFFIX; i++) {
+      const candidate =
+        entry.basePathPrefix + safeSlugify(`${entry.name} (${i})`);
+      entry.candidates.push(candidate);
+      if (suffixCandidates.has(candidate)) continue;
+      suffixCandidates.add(candidate);
+      indicesByBasePath.get(candidate)?.forEach(markContested);
+    }
+  }
+
+  if (suffixCandidates.size > 0) {
+    for (const row of await findExisting(Array.from(suffixCandidates))) {
+      taken.add(row.path);
+    }
+  }
 
   const resolved = new Map<string, { name: string; path: string }>();
   for (const entry of candidatesPerFolder) {
@@ -331,11 +384,10 @@ async function resolveLevelPaths(args: {
     if (!pickedPath || !pickedName) {
       throw new BulkValidationError(
         "SLUG_EXHAUSTED",
-        `Could not find a free slug for "${entry.name}" under ${entry.basePath}`,
+        `Could not find a free slug for "${entry.name}" under ${entry.basePathPrefix}`,
       );
     }
-    // Reserve the path so subsequent folders at the same level don't collide
-    // with it (siblings dropped with identical names within the same batch).
+    // The batch's own rows aren't in the DB yet, so reserve as we go.
     taken.add(pickedPath);
     resolved.set(entry.tempId, { name: pickedName, path: pickedPath });
   }
@@ -452,6 +504,59 @@ export async function bulkCreateMainDocsFolders(args: {
 // Dataroom (DataroomFolder) bulk creator
 // ---------------------------------------------------------------------------
 
+/**
+ * Shifts request-relative sibling positions past whatever already sits under
+ * the request root, so an import appends instead of interleaving with items
+ * the user arranged by hand. Only folders landing directly under `rootPath`
+ * can have pre-existing siblings; everything deeper gets a parent this same
+ * request creates.
+ */
+async function appendRootChildrenAfterExisting(args: {
+  tx: Prisma.TransactionClient;
+  dataroomId: string;
+  rootParentId: string | null;
+  folders: BulkFolderInput[];
+}): Promise<BulkFolderInput[]> {
+  const { tx, dataroomId, rootParentId, folders } = args;
+  const isRootChild = (f: BulkFolderInput) => !f.parentTempId && !f.parentPath;
+
+  if (!folders.some((f) => isRootChild(f) && f.orderIndex != null)) {
+    return folders;
+  }
+
+  // Serialize sibling-order reads for this parent so concurrent imports cannot
+  // compute the same offset. Held until the surrounding transaction commits,
+  // covering the inserts that consume the offset below.
+  await tx.$executeRaw`
+    SELECT pg_advisory_xact_lock(
+      hashtext(${`bulk-folder-order:${dataroomId}:${rootParentId ?? ""}`})
+    )
+  `;
+
+  const [folderMax, documentMax] = await Promise.all([
+    tx.dataroomFolder.aggregate({
+      where: { dataroomId, parentId: rootParentId },
+      _max: { orderIndex: true },
+    }),
+    tx.dataroomDocument.aggregate({
+      where: { dataroomId, folderId: rootParentId },
+      _max: { orderIndex: true },
+    }),
+  ]);
+  const offset =
+    Math.max(
+      folderMax._max.orderIndex ?? -1,
+      documentMax._max.orderIndex ?? -1,
+    ) + 1;
+  if (offset === 0) return folders;
+
+  return folders.map((f) =>
+    isRootChild(f) && f.orderIndex != null
+      ? { ...f, orderIndex: f.orderIndex + offset }
+      : f,
+  );
+}
+
 export async function bulkCreateDataroomFolders(args: {
   tx: Prisma.TransactionClient;
   dataroomId: string;
@@ -459,7 +564,13 @@ export async function bulkCreateDataroomFolders(args: {
   rootParentId: string | null;
   folders: BulkFolderInput[];
 }): Promise<BulkFolderResult[]> {
-  const { tx, dataroomId, rootPath, rootParentId, folders } = args;
+  const { tx, dataroomId, rootPath, rootParentId } = args;
+  const folders = await appendRootChildrenAfterExisting({
+    tx,
+    dataroomId,
+    rootParentId,
+    folders: args.folders,
+  });
   const levels = buildLevels(folders);
   if (levels.length === 0) return [];
 
@@ -505,16 +616,14 @@ export async function bulkCreateDataroomFolders(args: {
             externalParentPathToId,
             rootParentId,
           );
-          // orderIndex and hierarchicalIndex are intentionally left null.
-          // Matches the existing single-folder POST behavior; null sorts last
-          // so new folders append to the end of each parent. They can be
-          // re-indexed via /api/teams/.../datarooms/[id]/calculate-indexes
-          // when needed.
+          // hierarchicalIndex stays null; it is recomputed in bulk via
+          // /api/teams/.../datarooms/[id]/calculate-indexes.
           return {
             name: r.name,
             path: r.path,
             parentId,
             dataroomId,
+            orderIndex: f.orderIndex ?? null,
           };
         });
 

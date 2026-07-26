@@ -24,6 +24,13 @@ export interface BulkFolderRequestItem {
    * looks this path up in DB to resolve the parent's id.
    */
   parentPath?: string | null;
+  /**
+   * Position among the folder's siblings within this request, counting from
+   * 0. The dataroom bulk endpoint shifts these past whatever already sits
+   * under the parent and stores the result as orderIndex. Omitted/null leaves
+   * orderIndex null, which sorts the folder after every numbered sibling.
+   */
+  orderIndex?: number | null;
 }
 
 export interface BulkFolderResultItem {
@@ -175,6 +182,7 @@ export async function bulkCreateFoldersChunked(args: {
           name: f.name,
           parentTempId: null,
           parentPath: parent.path,
+          orderIndex: f.orderIndex,
         };
       }
       return f;
