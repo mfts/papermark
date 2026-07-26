@@ -41,7 +41,7 @@ type DomainEmbedPageProps = Partial<ViewerI18nPageProps> & {
   };
   showAccountCreationSlide?: boolean;
   useAdvancedExcelViewer?: boolean;
-  useCustomAccessForm?: boolean;
+  hideFooterOnAccessForm?: boolean;
   logoOnAccessForm?: boolean;
   textSelectionEnabled?: boolean;
 };
@@ -160,7 +160,7 @@ function EmbedPageInner(props: DomainEmbedPageProps) {
           disableEditEmail={!!disableEditEmail}
           urlPasscode={urlPasscode}
           disableEditPassword={disableEditPassword}
-          useCustomAccessForm={props.useCustomAccessForm}
+          hideFooterOnAccessForm={props.hideFooterOnAccessForm}
           logoOnAccessForm={props.logoOnAccessForm}
           verifiedEmail={verifiedEmail}
           textSelectionEnabled={props.textSelectionEnabled}
@@ -212,7 +212,7 @@ function EmbedPageInner(props: DomainEmbedPageProps) {
           disableEditEmail={!!disableEditEmail}
           urlPasscode={urlPasscode}
           disableEditPassword={disableEditPassword}
-          useCustomAccessForm={props.useCustomAccessForm}
+          hideFooterOnAccessForm={props.hideFooterOnAccessForm}
           logoOnAccessForm={props.logoOnAccessForm}
           verifiedEmail={verifiedEmail}
           textSelectionEnabled={props.textSelectionEnabled}

@@ -43,6 +43,7 @@
   },
   "footer": {
     "sharedSecurelyVia": "This document is securely shared with you using",
+    "sharedSecurelyViaDataroom": "This data room is securely shared with you using",
     "papermark": "Papermark",
     "seeHowWeProtect": "See how we protect your data in our",
     "privacyPolicy": "Privacy Policy"

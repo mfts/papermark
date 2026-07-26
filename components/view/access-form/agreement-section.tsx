@@ -177,7 +177,7 @@ export default function AgreementSection({
   linkId,
   requireEmail,
   requireName,
-  useCustomAccessForm,
+  hideFooterOnAccessForm,
 }: {
   data: DEFAULT_ACCESS_FORM_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_ACCESS_FORM_TYPE>>;
@@ -190,11 +190,14 @@ export default function AgreementSection({
   linkId?: string;
   requireEmail?: boolean;
   requireName?: boolean;
-  useCustomAccessForm?: boolean;
+  hideFooterOnAccessForm?: boolean;
 }) {
   const theme = useAccessFormTheme();
   const { t } = useTranslation("access-form");
   const isChecked = !!data.hasConfirmedAgreement;
+  const protectedLinkLabel = hideFooterOnAccessForm
+    ? "protected link"
+    : "protected Papermark link";
   const visitorEmail = typeof data.email === "string" ? data.email.trim() : "";
   const visitorName = typeof data.name === "string" ? data.name.trim() : "";
   const currentSigningIdentity = `${visitorEmail}\n${visitorName}`;
@@ -727,8 +730,8 @@ export default function AgreementSection({
             <SheetHeader className="px-6 pt-6 text-start">
               <SheetTitle>Sign {agreementName}</SheetTitle>
               <SheetDescription>
-                Complete the embedded signing flow to continue into the
-                protected Papermark link.
+                Complete the embedded signing flow to continue into the{" "}
+                {protectedLinkLabel}.
               </SheetDescription>
             </SheetHeader>
 

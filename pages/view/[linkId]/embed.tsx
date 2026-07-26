@@ -126,7 +126,7 @@ function EmbedPageInner(props: ViewPageProps) {
           disableEditEmail={!!disableEditEmail}
           urlPasscode={urlPasscode}
           disableEditPassword={disableEditPassword}
-          useCustomAccessForm={props.useCustomAccessForm}
+          hideFooterOnAccessForm={props.hideFooterOnAccessForm}
           verifiedEmail={verifiedEmail}
           isEmbedded
         />
@@ -179,7 +179,7 @@ function EmbedPageInner(props: ViewPageProps) {
           disableEditEmail={!!disableEditEmail}
           urlPasscode={urlPasscode}
           disableEditPassword={disableEditPassword}
-          useCustomAccessForm={props.useCustomAccessForm}
+          hideFooterOnAccessForm={props.hideFooterOnAccessForm}
           verifiedEmail={verifiedEmail}
           isEmbedded
         />

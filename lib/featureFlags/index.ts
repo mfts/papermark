@@ -19,7 +19,8 @@ export type BetaFeatures =
   | "textSelection"
   | "redaction"
   | "requestList"
-  | "logoOnAccessForm";
+  | "logoOnAccessForm"
+  | "hideFooterOnAccessForm";
 
 type BetaFeaturesRecord = Record<BetaFeatures, string[]>;
 
@@ -44,6 +45,7 @@ export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
     redaction: false,
     requestList: false,
     logoOnAccessForm: false,
+    hideFooterOnAccessForm: false,
   };
 
   // Return all features as false if edge config is not available

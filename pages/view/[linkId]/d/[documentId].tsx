@@ -55,7 +55,7 @@ type DataroomDocumentProps = Partial<ViewerI18nPageProps> & {
   showPoweredByBanner: boolean;
   showAccountCreationSlide: boolean;
   useAdvancedExcelViewer: boolean;
-  useCustomAccessForm: boolean;
+  hideFooterOnAccessForm: boolean;
   logoOnAccessForm: boolean;
   textSelectionEnabled?: boolean;
   frozen?: boolean;
@@ -70,7 +70,7 @@ function DataroomDocumentViewPageInner({
   showPoweredByBanner,
   showAccountCreationSlide,
   useAdvancedExcelViewer,
-  useCustomAccessForm,
+  hideFooterOnAccessForm,
   logoOnAccessForm,
   textSelectionEnabled,
   error,
@@ -199,7 +199,7 @@ function DataroomDocumentViewPageInner({
         disableEditEmail={!!disableEditEmail}
         urlPasscode={urlPasscode}
         disableEditPassword={disableEditPassword}
-        useCustomAccessForm={useCustomAccessForm}
+        hideFooterOnAccessForm={hideFooterOnAccessForm}
         logoOnAccessForm={logoOnAccessForm}
         token={storedToken}
         verifiedEmail={verifiedEmail}
@@ -297,6 +297,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
     const featureFlags = await getFeatureFlags({ teamId: teamId || undefined });
     const textSelectionEnabled = featureFlags.textSelection;
     const logoOnAccessFormEnabled = featureFlags.logoOnAccessForm;
+    const hideFooterOnAccessFormEnabled = featureFlags.hideFooterOnAccessForm;
 
     const defaultLanguage =
       brand && "defaultLanguage" in brand ? brand.defaultLanguage : undefined;
@@ -339,12 +340,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
         showPoweredByBanner: false,
         showAccountCreationSlide: false,
         useAdvancedExcelViewer: advancedExcelEnabled,
-        useCustomAccessForm:
-          teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
-          teamId === "clup33by90000oewh4rfvp2eg" ||
-          teamId === "cm76hfyvy0002q623hmen99pf" ||
-          teamId === "cm9ztf0s70005js04i689gefn" ||
-          teamId === "cmk2hnmqh0000k304zcoezt6n",
+        hideFooterOnAccessForm: hideFooterOnAccessFormEnabled,
         logoOnAccessForm: logoOnAccessFormEnabled,
         textSelectionEnabled,
         ...i18nProps,

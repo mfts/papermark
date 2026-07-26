@@ -75,7 +75,7 @@ export interface ViewPageProps extends Partial<ViewerI18nPageProps> {
   showPoweredByBanner: boolean;
   showAccountCreationSlide: boolean;
   useAdvancedExcelViewer: boolean;
-  useCustomAccessForm: boolean;
+  hideFooterOnAccessForm: boolean;
   logoOnAccessForm: boolean;
   dataroomIndexEnabled?: boolean;
   annotationsEnabled?: boolean;
@@ -145,7 +145,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           showPoweredByBanner: false,
           showAccountCreationSlide: false,
           useAdvancedExcelViewer: false,
-          useCustomAccessForm: false,
+          hideFooterOnAccessForm: false,
           logoOnAccessForm: false,
           ...i18nProps,
         },
@@ -206,6 +206,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       const annotationsEnabled = featureFlags.annotations;
       const textSelectionEnabled = featureFlags.textSelection;
       const logoOnAccessFormEnabled = featureFlags.logoOnAccessForm;
+      const hideFooterOnAccessFormEnabled = featureFlags.hideFooterOnAccessForm;
 
       return {
         props: {
@@ -237,12 +238,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           showPoweredByBanner: link.showBanner || teamPlan === "free",
           showAccountCreationSlide: link.showBanner || teamPlan === "free",
           useAdvancedExcelViewer: advancedExcelEnabled,
-          useCustomAccessForm:
-            teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
-            teamId === "clup33by90000oewh4rfvp2eg" ||
-            teamId === "cm76hfyvy0002q623hmen99pf" ||
-            teamId === "cm9ztf0s70005js04i689gefn" ||
-            teamId === "cmk2hnmqh0000k304zcoezt6n",
+          hideFooterOnAccessForm: hideFooterOnAccessFormEnabled,
           logoOnAccessForm: logoOnAccessFormEnabled,
           annotationsEnabled,
           textSelectionEnabled,
@@ -286,6 +282,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       const annotationsEnabled = featureFlags.annotations;
       const textSelectionEnabled = featureFlags.textSelection;
       const logoOnAccessFormEnabled = featureFlags.logoOnAccessForm;
+      const hideFooterOnAccessFormEnabled = featureFlags.hideFooterOnAccessForm;
 
       const lastUpdatedAt = link.dataroom.documents.reduce(
         (max: number, doc: any) => {
@@ -323,12 +320,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           showPoweredByBanner: false,
           showAccountCreationSlide: false,
           useAdvancedExcelViewer: false, // INFO: this is managed in the API route
-          useCustomAccessForm:
-            teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
-            teamId === "clup33by90000oewh4rfvp2eg" ||
-            teamId === "cm76hfyvy0002q623hmen99pf" ||
-            teamId === "cm9ztf0s70005js04i689gefn" ||
-            teamId === "cmk2hnmqh0000k304zcoezt6n",
+          hideFooterOnAccessForm: hideFooterOnAccessFormEnabled,
           logoOnAccessForm: logoOnAccessFormEnabled,
           dataroomIndexEnabled,
           annotationsEnabled,
@@ -360,7 +352,7 @@ function ViewPageInner({
   showPoweredByBanner,
   showAccountCreationSlide,
   useAdvancedExcelViewer,
-  useCustomAccessForm,
+  hideFooterOnAccessForm,
   logoOnAccessForm,
   dataroomIndexEnabled,
   annotationsEnabled,
@@ -522,7 +514,7 @@ function ViewPageInner({
           disableEditEmail={!!disableEditEmail}
           urlPasscode={urlPasscode}
           disableEditPassword={disableEditPassword}
-          useCustomAccessForm={useCustomAccessForm}
+          hideFooterOnAccessForm={hideFooterOnAccessForm}
           logoOnAccessForm={logoOnAccessForm}
           token={storedToken}
           verifiedEmail={verifiedEmail}
@@ -604,7 +596,7 @@ function ViewPageInner({
           disableEditEmail={!!disableEditEmail}
           urlPasscode={urlPasscode}
           disableEditPassword={disableEditPassword}
-          useCustomAccessForm={useCustomAccessForm}
+          hideFooterOnAccessForm={hideFooterOnAccessForm}
           logoOnAccessForm={logoOnAccessForm}
           token={storedToken}
           previewToken={previewToken}

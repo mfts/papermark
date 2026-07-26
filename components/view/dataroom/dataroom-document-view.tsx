@@ -89,7 +89,7 @@ export default function DataroomDocumentView({
   disableEditEmail,
   urlPasscode,
   disableEditPassword,
-  useCustomAccessForm,
+  hideFooterOnAccessForm,
   isEmbedded,
   preview,
   logoOnAccessForm,
@@ -112,7 +112,7 @@ export default function DataroomDocumentView({
   disableEditEmail?: boolean;
   urlPasscode?: string;
   disableEditPassword?: boolean;
-  useCustomAccessForm?: boolean;
+  hideFooterOnAccessForm?: boolean;
   isEmbedded?: boolean;
   preview?: boolean;
   logoOnAccessForm?: boolean;
@@ -426,7 +426,8 @@ export default function DataroomDocumentView({
           linkId={link.id}
           disableEditEmail={disableEditEmail}
           disableEditPassword={disableEditPassword}
-          useCustomAccessForm={useCustomAccessForm}
+          hideFooterOnAccessForm={hideFooterOnAccessForm}
+          linkType="DATAROOM_LINK"
           brand={brand}
           customFields={link.customFields}
           logoOnAccessForm={logoOnAccessForm}

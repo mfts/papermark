@@ -75,7 +75,7 @@ export default function DocumentView({
   disableEditEmail,
   urlPasscode,
   disableEditPassword,
-  useCustomAccessForm,
+  hideFooterOnAccessForm,
   logoOnAccessForm,
   isEmbedded,
   annotationsEnabled,
@@ -100,7 +100,7 @@ export default function DocumentView({
   disableEditEmail?: boolean;
   urlPasscode?: string;
   disableEditPassword?: boolean;
-  useCustomAccessForm?: boolean;
+  hideFooterOnAccessForm?: boolean;
   isEmbedded?: boolean;
   logoOnAccessForm?: boolean;
   annotationsEnabled?: boolean;
@@ -313,7 +313,8 @@ export default function DocumentView({
           linkId={link.id}
           disableEditEmail={disableEditEmail}
           disableEditPassword={disableEditPassword}
-          useCustomAccessForm={useCustomAccessForm}
+          hideFooterOnAccessForm={hideFooterOnAccessForm}
+          linkType="DOCUMENT_LINK"
           customFields={link.customFields}
           logoOnAccessForm={logoOnAccessForm}
           linkWelcomeMessage={link.welcomeMessage}

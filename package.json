@@ -10,6 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "check:access-form": "tsx scripts/check-access-form-footer.ts",
     "postinstall": "prisma generate",
     "vercel-build": "prisma migrate deploy && next build",
     "email": "email dev --dir ./components/emails --port 3001",

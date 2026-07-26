@@ -22,14 +22,14 @@ export default function EmailSection({
   setData,
   brand,
   disableEditEmail,
-  useCustomAccessForm,
+  hideFooterOnAccessForm,
   onValidationChange,
 }: {
   data: DEFAULT_ACCESS_FORM_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_ACCESS_FORM_TYPE>>;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   disableEditEmail?: boolean;
-  useCustomAccessForm?: boolean;
+  hideFooterOnAccessForm?: boolean;
   onValidationChange: (isValid: boolean) => void;
 }) {
   const { email } = data;
@@ -156,9 +156,15 @@ export default function EmailSection({
         </p>
       )}
       <p className="text-sm" style={{ color: theme.subtleTextColor }}>
-        {useCustomAccessForm
-          ? t("fields.email.sharedWithProvider", "This data will be shared with the content provider.")
-          : t("fields.email.sharedWithSender", "This data will be shared with the sender.")}
+        {hideFooterOnAccessForm
+          ? t(
+              "fields.email.sharedWithProvider",
+              "This data will be shared with the content provider.",
+            )
+          : t(
+              "fields.email.sharedWithSender",
+              "This data will be shared with the sender.",
+            )}
       </p>
     </div>
   );

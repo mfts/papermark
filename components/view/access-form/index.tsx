@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { Brand, CustomField, DataroomBrand } from "@prisma/client";
+import { Brand, CustomField, DataroomBrand, LinkType } from "@prisma/client";
 import { ArrowUpRightIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -52,7 +52,8 @@ export default function AccessForm({
   linkId,
   disableEditEmail,
   disableEditPassword,
-  useCustomAccessForm,
+  hideFooterOnAccessForm,
+  linkType,
   customFields,
   logoOnAccessForm,
   linkWelcomeMessage,
@@ -76,7 +77,8 @@ export default function AccessForm({
   linkId?: string;
   disableEditEmail?: boolean;
   disableEditPassword?: boolean;
-  useCustomAccessForm?: boolean;
+  hideFooterOnAccessForm?: boolean;
+  linkType?: LinkType;
   customFields?: Partial<CustomField>[];
   logoOnAccessForm?: boolean;
   linkWelcomeMessage?: string | null;
@@ -210,7 +212,7 @@ export default function AccessForm({
                 <EmailSection
                   {...{ data, setData, brand }}
                   disableEditEmail={lockEmailField}
-                  useCustomAccessForm={useCustomAccessForm}
+                  hideFooterOnAccessForm={hideFooterOnAccessForm}
                   onValidationChange={setIsEmailValid}
                 />
               ) : null}
@@ -239,7 +241,7 @@ export default function AccessForm({
                   linkId={linkId}
                   requireEmail={requireEmail}
                   requireName={requireName}
-                  useCustomAccessForm={useCustomAccessForm}
+                  hideFooterOnAccessForm={hideFooterOnAccessForm}
                 />
               ) : null}
 
@@ -260,13 +262,21 @@ export default function AccessForm({
             </form>
           </div>
         </div>
-        {!useCustomAccessForm ? (
-          <div className="flex flex-col items-center gap-0.5">
+        <div className="flex flex-col items-center gap-0.5">
+          {!hideFooterOnAccessForm ? (
             <p
               className="text-center text-sm tracking-tight"
               style={{ color: accessFormTheme.subtleTextColor }}
             >
-              {t("footer.sharedSecurelyVia", "This document is securely shared with you using")}{" "}
+              {linkType === "DATAROOM_LINK"
+                ? t(
+                    "footer.sharedSecurelyViaDataroom",
+                    "This data room is securely shared with you using",
+                  )
+                : t(
+                    "footer.sharedSecurelyVia",
+                    "This document is securely shared with you using",
+                  )}{" "}
               <a
                 href="https://www.papermark.com"
                 target="_blank"
@@ -278,24 +288,24 @@ export default function AccessForm({
               </a>
               .
             </p>
-            <p
-              className="text-center text-sm tracking-tight"
-              style={{ color: accessFormTheme.subtleTextColor }}
+          ) : null}
+          <p
+            className="text-center text-sm tracking-tight"
+            style={{ color: accessFormTheme.subtleTextColor }}
+          >
+            {t("footer.seeHowWeProtect", "See how we protect your data in our")}{" "}
+            <a
+              href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/privacy`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5"
+              style={{ color: accessFormTheme.mutedTextColor }}
             >
-              {t("footer.seeHowWeProtect", "See how we protect your data in our")}{" "}
-              <a
-                href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/privacy`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-0.5"
-                style={{ color: accessFormTheme.mutedTextColor }}
-              >
-                <span>{t("footer.privacyPolicy", "Privacy Policy")}</span>
-                <ArrowUpRightIcon className="h-3 w-3" />
-              </a>
-            </p>
-          </div>
-        ) : null}
+              <span>{t("footer.privacyPolicy", "Privacy Policy")}</span>
+              <ArrowUpRightIcon className="h-3 w-3" />
+            </a>
+          </p>
+        </div>
       </div>
     </AccessFormThemeProvider>
   );

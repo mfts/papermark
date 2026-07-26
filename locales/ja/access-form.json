@@ -43,6 +43,7 @@
   },
   "footer": {
     "sharedSecurelyVia": "この資料は安全に共有されています：",
+    "sharedSecurelyViaDataroom": "このデータルームは安全に共有されています：",
     "papermark": "Papermark",
     "seeHowWeProtect": "データ保護の詳細はこちら：",
     "privacyPolicy": "プライバシーポリシー"
