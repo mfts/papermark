@@ -10,6 +10,7 @@ export type BetaFeatures =
   | "inDocumentLinks"
   | "usStorage"
   | "dataroomIndex"
+  | "dataroomFreeze"
   | "slack"
   | "annotations"
   | "dataroomInvitations"
@@ -35,6 +36,7 @@ export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
     inDocumentLinks: false,
     usStorage: false,
     dataroomIndex: false,
+    dataroomFreeze: false,
     slack: false,
     annotations: false,
     dataroomInvitations: false,
