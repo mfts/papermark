@@ -1,13 +1,12 @@
-import { tasks } from "@trigger.dev/sdk";
-
-import { validateExternalDocumentUrl } from "@/lib/api/documents/validate-external-url";
-import { DocumentData } from "@/lib/documents/create-document";
-import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
-import prisma from "@/lib/prisma";
 import type {
   convertFilesToPdfTask,
   convertKeynoteToPdfTask,
 } from "@/ee/features/conversions/lib/trigger/convert-files";
+import { tasks } from "@trigger.dev/sdk";
+
+import { validateExternalDocumentUrl } from "@/lib/api/documents/validate-external-url";
+import { DocumentData } from "@/lib/documents/create-document";
+import prisma from "@/lib/prisma";
 import { processVideo } from "@/lib/trigger/optimize-video-files";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { getExtension } from "@/lib/utils";
@@ -232,12 +231,6 @@ export const processDocument = async ({
   }
 
   if (type === "sheet" && enableExcelAdvancedMode) {
-    await copyFileToBucketServer({
-      filePath: document.versions[0].file,
-      storageType: document.versions[0].storageType,
-      teamId,
-    });
-
     await prisma.documentVersion.update({
       where: { id: document.versions[0].id },
       data: { numPages: 1 },

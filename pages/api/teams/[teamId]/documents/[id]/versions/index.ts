@@ -1,17 +1,14 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { tasks } from "@trigger.dev/sdk";
-
 import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+import type { convertFilesToPdfTask } from "@/ee/features/conversions/lib/trigger/convert-files";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { tasks } from "@trigger.dev/sdk";
 import { getServerSession } from "next-auth/next";
 
 import { hashToken } from "@/lib/api/auth/token";
 import { enforceDocumentMemberScope } from "@/lib/api/rbac/guard";
-import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import prisma from "@/lib/prisma";
-
-import type { convertFilesToPdfTask } from "@/ee/features/conversions/lib/trigger/convert-files";
 import { processVideo } from "@/lib/trigger/optimize-video-files";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
@@ -62,9 +59,7 @@ export default async function handle(
     }
 
     // Scoped members may only add versions to documents in their rooms.
-    if (
-      await enforceDocumentMemberScope({ userId, teamId, documentId, res })
-    ) {
+    if (await enforceDocumentMemberScope({ userId, teamId, documentId, res })) {
       return;
     }
 
@@ -243,15 +238,6 @@ export default async function handle(
             concurrencyKey: teamId,
           },
         );
-      }
-
-      if (type === "sheet" && document?.advancedExcelEnabled) {
-        console.log("copying file to bucket server");
-        await copyFileToBucketServer({
-          filePath: version.file,
-          storageType: version.storageType,
-          teamId,
-        });
       }
 
       res.status(200).json({ id: documentId });

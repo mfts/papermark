@@ -2,9 +2,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { getTeamStorageConfigById } from "@/ee/features/storage/config";
-
 import { enforceDocumentMemberScope } from "@/lib/api/rbac/guard";
+import { getAdvancedExcelFileUrl } from "@/lib/files/advanced-excel-url";
 import { getFile } from "@/lib/files/get-file";
 import { signPageLinks } from "@/lib/files/sign-page-links";
 import prisma from "@/lib/prisma";
@@ -34,9 +33,7 @@ export default async function handle(
   const userId = (session.user as CustomUser).id;
 
   // Dataroom-scoped members may only access documents in their assigned rooms.
-  if (
-    await enforceDocumentMemberScope({ userId, teamId, documentId, res })
-  ) {
+  if (await enforceDocumentMemberScope({ userId, teamId, documentId, res })) {
     return;
   }
 
@@ -133,8 +130,8 @@ export default async function handle(
               ? await getFile({ data: page.file, type: storageType })
               : null,
             pageLinks: inWindow
-              ? (await signPageLinks(otherPageData.pageLinks)) ??
-                otherPageData.pageLinks
+              ? ((await signPageLinks(otherPageData.pageLinks)) ??
+                otherPageData.pageLinks)
               : otherPageData.pageLinks,
           };
         }),
@@ -149,12 +146,10 @@ export default async function handle(
     } else if (primaryVersion.type === "sheet") {
       if (document.advancedExcelEnabled) {
         // Advanced Excel mode: use Office Online viewer URL
-        if (!primaryVersion.file.includes("https://")) {
-          const storageConfig = await getTeamStorageConfigById(document.teamId);
-          returnData.file = `https://${storageConfig.advancedDistributionHost}/${primaryVersion.file}`;
-        } else {
-          returnData.file = primaryVersion.file;
-        }
+        returnData.file = await getAdvancedExcelFileUrl({
+          file: primaryVersion.file,
+          storageType: primaryVersion.storageType,
+        });
         returnData.numPages = 1;
       }
       // Non-advanced sheets: return 200 with advancedExcelEnabled=false so

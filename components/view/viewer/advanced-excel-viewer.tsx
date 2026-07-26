@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";
 import { getTrackingOptions } from "@/lib/tracking/tracking-config";
 import { cn } from "@/lib/utils";
+import { getOfficeViewerEmbedUrl } from "@/lib/utils/office-viewer";
 
 import { ScreenProtector } from "../ScreenProtection";
 import Nav, { TNavData } from "../nav";
@@ -179,7 +180,7 @@ export default function AdvancedExcelViewer({
               screenshotProtectionEnabled &&
               "blur-xl transition-all duration-300",
           )}
-          src={`https://view.officeapps.live.com/op/embed.aspx?src=${file}&wdPrint=0&action=embedview&wdAllowInteractivity=False`}
+          src={getOfficeViewerEmbedUrl(file)}
         ></iframe>
         <div
           className="absolute bottom-0 left-0 right-0 z-50 h-[26px] bg-gray-950"

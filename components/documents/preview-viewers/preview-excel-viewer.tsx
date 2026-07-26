@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { DocumentPreviewData } from "@/lib/types/document-preview";
 import { cn } from "@/lib/utils";
+import { getOfficeViewerEmbedUrl } from "@/lib/utils/office-viewer";
 
 interface PreviewExcelViewerProps {
   documentData: DocumentPreviewData;
@@ -24,7 +25,7 @@ export function PreviewExcelViewer({
     );
   }
 
-  const embedUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file)}&wdPrint=0&action=embedview&wdAllowInteractivity=False`;
+  const embedUrl = getOfficeViewerEmbedUrl(file);
 
   return (
     <div className="relative h-full w-full overflow-hidden">

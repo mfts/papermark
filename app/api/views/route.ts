@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { reportDeniedAccessAttempt } from "@/ee/features/access-notifications";
-import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { ipAddress, waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth";
 
@@ -20,6 +19,7 @@ import { PreviewSession } from "@/lib/auth/preview-auth";
 import { isEmbeddableUrl } from "@/lib/edge-config/embeddable-domains";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFeatureFlags } from "@/lib/featureFlags";
+import { getAdvancedExcelFileUrl } from "@/lib/files/advanced-excel-url";
 import { getFile } from "@/lib/files/get-file";
 import { signPageLinks } from "@/lib/files/sign-page-links";
 import { newId } from "@/lib/id-helper";
@@ -870,13 +870,10 @@ export async function POST(request: NextRequest) {
 
         if (documentVersion.type === "sheet") {
           if (useAdvancedExcelViewer) {
-            if (!documentVersion.file.includes("https://")) {
-              // Get team-specific storage config for advanced distribution host
-              const storageConfig = await getTeamStorageConfigById(
-                link.teamId!,
-              );
-              documentVersion.file = `https://${storageConfig.advancedDistributionHost}/${documentVersion.file}`;
-            }
+            documentVersion.file = await getAdvancedExcelFileUrl({
+              file: documentVersion.file,
+              storageType: documentVersion.storageType,
+            });
           } else {
             const fileUrl = await getFile({
               data: documentVersion.file,
