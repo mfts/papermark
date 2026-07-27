@@ -164,6 +164,16 @@ async function loadNamespaceFile(
           return (await import("../../locales/it/viewer.json")).default;
       }
       break;
+    case "nl":
+      switch (namespace) {
+        case "access-form":
+          return (await import("../../locales/nl/access-form.json")).default;
+        case "dataroom":
+          return (await import("../../locales/nl/dataroom.json")).default;
+        case "viewer":
+          return (await import("../../locales/nl/viewer.json")).default;
+      }
+      break;
     case "pt-BR":
       switch (namespace) {
         case "access-form":

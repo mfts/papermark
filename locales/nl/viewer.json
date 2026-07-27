@@ -1,0 +1,64 @@
+{
+  "nav": {
+    "home": "Start",
+    "viewQA": "V&A bekijken",
+    "linksOnPage": "Links op de pagina",
+    "linksOnCurrentPage": "Links op de huidige pagina",
+    "zoomIn": "Inzoomen",
+    "zoomOut": "Uitzoomen",
+    "resetZoom": "Aanpassen aan scherm",
+    "fullscreen": "Volledig scherm",
+    "exitFullscreen": "Volledig scherm afsluiten",
+    "downloadDocument": "Document downloaden",
+    "teamMemberTooltip": "Verificatie overgeslagen omdat u teamlid bent; er worden geen analyses vastgelegd",
+    "changeLanguage": "Taal wijzigen"
+  },
+  "fullscreenControls": {
+    "rotate": "Draaien",
+    "exitFullscreen": "Volledig scherm afsluiten"
+  },
+  "toasts": {
+    "preparingDownload": "Download wordt voorbereid ...",
+    "preparingDownloadWatermark": "Download met watermerk wordt voorbereid ...",
+    "downloadSuccess": "Bestand succesvol gedownload",
+    "downloadFailed": "Bestand kon niet worden gedownload",
+    "cannotDownloadPreview": "In de voorbeeldmodus kunt u geen documenten downloaden."
+  },
+  "downloadOnly": {
+    "title": "Document downloaden",
+    "description": "Dit document is alleen beschikbaar om te downloaden",
+    "button": "Nu downloaden"
+  },
+  "awayPoster": {
+    "title": "We hebben gepauzeerd om uw sessie te beschermen",
+    "description": "U was {{duration}} inactief, daarom hebben we het documentvoorbeeld gepauzeerd om uw sessie veilig te houden.",
+    "ariaTitle": "Melding over automatisch gepauzeerde sessie",
+    "ariaDescription": "Uw sessie is gepauzeerd wegens inactiviteit. Klik op doorgaan of beweeg uw muis om te hervatten.",
+    "badge": "Automatisch gepauzeerd",
+    "idleFor": "{{duration}} inactief",
+    "minSec": "{{minutes}} min {{seconds}} sec",
+    "minOnly": "{{minutes}} min",
+    "secOnly": "{{seconds}} sec",
+    "resume": "Ga verder waar u was gebleven",
+    "moveHint": "Of beweeg uw muis of druk op een toets om door te gaan"
+  },
+  "poweredBy": {
+    "shareDocsVia": "Deel documenten via"
+  },
+  "report": {
+    "trigger": "Misbruik melden",
+    "title": "Probleem melden",
+    "description": "Ziet u iets ongepasts? Wij bekijken het en ondernemen waar nodig actie.",
+    "submit": "Melding verzenden",
+    "successToast": "Melding succesvol verzonden",
+    "selectTypeError": "Selecteer een type misbruik.",
+    "types": {
+      "spam": "Spam, fraude of zwendel",
+      "malware": "Malware of virus",
+      "copyright": "Auteursrechtinbreuk",
+      "harmful": "Schadelijke inhoud",
+      "notWorking": "Inhoud werkt niet goed",
+      "other": "Overig"
+    }
+  }
+}

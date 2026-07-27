@@ -19,6 +19,7 @@ export type SupportedLocaleCode =
   | "fr"
   | "es"
   | "it"
+  | "nl"
   | "pt-BR"
   | "ja";
 
@@ -34,6 +35,7 @@ export const SUPPORTED_LOCALES: readonly SupportedLocale[] = [
   { code: "fr", nativeName: "Français", englishName: "French" },
   { code: "es", nativeName: "Español", englishName: "Spanish" },
   { code: "it", nativeName: "Italiano", englishName: "Italian" },
+  { code: "nl", nativeName: "Nederlands", englishName: "Dutch" },
   { code: "pt-BR", nativeName: "Português (Brasil)", englishName: "Portuguese (Brazil)" },
   { code: "ja", nativeName: "日本語", englishName: "Japanese" },
 ] as const;
