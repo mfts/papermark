@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 
 import { useEffect, useRef, useState } from "react";
 
+import { useRequestListFeatureEnabled } from "@/ee/features/request-lists/lib/use-request-list-feature";
 import {
   BarChart3Icon,
   BellIcon,
@@ -28,7 +29,6 @@ import {
   UsersIcon,
 } from "lucide-react";
 
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { useSelfMembership } from "@/lib/hooks/use-self-membership";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { cn } from "@/lib/utils";
@@ -124,8 +124,7 @@ export function DataroomSidebarContent() {
   const { dataroom } = useDataroom();
   const { state, isMobile } = useSidebar();
   const { isDataroomMember } = useSelfMembership();
-  const { isFeatureEnabled } = useFeatureFlags();
-  const isRequestListFeatureEnabled = isFeatureEnabled("requestList");
+  const isRequestListFeatureEnabled = useRequestListFeatureEnabled();
   const dataroomId = dataroom?.id ?? (router.query.id as string);
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState(false);
 

@@ -5,6 +5,7 @@ import { DefaultPermissionStrategy, RootItemAccess } from "@prisma/client";
 import { withTeamApi } from "@/lib/api/auth/with-session-team";
 import { errorhandler } from "@/lib/errorHandler";
 import { getFeatureFlags } from "@/lib/featureFlags";
+import { isRequestListEnabled } from "@/lib/featureFlags/request-list";
 import prisma from "@/lib/prisma";
 
 // GET /api/teams/:teamId/datarooms/:id
@@ -123,7 +124,10 @@ const patchHandler = withTeamApi(
 
       if (
         requestListEnabled !== undefined &&
-        (!featureFlags.requestList || !isDataroomsPlus)
+        !isRequestListEnabled({
+          requestListFlag: featureFlags.requestList,
+          teamPlan: team.plan,
+        })
       ) {
         return res.status(403).json({
           message: "This feature is not available in your plan",

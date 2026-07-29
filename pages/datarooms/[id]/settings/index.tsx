@@ -3,11 +3,11 @@ import { useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { AgentsSettingsCard } from "@/ee/features/ai/components/agents-settings-card";
 import { RequestListSettingsCard } from "@/ee/features/request-lists/components/request-list-settings-card";
+import { useRequestListFeatureEnabled } from "@/ee/features/request-lists/lib/use-request-list-feature";
 import { Check, CircleHelpIcon, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { useSelfMembership } from "@/lib/hooks/use-self-membership";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 
@@ -32,8 +32,7 @@ export default function Settings() {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const { isDataroomMember } = useSelfMembership();
-  const { isFeatureEnabled } = useFeatureFlags();
-  const isRequestListEnabled = isFeatureEnabled("requestList");
+  const isRequestListEnabled = useRequestListFeatureEnabled();
   const [isCopied, setIsCopied] = useState(false);
 
   if (!dataroom) {

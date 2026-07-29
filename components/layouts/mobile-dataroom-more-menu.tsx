@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
+import { useRequestListFeatureEnabled } from "@/ee/features/request-lists/lib/use-request-list-feature";
 import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BarChart3Icon,
@@ -23,7 +24,6 @@ import {
   XIcon,
 } from "lucide-react";
 
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import useLimits from "@/lib/swr/use-limits";
@@ -60,8 +60,7 @@ export function MobileDataroomMoreMenu({
   const { isTrial } = usePlan();
   const { limits } = useLimits();
   const { dataroom } = useDataroom(dataroomId);
-  const { isFeatureEnabled } = useFeatureFlags();
-  const isRequestListFeatureEnabled = isFeatureEnabled("requestList");
+  const isRequestListFeatureEnabled = useRequestListFeatureEnabled();
   const [settingsExpanded, setSettingsExpanded] = useState(() =>
     router.pathname.includes("/settings"),
   );
