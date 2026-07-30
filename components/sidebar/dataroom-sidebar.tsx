@@ -26,6 +26,7 @@ import {
   SnowflakeIcon,
   TableIcon,
   TriangleAlertIcon,
+  UserRoundIcon,
   UsersIcon,
 } from "lucide-react";
 
@@ -196,6 +197,12 @@ export function DataroomSidebarContent() {
           icon: UsersIcon,
         },
       ],
+    },
+    {
+      title: "Participants",
+      href: `/datarooms/${dataroomId}/participants`,
+      icon: UserRoundIcon,
+      segment: "participants",
     },
     {
       title: "Analytics",

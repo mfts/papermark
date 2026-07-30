@@ -164,6 +164,8 @@ const SingleDataroomBreadcrumb = ({ path }: { path: string }) => {
       case "/datarooms/[id]/groups/[groupId]/members":
       case "/datarooms/[id]/groups/[groupId]/links":
         return "Permissions";
+      case "/datarooms/[id]/participants":
+        return "Participants";
       case "/datarooms/[id]/analytics":
         return "Analytics";
       case "/datarooms/[id]/conversations/faqs":

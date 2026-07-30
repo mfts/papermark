@@ -39,6 +39,7 @@ import { mutate } from "swr";
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
+import { buildLinkFormData } from "@/lib/links/build-link-form-data";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
@@ -415,66 +416,6 @@ export default function LinksTable({
   const handleCopyToClipboard = (linkString: string) => {
     copyToClipboard(`${linkString}`, "Link copied to clipboard.");
   };
-
-  const buildLinkFormData = (link: LinkWithViews): DEFAULT_LINK_TYPE => ({
-    id: link.id,
-    name: link.name || `Link #${link.id.slice(-5)}`,
-    domain: link.domainSlug,
-    slug: link.slug,
-    expiresAt: link.expiresAt,
-    password: link.password,
-    emailProtected: link.emailProtected,
-    emailAuthenticated: link.emailAuthenticated,
-    allowDownload: link.allowDownload ? link.allowDownload : false,
-    allowList: link.allowList,
-    denyList: link.denyList,
-    visitorGroupIds:
-      link.visitorGroups?.map(
-        (vg: { visitorGroupId: string }) => vg.visitorGroupId,
-      ) || [],
-    enableNotification: link.enableNotification
-      ? link.enableNotification
-      : false,
-    enableFeedback: link.enableFeedback ? link.enableFeedback : false,
-    enableScreenshotProtection: link.enableScreenshotProtection
-      ? link.enableScreenshotProtection
-      : false,
-    enableConfidentialView: link.enableConfidentialView
-      ? link.enableConfidentialView
-      : false,
-    enableCustomMetatag: link.enableCustomMetatag
-      ? link.enableCustomMetatag
-      : false,
-    enableQuestion: link.enableQuestion ? link.enableQuestion : false,
-    questionText: link.feedback ? link.feedback.data?.question : "",
-    questionType: link.feedback ? link.feedback.data?.type : "",
-    metaTitle: link.metaTitle,
-    metaDescription: link.metaDescription,
-    metaImage: link.metaImage,
-    metaFavicon: link.metaFavicon,
-    enableAgreement: link.enableAgreement ? link.enableAgreement : false,
-    agreementId: link.agreementId,
-    showBanner: link.showBanner ?? false,
-    enableWatermark: link.enableWatermark ?? false,
-    watermarkConfig: link.watermarkConfig as WatermarkConfig | null,
-    audienceType: link.audienceType,
-    groupId: link.groupId,
-    customFields: link.customFields || [],
-    tags: link.tags.map((tag) => tag.id) || [],
-    enableConversation: link.enableConversation ?? false,
-    enableUpload: link.enableUpload ?? false,
-    isFileRequestOnly: link.isFileRequestOnly ?? false,
-    uploadFolderIds: Array.isArray(link.uploadFolderIds)
-      ? link.uploadFolderIds
-      : [],
-    uploadFolders: Array.isArray(link.uploadFolders)
-      ? link.uploadFolders
-      : [],
-    enableIndexFile: link.enableIndexFile ?? false,
-    permissionGroupId: link.permissionGroupId ?? null,
-    welcomeMessage: link.welcomeMessage ?? null,
-    enableAIAgents: link.enableAIAgents ?? false,
-  });
 
   const handleEditLink = (link: LinkWithViews) => {
     setOpenLinkSheetToFiles(false);
@@ -1235,6 +1176,19 @@ export default function LinksTable({
                     mutate(linksApiRoute);
                   }
                   setInviteLink(null);
+                  // Invitees land on the room's participant list, where their
+                  // invited status and access now show up. The list is cached,
+                  // so drop it first or the fresh invite would not be there.
+                  if (targetType === "DATAROOM" && targetId) {
+                    mutate(
+                      (key) =>
+                        typeof key === "string" &&
+                        key.includes(`/datarooms/${targetId}/visitors`),
+                      undefined,
+                      { revalidate: true },
+                    );
+                    router.push(`/datarooms/${targetId}/participants`);
+                  }
                 }}
               />
             ) : null}

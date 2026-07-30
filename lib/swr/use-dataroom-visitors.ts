@@ -1,7 +1,6 @@
 import { useRouter } from "next/router";
 
 import { useTeam } from "@/context/team-context";
-import { Viewer } from "@prisma/client";
 import useSWR from "swr";
 
 import { fetcher } from "@/lib/utils";
@@ -11,29 +10,37 @@ import type {
   VisitorStatus,
 } from "@/components/visitors/visitor-status-badge";
 
-type ViewerWithStats = {
+export type DataroomVisitor = {
   id: string | null;
   email: string;
   viewerName: string | null;
   verified: boolean;
-  internal: boolean;
   agreement: { name: string; signed: boolean; signedAt: Date | null } | null;
   isDomain: boolean;
   status: VisitorStatus;
+  invitedAt: Date | null;
+  invitationStatus: string | null;
+  accessSources: VisitorAccessSource[];
   createdAt: Date | null;
   updatedAt: Date | null;
   totalVisits: number;
   documentViews: number;
   downloads: number;
   lastViewed: Date | null;
-  invitedAt: Date | null;
-  invitationStatus: string | null;
-  accessSources: VisitorAccessSource[];
+  internal: boolean;
+  dataroomName: string;
+  linkNames: string[];
+  hasVisitedLinks: boolean;
 };
 
-type ViewersResponse = {
-  viewers: ViewerWithStats[];
-  anonymous: { visits: number; lastViewed: Date | null };
+export type AnonymousVisitorStats = {
+  visits: number;
+  lastViewed: Date | null;
+};
+
+type DataroomVisitorsResponse = {
+  visitors: DataroomVisitor[];
+  anonymous: AnonymousVisitorStats;
   pagination: {
     currentPage: number;
     pageSize: number;
@@ -48,44 +55,49 @@ type ViewersResponse = {
   };
 };
 
-export default function useViewers(
-  page: number = 1,
-  pageSize: number = 10,
-  sortBy: string = "lastViewed",
-  sortOrder: string = "desc",
-  status?: string
-) {
+export function useDataroomVisitors({
+  dataroomId,
+  page = 1,
+  pageSize = 10,
+  sortBy = "lastViewed",
+  sortOrder = "desc",
+  status,
+}: {
+  dataroomId?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: string;
+  status?: string;
+}) {
   const router = useRouter();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const routerQuery = router.query;
-  const searchQuery = routerQuery["search"];
+  const searchQuery = router.query["search"];
 
   const queryParams = new URLSearchParams();
-  queryParams.append('page', page.toString());
-  queryParams.append('pageSize', pageSize.toString());
-  queryParams.append('sortBy', sortBy);
-  queryParams.append('sortOrder', sortOrder);
+  queryParams.append("page", page.toString());
+  queryParams.append("pageSize", pageSize.toString());
+  queryParams.append("sortBy", sortBy);
+  queryParams.append("sortOrder", sortOrder);
 
-  if (searchQuery && typeof searchQuery === 'string') {
-    queryParams.append('query', searchQuery);
+  if (searchQuery && typeof searchQuery === "string") {
+    queryParams.append("query", searchQuery);
   }
 
-  if (status && status !== 'all') {
-    queryParams.append('status', status);
+  if (status && status !== "all") {
+    queryParams.append("status", status);
   }
-
-  const queryString = queryParams.toString();
 
   const {
     data: response,
     isValidating,
     error,
     mutate,
-  } = useSWR<ViewersResponse>(
-    teamId
-      ? `/api/teams/${teamId}/viewers?${queryString}`
+  } = useSWR<DataroomVisitorsResponse>(
+    teamId && dataroomId
+      ? `/api/teams/${teamId}/datarooms/${dataroomId}/visitors?${queryParams.toString()}`
       : null,
     fetcher,
     {
@@ -94,20 +106,19 @@ export default function useViewers(
       revalidateOnReconnect: false,
       dedupingInterval: 30000,
       keepPreviousData: true,
-      refreshInterval: 0,
       errorRetryCount: 2,
       errorRetryInterval: 5000,
     },
   );
 
   return {
-    viewers: response?.viewers,
+    visitors: response?.visitors,
     anonymous: response?.anonymous,
     pagination: response?.pagination,
     sorting: response?.sorting,
     isValidating,
     loading: !response && !error,
-    isFiltered: !!searchQuery,
+    isFiltered: !!searchQuery || (!!status && status !== "all"),
     error,
     mutate,
   };

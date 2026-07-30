@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import dynamic from "next/dynamic";
 
 import { useEffect, useRef, useState } from "react";
@@ -37,6 +39,7 @@ const BulkImportLinksModal = dynamic(
 );
 
 export default function DataroomLinksPage() {
+  const router = useRouter();
   const { dataroom } = useDataroom();
   const { links, loading: linksLoading } = useDataroomLinks();
   const { isDatarooms, isDataroomsPlus, isTrial } = usePlan();
@@ -91,15 +94,13 @@ export default function DataroomLinksPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {!canInviteViewers && (
-              <Button
-                variant="outline"
-                onClick={() => setIsInviteModalOpen(true)}
-              >
-                <SendIcon className="h-4 w-4" />
-                Invite via email
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              onClick={() => setIsInviteModalOpen(true)}
+            >
+              <SendIcon className="h-4 w-4" />
+              Invite via email
+            </Button>
             <Button onClick={() => setIsLinkSheetOpen(true)}>
               <PlusIcon className="h-4 w-4" />
               Create link
@@ -165,15 +166,14 @@ export default function DataroomLinksPage() {
         targetId={dataroom.id}
       />
 
-      {!canInviteViewers && (
-        <InviteViewersModal
-          open={isInviteModalOpen}
-          setOpen={setIsInviteModalOpen}
-          dataroomId={dataroom.id}
-          dataroomName={dataroom.name}
-          canSend={false}
-        />
-      )}
+      <InviteViewersModal
+        open={isInviteModalOpen}
+        setOpen={setIsInviteModalOpen}
+        dataroomId={dataroom.id}
+        dataroomName={dataroom.name}
+        canSend={canInviteViewers}
+        onSuccess={() => router.push(`/datarooms/${dataroom.id}/participants`)}
+      />
     </AppLayout>
   );
 }
