@@ -14,6 +14,7 @@ import { useAnalytics } from "@/lib/analytics";
 import {
   FREE_PLAN_ACCEPTED_FILE_TYPES,
   FULL_PLAN_ACCEPTED_FILE_TYPES,
+  HTML_ACCEPTED_FILE_TYPES,
   SUPPORTED_DOCUMENT_MIME_TYPES,
 } from "@/lib/constants";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
@@ -29,12 +30,16 @@ import {
   createFolderInMainDocs,
   isSystemFile,
 } from "@/lib/folders/create-folder";
+import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { useTeamSettings } from "@/lib/swr/use-team-settings";
 import { CustomUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { getSupportedContentType } from "@/lib/utils/get-content-type";
+import {
+  getSupportedContentType,
+  isHtmlFile,
+} from "@/lib/utils/get-content-type";
 import {
   getFileSizeLimit,
   getFileSizeLimits,
@@ -282,6 +287,8 @@ export default function UploadZone({
   const { data: session } = useSession();
   const { limits, canAddDocuments, isPaused } = useLimits();
   const { registerUploadTriggers } = useUploadProgress();
+  const { isFeatureEnabled } = useFeatureFlags();
+  const htmlDocumentsEnabled = isFeatureEnabled("htmlDocuments");
 
   // Refs to the two hidden file inputs rendered inside this zone. Used to
   // open the OS picker without traversing the DOM by id, so callers
@@ -335,10 +342,16 @@ export default function UploadZone({
     [limits, isFree, isTrial],
   );
 
-  const acceptableDropZoneFileTypes =
-    isFree && !isTrial
-      ? acceptableDropZoneMimeTypesWhenIsFreePlanAndNotTrial
-      : allAcceptableDropZoneMimeTypes;
+  const acceptableDropZoneFileTypes = useMemo(
+    () =>
+      isFree && !isTrial
+        ? acceptableDropZoneMimeTypesWhenIsFreePlanAndNotTrial
+        : {
+            ...allAcceptableDropZoneMimeTypes,
+            ...(htmlDocumentsEnabled ? HTML_ACCEPTED_FILE_TYPES : {}),
+          },
+    [isFree, isTrial, htmlDocumentsEnabled],
+  );
 
   // Helper function to get or create the dataroom folder in "All Documents"
   // Uses promise-lock pattern to prevent concurrent creation attempts
@@ -973,6 +986,11 @@ export default function UploadZone({
           if (storageFileName.endsWith(".bak")) {
             supportedFileType = "other";
             contentType = "application/x-bak";
+          }
+
+          if (isHtmlFile({ name: storageFileName, contentType })) {
+            supportedFileType = "html";
+            contentType = "text/html";
           }
 
           const documentData: DocumentData = {
@@ -1869,7 +1887,7 @@ export default function UploadZone({
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   {isFree && !isTrial
                     ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.tsv, *.ods, *.png, *.jpeg, *.jpg`
-                    : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.tsv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.md, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg, *.log`}
+                    : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.tsv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.md, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg, *.log${htmlDocumentsEnabled ? ", *.html, *.htm" : ""}`}
                 </p>
               </div>
             </div>

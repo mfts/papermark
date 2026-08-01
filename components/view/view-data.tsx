@@ -38,6 +38,7 @@ import LinkPreview from "./link-preview";
 import { TNavData } from "./nav";
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "./viewer/download-only-viewer";
+import HtmlViewer from "./viewer/html-viewer";
 import ImageViewer from "./viewer/image-viewer";
 import PagesHorizontalViewer from "./viewer/pages-horizontal-viewer";
 import PagesVerticalViewer from "./viewer/pages-vertical-viewer";
@@ -201,6 +202,15 @@ export default function ViewData({
               <DownloadOnlyViewer
                 versionNumber={document.versions[0].versionNumber}
                 documentName={document.name}
+                navData={navData}
+              />
+            ) : viewData.fileType === "html" && viewData.htmlContent ? (
+              <HtmlViewer
+                htmlContent={viewData.htmlContent}
+                documentName={document.name}
+                versionNumber={document.versions[0].versionNumber}
+                screenshotProtectionEnabled={link.enableScreenshotProtection!}
+                confidentialViewEnabled={!!link.enableConfidentialView}
                 navData={navData}
               />
             ) : viewData.fileType === "sheet" && viewData.sheetData ? (

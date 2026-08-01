@@ -21,6 +21,7 @@ export type BetaFeatures =
   | "redaction"
   | "requestList"
   | "logoOnAccessForm"
+  | "htmlDocuments"
   | "hideFooterOnAccessForm";
 
 type BetaFeaturesRecord = Record<BetaFeatures, string[]>;
@@ -47,6 +48,7 @@ export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
     redaction: false,
     requestList: false,
     logoOnAccessForm: false,
+    htmlDocuments: false,
     hideFooterOnAccessForm: false,
   };
 

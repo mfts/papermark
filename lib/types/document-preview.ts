@@ -17,4 +17,5 @@ export interface DocumentPreviewData {
   }[];
   file?: string;
   sheetData?: any;
+  htmlContent?: string;
 }

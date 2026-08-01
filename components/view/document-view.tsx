@@ -49,6 +49,7 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
       }[]
     | null;
   sheetData?: SheetData[] | null;
+  htmlContent?: string | null;
   fileType?: string;
   isPreview?: boolean;
   ipAddress?: string;
@@ -183,6 +184,7 @@ export default function DocumentView({
           file,
           pages,
           sheetData,
+          htmlContent,
           fileType,
           isPreview,
           ipAddress,
@@ -223,6 +225,7 @@ export default function DocumentView({
           file,
           pages,
           sheetData,
+          htmlContent,
           fileType,
           isPreview,
           ipAddress,

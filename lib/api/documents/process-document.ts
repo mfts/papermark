@@ -6,6 +6,7 @@ import { tasks } from "@trigger.dev/sdk";
 
 import { validateExternalDocumentUrl } from "@/lib/api/documents/validate-external-url";
 import { DocumentData } from "@/lib/documents/create-document";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { processVideo } from "@/lib/trigger/optimize-video-files";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
@@ -49,6 +50,13 @@ export const processDocument = async ({
 
   // Get passed type property or alternatively, the file extension and save it as the type
   const type = supportedFileType || getExtension(name);
+
+  if (type === "html") {
+    const featureFlags = await getFeatureFlags({ teamId });
+    if (!featureFlags.htmlDocuments) {
+      throw new Error("HTML documents are not enabled for this team.");
+    }
+  }
 
   // For notion/link documents, validate the external URL (Notion page must be
   // public; link URLs must be well-formed and not blocked). No-op otherwise.

@@ -17,6 +17,7 @@ import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
 import { PreviewSession, verifyPreviewSession } from "@/lib/auth/preview-auth";
 import { isEmbeddableUrl } from "@/lib/edge-config/embeddable-domains";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import { getAdvancedExcelFileUrl } from "@/lib/files/advanced-excel-url";
 import { getFile } from "@/lib/files/get-file";
 import { signPageLinks } from "@/lib/files/sign-page-links";
@@ -48,6 +49,7 @@ import {
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
+import { resolveHtmlContentForRender } from "@/lib/utils/html-document";
 import { validateEmail } from "@/lib/utils/validate-email";
 
 export async function POST(request: NextRequest) {
@@ -1277,6 +1279,7 @@ export async function POST(request: NextRequest) {
       // otherwise, return file from document version
       let documentPages, documentVersion;
       let sheetData;
+      let htmlContent: string | undefined;
       const INITIAL_PAGES_TO_LOAD = 10;
 
       if (hasPages) {
@@ -1378,6 +1381,33 @@ export async function POST(request: NextRequest) {
             sheetData = data;
           }
         }
+
+        if (documentVersion.type === "html") {
+          const featureFlags = await getFeatureFlags({ teamId: link.teamId! });
+          if (!featureFlags.htmlDocuments) {
+            return NextResponse.json(
+              { message: "This document is not available for viewing." },
+              { status: 400 },
+            );
+          }
+
+          try {
+            const fileUrl = await getFile({
+              data: documentVersion.file,
+              type: documentVersion.storageType,
+            });
+            htmlContent = await resolveHtmlContentForRender({
+              documentId: resolvedDocumentId,
+              url: fileUrl,
+            });
+          } catch (error) {
+            console.error("Failed to load HTML document for rendering:", error);
+            return NextResponse.json(
+              { message: "This document could not be loaded." },
+              { status: 400 },
+            );
+          }
+        }
         console.timeEnd("get-file");
       }
 
@@ -1420,6 +1450,10 @@ export async function POST(request: NextRequest) {
           documentVersion.type === "sheet" &&
           !useAdvancedExcelViewer
             ? sheetData
+            : undefined,
+        htmlContent:
+          documentVersion && documentVersion.type === "html"
+            ? htmlContent
             : undefined,
         fileType: documentVersion
           ? documentVersion.type

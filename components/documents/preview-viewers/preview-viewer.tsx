@@ -1,6 +1,7 @@
 import { useTeam } from "@/context/team-context";
 
 import { DocumentPreviewData } from "@/lib/types/document-preview";
+import { HTML_DOCUMENT_IFRAME_SANDBOX } from "@/lib/utils/html-document";
 
 import { PreviewExcelViewer } from "./preview-excel-viewer";
 import { PreviewImageViewer } from "./preview-image-viewer";
@@ -64,6 +65,19 @@ export function PreviewViewer({
             </p>
           </div>
         </div>
+      );
+    }
+
+    if (documentData.fileType === "html" && documentData.htmlContent) {
+      return (
+        <iframe
+          srcDoc={documentData.htmlContent}
+          title={documentData.documentName || "HTML document"}
+          className="h-full w-full rounded-lg border-0 bg-white"
+          sandbox={HTML_DOCUMENT_IFRAME_SANDBOX}
+          referrerPolicy="no-referrer"
+          allow=""
+        />
       );
     }
 

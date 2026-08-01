@@ -8,6 +8,7 @@ import { getServerSession } from "next-auth/next";
 
 import { hashToken } from "@/lib/api/auth/token";
 import { enforceDocumentMemberScope } from "@/lib/api/rbac/guard";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { processVideo } from "@/lib/trigger/optimize-video-files";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
@@ -100,6 +101,15 @@ export default async function handle(
 
       if (!team) {
         return res.status(401).end("Unauthorized");
+      }
+
+      if (type === "html") {
+        const featureFlags = await getFeatureFlags({ teamId });
+        if (!featureFlags.htmlDocuments) {
+          return res.status(403).json({
+            error: "HTML documents are not enabled for this team.",
+          });
+        }
       }
 
       // Check if team is paused

@@ -123,7 +123,13 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "application/vnd.google-earth.kmz", // .kmz
   "application/vnd.ms-outlook", // .msg
   "message/rfc822", // .eml
+  "text/html", // .html, .htm
 ];
+
+// Merged into the dropzone accept map only when the `htmlDocuments` flag is on.
+export const HTML_ACCEPTED_FILE_TYPES = {
+  "text/html": [".html", ".htm"],
+};
 
 // Upload configurations for different plan types and contexts
 export const FREE_PLAN_ACCEPTED_FILE_TYPES = {
@@ -257,6 +263,7 @@ export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "video",
   "map",
   "email",
+  "html",
   "other",
 ] as const;
 

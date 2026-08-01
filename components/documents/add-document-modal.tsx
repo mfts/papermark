@@ -24,7 +24,10 @@ import { getNotionPageIdFromSlug } from "@/lib/notion/utils";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import useLimits from "@/lib/swr/use-limits";
-import { getSupportedContentType } from "@/lib/utils/get-content-type";
+import {
+  getSupportedContentType,
+  isHtmlFile,
+} from "@/lib/utils/get-content-type";
 
 import { SetUnifiedPermissionsModal } from "@/components/datarooms/groups/set-unified-permissions-modal";
 import DocumentUpload from "@/components/document-upload";
@@ -327,6 +330,11 @@ export function AddDocumentModal({
       if (currentFile.name.endsWith(".bak")) {
         supportedFileType = "other";
         contentType = "application/x-bak";
+      }
+
+      if (isHtmlFile({ name: currentFile.name, contentType })) {
+        supportedFileType = "html";
+        contentType = "text/html";
       }
 
       if (!supportedFileType) {

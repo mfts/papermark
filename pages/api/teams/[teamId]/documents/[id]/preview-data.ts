@@ -3,12 +3,14 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 
 import { enforceDocumentMemberScope } from "@/lib/api/rbac/guard";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import { getAdvancedExcelFileUrl } from "@/lib/files/advanced-excel-url";
 import { getFile } from "@/lib/files/get-file";
 import { signPageLinks } from "@/lib/files/sign-page-links";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
+import { resolveHtmlContentForRender } from "@/lib/utils/html-document";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 
@@ -111,6 +113,7 @@ export default async function handle(
       pages: undefined as any,
       file: undefined as string | undefined,
       sheetData: undefined as any,
+      htmlContent: undefined as string | undefined,
     };
 
     const INITIAL_PAGES_TO_LOAD = 10;
@@ -154,6 +157,32 @@ export default async function handle(
       }
       // Non-advanced sheets: return 200 with advancedExcelEnabled=false so
       // PreviewViewer renders its inline fallback instead of showing an error.
+    } else if (primaryVersion.type === "html") {
+      const featureFlags = await getFeatureFlags({ teamId });
+      if (!featureFlags.htmlDocuments) {
+        return res.status(400).json({
+          message: "HTML documents are not enabled for this team.",
+        });
+      }
+      try {
+        const fileUrl = await getFile({
+          data: primaryVersion.file,
+          type: primaryVersion.storageType,
+        });
+        returnData.htmlContent = await resolveHtmlContentForRender({
+          documentId,
+          url: fileUrl,
+        });
+        returnData.numPages = 1;
+      } catch (error) {
+        console.error("Failed to load HTML document preview:", error);
+        return res.status(400).json({
+          message:
+            error instanceof Error && error.message
+              ? error.message
+              : "Preview not available for this document",
+        });
+      }
     } else if (primaryVersion.type === "notion") {
       // Notion documents - preview not supported
       return res.status(400).json({

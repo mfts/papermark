@@ -10,11 +10,14 @@ import { toast } from "sonner";
 import {
   FREE_PLAN_ACCEPTED_FILE_TYPES,
   FULL_PLAN_ACCEPTED_FILE_TYPES,
+  HTML_ACCEPTED_FILE_TYPES,
   SUPPORTED_DOCUMENT_MIME_TYPES,
 } from "@/lib/constants";
+import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { bytesToSize } from "@/lib/utils";
+import { isHtmlFile } from "@/lib/utils/get-content-type";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import {
   getFileSizeLimit,
@@ -41,6 +44,16 @@ export default function DocumentUpload({
     theme === "light" || (theme === "system" && systemTheme === "light");
   const { isFree, isTrial } = usePlan();
   const { limits } = useLimits();
+  const { isFeatureEnabled } = useFeatureFlags();
+  const htmlDocumentsEnabled = isFeatureEnabled("htmlDocuments");
+
+  const fullPlanAcceptedFileTypes = useMemo(
+    () => ({
+      ...FULL_PLAN_ACCEPTED_FILE_TYPES,
+      ...(htmlDocumentsEnabled ? HTML_ACCEPTED_FILE_TYPES : {}),
+    }),
+    [htmlDocumentsEnabled],
+  );
 
   const fileSizeLimits = useMemo(
     () =>
@@ -63,7 +76,7 @@ export default function DocumentUpload({
       ? { "application/pdf": [".pdf"] }
       : isFree && !isTrial
         ? FREE_PLAN_ACCEPTED_FILE_TYPES
-        : FULL_PLAN_ACCEPTED_FILE_TYPES,
+        : fullPlanAcceptedFileTypes,
     multiple: false,
     onDropAccepted: (acceptedFiles) => {
       if (acceptedFiles.length === 0) {
@@ -185,7 +198,12 @@ export default function DocumentUpload({
               <div className="flex flex-col items-center text-foreground sm:flex-row sm:space-x-2">
                 <div>
                   {fileIcon({
-                    fileType: currentFile.type,
+                    fileType: isHtmlFile({
+                      name: currentFile.name,
+                      contentType: currentFile.type,
+                    })
+                      ? "html"
+                      : currentFile.type,
                     isLight,
                   })}
                 </div>
@@ -211,7 +229,7 @@ export default function DocumentUpload({
                   ? `Only *.pdf`
                   : isFree && !isTrial
                     ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.tsv, *.ods, *.png, *.jpeg, *.jpg`
-                    : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.tsv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.rtf, *.txt, *.md, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg, *.log`}
+                    : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.tsv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.rtf, *.txt, *.md, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg, *.log${htmlDocumentsEnabled ? ", *.html, *.htm" : ""}`}
             </p>
           </div>
         </div>

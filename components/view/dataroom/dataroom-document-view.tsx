@@ -56,6 +56,7 @@ export type DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE = {
       }[]
     | null;
   sheetData?: SheetData[] | null;
+  htmlContent?: string | null;
   notionData?: {
     recordMap: ExtendedRecordMap | null;
     theme: NotionTheme | null | undefined;
@@ -210,6 +211,7 @@ export default function DataroomDocumentView({
           pages,
           notionData,
           sheetData,
+          htmlContent,
           fileType,
           isPreview,
           ipAddress,
@@ -258,6 +260,7 @@ export default function DataroomDocumentView({
           pages,
           notionData,
           sheetData,
+          htmlContent,
           fileType,
           isPreview,
           ipAddress,
