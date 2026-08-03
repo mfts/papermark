@@ -53,7 +53,7 @@ Papermark is the open-source document-sharing alternative to DocSend, featuring 
 
 Here's what you need to run Papermark:
 
-- Node.js (version >= 18.17.0)
+- Node.js (version >= 24)
 - PostgreSQL Database
 - Blob storage (currently [AWS S3](https://aws.amazon.com/s3/) or [Vercel Blob](https://vercel.com/storage/blob))
 - [Resend](https://resend.com) (for sending emails)
