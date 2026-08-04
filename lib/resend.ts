@@ -45,6 +45,7 @@ export const sendEmail = async ({
   const plainText = toPlainText(html);
 
   const fromAddress =
+    process.env.RESEND_FROM_EMAIL ??
     from ??
     (marketing
       ? "Marc from Papermark <marc@ship.papermark.io>"
