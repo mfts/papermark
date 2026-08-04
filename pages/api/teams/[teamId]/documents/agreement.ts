@@ -144,7 +144,6 @@ export default async function handle(
               `document_${document.id}`,
               `version:${document.versions[0].id}`,
             ],
-            queue: conversionQueue(team.plan),
             concurrencyKey: teamId,
           },
         );
@@ -165,7 +164,6 @@ export default async function handle(
               `document_${document.id}`,
               `version:${document.versions[0].id}`,
             ],
-            queue: conversionQueue(team.plan),
             concurrencyKey: teamId,
           },
         );
