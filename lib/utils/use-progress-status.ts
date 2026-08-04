@@ -3,7 +3,7 @@
 import { type RunStatus } from "@trigger.dev/core/v3";
 import { useRealtimeRunsWithTag } from "@trigger.dev/react-hooks";
 
-import { parseStatus } from "@/lib/utils/generate-trigger-status";
+import { parseStatus } from "@/lib/utils/parse-trigger-status";
 
 interface IDocumentProgressStatus {
   state: RunStatus;
