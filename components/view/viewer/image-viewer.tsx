@@ -72,7 +72,7 @@ export default function ImageViewer({
     rotate,
   } = useFullscreen();
 
-  useDisablePullToRefresh(!!isMobile);
+  useDisablePullToRefresh();
 
   // In fullscreen the overlay controls fade after a few seconds; a tap anywhere
   // reveals them again.
