@@ -7,6 +7,21 @@ import notion from "@/lib/notion";
 import { getNotionPageIdFromSlug } from "@/lib/notion/utils";
 import { log } from "@/lib/utils";
 
+// Query strings and fragments can carry tokens or PII, so log origin + path
+// only — the same rule the blocked-keyword alert below follows.
+function describeUrlForLog(value: string): string {
+  try {
+    const parsed = new URL(value);
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return value;
+  }
+}
+
+function causeForLog(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 /**
  * Validates the external URL backing a `notion` or `link` document: Notion
  * pages must be publicly accessible, and link URLs must be well-formed and not
@@ -44,6 +59,11 @@ export async function validateExternalDocumentUrl({
       }
       await notion.getPage(pageId);
     } catch (error) {
+      console.error("[validateExternalDocumentUrl] Notion page check failed", {
+        teamId,
+        url: describeUrlForLog(key),
+        cause: causeForLog(error),
+      });
       throw new PapermarkApiError(
         "unprocessable_entity",
         "This Notion page isn't publically available.",
@@ -81,6 +101,11 @@ export async function validateExternalDocumentUrl({
         }
       }
     } catch (error) {
+      console.error("[validateExternalDocumentUrl] Link URL check failed", {
+        teamId,
+        url: describeUrlForLog(key),
+        cause: causeForLog(error),
+      });
       throw new PapermarkApiError(
         "unprocessable_entity",
         "Invalid URL format for link document.",
