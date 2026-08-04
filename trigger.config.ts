@@ -19,7 +19,8 @@ export default defineConfig({
   build: {
     extensions: [
       prismaExtension({
-        schema: "prisma/schema/schema.prisma",
+        mode: "legacy",
+        schema: "prisma/schema",
       }),
       ffmpeg(),
     ],
