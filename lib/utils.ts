@@ -40,7 +40,7 @@ export function getFileNameWithPdfExtension(filename?: string): string {
   return `${nameWithoutExt}.pdf`;
 }
 
-interface SWRError extends Error {
+export interface SWRError extends Error {
   status: number;
 }
 

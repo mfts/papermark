@@ -120,6 +120,7 @@
     "js-cookie": "^3.0.7",
     "jsonwebtoken": "^9.0.3",
     "jszip": "^3.10.1",
+    "lru-cache": "^11.5.2",
     "lucide-react": "^1.16.0",
     "mime-types": "^3.0.2",
     "motion": "^12.40.0",

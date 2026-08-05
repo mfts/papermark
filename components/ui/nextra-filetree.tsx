@@ -173,8 +173,13 @@ const Folder = memo<FolderProps>(
             <FolderIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
           )}
           <span
-            className="ml-2 min-w-0 flex-1 truncate whitespace-nowrap"
-            title={(label ?? name) as string}
+            className={cn(
+              "ml-2 min-w-0 flex-1",
+              // A label does its own truncation; clipping here would cut off whatever
+              // it places after the name.
+              label ? "flex items-center gap-2" : "truncate whitespace-nowrap",
+            )}
+            title={name}
           >
             {label ?? name}
           </span>
@@ -207,7 +212,7 @@ const File = memo<FileProps>(({ label, name, active, onToggle }) => {
         "px-3 py-1.5 leading-6",
         active &&
           (prefersLightText
-            ? "bg-[var(--viewer-panel-active)] text-[var(--viewer-text)] font-semibold"
+            ? "bg-[var(--viewer-panel-active)] font-semibold text-[var(--viewer-text)]"
             : "bg-gray-100 font-semibold dark:bg-muted"),
       )}
     >
@@ -218,8 +223,11 @@ const File = memo<FileProps>(({ label, name, active, onToggle }) => {
         <Ident />
         <FileIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
         <span
-          className="ml-2 min-w-0 flex-1 truncate whitespace-nowrap"
-          title={(label ?? name) as string}
+          className={cn(
+            "ml-2 min-w-0 flex-1",
+            label ? "flex items-center gap-2" : "truncate whitespace-nowrap",
+          )}
+          title={name}
         >
           {label ?? name}
         </span>

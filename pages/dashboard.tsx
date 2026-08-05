@@ -17,8 +17,10 @@ import DashboardViewsChart from "@/components/analytics/dashboard-views-chart";
 import DocumentsTable from "@/components/analytics/documents-table";
 import LinksTable from "@/components/analytics/links-table";
 import {
-  TimeRange,
+  DASHBOARD_TIME_RANGES,
+  DashboardTimeRange,
   TimeRangeSelect,
+  isDashboardTimeRange,
 } from "@/components/analytics/time-range-select";
 import ViewsTable from "@/components/analytics/views-table";
 import VisitorsTable from "@/components/analytics/visitors-table";
@@ -60,16 +62,21 @@ export default function DashboardPage() {
   const isPremium = plan !== "free" || !!trial;
 
   const {
-    interval = "7d",
     type = "links",
     start,
     end,
   } = router.query as {
-    interval: TimeRange;
     type: string;
     start: string;
     end: string;
   };
+
+  // A hand-edited "?interval=all" would 400 against /api/analytics, so fall back to the default.
+  const interval: DashboardTimeRange = isDashboardTimeRange(
+    router.query.interval,
+  )
+    ? router.query.interval
+    : "7d";
 
   const {
     data: overview,
@@ -95,7 +102,7 @@ export default function DashboardPage() {
   }
 
   // Update the URL when time range changes
-  const handleTimeRangeChange = (newTimeRange: TimeRange) => {
+  const handleTimeRangeChange = (newTimeRange: DashboardTimeRange) => {
     const params = new URLSearchParams(window.location.search);
     params.set("interval", newTimeRange);
     if (type) {
@@ -149,6 +156,7 @@ export default function DashboardPage() {
           <TimeRangeSelect
             value={interval}
             onChange={handleTimeRangeChange}
+            ranges={DASHBOARD_TIME_RANGES}
             customRange={customRange}
             setCustomRange={setCustomRange}
             onCustomRangeComplete={handleCustomRangeComplete}

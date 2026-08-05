@@ -9,8 +9,9 @@ const FADE_THRESHOLD_PX = 10;
 /**
  * ScrollArea with top/bottom fade masks that appear when content overflows in
  * that direction (same affordance as the viewer FAQ section), plus an optional
- * always-rendered scrollbar. Pair `showScrollbar` with a `pr-2.5`
- * `contentClassName` to keep content out of the scrollbar gutter.
+ * always-rendered scrollbar. Pair `showScrollbar` with a right-padded
+ * `contentClassName` (at least `pr-2.5`, the scrollbar width) to keep content
+ * out of the scrollbar gutter.
  */
 export function FadeScrollArea({
   className,
@@ -60,10 +61,13 @@ export function FadeScrollArea({
 
   return (
     <div className={cn("relative min-h-0", className)}>
+      {/* Radix wraps the viewport content in a `display: table`, which grows to the widest row
+          instead of clamping to the viewport, so `truncate` inside rows never engages. */}
       <ScrollArea
         ref={rootRef}
         className="h-full"
         showScrollbar={showScrollbar}
+        viewportClassName="[&>*]:!block"
       >
         <div className={contentClassName}>{children}</div>
       </ScrollArea>

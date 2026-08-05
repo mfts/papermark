@@ -11,10 +11,10 @@ import {
   YAxis,
 } from "recharts";
 
-import { TimeRange } from "./time-range-select";
+import { DashboardTimeRange } from "./time-range-select";
 
 interface DashboardViewsChartProps {
-  timeRange: TimeRange;
+  timeRange: DashboardTimeRange;
   data?: { date: string; views: number }[];
   startDate?: Date;
   endDate?: Date;

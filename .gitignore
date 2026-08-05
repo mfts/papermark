@@ -53,6 +53,8 @@ scripts/*
 !scripts/mcp-smoke.mjs
 !scripts/check-tool-contracts.sh
 !scripts/extend-trial.ts
+!scripts/local/
+scripts/local/.tinybird-page-views.json
 !.github/scripts/
 
 # marketing emails
