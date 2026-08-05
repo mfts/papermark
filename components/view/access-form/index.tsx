@@ -93,6 +93,13 @@ export default function AccessForm({
   const { t } = useTranslation("access-form");
   const resolvedBrandLogo = resolveBrandLogo(brand);
 
+  // The server only leaves this set when the override actually applies.
+  const customPrivacyPolicyUrl =
+    brand && "privacyPolicyUrl" in brand ? brand.privacyPolicyUrl : null;
+  const privacyPolicyUrl =
+    customPrivacyPolicyUrl ||
+    `${process.env.NEXT_PUBLIC_MARKETING_URL}/privacy`;
+
   const isSigningAgreement =
     signingProvider === "DOCUMENSO" || agreementContentType === "SIGNING";
   const isAgreementLocked = Boolean(
@@ -297,7 +304,7 @@ export default function AccessForm({
           >
             {t("footer.seeHowWeProtect", "See how we protect your data in our")}{" "}
             <a
-              href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/privacy`}
+              href={privacyPolicyUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-0.5"

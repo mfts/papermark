@@ -97,6 +97,7 @@ model Brand {
   welcomeMessage                 String? // This should be a reference to the welcome message
   ctaLabel                       String? // Default CTA button label (inherited by datarooms unless overridden)
   ctaUrl                         String? // Default CTA button URL (inherited by datarooms unless overridden)
+  privacyPolicyUrl               String? // Access screen privacy link, custom domains only
 
   cardLayout            String  @default("LIST")
   showFolderTree        Boolean @default(true)

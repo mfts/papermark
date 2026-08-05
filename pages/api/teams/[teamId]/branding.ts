@@ -18,6 +18,7 @@ import {
 } from "@/lib/billing/team-plan-custom-messaging";
 import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
 import { errorhandler } from "@/lib/errorHandler";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import {
   clearCachedBrandLogo,
@@ -43,6 +44,7 @@ const updateBrandingSchema = z.object({
   linkPreviewFavicon: z.string().nullable().optional(),
   ctaLabel: z.string().nullable().optional(),
   ctaUrl: z.string().nullable().optional(),
+  privacyPolicyUrl: z.string().nullable().optional(),
   cardLayout: DataroomCardLayoutSchema.optional(),
   showFolderTree: z.boolean().optional(),
   viewerLayoutPreset: DataroomViewerLayoutPresetSchema.optional(),
@@ -92,6 +94,34 @@ function sanitizeLayoutPayload(input: LayoutPayload): LayoutPayload {
     out.hideFolderIconsInMain = input.hideFolderIconsInMain;
   }
   return out;
+}
+
+// Returns `undefined` to leave the stored value untouched (Prisma skips it).
+async function resolvePrivacyPolicyUrl(
+  teamId: string,
+  value: string | null | undefined,
+): Promise<
+  { ok: true; url: string | null | undefined } | { ok: false; message: string }
+> {
+  const featureFlags = await getFeatureFlags({ teamId });
+  if (!featureFlags.customPrivacyUrl || value === undefined) {
+    return { ok: true, url: undefined };
+  }
+
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) {
+    return { ok: true, url: null };
+  }
+
+  const validation = await validateRedirectUrl(trimmed, teamId);
+  if (!validation.valid) {
+    return {
+      ok: false,
+      message: validation.message.replace("Redirect URL", "Privacy policy URL"),
+    };
+  }
+
+  return { ok: true, url: validation.url || null };
 }
 
 function maybeDeleteBlobAsset(url: string | null | undefined): Promise<void> {
@@ -196,6 +226,14 @@ export default async function handle(
       validatedCtaUrl = ctaValidation.url;
     }
 
+    const privacyPolicy = await resolvePrivacyPolicyUrl(
+      teamId,
+      body.privacyPolicyUrl,
+    );
+    if (!privacyPolicy.ok) {
+      return res.status(400).json({ message: privacyPolicy.message });
+    }
+
     // Use upsert so POST is idempotent: clients can hit POST even when a
     // Brand row already exists (e.g. SWR cache is stale and `brand` is
     // falsy on the client) without tripping the unique-teamId constraint.
@@ -228,6 +266,7 @@ export default async function handle(
           : undefined,
         ctaLabel: messagingAllowed ? body.ctaLabel ?? undefined : undefined,
         ctaUrl: messagingAllowed ? validatedCtaUrl ?? undefined : undefined,
+        privacyPolicyUrl: privacyPolicy.url ?? undefined,
         ...layoutData,
         teamId: teamId,
       },
@@ -241,6 +280,7 @@ export default async function handle(
         applyAccentColorToDataroomView:
           body.applyAccentColorToDataroomView ?? false,
         welcomeMessage: messagingAllowed ? body.welcomeMessage ?? null : undefined,
+        privacyPolicyUrl: privacyPolicy.url,
         customLinkPreviewEnabled: messagingAllowed
           ? body.customLinkPreviewEnabled
           : undefined,
@@ -300,6 +340,14 @@ export default async function handle(
       validatedCtaUrl = ctaValidation.url;
     }
 
+    const privacyPolicy = await resolvePrivacyPolicyUrl(
+      teamId,
+      body.privacyPolicyUrl,
+    );
+    if (!privacyPolicy.ok) {
+      return res.status(400).json({ message: privacyPolicy.message });
+    }
+
     const resolvedWelcome = messagingAllowed
       ? body.welcomeMessage ?? null
       : (existingBrand?.welcomeMessage ?? null);
@@ -350,6 +398,7 @@ export default async function handle(
           : undefined,
         ctaLabel: messagingAllowed ? body.ctaLabel ?? undefined : undefined,
         ctaUrl: messagingAllowed ? validatedCtaUrl ?? undefined : undefined,
+        privacyPolicyUrl: privacyPolicy.url ?? undefined,
         ...layoutData,
         teamId: teamId,
       },
@@ -362,6 +411,7 @@ export default async function handle(
         accentButtonColor: body.accentButtonColor ?? null,
         applyAccentColorToDataroomView: !!body.applyAccentColorToDataroomView,
         welcomeMessage: resolvedWelcome,
+        privacyPolicyUrl: privacyPolicy.url,
         // Preserve stored link-preview settings on partial PUTs: only write
         // these fields when they're explicitly present in the payload.
         // Prisma skips updates for `undefined` values. Plans without messaging
