@@ -1,6 +1,8 @@
+import { resolveBrandLogo } from "@/ee/features/branding/lib/brand-logo";
+import { useBrandingPreviewParams } from "@/ee/features/branding/lib/use-branding-preview-params";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
-import { useBrandingPreviewParams } from "@/ee/features/branding/lib/use-branding-preview-params";
+import { cn } from "@/lib/utils";
 import { determineTextColor } from "@/lib/utils/determine-text-color";
 
 export default function ViewPage() {
@@ -8,12 +10,41 @@ export default function ViewPage() {
   // the editor never has to reload (and therefore never flashes) this iframe.
   const {
     brandLogo,
+    hideLogo,
     brandColor,
     accentColor,
     accentButtonColor,
     ctaLabel,
     ctaUrl,
   } = useBrandingPreviewParams();
+  const resolvedBrandLogo = resolveBrandLogo({
+    logo: brandLogo || null,
+    hideLogo: hideLogo === "1",
+  });
+  const renderBrandLogo = () => {
+    switch (resolvedBrandLogo.kind) {
+      case "custom":
+        return (
+          <img
+            className="w-full object-contain"
+            src={resolvedBrandLogo.src}
+            alt="Logo"
+          />
+        );
+      case "papermark":
+        return (
+          <div className="text-2xl font-bold tracking-tighter text-white">
+            Papermark
+          </div>
+        );
+      case "none":
+        return null;
+      default: {
+        const _exhaustive: never = resolvedBrandLogo;
+        return _exhaustive;
+      }
+    }
+  };
 
   const safeCtaUrl = (() => {
     if (!ctaUrl) return null;
@@ -40,18 +71,13 @@ export default function ViewPage() {
         <div className="mx-auto px-2 sm:px-6 lg:px-8">
           <div className="relative flex h-16 items-center justify-between">
             <div className="flex flex-1 items-stretch justify-start">
-              <div className="relative flex h-16 w-36 flex-shrink-0 items-center overflow-y-hidden">
-                {brandLogo ? (
-                  <img
-                    className="w-full object-contain"
-                    src={brandLogo}
-                    alt="Logo"
-                  />
-                ) : (
-                  <div className="text-2xl font-bold tracking-tighter text-white">
-                    Papermark
-                  </div>
+              <div
+                className={cn(
+                  "relative flex h-16 flex-shrink-0 items-center overflow-y-hidden",
+                  resolvedBrandLogo.kind !== "none" && "w-36",
                 )}
+              >
+                {renderBrandLogo()}
               </div>
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center space-x-4 pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">

@@ -3,6 +3,7 @@ import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 
 import { useViewerChatSafe } from "@/ee/features/ai/components/viewer-chat-provider";
+import { resolveBrandLogo } from "@/ee/features/branding/lib/brand-logo";
 import { classifyDataroomBanner } from "@/ee/features/branding/lib/dataroom-banner";
 import {
   type DataroomViewerHeaderStyle,
@@ -309,31 +310,44 @@ export default function DataroomNav({
     bannerKind === "video" || bannerKind === "youtube"
       ? DEFAULT_BANNER_IMAGE
       : bannerSrc;
+  const resolvedBrandLogo = resolveBrandLogo(brand);
 
   // The brand logo is rendered without a wrapper card so it sits naturally on
   // the surface — uploaded logos are typically designed to read on the brand's
   // chosen background and shouldn't be boxed in a contrasting chip.
-  const renderPrimaryLogo = (forLightBackground?: boolean) =>
-    brand && brand.logo ? (
-      <img
-        className="h-10 w-28 object-contain sm:h-12 sm:w-32"
-        src={brand.logo}
-        alt="Logo"
-      />
-    ) : (
-      <Link
-        href={`https://www.papermark.com?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
-        target="_blank"
-        className={cn(
-          "text-2xl font-bold tracking-tighter",
-          forLightBackground
-            ? "text-neutral-900 dark:text-white"
-            : "text-white",
-        )}
-      >
-        Papermark
-      </Link>
-    );
+  const renderPrimaryLogo = (forLightBackground?: boolean) => {
+    switch (resolvedBrandLogo.kind) {
+      case "custom":
+        return (
+          <img
+            className="h-10 w-28 object-contain sm:h-12 sm:w-32"
+            src={resolvedBrandLogo.src}
+            alt="Logo"
+          />
+        );
+      case "papermark":
+        return (
+          <Link
+            href={`https://www.papermark.com?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
+            target="_blank"
+            className={cn(
+              "text-2xl font-bold tracking-tighter",
+              forLightBackground
+                ? "text-neutral-900 dark:text-white"
+                : "text-white",
+            )}
+          >
+            Papermark
+          </Link>
+        );
+      case "none":
+        return null;
+      default: {
+        const _exhaustive: never = resolvedBrandLogo;
+        return _exhaustive;
+      }
+    }
+  };
 
   const welcomeMessage =
     (brand as { welcomeMessage?: string | null })?.welcomeMessage?.trim() ||
@@ -423,6 +437,20 @@ export default function DataroomNav({
       }) as React.CSSProperties,
     [surfaceTheme, brand],
   );
+  const notionLogoSrc = (() => {
+    switch (resolvedBrandLogo.kind) {
+      case "custom":
+        return resolvedBrandLogo.src;
+      case "papermark":
+        return "/_static/papermark-p.svg";
+      case "none":
+        return null;
+      default: {
+        const _exhaustive: never = resolvedBrandLogo;
+        return _exhaustive;
+      }
+    }
+  })();
 
   return (
     <nav
@@ -482,16 +510,25 @@ export default function DataroomNav({
             }
           >
             <div className={cn(DATAROOM_NAV_PAGE_FRAME, "pb-10 pt-2")}>
-              <div className="relative z-10 -mt-10 flex w-full flex-col items-start text-left sm:-mt-12">
-                <NotionLogoChip
-                  src={brand?.logo ?? "/_static/papermark-p.svg"}
-                  usesSurfaceBackground={usesSurfaceBackground}
-                  surfacePanelBorderColor={
-                    surfaceTheme.palette.panelBorderColor
-                  }
-                />
+              {/* The chip overlaps the cover, so with no chip the negative
+                  margin has to go or the dataroom name rides up onto it. */}
+              <div
+                className={cn(
+                  "relative z-10 flex w-full flex-col items-start text-left",
+                  notionLogoSrc && "-mt-10 sm:-mt-12",
+                )}
+              >
+                {notionLogoSrc ? (
+                  <NotionLogoChip
+                    src={notionLogoSrc}
+                    usesSurfaceBackground={usesSurfaceBackground}
+                    surfacePanelBorderColor={
+                      surfaceTheme.palette.panelBorderColor
+                    }
+                  />
+                ) : null}
                 <div
-                  className="mt-4 max-w-3xl text-3xl"
+                  className={cn("max-w-3xl text-3xl", notionLogoSrc && "mt-4")}
                   style={surfaceTextStyle}
                 >
                   {dataroom.name}

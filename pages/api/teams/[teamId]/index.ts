@@ -10,7 +10,7 @@ import { removeDomainFromVercelProject } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
 import { deleteFiles } from "@/lib/files/delete-team-files-server";
 import prisma from "@/lib/prisma";
-import { redis } from "@/lib/redis";
+import { clearCachedBrandLogo } from "@/lib/redis/brand-logo-cache";
 
 import { CustomUser } from "@/lib/types";
 import { unsubscribe } from "@/lib/resend";
@@ -237,7 +237,7 @@ export default async function handle(
           },
         }),
         // delete team branding from redis
-        redis.del(`brand:logo:${teamId}`),
+        clearCachedBrandLogo(teamId),
 
         // delete team
         prisma.team.delete({

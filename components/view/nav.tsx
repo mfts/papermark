@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 
 import { useViewerChatSafe } from "@/ee/features/ai/components/viewer-chat-provider";
+import { resolveBrandLogo } from "@/ee/features/branding/lib/brand-logo";
 import { useConversationSidebarSafe } from "@/ee/features/conversations/components/viewer/conversation-sidebar-provider";
 import { Brand, DataroomBrand } from "@prisma/client";
 import {
@@ -19,6 +20,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { cn } from "@/lib/utils";
 import { createAdaptiveSurfacePalette } from "@/lib/utils/create-adaptive-surface-palette";
 import { determineTextColor } from "@/lib/utils/determine-text-color";
 import { downloadFromLinkEndpoint } from "@/lib/utils/download-document";
@@ -140,6 +142,36 @@ export default function Nav({
   const [showConversations, setShowConversations] = useState(false);
   const brandColor = brand?.brandColor || "black";
   const navColorPalette = createAdaptiveSurfacePalette(brandColor);
+  const resolvedBrandLogo = resolveBrandLogo(brand);
+  const renderBrandLogo = () => {
+    switch (resolvedBrandLogo.kind) {
+      case "custom":
+        return (
+          <img
+            className="h-16 w-36 object-contain"
+            src={resolvedBrandLogo.src}
+            alt="Logo"
+          />
+        );
+      case "papermark":
+        return (
+          <Link
+            href={`https://www.papermark.com?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
+            target="_blank"
+            className="text-2xl font-bold tracking-tighter"
+            style={{ color: navColorPalette.textColor }}
+          >
+            Papermark
+          </Link>
+        );
+      case "none":
+        return null;
+      default: {
+        const _exhaustive: never = resolvedBrandLogo;
+        return _exhaustive;
+      }
+    }
+  };
 
   const ctaLabel = (brand as { ctaLabel?: string | null } | null | undefined)
     ?.ctaLabel;
@@ -256,26 +288,15 @@ export default function Nav({
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
           <div className="flex flex-1 items-center justify-start">
-            <div className="relative flex h-16 w-36 flex-shrink-0 items-center">
-              {brand && brand.logo ? (
-                <img
-                  className="h-16 w-36 object-contain"
-                  src={brand.logo}
-                  alt="Logo"
-                  // fill
-                  // quality={100}
-                  // priority
-                />
-              ) : (
-                <Link
-                  href={`https://www.papermark.com?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
-                  target="_blank"
-                  className="text-2xl font-bold tracking-tighter"
-                  style={{ color: navColorPalette.textColor }}
-                >
-                  Papermark
-                </Link>
+            {/* Without a logo the slot must not reserve its width, or a ghost
+                spacer pushes the breadcrumb off the left edge. */}
+            <div
+              className={cn(
+                "relative flex h-16 flex-shrink-0 items-center",
+                resolvedBrandLogo.kind !== "none" && "w-36",
               )}
+            >
+              {renderBrandLogo()}
             </div>
             {isDataroom ? (
               <Breadcrumb className="ml-6">

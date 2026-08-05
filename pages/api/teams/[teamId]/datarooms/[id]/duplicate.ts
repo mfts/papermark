@@ -199,6 +199,7 @@ const postHandler = withTeamApi(
             ? {
                 create: {
                   logo: dataroomContents.brand.logo,
+                  hideLogo: dataroomContents.brand.hideLogo,
                   banner: dataroomContents.brand.banner,
                   brandColor: dataroomContents.brand.brandColor,
                   accentColor: dataroomContents.brand.accentColor,

@@ -284,6 +284,7 @@ model DataroomFolder {
 model DataroomBrand {
   id                             String  @id @default(cuid())
   logo                           String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  hideLogo                       Boolean? // null inherits the team-level Brand.hideLogo
   banner                         String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   brandColor                     String? // This should be a reference to the brand color
   accentColor                    String? // This should be a reference to the accent color (front-page background)

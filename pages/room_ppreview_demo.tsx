@@ -5,6 +5,7 @@ import {
   type DataroomViewerHeaderStyle,
 } from "@/ee/features/branding/lib/dataroom-viewer-layout";
 import { useBrandingPreviewParams } from "@/ee/features/branding/lib/use-branding-preview-params";
+import { resolveBrandLogo } from "@/ee/features/branding/lib/brand-logo";
 
 import { PlayIcon } from "lucide-react";
 
@@ -196,6 +197,7 @@ export default function ViewPage({ i18n }: ViewerI18nPageProps) {
   // the editor never has to reload (and therefore never flashes) this iframe.
   const {
     brandLogo,
+    hideLogo,
     brandColor,
     brandBanner,
     accentColor,
@@ -208,6 +210,10 @@ export default function ViewPage({ i18n }: ViewerI18nPageProps) {
     viewerHeaderStyle: viewerHeaderStyleParam,
     hideFolderIconsInMain: hideFolderIconsMainParam,
   } = useBrandingPreviewParams();
+  const resolvedBrandLogo = resolveBrandLogo({
+    logo: brandLogo || null,
+    hideLogo: hideLogo === "1",
+  });
   const [previewFolderId, setPreviewFolderId] = useState<string | null>(null);
 
   // Always the same "Example Virtual Data Room" — keeps the preview consistent
@@ -313,18 +319,102 @@ export default function ViewPage({ i18n }: ViewerI18nPageProps) {
   const compactPreviewShowUpdated = cardLayout === "COMPACT";
   const compactPreviewShowActions = false;
 
-  const renderPrimaryLogo = () =>
-    brandLogo ? (
-      <img
-        className="h-10 w-28 object-contain sm:h-12 sm:w-32"
-        src={brandLogo}
-        alt="Logo"
-      />
-    ) : (
-      <div className="text-2xl font-bold tracking-tighter text-white">
-        Papermark
-      </div>
-    );
+  const renderPrimaryLogo = (forLightBackground?: boolean) => {
+    switch (resolvedBrandLogo.kind) {
+      case "custom":
+        return (
+          <img
+            className="h-10 w-28 object-contain sm:h-12 sm:w-32"
+            src={resolvedBrandLogo.src}
+            alt="Logo"
+          />
+        );
+      case "papermark":
+        return (
+          <div
+            className={cn(
+              "text-2xl font-bold tracking-tighter",
+              forLightBackground
+                ? "text-neutral-900 dark:text-white"
+                : "text-white",
+            )}
+          >
+            Papermark
+          </div>
+        );
+      case "none":
+        return null;
+      default: {
+        const _exhaustive: never = resolvedBrandLogo;
+        return _exhaustive;
+      }
+    }
+  };
+
+  // Without a chip the negative top margin would pull the dataroom name up
+  // over the cover image, so the "none" case drops the overlap entirely.
+  const notionLogo = (() => {
+    const overlapping = {
+      containerClassName:
+        "-mt-10 relative z-10 flex w-full flex-col items-start text-left sm:-mt-12",
+      titleClassName: "mt-4 max-w-3xl text-3xl",
+    };
+    switch (resolvedBrandLogo.kind) {
+      case "custom":
+        return {
+          ...overlapping,
+          // Notion cover logo chip: adaptive background based on the logo's
+          // averaged luminance — dark logos sit in a white box, light/white
+          // logos sit in a black box so they're always visible regardless of
+          // brand colors.
+          chip: (
+            <PreviewNotionLogoChip
+              src={resolvedBrandLogo.src}
+              shouldApplyAccent={shouldApplyAccentToDataroomView}
+              surfacePanelBorderColor={
+                previewSurfaceTheme.palette.panelBorderColor
+              }
+            />
+          ),
+        };
+      case "papermark":
+        return {
+          ...overlapping,
+          chip: (
+            <div
+              className={cn(
+                "flex size-16 items-center justify-center rounded-xl border text-sm font-semibold sm:size-20",
+                shouldApplyAccentToDataroomView
+                  ? ""
+                  : "border-neutral-200 bg-neutral-900 text-white dark:border-neutral-700 dark:bg-white dark:text-neutral-950",
+              )}
+              style={
+                shouldApplyAccentToDataroomView
+                  ? {
+                      backgroundColor: previewSurfaceTheme.palette.ctaBgColor,
+                      color: previewSurfaceTheme.palette.ctaTextColor,
+                      borderColor: previewSurfaceTheme.palette.panelBorderColor,
+                    }
+                  : undefined
+              }
+            >
+              EX
+            </div>
+          ),
+        };
+      case "none":
+        return {
+          chip: null,
+          containerClassName:
+            "relative z-10 flex w-full flex-col items-start text-left",
+          titleClassName: "max-w-3xl text-3xl",
+        };
+      default: {
+        const _exhaustive: never = resolvedBrandLogo;
+        return _exhaustive;
+      }
+    }
+  })();
 
   return (
     // The cards below call `useTranslation` — without an initialized i18n
@@ -393,45 +483,10 @@ export default function ViewPage({ i18n }: ViewerI18nPageProps) {
               }
             >
               <div className={cn(DATAROOM_NAV_PAGE_FRAME, "pb-10 pt-2")}>
-                <div className="-mt-10 relative z-10 flex w-full flex-col items-start text-left sm:-mt-12">
-                  {brandLogo ? (
-                    // Notion cover logo chip: adaptive background based on the
-                    // logo's averaged luminance — dark logos sit in a white
-                    // box, light/white logos sit in a black box so they're
-                    // always visible regardless of brand colors.
-                    <PreviewNotionLogoChip
-                      src={brandLogo}
-                      shouldApplyAccent={shouldApplyAccentToDataroomView}
-                      surfacePanelBorderColor={
-                        previewSurfaceTheme.palette.panelBorderColor
-                      }
-                    />
-                  ) : (
-                    <div
-                      className={cn(
-                        "flex size-16 items-center justify-center rounded-xl border text-sm font-semibold sm:size-20",
-                        shouldApplyAccentToDataroomView
-                          ? ""
-                          : "border-neutral-200 bg-neutral-900 text-white dark:border-neutral-700 dark:bg-white dark:text-neutral-950",
-                      )}
-                      style={
-                        shouldApplyAccentToDataroomView
-                          ? {
-                              backgroundColor:
-                                previewSurfaceTheme.palette.ctaBgColor,
-                              color:
-                                previewSurfaceTheme.palette.ctaTextColor,
-                              borderColor:
-                                previewSurfaceTheme.palette.panelBorderColor,
-                            }
-                          : undefined
-                      }
-                    >
-                      EX
-                    </div>
-                  )}
+                <div className={notionLogo.containerClassName}>
+                  {notionLogo.chip}
                   <div
-                    className="mt-4 max-w-3xl text-3xl"
+                    className={notionLogo.titleClassName}
                     style={
                       shouldApplyAccentToDataroomView
                         ? { color: previewSurfaceTheme.palette.textColor }
@@ -459,17 +514,7 @@ export default function ViewPage({ i18n }: ViewerI18nPageProps) {
             <div className={cn(DATAROOM_NAV_PAGE_FRAME, "pt-4")}>
               <div className="flex items-center justify-between gap-2 border-b border-[var(--viewer-panel-border)] pb-2">
                 <div className="relative flex min-h-14 shrink-0 items-center">
-                  {brandLogo ? (
-                    <img
-                      className="h-10 w-28 object-contain sm:h-12 sm:w-32"
-                      src={brandLogo}
-                      alt="Logo"
-                    />
-                  ) : (
-                    <div className="text-2xl font-bold tracking-tighter text-neutral-900 dark:text-white">
-                      Papermark
-                    </div>
-                  )}
+                  {renderPrimaryLogo(true)}
                 </div>
                 <div className="flex min-w-0 shrink items-center justify-end gap-2">
                   {showNavCta ? (

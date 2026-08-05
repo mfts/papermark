@@ -1,5 +1,6 @@
 import React from "react";
 
+import type { ResolvedBrandLogo } from "@/ee/features/branding/lib/brand-logo";
 import {
   Body,
   Container,
@@ -17,14 +18,38 @@ export default function OtpEmailVerification({
   email = "test@example.co",
   code = "123456",
   isDataroom = false,
-  logo,
+  logo = { kind: "papermark" },
 }: {
   email: string;
   code: string;
   isDataroom: boolean;
-  logo?: string;
+  logo?: ResolvedBrandLogo;
 }) {
   const resourceLabel = isDataroom ? "dataroom" : "document";
+  const logoSection = (() => {
+    switch (logo.kind) {
+      case "custom":
+        return (
+          <Section className="mt-8">
+            <Img src={logo.src} alt="Logo" width="120" height="36" />
+          </Section>
+        );
+      case "papermark":
+        return (
+          <Section className="mt-8">
+            <Text className="text-2xl font-bold tracking-tighter">
+              Papermark
+            </Text>
+          </Section>
+        );
+      case "none":
+        return null;
+      default: {
+        const _exhaustive: never = logo;
+        return _exhaustive;
+      }
+    }
+  })();
 
   return (
     <Html>
@@ -32,15 +57,7 @@ export default function OtpEmailVerification({
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 max-w-[600px] rounded border border-solid border-neutral-200 px-10 py-5">
-            <Section className="mt-8">
-              {logo ? (
-                <Img src={logo} alt="Logo" width="120" height="36" />
-              ) : (
-                <Text className="text-2xl font-bold tracking-tighter">
-                  Papermark
-                </Text>
-              )}
-            </Section>
+            {logoSection}
             <Text className="mx-0 my-7 p-0 text-xl font-semibold text-black">
               Your verification code
             </Text>

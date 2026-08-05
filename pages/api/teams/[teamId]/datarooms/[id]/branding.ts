@@ -27,6 +27,8 @@ import { CustomUser } from "@/lib/types";
 
 const updateDataroomBrandingSchema = z.object({
   logo: z.string().nullable().optional(),
+  // Nullable on purpose: null clears the override so the team setting applies.
+  hideLogo: z.boolean().nullable().optional(),
   banner: z.string().nullable().optional(),
   brandColor: z.string().nullable().optional(),
   accentColor: z.string().nullable().optional(),
@@ -231,6 +233,7 @@ export default async function handle(
     const brand = await prisma.dataroomBrand.create({
       data: {
         logo: body.logo ?? undefined,
+        hideLogo: body.hideLogo,
         banner: body.banner ?? undefined,
         brandColor: body.brandColor ?? undefined,
         accentColor: body.accentColor ?? undefined,
@@ -338,6 +341,7 @@ export default async function handle(
       },
       data: {
         logo: body.logo,
+        hideLogo: body.hideLogo,
         banner: body.banner,
         brandColor: body.brandColor,
         accentColor: body.accentColor,

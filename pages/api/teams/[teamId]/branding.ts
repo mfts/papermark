@@ -19,13 +19,17 @@ import {
 import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { redis } from "@/lib/redis";
+import {
+  clearCachedBrandLogo,
+  writeCachedBrandLogo,
+} from "@/lib/redis/brand-logo-cache";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
 
 const updateBrandingSchema = z.object({
   logo: z.string().nullable().optional(),
+  hideLogo: z.boolean().optional(),
   banner: z.string().nullable().optional(),
   brandColor: z.string().nullable().optional(),
   accentColor: z.string().nullable().optional(),
@@ -199,6 +203,7 @@ export default async function handle(
       where: { teamId },
       create: {
         logo: body.logo,
+        hideLogo: body.hideLogo ?? false,
         banner: body.banner,
         brandColor: body.brandColor,
         accentColor: body.accentColor,
@@ -228,6 +233,7 @@ export default async function handle(
       },
       update: {
         logo: body.logo,
+        hideLogo: body.hideLogo,
         banner: body.banner,
         brandColor: body.brandColor,
         accentColor: body.accentColor,
@@ -252,11 +258,7 @@ export default async function handle(
       },
     });
 
-    if (body.logo) {
-      await redis.set(`brand:logo:${teamId}`, body.logo);
-    } else if (body.logo === null) {
-      await redis.del(`brand:logo:${teamId}`);
-    }
+    await writeCachedBrandLogo(teamId, brand);
 
     return res.status(200).json(brand);
   } else if (req.method === "PUT") {
@@ -324,6 +326,7 @@ export default async function handle(
       },
       create: {
         logo: body.logo,
+        hideLogo: body.hideLogo ?? false,
         banner: body.banner,
         brandColor: body.brandColor,
         accentColor: body.accentColor,
@@ -352,6 +355,7 @@ export default async function handle(
       },
       update: {
         logo: body.logo,
+        hideLogo: body.hideLogo,
         banner: body.banner,
         brandColor: body.brandColor,
         accentColor: body.accentColor,
@@ -380,13 +384,7 @@ export default async function handle(
       },
     });
 
-    // Update logo in Redis cache
-    if (body.logo) {
-      await redis.set(`brand:logo:${teamId}`, body.logo);
-    } else {
-      // If logo is null or undefined, delete the cache
-      await redis.del(`brand:logo:${teamId}`);
-    }
+    await writeCachedBrandLogo(teamId, brand);
 
     return res.status(200).json(brand);
   } else if (req.method === "DELETE") {
@@ -411,8 +409,7 @@ export default async function handle(
       where: { teamId },
     });
 
-    // Remove logo from Redis cache
-    await redis.del(`brand:logo:${teamId}`);
+    await clearCachedBrandLogo(teamId);
 
     return res.status(204).end();
   } else {

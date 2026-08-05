@@ -12,6 +12,7 @@ import {
   AUTO_FILL_NOT_FOUND_MESSAGE,
   autoFillHasBrandAssets,
 } from "@/ee/features/branding/lib/auto-fill-result";
+import { mergeBrandLogoFields } from "@/ee/features/branding/lib/brand-logo";
 import {
   CARD_LAYOUT_OPTIONS,
   type DataroomCardLayout,
@@ -81,6 +82,11 @@ export default function DataroomBrandPage() {
   const [applyAccentColorToDataroomView, setApplyAccentColorToDataroomView] =
     useState<boolean>(false);
   const [logo, setLogo] = useState<string | null>(null);
+  // Null keeps this data room on the team setting. Only an explicit click sends
+  // a boolean, so saving unrelated branding never pins the inherited value.
+  const [hideLogoOverride, setHideLogoOverride] = useState<boolean | null>(
+    null,
+  );
   const [banner, setBanner] = useState<string | null>(null);
   const [originalBanner, setOriginalBanner] = useState<string | null>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
@@ -98,6 +104,8 @@ export default function DataroomBrandPage() {
     null,
   );
   const [previewTab, setPreviewTab] = useState<string>("dataroom-view");
+  // What visitors of this data room actually get, for the control and previews.
+  const hideLogo = hideLogoOverride ?? Boolean(globalBrand?.hideLogo);
 
   // Layout customization state
   const [showFolderTree, setShowFolderTree] = useState<boolean>(true);
@@ -345,6 +353,7 @@ export default function DataroomBrandPage() {
           reader.onload = (e) => {
             const dataUrl = e.target?.result as string;
             setLogo(dataUrl);
+            setHideLogoOverride(false);
             // create a blob url for preview
             const blob = convertDataUrlToFile({ dataUrl });
             const blobUrl = URL.createObjectURL(blob);
@@ -407,7 +416,12 @@ export default function DataroomBrandPage() {
           (globalBrand as any)?.applyAccentColorToDataroomView ??
           false,
       );
-      setLogo(dataroomBrand.logo || globalBrand?.logo || null);
+      const logoFields = mergeBrandLogoFields({
+        dataroom: dataroomBrand,
+        team: globalBrand,
+      });
+      setLogo(logoFields.logo);
+      setHideLogoOverride(dataroomBrand.hideLogo ?? null);
       const bannerValue = dataroomBrand.banner || globalBrand?.banner || null;
       setBanner(bannerValue);
       setOriginalBanner(bannerValue);
@@ -471,6 +485,10 @@ export default function DataroomBrandPage() {
     hasSeededNullDataroomFromGlobalRef.current = true;
 
     if (globalBrand) {
+      const logoFields = mergeBrandLogoFields({
+        dataroom: null,
+        team: globalBrand,
+      });
       setBrandColor(globalBrand.brandColor || "#000000");
       setAccentColor(globalBrand.accentColor || "#FFFFFF");
       setAccentButtonColor(
@@ -481,7 +499,8 @@ export default function DataroomBrandPage() {
       setApplyAccentColorToDataroomView(
         (globalBrand as any)?.applyAccentColorToDataroomView ?? false,
       );
-      setLogo(globalBrand.logo || null);
+      setLogo(logoFields.logo);
+      setHideLogoOverride(null);
       const bannerValue = globalBrand.banner || null;
       setBanner(bannerValue);
       setOriginalBanner(bannerValue);
@@ -542,6 +561,7 @@ export default function DataroomBrandPage() {
       setAccentButtonColor("#000000");
       setApplyAccentColorToDataroomView(false);
       setLogo(null);
+      setHideLogoOverride(null);
       setBanner(DEFAULT_BANNER_IMAGE);
       setOriginalBanner(DEFAULT_BANNER_IMAGE);
       setWelcomeMessage(DEFAULT_WELCOME_MESSAGE);
@@ -665,6 +685,7 @@ export default function DataroomBrandPage() {
       accentButtonColor: accentButtonColor,
       applyAccentColorToDataroomView,
       logo: blobUrl,
+      hideLogo: hideLogoOverride,
       banner: bannerBlobUrl,
       cardLayout,
       showFolderTree,
@@ -761,8 +782,13 @@ export default function DataroomBrandPage() {
       const inheritedWelcomeSaved = globalBrand?.welcomeMessage ?? null;
       const inheritedWelcomeMessage =
         inheritedWelcomeSaved || DEFAULT_WELCOME_MESSAGE;
+      const inheritedLogoFields = mergeBrandLogoFields({
+        dataroom: null,
+        team: globalBrand,
+      });
 
-      setLogo(globalBrand?.logo ?? null);
+      setLogo(inheritedLogoFields.logo);
+      setHideLogoOverride(null);
       setBanner(inheritedBanner);
       setOriginalBanner(inheritedBanner);
       setBrandColor(globalBrand?.brandColor ?? "#000000");
@@ -830,6 +856,7 @@ export default function DataroomBrandPage() {
       showFolderTree: showFolderTree ? "1" : "0",
       viewerHeaderStyle,
       hideFolderIconsInMain: hideFolderIconsInMain ? "1" : "0",
+      hideLogo: hideLogo ? "1" : "0",
     };
     const logoSrc = blobUrl || logo || "";
     if (logoSrc) params.brandLogo = logoSrc;
@@ -991,6 +1018,7 @@ export default function DataroomBrandPage() {
                                   reader.onload = (e) => {
                                     const dataUrl = e.target?.result as string;
                                     setLogo(dataUrl);
+                                    setHideLogoOverride(false);
                                     const blob = convertDataUrlToFile({
                                       dataUrl,
                                     });
@@ -1019,7 +1047,10 @@ export default function DataroomBrandPage() {
                               <img
                                 src={logo}
                                 alt="Logo preview"
-                                className="max-h-full max-w-full object-contain"
+                                className={cn(
+                                  "max-h-full max-w-full object-contain",
+                                  hideLogo && "opacity-40",
+                                )}
                               />
                             </div>
                           )}
@@ -1035,6 +1066,30 @@ export default function DataroomBrandPage() {
                         {fileError && (
                           <p className="text-sm text-red-500">{fileError}</p>
                         )}
+                        <div className="rounded-md border border-border/70 p-3">
+                          <div className="flex items-start space-x-3">
+                            <Checkbox
+                              id="dataroom-hide-logo"
+                              checked={hideLogo}
+                              onCheckedChange={(checked) =>
+                                setHideLogoOverride(checked === true)
+                              }
+                              className="mt-0.5"
+                            />
+                            <div className="space-y-1">
+                              <Label
+                                htmlFor="dataroom-hide-logo"
+                                className="cursor-pointer text-sm font-medium"
+                              >
+                                Show no logo
+                              </Label>
+                              <p className="text-xs text-muted-foreground">
+                                Overrides the team logo setting for this data
+                                room.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -1867,6 +1922,7 @@ export default function DataroomBrandPage() {
                     brandColor: debouncedBrandColor,
                     accentColor: debouncedAccentColor,
                     brandLogo: blobUrl || logo || "",
+                    hideLogo: hideLogo ? "1" : "0",
                   }}
                 />
               </TabsContent>

@@ -1,3 +1,4 @@
+import { mergeBrandLogoFields } from "@/ee/features/branding/lib/brand-logo";
 import { resolvePublicLinkMeta } from "@/ee/features/branding/lib/resolve-public-link-meta";
 import type { ResolvedPublicLinkMeta } from "@/ee/features/branding/lib/resolve-public-link-meta";
 import {
@@ -315,6 +316,7 @@ export async function fetchDataroomLinkData({
     where: { dataroomId: linkData.dataroom.id },
     select: {
       logo: true,
+      hideLogo: true,
       banner: true,
       brandColor: true,
       accentColor: true,
@@ -336,6 +338,7 @@ export async function fetchDataroomLinkData({
     where: { teamId: linkData.dataroom.teamId },
     select: {
       logo: true,
+      hideLogo: true,
       banner: true,
       brandColor: true,
       accentColor: true,
@@ -354,7 +357,10 @@ export async function fetchDataroomLinkData({
   });
 
   const brand = {
-    logo: dataroomBrand?.logo || teamBrand?.logo,
+    ...mergeBrandLogoFields({
+      dataroom: dataroomBrand,
+      team: teamBrand,
+    }),
     banner: dataroomBrand?.banner || teamBrand?.banner || null,
     brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
     accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
@@ -522,6 +528,7 @@ export async function fetchDataroomDocumentLinkData({
     where: { dataroomId: linkData.dataroom.id },
     select: {
       logo: true,
+      hideLogo: true,
       banner: true,
       brandColor: true,
       accentColor: true,
@@ -543,6 +550,7 @@ export async function fetchDataroomDocumentLinkData({
     where: { teamId: linkData.dataroom.teamId },
     select: {
       logo: true,
+      hideLogo: true,
       banner: true,
       brandColor: true,
       accentColor: true,
@@ -561,7 +569,10 @@ export async function fetchDataroomDocumentLinkData({
   });
 
   const brand = {
-    logo: dataroomBrand?.logo || teamBrand?.logo,
+    ...mergeBrandLogoFields({
+      dataroom: dataroomBrand,
+      team: teamBrand,
+    }),
     banner: dataroomBrand?.banner || teamBrand?.banner || null,
     brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
     accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
@@ -647,6 +658,7 @@ export async function fetchDocumentLinkData({
     where: { teamId: linkData.document.teamId },
     select: {
       logo: true,
+      hideLogo: true,
       brandColor: true,
       accentColor: true,
       accentButtonColor: true,
@@ -693,6 +705,7 @@ async function processLinkData(
         where: { teamId: link.teamId },
         select: {
           logo: true,
+          hideLogo: true,
           brandColor: true,
           accentColor: true,
           defaultLanguage: true,

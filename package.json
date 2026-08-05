@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "check:access-form": "tsx scripts/check-access-form-footer.ts",
+    "check:brand-logo": "tsx scripts/check-brand-logo.ts",
     "postinstall": "prisma generate",
     "vercel-build": "prisma migrate deploy && next build",
     "email": "email dev --dir ./components/emails --port 3001",

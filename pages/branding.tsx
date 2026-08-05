@@ -67,6 +67,7 @@ export default function Branding() {
   const [ctaLabel, setCtaLabel] = useState<string>("");
   const [ctaUrl, setCtaUrl] = useState<string>("");
   const [logo, setLogo] = useState<string | null>(null);
+  const [hideLogo, setHideLogo] = useState<boolean>(false);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [banner, setBanner] = useState<string | null>(null);
   const [bannerBlobUrl, setBannerBlobUrl] = useState<string | null>(null);
@@ -232,6 +233,7 @@ export default function Branding() {
       }
       if (data.logo) {
         setLogo(data.logo);
+        setHideLogo(false);
         setBlobUrl(null);
       }
       if (hasDataroomAccess && data.banner) {
@@ -290,6 +292,7 @@ export default function Branding() {
           reader.onload = (e) => {
             const dataUrl = e.target?.result as string;
             setLogo(dataUrl);
+            setHideLogo(false);
             // create a blob url for preview
             const blob = convertDataUrlToFile({ dataUrl });
             const blobUrl = URL.createObjectURL(blob);
@@ -355,6 +358,7 @@ export default function Branding() {
         (brand as any)?.accentButtonColor || brand.brandColor || "#000000",
       );
       setLogo(brand.logo || null);
+      setHideLogo(!!brand.hideLogo);
       setBanner(brand.banner || null);
       setApplyAccentColorToDataroomView(
         (brand as any)?.applyAccentColorToDataroomView ?? false,
@@ -404,6 +408,7 @@ export default function Branding() {
     setAccentColor("#030712");
     setAccentButtonColor("#000000");
     setLogo(null);
+    setHideLogo(false);
     setBanner(null);
     setApplyAccentColorToDataroomView(false);
     setCtaEnabled(false);
@@ -512,6 +517,7 @@ export default function Branding() {
       accentButtonColor: accentButtonColor,
       applyAccentColorToDataroomView,
       logo: logoBlobUrl,
+      hideLogo,
       ctaLabel: hasBusinessMessagingAccess
         ? ctaEnabled
           ? ctaLabel.trim() || null
@@ -610,6 +616,7 @@ export default function Branding() {
         revalidate: false,
       });
       setLogo(null);
+      setHideLogo(false);
       setBanner(null);
       setBrandColor("#000000");
       setAccentColor("#030712");
@@ -813,6 +820,7 @@ export default function Branding() {
                                   reader.onload = (e) => {
                                     const dataUrl = e.target?.result as string;
                                     setLogo(dataUrl);
+                                    setHideLogo(false);
                                     const blob = convertDataUrlToFile({
                                       dataUrl,
                                     });
@@ -841,7 +849,10 @@ export default function Branding() {
                               <img
                                 src={logo}
                                 alt="Logo preview"
-                                className="max-h-full max-w-full object-contain"
+                                className={cn(
+                                  "max-h-full max-w-full object-contain",
+                                  hideLogo && "opacity-40",
+                                )}
                               />
                             </div>
                           )}
@@ -857,6 +868,30 @@ export default function Branding() {
                         {fileError && (
                           <p className="text-sm text-red-500">{fileError}</p>
                         )}
+                        <div className="rounded-md border border-border/70 p-3">
+                          <div className="flex items-start space-x-3">
+                            <Checkbox
+                              id="global-hide-logo"
+                              checked={hideLogo}
+                              onCheckedChange={(checked) =>
+                                setHideLogo(checked === true)
+                              }
+                              className="mt-0.5"
+                            />
+                            <div className="space-y-1">
+                              <Label
+                                htmlFor="global-hide-logo"
+                                className="cursor-pointer text-sm font-medium"
+                              >
+                                Show no logo
+                              </Label>
+                              <p className="text-xs text-muted-foreground">
+                                Visitors see no logo at all, not even the
+                                Papermark logo.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -1637,6 +1672,7 @@ export default function Branding() {
                     brandColor: debouncedBrandColor,
                     accentColor: debouncedAccentColor,
                     brandLogo: blobUrl || logo || "",
+                    hideLogo: hideLogo ? "1" : "0",
                     accentButtonColor: debouncedAccentButtonColor,
                     ctaLabel: previewCtaLabel,
                     ctaUrl: previewCtaUrl,
@@ -1658,6 +1694,7 @@ export default function Branding() {
                       applyAccentColorToDataroomView:
                         applyAccentColorToDataroomView ? "1" : "0",
                       brandLogo: blobUrl || logo || "",
+                      hideLogo: hideLogo ? "1" : "0",
                       brandBanner:
                         banner === "no-banner"
                           ? "no-banner"
