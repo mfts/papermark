@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
+import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -72,22 +73,21 @@ export default async function handler(
   }
 
   try {
+    // Scoped members may only reorder within their assigned rooms.
+    if (await enforceDataroomMemberScope({ userId, teamId, dataroomId, res })) {
+      return;
+    }
+
     const team = await prisma.team.findUnique({
-      where: { id: teamId },
-      include: {
-        datarooms: {
-          where: { id: dataroomId },
-        },
-        users: {
-          where: {
-            role: { in: ["ADMIN", "MANAGER"] },
-            userId: userId,
-          },
-        },
+      where: {
+        id: teamId,
+        users: { some: { userId } },
+        datarooms: { some: { id: dataroomId } },
       },
+      select: { id: true },
     });
 
-    if (!team || team.users.length === 0 || team.datarooms.length === 0) {
+    if (!team) {
       return res.status(403).end("Forbidden");
     }
 
