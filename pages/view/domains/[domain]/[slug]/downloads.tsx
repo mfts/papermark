@@ -1,8 +1,8 @@
 import { GetServerSideProps } from "next";
 
 import {
-  buildViewerI18nPageProps,
   type ViewerI18nPageProps,
+  buildViewerI18nPageProps,
 } from "@/lib/i18n/viewer-page-props";
 import prisma from "@/lib/prisma";
 
@@ -11,7 +11,9 @@ import { ViewerI18nProvider } from "@/components/view/viewer-i18n-provider";
 
 type Props = Partial<ViewerI18nPageProps> & { linkId: string };
 
-export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
+export const getServerSideProps: GetServerSideProps<Props> = async (
+  context,
+) => {
   const domain = context.params?.domain as string;
   const slug = context.params?.slug as string;
   if (!domain || !slug) {

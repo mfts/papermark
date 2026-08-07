@@ -2,8 +2,6 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
-import NotFound from "@/pages/404";
-
 import { useAnalytics } from "@/lib/analytics";
 import { useUrlPasscode } from "@/lib/hooks/use-url-passcode";
 
@@ -11,6 +9,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
 import { ViewerI18nProvider } from "@/components/view/viewer-i18n-provider";
+import { ViewerNotFound } from "@/components/view/viewer-not-found";
 
 import { ViewPageProps } from "./index";
 
@@ -60,9 +59,7 @@ function EmbedPageInner(props: ViewPageProps) {
 
   // Block direct access
   if (!isEmbedded) {
-    return (
-      <NotFound message="This page can only be accessed when embedded in another website." />
-    );
+    return <ViewerNotFound reason="embedOnly" />;
   }
 
   const {
@@ -99,15 +96,11 @@ function EmbedPageInner(props: ViewPageProps) {
 
     // If the link is expired, show a 404 page
     if (expiresAt && new Date(expiresAt) < new Date()) {
-      return (
-        <NotFound message="Sorry, the link you're looking for is expired." />
-      );
+      return <ViewerNotFound reason="expired" />;
     }
 
     if (isArchived) {
-      return (
-        <NotFound message="Sorry, the link you're looking for is archived." />
-      );
+      return <ViewerNotFound reason="archived" />;
     }
 
     return (
@@ -156,15 +149,11 @@ function EmbedPageInner(props: ViewPageProps) {
 
     // If the link is expired, show a 404 page
     if (expiresAt && new Date(expiresAt) < new Date()) {
-      return (
-        <NotFound message="Sorry, the link you're looking for is expired." />
-      );
+      return <ViewerNotFound reason="expired" />;
     }
 
     if (isArchived) {
-      return (
-        <NotFound message="Sorry, the link you're looking for is archived." />
-      );
+      return <ViewerNotFound reason="archived" />;
     }
 
     return (

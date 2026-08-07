@@ -60,5 +60,82 @@
       "notWorking": "Content is not working properly",
       "other": "Other"
     }
+  },
+  "qa": {
+    "header": {
+      "title": "Ask the deal team",
+      "composeTitle": "Ask a new question",
+      "subtitleWithName": "Questions about {{name}}",
+      "subtitle": "Questions about this data room",
+      "back": "Back",
+      "close": "Close"
+    },
+    "tabs": {
+      "home": "Home",
+      "messages": "Questions",
+      "faq": "FAQ"
+    },
+    "home": {
+      "askNew": "Ask a new question",
+      "recentReply": "Recent reply",
+      "openConversation": "Open conversation",
+      "frequentlyAsked": "Frequently asked"
+    },
+    "messages": {
+      "emptyTitle": "No questions yet",
+      "emptyDescription": "Ask the team a question and it will show up here.",
+      "askQuestion": "Ask a question",
+      "newReply": "New reply"
+    },
+    "compose": {
+      "aboutPage": "About this page",
+      "subjectPlaceholder": "Subject (optional)",
+      "messagePlaceholder": "Type your question...",
+      "sending": "Sending…",
+      "submit": "Send question"
+    },
+    "thread": {
+      "you": "You",
+      "team": "Team",
+      "page": "Page {{page}}",
+      "newDivider": "New",
+      "closed": "This conversation has been closed by the team.",
+      "messagePlaceholder": "Type your message...",
+      "sendReply": "Send reply"
+    },
+    "status": {
+      "answered": "Answered",
+      "awaiting": "Awaiting reply",
+      "closed": "Closed"
+    },
+    "snippet": {
+      "team": "Team: ",
+      "you": "You: "
+    },
+    "time": {
+      "now": "now",
+      "minutes": "{{n}}m",
+      "hours": "{{n}}h",
+      "days": "{{n}}d"
+    },
+    "toasts": {
+      "sendMessageFailed": "Failed to send message",
+      "sendQuestionFailed": "Failed to send question"
+    },
+    "untitled": "Untitled question",
+    "faqEmpty": "No questions published yet."
+  },
+  "notFound": {
+    "eyebrow": "404 error",
+    "title": "Page not found.",
+    "goHome": "Go back home",
+    "reasons": {
+      "expired": "Sorry, the link you're looking for is expired.",
+      "archived": "Sorry, the link you're looking for is archived.",
+      "dataroomClosed": "This data room has been closed and is no longer available.",
+      "loadErrorRefresh": "Sorry, we had trouble loading this link. Please try refreshing.",
+      "loadErrorRetry": "Sorry, we had trouble loading this link. Please try again in a moment.",
+      "embedOnly": "This page can only be accessed when embedded in another website."
+    }
   }
 }

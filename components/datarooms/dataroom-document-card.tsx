@@ -8,6 +8,7 @@ import { TeamContextType } from "@/context/team-context";
 import {
   ArchiveXIcon,
   BetweenHorizontalStartIcon,
+  DownloadIcon,
   FilePenIcon,
   FileSlidersIcon,
   FolderInputIcon,
@@ -20,6 +21,7 @@ import { mutate } from "swr";
 import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
 import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
+import { downloadFromLinkEndpoint } from "@/lib/utils/download-document";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
@@ -175,6 +177,24 @@ export default function DataroomDocumentCard({
     );
   };
 
+  const handleDownloadDocument = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMenuOpen(false);
+
+    toast.promise(
+      downloadFromLinkEndpoint({
+        endpoint: `/api/teams/${teamInfo?.currentTeam?.id}/documents/${dataroomDocument.document.id}/download`,
+        body: {},
+        fallbackFileName: dataroomDocument.document.name,
+      }),
+      {
+        loading: "Preparing download...",
+        success: "Download started.",
+        error: (err) => err.message || "Failed to download. Try again.",
+      },
+    );
+  };
+
   const handleMenuStateChange = (open: boolean) => {
     if (isFirstClick) {
       setMenuOpen(true); // Keep the dropdown open on the first click
@@ -301,6 +321,12 @@ export default function DataroomDocumentCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" ref={dropdownRef}>
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                {dataroomDocument.document.type !== "notion" ? (
+                  <DropdownMenuItem onClick={handleDownloadDocument}>
+                    <DownloadIcon className="mr-2 h-4 w-4" />
+                    Download
+                  </DropdownMenuItem>
+                ) : null}
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();

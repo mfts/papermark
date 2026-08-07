@@ -73,7 +73,8 @@
     "uploadingTo": "Hochladen nach:",
     "setByOwner": "(festgelegt vom Datenraum-Inhaber)",
     "success": "Dokument erfolgreich hochgeladen!",
-    "successDescription": "Ihr Dokument ist jetzt im Datenraum sichtbar."
+    "successDescription": "Ihr Dokument ist jetzt im Datenraum sichtbar.",
+    "previewDisabled": "Im Vorschaumodus können Sie keine Dateien hochladen."
   },
   "download": {
     "folderTitle": "Ordner herunterladen: {{name}}",
@@ -167,6 +168,66 @@
     "generating": "Wird generiert...",
     "successToast": "Indexdatei erfolgreich generiert",
     "errorToast": "Index konnte nicht generiert werden",
-    "genericError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+    "genericError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "previewDisabled": "Im Vorschaumodus können Sie keine Indexdatei generieren."
+  },
+  "requestList": {
+    "trigger": "Anfrageliste",
+    "title": "Anfrageliste",
+    "summaryEmpty": "Ihnen zugewiesene Anfragen erscheinen hier.",
+    "summaryPending_one": "{{count}} Anfrage benötigt Ihre Aufmerksamkeit.",
+    "summaryPending_other": "{{count}} Anfragen benötigen Ihre Aufmerksamkeit.",
+    "summaryDone": "Sie haben alles erledigt. Warten auf die Prüfung durch den Inhaber.",
+    "emptyTitle": "Nichts zu erledigen",
+    "emptyDescription": "Ihnen ist derzeit keine Anfrage zugewiesen.",
+    "due": "Fällig {{date}}",
+    "overdue": "überfällig",
+    "lockedByHost": "Vom Inhaber als erledigt markiert",
+    "commentPlaceholder": "Notiz für den Inhaber hinzufügen (optional)…",
+    "commentPlaceholderLocked": "Kommentar hinzufügen…",
+    "submitComment": "Kommentar hinzufügen",
+    "submitStatus": "Anfrage aktualisieren",
+    "submitDefault": "Update senden",
+    "activityHeading": "Aktivität",
+    "uploadsHeading": "Ihre Dateien",
+    "uploadRequired": "Datei erforderlich",
+    "uploadProcessing": "Wird verarbeitet",
+    "toastUpdated": "Anfrage aktualisiert",
+    "toastCommented": "Kommentar hinzugefügt",
+    "toastFailed": "Aktualisierung fehlgeschlagen",
+    "status": {
+      "OPEN": "Offen",
+      "IN_PROGRESS": "In Bearbeitung",
+      "SUBMITTED": "Eingereicht",
+      "COMPLETED": "Abgeschlossen"
+    },
+    "activity": {
+      "you": "Sie",
+      "someone": "Jemand",
+      "empty": "Noch keine Aktivität.",
+      "created": "Anfrage erstellt",
+      "assigned": "Zuweisungen aktualisiert",
+      "uploaded": "{{name}} hochgeladen",
+      "uploadedFallback": "Datei hochgeladen",
+      "statusFromTo": "Status von {{from}} zu {{to}} geändert",
+      "statusTo": "Status auf {{status}} gesetzt",
+      "statusChanged": "Status geändert",
+      "updated": "Anfrage aktualisiert"
+    }
+  },
+  "uploadZone": {
+    "dropzoneTitle": "Dateien hierher ziehen und ablegen oder klicken, um Dateien auszuwählen",
+    "dropzoneHint": "Unterstützt: PDF, Office, Tabellen, Bilder, ZIP und mehr",
+    "dropActive": "Datei(en) hier ablegen",
+    "dropActiveHint": "PDF, Office, Bilder, ZIP und mehr",
+    "rejectedTitle": "Einige Dateien wurden abgelehnt:",
+    "rejectedTooLarge": "Datei ist zu groß (max. {{size}} MB).",
+    "rejectedType": "Dateityp wird nicht unterstützt.",
+    "toastComplete": "Upload abgeschlossen!",
+    "toastError": "Beim Hochladen ist ein Fehler aufgetreten",
+    "toastFileFailed": "{{name}} konnte nicht hochgeladen werden",
+    "toastUploadFailed": "Dokument konnte nicht hochgeladen werden",
+    "errorProcessFailed": "Upload konnte nicht verarbeitet werden",
+    "errorMissingMetadata": "In der Upload-Antwort fehlen die Dokument-Metadaten"
   }
 }

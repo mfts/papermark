@@ -4,8 +4,11 @@ import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 
+import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
 import { buildBulkDownloadStructure } from "@/lib/dataroom/build-bulk-download-structure";
+import { collectDescendantIds } from "@/lib/dataroom/build-folder-hierarchy";
 import prisma from "@/lib/prisma";
+import { ratelimit } from "@/lib/redis";
 import { downloadJobStore } from "@/lib/redis-download-job-store";
 import { bulkDownloadTask } from "@/lib/trigger/bulk-download";
 import { CustomUser } from "@/lib/types";
@@ -13,6 +16,52 @@ import { CustomUser } from "@/lib/types";
 export const config = {
   maxDuration: 60, // Reduced since we're just triggering the async task
 };
+
+type DataroomFolderRow = {
+  id: string;
+  name: string;
+  path: string;
+  parentId: string | null;
+};
+
+/**
+ * What this request is downloading. Resolved once from the request body and
+ * then used for every downstream decision: which folders go into the zip,
+ * which documents to query, whether the zip is rooted under a folder slug,
+ * and how the job is labelled. `rootFolder` is set only for a folder-scoped
+ * download, so its presence is the whole discriminant.
+ */
+type DownloadScope = {
+  folders: DataroomFolderRow[];
+  rootFolder?: { id: string; name: string };
+};
+
+/**
+ * Returns `null` when a `folderId` was supplied that does not belong to this
+ * dataroom — that lookup is what stops a caller scoping the download to
+ * another dataroom's folder.
+ */
+function resolveDownloadScope(
+  folderId: string | undefined,
+  allFolders: DataroomFolderRow[],
+): DownloadScope | null {
+  if (!folderId) {
+    return { folders: allFolders };
+  }
+
+  const root = allFolders.find((folder) => folder.id === folderId);
+  if (!root) {
+    return null;
+  }
+
+  const descendantIds = collectDescendantIds(folderId, allFolders);
+  return {
+    rootFolder: { id: root.id, name: root.name },
+    folders: allFolders.filter(
+      (folder) => folder.id === folderId || descendantIds.has(folder.id),
+    ),
+  };
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -32,6 +81,8 @@ export default async function handler(
 
   if (req.method === "POST") {
     try {
+      const { folderId } = (req.body ?? {}) as { folderId?: string };
+
       const teamAccess = await prisma.userTeam.findUnique({
         where: {
           userId_teamId: {
@@ -39,11 +90,38 @@ export default async function handler(
             teamId: teamId,
           },
         },
-        select: { teamId: true },
+        select: { teamId: true, role: true },
       });
 
       if (!teamAccess) {
         return res.status(403).end("Unauthorized to access this team");
+      }
+
+      // Team membership alone would let a scoped member bulk-download a room
+      // they were never assigned to.
+      if (
+        await enforceDataroomMemberScope({
+          userId,
+          teamId,
+          dataroomId,
+          res,
+          role: teamAccess.role,
+        })
+      ) {
+        return;
+      }
+
+      // Download is now on every row rather than a single page-header button,
+      // so walking a folder list could otherwise fan out one Trigger.dev run
+      // and one lambda batch per row. One key covers both scopes.
+      const { success } = await ratelimit(5, "1 m").limit(
+        `dataroom-download:${teamId}:${dataroomId}:${userId}`,
+      );
+      if (!success) {
+        return res.status(429).json({
+          error: "Too many download requests. Please try again shortly.",
+          code: "RATE_LIMITED",
+        });
       }
 
       const dataroom = await prisma.dataroom.findUnique({
@@ -62,29 +140,6 @@ export default async function handler(
               parentId: true,
             },
           },
-          documents: {
-            select: {
-              id: true,
-              folderId: true,
-              document: {
-                select: {
-                  name: true,
-                  versions: {
-                    where: { isPrimary: true },
-                    select: {
-                      type: true,
-                      file: true,
-                      storageType: true,
-                      originalFile: true,
-                      contentType: true,
-                      fileSize: true,
-                    },
-                    take: 1,
-                  },
-                },
-              },
-            },
-          },
         },
       });
 
@@ -92,16 +147,61 @@ export default async function handler(
         return res.status(404).end("Dataroom not found");
       }
 
+      const scope = resolveDownloadScope(folderId, dataroom.folders);
+      if (!scope) {
+        return res
+          .status(404)
+          .json({ error: "Folder not found in this dataroom" });
+      }
+
+      const documents = await prisma.dataroomDocument.findMany({
+        where: {
+          dataroomId: dataroom.id,
+          ...(scope.rootFolder
+            ? { folderId: { in: scope.folders.map((folder) => folder.id) } }
+            : {}),
+        },
+        select: {
+          id: true,
+          folderId: true,
+          document: {
+            select: {
+              name: true,
+              versions: {
+                where: { isPrimary: true },
+                select: {
+                  type: true,
+                  file: true,
+                  storageType: true,
+                  originalFile: true,
+                  contentType: true,
+                  fileSize: true,
+                },
+                take: 1,
+              },
+            },
+          },
+        },
+      });
+
       // Admin bulk download: no permission filtering, no watermark.
+      // `fullFolders` is the builder's hierarchy input and `includedFolders`
+      // is the scope filter; they stay distinct because every path is resolved
+      // against the whole tree before being rebased under `rootFolder`.
       const { folderStructure, fileKeys } = buildBulkDownloadStructure({
         fullFolders: dataroom.folders,
-        includedFolders: dataroom.folders,
-        includedDocuments: dataroom.documents,
+        includedFolders: scope.folders,
+        includedDocuments: documents,
         enableWatermark: false,
+        rootFolder: scope.rootFolder,
       });
 
       if (fileKeys.length === 0) {
-        return res.status(404).json({ error: "No files to download" });
+        return res.status(404).json({
+          error: scope.rootFolder
+            ? "This folder has no downloadable files."
+            : "No files to download",
+        });
       }
 
       // Get team-specific storage config
@@ -115,7 +215,8 @@ export default async function handler(
 
       // Create download job in Redis
       const job = await downloadJobStore.createJob({
-        type: "bulk",
+        type: scope.rootFolder ? "folder" : "bulk",
+        folderName: scope.rootFolder?.name,
         status: "PENDING",
         dataroomId: dataroom.id,
         dataroomName: dataroom.name,
@@ -138,6 +239,7 @@ export default async function handler(
           folderStructure: folderStructure,
           fileKeys: fileKeys,
           sourceBucket: storageConfig.bucket,
+          folderName: scope.rootFolder?.name,
           watermarkConfig: { enabled: false },
           userId: userId,
           emailNotification: !!user?.email,

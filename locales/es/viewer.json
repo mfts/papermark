@@ -6,7 +6,9 @@
     "linksOnCurrentPage": "Enlaces en la página actual",
     "zoomIn": "Acercar",
     "zoomOut": "Alejar",
+    "resetZoom": "Ajustar a la pantalla",
     "fullscreen": "Pantalla completa",
+    "exitFullscreen": "Salir de pantalla completa",
     "downloadDocument": "Descargar documento",
     "teamMemberTooltip": "Verificación omitida porque es miembro del equipo; no se recopilarán datos analíticos",
     "changeLanguage": "Cambiar idioma"
@@ -57,6 +59,83 @@
       "harmful": "Contenido dañino",
       "notWorking": "El contenido no funciona correctamente",
       "other": "Otro"
+    }
+  },
+  "qa": {
+    "header": {
+      "title": "Pregunte al equipo",
+      "composeTitle": "Hacer una nueva pregunta",
+      "subtitleWithName": "Preguntas sobre {{name}}",
+      "subtitle": "Preguntas sobre esta sala de datos",
+      "back": "Atrás",
+      "close": "Cerrar"
+    },
+    "tabs": {
+      "home": "Inicio",
+      "messages": "Preguntas",
+      "faq": "FAQ"
+    },
+    "home": {
+      "askNew": "Hacer una nueva pregunta",
+      "recentReply": "Respuesta reciente",
+      "openConversation": "Abrir conversación",
+      "frequentlyAsked": "Preguntas frecuentes"
+    },
+    "messages": {
+      "emptyTitle": "Aún no hay preguntas",
+      "emptyDescription": "Haga una pregunta al equipo y aparecerá aquí.",
+      "askQuestion": "Hacer una pregunta",
+      "newReply": "Respuesta nueva"
+    },
+    "compose": {
+      "aboutPage": "Sobre esta página",
+      "subjectPlaceholder": "Asunto (opcional)",
+      "messagePlaceholder": "Escriba su pregunta...",
+      "sending": "Enviando…",
+      "submit": "Enviar pregunta"
+    },
+    "thread": {
+      "you": "Usted",
+      "team": "Equipo",
+      "page": "Página {{page}}",
+      "newDivider": "Nuevo",
+      "closed": "El equipo ha cerrado esta conversación.",
+      "messagePlaceholder": "Escriba su mensaje...",
+      "sendReply": "Enviar respuesta"
+    },
+    "status": {
+      "answered": "Respondida",
+      "awaiting": "Esperando respuesta",
+      "closed": "Cerrada"
+    },
+    "snippet": {
+      "team": "Equipo: ",
+      "you": "Usted: "
+    },
+    "time": {
+      "now": "ahora",
+      "minutes": "{{n}} min",
+      "hours": "{{n}} h",
+      "days": "{{n}} d"
+    },
+    "toasts": {
+      "sendMessageFailed": "No se pudo enviar el mensaje",
+      "sendQuestionFailed": "No se pudo enviar la pregunta"
+    },
+    "untitled": "Pregunta sin título",
+    "faqEmpty": "Aún no se han publicado preguntas."
+  },
+  "notFound": {
+    "eyebrow": "Error 404",
+    "title": "Página no encontrada.",
+    "goHome": "Volver al inicio",
+    "reasons": {
+      "expired": "El enlace que busca ha caducado.",
+      "archived": "El enlace que busca está archivado.",
+      "dataroomClosed": "Esta sala de datos se ha cerrado y ya no está disponible.",
+      "loadErrorRefresh": "No pudimos cargar este enlace. Intente actualizar la página.",
+      "loadErrorRetry": "No pudimos cargar este enlace. Vuelva a intentarlo en un momento.",
+      "embedOnly": "Solo se puede acceder a esta página cuando está insertada en otro sitio web."
     }
   }
 }

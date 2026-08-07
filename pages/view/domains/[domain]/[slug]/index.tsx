@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import WorkflowAccessView from "@/ee/features/workflows/components/workflow-access-view";
-import NotFound from "@/pages/404";
 import { Brand, DataroomBrand } from "@prisma/client";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
@@ -16,8 +15,8 @@ import { fetchLinkDataByDomainSlug } from "@/lib/api/links/link-data";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import { useUrlPasscode } from "@/lib/hooks/use-url-passcode";
 import {
-  buildViewerI18nPageProps,
   type ViewerI18nPageProps,
+  buildViewerI18nPageProps,
 } from "@/lib/i18n/viewer-page-props";
 import notion from "@/lib/notion";
 import {
@@ -37,6 +36,7 @@ import CustomMetaTag from "@/components/view/custom-metatag";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
 import { ViewerI18nProvider } from "@/components/view/viewer-i18n-provider";
+import { ViewerNotFound } from "@/components/view/viewer-not-found";
 
 type DocumentLinkData = {
   linkType: "DOCUMENT_LINK";
@@ -176,7 +176,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       const teamPlan = team?.plan || "free";
 
       // Check feature flags for document links
-      const docFeatureFlags = await getFeatureFlags({ teamId: teamId || undefined });
+      const docFeatureFlags = await getFeatureFlags({
+        teamId: teamId || undefined,
+      });
       const textSelectionEnabled = docFeatureFlags.textSelection;
       const logoOnAccessFormEnabled = docFeatureFlags.logoOnAccessForm;
       const hideFooterOnAccessFormEnabled =
@@ -380,15 +382,11 @@ function ViewPageInner({
   }
 
   if (frozen) {
-    return (
-      <NotFound message="This data room has been closed and is no longer available." />
-    );
+    return <ViewerNotFound reason="dataroomClosed" />;
   }
 
   if (error) {
-    return (
-      <NotFound message="Sorry, we had trouble loading this link. Please try again in a moment." />
-    );
+    return <ViewerNotFound reason="loadErrorRetry" />;
   }
 
   const {
@@ -466,15 +464,11 @@ function ViewPageInner({
 
     // If the link is expired, show a 404 page
     if (expiresAt && new Date(expiresAt) < new Date()) {
-      return (
-        <NotFound message="Sorry, the link you're looking for is expired." />
-      );
+      return <ViewerNotFound reason="expired" />;
     }
 
     if (isArchived) {
-      return (
-        <NotFound message="Sorry, the link you're looking for is archived." />
-      );
+      return <ViewerNotFound reason="archived" />;
     }
 
     return (
@@ -550,15 +544,11 @@ function ViewPageInner({
 
     // If the link is expired, show a 404 page
     if (expiresAt && new Date(expiresAt) < new Date()) {
-      return (
-        <NotFound message="Sorry, the link you're looking for is expired." />
-      );
+      return <ViewerNotFound reason="expired" />;
     }
 
     if (isArchived) {
-      return (
-        <NotFound message="Sorry, the link you're looking for is archived." />
-      );
+      return <ViewerNotFound reason="archived" />;
     }
 
     return (
@@ -600,10 +590,7 @@ export default function ViewPage(props: DomainViewPageProps) {
   const locale = props.i18n?.locale ?? "en";
   const resources = props.i18n?.resources ?? {};
   return (
-    <ViewerI18nProvider
-      locale={locale}
-      resources={resources}
-    >
+    <ViewerI18nProvider locale={locale} resources={resources}>
       <ViewPageInner {...props} />
     </ViewerI18nProvider>
   );

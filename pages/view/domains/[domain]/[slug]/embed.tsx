@@ -2,7 +2,6 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
-import NotFound from "@/pages/404";
 import { Brand, DataroomBrand } from "@prisma/client";
 
 import { useAnalytics } from "@/lib/analytics";
@@ -14,6 +13,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
 import { ViewerI18nProvider } from "@/components/view/viewer-i18n-provider";
+import { ViewerNotFound } from "@/components/view/viewer-not-found";
 
 // Reuse the same getStaticProps and getStaticPaths from the main domain view page
 export { getStaticProps, getStaticPaths } from "./index";
@@ -85,21 +85,15 @@ function EmbedPageInner(props: DomainEmbedPageProps) {
   }
 
   if (!isEmbedded) {
-    return (
-      <NotFound message="This page can only be accessed when embedded in another website." />
-    );
+    return <ViewerNotFound reason="embedOnly" />;
   }
 
   if (props.frozen) {
-    return (
-      <NotFound message="This data room has been closed and is no longer available." />
-    );
+    return <ViewerNotFound reason="dataroomClosed" />;
   }
 
   if (props.error) {
-    return (
-      <NotFound message="Sorry, we had trouble loading this link. Please try again in a moment." />
-    );
+    return <ViewerNotFound reason="loadErrorRetry" />;
   }
 
   const {
@@ -134,15 +128,11 @@ function EmbedPageInner(props: DomainEmbedPageProps) {
     } = link;
 
     if (expiresAt && new Date(expiresAt) < new Date()) {
-      return (
-        <NotFound message="Sorry, the link you're looking for is expired." />
-      );
+      return <ViewerNotFound reason="expired" />;
     }
 
     if (isArchived) {
-      return (
-        <NotFound message="Sorry, the link you're looking for is archived." />
-      );
+      return <ViewerNotFound reason="archived" />;
     }
 
     return (
@@ -189,15 +179,11 @@ function EmbedPageInner(props: DomainEmbedPageProps) {
     } = link;
 
     if (expiresAt && new Date(expiresAt) < new Date()) {
-      return (
-        <NotFound message="Sorry, the link you're looking for is expired." />
-      );
+      return <ViewerNotFound reason="expired" />;
     }
 
     if (isArchived) {
-      return (
-        <NotFound message="Sorry, the link you're looking for is archived." />
-      );
+      return <ViewerNotFound reason="archived" />;
     }
 
     return (

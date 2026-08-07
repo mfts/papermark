@@ -4,8 +4,8 @@ import { useRouter } from "next/router";
 import { Loader2 } from "lucide-react";
 
 import {
-  buildViewerI18nPageProps,
   type ViewerI18nPageProps,
+  buildViewerI18nPageProps,
 } from "@/lib/i18n/viewer-page-props";
 import prisma from "@/lib/prisma";
 
@@ -14,7 +14,9 @@ import { ViewerI18nProvider } from "@/components/view/viewer-i18n-provider";
 
 type Props = Partial<ViewerI18nPageProps> & { linkId: string | null };
 
-export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
+export const getServerSideProps: GetServerSideProps<Props> = async (
+  context,
+) => {
   const linkId = context.params?.linkId as string;
   let link: {
     dataroom: { brand: { defaultLanguage: string | null } | null } | null;
@@ -27,7 +29,9 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       link = await prisma.link.findUnique({
         where: { id: linkId },
         select: {
-          dataroom: { select: { brand: { select: { defaultLanguage: true } } } },
+          dataroom: {
+            select: { brand: { select: { defaultLanguage: true } } },
+          },
         },
       });
     }

@@ -73,7 +73,8 @@
     "uploadingTo": "Enviando para:",
     "setByOwner": "(definido pelo proprietário da sala de dados)",
     "success": "Documento enviado com sucesso!",
-    "successDescription": "Seu documento agora está visível na sala de dados."
+    "successDescription": "Seu documento agora está visível na sala de dados.",
+    "previewDisabled": "Você não pode enviar arquivos no modo de pré-visualização."
   },
   "download": {
     "folderTitle": "Baixar pasta: {{name}}",
@@ -167,6 +168,66 @@
     "generating": "Gerando...",
     "successToast": "Arquivo de índice gerado com sucesso",
     "errorToast": "Falha ao gerar o índice",
-    "genericError": "Algo deu errado. Por favor, tente novamente."
+    "genericError": "Algo deu errado. Por favor, tente novamente.",
+    "previewDisabled": "Você não pode gerar um arquivo de índice no modo de pré-visualização."
+  },
+  "requestList": {
+    "trigger": "Lista de solicitações",
+    "title": "Lista de solicitações",
+    "summaryEmpty": "As solicitações atribuídas a você aparecem aqui.",
+    "summaryPending_one": "{{count}} solicitação precisa da sua atenção.",
+    "summaryPending_other": "{{count}} solicitações precisam da sua atenção.",
+    "summaryDone": "Você está em dia. Aguardando a revisão do proprietário.",
+    "emptyTitle": "Nada a fazer",
+    "emptyDescription": "Nenhuma solicitação está atribuída a você no momento.",
+    "due": "Prazo {{date}}",
+    "overdue": "atrasada",
+    "lockedByHost": "Marcada como concluída pelo proprietário",
+    "commentPlaceholder": "Adicione uma observação para o proprietário (opcional)…",
+    "commentPlaceholderLocked": "Adicione um comentário…",
+    "submitComment": "Adicionar comentário",
+    "submitStatus": "Atualizar solicitação",
+    "submitDefault": "Enviar atualização",
+    "activityHeading": "Atividade",
+    "uploadsHeading": "Seus arquivos",
+    "uploadRequired": "Arquivo obrigatório",
+    "uploadProcessing": "Processando",
+    "toastUpdated": "Solicitação atualizada",
+    "toastCommented": "Comentário adicionado",
+    "toastFailed": "Falha ao atualizar",
+    "status": {
+      "OPEN": "Aberta",
+      "IN_PROGRESS": "Em andamento",
+      "SUBMITTED": "Enviada",
+      "COMPLETED": "Concluída"
+    },
+    "activity": {
+      "you": "Você",
+      "someone": "Alguém",
+      "empty": "Ainda não há atividade.",
+      "created": "criou a solicitação",
+      "assigned": "atualizou os responsáveis",
+      "uploaded": "enviou {{name}}",
+      "uploadedFallback": "enviou um arquivo",
+      "statusFromTo": "alterou o status de {{from}} para {{to}}",
+      "statusTo": "definiu o status como {{status}}",
+      "statusChanged": "alterou o status",
+      "updated": "atualizou a solicitação"
+    }
+  },
+  "uploadZone": {
+    "dropzoneTitle": "Arraste e solte arquivos aqui ou clique para selecioná-los",
+    "dropzoneHint": "Compatível: PDF, Office, planilhas, imagens, ZIP e mais",
+    "dropActive": "Solte seus arquivos aqui",
+    "dropActiveHint": "PDF, Office, imagens, ZIP e mais",
+    "rejectedTitle": "Alguns arquivos foram rejeitados:",
+    "rejectedTooLarge": "Arquivo muito grande (máx. {{size}} MB).",
+    "rejectedType": "Tipo de arquivo não compatível.",
+    "toastComplete": "Envio concluído!",
+    "toastError": "Ocorreu um erro durante o envio",
+    "toastFileFailed": "Falha ao enviar {{name}}",
+    "toastUploadFailed": "Falha ao enviar o documento",
+    "errorProcessFailed": "Falha ao processar o envio",
+    "errorMissingMetadata": "Os metadados do documento estão ausentes na resposta de envio"
   }
 }

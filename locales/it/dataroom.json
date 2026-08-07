@@ -73,7 +73,8 @@
     "uploadingTo": "Caricamento in:",
     "setByOwner": "(impostato dal proprietario della data room)",
     "success": "Documento caricato correttamente!",
-    "successDescription": "Il tuo documento è ora visibile nella data room."
+    "successDescription": "Il tuo documento è ora visibile nella data room.",
+    "previewDisabled": "Non puoi caricare file in modalità anteprima."
   },
   "download": {
     "folderTitle": "Scarica cartella: {{name}}",
@@ -167,6 +168,66 @@
     "generating": "Generazione...",
     "successToast": "File indice generato con successo",
     "errorToast": "Impossibile generare l'indice",
-    "genericError": "Qualcosa è andato storto. Riprova."
+    "genericError": "Qualcosa è andato storto. Riprova.",
+    "previewDisabled": "Non puoi generare un file indice in modalità anteprima."
+  },
+  "requestList": {
+    "trigger": "Elenco richieste",
+    "title": "Elenco richieste",
+    "summaryEmpty": "Le richieste assegnate a te compaiono qui.",
+    "summaryPending_one": "{{count}} richiesta richiede la tua attenzione.",
+    "summaryPending_other": "{{count}} richieste richiedono la tua attenzione.",
+    "summaryDone": "Sei in pari. In attesa della revisione del proprietario.",
+    "emptyTitle": "Nulla da fare",
+    "emptyDescription": "Al momento non ti è assegnata alcuna richiesta.",
+    "due": "Scadenza {{date}}",
+    "overdue": "in ritardo",
+    "lockedByHost": "Contrassegnata come completata dal proprietario",
+    "commentPlaceholder": "Aggiungi una nota per il proprietario (facoltativo)…",
+    "commentPlaceholderLocked": "Aggiungi un commento…",
+    "submitComment": "Aggiungi commento",
+    "submitStatus": "Aggiorna richiesta",
+    "submitDefault": "Invia aggiornamento",
+    "activityHeading": "Attività",
+    "uploadsHeading": "I tuoi file",
+    "uploadRequired": "File obbligatorio",
+    "uploadProcessing": "Elaborazione",
+    "toastUpdated": "Richiesta aggiornata",
+    "toastCommented": "Commento aggiunto",
+    "toastFailed": "Aggiornamento non riuscito",
+    "status": {
+      "OPEN": "Aperta",
+      "IN_PROGRESS": "In corso",
+      "SUBMITTED": "Inviata",
+      "COMPLETED": "Completata"
+    },
+    "activity": {
+      "you": "Tu",
+      "someone": "Qualcuno",
+      "empty": "Nessuna attività.",
+      "created": "richiesta creata",
+      "assigned": "assegnatari aggiornati",
+      "uploaded": "{{name}} caricato",
+      "uploadedFallback": "file caricato",
+      "statusFromTo": "stato modificato da {{from}} a {{to}}",
+      "statusTo": "stato impostato su {{status}}",
+      "statusChanged": "stato modificato",
+      "updated": "richiesta aggiornata"
+    }
+  },
+  "uploadZone": {
+    "dropzoneTitle": "Trascina qui i file oppure fai clic per selezionarli",
+    "dropzoneHint": "Supportati: PDF, Office, fogli di calcolo, immagini, ZIP e altro",
+    "dropActive": "Rilascia qui i tuoi file",
+    "dropActiveHint": "PDF, Office, immagini, ZIP e altro",
+    "rejectedTitle": "Alcuni file sono stati rifiutati:",
+    "rejectedTooLarge": "File troppo grande (max. {{size}} MB).",
+    "rejectedType": "Tipo di file non supportato.",
+    "toastComplete": "Caricamento completato!",
+    "toastError": "Si è verificato un errore durante il caricamento",
+    "toastFileFailed": "Caricamento di {{name}} non riuscito",
+    "toastUploadFailed": "Caricamento del documento non riuscito",
+    "errorProcessFailed": "Elaborazione del caricamento non riuscita",
+    "errorMissingMetadata": "Metadati del documento mancanti nella risposta di caricamento"
   }
 }

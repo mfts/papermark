@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 
 import { usePendingUploads } from "@/context/pending-uploads-context";
 import { FileUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { DocumentData } from "@/lib/documents/create-document";
@@ -26,6 +27,9 @@ export function ViewerUploadComponent({
   taskId?: string;
   onUploadSuccess?: () => void;
 }) {
+  // Viewer-only component: it is mounted exclusively inside the data room
+  // viewer tree, so the `dataroom` namespace is always available.
+  const { t } = useTranslation("dataroom");
   const [uploads, setUploads] = useState<
     { uploadId: string; fileName: string; progress: number }[]
   >([]);
@@ -133,12 +137,20 @@ export function ViewerUploadComponent({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to process upload");
+        throw new Error(
+          errorData.message ||
+            t("uploadZone.errorProcessFailed", "Failed to process upload"),
+        );
       }
 
       const result = await response.json();
       if (!result.document) {
-        throw new Error("Upload response missing document metadata");
+        throw new Error(
+          t(
+            "uploadZone.errorMissingMetadata",
+            "Upload response missing document metadata",
+          ),
+        );
       }
 
       // Determine if the file needs trigger processing (PDF, docs, slides)
@@ -167,12 +179,16 @@ export function ViewerUploadComponent({
       settleUpload(uploadId, false);
     } catch (error) {
       console.error("Error processing upload:", error);
-      toast.error((error as Error).message || "Failed to upload document");
+      const fallback = t(
+        "uploadZone.toastUploadFailed",
+        "Failed to upload document",
+      );
+      toast.error((error as Error).message || fallback);
 
       if (pendingId) {
         updatePendingUpload(pendingId, {
           status: "error",
-          errorMessage: (error as Error).message || "Failed to upload document",
+          errorMessage: (error as Error).message || fallback,
         });
       }
 
@@ -225,10 +241,16 @@ export function ViewerUploadComponent({
             <FileUp className="h-5 w-5 text-muted-foreground" />
           </div>
           <p className="text-sm font-medium text-foreground">
-            Drag & drop files here, or click to select files
+            {t(
+              "uploadZone.dropzoneTitle",
+              "Drag & drop files here, or click to select files",
+            )}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Supported: PDF, Office, spreadsheets, images, ZIP, and more
+            {t(
+              "uploadZone.dropzoneHint",
+              "Supported: PDF, Office, spreadsheets, images, ZIP, and more",
+            )}
           </p>
         </div>
       )}
@@ -237,7 +259,7 @@ export function ViewerUploadComponent({
       {rejectedFiles.length > 0 && (
         <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950/30">
           <p className="text-xs font-medium text-red-600 dark:text-red-400">
-            Some files were rejected:
+            {t("uploadZone.rejectedTitle", "Some files were rejected:")}
           </p>
           <ul className="mt-1.5 space-y-0.5">
             {rejectedFiles.map((file, index) => (

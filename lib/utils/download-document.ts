@@ -25,7 +25,9 @@ export async function downloadFromLinkEndpoint({
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || "Failed to download file");
+    throw new Error(
+      errorData.error || errorData.message || "Failed to download file",
+    );
   }
 
   const contentType = response.headers.get("content-type");

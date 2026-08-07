@@ -73,7 +73,8 @@
     "uploadingTo": "アップロード先：",
     "setByOwner": "（データルームの所有者により設定）",
     "success": "資料をアップロードしました！",
-    "successDescription": "資料がデータルームに表示されました。"
+    "successDescription": "資料がデータルームに表示されました。",
+    "previewDisabled": "プレビュー モードではファイルをアップロードできません。"
   },
   "download": {
     "folderTitle": "フォルダをダウンロード：{{name}}",
@@ -167,6 +168,66 @@
     "generating": "生成中...",
     "successToast": "インデックスファイルを生成しました",
     "errorToast": "インデックスの生成に失敗しました",
-    "genericError": "問題が発生しました。もう一度お試しください。"
+    "genericError": "問題が発生しました。もう一度お試しください。",
+    "previewDisabled": "プレビュー モードではインデックスファイルを生成できません。"
+  },
+  "requestList": {
+    "trigger": "リクエスト一覧",
+    "title": "リクエスト一覧",
+    "summaryEmpty": "あなたに割り当てられたリクエストがここに表示されます。",
+    "summaryPending_one": "{{count}} 件のリクエストに対応が必要です。",
+    "summaryPending_other": "{{count}} 件のリクエストに対応が必要です。",
+    "summaryDone": "対応はすべて完了しました。所有者の確認をお待ちください。",
+    "emptyTitle": "対応が必要な項目はありません",
+    "emptyDescription": "現在あなたに割り当てられたリクエストはありません。",
+    "due": "期限 {{date}}",
+    "overdue": "期限超過",
+    "lockedByHost": "所有者により完了として設定されました",
+    "commentPlaceholder": "所有者へのメモを追加（任意）…",
+    "commentPlaceholderLocked": "コメントを追加…",
+    "submitComment": "コメントを追加",
+    "submitStatus": "リクエストを更新",
+    "submitDefault": "更新を送信",
+    "activityHeading": "アクティビティ",
+    "uploadsHeading": "あなたのファイル",
+    "uploadRequired": "ファイルが必要です",
+    "uploadProcessing": "処理中",
+    "toastUpdated": "リクエストを更新しました",
+    "toastCommented": "コメントを追加しました",
+    "toastFailed": "更新できませんでした",
+    "status": {
+      "OPEN": "未対応",
+      "IN_PROGRESS": "対応中",
+      "SUBMITTED": "提出済み",
+      "COMPLETED": "完了"
+    },
+    "activity": {
+      "you": "あなた",
+      "someone": "誰か",
+      "empty": "アクティビティはまだありません。",
+      "created": "リクエストを作成しました",
+      "assigned": "担当者を更新しました",
+      "uploaded": "{{name}} をアップロードしました",
+      "uploadedFallback": "ファイルをアップロードしました",
+      "statusFromTo": "ステータスを {{from}} から {{to}} に変更しました",
+      "statusTo": "ステータスを {{status}} に設定しました",
+      "statusChanged": "ステータスを変更しました",
+      "updated": "リクエストを更新しました"
+    }
+  },
+  "uploadZone": {
+    "dropzoneTitle": "ファイルをここにドラッグ＆ドロップするか、クリックして選択してください",
+    "dropzoneHint": "対応形式：PDF、Office、表計算、画像、ZIP など",
+    "dropActive": "ファイルをここにドロップ",
+    "dropActiveHint": "PDF、Office、画像、ZIP など",
+    "rejectedTitle": "一部のファイルは受け付けられませんでした:",
+    "rejectedTooLarge": "ファイルサイズが大きすぎます（最大 {{size}} MB）。",
+    "rejectedType": "対応していないファイル形式です。",
+    "toastComplete": "アップロードが完了しました！",
+    "toastError": "アップロード中にエラーが発生しました",
+    "toastFileFailed": "{{name}} をアップロードできませんでした",
+    "toastUploadFailed": "資料をアップロードできませんでした",
+    "errorProcessFailed": "アップロードを処理できませんでした",
+    "errorMissingMetadata": "アップロード応答に資料のメタデータがありません"
   }
 }

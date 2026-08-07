@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 
 import React, { useEffect, useState } from "react";
 
-import NotFound from "@/pages/404";
 import { DataroomBrand } from "@prisma/client";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
@@ -15,8 +14,8 @@ import { fetchLinkDataByDomainSlug } from "@/lib/api/links/link-data";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import { useUrlPasscode } from "@/lib/hooks/use-url-passcode";
 import {
-  buildViewerI18nPageProps,
   type ViewerI18nPageProps,
+  buildViewerI18nPageProps,
 } from "@/lib/i18n/viewer-page-props";
 import notion from "@/lib/notion";
 import {
@@ -30,6 +29,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomMetaTag from "@/components/view/custom-metatag";
 import DataroomDocumentView from "@/components/view/dataroom/dataroom-document-view";
 import { ViewerI18nProvider } from "@/components/view/viewer-i18n-provider";
+import { ViewerNotFound } from "@/components/view/viewer-not-found";
 
 type DataroomDocumentLinkData = {
   linkType: "DATAROOM_LINK";
@@ -103,15 +103,11 @@ function DataroomDocumentViewPageInner({
   }
 
   if (frozen) {
-    return (
-      <NotFound message="This data room has been closed and is no longer available." />
-    );
+    return <ViewerNotFound reason="dataroomClosed" />;
   }
 
   if (error) {
-    return (
-      <NotFound message="Sorry, we had trouble loading this link. Please try again in a moment." />
-    );
+    return <ViewerNotFound reason="loadErrorRetry" />;
   }
 
   const {
@@ -163,16 +159,12 @@ function DataroomDocumentViewPageInner({
 
   // Check if the link is expired
   if (expiresAt && new Date(expiresAt) < new Date()) {
-    return (
-      <NotFound message="Sorry, the link you're looking for is expired." />
-    );
+    return <ViewerNotFound reason="expired" />;
   }
 
   // Check if the link is archived
   if (isArchived) {
-    return (
-      <NotFound message="Sorry, the link you're looking for is archived." />
-    );
+    return <ViewerNotFound reason="archived" />;
   }
 
   return (
@@ -215,10 +207,7 @@ export default function DataroomDocumentViewPage(props: DataroomDocumentProps) {
   const locale = props.i18n?.locale ?? "en";
   const resources = props.i18n?.resources ?? {};
   return (
-    <ViewerI18nProvider
-      locale={locale}
-      resources={resources}
-    >
+    <ViewerI18nProvider locale={locale} resources={resources}>
       <DataroomDocumentViewPageInner {...props} />
     </ViewerI18nProvider>
   );
