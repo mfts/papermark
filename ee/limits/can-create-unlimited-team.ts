@@ -1,9 +1,16 @@
 import prisma from "@/lib/prisma";
 
+import type { PrismaClient } from "@prisma/client";
+
 const UNLIMITED_PLANS = ["datarooms-unlimited"];
 
-export async function canCreateUnlimitedTeam(userId: string): Promise<boolean> {
-  const teams = await prisma.userTeam.findMany({
+type PrismaTx = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
+
+export async function canCreateUnlimitedTeam(
+  userId: string,
+  tx: PrismaClient | PrismaTx = prisma as any
+): Promise<boolean> {
+  const teams = await tx.userTeam.findMany({
     where: {
       userId,
       role: "ADMIN",

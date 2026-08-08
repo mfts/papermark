@@ -104,56 +104,60 @@ export default async function handle(
     const user = session.user as CustomUser;
 
     try {
-      const grantUnlimited = await canCreateUnlimitedTeam(user.id);
+      const newTeam = await prisma.$transaction(async (tx) => {
+        const grantUnlimited = await canCreateUnlimitedTeam(user.id, tx);
 
-      // Datarooms-premium admins can provision their own teams (same
-      // principle as datarooms-unlimited), but are capped at
-      // PREMIUM_TEAM_LIMIT teams. Unlimited takes precedence.
-      const premiumEligibility = grantUnlimited
-        ? null
-        : await getPremiumTeamEligibility(user.id);
+        // Datarooms-premium admins can provision their own teams (same
+        // principle as datarooms-unlimited), but are capped at
+        // PREMIUM_TEAM_LIMIT teams. Unlimited takes precedence.
+        const premiumEligibility = grantUnlimited
+          ? null
+          : await getPremiumTeamEligibility(user.id, tx);
 
-      if (
-        premiumEligibility?.isPremiumAdmin &&
-        !premiumEligibility.canCreate
-      ) {
+        if (premiumEligibility?.isPremiumAdmin && !premiumEligibility.canCreate) {
+          throw new Error("PREMIUM_TEAM_LIMIT_REACHED");
+        }
+
+        const grantPremium = premiumEligibility?.canCreate ?? false;
+
+        return tx.team.create({
+          data: {
+            name: team,
+            ...(grantUnlimited
+              ? {
+                plan: "datarooms-unlimited",
+                limits: structuredClone(DATAROOMS_UNLIMITED_PLAN_LIMITS),
+              }
+              : grantPremium
+                ? {
+                  plan: "datarooms-premium",
+                  limits: structuredClone(DATAROOMS_PREMIUM_PLAN_LIMITS),
+                }
+                : {}),
+            users: {
+              create: {
+                userId: user.id,
+                role: "ADMIN",
+              },
+            },
+          },
+          include: {
+            users: true,
+          },
+        });
+      }, {
+        isolationLevel: "Serializable" as any
+      });
+
+      return res.status(201).json(newTeam);
+    } catch (error: any) {
+      if (error?.message === "PREMIUM_TEAM_LIMIT_REACHED") {
         return res
           .status(403)
           .json(
             `You have reached the limit of ${PREMIUM_TEAM_LIMIT} teams for your plan.`,
           );
       }
-
-      const grantPremium = premiumEligibility?.canCreate ?? false;
-
-      const newTeam = await prisma.team.create({
-        data: {
-          name: team,
-          ...(grantUnlimited
-            ? {
-                plan: "datarooms-unlimited",
-                limits: structuredClone(DATAROOMS_UNLIMITED_PLAN_LIMITS),
-              }
-            : grantPremium
-              ? {
-                  plan: "datarooms-premium",
-                  limits: structuredClone(DATAROOMS_PREMIUM_PLAN_LIMITS),
-                }
-              : {}),
-          users: {
-            create: {
-              userId: user.id,
-              role: "ADMIN",
-            },
-          },
-        },
-        include: {
-          users: true,
-        },
-      });
-
-      return res.status(201).json(newTeam);
-    } catch (error) {
       log({
         message: `Failed to create team "${team}" for user: _${user.id}_. \n\n*Error*: \n\n ${error}`,
         type: "error",

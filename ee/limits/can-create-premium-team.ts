@@ -1,14 +1,21 @@
 import prisma from "@/lib/prisma";
 
+import type { PrismaClient } from "@prisma/client";
+
 export const PREMIUM_TEAM_LIMIT = 5;
 
 const PREMIUM_PLANS = ["datarooms-premium"];
 
-export async function getPremiumTeamEligibility(userId: string): Promise<{
+type PrismaTx = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
+
+export async function getPremiumTeamEligibility(
+  userId: string,
+  tx: PrismaClient | PrismaTx = prisma as any,
+): Promise<{
   isPremiumAdmin: boolean;
   canCreate: boolean;
 }> {
-  const adminTeams = await prisma.userTeam.findMany({
+  const adminTeams = await tx.userTeam.findMany({
     where: {
       userId,
       role: "ADMIN",
@@ -23,8 +30,8 @@ export async function getPremiumTeamEligibility(userId: string): Promise<{
     },
   });
 
-  const isPremiumAdmin = adminTeams.some((member) =>
-    PREMIUM_PLANS.some((plan) => member.team.plan.includes(plan)),
+  const isPremiumAdmin = adminTeams.some((member: any) =>
+    PREMIUM_PLANS.includes(member.team.plan)
   );
 
   return {

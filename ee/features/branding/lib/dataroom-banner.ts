@@ -26,12 +26,14 @@ function getUrl(path: string): URL | null {
 }
 
 function getYouTubeId(url: URL): string | null {
-  if (url.hostname.includes("youtu.be")) {
+  const hostname = url.hostname.toLowerCase();
+
+  if (hostname === "youtu.be") {
     const id = url.pathname.split("/").filter(Boolean)[0];
     return id || null;
   }
 
-  if (url.hostname.includes("youtube.com")) {
+  if (hostname === "youtube.com" || hostname.endsWith(".youtube.com")) {
     const shortId = url.searchParams.get("v");
     if (shortId) return shortId;
 
@@ -62,12 +64,12 @@ export function classifyDataroomBanner(
     }
   }
 
-  const lower = trimmed.toLowerCase();
-  if (VIDEO_EXTENSIONS.some((ext) => lower.includes(ext))) {
+  const path = (url?.pathname ?? trimmed.split(/[?#]/, 1)[0]).toLowerCase();
+  if (VIDEO_EXTENSIONS.some((ext) => path.endsWith(ext))) {
     return { kind: "video", src: trimmed };
   }
 
-  if (IMAGE_EXTENSIONS.some((ext) => lower.includes(ext))) {
+  if (IMAGE_EXTENSIONS.some((ext) => path.endsWith(ext))) {
     return { kind: "image", src: trimmed };
   }
 
