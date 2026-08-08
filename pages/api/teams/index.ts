@@ -103,66 +103,80 @@ export default async function handle(
 
     const user = session.user as CustomUser;
 
-    try {
-      const newTeam = await prisma.$transaction(async (tx) => {
-        const grantUnlimited = await canCreateUnlimitedTeam(user.id, tx);
+    let retries = 0;
+    const MAX_RETRIES = 5;
 
-        // Datarooms-premium admins can provision their own teams (same
-        // principle as datarooms-unlimited), but are capped at
-        // PREMIUM_TEAM_LIMIT teams. Unlimited takes precedence.
-        const premiumEligibility = grantUnlimited
-          ? null
-          : await getPremiumTeamEligibility(user.id, tx);
+    while (true) {
+      try {
+        const newTeam = await prisma.$transaction(async (tx) => {
+          const grantUnlimited = await canCreateUnlimitedTeam(user.id, tx);
 
-        if (premiumEligibility?.isPremiumAdmin && !premiumEligibility.canCreate) {
-          throw new Error("PREMIUM_TEAM_LIMIT_REACHED");
-        }
+          // Datarooms-premium admins can provision their own teams (same
+          // principle as datarooms-unlimited), but are capped at
+          // PREMIUM_TEAM_LIMIT teams. Unlimited takes precedence.
+          const premiumEligibility = grantUnlimited
+            ? null
+            : await getPremiumTeamEligibility(user.id, tx);
 
-        const grantPremium = premiumEligibility?.canCreate ?? false;
+          if (premiumEligibility?.isPremiumAdmin && !premiumEligibility.canCreate) {
+            throw new Error("PREMIUM_TEAM_LIMIT_REACHED");
+          }
 
-        return tx.team.create({
-          data: {
-            name: team,
-            ...(grantUnlimited
-              ? {
-                plan: "datarooms-unlimited",
-                limits: structuredClone(DATAROOMS_UNLIMITED_PLAN_LIMITS),
-              }
-              : grantPremium
+          const grantPremium = premiumEligibility?.canCreate ?? false;
+
+          return tx.team.create({
+            data: {
+              name: team,
+              ...(grantUnlimited
                 ? {
-                  plan: "datarooms-premium",
-                  limits: structuredClone(DATAROOMS_PREMIUM_PLAN_LIMITS),
+                  plan: "datarooms-unlimited",
+                  limits: structuredClone(DATAROOMS_UNLIMITED_PLAN_LIMITS),
                 }
-                : {}),
-            users: {
-              create: {
-                userId: user.id,
-                role: "ADMIN",
+                : grantPremium
+                  ? {
+                    plan: "datarooms-premium",
+                    limits: structuredClone(DATAROOMS_PREMIUM_PLAN_LIMITS),
+                  }
+                  : {}),
+              users: {
+                create: {
+                  userId: user.id,
+                  role: "ADMIN",
+                },
               },
             },
-          },
-          include: {
-            users: true,
-          },
+            include: {
+              users: true,
+            },
+          });
+        }, {
+          isolationLevel: "Serializable" as any
         });
-      }, {
-        isolationLevel: "Serializable" as any
-      });
 
-      return res.status(201).json(newTeam);
-    } catch (error: any) {
-      if (error?.message === "PREMIUM_TEAM_LIMIT_REACHED") {
-        return res
-          .status(403)
-          .json(
-            `You have reached the limit of ${PREMIUM_TEAM_LIMIT} teams for your plan.`,
-          );
+        return res.status(201).json(newTeam);
+      } catch (error: any) {
+        if (error?.code === "P2034" && retries < MAX_RETRIES) {
+          retries++;
+          // Bounded exponential backoff with jitter
+          const delay = Math.min(100 * Math.pow(2, retries), 1000) + Math.random() * 50;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+
+        if (error?.message === "PREMIUM_TEAM_LIMIT_REACHED") {
+          return res
+            .status(403)
+            .json(
+              `You have reached the limit of ${PREMIUM_TEAM_LIMIT} teams for your plan.`,
+            );
+        }
+        log({
+          message: `Failed to create team "${team}" for user: _${user.id}_. \n\n*Error*: \n\n ${error}`,
+          type: "error",
+        });
+        errorhandler(error, res);
+        return; // Ensure the function completes if errorhandler doesn't perfectly throw/end
       }
-      log({
-        message: `Failed to create team "${team}" for user: _${user.id}_. \n\n*Error*: \n\n ${error}`,
-        type: "error",
-      });
-      errorhandler(error, res);
     }
   } else {
     res.setHeader("Allow", ["GET", "POST"]);
