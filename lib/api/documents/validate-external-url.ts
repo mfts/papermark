@@ -96,11 +96,20 @@ export async function validateExternalDocumentUrl({
               type: "error",
               mention: true,
             });
-            throw new Error("This URL is not allowed");
+            throw new PapermarkApiError(
+              "unprocessable_entity",
+              "This URL is not allowed",
+            );
           }
         }
       }
     } catch (error) {
+      // A blocked-keyword rejection is a deliberate verdict, not a parse
+      // failure - let it through instead of relabelling it as a bad URL.
+      if (error instanceof PapermarkApiError) {
+        throw error;
+      }
+
       console.error("[validateExternalDocumentUrl] Link URL check failed", {
         teamId,
         url: describeUrlForLog(key),
