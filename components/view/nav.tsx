@@ -148,7 +148,7 @@ export default function Nav({
       case "custom":
         return (
           <img
-            className="h-16 w-36 object-contain"
+            className="h-10 w-28 object-contain sm:h-12 sm:w-32"
             src={resolvedBrandLogo.src}
             alt="Logo"
           />

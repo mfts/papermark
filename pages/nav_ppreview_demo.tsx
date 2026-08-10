@@ -26,7 +26,7 @@ export default function ViewPage() {
       case "custom":
         return (
           <img
-            className="w-full object-contain"
+            className="h-10 w-28 object-contain sm:h-12 sm:w-32"
             src={resolvedBrandLogo.src}
             alt="Logo"
           />
@@ -73,7 +73,7 @@ export default function ViewPage() {
             <div className="flex flex-1 items-stretch justify-start">
               <div
                 className={cn(
-                  "relative flex h-16 flex-shrink-0 items-center overflow-y-hidden",
+                  "relative flex h-16 flex-shrink-0 items-center",
                   resolvedBrandLogo.kind !== "none" && "w-36",
                 )}
               >
