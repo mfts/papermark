@@ -3,16 +3,20 @@
 # Brings up the services Papermark previously required you to rent from a
 # third party:
 #
+#   * app      — the Papermark server itself (build + migrate + serve)
 #   * postgres — the application database (replaces Vercel Postgres / Neon)
 #   * minio    — S3-compatible blob storage (replaces AWS S3 / Vercel Blob)
 #   * redis    — sessions, login codes, rate limits, upload locks
 #   * redis-http — Upstash-compatible REST facade in front of redis
 #
-# Usage:
-#   docker compose up -d
-#   cp .env.example .env      # the defaults already point at these containers
-#   npm run dev:prisma
-#   npm run dev
+# Usage — full stack on a server:
+#   cp .env.example .env      # edit the URLs and secrets for your domain
+#   docker compose up -d --build
+#
+# Usage — infrastructure only, app from `npm run dev`:
+#   docker compose up -d postgres minio redis redis-http
+#   cp .env.example .env
+#   npm run dev:prisma && npm run dev
 #
 # See docs/self-hosting.md for the full walkthrough, including which services
 # are still external and how to move this setup to a real server.
@@ -20,6 +24,46 @@
 name: papermark
 
 services:
+  # The Papermark app itself. Started by default alongside its dependencies;
+  # for local development run `docker compose up -d postgres minio redis
+  # redis-http` instead and use `npm run dev` against them.
+  app:
+    build:
+      context: .
+      args:
+        # Inlined into the client bundle at build time. Change any of these and
+        # you must rebuild: `docker compose up -d --build app`.
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
+        NEXT_PUBLIC_MARKETING_URL: ${NEXT_PUBLIC_MARKETING_URL:-http://localhost:3000}
+        NEXT_PUBLIC_APP_BASE_HOST: ${NEXT_PUBLIC_APP_BASE_HOST:-localhost}
+        NEXT_PUBLIC_UPLOAD_TRANSPORT: ${NEXT_PUBLIC_UPLOAD_TRANSPORT:-s3}
+        NEXT_PUBLIC_HANKO_TENANT_ID: ${NEXT_PUBLIC_HANKO_TENANT_ID:-add-your-hanko-tenant-id}
+        NEXT_PUBLIC_WEBHOOK_BASE_URL: ${NEXT_PUBLIC_WEBHOOK_BASE_URL:-}
+        NEXT_PUBLIC_WEBHOOK_BASE_HOST: ${NEXT_PUBLIC_WEBHOOK_BASE_HOST:-}
+        NEXT_PRIVATE_UPLOAD_ENDPOINT: ${NEXT_PRIVATE_UPLOAD_ENDPOINT:-http://localhost:9000}
+        NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST: ${NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST:-}
+    container_name: papermark-app
+    restart: unless-stopped
+    # Everything else comes from .env at runtime.
+    env_file:
+      - .env
+    environment:
+      # Inside the compose network the app reaches its dependencies by service
+      # name, overriding the localhost defaults meant for `npm run dev`.
+      POSTGRES_PRISMA_URL: postgresql://${POSTGRES_USER:-papermark}:${POSTGRES_PASSWORD:-papermark}@postgres:5432/${POSTGRES_DB:-papermark}?schema=public
+      POSTGRES_PRISMA_URL_NON_POOLING: postgresql://${POSTGRES_USER:-papermark}:${POSTGRES_PASSWORD:-papermark}@postgres:5432/${POSTGRES_DB:-papermark}?schema=public
+      UPSTASH_REDIS_REST_URL: http://redis-http:80
+      UPSTASH_REDIS_REST_LOCKER_URL: http://redis-http:80
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      redis-http:
+        condition: service_started
+
   postgres:
     image: postgres:16-alpine
     container_name: papermark-postgres

@@ -21,6 +21,7 @@ one costs you if you leave it unconfigured.
 - [Port conflicts](#port-conflicts)
 - [Using managed providers instead](#using-managed-providers-instead)
 - [What stays external](#what-stays-external)
+- [Deploying to a server](#deploying-to-a-server)
 - [Running in production](#running-in-production)
 - [Troubleshooting](#troubleshooting)
 
@@ -339,6 +340,66 @@ Two smaller features still reach for Vercel Blob regardless of the public
 bucket: visit-report exports (`lib/trigger/export-visits.ts`) and link
 bulk-import files (`lib/api/links/bulk-import.ts`). Both fail closed and
 neither blocks normal document sharing.
+
+---
+
+## Deploying to a server
+
+The compose file can run the whole stack, app included, so a server only needs
+Docker and a clone of this repository.
+
+```shell
+git clone git@github.com:rebasedaily/papermark.git
+cd papermark
+cp .env.example .env
+```
+
+Edit `.env` before starting — at minimum:
+
+| Variable                                                                    | Set it to                                                                                                              |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_BASE_URL`                                                      | `https://papermark.example.com`                                                                                        |
+| `NEXT_PUBLIC_MARKETING_URL`                                                 | the same URL                                                                                                           |
+| `NEXT_PUBLIC_APP_BASE_HOST`                                                 | `papermark.example.com`                                                                                                |
+| `NEXTAUTH_URL`                                                              | the same URL                                                                                                           |
+| `NEXT_PRIVATE_UPLOAD_ENDPOINT`                                              | `https://storage.example.com` — must be reachable **from the browser**, since uploads and downloads use presigned URLs |
+| `NEXTAUTH_SECRET`, `INTERNAL_API_KEY`, `NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY` | fresh values from `openssl rand -hex 32`                                                                               |
+| `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`                                   | real credentials, matched by `NEXT_PRIVATE_UPLOAD_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY`                                |
+| `REDIS_REST_TOKEN`                                                          | a fresh random value                                                                                                   |
+| `RESEND_API_KEY`, `RESEND_FROM_EMAIL`                                       | your Resend key and a sender on a domain you have verified                                                             |
+
+Then bring everything up:
+
+```shell
+docker compose up -d --build
+```
+
+The app container applies pending database migrations before it starts serving,
+so there is no separate migrate step.
+
+### Things worth knowing
+
+**`NEXT_PUBLIC_*` values are baked in at build time.** Next inlines them into the
+client bundle, so changing any of them means rebuilding:
+
+```shell
+docker compose up -d --build app
+```
+
+**MinIO has to be reachable from the browser.** Documents are uploaded and
+downloaded directly against presigned S3 URLs, so `NEXT_PRIVATE_UPLOAD_ENDPOINT`
+cannot be an internal hostname. Put a reverse proxy in front of the MinIO
+container on its own subdomain with TLS. Brand assets do not have this
+constraint — they are proxied through the app.
+
+**Do not publish the data ports.** Postgres, Redis, and the Redis REST facade
+should not be exposed to the internet. Drop their `ports:` mappings, or bind
+them to `127.0.0.1`, and let the containers talk over the compose network.
+
+**Put TLS in front of the app.** The `app` service speaks plain HTTP on port 3000. Terminate TLS with Caddy, nginx, or Traefik and proxy to it.
+
+**Back up the volumes.** `papermark-postgres` and `papermark-minio` hold all
+your data.
 
 ---
 
