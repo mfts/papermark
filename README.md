@@ -27,7 +27,7 @@ Papermark is the open-source document-sharing alternative to DocSend, featuring 
 - **Shareable Links:** Share your documents securely by sending a custom link.
 - **Custom Branding:** Add a custom domain and your own branding.
 - **Analytics:** Gain insights through document tracking and soon page-by-page analytics.
-- **Self-hosted, Open-source:** Host it yourself and customize it as needed.
+- **Self-hosted, Open-source:** Host it yourself and customize it as needed — `docker compose up` gives you the database and blob storage, no third-party accounts needed.
 
 ## Demo
 
@@ -41,6 +41,7 @@ Papermark is the open-source document-sharing alternative to DocSend, featuring 
 - [shadcn/ui](https://ui.shadcn.com) - UI Components
 - [Prisma](https://prisma.io) - ORM [![Made with Prisma](https://made-with.prisma.io/dark.svg)](https://prisma.io)
 - [PostgreSQL](https://www.postgresql.org/) - Database
+- [MinIO](https://min.io/) - S3-compatible blob storage
 - [NextAuth.js](https://next-auth.js.org/) – Authentication
 - [Tinybird](https://tinybird.co) – Analytics
 - [Resend](https://resend.com) – Email
@@ -53,10 +54,21 @@ Papermark is the open-source document-sharing alternative to DocSend, featuring 
 
 Here's what you need to run Papermark:
 
-- Node.js (version >= 18.17.0)
-- PostgreSQL Database
-- Blob storage (currently [AWS S3](https://aws.amazon.com/s3/) or [Vercel Blob](https://vercel.com/storage/blob))
-- [Resend](https://resend.com) (for sending emails)
+- Node.js (version >= 24)
+- Docker with Compose v2 — runs the database, blob storage, and Redis locally
+
+The included `docker-compose.yml` provisions everything Papermark needs to
+store data, so no third-party accounts are required to get started:
+
+| Service             | What it provides                         | Replaces                        |
+| ------------------- | ---------------------------------------- | ------------------------------- |
+| PostgreSQL 16       | Application database                     | Vercel Postgres, Neon, Supabase |
+| MinIO               | S3-compatible blob storage for documents | AWS S3, Vercel Blob             |
+| Redis + REST facade | Sign-in codes, rate limits, upload locks | Upstash Redis                   |
+
+Prefer managed services? Every one of these can be swapped for a hosted
+provider by changing environment variables — see
+[docs/self-hosting.md](docs/self-hosting.md).
 
 ### 1. Clone the repository
 
@@ -71,27 +83,54 @@ cd papermark
 npm install
 ```
 
-### 3. Copy the environment variables to `.env` and change the values
+### 3. Start the database, blob storage, and Redis
+
+```shell
+docker compose up -d
+```
+
+This also creates the storage buckets and the Prisma shadow database. Re-running
+it is safe.
+
+### 4. Copy the environment variables to `.env`
 
 ```shell
 cp .env.example .env
 ```
 
-### 4. Initialize the database
+The database, storage, and Redis values already point at the containers from
+step 3, so the app runs as-is. Replace `NEXTAUTH_SECRET`, `INTERNAL_API_KEY`,
+`NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY`, and the MinIO credentials with real
+secrets before letting anyone else reach your instance.
+
+### 5. Initialize the database
 
 ```shell
 npm run dev:prisma
 ```
 
-### 5. Run the dev server
+### 6. Run the dev server
 
 ```shell
 npm run dev
 ```
 
-### 6. Open the app in your browser
+### 7. Open the app in your browser
 
-Visit [http://localhost:3000](http://localhost:3000) in your browser.
+Visit [http://localhost:3000](http://localhost:3000) in your browser. The MinIO
+console is at [http://localhost:9001](http://localhost:9001)
+(`papermark` / `papermark-secret`).
+
+> **Signing in.** Papermark emails a login code, so email sign-in needs a
+> [Resend](https://resend.com) API key. Without one, set `GOOGLE_CLIENT_ID` and
+> `GOOGLE_CLIENT_SECRET` and sign in with Google instead.
+
+### Self-hosting
+
+[docs/self-hosting.md](docs/self-hosting.md) covers the full deployment story:
+what each container does, how to swap in managed providers, which integrations
+remain external and what breaks without them, production hardening, and
+troubleshooting.
 
 ## Tinybird Instructions
 

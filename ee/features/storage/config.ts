@@ -8,6 +8,7 @@ export interface StorageConfig {
   accessKeyId: string;
   secretAccessKey: string;
   endpoint?: string;
+  forcePathStyle?: boolean;
   distributionHost?: string;
   advancedDistributionHost?: string;
   distributionKeyId?: string;
@@ -78,6 +79,11 @@ export function getStorageConfig(storageRegion?: string): StorageConfig {
     accessKeyId: getAccessKeyId(),
     secretAccessKey: getSecretAccessKey(),
     endpoint: process.env[`NEXT_PRIVATE_UPLOAD_ENDPOINT${suffix}`],
+    // S3-compatible servers (MinIO, Ceph, Garage, …) generally address buckets
+    // as `<endpoint>/<bucket>/<key>` rather than `<bucket>.<endpoint>/<key>`,
+    // which is what the AWS SDK defaults to. Real S3 ignores this flag.
+    forcePathStyle:
+      process.env[`NEXT_PRIVATE_UPLOAD_FORCE_PATH_STYLE${suffix}`] === "true",
     distributionHost:
       process.env[`NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST${suffix}`],
     advancedDistributionHost:

@@ -427,6 +427,27 @@ function prepareRemotePatterns() {
     });
   }
 
+  // Self-hosted / S3-compatible storage (e.g. the MinIO container in
+  // docker-compose.yml). Without a CDN in front of it, presigned URLs point
+  // straight at the S3 endpoint, so next/image needs that origin — including
+  // its port, and http:// for local development — on the allow-list.
+  for (const endpoint of [
+    process.env.NEXT_PRIVATE_UPLOAD_ENDPOINT,
+    process.env.NEXT_PRIVATE_UPLOAD_ENDPOINT_US,
+  ]) {
+    if (!endpoint) continue;
+    try {
+      const { protocol, hostname, port } = new URL(endpoint);
+      patterns.push({
+        protocol: protocol.replace(":", ""),
+        hostname,
+        ...(port ? { port } : {}),
+      });
+    } catch {
+      // Ignore malformed endpoint values rather than failing the build.
+    }
+  }
+
   // US region patterns
   if (process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST_US) {
     patterns.push({
