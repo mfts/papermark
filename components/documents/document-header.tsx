@@ -66,6 +66,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 
 import PlanBadge from "../billing/plan-badge";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
@@ -135,6 +136,7 @@ export default function DocumentHeader({
   const { isFeatureEnabled } = useFeatureFlags();
   const isRedactionEnabled = isFeatureEnabled("redaction");
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
+  const [nameDraft, setNameDraft] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [orientationLoading, setOrientationLoading] = useState<boolean>(false);
@@ -149,8 +151,8 @@ export default function DocumentHeader({
   const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
   const [exportModalOpen, setExportModalOpen] = useState<boolean>(false);
   const [aiDialogOpen, setAiDialogOpen] = useState<boolean>(false);
-  const nameRef = useRef<HTMLHeadingElement>(null);
-  const enterPressedRef = useRef<boolean>(false);
+  const skipNameSubmitRef = useRef<boolean>(false);
+  const savingNameRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const actionRows: React.ReactNode[][] = [];
@@ -199,51 +201,146 @@ export default function DocumentHeader({
     }
   }, [addDataRoomOpen, addDocumentVersion]);
 
-  const handleNameSubmit = async () => {
-    if (enterPressedRef.current) {
-      enterPressedRef.current = false;
-      return;
-    }
-    if (nameRef.current && isEditingName) {
-      const newName = nameRef.current.innerText;
+  const startEditingName = () => {
+    skipNameSubmitRef.current = false;
+    setNameDraft(prismaDocument.name);
+    setIsEditingName(true);
+  };
 
-      if (newName !== prismaDocument!.name) {
-        const response = await fetch(
-          `/api/teams/${teamId}/documents/${prismaDocument!.id}/update-name`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: newName,
-            }),
-          },
-        );
+  const refreshDocumentNameCaches = (newName: string) => {
+    const encodedDocumentId = encodeURIComponent(prismaDocument.id);
 
-        if (response.ok) {
-          const { message } = await response.json();
-          toast.success(message);
-        } else {
-          const { message } = await response.json();
-          toast.error(message);
-        }
-      }
-      setIsEditingName(false);
+    mutate(
+      `/api/teams/${teamId}/documents/${encodedDocumentId}`,
+      (current: DocumentWithVersion | undefined) =>
+        current ? { ...current, name: newName } : current,
+      { revalidate: true },
+    );
+    mutate(
+      `/api/teams/${teamId}/documents/${encodedDocumentId}/overview`,
+      (current: { document?: DocumentWithVersion } | undefined) =>
+        current?.document
+          ? {
+              ...current,
+              document: { ...current.document, name: newName },
+            }
+          : current,
+      { revalidate: true },
+    );
+
+    if (dataroomId && dataroomDocumentId) {
+      mutate(
+        `/api/teams/${teamId}/datarooms/${dataroomId}/documents/${encodeURIComponent(
+          dataroomDocumentId,
+        )}/overview`,
+        (
+          current:
+            | {
+                document?: DocumentWithVersion;
+              }
+            | undefined,
+        ) =>
+          current?.document
+            ? {
+                ...current,
+                document: { ...current.document, name: newName },
+              }
+            : current,
+        { revalidate: true },
+      );
     }
   };
 
-  const preventEnterAndSubmit = (
-    event: React.KeyboardEvent<HTMLHeadingElement>,
-  ) => {
-    if (event.key === "Enter") {
-      event.preventDefault(); // Prevent the default line break
-      setIsEditingName(true);
-      enterPressedRef.current = true;
-      handleNameSubmit(); // Handle the submit
-      if (nameRef.current) {
-        nameRef.current.blur(); // Remove focus from the h2 element
+  const parseErrorMessage = async (response: Response) => {
+    const fallback = "Failed to update document name";
+    const raw = await response.text();
+    if (!raw) return fallback;
+
+    try {
+      const data = JSON.parse(raw) as { error?: string; message?: string };
+      return data.error || data.message || fallback;
+    } catch {
+      return raw;
+    }
+  };
+
+  const handleNameSubmit = async () => {
+    if (!isEditingName || savingNameRef.current) return;
+
+    const newName = nameDraft.trim();
+    if (!newName) {
+      setNameDraft(prismaDocument.name);
+      setIsEditingName(false);
+      toast.error("Document name is required");
+      return;
+    }
+
+    if (newName === prismaDocument.name) {
+      setIsEditingName(false);
+      return;
+    }
+
+    savingNameRef.current = true;
+    setIsEditingName(false);
+
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/documents/${prismaDocument.id}/update-name`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: newName,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        let message = "Document name updated!";
+        try {
+          const data = (await response.json()) as { message?: string };
+          if (data.message) message = data.message;
+        } catch {
+          // keep fallback success message
+        }
+        toast.success(message);
+        refreshDocumentNameCaches(newName);
+      } else {
+        toast.error(await parseErrorMessage(response));
+        setNameDraft(prismaDocument.name);
       }
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update document name",
+      );
+      setNameDraft(prismaDocument.name);
+    } finally {
+      savingNameRef.current = false;
+    }
+  };
+
+  const handleNameBlur = () => {
+    if (skipNameSubmitRef.current) {
+      skipNameSubmitRef.current = false;
+      return;
+    }
+    void handleNameSubmit();
+  };
+
+  const handleNameKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      if (event.nativeEvent.isComposing) return;
+      event.preventDefault();
+      void handleNameSubmit();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      skipNameSubmitRef.current = true;
+      setNameDraft(prismaDocument.name);
+      setIsEditingName(false);
     }
   };
 
@@ -621,20 +718,34 @@ export default function DocumentHeader({
           })}
 
           <div className="mt-1 flex min-w-0 flex-col lg:mt-0">
-            <h2
-              className="truncate rounded-md border border-transparent px-1 py-0.5 text-base font-semibold tracking-tight text-foreground duration-200 hover:cursor-text hover:border hover:border-border focus-visible:text-base sm:text-lg sm:focus-visible:text-lg lg:px-3 lg:py-1 lg:text-xl lg:focus-visible:text-xl xl:text-2xl"
-              ref={nameRef}
-              contentEditable={true}
-              onFocus={() => setIsEditingName(true)}
-              onBlur={handleNameSubmit}
-              onKeyDown={preventEnterAndSubmit}
-              title="Click to edit"
-              dangerouslySetInnerHTML={{ __html: prismaDocument.name }}
-            />
-            {isEditingName && (
-              <span className="mt-1 text-xs text-muted-foreground">
-                {`Press <Enter> to save the name.`}
-              </span>
+            {isEditingName ? (
+              <>
+                <Input
+                  autoFocus
+                  value={nameDraft}
+                  onChange={(event) => setNameDraft(event.target.value)}
+                  onFocus={(event) => event.currentTarget.select()}
+                  onBlur={handleNameBlur}
+                  onKeyDown={handleNameKeyDown}
+                  aria-label="Document name"
+                  className="h-auto truncate rounded-md border border-border px-1 py-0.5 text-base font-semibold tracking-tight text-foreground sm:text-lg lg:px-3 lg:py-1 lg:text-xl xl:text-2xl"
+                />
+                <span className="mt-1 text-xs text-muted-foreground">
+                  Press Enter to save, Esc to cancel.
+                </span>
+              </>
+            ) : (
+              <h2 className="min-w-0">
+                <button
+                  type="button"
+                  onClick={startEditingName}
+                  title="Click to edit"
+                  aria-label={`Rename ${prismaDocument.name}`}
+                  className="w-full truncate rounded-md border border-transparent px-1 py-0.5 text-left text-base font-semibold tracking-tight text-foreground duration-200 hover:cursor-text hover:border hover:border-border sm:text-lg lg:px-3 lg:py-1 lg:text-xl xl:text-2xl"
+                >
+                  {prismaDocument.name}
+                </button>
+              </h2>
             )}
           </div>
 

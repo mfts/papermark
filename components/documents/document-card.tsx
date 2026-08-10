@@ -11,6 +11,7 @@ import {
   EyeIcon,
   EyeOffIcon,
   FileIcon,
+  FilePenIcon,
   FolderIcon,
   FolderInputIcon,
   MoreVertical,
@@ -32,6 +33,7 @@ import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
 import { AddToDataroomModal } from "@/components/documents/add-document-to-dataroom-modal";
 import { DocumentPreviewModal } from "@/components/documents/document-preview-modal";
+import { EditDocumentNameModal } from "@/components/documents/edit-document-name-modal";
 import { MoveToFolderModal } from "@/components/documents/move-folder-modal";
 import BarChart from "@/components/shared/icons/bar-chart";
 import { Button } from "@/components/ui/button";
@@ -71,6 +73,7 @@ export default function DocumentsCard({
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
+  const [renameOpen, setRenameOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
   const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
@@ -93,12 +96,12 @@ export default function DocumentsCard({
 
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
-    if (!moveFolderOpen || !addDataroomOpen) {
+    if (!moveFolderOpen && !addDataroomOpen && !renameOpen) {
       setTimeout(() => {
         document.body.style.pointerEvents = "";
       });
     }
-  }, [moveFolderOpen, addDataroomOpen]);
+  }, [moveFolderOpen, addDataroomOpen, renameOpen]);
 
   useEffect(() => {
     function handleClickOutside(event: { target: any }) {
@@ -435,6 +438,15 @@ export default function DocumentsCard({
                 Quick preview
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRenameOpen(true);
+                }}
+              >
+                <FilePenIcon className="mr-2 h-4 w-4" />
+                Rename
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
@@ -481,6 +493,15 @@ export default function DocumentsCard({
           documentIds={[prismaDocument.id]}
           itemName={prismaDocument.name}
           folderParentId={prismaDocument.folderId!}
+        />
+      ) : null}
+
+      {renameOpen ? (
+        <EditDocumentNameModal
+          open={renameOpen}
+          setOpen={setRenameOpen}
+          documentId={prismaDocument.id}
+          documentName={prismaDocument.name}
         />
       ) : null}
 
