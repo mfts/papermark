@@ -1,7 +1,6 @@
 import { NextRouter } from "next/router";
 
 import slugify from "@sindresorhus/slugify";
-import { upload } from "@vercel/blob/client";
 import { transliterate } from "transliteration";
 import bcrypt from "bcryptjs";
 import * as chrono from "chrono-node";
@@ -565,12 +564,28 @@ export const uploadImage = async (
   file: File,
   uploadType: "profile" | "assets" = "assets",
 ) => {
-  const newBlob = await upload(file.name, file, {
-    access: "public",
-    handleUploadUrl: `/api/file/image-upload?type=${uploadType}`,
-  });
+  // Posts the raw file to our own API, which stores it in whichever public
+  // asset backend is configured (S3/MinIO or Vercel Blob) and returns an
+  // absolute, non-expiring URL.
+  const response = await fetch(
+    `/api/file/image-upload?type=${uploadType}&filename=${encodeURIComponent(file.name)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": file.type },
+      body: file,
+    },
+  );
 
-  return newBlob.url;
+  if (!response.ok) {
+    const message = await response
+      .json()
+      .then((body) => body?.error)
+      .catch(() => null);
+    throw new Error(message || "Failed to upload image");
+  }
+
+  const { url } = (await response.json()) as { url: string };
+  return url;
 };
 
 /**

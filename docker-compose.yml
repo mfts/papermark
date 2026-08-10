@@ -80,6 +80,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-papermark-secret}
       UPLOAD_BUCKET: ${NEXT_PRIVATE_UPLOAD_BUCKET:-papermark-documents}
       ARCHIVE_BUCKET: ${NEXT_PRIVATE_ARCHIVE_BUCKET:-papermark-archive}
+      PUBLIC_BUCKET: ${NEXT_PRIVATE_PUBLIC_BUCKET:-papermark-public}
     entrypoint: ["/bin/sh", "/init/create-buckets.sh"]
     volumes:
       - ./docker/minio:/init:ro

@@ -4,6 +4,11 @@ export interface StorageConfig {
   bucket: string;
   advancedBucket?: string;
   archiveBucket: string;
+  /**
+   * Bucket for public assets (brand logos, banners, link preview images).
+   * Optional: when unset, public assets fall back to Vercel Blob.
+   */
+  publicBucket?: string;
   region: string;
   accessKeyId: string;
   secretAccessKey: string;
@@ -75,6 +80,9 @@ export function getStorageConfig(storageRegion?: string): StorageConfig {
     bucket: getBucket(),
     advancedBucket: process.env[`NEXT_PRIVATE_ADVANCED_UPLOAD_BUCKET${suffix}`],
     archiveBucket: getArchiveBucket(),
+    // Deliberately not validated: leaving it unset is the supported way to
+    // keep serving public assets from Vercel Blob.
+    publicBucket: process.env[`NEXT_PRIVATE_PUBLIC_BUCKET${suffix}`],
     region: getRegion(),
     accessKeyId: getAccessKeyId(),
     secretAccessKey: getSecretAccessKey(),

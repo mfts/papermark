@@ -427,6 +427,25 @@ function prepareRemotePatterns() {
     });
   }
 
+  // Public assets (brand logos, banners, link preview images) are served
+  // through /api/assets on this app's own origin. The URLs are stored absolute
+  // because og:image tags and email templates cannot use relative paths, so
+  // next/image needs the app origin allow-listed too.
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    try {
+      const { protocol, hostname, port } = new URL(
+        process.env.NEXT_PUBLIC_BASE_URL,
+      );
+      patterns.push({
+        protocol: protocol.replace(":", ""),
+        hostname,
+        ...(port ? { port } : {}),
+      });
+    } catch {
+      // Ignore malformed values rather than failing the build.
+    }
+  }
+
   // Self-hosted / S3-compatible storage (e.g. the MinIO container in
   // docker-compose.yml). Without a CDN in front of it, presigned URLs point
   // straight at the S3 endpoint, so next/image needs that origin — including

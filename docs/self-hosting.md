@@ -56,8 +56,9 @@ npm install
 docker compose up -d
 ```
 
-This pulls Postgres, MinIO, and Redis, creates the `papermark-documents` and
-`papermark-archive` buckets, and creates the Prisma shadow database. Bucket and
+This pulls Postgres, MinIO, and Redis, creates the `papermark-documents`,
+`papermark-archive`, and `papermark-public` buckets, and creates the Prisma
+shadow database. Bucket and
 database creation are idempotent, so re-running the command is safe.
 
 **2. Create your `.env`.**
@@ -109,7 +110,7 @@ Confirm the buckets were created:
 
 ```shell
 docker compose logs minio-init
-# MinIO buckets ready: papermark-documents, papermark-archive
+# MinIO buckets ready: papermark-documents, papermark-archive, papermark-public
 ```
 
 Confirm the database has Papermark's tables:
@@ -169,6 +170,38 @@ origin, so direct-to-storage uploads work with no extra configuration.
 > **Leave `NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST` empty.** Setting it switches
 > Papermark to CloudFront-signed URLs, which MinIO cannot validate. It is only
 > for deployments that actually put CloudFront in front of S3.
+
+### Public assets
+
+Brand logos, banners, and link preview images are _public_ — they appear on
+share pages that anonymous visitors load, in `og:image` tags that social
+crawlers fetch, and in email templates. That rules out the presigned URLs used
+for documents, which expire.
+
+Rather than exposing a bucket to the internet, Papermark stores them in a
+separate private bucket (`NEXT_PRIVATE_PUBLIC_BUCKET`) and serves them through
+`/api/assets/<prefix>/<name>` on the app's own origin, with a one-year
+immutable cache header. Keys are unique per upload, so the aggressive caching
+is safe.
+
+This means:
+
+- The object store never has to be publicly reachable for assets to work.
+- URLs live on your app domain, so there is no second hostname, TLS
+  certificate, or CORS policy to manage — and any CDN in front of the app
+  caches them for free.
+- Uploads are proxied through the app rather than going direct-to-storage.
+  Assets are capped at 5MB, so this costs very little.
+
+The route is deliberately unauthenticated — crawlers and mail clients have to
+reach it — but it reads only from the public-asset bucket, and keys are
+validated against a strict allow-list, so it cannot be walked into document
+storage.
+
+**Leave `NEXT_PRIVATE_PUBLIC_BUCKET` empty** to keep the previous behaviour and
+store these in Vercel Blob instead. Existing Vercel Blob URLs are absolute and
+stored in the database, so they keep resolving either way — switching needs no
+migration.
 
 ### `redis` and `redis-http`
 
@@ -245,8 +278,10 @@ Papermark boots without any of these. This is what you lose if you skip them:
 For a minimal working instance you need the four containers plus **either**
 Resend **or** Google OAuth so you can log in.
 
-Public assets still going through Vercel Blob is a known gap in full
-self-hosting: document content was migrated to S3, brand assets were not.
+Two smaller features still reach for Vercel Blob regardless of the public
+bucket: visit-report exports (`lib/trigger/export-visits.ts`) and link
+bulk-import files (`lib/api/links/bulk-import.ts`). Both fail closed and
+neither blocks normal document sharing.
 
 ---
 
@@ -272,7 +307,7 @@ browsers, so the endpoint must be publicly resolvable. Put a reverse proxy
 adds that origin to the `next/image` allow-list automatically.
 
 **Create a scoped MinIO user.** Do not ship the root credentials to the app.
-Create a service account limited to the two buckets and use those keys.
+Create a service account limited to the three buckets and use those keys.
 
 **Back up both stores.** The `papermark-postgres` and `papermark-minio` volumes
 hold all of your data. `pg_dump` on a schedule plus `mc mirror` to off-site
@@ -305,6 +340,11 @@ from MinIO.
 Restart `npm run dev`. The `next/image` allow-list is built from
 `NEXT_PRIVATE_UPLOAD_ENDPOINT` at startup, so it does not pick up `.env`
 changes until the server restarts.
+
+**Brand logos 404 or fail to upload**
+Either `NEXT_PRIVATE_PUBLIC_BUCKET` is set but the bucket does not exist (run
+`docker compose up -d minio-init`), or it is empty and `BLOB_READ_WRITE_TOKEN`
+is missing too — the upload route needs one backend or the other.
 
 **Sign-in silently does nothing**
 Either Redis is unreachable (check `docker compose ps redis-http` and the

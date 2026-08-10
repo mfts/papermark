@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { del } from "@vercel/blob";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
@@ -22,6 +21,7 @@ import {
   teamPlanAllowsVisitorLanguage,
 } from "@/lib/billing/team-plan-custom-messaging";
 import { errorhandler } from "@/lib/errorHandler";
+import { deletePublicAsset } from "@/lib/files/public-assets";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -98,11 +98,9 @@ function sanitizeLayoutPayload(input: LayoutFields): LayoutFields {
   return out;
 }
 
-/** Vercel Blob `del` only accepts URLs we uploaded there; skip sentinels & local paths */
+/** Deletes from whichever public asset backend produced the URL; skips sentinels & bundled paths */
 function maybeDeleteBlobAsset(url: string | null | undefined): Promise<void> {
-  if (!url || url === "no-banner") return Promise.resolve();
-  if (url.startsWith("/") || url.startsWith("data:")) return Promise.resolve();
-  return del(url).catch(() => {});
+  return deletePublicAsset(url);
 }
 
 export default async function handle(
