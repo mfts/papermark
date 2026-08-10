@@ -16,6 +16,7 @@ one costs you if you leave it unconfigured.
 - [What runs where](#what-runs-where)
 - [Quick start](#quick-start)
 - [Verifying the setup](#verifying-the-setup)
+- [Signing in without Resend](#signing-in-without-resend)
 - [The containers in detail](#the-containers-in-detail)
 - [Port conflicts](#port-conflicts)
 - [Using managed providers instead](#using-managed-providers-instead)
@@ -132,6 +133,38 @@ The real end-to-end test is uploading a document in the UI and opening its
 share link. If that works, storage, database, and Redis are all wired up.
 
 ---
+
+---
+
+## Signing in without Resend
+
+Papermark emails a login code, so a stock local install cannot log in without a
+`RESEND_API_KEY` or Google OAuth. For local testing you need neither: the code
+is written to Redis _before_ the email is sent, and the send is wrapped in a
+`.catch()`, so a missing key does not break the flow.
+
+Request a code by entering your email on `/login`, then read it back:
+
+```shell
+docker compose exec redis redis-cli --scan --pattern 'login_code:email:*'
+# login_code:email:you@example.com:R0QCF5WF9J
+```
+
+The code is the part after the last colon — type it into the app.
+
+The stored value also contains a ready-made magic link, if you would rather
+skip the code entry entirely:
+
+```shell
+KEY=$(docker compose exec -T redis redis-cli --scan --pattern 'login_code:email:you@example.com:*' | head -1)
+docker compose exec -T redis redis-cli GET "$KEY"
+```
+
+Open the `callbackUrl` from that JSON in your browser and you are signed in.
+
+> The redirect after sign-in may 500 if `QSTASH_TOKEN` is unset — Papermark
+> queues a welcome job there. The session is still created; navigate to
+> `/documents` and carry on.
 
 ## The containers in detail
 
@@ -340,6 +373,16 @@ from MinIO.
 Restart `npm run dev`. The `next/image` allow-list is built from
 `NEXT_PRIVATE_UPLOAD_ENDPOINT` at startup, so it does not pick up `.env`
 changes until the server restarts.
+
+**Every page 500s with `Neither apiKey nor config.authenticator provided`**
+`STRIPE_SECRET_KEY` and `STRIPE_SECRET_KEY_OLD` are empty. Papermark builds its
+Stripe clients at import time and the SDK rejects an empty key, which takes the
+auth routes down with it. The placeholders in `.env.example` are enough — you
+do not need a real Stripe account unless you enable billing.
+
+**Every page 500s with `Please set HANKO_API_KEY...`**
+Same class of problem: `lib/hanko.ts` throws at import time when its two
+variables are empty. Keep the placeholder values from `.env.example`.
 
 **Brand logos 404 or fail to upload**
 Either `NEXT_PRIVATE_PUBLIC_BUCKET` is set but the bucket does not exist (run

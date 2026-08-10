@@ -24,25 +24,36 @@ const uploadConfig = {
   },
 };
 
-// The body is the raw image. Uploads are proxied through this route rather
-// than going direct-to-storage so that the object store never has to be
-// publicly reachable. Assets are capped at 5MB, well under any platform limit.
+// The body is the raw image, so Next's body parser must be off: it decodes
+// unrecognised content types as UTF-8 text, which silently corrupts binary
+// uploads (0x89 in the PNG magic number becomes U+FFFD). Uploads are proxied
+// through this route rather than going direct-to-storage so that the object
+// store never has to be publicly reachable.
 export const config = {
   api: {
-    bodyParser: {
-      sizeLimit: "6mb",
-    },
+    bodyParser: false,
   },
 };
 
-const readRawBody = async (req: NextApiRequest): Promise<Buffer> => {
-  if (Buffer.isBuffer(req.body)) return req.body;
-  if (typeof req.body === "string") return Buffer.from(req.body);
+class PayloadTooLargeError extends Error {}
 
+/** Reads the raw request body, aborting as soon as the limit is exceeded. */
+const readRawBody = async (
+  req: NextApiRequest,
+  maximumSizeInBytes: number,
+): Promise<Buffer> => {
   const chunks: Buffer[] = [];
+  let size = 0;
+
   for await (const chunk of req) {
-    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    size += buffer.length;
+    if (size > maximumSizeInBytes) {
+      throw new PayloadTooLargeError("File too large.");
+    }
+    chunks.push(buffer);
   }
+
   return Buffer.concat(chunks);
 };
 
@@ -82,13 +93,10 @@ export default async function handler(
   const filename = filenameParam || "asset";
 
   try {
-    const body = await readRawBody(req);
+    const body = await readRawBody(req, maximumSizeInBytes);
 
     if (body.length === 0) {
       return res.status(400).json({ error: "Empty file." });
-    }
-    if (body.length > maximumSizeInBytes) {
-      return res.status(413).json({ error: "File too large." });
     }
 
     const url = await putPublicAsset({
@@ -100,6 +108,9 @@ export default async function handler(
 
     return res.status(200).json({ url });
   } catch (error) {
+    if (error instanceof PayloadTooLargeError) {
+      return res.status(413).json({ error: error.message });
+    }
     return res.status(500).json({
       error: error instanceof Error ? error.message : "Upload failed.",
     });
