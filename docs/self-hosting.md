@@ -166,6 +166,30 @@ Open the `callbackUrl` from that JSON in your browser and you are signed in.
 > queues a welcome job there. The session is still created; navigate to
 > `/documents` and carry on.
 
+### Sending email from your own domain
+
+Papermark's default sender addresses are `@papermark.com`, which Resend rejects
+unless your account has verified that domain — so a self-hosted instance must
+override them:
+
+```shell
+RESEND_API_KEY=re_your_key
+RESEND_FROM_EMAIL="Your Company <noreply@yourdomain.com>"
+```
+
+`RESEND_FROM_EMAIL` applies to every outgoing message, including login and 2FA
+codes. Verify the domain in Resend first, or sends fail with a 403.
+
+In development Papermark deliberately routes mail to Resend's sink
+(`delivered@resend.dev`) so local runs cannot email real people. To test real
+delivery to your own address:
+
+```shell
+RESEND_DELIVER_IN_DEV=true
+```
+
+Leave it unset in production — there `NODE_ENV` already disables the sink.
+
 ## The containers in detail
 
 ### `postgres`
@@ -299,7 +323,7 @@ Papermark boots without any of these. This is what you lose if you skip them:
 
 | Service        | Variables                                                  | Without it                                                                                                                                                              |
 | -------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Resend         | `RESEND_API_KEY`                                           | No email at all — email sign-in fails, notifications are dropped. Use Google OAuth to sign in instead.                                                                  |
+| Resend         | `RESEND_API_KEY`, `RESEND_FROM_EMAIL`                      | No email at all — email sign-in fails, notifications are dropped. Use Google OAuth to sign in instead.                                                                  |
 | Vercel Blob    | `BLOB_READ_WRITE_TOKEN`                                    | Custom branding uploads (team and dataroom logos, banners, link preview images) and visit-report exports fail. **Document storage is unaffected** — that uses MinIO/S3. |
 | Tinybird       | `TINYBIRD_TOKEN`                                           | Documents and links work, but analytics pages stay empty.                                                                                                               |
 | Trigger.dev    | `TRIGGER_SECRET_KEY`                                       | Background processing stops: PDF-to-image conversion, bulk downloads, notification fan-out.                                                                             |
