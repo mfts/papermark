@@ -515,144 +515,149 @@ export default function Branding() {
     }
 
     setIsLoading(true);
-    let logoBlobUrl: string | null =
-      logo && logo.startsWith("data:") ? null : logo;
-    if (logo && logo.startsWith("data:")) {
-      const blob = convertDataUrlToFile({ dataUrl: logo });
-      logoBlobUrl = await uploadImage(blob);
-      setLogo(logoBlobUrl);
-    }
+    try {
+      let logoBlobUrl: string | null =
+        logo && logo.startsWith("data:") ? null : logo;
+      if (logo && logo.startsWith("data:")) {
+        const blob = convertDataUrlToFile({ dataUrl: logo });
+        logoBlobUrl = await uploadImage(blob);
+        setLogo(logoBlobUrl);
+      }
 
-    let bannerBlobUrl: string | null =
-      banner && banner.startsWith("data:") ? null : banner;
-    if (banner && banner.startsWith("data:")) {
-      const blob = convertDataUrlToFile({ dataUrl: banner });
-      bannerBlobUrl = await uploadImage(blob);
-      setBanner(bannerBlobUrl);
-    }
+      let bannerBlobUrl: string | null =
+        banner && banner.startsWith("data:") ? null : banner;
+      if (banner && banner.startsWith("data:")) {
+        const blob = convertDataUrlToFile({ dataUrl: banner });
+        bannerBlobUrl = await uploadImage(blob);
+        setBanner(bannerBlobUrl);
+      }
 
-    // Persist Custom Link Preview assets the same way as logo/banner: when the
-    // user is on a tier that can write them and has the toggle on, swap any
-    // data: URL for a uploaded blob URL before sending to the API.
-    let linkPreviewImageUrl: string | null = linkPreviewImage;
-    if (
-      hasBusinessMessagingAccess &&
-      linkPreviewEnabled &&
-      linkPreviewImage &&
-      linkPreviewImage.startsWith("data:")
-    ) {
-      const blob = convertDataUrlToFile({ dataUrl: linkPreviewImage });
-      linkPreviewImageUrl = await uploadImage(blob);
-      setLinkPreviewImage(linkPreviewImageUrl);
-    }
+      // Persist Custom Link Preview assets the same way as logo/banner: when the
+      // user is on a tier that can write them and has the toggle on, swap any
+      // data: URL for a uploaded blob URL before sending to the API.
+      let linkPreviewImageUrl: string | null = linkPreviewImage;
+      if (
+        hasBusinessMessagingAccess &&
+        linkPreviewEnabled &&
+        linkPreviewImage &&
+        linkPreviewImage.startsWith("data:")
+      ) {
+        const blob = convertDataUrlToFile({ dataUrl: linkPreviewImage });
+        linkPreviewImageUrl = await uploadImage(blob);
+        setLinkPreviewImage(linkPreviewImageUrl);
+      }
 
-    let linkPreviewFaviconUrl: string | null = linkPreviewFavicon;
-    if (
-      hasBusinessMessagingAccess &&
-      linkPreviewEnabled &&
-      linkPreviewFavicon &&
-      linkPreviewFavicon.startsWith("data:")
-    ) {
-      const blob = convertDataUrlToFile({ dataUrl: linkPreviewFavicon });
-      linkPreviewFaviconUrl = await uploadImage(blob);
-      setLinkPreviewFavicon(linkPreviewFaviconUrl);
-    }
+      let linkPreviewFaviconUrl: string | null = linkPreviewFavicon;
+      if (
+        hasBusinessMessagingAccess &&
+        linkPreviewEnabled &&
+        linkPreviewFavicon &&
+        linkPreviewFavicon.startsWith("data:")
+      ) {
+        const blob = convertDataUrlToFile({ dataUrl: linkPreviewFavicon });
+        linkPreviewFaviconUrl = await uploadImage(blob);
+        setLinkPreviewFavicon(linkPreviewFaviconUrl);
+      }
 
-    const data = {
-      welcomeMessage: hasBusinessMessagingAccess
-        ? welcomeEnabled
-          ? welcomeMessage.trim() || DEFAULT_WELCOME_MESSAGE
-          : null
-        : ((brand as any)?.welcomeMessage ?? null),
-      brandColor: brandColor,
-      accentColor: accentColor,
-      accentButtonColor: accentButtonColor,
-      applyAccentColorToDataroomView,
-      logo: logoBlobUrl,
-      hideLogo,
-      ctaLabel: hasBusinessMessagingAccess
-        ? ctaEnabled
-          ? ctaLabel.trim() || null
-          : null
-        : ((brand as any)?.ctaLabel ?? null),
-      ctaUrl: hasBusinessMessagingAccess
-        ? ctaEnabled
-          ? ctaUrl.trim() || null
-          : null
-        : ((brand as any)?.ctaUrl ?? null),
-      ...(customPrivacyUrlEnabled && {
-        privacyPolicyUrl: privacyPolicyEnabled
-          ? privacyPolicyUrl.trim() || null
-          : null,
-      }),
-      // Custom Link Preview — only writable when the team plan grants the
-      // Business messaging tier. Otherwise we mirror back what's already
-      // persisted so the API doesn't clear it out from a lower tier.
-      customLinkPreviewEnabled: hasBusinessMessagingAccess
-        ? linkPreviewEnabled
-        : !!(brand as any)?.customLinkPreviewEnabled,
-      linkPreviewTitle: hasBusinessMessagingAccess
-        ? linkPreviewEnabled
-          ? linkPreviewTitle.trim() || null
-          : null
-        : ((brand as any)?.linkPreviewTitle ?? null),
-      linkPreviewDescription: hasBusinessMessagingAccess
-        ? linkPreviewEnabled
-          ? linkPreviewDescription.trim() || null
-          : null
-        : ((brand as any)?.linkPreviewDescription ?? null),
-      linkPreviewImage: hasBusinessMessagingAccess
-        ? linkPreviewEnabled
-          ? linkPreviewImageUrl
-          : null
-        : ((brand as any)?.linkPreviewImage ?? null),
-      linkPreviewFavicon: hasBusinessMessagingAccess
-        ? linkPreviewEnabled
-          ? linkPreviewFaviconUrl
-          : null
-        : ((brand as any)?.linkPreviewFavicon ?? null),
-      // Only include banner if user has dataroom access (Business+)
-      ...(hasDataroomAccess && { banner: bannerBlobUrl }),
-      // Layout fields are only included when the plan can persist them. The
-      // API still re-checks tier and silently drops them otherwise, but
-      // sending less keeps the payload honest.
-      ...(hasLayoutSaveAccess && {
-        cardLayout,
-        showFolderTree,
-        viewerHeaderStyle,
-        hideFolderIconsInMain,
-        viewerLayoutPreset: derivedLayoutPreset,
-      }),
-    };
-
-    const res = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/branding`,
-      {
-        method: brand ? "PUT" : "POST",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    if (res.ok) {
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/branding`);
-      setIsLoading(false);
-      if (hasLayoutSaveAccess) {
-        initialLayoutSnapshotRef.current = {
+      const data = {
+        welcomeMessage: hasBusinessMessagingAccess
+          ? welcomeEnabled
+            ? welcomeMessage.trim() || DEFAULT_WELCOME_MESSAGE
+            : null
+          : ((brand as any)?.welcomeMessage ?? null),
+        brandColor: brandColor,
+        accentColor: accentColor,
+        accentButtonColor: accentButtonColor,
+        applyAccentColorToDataroomView,
+        logo: logoBlobUrl,
+        hideLogo,
+        ctaLabel: hasBusinessMessagingAccess
+          ? ctaEnabled
+            ? ctaLabel.trim() || null
+            : null
+          : ((brand as any)?.ctaLabel ?? null),
+        ctaUrl: hasBusinessMessagingAccess
+          ? ctaEnabled
+            ? ctaUrl.trim() || null
+            : null
+          : ((brand as any)?.ctaUrl ?? null),
+        ...(customPrivacyUrlEnabled && {
+          privacyPolicyUrl: privacyPolicyEnabled
+            ? privacyPolicyUrl.trim() || null
+            : null,
+        }),
+        // Custom Link Preview — only writable when the team plan grants the
+        // Business messaging tier. Otherwise we mirror back what's already
+        // persisted so the API doesn't clear it out from a lower tier.
+        customLinkPreviewEnabled: hasBusinessMessagingAccess
+          ? linkPreviewEnabled
+          : !!(brand as any)?.customLinkPreviewEnabled,
+        linkPreviewTitle: hasBusinessMessagingAccess
+          ? linkPreviewEnabled
+            ? linkPreviewTitle.trim() || null
+            : null
+          : ((brand as any)?.linkPreviewTitle ?? null),
+        linkPreviewDescription: hasBusinessMessagingAccess
+          ? linkPreviewEnabled
+            ? linkPreviewDescription.trim() || null
+            : null
+          : ((brand as any)?.linkPreviewDescription ?? null),
+        linkPreviewImage: hasBusinessMessagingAccess
+          ? linkPreviewEnabled
+            ? linkPreviewImageUrl
+            : null
+          : ((brand as any)?.linkPreviewImage ?? null),
+        linkPreviewFavicon: hasBusinessMessagingAccess
+          ? linkPreviewEnabled
+            ? linkPreviewFaviconUrl
+            : null
+          : ((brand as any)?.linkPreviewFavicon ?? null),
+        // Only include banner if user has dataroom access (Business+)
+        ...(hasDataroomAccess && { banner: bannerBlobUrl }),
+        // Layout fields are only included when the plan can persist them. The
+        // API still re-checks tier and silently drops them otherwise, but
+        // sending less keeps the payload honest.
+        ...(hasLayoutSaveAccess && {
           cardLayout,
           showFolderTree,
           viewerHeaderStyle,
           hideFolderIconsInMain,
-        };
+          viewerLayoutPreset: derivedLayoutPreset,
+        }),
+      };
+
+      const res = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/branding`,
+        {
+          method: brand ? "PUT" : "POST",
+          body: JSON.stringify(data),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (res.ok) {
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/branding`);
+        if (hasLayoutSaveAccess) {
+          initialLayoutSnapshotRef.current = {
+            cardLayout,
+            showFolderTree,
+            viewerHeaderStyle,
+            hideFolderIconsInMain,
+          };
+        }
+        toast.success("Branding updated successfully");
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Save error:", errorData);
+        toast.error(errorData.message || "Failed to save branding");
       }
-      toast.success("Branding updated successfully");
-    } else {
+    } catch (error) {
+      console.error("Save branding failed:", error);
+      toast.error("Failed to upload branding assets. Please try again.");
+    } finally {
       setIsLoading(false);
-      const errorData = await res.json().catch(() => ({}));
-      console.error("Save error:", errorData);
-      toast.error(errorData.message || "Failed to save branding");
     }
   };
 
