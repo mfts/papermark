@@ -46,13 +46,15 @@ export type DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE = {
         file: string | null;
         pageNumber: string;
         embeddedLinks: string[];
-        pageLinks: {
-          href: string;
-          coords: string;
-          isInternal?: boolean;
-          targetPage?: number;
-        }[];
-        metadata: { width: number; height: number; scaleFactor: number };
+        pageLinks?:
+          | {
+              href: string;
+              coords: string;
+              isInternal?: boolean;
+              targetPage?: number;
+            }[]
+          | null;
+        metadata: { width: number; height: number; scaleFactor: number } | null;
       }[]
     | null;
   sheetData?: SheetData[] | null;

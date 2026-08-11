@@ -87,8 +87,8 @@ export default function PagesVerticalViewer({
     file: string | null;
     pageNumber: string;
     embeddedLinks: string[];
-    pageLinks: PageLink[];
-    metadata: { width: number; height: number; scaleFactor: number };
+    pageLinks?: PageLink[] | null;
+    metadata: { width: number; height: number; scaleFactor: number } | null;
   }[];
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
@@ -1012,11 +1012,11 @@ export default function PagesVerticalViewer({
                           {(() => {
                             if (!page.pageLinks) return null;
                             const { links, media } = partitionPageLinks(
-                              page.pageLinks as PageLink[],
+                              page.pageLinks,
                             );
                             const displayScale = getScaleFactor({
-                              naturalHeight: page.metadata.height,
-                              scaleFactor: page.metadata.scaleFactor,
+                              naturalHeight: page.metadata?.height ?? 0,
+                              scaleFactor: page.metadata?.scaleFactor ?? 1,
                               pageIndex: index,
                             });
                             // Vertical layout uses px-4/md:px-8 outer padding

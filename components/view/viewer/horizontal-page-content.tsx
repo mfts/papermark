@@ -16,8 +16,8 @@ export type HorizontalViewerPage = {
   file: string | null;
   pageNumber: string;
   embeddedLinks: string[];
-  pageLinks: PageLink[];
-  metadata: { width: number; height: number; scaleFactor: number };
+  pageLinks?: PageLink[] | null;
+  metadata: { width: number; height: number; scaleFactor: number } | null;
 };
 
 type PageDimensions = Record<number, { width: number; height: number }>;
@@ -64,15 +64,19 @@ export function HorizontalPageContent({
   ) => void;
   onLinkClick: (href: string, event: MouseEvent<HTMLAreaElement>) => void;
 }) {
+  // 0 makes getContainedImageRect fall back to the full element box.
+  const aspectRatio =
+    page.metadata && page.metadata.height > 0
+      ? page.metadata.width / page.metadata.height
+      : 0;
+
   const watermarkBox = imageDimensions[index];
   const watermarkRect =
     watermarkConfig && watermarkBox
       ? getContainedImageRect(
           watermarkBox.width,
           watermarkBox.height,
-          page.metadata.height > 0
-            ? page.metadata.width / page.metadata.height
-            : 0,
+          aspectRatio,
         )
       : null;
 
@@ -133,12 +137,10 @@ export function HorizontalPageContent({
 
       {(() => {
         if (!page.pageLinks) return null;
-        const { links, media } = partitionPageLinks(
-          page.pageLinks as PageLink[],
-        );
+        const { links, media } = partitionPageLinks(page.pageLinks);
         const displayScale = getScaleFactor({
-          naturalHeight: page.metadata.height,
-          scaleFactor: page.metadata.scaleFactor,
+          naturalHeight: page.metadata?.height ?? 0,
+          scaleFactor: page.metadata?.scaleFactor ?? 1,
         });
 
         // In fullscreen the <img> is given an explicit height plus
@@ -147,20 +149,12 @@ export function HorizontalPageContent({
         // watermark) so GIF/video overlays scale and sit on the image instead
         // of drifting into the letterbox bands and mis-scaling off the box.
         const mediaBox = imageDimensions[index];
-        const mediaAspectRatio =
-          page.metadata.height > 0
-            ? page.metadata.width / page.metadata.height
-            : 0;
         const mediaRect = mediaBox
-          ? getContainedImageRect(
-              mediaBox.width,
-              mediaBox.height,
-              mediaAspectRatio,
-            )
+          ? getContainedImageRect(mediaBox.width, mediaBox.height, aspectRatio)
           : null;
         const mediaScale =
-          mediaRect && page.metadata.height > 0
-            ? (page.metadata.scaleFactor * mediaRect.height) /
+          mediaRect && page.metadata && page.metadata.height > 0
+            ? ((page.metadata.scaleFactor ?? 1) * mediaRect.height) /
               page.metadata.height
             : displayScale;
         const mediaLeftOffset = mediaRect ? mediaRect.left : 0;
