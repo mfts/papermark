@@ -306,6 +306,23 @@ export const addSignedUrls: NotionAPI["addSignedUrls"] = async ({
   }
 };
 
+const NOTION_APP_HOSTNAMES = new Set([
+  "www.notion.so",
+  "notion.so",
+  "www.notion.com",
+  "notion.com",
+  "app.notion.com",
+]);
+
+// Matches getNotionPageIdFromSlug: only single-label *.notion.site hosts.
+const NOTION_SITE_HOSTNAME_RE = /^[^.]+\.notion\.site$/;
+
+export function isStandardNotionHostname(hostname: string): boolean {
+  return (
+    NOTION_APP_HOSTNAMES.has(hostname) || NOTION_SITE_HOSTNAME_RE.test(hostname)
+  );
+}
+
 /**
  * Extracts page ID from custom Notion domain URLs
  * For custom domains, the page ID is typically embedded in the URL slug
@@ -357,17 +374,17 @@ export async function getNotionPageIdFromSlug(
   const urlObj = new URL(url);
   const hostname = urlObj.hostname;
 
-  const isNotionSo = hostname === "www.notion.so" || hostname === "notion.so";
-  const isNotionSite = hostname.endsWith(".notion.site");
+  const isNotionApp = NOTION_APP_HOSTNAMES.has(hostname);
+  const isNotionSite = NOTION_SITE_HOSTNAME_RE.test(hostname);
 
-  // notion.so: extract ID from path directly
-  if (isNotionSo) {
+  // notion.so / notion.com / app.notion.com: extract ID from path directly
+  if (isNotionApp) {
     const pageId = parsePageId(url) ?? parsePageId(urlObj.pathname);
     if (pageId) return pageId;
     throw new Error(`Unable to extract page ID from Notion URL: ${url}`);
   }
 
-  // Custom domains (non notion.site, non notion.so)
+  // Custom domains (anything outside NOTION_APP_HOSTNAMES and *.notion.site)
   if (!isNotionSite) {
     const pageId = extractPageIdFromCustomNotionUrl(url);
     if (pageId) {
