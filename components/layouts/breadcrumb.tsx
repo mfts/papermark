@@ -514,6 +514,19 @@ export const AppBreadcrumb = () => {
       return <AccountBreadcrumb />;
     }
 
+    // Partner program route
+    if (path === "/partners") {
+      return (
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbPage>Partner program</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      );
+    }
+
     // Global branding route
     if (path === "/branding") {
       return (

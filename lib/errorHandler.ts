@@ -1,4 +1,5 @@
 import { NextApiResponse } from "next";
+import { NextResponse } from "next/server";
 
 function sanitizeError(err: unknown) {
   if (!(err instanceof Error)) {
@@ -24,6 +25,22 @@ export function errorhandler(err: unknown, res: NextApiResponse) {
       message: "Internal Server Error",
     });
   }
+}
+
+/**
+ * {@link errorhandler} for App Router route handlers, which return a response
+ * rather than write to one.
+ */
+export function errorResponse(err: unknown) {
+  if (err instanceof TeamError || err instanceof DocumentError) {
+    return new NextResponse(err.message, { status: err.statusCode });
+  }
+
+  console.error("[errorhandler] unhandled error", sanitizeError(err));
+  return NextResponse.json(
+    { message: "Internal Server Error" },
+    { status: 500 },
+  );
 }
 
 export class TeamError extends Error {

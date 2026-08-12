@@ -1,5 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import {
+  sendDataroomTrial24hReminderEmailTask,
+  sendDataroomTrialExpiredEmailTask,
+  sendDataroomTrialInfoEmailTask,
+} from "@/ee/features/billing/dataroom-trial/lib/trigger/send-scheduled-email";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
@@ -7,11 +12,7 @@ import { getServerSession } from "next-auth/next";
 import { sendDataroomTrialWelcome } from "@/lib/emails/send-dataroom-trial";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
-import {
-  sendDataroomTrial24hReminderEmailTask,
-  sendDataroomTrialExpiredEmailTask,
-  sendDataroomTrialInfoEmailTask,
-} from "@/ee/features/billing/dataroom-trial/lib/trigger/send-scheduled-email";
+import { companyTeamName, isGeneratedTeamName } from "@/lib/team-name";
 import { CustomUser } from "@/lib/types";
 import { log, logStore } from "@/lib/utils";
 
@@ -58,6 +59,7 @@ export default async function handle(
         },
         select: {
           id: true,
+          name: true,
           plan: true,
           _count: {
             select: {
@@ -95,10 +97,17 @@ export default async function handle(
         },
       });
 
+      // The trial form is the first place we learn who the team actually is, so
+      // "Personal Team" becomes "Acme Team". A name they chose is left alone.
+      const renamed = isGeneratedTeamName(team.name, fullName)
+        ? companyTeamName(companyName)
+        : "";
+
       await prisma.team.update({
         where: { id: teamId },
         data: {
           plan: `${team.plan}+drtrial`,
+          ...(renamed ? { name: renamed } : {}),
         },
       });
 

@@ -84,6 +84,15 @@ model Team {
   globalBlockList String[] // Email and domains that are blocked for the team
 
   notificationPreferences NotificationPreference[]
+
+  // Partner program, portfolio-discount track only. The discount lands on this
+  // team's plan, so the enrolment belongs to the team rather than to whoever
+  // filled the form: one link every member shares, one invite list, one cap.
+  // The affiliate track stays on User, where the commission is paid.
+  referralTrack           ReferralTrack?
+  referralTrackSelectedAt DateTime?
+  referralProfile         Json?
+  referralInvites         ReferralInvite[]
 }
 
 enum Role {

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
+import { isReferralsEnabled } from "@/ee/features/partners/lib/referrals";
 import {
   ChevronLeftIcon,
   CircleUserRound,
+  GiftIcon,
   LogOut,
   MailIcon,
 } from "lucide-react";
@@ -131,6 +133,14 @@ export function MobileHeader() {
                 <MailIcon className="mr-2 h-4 w-4" />
                 Contact Support
               </DropdownMenuItem>
+              {isReferralsEnabled() ? (
+                <Link href="/partners">
+                  <DropdownMenuItem>
+                    <GiftIcon className="mr-2 h-4 w-4" />
+                    Earn and Refer
+                  </DropdownMenuItem>
+                </Link>
+              ) : null}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem

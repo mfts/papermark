@@ -1,10 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 
+import { useEffect, useMemo, useRef, useState } from "react";
+
 import { useTeam } from "@/context/team-context";
+import { InfoIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { z } from "zod";
+
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,10 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
-import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
+import { BadgeTooltip } from "@/components/ui/tooltip";
 
 type InviteRole = "ADMIN" | "MANAGER" | "MEMBER" | "DATAROOM_MEMBER";
 
@@ -63,6 +66,7 @@ export function AddTeamMembers({
     defaultDataroomIds ?? [],
   );
   const [loading, setLoading] = useState<boolean>(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const analytics = useAnalytics();
@@ -161,11 +165,50 @@ export function AddTeamMembers({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent
+        className="sm:max-w-[425px]"
+        onOpenAutoFocus={(event) => {
+          // The info button is the first focusable element in the dialog, and
+          // Radix tooltips open on focus — without this the tooltip pops open
+          // on its own every time the modal is launched.
+          event.preventDefault();
+          emailInputRef.current?.focus();
+        }}
+      >
         <DialogHeader className="text-start">
           <DialogTitle>Add Member</DialogTitle>
           <DialogDescription>
-            You can easily add team members.
+            You can easily add team members.{" "}
+            <BadgeTooltip
+              side="bottom"
+              align="start"
+              className="max-w-xs text-left"
+              content={
+                <div className="space-y-1.5">
+                  <p>
+                    <span className="font-medium text-foreground">Members</span>{" "}
+                    join your team and can edit and manage documents, data
+                    rooms, and links.
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground">
+                      Visitors
+                    </span>{" "}
+                    are people you share links with. They only get view access,
+                    plus upload access on some plans. Visitors are unlimited on
+                    every plan.
+                  </p>
+                </div>
+              }
+            >
+              <button
+                type="button"
+                aria-label="Learn about members and visitors"
+                className="inline-flex translate-y-0.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <InfoIcon className="size-3.5" />
+              </button>
+            </BadgeTooltip>
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4">
@@ -175,6 +218,7 @@ export function AddTeamMembers({
             </Label>
             <Input
               id="email"
+              ref={emailInputRef}
               placeholder="team@member.com"
               className="w-full"
               onChange={(e) => setEmail(e.target.value)}

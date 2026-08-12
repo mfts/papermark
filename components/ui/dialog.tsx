@@ -55,6 +55,8 @@ const DialogContent = React.forwardRef<
     isDocumentDialog?: boolean;
     isPreviewDialog?: boolean;
     mobileFullScreen?: boolean;
+    /** For dialogs that require a choice, where a close button would be a dead control. */
+    hideCloseButton?: boolean;
   }
 >(
   (
@@ -64,6 +66,7 @@ const DialogContent = React.forwardRef<
       isDocumentDialog,
       isPreviewDialog,
       mobileFullScreen,
+      hideCloseButton,
       ...props
     },
     ref,
@@ -85,15 +88,17 @@ const DialogContent = React.forwardRef<
         {...props}
       >
         {children}
-        <DialogPrimitive.Close
-          className={cn(
-            "absolute z-10 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground",
-            isDocumentDialog ? "right-8 top-20" : "right-4 top-4",
-          )}
-        >
-          <X className="h-5 w-5 sm:h-4 sm:w-4" />
-          <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
+        {hideCloseButton ? null : (
+          <DialogPrimitive.Close
+            className={cn(
+              "absolute z-10 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground",
+              isDocumentDialog ? "right-8 top-20" : "right-4 top-4",
+            )}
+          >
+            <X className="h-5 w-5 sm:h-4 sm:w-4" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        )}
       </DialogPrimitive.Content>
     </DialogPortal>
   ),

@@ -83,6 +83,15 @@ model User {
   taskActivities TaskActivity[] @relation("taskActivities")
 
   notificationPreferences NotificationPreference[]
+
+  // Dub referral program
+  referralTrack           ReferralTrack?
+  referralTrackSelectedAt DateTime?
+  // Self-declared answers from the partner form, following the same shape-in-a-column
+  // convention as Team.surveyData:
+  // { useCase?: string, useCaseOther?: string, role?: string, roleOther?: string }
+  referralProfile         Json?
+  referralInvites         ReferralInvite[]
 }
 
 model Brand {
