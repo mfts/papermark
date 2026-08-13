@@ -1,0 +1,173 @@
+# Local infrastructure for self-hosting Papermark.
+#
+# Brings up the services Papermark previously required you to rent from a
+# third party:
+#
+#   * app      — the Papermark server itself (build + migrate + serve)
+#   * postgres — the application database (replaces Vercel Postgres / Neon)
+#   * minio    — S3-compatible blob storage (replaces AWS S3 / Vercel Blob)
+#   * redis    — sessions, login codes, rate limits, upload locks
+#   * redis-http — Upstash-compatible REST facade in front of redis
+#
+# Usage — full stack on a server:
+#   cp .env.example .env      # edit the URLs and secrets for your domain
+#   docker compose up -d --build
+#
+# Usage — infrastructure only, app from `npm run dev`:
+#   docker compose up -d postgres minio redis redis-http
+#   cp .env.example .env
+#   npm run dev:prisma && npm run dev
+#
+# See docs/self-hosting.md for the full walkthrough, including which services
+# are still external and how to move this setup to a real server.
+
+name: papermark
+
+services:
+  # The Papermark app itself. Started by default alongside its dependencies;
+  # for local development run `docker compose up -d postgres minio redis
+  # redis-http` instead and use `npm run dev` against them.
+  app:
+    build:
+      context: .
+      args:
+        # Inlined into the client bundle at build time. Change any of these and
+        # you must rebuild: `docker compose up -d --build app`.
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
+        NEXT_PUBLIC_MARKETING_URL: ${NEXT_PUBLIC_MARKETING_URL:-http://localhost:3000}
+        NEXT_PUBLIC_APP_BASE_HOST: ${NEXT_PUBLIC_APP_BASE_HOST:-localhost}
+        NEXT_PUBLIC_UPLOAD_TRANSPORT: ${NEXT_PUBLIC_UPLOAD_TRANSPORT:-s3}
+        NEXT_PUBLIC_HANKO_TENANT_ID: ${NEXT_PUBLIC_HANKO_TENANT_ID:-add-your-hanko-tenant-id}
+        NEXT_PUBLIC_WEBHOOK_BASE_URL: ${NEXT_PUBLIC_WEBHOOK_BASE_URL:-}
+        NEXT_PUBLIC_WEBHOOK_BASE_HOST: ${NEXT_PUBLIC_WEBHOOK_BASE_HOST:-}
+        NEXT_PRIVATE_UPLOAD_ENDPOINT: ${NEXT_PRIVATE_UPLOAD_ENDPOINT:-http://localhost:9000}
+        NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST: ${NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST:-}
+    container_name: papermark-app
+    restart: unless-stopped
+    # Everything else comes from .env at runtime.
+    env_file:
+      - .env
+    environment:
+      # Inside the compose network the app reaches its dependencies by service
+      # name, overriding the localhost defaults meant for `npm run dev`.
+      POSTGRES_PRISMA_URL: postgresql://${POSTGRES_USER:-papermark}:${POSTGRES_PASSWORD:-papermark}@postgres:5432/${POSTGRES_DB:-papermark}?schema=public
+      POSTGRES_PRISMA_URL_NON_POOLING: postgresql://${POSTGRES_USER:-papermark}:${POSTGRES_PASSWORD:-papermark}@postgres:5432/${POSTGRES_DB:-papermark}?schema=public
+      UPSTASH_REDIS_REST_URL: http://redis-http:80
+      UPSTASH_REDIS_REST_LOCKER_URL: http://redis-http:80
+    ports:
+      # Behind a reverse proxy set APP_BIND=127.0.0.1 so the app is reachable
+      # only through the proxy rather than published on every interface.
+      - "${APP_BIND:-0.0.0.0}:${APP_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      redis-http:
+        condition: service_started
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: papermark-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-papermark}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-papermark}
+      POSTGRES_DB: ${POSTGRES_DB:-papermark}
+    ports:
+      # Host port is configurable so it does not clash with a local Postgres.
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - papermark-postgres:/var/lib/postgresql/data
+      # Creates the shadow database Prisma needs for `prisma migrate dev`.
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-papermark} -d ${POSTGRES_DB:-papermark}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    # Pin to a release tag rather than `latest` so everyone gets the same build.
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: papermark-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-papermark}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-papermark-secret}
+    ports:
+      # 9000 = S3 API (what the app and the browser talk to)
+      # 9001 = web console (http://localhost:9001)
+      #
+      # Browsers hit the S3 API directly via presigned URLs, so it has to be
+      # reachable — but behind a reverse proxy that should happen through the
+      # proxy, not by publishing the container on every interface. Set
+      # MINIO_BIND=127.0.0.1 there. The console has no reason to be public at
+      # all; it is bound to localhost unless you deliberately move it.
+      - "${MINIO_BIND:-0.0.0.0}:${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_BIND:-127.0.0.1}:${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - papermark-minio:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # One-shot container: creates the buckets Papermark expects, then exits.
+  # Re-running `docker compose up` is safe — bucket creation is idempotent.
+  minio-init:
+    image: minio/mc:latest
+    container_name: papermark-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-papermark}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-papermark-secret}
+      UPLOAD_BUCKET: ${NEXT_PRIVATE_UPLOAD_BUCKET:-papermark-documents}
+      ARCHIVE_BUCKET: ${NEXT_PRIVATE_ARCHIVE_BUCKET:-papermark-archive}
+      PUBLIC_BUCKET: ${NEXT_PRIVATE_PUBLIC_BUCKET:-papermark-public}
+    entrypoint: ["/bin/sh", "/init/create-buckets.sh"]
+    volumes:
+      - ./docker/minio:/init:ro
+
+  redis:
+    image: redis:7-alpine
+    container_name: papermark-redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --appendonly yes
+    volumes:
+      - papermark-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Papermark talks to Redis through the Upstash REST API (@upstash/redis).
+  # This proxy speaks that REST dialect on top of the plain Redis above, so
+  # no Upstash account is needed.
+  redis-http:
+    image: hiett/serverless-redis-http:latest
+    container_name: papermark-redis-http
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: ${REDIS_REST_TOKEN:-papermark-redis-token}
+      SRH_CONNECTION_STRING: redis://redis:6379
+    ports:
+      - "${REDIS_HTTP_PORT:-8079}:80"
+
+volumes:
+  papermark-postgres:
+  papermark-minio:
+  papermark-redis:

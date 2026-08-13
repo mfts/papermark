@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { del } from "@vercel/blob";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
@@ -18,6 +17,7 @@ import {
 } from "@/lib/billing/team-plan-custom-messaging";
 import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
 import { errorhandler } from "@/lib/errorHandler";
+import { deletePublicAsset } from "@/lib/files/public-assets";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import {
@@ -124,10 +124,9 @@ async function resolvePrivacyPolicyUrl(
   return { ok: true, url: validation.url || null };
 }
 
+/** Deletes from whichever public asset backend produced the URL; skips sentinels & bundled paths */
 function maybeDeleteBlobAsset(url: string | null | undefined): Promise<void> {
-  if (!url || url === "no-banner") return Promise.resolve();
-  if (url.startsWith("/") || url.startsWith("data:")) return Promise.resolve();
-  return del(url).catch(() => {});
+  return deletePublicAsset(url);
 }
 
 export default async function handle(

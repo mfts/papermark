@@ -239,20 +239,45 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async createUser(message) {
-      await identifyUser(message.user.email ?? message.user.id);
-      await trackAnalytics({
-        event: "User Signed Up",
-        email: message.user.email,
-        userId: message.user.id,
-      });
+      // NextAuth aborts the sign-in callback when this event throws, so a
+      // failure here strands a brand-new user back on /login with no session
+      // — the account row exists, but they never get signed in. None of the
+      // work below is essential to having an account, and a self-hosted
+      // instance routinely runs without Tinybird or QStash configured, so
+      // each step fails loudly in the logs and quietly to the user.
+      const runSafely = async (label: string, run: () => Promise<unknown>) => {
+        try {
+          await run();
+        } catch (error) {
+          console.error(`[createUser] ${label} failed:`, error);
+        }
+      };
 
-      await qstash.publishJSON({
-        url: `${process.env.NEXT_PUBLIC_BASE_URL ?? getMainDomainUrl()}/api/cron/welcome-user`,
-        body: {
+      await runSafely("identifyUser", () =>
+        identifyUser(message.user.email ?? message.user.id),
+      );
+
+      await runSafely("trackAnalytics", () =>
+        trackAnalytics({
+          event: "User Signed Up",
+          email: message.user.email,
           userId: message.user.id,
-        },
-        delay: 15 * 60,
-      });
+        }),
+      );
+
+      // Skipped rather than attempted without a token: the queue rejects the
+      // request outright, and the welcome email it schedules is optional.
+      if (process.env.QSTASH_TOKEN) {
+        await runSafely("welcome-user job", () =>
+          qstash.publishJSON({
+            url: `${process.env.NEXT_PUBLIC_BASE_URL ?? getMainDomainUrl()}/api/cron/welcome-user`,
+            body: {
+              userId: message.user.id,
+            },
+            delay: 15 * 60,
+          }),
+        );
+      }
     },
   },
 };

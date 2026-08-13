@@ -72,6 +72,7 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
+    "@react-email/components": "^1.0.12",
     "@sindresorhus/slugify": "^3.0.0",
     "@stripe/stripe-js": "^9.8.0",
     "@tailwindcss/typography": "^0.5.19",

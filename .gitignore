@@ -30,8 +30,10 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env*.local
-.env
+# Broad on purpose: editor/manual backups like ".env copy" or ".env.bak" hold
+# the same live secrets as .env, and this repo is public.
+.env*
+!.env.example
 
 # vercel
 .vercel

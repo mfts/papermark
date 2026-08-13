@@ -1,0 +1,490 @@
+# Self-hosting Papermark
+
+Papermark needs a PostgreSQL database, S3-compatible blob storage, and Redis.
+Historically the setup instructions pointed you at hosted providers for all
+three. The `docker-compose.yml` in the repository root runs them locally
+instead, so you can get a working instance without signing up for anything.
+
+The rest of Papermark's integrations (email, analytics, background jobs) remain
+external. [What stays external](#what-stays-external) explains exactly what each
+one costs you if you leave it unconfigured.
+
+---
+
+## Contents
+
+- [What runs where](#what-runs-where)
+- [Quick start](#quick-start)
+- [Verifying the setup](#verifying-the-setup)
+- [Signing in without Resend](#signing-in-without-resend)
+- [The containers in detail](#the-containers-in-detail)
+- [Port conflicts](#port-conflicts)
+- [Using managed providers instead](#using-managed-providers-instead)
+- [What stays external](#what-stays-external)
+- [Deploying to a server](#deploying-to-a-server)
+- [Running in production](#running-in-production)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## What runs where
+
+| Component           | Container    | Replaces                             | Required?                                   |
+| ------------------- | ------------ | ------------------------------------ | ------------------------------------------- |
+| PostgreSQL 16       | `postgres`   | Vercel Postgres, Neon, Supabase, RDS | Yes                                         |
+| MinIO (S3 API)      | `minio`      | AWS S3, Vercel Blob, Cloudflare R2   | Yes — documents live here                   |
+| Bucket bootstrap    | `minio-init` | Manual bucket creation               | Runs once, then exits                       |
+| Redis 7             | `redis`      | Upstash Redis                        | Yes — sign-in codes, rate limits            |
+| Upstash REST facade | `redis-http` | Upstash REST API                     | Yes — Papermark speaks REST, not `redis://` |
+
+Everything else (email, analytics, PDF processing) is optional and covered
+under [What stays external](#what-stays-external).
+
+---
+
+## Quick start
+
+**Prerequisites:** Node.js >= 24, Docker with Compose v2.
+
+```shell
+git clone https://github.com/mfts/papermark.git
+cd papermark
+npm install
+```
+
+**1. Start the infrastructure.**
+
+```shell
+docker compose up -d
+```
+
+This pulls Postgres, MinIO, and Redis, creates the `papermark-documents`,
+`papermark-archive`, and `papermark-public` buckets, and creates the Prisma
+shadow database. Bucket and
+database creation are idempotent, so re-running the command is safe.
+
+**2. Create your `.env`.**
+
+```shell
+cp .env.example .env
+```
+
+The database, storage, and Redis values in `.env.example` already point at the
+containers you just started — no editing required to get running. Before
+exposing the instance to anyone else, replace `NEXTAUTH_SECRET`,
+`INTERNAL_API_KEY`, `NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY`, and the MinIO
+credentials with real secrets (`openssl rand -hex 32` generates suitable
+values).
+
+**3. Apply the database schema.**
+
+```shell
+npm run dev:prisma
+```
+
+**4. Run the app.**
+
+```shell
+npm run dev
+```
+
+Papermark is now on [http://localhost:3000](http://localhost:3000), and the
+MinIO console is on [http://localhost:9001](http://localhost:9001) (log in with
+`papermark` / `papermark-secret`).
+
+> **Signing in.** Papermark emails a login code, so email sign-in needs a
+> `RESEND_API_KEY`. Without one, configure `GOOGLE_CLIENT_ID` /
+> `GOOGLE_CLIENT_SECRET` and use Google sign-in instead. See
+> [What stays external](#what-stays-external).
+
+---
+
+## Verifying the setup
+
+Check that all four containers are up and the two healthchecked ones are
+healthy:
+
+```shell
+docker compose ps
+```
+
+Confirm the buckets were created:
+
+```shell
+docker compose logs minio-init
+# MinIO buckets ready: papermark-documents, papermark-archive, papermark-public
+```
+
+Confirm the database has Papermark's tables:
+
+```shell
+docker compose exec postgres psql -U papermark -d papermark -c '\dt' | head
+```
+
+Confirm the Redis REST facade answers:
+
+```shell
+curl -H "Authorization: Bearer papermark-redis-token" \
+     -H "Content-Type: application/json" \
+     -d '["PING"]' http://localhost:8079/
+# {"result":"PONG"}
+```
+
+The real end-to-end test is uploading a document in the UI and opening its
+share link. If that works, storage, database, and Redis are all wired up.
+
+---
+
+---
+
+## Signing in without Resend
+
+Papermark emails a login code, so a stock local install cannot log in without a
+`RESEND_API_KEY` or Google OAuth. For local testing you need neither: the code
+is written to Redis _before_ the email is sent, and the send is wrapped in a
+`.catch()`, so a missing key does not break the flow.
+
+Request a code by entering your email on `/login`, then read it back:
+
+```shell
+docker compose exec redis redis-cli --scan --pattern 'login_code:email:*'
+# login_code:email:you@example.com:R0QCF5WF9J
+```
+
+The code is the part after the last colon — type it into the app.
+
+The stored value also contains a ready-made magic link, if you would rather
+skip the code entry entirely:
+
+```shell
+KEY=$(docker compose exec -T redis redis-cli --scan --pattern 'login_code:email:you@example.com:*' | head -1)
+docker compose exec -T redis redis-cli GET "$KEY"
+```
+
+Open the `callbackUrl` from that JSON in your browser and you are signed in.
+
+> The redirect after sign-in may 500 if `QSTASH_TOKEN` is unset — Papermark
+> queues a welcome job there. The session is still created; navigate to
+> `/documents` and carry on.
+
+### Sending email from your own domain
+
+Papermark's default sender addresses are `@papermark.com`, which Resend rejects
+unless your account has verified that domain — so a self-hosted instance must
+override them:
+
+```shell
+RESEND_API_KEY=re_your_key
+RESEND_FROM_EMAIL="Your Company <noreply@yourdomain.com>"
+```
+
+`RESEND_FROM_EMAIL` applies to every outgoing message, including login and 2FA
+codes. Verify the domain in Resend first, or sends fail with a 403.
+
+In development Papermark deliberately routes mail to Resend's sink
+(`delivered@resend.dev`) so local runs cannot email real people. To test real
+delivery to your own address:
+
+```shell
+RESEND_DELIVER_IN_DEV=true
+```
+
+Leave it unset in production — there `NODE_ENV` already disables the sink.
+
+## The containers in detail
+
+### `postgres`
+
+Plain PostgreSQL 16 with a named volume for persistence.
+
+Prisma expects both a pooled and a direct connection URL
+(`POSTGRES_PRISMA_URL` and `POSTGRES_PRISMA_URL_NON_POOLING`). Against a plain
+Postgres server there is no separate pooler, so both point at the same
+database. That is expected and supported.
+
+`docker/postgres/init/01-create-shadow-database.sql` creates a
+`papermark_shadow` database on first boot. Prisma only needs it for
+`npx prisma migrate dev` when you are authoring new migrations;
+`npm run dev:prisma` (which runs `migrate deploy`) does not touch it.
+
+### `minio`
+
+MinIO implements the S3 API, so Papermark's existing S3 transport talks to it
+unchanged. Two settings make this work:
+
+- `NEXT_PRIVATE_UPLOAD_ENDPOINT` points the AWS SDK at MinIO instead of AWS.
+- `NEXT_PRIVATE_UPLOAD_FORCE_PATH_STYLE="true"` makes the SDK address buckets
+  as `http://localhost:9000/papermark-documents/key` rather than
+  `http://papermark-documents.localhost:9000/key`. Without it MinIO rejects
+  every request with `InvalidBucketName`, because the virtual-host form
+  requires wildcard DNS that `localhost` does not provide.
+
+Buckets stay **private**. Papermark issues short-lived presigned URLs for every
+read and write, exactly as it does against real S3 — objects are never public.
+
+MinIO's default CORS policy already allows browser uploads from your app
+origin, so direct-to-storage uploads work with no extra configuration.
+
+> **Leave `NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST` empty.** Setting it switches
+> Papermark to CloudFront-signed URLs, which MinIO cannot validate. It is only
+> for deployments that actually put CloudFront in front of S3.
+
+### Public assets
+
+Brand logos, banners, and link preview images are _public_ — they appear on
+share pages that anonymous visitors load, in `og:image` tags that social
+crawlers fetch, and in email templates. That rules out the presigned URLs used
+for documents, which expire.
+
+Rather than exposing a bucket to the internet, Papermark stores them in a
+separate private bucket (`NEXT_PRIVATE_PUBLIC_BUCKET`) and serves them through
+`/api/assets/<prefix>/<name>` on the app's own origin, with a one-year
+immutable cache header. Keys are unique per upload, so the aggressive caching
+is safe.
+
+This means:
+
+- The object store never has to be publicly reachable for assets to work.
+- URLs live on your app domain, so there is no second hostname, TLS
+  certificate, or CORS policy to manage — and any CDN in front of the app
+  caches them for free.
+- Uploads are proxied through the app rather than going direct-to-storage.
+  Assets are capped at 5MB, so this costs very little.
+
+The route is deliberately unauthenticated — crawlers and mail clients have to
+reach it — but it reads only from the public-asset bucket, and keys are
+validated against a strict allow-list, so it cannot be walked into document
+storage.
+
+**Leave `NEXT_PRIVATE_PUBLIC_BUCKET` empty** to keep the previous behaviour and
+store these in Vercel Blob instead. Existing Vercel Blob URLs are absolute and
+stored in the database, so they keep resolving either way — switching needs no
+migration.
+
+### `redis` and `redis-http`
+
+Papermark uses `@upstash/redis`, which speaks HTTP rather than the Redis wire
+protocol. `redis-http` runs
+[serverless-redis-http](https://github.com/hiett/serverless-redis-http), an
+Upstash-compatible REST facade, in front of an ordinary Redis container.
+
+That is why `UPSTASH_REDIS_REST_URL` is an `http://` URL and not `redis://`.
+The token in `.env` must match `SRH_TOKEN` in `docker-compose.yml`.
+
+Redis backs sign-in codes, rate limiting, and the tus.io bulk-upload lock.
+
+---
+
+## Port conflicts
+
+If another service already holds a port, override it and restart. Compose reads
+these from your shell or from `.env`:
+
+| Variable             | Default | Service           |
+| -------------------- | ------- | ----------------- |
+| `POSTGRES_PORT`      | `5432`  | Postgres          |
+| `MINIO_PORT`         | `9000`  | MinIO S3 API      |
+| `MINIO_CONSOLE_PORT` | `9001`  | MinIO console     |
+| `REDIS_HTTP_PORT`    | `8079`  | Redis REST facade |
+
+For example, if you already run Postgres on 5432:
+
+```shell
+POSTGRES_PORT=5433 docker compose up -d
+```
+
+Then update the port in `POSTGRES_PRISMA_URL`, `POSTGRES_PRISMA_URL_NON_POOLING`,
+and `POSTGRES_PRISMA_SHADOW_URL` in your `.env` to match.
+
+---
+
+## Using managed providers instead
+
+The containers are a convenience, not a lock-in. Each can be swapped for a
+hosted equivalent by changing environment variables only.
+
+**Database** — point `POSTGRES_PRISMA_URL` at your provider's pooled connection
+string and `POSTGRES_PRISMA_URL_NON_POOLING` at the direct one. Then
+`docker compose up -d minio redis redis-http` to skip the local Postgres.
+
+**Storage** — for AWS S3, clear `NEXT_PRIVATE_UPLOAD_ENDPOINT` and
+`NEXT_PRIVATE_UPLOAD_FORCE_PATH_STYLE`, then set the region, buckets, and IAM
+credentials. For Cloudflare R2, Backblaze B2, Wasabi, or Hetzner, keep both set
+(they all use path-style addressing) and change the endpoint and credentials.
+
+**Redis** — paste your Upstash REST URL and token into
+`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` and the matching
+`_LOCKER_` pair.
+
+---
+
+## What stays external
+
+Papermark boots without any of these. This is what you lose if you skip them:
+
+| Service        | Variables                                                  | Without it                                                                                                                                                              |
+| -------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Resend         | `RESEND_API_KEY`, `RESEND_FROM_EMAIL`                      | No email at all — email sign-in fails, notifications are dropped. Use Google OAuth to sign in instead.                                                                  |
+| Vercel Blob    | `BLOB_READ_WRITE_TOKEN`                                    | Custom branding uploads (team and dataroom logos, banners, link preview images) and visit-report exports fail. **Document storage is unaffected** — that uses MinIO/S3. |
+| Tinybird       | `TINYBIRD_TOKEN`                                           | Documents and links work, but analytics pages stay empty.                                                                                                               |
+| Trigger.dev    | `TRIGGER_SECRET_KEY`                                       | Background processing stops: PDF-to-image conversion, bulk downloads, notification fan-out.                                                                             |
+| Upstash QStash | `QSTASH_TOKEN`, `QSTASH_*_SIGNING_KEY`                     | Queued jobs are not delivered.                                                                                                                                          |
+| Google OAuth   | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                 | No Google sign-in button.                                                                                                                                               |
+| Hanko          | `HANKO_API_KEY`, `NEXT_PUBLIC_HANKO_TENANT_ID`             | No passkey signup.                                                                                                                                                      |
+| Vercel API     | `PROJECT_ID_VERCEL`, `TEAM_ID_VERCEL`, `AUTH_BEARER_TOKEN` | Cannot provision customer custom domains.                                                                                                                               |
+
+For a minimal working instance you need the four containers plus **either**
+Resend **or** Google OAuth so you can log in.
+
+Two smaller features still reach for Vercel Blob regardless of the public
+bucket: visit-report exports (`lib/trigger/export-visits.ts`) and link
+bulk-import files (`lib/api/links/bulk-import.ts`). Both fail closed and
+neither blocks normal document sharing.
+
+---
+
+## Deploying to a server
+
+The compose file can run the whole stack, app included, so a server only needs
+Docker and a clone of this repository.
+
+```shell
+git clone git@github.com:rebasedaily/papermark.git
+cd papermark
+cp .env.example .env
+```
+
+Edit `.env` before starting — at minimum:
+
+| Variable                                                                    | Set it to                                                                                                              |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_BASE_URL`                                                      | `https://papermark.example.com`                                                                                        |
+| `NEXT_PUBLIC_MARKETING_URL`                                                 | the same URL                                                                                                           |
+| `NEXT_PUBLIC_APP_BASE_HOST`                                                 | `papermark.example.com`                                                                                                |
+| `NEXTAUTH_URL`                                                              | the same URL                                                                                                           |
+| `NEXT_PRIVATE_UPLOAD_ENDPOINT`                                              | `https://storage.example.com` — must be reachable **from the browser**, since uploads and downloads use presigned URLs |
+| `NEXTAUTH_SECRET`, `INTERNAL_API_KEY`, `NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY` | fresh values from `openssl rand -hex 32`                                                                               |
+| `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`                                   | real credentials, matched by `NEXT_PRIVATE_UPLOAD_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY`                                |
+| `REDIS_REST_TOKEN`                                                          | a fresh random value                                                                                                   |
+| `RESEND_API_KEY`, `RESEND_FROM_EMAIL`                                       | your Resend key and a sender on a domain you have verified                                                             |
+
+Then bring everything up:
+
+```shell
+docker compose up -d --build
+```
+
+The app container applies pending database migrations before it starts serving,
+so there is no separate migrate step.
+
+### Things worth knowing
+
+**`NEXT_PUBLIC_*` values are baked in at build time.** Next inlines them into the
+client bundle, so changing any of them means rebuilding:
+
+```shell
+docker compose up -d --build app
+```
+
+**MinIO has to be reachable from the browser.** Documents are uploaded and
+downloaded directly against presigned S3 URLs, so `NEXT_PRIVATE_UPLOAD_ENDPOINT`
+cannot be an internal hostname. Put a reverse proxy in front of the MinIO
+container on its own subdomain with TLS. Brand assets do not have this
+constraint — they are proxied through the app.
+
+**Do not publish the data ports.** Postgres, Redis, and the Redis REST facade
+should not be exposed to the internet. Drop their `ports:` mappings, or bind
+them to `127.0.0.1`, and let the containers talk over the compose network.
+
+**Put TLS in front of the app.** The `app` service speaks plain HTTP on port 3000. Terminate TLS with Caddy, nginx, or Traefik and proxy to it.
+
+**Back up the volumes.** `papermark-postgres` and `papermark-minio` hold all
+your data.
+
+---
+
+## Running in production
+
+The compose file is tuned for local development. Before running it on a server:
+
+**Change every default secret.** `NEXTAUTH_SECRET`, `INTERNAL_API_KEY`,
+`NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY`, `MINIO_ROOT_USER` /
+`MINIO_ROOT_PASSWORD` (these must stay in sync with
+`NEXT_PRIVATE_UPLOAD_ACCESS_KEY_ID` / `NEXT_PRIVATE_UPLOAD_SECRET_ACCESS_KEY`),
+and `REDIS_REST_TOKEN`.
+
+**Do not publish the data ports.** Postgres, Redis, and the Redis REST facade
+should not be reachable from the internet. Drop their `ports:` mappings and let
+containers reach each other over the compose network, or bind them to
+`127.0.0.1`.
+
+**Serve MinIO over HTTPS on a real hostname.** Presigned URLs are handed to
+browsers, so the endpoint must be publicly resolvable. Put a reverse proxy
+(Caddy, nginx, Traefik) in front of MinIO, then set
+`NEXT_PRIVATE_UPLOAD_ENDPOINT="https://storage.example.com"`. `next.config.mjs`
+adds that origin to the `next/image` allow-list automatically.
+
+**Create a scoped MinIO user.** Do not ship the root credentials to the app.
+Create a service account limited to the three buckets and use those keys.
+
+**Back up both stores.** The `papermark-postgres` and `papermark-minio` volumes
+hold all of your data. `pg_dump` on a schedule plus `mc mirror` to off-site
+storage is the minimum.
+
+**Pin the image tags.** `minio/mc:latest` is used for the one-shot bootstrap
+container; pin it to a release tag for reproducible deploys.
+
+---
+
+## Troubleshooting
+
+**`Bind for 0.0.0.0:5432 failed: port is already allocated`**
+Another Postgres holds the port. See [Port conflicts](#port-conflicts).
+
+**Uploads fail with `InvalidBucketName`**
+`NEXT_PRIVATE_UPLOAD_FORCE_PATH_STYLE` is not set to `"true"`. MinIO needs
+path-style addressing.
+
+**Uploads fail with `AccessDenied` or `SignatureDoesNotMatch`**
+`NEXT_PRIVATE_UPLOAD_ACCESS_KEY_ID` / `NEXT_PRIVATE_UPLOAD_SECRET_ACCESS_KEY`
+in `.env` have drifted from `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` in
+`docker-compose.yml`. They must match.
+
+**Downloads return CloudFront errors**
+`NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST` is set. Clear it when serving directly
+from MinIO.
+
+**Images fail to render with "hostname is not configured under images"**
+Restart `npm run dev`. The `next/image` allow-list is built from
+`NEXT_PRIVATE_UPLOAD_ENDPOINT` at startup, so it does not pick up `.env`
+changes until the server restarts.
+
+**Every page 500s with `Neither apiKey nor config.authenticator provided`**
+`STRIPE_SECRET_KEY` and `STRIPE_SECRET_KEY_OLD` are empty. Papermark builds its
+Stripe clients at import time and the SDK rejects an empty key, which takes the
+auth routes down with it. The placeholders in `.env.example` are enough — you
+do not need a real Stripe account unless you enable billing.
+
+**Every page 500s with `Please set HANKO_API_KEY...`**
+Same class of problem: `lib/hanko.ts` throws at import time when its two
+variables are empty. Keep the placeholder values from `.env.example`.
+
+**Brand logos 404 or fail to upload**
+Either `NEXT_PRIVATE_PUBLIC_BUCKET` is set but the bucket does not exist (run
+`docker compose up -d minio-init`), or it is empty and `BLOB_READ_WRITE_TOKEN`
+is missing too — the upload route needs one backend or the other.
+
+**Sign-in silently does nothing**
+Either Redis is unreachable (check `docker compose ps redis-http` and the
+token) or `RESEND_API_KEY` is missing so the login-code email is never sent.
+
+**`prisma migrate deploy` cannot connect**
+The Postgres container is still starting, or the port in `POSTGRES_PRISMA_URL`
+does not match the published port. `docker compose ps postgres` should report
+`healthy`.
+
+**Starting over.** This destroys all local data:
+
+```shell
+docker compose down -v && docker compose up -d && npm run dev:prisma
+```

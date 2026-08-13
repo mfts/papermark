@@ -6,6 +6,7 @@ import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 export interface S3KeyInfo {
   bucket: string;
   key: string;
+  /** Empty when the URL came from a custom endpoint that encodes no region. */
   region: string;
 }
 
@@ -17,6 +18,9 @@ const THREE_DAYS_IN_SECONDS = 3 * 24 * 60 * 60;
  *
  * Path-style:    https://s3.{region}.amazonaws.com/{bucket}/{key}
  * Virtual-hosted: https://{bucket}.s3.{region}.amazonaws.com/{key}
+ *
+ * S3-compatible endpoints (MinIO and friends) fall through to a path-style
+ * read with no region — the caller substitutes the configured region.
  */
 export function parseS3PresignedUrl(presignedUrl: string): S3KeyInfo {
   const url = new URL(presignedUrl);
@@ -50,6 +54,18 @@ export function parseS3PresignedUrl(presignedUrl: string): S3KeyInfo {
     return { bucket: bucket, key, region: "us-east-1" };
   }
 
+  // Self-hosted / third-party S3-compatible endpoint. These are always
+  // addressed path-style by Papermark (see NEXT_PRIVATE_UPLOAD_FORCE_PATH_STYLE),
+  // so the first path segment is the bucket.
+  const pathParts = url.pathname.slice(1).split("/");
+  if (pathParts.length > 1 && pathParts[0]) {
+    return {
+      bucket: decodeURIComponent(pathParts[0]),
+      key: pathParts.slice(1).map(decodeURIComponent).join("/"),
+      region: "",
+    };
+  }
+
   throw new Error(`Unable to parse S3 URL: ${presignedUrl}`);
 }
 
@@ -65,7 +81,9 @@ export async function generateFreshPresignedUrl(
   const config = await getTeamStorageConfigById(teamId);
 
   const client = new S3Client({
-    region: s3Key.region,
+    endpoint: config.endpoint || undefined,
+    forcePathStyle: config.forcePathStyle,
+    region: s3Key.region || config.region,
     credentials: {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,

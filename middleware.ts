@@ -19,7 +19,28 @@ function isAnalyticsPath(path: string) {
   return pattern.test(path);
 }
 
+// Hosts this deployment serves as itself, rather than as a customer's custom
+// domain. papermark.com knows its own hostnames statically; a self-hosted
+// instance runs on a domain only its config knows about, and without this it
+// falls through to the custom-domain branch below — which redirects / to
+// www.papermark.com and rewrites every other path into the viewer, leaving the
+// app unreachable on its own domain.
+function isFirstPartyHost(hostname: string) {
+  return [
+    process.env.NEXT_PUBLIC_APP_BASE_HOST,
+    process.env.NEXT_PUBLIC_WEBHOOK_BASE_HOST,
+  ].some((configured) => configured && hostname === configured.split(":")[0]);
+}
+
 function isCustomDomain(host: string) {
+  // The Host header carries a port when the app is reached directly rather
+  // than through a proxy, so compare on the hostname alone.
+  const hostname = (host || "").split(":")[0];
+
+  if (isFirstPartyHost(hostname)) {
+    return false;
+  }
+
   return (
     (process.env.NODE_ENV === "development" &&
       (host?.includes(".local") || host?.includes("papermark.dev"))) ||

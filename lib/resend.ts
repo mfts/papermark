@@ -47,8 +47,11 @@ export const sendEmail = async ({
   const html = await render(react);
   const plainText = toPlainText(html);
 
-  const fromAddress =
-    from ??
+  // Self-hosted instances cannot send from papermark.com, since Resend rejects
+  // any domain the account has not verified. RESEND_FROM_EMAIL overrides every
+  // default sender; an explicit `from` argument still wins over it.
+  const defaultFromAddress =
+    process.env.RESEND_FROM_EMAIL ??
     (marketing
       ? "Marc from Papermark <marc@updates.papermark.com>"
       : system
@@ -59,13 +62,23 @@ export const sendEmail = async ({
             ? "Marc Seitz <marc@papermark.com>"
             : "Marc from Papermark <marc@papermark.com>");
 
+  const fromAddress = from ?? defaultFromAddress;
+
+  // In development Papermark routes mail to Resend's sink so local runs cannot
+  // email real people. Set RESEND_DELIVER_IN_DEV=true when you are deliberately
+  // testing delivery against your own address.
+  const deliverInDev = process.env.RESEND_DELIVER_IN_DEV === "true";
+  const recipient = test && !deliverInDev ? "delivered@resend.dev" : to;
+
   try {
     const { data, error } = await resend.emails.send(
       {
         from: fromAddress,
-        to: test ? "delivered@resend.dev" : to,
+        to: recipient,
         cc: cc,
-        replyTo: marketing ? "marc@papermark.com" : replyTo,
+        replyTo: marketing
+          ? (process.env.RESEND_FROM_EMAIL ?? "marc@papermark.com")
+          : replyTo,
         subject,
         react,
         scheduledAt,

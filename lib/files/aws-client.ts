@@ -17,6 +17,7 @@ export const getS3Client = (storageRegion?: string) => {
 
   return new S3Client({
     endpoint: config.endpoint || undefined,
+    forcePathStyle: config.forcePathStyle,
     region: config.region,
     credentials: {
       accessKeyId: config.accessKeyId,
@@ -36,6 +37,7 @@ export const getS3ClientForTeam = async (teamId: string) => {
 
   return new S3Client({
     endpoint: config.endpoint || undefined,
+    forcePathStyle: config.forcePathStyle,
     region: config.region,
     credentials: {
       accessKeyId: config.accessKeyId,
@@ -98,6 +100,7 @@ export const getTeamS3ClientAndConfig = async (teamId: string) => {
 
   const client = new S3Client({
     endpoint: config.endpoint || undefined,
+    forcePathStyle: config.forcePathStyle,
     region: config.region,
     credentials: {
       accessKeyId: config.accessKeyId,

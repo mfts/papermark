@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
 import { LinkPreset } from "@prisma/client";
-import { put } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
 
@@ -22,8 +21,8 @@ import {
   generateEncrpytedPassword,
   isDataUrl,
   safeSlugify,
-  uploadImage,
 } from "@/lib/utils";
+import { putPublicAsset } from "@/lib/files/public-assets";
 import {
   getExtensionFromContentType,
   getSupportedContentType,
@@ -572,11 +571,11 @@ async function handleDocumentCreate(
           const { buffer, mimeType, filename } = convertDataUrlToBuffer(
             preset.metaImage,
           );
-          const blob = await put(filename, buffer, {
-            access: "public",
-            addRandomSuffix: true,
+          metaImage = await putPublicAsset({
+            filename,
+            contentType: mimeType,
+            body: buffer,
           });
-          metaImage = blob.url;
         }
 
         // Process favicon if present
@@ -584,11 +583,11 @@ async function handleDocumentCreate(
           const { buffer, mimeType, filename } = convertDataUrlToBuffer(
             preset.metaFavicon,
           );
-          const blob = await put(filename, buffer, {
-            access: "public",
-            addRandomSuffix: true,
+          metaFavicon = await putPublicAsset({
+            filename,
+            contentType: mimeType,
+            body: buffer,
           });
-          metaFavicon = blob.url;
         }
       }
     }
@@ -971,11 +970,11 @@ async function handleLinkCreate(
         const { buffer, mimeType, filename } = convertDataUrlToBuffer(
           preset.metaImage,
         );
-        const blob = await put(filename, buffer, {
-          access: "public",
-          addRandomSuffix: true,
+        metaImage = await putPublicAsset({
+          filename,
+          contentType: mimeType,
+          body: buffer,
         });
-        metaImage = blob.url;
       }
 
       // Process favicon if present
@@ -983,11 +982,11 @@ async function handleLinkCreate(
         const { buffer, mimeType, filename } = convertDataUrlToBuffer(
           preset.metaFavicon,
         );
-        const blob = await put(filename, buffer, {
-          access: "public",
-          addRandomSuffix: true,
+        metaFavicon = await putPublicAsset({
+          filename,
+          contentType: mimeType,
+          body: buffer,
         });
-        metaFavicon = blob.url;
       }
     }
   }
@@ -1195,11 +1194,11 @@ async function handleLinkUpdate(
         const { buffer, mimeType, filename } = convertDataUrlToBuffer(
           preset.metaImage,
         );
-        const blob = await put(filename, buffer, {
-          access: "public",
-          addRandomSuffix: true,
+        metaImage = await putPublicAsset({
+          filename,
+          contentType: mimeType,
+          body: buffer,
         });
-        metaImage = blob.url;
       }
 
       // Process favicon if present
@@ -1207,11 +1206,11 @@ async function handleLinkUpdate(
         const { buffer, mimeType, filename } = convertDataUrlToBuffer(
           preset.metaFavicon,
         );
-        const blob = await put(filename, buffer, {
-          access: "public",
-          addRandomSuffix: true,
+        metaFavicon = await putPublicAsset({
+          filename,
+          contentType: mimeType,
+          body: buffer,
         });
-        metaFavicon = blob.url;
       }
     }
   }
@@ -1467,11 +1466,11 @@ async function handleDataroomCreate(
         const { buffer, mimeType, filename } = convertDataUrlToBuffer(
           preset.metaImage,
         );
-        const blob = await put(filename, buffer, {
-          access: "public",
-          addRandomSuffix: true,
+        metaImage = await putPublicAsset({
+          filename,
+          contentType: mimeType,
+          body: buffer,
         });
-        metaImage = blob.url;
       }
 
       // Process favicon if present
@@ -1479,11 +1478,11 @@ async function handleDataroomCreate(
         const { buffer, mimeType, filename } = convertDataUrlToBuffer(
           preset.metaFavicon,
         );
-        const blob = await put(filename, buffer, {
-          access: "public",
-          addRandomSuffix: true,
+        metaFavicon = await putPublicAsset({
+          filename,
+          contentType: mimeType,
+          body: buffer,
         });
-        metaFavicon = blob.url;
       }
     }
   }

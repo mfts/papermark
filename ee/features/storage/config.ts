@@ -4,10 +4,16 @@ export interface StorageConfig {
   bucket: string;
   advancedBucket?: string;
   archiveBucket: string;
+  /**
+   * Bucket for public assets (brand logos, banners, link preview images).
+   * Optional: when unset, public assets fall back to Vercel Blob.
+   */
+  publicBucket?: string;
   region: string;
   accessKeyId: string;
   secretAccessKey: string;
   endpoint?: string;
+  forcePathStyle?: boolean;
   distributionHost?: string;
   advancedDistributionHost?: string;
   distributionKeyId?: string;
@@ -74,10 +80,18 @@ export function getStorageConfig(storageRegion?: string): StorageConfig {
     bucket: getBucket(),
     advancedBucket: process.env[`NEXT_PRIVATE_ADVANCED_UPLOAD_BUCKET${suffix}`],
     archiveBucket: getArchiveBucket(),
+    // Deliberately not validated: leaving it unset is the supported way to
+    // keep serving public assets from Vercel Blob.
+    publicBucket: process.env[`NEXT_PRIVATE_PUBLIC_BUCKET${suffix}`],
     region: getRegion(),
     accessKeyId: getAccessKeyId(),
     secretAccessKey: getSecretAccessKey(),
     endpoint: process.env[`NEXT_PRIVATE_UPLOAD_ENDPOINT${suffix}`],
+    // S3-compatible servers (MinIO, Ceph, Garage, …) generally address buckets
+    // as `<endpoint>/<bucket>/<key>` rather than `<bucket>.<endpoint>/<key>`,
+    // which is what the AWS SDK defaults to. Real S3 ignores this flag.
+    forcePathStyle:
+      process.env[`NEXT_PRIVATE_UPLOAD_FORCE_PATH_STYLE${suffix}`] === "true",
     distributionHost:
       process.env[`NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST${suffix}`],
     advancedDistributionHost:
