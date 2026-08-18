@@ -1,12 +1,19 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
+import { dashboardLinkInclude } from "@/lib/api/links/dashboard-include";
+import { revalidateLinkById } from "@/lib/api/links/revalidate";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
+
+export const config = {
+  supportsResponseStreaming: true,
+};
 
 export default async function handle(
   req: NextApiRequest,
@@ -48,7 +55,10 @@ export default async function handle(
 
       const link = await prisma.link.findUnique({
         where: { id, teamId, deletedAt: null },
-        select: { dataroom: { select: { isFrozen: true } } },
+        select: {
+          linkType: true,
+          dataroom: { select: { isFrozen: true } },
+        },
       });
 
       if (!link) {
@@ -62,34 +72,12 @@ export default async function handle(
         });
       }
 
-      // Update the link in the database
       const updatedLink = await prisma.link.update({
         where: { id, teamId, deletedAt: null },
         data: {
           isArchived: isArchived,
         },
-        include: {
-          views: {
-            orderBy: {
-              viewedAt: "desc",
-            },
-          },
-          _count: {
-            select: { views: true },
-          },
-          tags: {
-            select: {
-              tag: {
-                select: {
-                  id: true,
-                  name: true,
-                  description: true,
-                  color: true,
-                },
-              },
-            },
-          },
-        },
+        include: dashboardLinkInclude(link.linkType),
       });
       if (!updatedLink) {
         return res.status(404).json({ error: "Link not found" });
@@ -98,13 +86,11 @@ export default async function handle(
       const { tags, ...rest } = updatedLink;
       const linkTags = tags.map((t) => t.tag);
 
-      await fetch(
-        `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}&hasDomain=${updatedLink.domainId ? "true" : "false"}`,
-      );
+      waitUntil(revalidateLinkById(id));
 
       return res.status(200).json({ ...rest, tags: linkTags });
     } catch (error) {
-      errorhandler(error, res);
+      return errorhandler(error, res);
     }
   }
 
