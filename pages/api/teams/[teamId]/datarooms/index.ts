@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+import { resolveDefaultBrandId } from "@/ee/features/branding/lib/resolve-base-brand";
 import { getLimits } from "@/ee/limits/server";
 import { Prisma } from "@prisma/client";
 
@@ -229,14 +230,15 @@ const postHandler = withTeamApi(
         });
       }
 
-      // Limits: Check if the user has reached the limit of datarooms in the team
-      const dataroomCount = await prisma.dataroom.count({
-        where: {
-          teamId: teamId,
-        },
-      });
-
-      const limits = await getLimits({ teamId, userId });
+      const [dataroomCount, limits, defaultBrandId] = await Promise.all([
+        prisma.dataroom.count({
+          where: {
+            teamId: teamId,
+          },
+        }),
+        getLimits({ teamId, userId }),
+        resolveDefaultBrandId(teamId),
+      ]);
 
       if (
         limits &&
@@ -255,6 +257,7 @@ const postHandler = withTeamApi(
           name: name,
           teamId: teamId,
           pId: pId,
+          brandId: defaultBrandId,
           ...(internalName && { internalName: internalName.trim() }),
         },
       });

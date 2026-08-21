@@ -138,6 +138,7 @@ export async function POST(request: NextRequest) {
         enableWatermark: true,
         watermarkConfig: true,
         teamId: true,
+        brandId: true,
         team: {
           select: {
             plan: true,
@@ -490,6 +491,7 @@ export async function POST(request: NextRequest) {
             otpCode,
             false,
             link.teamId!,
+            { linkBrandId: link.brandId },
           ),
         );
         return NextResponse.json({

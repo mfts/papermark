@@ -13,6 +13,8 @@ model Dataroom {
   viewers      Viewer[]
   viewerGroups ViewerGroup[]
   brand        DataroomBrand?
+  brandId      String?
+  baseBrand    Brand?           @relation("DataroomBaseBrand", fields: [brandId], references: [id], onDelete: SetNull)
 
   // Internal team members scoped to this dataroom (DATAROOM_MEMBER role).
   userDatarooms UserDataroom[]
@@ -89,6 +91,7 @@ model Dataroom {
   updatedAt DateTime @updatedAt
 
   @@index([teamId])
+  @@index([brandId])
 }
 
 // =============================================================================

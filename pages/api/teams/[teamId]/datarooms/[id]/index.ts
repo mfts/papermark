@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { resolveOwnedBrandId } from "@/ee/features/branding/lib/resolve-base-brand";
 import { DefaultPermissionStrategy, RootItemAccess } from "@prisma/client";
 
 import { withTeamApi } from "@/lib/api/auth/with-session-team";
@@ -79,6 +80,7 @@ const patchHandler = withTeamApi(
         introductionEnabled,
         introductionContent,
         requestListEnabled,
+        brandId,
       } = req.body as {
         name?: string;
         internalName?: string | null;
@@ -95,6 +97,7 @@ const patchHandler = withTeamApi(
         introductionEnabled?: boolean;
         introductionContent?: any;
         requestListEnabled?: boolean;
+        brandId?: string | null;
       };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
@@ -145,6 +148,11 @@ const patchHandler = withTeamApi(
         }
       }
 
+      const nextBrandId =
+        brandId === undefined
+          ? undefined
+          : await resolveOwnedBrandId(team.id, brandId);
+
       const updatedDataroom = await prisma.$transaction(async (tx) => {
         const dataroom = await tx.dataroom.update({
           where: {
@@ -152,6 +160,7 @@ const patchHandler = withTeamApi(
             teamId: team.id,
           },
           data: {
+            ...(nextBrandId !== undefined && { brandId: nextBrandId }),
             ...(name && { name }),
             ...(internalName !== undefined && {
               internalName:

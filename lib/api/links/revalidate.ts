@@ -25,7 +25,7 @@ function getRevalidateConfig(): RevalidateConfig | null {
 async function revalidateSingleLink(
   link: LinkForRevalidation,
   config: RevalidateConfig,
-): Promise<void> {
+): Promise<boolean> {
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
@@ -42,9 +42,13 @@ async function revalidateSingleLink(
       console.error(
         `Error revalidating link ${link.id}: unexpected status ${response.status}`,
       );
+      return false;
     }
+
+    return true;
   } catch (error) {
     console.error(`Error revalidating link ${link.id}:`, error);
+    return false;
   } finally {
     clearTimeout(timeout);
   }
@@ -71,19 +75,24 @@ async function revalidateLinks(links: LinkForRevalidation[]): Promise<void> {
 /**
  * Trigger ISR revalidation for a single link by ID.
  */
-export async function revalidateLinkById(linkId: string): Promise<void> {
-  try {
-    const link = await prisma.link.findUnique({
-      where: { id: linkId },
-      select: { id: true, domainId: true },
-    });
+export async function revalidateLinkById(linkId: string): Promise<boolean> {
+  const link = await prisma.link.findUnique({
+    where: { id: linkId },
+    select: { id: true, domainId: true },
+  });
 
-    if (!link) return;
-
-    await revalidateLinks([link]);
-  } catch (error) {
-    console.error(`Error revalidating link ${linkId}:`, error);
+  if (!link) {
+    console.error(`Error revalidating link ${linkId}: link not found`);
+    return false;
   }
+
+  const config = getRevalidateConfig();
+  if (!config) {
+    console.error(`Error revalidating link ${linkId}: missing revalidate config`);
+    return false;
+  }
+
+  return revalidateSingleLink(link, config);
 }
 
 /**

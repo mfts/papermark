@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+import { resolveOwnedBrandId } from "@/ee/features/branding/lib/resolve-base-brand";
 import { LinkAudienceType, Tag } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
@@ -271,8 +272,7 @@ export default async function handler(
 
         if (validGroups.length !== linkData.visitorGroupIds.length) {
           return res.status(400).json({
-            error:
-              "One or more visitor group IDs do not belong to this team.",
+            error: "One or more visitor group IDs do not belong to this team.",
           });
         }
       }
@@ -326,6 +326,8 @@ export default async function handler(
         }
       }
 
+      const resolvedBrandId = await resolveOwnedBrandId(teamId, linkData.brandId);
+
       // Fetch the link and its related document from the database
       const updatedLink = await prisma.$transaction(async (tx) => {
         const link = await tx.link.create({
@@ -358,6 +360,7 @@ export default async function handler(
             metaImage: linkData.metaImage || null,
             metaFavicon: linkData.metaFavicon || null,
             welcomeMessage: linkData.welcomeMessage || null,
+            brandId: resolvedBrandId,
             allowList: linkData.allowList,
             denyList: linkData.denyList,
             audienceType: linkData.audienceType,

@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+import { resolveDefaultBrandId } from "@/ee/features/branding/lib/resolve-base-brand";
 import { LinkPreset } from "@prisma/client";
 import { put } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
@@ -1493,12 +1494,14 @@ async function handleDataroomCreate(
     // Generate unique public ID for the dataroom
     const pId = newId("dataroom");
 
-    // Create dataroom with link if requested
+    const defaultBrandId = await resolveDefaultBrandId(teamId);
+
     let createData: any = {
       name,
       description,
       teamId,
       pId,
+      brandId: defaultBrandId,
     };
 
     if (createLink && link) {

@@ -95,6 +95,9 @@ model Link {
   teamId String?
   team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
+  brandId String?
+  brand   Brand?  @relation(fields: [brandId], references: [id], onDelete: SetNull)
+
   ownerId String?
   owner   User?   @relation("LinkOwner", fields: [ownerId], references: [id], onDelete: SetNull)
 
@@ -119,6 +122,7 @@ model Link {
   @@index([permissionGroupId]) // Performance optimization for permission group queries
   @@index([deletedAt]) // Performance optimization for filtering deleted links
   @@index([ownerId]) // Performance optimization for link owner queries
+  @@index([brandId])
 }
 
 model LinkPreset {

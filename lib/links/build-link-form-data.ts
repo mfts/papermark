@@ -1,14 +1,12 @@
-import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
-
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
+
+import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 
 /**
  * Maps a saved link onto the shape the link sheet edits, so any surface that
  * can name a link can also open it for editing.
  */
-export const buildLinkFormData = (
-  link: LinkWithViews,
-): DEFAULT_LINK_TYPE => ({
+export const buildLinkFormData = (link: LinkWithViews): DEFAULT_LINK_TYPE => ({
   id: link.id,
   name: link.name || `Link #${link.id.slice(-5)}`,
   domain: link.domainSlug,
@@ -24,9 +22,7 @@ export const buildLinkFormData = (
     link.visitorGroups?.map(
       (vg: { visitorGroupId: string }) => vg.visitorGroupId,
     ) || [],
-  enableNotification: link.enableNotification
-    ? link.enableNotification
-    : false,
+  enableNotification: link.enableNotification ? link.enableNotification : false,
   enableFeedback: link.enableFeedback ? link.enableFeedback : false,
   enableScreenshotProtection: link.enableScreenshotProtection
     ? link.enableScreenshotProtection
@@ -59,11 +55,11 @@ export const buildLinkFormData = (
   uploadFolderIds: Array.isArray(link.uploadFolderIds)
     ? link.uploadFolderIds
     : [],
-  uploadFolders: Array.isArray(link.uploadFolders)
-    ? link.uploadFolders
-    : [],
+  uploadFolders: Array.isArray(link.uploadFolders) ? link.uploadFolders : [],
   enableIndexFile: link.enableIndexFile ?? false,
   permissionGroupId: link.permissionGroupId ?? null,
   welcomeMessage: link.welcomeMessage ?? null,
+  brandId: link.brandId ?? null,
+  dataroomBrandId: link.dataroom?.brandId ?? null,
   enableAIAgents: link.enableAIAgents ?? false,
 });

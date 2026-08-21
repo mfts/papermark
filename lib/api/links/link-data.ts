@@ -1,4 +1,13 @@
-import { mergeBrandLogoFields } from "@/ee/features/branding/lib/brand-logo";
+import {
+  resolveBaseBrand,
+  teamBrandOgSelect,
+  teamBrandViewerSelect,
+  teamBrandWorkflowSelect,
+} from "@/ee/features/branding/lib/resolve-base-brand";
+import {
+  inheritsTeamBrand,
+  resolveDisplayedDataroomBrand,
+} from "@/ee/features/branding/lib/resolve-dataroom-displayed-brand";
 import { resolvePublicLinkMeta } from "@/ee/features/branding/lib/resolve-public-link-meta";
 import type { ResolvedPublicLinkMeta } from "@/ee/features/branding/lib/resolve-public-link-meta";
 import {
@@ -67,6 +76,7 @@ const linkSelect = {
   metaImage: true,
   metaFavicon: true,
   welcomeMessage: true,
+  brandId: true,
   enableQuestion: true,
   linkType: true,
   feedback: {
@@ -84,6 +94,11 @@ const linkSelect = {
   permissionGroupId: true,
   audienceType: true,
   dataroomId: true,
+  dataroom: {
+    select: {
+      brandId: true,
+    },
+  },
   teamId: true,
   team: {
     select: {
@@ -216,12 +231,14 @@ export async function fetchDataroomLinkData({
   const linkData = await prisma.link.findUnique({
     where: { id: linkId, teamId },
     select: {
+      brandId: true,
       dataroom: {
         select: {
           id: true,
           name: true,
           description: true,
           teamId: true,
+          brandId: true,
           isFrozen: true,
           allowBulkDownload: true,
           showLastUpdated: true,
@@ -334,75 +351,23 @@ export async function fetchDataroomLinkData({
     },
   });
 
-  const teamBrand = await prisma.brand.findFirst({
-    where: { teamId: linkData.dataroom.teamId },
-    select: {
-      logo: true,
-      hideLogo: true,
-      banner: true,
-      brandColor: true,
-      accentColor: true,
-      accentButtonColor: true,
-      applyAccentColorToDataroomView: true,
-      welcomeMessage: true,
-      ctaLabel: true,
-      ctaUrl: true,
-      cardLayout: true,
-      showFolderTree: true,
-      viewerLayoutPreset: true,
-      viewerHeaderStyle: true,
-      hideFolderIconsInMain: true,
-      defaultLanguage: true,
-      privacyPolicyUrl: true,
-    },
+  const inheritTeamBrand = inheritsTeamBrand({
+    linkBrandId: linkData.brandId,
+    dataroomBrandId: linkData.dataroom.brandId,
+    hasDataroomBrand: Boolean(dataroomBrand),
+  });
+  const teamBrand = await resolveBaseBrand({
+    teamId: linkData.dataroom.teamId,
+    linkBrandId: linkData.brandId,
+    dataroomBrandId: linkData.dataroom.brandId,
+    select: teamBrandViewerSelect,
   });
 
-  const brand = {
-    ...mergeBrandLogoFields({
-      dataroom: dataroomBrand,
-      team: teamBrand,
-    }),
-    banner: dataroomBrand?.banner || teamBrand?.banner || null,
-    brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
-    accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
-    accentButtonColor:
-      dataroomBrand?.accentButtonColor || teamBrand?.accentButtonColor || null,
-    applyAccentColorToDataroomView:
-      dataroomBrand?.applyAccentColorToDataroomView ??
-      teamBrand?.applyAccentColorToDataroomView ??
-      false,
-    welcomeMessage: dataroomBrand?.welcomeMessage || teamBrand?.welcomeMessage,
-    // Layout fields cascade: dataroom override → team default → enum default.
-    // Per-dataroom rows always win once present (matches accentColor pattern).
-    cardLayout:
-      dataroomBrand?.cardLayout ?? (teamBrand as any)?.cardLayout ?? "LIST",
-    showFolderTree:
-      dataroomBrand?.showFolderTree ??
-      (teamBrand as any)?.showFolderTree ??
-      true,
-    viewerLayoutPreset:
-      dataroomBrand?.viewerLayoutPreset ??
-      (teamBrand as any)?.viewerLayoutPreset ??
-      "STANDARD",
-    viewerHeaderStyle:
-      dataroomBrand?.viewerHeaderStyle ??
-      (teamBrand as any)?.viewerHeaderStyle ??
-      "DEFAULT",
-    hideFolderIconsInMain:
-      dataroomBrand?.hideFolderIconsInMain ??
-      (teamBrand as any)?.hideFolderIconsInMain ??
-      false,
-    ctaLabel: dataroomBrand?.ctaLabel ?? teamBrand?.ctaLabel ?? null,
-    ctaUrl: dataroomBrand?.ctaUrl ?? teamBrand?.ctaUrl ?? null,
-    // Viewer i18n: dataroom-level setting wins, else team-level, else en.
-    // Read by `buildViewerI18nPageProps` to pick the locale + bundles.
-    defaultLanguage:
-      (dataroomBrand as any)?.defaultLanguage ??
-      (teamBrand as any)?.defaultLanguage ??
-      "en",
-    // Team-level only; `processLinkData` strips it again when it doesn't apply.
-    privacyPolicyUrl: (teamBrand as any)?.privacyPolicyUrl ?? null,
-  };
+  const brand = resolveDisplayedDataroomBrand({
+    dataroomBrand,
+    teamBrand,
+    inheritTeamBrand,
+  });
 
   // Extract access controls from either ViewerGroup or PermissionGroup
   const accessControls =
@@ -480,12 +445,14 @@ export async function fetchDataroomDocumentLinkData({
   const linkData = await prisma.link.findUnique({
     where: { id: linkId, teamId, linkType: "DATAROOM_LINK", deletedAt: null },
     select: {
+      brandId: true,
       dataroom: {
         select: {
           id: true,
           name: true,
           description: true,
           teamId: true,
+          brandId: true,
           isFrozen: true,
           allowBulkDownload: true,
           showLastUpdated: true,
@@ -549,71 +516,23 @@ export async function fetchDataroomDocumentLinkData({
     },
   });
 
-  const teamBrand = await prisma.brand.findFirst({
-    where: { teamId: linkData.dataroom.teamId },
-    select: {
-      logo: true,
-      hideLogo: true,
-      banner: true,
-      brandColor: true,
-      accentColor: true,
-      accentButtonColor: true,
-      applyAccentColorToDataroomView: true,
-      welcomeMessage: true,
-      ctaLabel: true,
-      ctaUrl: true,
-      cardLayout: true,
-      showFolderTree: true,
-      viewerLayoutPreset: true,
-      viewerHeaderStyle: true,
-      hideFolderIconsInMain: true,
-      defaultLanguage: true,
-      privacyPolicyUrl: true,
-    },
+  const inheritTeamBrand = inheritsTeamBrand({
+    linkBrandId: linkData.brandId,
+    dataroomBrandId: linkData.dataroom.brandId,
+    hasDataroomBrand: Boolean(dataroomBrand),
+  });
+  const teamBrand = await resolveBaseBrand({
+    teamId: linkData.dataroom.teamId,
+    linkBrandId: linkData.brandId,
+    dataroomBrandId: linkData.dataroom.brandId,
+    select: teamBrandViewerSelect,
   });
 
-  const brand = {
-    ...mergeBrandLogoFields({
-      dataroom: dataroomBrand,
-      team: teamBrand,
-    }),
-    banner: dataroomBrand?.banner || teamBrand?.banner || null,
-    brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
-    accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
-    accentButtonColor:
-      dataroomBrand?.accentButtonColor || teamBrand?.accentButtonColor || null,
-    applyAccentColorToDataroomView:
-      dataroomBrand?.applyAccentColorToDataroomView ??
-      teamBrand?.applyAccentColorToDataroomView ??
-      false,
-    welcomeMessage: dataroomBrand?.welcomeMessage || teamBrand?.welcomeMessage,
-    cardLayout:
-      dataroomBrand?.cardLayout ?? (teamBrand as any)?.cardLayout ?? "LIST",
-    showFolderTree:
-      dataroomBrand?.showFolderTree ??
-      (teamBrand as any)?.showFolderTree ??
-      true,
-    viewerLayoutPreset:
-      dataroomBrand?.viewerLayoutPreset ??
-      (teamBrand as any)?.viewerLayoutPreset ??
-      "STANDARD",
-    viewerHeaderStyle:
-      dataroomBrand?.viewerHeaderStyle ??
-      (teamBrand as any)?.viewerHeaderStyle ??
-      "DEFAULT",
-    hideFolderIconsInMain:
-      dataroomBrand?.hideFolderIconsInMain ??
-      (teamBrand as any)?.hideFolderIconsInMain ??
-      false,
-    ctaLabel: dataroomBrand?.ctaLabel ?? teamBrand?.ctaLabel ?? null,
-    ctaUrl: dataroomBrand?.ctaUrl ?? teamBrand?.ctaUrl ?? null,
-    defaultLanguage:
-      (dataroomBrand as any)?.defaultLanguage ??
-      (teamBrand as any)?.defaultLanguage ??
-      "en",
-    // Team-level only; `processLinkData` strips it again when it doesn't apply.
-    privacyPolicyUrl: (teamBrand as any)?.privacyPolicyUrl ?? null,
-  };
+  const brand = resolveDisplayedDataroomBrand({
+    dataroomBrand,
+    teamBrand,
+    inheritTeamBrand,
+  });
 
   return { linkData, brand };
 }
@@ -628,6 +547,7 @@ export async function fetchDocumentLinkData({
   const linkData = await prisma.link.findUnique({
     where: { id: linkId, teamId, deletedAt: null },
     select: {
+      brandId: true,
       document: {
         select: {
           id: true,
@@ -660,20 +580,10 @@ export async function fetchDocumentLinkData({
     throw new Error("Document not found");
   }
 
-  const brand = await prisma.brand.findFirst({
-    where: { teamId: linkData.document.teamId },
-    select: {
-      logo: true,
-      hideLogo: true,
-      brandColor: true,
-      accentColor: true,
-      accentButtonColor: true,
-      welcomeMessage: true,
-      ctaLabel: true,
-      ctaUrl: true,
-      defaultLanguage: true,
-      privacyPolicyUrl: true,
-    },
+  const brand = await resolveBaseBrand({
+    teamId: linkData.document.teamId,
+    linkBrandId: linkData.brandId,
+    select: teamBrandViewerSelect,
   });
 
   return { linkData, brand };
@@ -729,16 +639,10 @@ async function processLinkData(
   if (linkType === "WORKFLOW_LINK") {
     let brand: Partial<Brand> | null = null;
     if (link.teamId) {
-      const teamBrand = await prisma.brand.findUnique({
-        where: { teamId: link.teamId },
-        select: {
-          logo: true,
-          hideLogo: true,
-          brandColor: true,
-          accentColor: true,
-          defaultLanguage: true,
-          privacyPolicyUrl: true,
-        },
+      const teamBrand = await resolveBaseBrand({
+        teamId: link.teamId,
+        linkBrandId: link.brandId,
+        select: teamBrandWorkflowSelect,
       });
       brand = await applyPrivacyPolicyUrlVisibility(teamBrand, {
         teamId: link.teamId,
@@ -919,15 +823,11 @@ async function processLinkData(
     (linkType === "DOCUMENT_LINK" || linkType === "DATAROOM_LINK")
   ) {
     const [teamBrandLp, dataroomBrandLp] = await Promise.all([
-      prisma.brand.findFirst({
-        where: { teamId: link.teamId },
-        select: {
-          customLinkPreviewEnabled: true,
-          linkPreviewTitle: true,
-          linkPreviewDescription: true,
-          linkPreviewImage: true,
-          linkPreviewFavicon: true,
-        },
+      resolveBaseBrand({
+        teamId: link.teamId,
+        linkBrandId: link.brandId,
+        dataroomBrandId: link.dataroom?.brandId,
+        select: teamBrandOgSelect,
       }),
       linkType === "DATAROOM_LINK" && link.dataroomId
         ? prisma.dataroomBrand.findFirst({
@@ -956,6 +856,11 @@ async function processLinkData(
       }
     }
 
+    const inheritTeamBrand = inheritsTeamBrand({
+      linkBrandId: link.brandId,
+      dataroomBrandId: link.dataroom?.brandId,
+      hasDataroomBrand: Boolean(dataroomBrandLp),
+    });
     publicMeta = resolvePublicLinkMeta({
       link: {
         enableCustomMetatag: !!link.enableCustomMetatag,
@@ -964,8 +869,8 @@ async function processLinkData(
         metaImage: link.metaImage,
         metaFavicon: link.metaFavicon,
       },
-      teamBrand: teamBrandLp,
-      dataroomBrand: dataroomBrandLp,
+      teamBrand: inheritTeamBrand ? teamBrandLp : null,
+      dataroomBrand: inheritTeamBrand ? null : dataroomBrandLp,
       defaultTitle,
     });
   }

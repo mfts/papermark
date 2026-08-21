@@ -9,6 +9,11 @@ import { BrandingPreviewChrome } from "@/ee/features/branding/components/brandin
 import { CollapsibleBrandingSection } from "@/ee/features/branding/components/collapsible-branding-section";
 import { DataroomLayoutPresetCards } from "@/ee/features/branding/components/dataroom-layout-preset-cards";
 import {
+  DRAFT_TEAM_BRAND_ID,
+  TeamBrandSwitcher,
+  nextTeamBrandName,
+} from "@/ee/features/branding/components/team-brand-switcher";
+import {
   AUTO_FILL_NOT_FOUND_MESSAGE,
   autoFillHasBrandAssets,
 } from "@/ee/features/branding/lib/auto-fill-result";
@@ -31,7 +36,7 @@ import { useDebounce } from "use-debounce";
 
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { usePlan } from "@/lib/swr/use-billing";
-import { useBrand } from "@/lib/swr/use-brand";
+import { useBrand, useBrands } from "@/lib/swr/use-brand";
 import { cn, convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
@@ -59,6 +64,22 @@ import { DataroomBannerMedia } from "@/components/view/dataroom/dataroom-banner-
 export default function Branding() {
   const teamInfo = useTeam();
   const { brand } = useBrand();
+  const {
+    brands,
+    defaultBrandId,
+    loading: brandsLoading,
+    mutate: mutateBrands,
+  } = useBrands();
+  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
+  const [brandName, setBrandName] = useState("Default");
+  const isDraftBrand = selectedBrandId === DRAFT_TEAM_BRAND_ID;
+  const persistedBrandId = isDraftBrand ? null : selectedBrandId;
+  const selectedBrand = isDraftBrand
+    ? null
+    : persistedBrandId
+      ? (brands.find((item) => item.id === persistedBrandId) ??
+        (brand?.id === persistedBrandId ? brand : null))
+      : (brand ?? null);
   const { plan, isTrial, isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
   const { isFeatureEnabled } = useFeatureFlags();
   const customPrivacyUrlEnabled = isFeatureEnabled("customPrivacyUrl");
@@ -358,66 +379,13 @@ export default function Branding() {
   }, [bannerBlobUrl]);
 
   useEffect(() => {
-    // undefined = SWR still loading; null = no Brand row (treat as reset defaults)
-    if (brand === undefined) return;
-
-    if (brand) {
-      setBrandColor(brand.brandColor || "#000000");
-      setAccentColor(brand.accentColor || "#FFFFFF");
-      setAccentButtonColor(
-        (brand as any)?.accentButtonColor || brand.brandColor || "#000000",
-      );
-      setLogo(brand.logo || null);
-      setHideLogo(!!brand.hideLogo);
-      setBanner(brand.banner || null);
-      setApplyAccentColorToDataroomView(
-        (brand as any)?.applyAccentColorToDataroomView ?? false,
-      );
-      const initialCtaLabel = (brand as any)?.ctaLabel ?? "";
-      const initialCtaUrl = (brand as any)?.ctaUrl ?? "";
-      setCtaLabel(initialCtaLabel);
-      setCtaUrl(initialCtaUrl);
-      setCtaEnabled(!!(initialCtaLabel || initialCtaUrl));
-      const initialPrivacyPolicyUrl = (brand as any)?.privacyPolicyUrl ?? "";
-      setPrivacyPolicyUrl(initialPrivacyPolicyUrl);
-      setPrivacyPolicyEnabled(!!initialPrivacyPolicyUrl);
-      setPrivacyPolicyUrlError(null);
-      const savedMessage = brand.welcomeMessage ?? null;
-      const message = savedMessage || DEFAULT_WELCOME_MESSAGE;
-      setWelcomeMessage(message);
-      setWelcomeEnabled(
-        !!savedMessage && savedMessage !== DEFAULT_WELCOME_MESSAGE,
-      );
-      // Validate existing message
-      const error = validateWelcomeMessage(message);
-      setWelcomeMessageError(error);
-      setLinkPreviewEnabled((brand as any)?.customLinkPreviewEnabled === true);
-      setLinkPreviewTitle((brand as any)?.linkPreviewTitle ?? "");
-      setLinkPreviewDescription((brand as any)?.linkPreviewDescription ?? "");
-      setLinkPreviewImage((brand as any)?.linkPreviewImage ?? null);
-      setLinkPreviewFavicon((brand as any)?.linkPreviewFavicon ?? null);
-
-      const loadedCardLayout = asDataroomCardLayout((brand as any)?.cardLayout);
-      const loadedShowFolderTree =
-        ((brand as any)?.showFolderTree as boolean | undefined) ?? true;
-      const loadedHeaderStyle = asDataroomViewerHeaderStyle(
-        (brand as any)?.viewerHeaderStyle,
-      );
-      const loadedHideFolderIcons =
-        ((brand as any)?.hideFolderIconsInMain as boolean | undefined) ?? false;
-      setCardLayout(loadedCardLayout);
-      setShowFolderTree(loadedShowFolderTree);
-      setViewerHeaderStyle(loadedHeaderStyle);
-      setHideFolderIconsInMain(loadedHideFolderIcons);
-      initialLayoutSnapshotRef.current = {
-        cardLayout: loadedCardLayout,
-        showFolderTree: loadedShowFolderTree,
-        viewerHeaderStyle: loadedHeaderStyle,
-        hideFolderIconsInMain: loadedHideFolderIcons,
-      };
-      return;
+    if (!selectedBrandId && defaultBrandId) {
+      setSelectedBrandId(defaultBrandId);
     }
+  }, [defaultBrandId, selectedBrandId]);
 
+  const applyEmptyBrandForm = (name: string) => {
+    setBrandName(name);
     setBrandColor("#000000");
     setAccentColor("#030712");
     setAccentButtonColor("#000000");
@@ -443,13 +411,82 @@ export default function Branding() {
     setShowFolderTree(true);
     setViewerHeaderStyle("DEFAULT");
     setHideFolderIconsInMain(false);
+    setFileError(null);
+    setBannerError(null);
     initialLayoutSnapshotRef.current = {
       cardLayout: "LIST",
       showFolderTree: true,
       viewerHeaderStyle: "DEFAULT",
       hideFolderIconsInMain: false,
     };
-  }, [brand]);
+  };
+
+  useEffect(() => {
+    if (isDraftBrand) return;
+    if (brandsLoading && brand === undefined) return;
+    if (persistedBrandId && !selectedBrand) return;
+
+    if (selectedBrand) {
+      setBrandName(selectedBrand.name || "Default");
+      setBrandColor(selectedBrand.brandColor || "#000000");
+      setAccentColor(selectedBrand.accentColor || "#FFFFFF");
+      setAccentButtonColor(
+        selectedBrand.accentButtonColor ||
+          selectedBrand.brandColor ||
+          "#000000",
+      );
+      setLogo(selectedBrand.logo || null);
+      setHideLogo(!!selectedBrand.hideLogo);
+      setBanner(selectedBrand.banner || null);
+      setApplyAccentColorToDataroomView(
+        selectedBrand.applyAccentColorToDataroomView ?? false,
+      );
+      const initialCtaLabel = selectedBrand.ctaLabel ?? "";
+      const initialCtaUrl = selectedBrand.ctaUrl ?? "";
+      setCtaLabel(initialCtaLabel);
+      setCtaUrl(initialCtaUrl);
+      setCtaEnabled(!!(initialCtaLabel || initialCtaUrl));
+      const initialPrivacyPolicyUrl = selectedBrand.privacyPolicyUrl ?? "";
+      setPrivacyPolicyUrl(initialPrivacyPolicyUrl);
+      setPrivacyPolicyEnabled(!!initialPrivacyPolicyUrl);
+      setPrivacyPolicyUrlError(null);
+      const savedMessage = selectedBrand.welcomeMessage ?? null;
+      const message = savedMessage || DEFAULT_WELCOME_MESSAGE;
+      setWelcomeMessage(message);
+      setWelcomeEnabled(
+        !!savedMessage && savedMessage !== DEFAULT_WELCOME_MESSAGE,
+      );
+      // Validate existing message
+      const error = validateWelcomeMessage(message);
+      setWelcomeMessageError(error);
+      setLinkPreviewEnabled(selectedBrand.customLinkPreviewEnabled === true);
+      setLinkPreviewTitle(selectedBrand.linkPreviewTitle ?? "");
+      setLinkPreviewDescription(selectedBrand.linkPreviewDescription ?? "");
+      setLinkPreviewImage(selectedBrand.linkPreviewImage ?? null);
+      setLinkPreviewFavicon(selectedBrand.linkPreviewFavicon ?? null);
+
+      const loadedCardLayout = asDataroomCardLayout(selectedBrand.cardLayout);
+      const loadedShowFolderTree = selectedBrand.showFolderTree ?? true;
+      const loadedHeaderStyle = asDataroomViewerHeaderStyle(
+        selectedBrand.viewerHeaderStyle,
+      );
+      const loadedHideFolderIcons =
+        selectedBrand.hideFolderIconsInMain ?? false;
+      setCardLayout(loadedCardLayout);
+      setShowFolderTree(loadedShowFolderTree);
+      setViewerHeaderStyle(loadedHeaderStyle);
+      setHideFolderIconsInMain(loadedHideFolderIcons);
+      initialLayoutSnapshotRef.current = {
+        cardLayout: loadedCardLayout,
+        showFolderTree: loadedShowFolderTree,
+        viewerHeaderStyle: loadedHeaderStyle,
+        hideFolderIconsInMain: loadedHideFolderIcons,
+      };
+      return;
+    }
+
+    applyEmptyBrandForm("Default");
+  }, [brand, brandsLoading, isDraftBrand, persistedBrandId, selectedBrand]);
 
   // Mirrors the server-side check in `validateRedirectUrl`: HTTPS only.
   const validatePrivacyPolicyUrl = (url: string): string | null => {
@@ -560,11 +597,12 @@ export default function Branding() {
       }
 
       const data = {
+        name: brandName.trim() || "Default",
         welcomeMessage: hasBusinessMessagingAccess
           ? welcomeEnabled
             ? welcomeMessage.trim() || DEFAULT_WELCOME_MESSAGE
             : null
-          : ((brand as any)?.welcomeMessage ?? null),
+          : (selectedBrand?.welcomeMessage ?? null),
         brandColor: brandColor,
         accentColor: accentColor,
         accentButtonColor: accentButtonColor,
@@ -575,43 +613,40 @@ export default function Branding() {
           ? ctaEnabled
             ? ctaLabel.trim() || null
             : null
-          : ((brand as any)?.ctaLabel ?? null),
+          : (selectedBrand?.ctaLabel ?? null),
         ctaUrl: hasBusinessMessagingAccess
           ? ctaEnabled
             ? ctaUrl.trim() || null
             : null
-          : ((brand as any)?.ctaUrl ?? null),
+          : (selectedBrand?.ctaUrl ?? null),
         ...(customPrivacyUrlEnabled && {
           privacyPolicyUrl: privacyPolicyEnabled
             ? privacyPolicyUrl.trim() || null
             : null,
         }),
-        // Custom Link Preview — only writable when the team plan grants the
-        // Business messaging tier. Otherwise we mirror back what's already
-        // persisted so the API doesn't clear it out from a lower tier.
         customLinkPreviewEnabled: hasBusinessMessagingAccess
           ? linkPreviewEnabled
-          : !!(brand as any)?.customLinkPreviewEnabled,
+          : !!selectedBrand?.customLinkPreviewEnabled,
         linkPreviewTitle: hasBusinessMessagingAccess
           ? linkPreviewEnabled
             ? linkPreviewTitle.trim() || null
             : null
-          : ((brand as any)?.linkPreviewTitle ?? null),
+          : (selectedBrand?.linkPreviewTitle ?? null),
         linkPreviewDescription: hasBusinessMessagingAccess
           ? linkPreviewEnabled
             ? linkPreviewDescription.trim() || null
             : null
-          : ((brand as any)?.linkPreviewDescription ?? null),
+          : (selectedBrand?.linkPreviewDescription ?? null),
         linkPreviewImage: hasBusinessMessagingAccess
           ? linkPreviewEnabled
             ? linkPreviewImageUrl
             : null
-          : ((brand as any)?.linkPreviewImage ?? null),
+          : (selectedBrand?.linkPreviewImage ?? null),
         linkPreviewFavicon: hasBusinessMessagingAccess
           ? linkPreviewEnabled
             ? linkPreviewFaviconUrl
             : null
-          : ((brand as any)?.linkPreviewFavicon ?? null),
+          : (selectedBrand?.linkPreviewFavicon ?? null),
         // Only include banner if user has dataroom access (Business+)
         ...(hasDataroomAccess && { banner: bannerBlobUrl }),
         // Layout fields are only included when the plan can persist them. The
@@ -626,10 +661,15 @@ export default function Branding() {
         }),
       };
 
+      const teamId = teamInfo?.currentTeam?.id;
       const res = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/branding`,
+        persistedBrandId
+          ? `/api/teams/${teamId}/brands/${persistedBrandId}`
+          : isDraftBrand
+            ? `/api/teams/${teamId}/brands`
+            : `/api/teams/${teamId}/branding`,
         {
-          method: brand ? "PUT" : "POST",
+          method: persistedBrandId ? "PUT" : "POST",
           body: JSON.stringify(data),
           headers: {
             "Content-Type": "application/json",
@@ -638,7 +678,12 @@ export default function Branding() {
       );
 
       if (res.ok) {
-        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/branding`);
+        const saved = await res.json().catch(() => null);
+        if (saved?.id) {
+          setSelectedBrandId(saved.id);
+        }
+        mutate(`/api/teams/${teamId}/branding`);
+        void mutateBrands();
         if (hasLayoutSaveAccess) {
           initialLayoutSnapshotRef.current = {
             cardLayout,
@@ -661,10 +706,44 @@ export default function Branding() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleCreateBrand = () => {
+    setSelectedBrandId(DRAFT_TEAM_BRAND_ID);
+    applyEmptyBrandForm(nextTeamBrandName(brands));
+  };
+
+  const handleSetDefaultBrand = async () => {
+    const teamId = teamInfo?.currentTeam?.id;
+    if (!teamId || !persistedBrandId) return;
     setIsLoading(true);
+    try {
+      const res = await fetch(
+        `/api/teams/${teamId}/brands/${persistedBrandId}/default`,
+        { method: "POST" },
+      );
+      if (!res.ok) {
+        toast.error("Failed to set default brand");
+        return;
+      }
+      await mutateBrands();
+      mutate(`/api/teams/${teamId}/branding`);
+      toast.success("Default brand updated");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (isDraftBrand) {
+      setSelectedBrandId(defaultBrandId);
+      return;
+    }
+
+    setIsLoading(true);
+    const teamId = teamInfo?.currentTeam?.id;
     const res = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/branding`,
+      persistedBrandId
+        ? `/api/teams/${teamId}/brands/${persistedBrandId}`
+        : `/api/teams/${teamId}/branding`,
       {
         method: "DELETE",
         headers: {
@@ -674,9 +753,9 @@ export default function Branding() {
     );
 
     if (res.ok) {
-      await mutate(`/api/teams/${teamInfo?.currentTeam?.id}/branding`, null, {
-        revalidate: false,
-      });
+      await mutate(`/api/teams/${teamId}/branding`);
+      const next = await mutateBrands();
+      setSelectedBrandId(next?.defaultBrandId ?? null);
       setLogo(null);
       setHideLogo(false);
       setBanner(null);
@@ -709,10 +788,10 @@ export default function Branding() {
         hideFolderIconsInMain: false,
       };
       setIsLoading(false);
-      toast.success("Branding reset successfully");
+      toast.success("Brand deleted");
     } else {
       setIsLoading(false);
-      toast.error("Failed to reset branding");
+      toast.error("Failed to delete brand");
     }
   };
 
@@ -724,12 +803,11 @@ export default function Branding() {
         <div className="mb-4 flex items-start justify-between gap-4 md:mb-6 lg:shrink-0">
           <div className="max-w-3xl space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-              Global Branding
+              Branding
             </h1>
             <div className="text-sm text-muted-foreground">
-              All direct links to documents and data rooms will have your
-              branding applied. You can overwrite the branding for each data
-              room individually.{" "}
+              The default brand applies to every document and data room link
+              unless you pick another brand on that link or room.{" "}
               <BadgeTooltip
                 linkText="Click here"
                 content="How to customize document branding?"
@@ -745,7 +823,19 @@ export default function Branding() {
           </Button>
         </div>
 
-        {/* Main Layout */}
+        <TeamBrandSwitcher
+          brands={brands}
+          selectedBrandId={selectedBrandId}
+          defaultBrandId={defaultBrandId}
+          brandName={brandName}
+          onBrandNameChange={setBrandName}
+          onSelect={setSelectedBrandId}
+          onCreate={handleCreateBrand}
+          onSetDefault={handleSetDefaultBrand}
+          onDelete={handleDelete}
+          disabled={isLoading}
+        />
+
         <div className="flex w-full flex-col gap-6 lg:min-h-0 lg:flex-1 lg:flex-row lg:gap-8">
           {/* Settings Column */}
           <div className="flex w-full flex-col gap-6 lg:min-h-0 lg:w-[420px] lg:shrink-0">
@@ -1745,7 +1835,11 @@ export default function Branding() {
                   Save changes
                 </Button>
               )}
-              <Button variant="ghost" onClick={handleDelete} disabled={!brand}>
+              <Button
+                variant="ghost"
+                onClick={handleDelete}
+                disabled={!selectedBrand && !isDraftBrand}
+              >
                 Reset branding
               </Button>
             </div>

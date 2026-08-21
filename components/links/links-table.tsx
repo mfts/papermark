@@ -24,6 +24,7 @@ import {
   FileSlidersIcon,
   FileSpreadsheetIcon,
   LinkIcon,
+  RefreshCwIcon,
   SendIcon,
   Settings2Icon,
   Square,
@@ -37,9 +38,9 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
+import { buildLinkFormData } from "@/lib/links/build-link-form-data";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
-import { buildLinkFormData } from "@/lib/links/build-link-form-data";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
@@ -84,7 +85,6 @@ import { Label } from "../ui/label";
 import { ButtonTooltip } from "../ui/tooltip";
 import { useDeleteLinkModal } from "./delete-link-modal";
 import EmbedCodeModal from "./embed-code-modal";
-import { useTransferLinkModal } from "./transfer-link-modal";
 import LinkActiveControls, {
   countActiveSettings,
 } from "./link-active-controls";
@@ -95,6 +95,7 @@ import LinkSheet, {
 import { DataroomLinkSheet } from "./link-sheet/dataroom-link-sheet";
 import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
+import { useTransferLinkModal } from "./transfer-link-modal";
 
 const BulkImportLinksModal = dynamic(
   () =>
@@ -519,6 +520,37 @@ export default function LinksTable({
     setInviteDefaultEmails(sanitizedEmails);
     setInviteLink(link);
     setIsInviteModalOpen(true);
+  };
+
+  const handleRevalidateLinkCache = (link: LinkWithViews) => {
+    if (!currentTeamId) {
+      toast.error("Failed to revalidate link cache");
+      return;
+    }
+
+    toast.promise(
+      fetch(`/api/links/${link.id}/revalidate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          teamId: currentTeamId,
+        }),
+      }).then(async (response) => {
+        if (!response.ok) {
+          const data = await response.json().catch(() => null);
+          throw new Error(
+            data?.error || `HTTP error! status: ${response.status}`,
+          );
+        }
+      }),
+      {
+        loading: "Revalidating link cache...",
+        success: "Link cache revalidated",
+        error: "Failed to revalidate link cache",
+      },
+    );
   };
 
   const handleEditPermissions = (link: LinkWithViews) => {
@@ -1039,9 +1071,7 @@ export default function LinksTable({
                               setSelectedEmbedLink({
                                 id: link.id,
                                 name: link.name || `Link #${link.id.slice(-5)}`,
-                                domain: link.domainId
-                                  ? link.domainSlug
-                                  : null,
+                                domain: link.domainId ? link.domainSlug : null,
                                 slug: link.domainId ? link.slug : null,
                               });
                               setEmbedModalOpen(true);
@@ -1049,6 +1079,12 @@ export default function LinksTable({
                           >
                             <Code2Icon className="mr-2 h-4 w-4" />
                             Get Embed Code
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleRevalidateLinkCache(link)}
+                          >
+                            <RefreshCwIcon className="mr-2 h-4 w-4" />
+                            Revalidate link cache
                           </DropdownMenuItem>
                           {!isFree && (
                             <>

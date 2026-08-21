@@ -9,7 +9,9 @@ model Team {
   domains       Domain[]
   invitations   Invitation[]
   sentEmails    SentEmail[]
-  brand         Brand?
+  brands         Brand[] @relation("TeamBrands")
+  defaultBrandId String?
+  defaultBrand   Brand?  @relation("TeamDefaultBrand", fields: [defaultBrandId], references: [id], onDelete: SetNull)
   datarooms     Dataroom[]
   agreements    Agreement[]
   viewerGroups  ViewerGroup[]
@@ -93,6 +95,8 @@ model Team {
   referralTrackSelectedAt DateTime?
   referralProfile         Json?
   referralInvites         ReferralInvite[]
+
+  @@index([defaultBrandId])
 }
 
 enum Role {

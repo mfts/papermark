@@ -74,6 +74,9 @@ export default async function handle(
           visitorGroups: {
             select: { visitorGroupId: true },
           },
+          dataroom: {
+            select: { brandId: true },
+          },
           _count: {
             select: { views: { where: { viewType: "DATAROOM_VIEW" } } },
           },

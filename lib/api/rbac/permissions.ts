@@ -26,6 +26,7 @@ export type PermissionAction =
   | "tokens.write"
   | "webhooks.write"
   | "domains.write"
+  | "branding.read"
   | "branding.write"
   // SAML / SSO configuration (admin only).
   | "sso.write";
@@ -45,6 +46,7 @@ const ALL_PERMISSIONS: PermissionAction[] = [
   "tokens.write",
   "webhooks.write",
   "domains.write",
+  "branding.read",
   "branding.write",
   "sso.write",
 ];
@@ -74,6 +76,8 @@ const DATAROOM_MEMBER_PERMISSIONS: PermissionAction[] = [
   "links.read",
   "links.write",
   "analytics.read",
+  // Read team brands when picking one for an assigned room or link.
+  "branding.read",
 ];
 
 /**

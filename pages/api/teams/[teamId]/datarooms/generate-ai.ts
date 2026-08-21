@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+import { resolveDefaultBrandId } from "@/ee/features/branding/lib/resolve-base-brand";
 import { FolderTemplate } from "@/ee/features/templates/constants/dataroom-templates";
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -170,6 +171,9 @@ export default async function handle(
       }
 
       const dataroomName = name.trim();
+      const defaultBrandId = existingDataroomId
+        ? null
+        : await resolveDefaultBrandId(teamId);
 
       // Create the dataroom and folders in a transaction to prevent hanging results
       const dataroom = await prisma.$transaction(async (tx) => {
@@ -201,6 +205,7 @@ export default async function handle(
               name: dataroomName,
               teamId: teamId,
               pId: pId,
+              brandId: defaultBrandId,
             },
           });
         }

@@ -73,6 +73,14 @@ export interface WithSessionTeamOptions {
     params: Record<string, string | string[] | undefined>;
     req: NextRequest | NextApiRequest;
   }) => Promise<string | null | undefined> | string | null | undefined;
+  /**
+   * Custom resolver for the team id when it is not in the route params
+   * (e.g. sent in the request body). Used only when `params.teamId` is absent.
+   */
+  resolveTeamId?: (args: {
+    params: Record<string, string | string[] | undefined>;
+    req: NextRequest | NextApiRequest;
+  }) => Promise<string | null | undefined> | string | null | undefined;
 }
 
 type AuthError = { status: number; message: string };
@@ -99,7 +107,7 @@ function firstString(v: string | string[] | undefined): string | undefined {
  */
 async function resolveSessionTeam({
   session,
-  teamId,
+  teamId: teamIdInput,
   params,
   req,
   opts,
@@ -113,6 +121,15 @@ async function resolveSessionTeam({
   if (!session || !session.user) {
     return { status: 401, message: "Unauthorized" };
   }
+
+  let teamId = teamIdInput;
+  if (!teamId && opts.resolveTeamId) {
+    const resolved = await opts.resolveTeamId({ params, req });
+    if (typeof resolved === "string" && resolved.length > 0) {
+      teamId = resolved;
+    }
+  }
+
   if (!teamId) {
     return { status: 400, message: "Missing teamId" };
   }

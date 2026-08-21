@@ -68,6 +68,7 @@ export interface LinkWithViews extends Link {
   tags: TagProps[];
   uploadFolders?: { id: string; name: string; path: string | null }[];
   visitorGroups?: { visitorGroupId: string }[];
+  dataroom?: { brandId: string | null } | null;
 }
 
 export interface LinkWithDocument extends Link {

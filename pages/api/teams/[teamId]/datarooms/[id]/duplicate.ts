@@ -187,6 +187,7 @@ const postHandler = withTeamApi(
           pId: pId,
           name: dataroomContents.name + " (Copy)",
           teamId: dataroomContents.teamId,
+          brandId: dataroomContents.brandId,
           documents: {
             create: dataroomContents.documents.map((doc) => ({
               documentId: doc.documentId,
@@ -208,6 +209,7 @@ const postHandler = withTeamApi(
                     dataroomContents.brand.applyAccentColorToDataroomView ??
                     false,
                   welcomeMessage: dataroomContents.brand.welcomeMessage,
+                  defaultLanguage: dataroomContents.brand.defaultLanguage,
                   cardLayout: dataroomContents.brand.cardLayout ?? undefined,
                   showFolderTree:
                     dataroomContents.brand.showFolderTree ?? undefined,

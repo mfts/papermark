@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { resolveOwnedBrandId } from "@/ee/features/branding/lib/resolve-base-brand";
 import { LinkAudienceType } from "@prisma/client";
 import { customAlphabet } from "nanoid";
 import { getServerSession } from "next-auth/next";
@@ -374,6 +375,11 @@ export default async function handle(
       }
     }
 
+    const nextBrandId =
+      linkData.brandId === undefined
+        ? undefined
+        : await resolveOwnedBrandId(teamId, linkData.brandId);
+
     const updatedLink = await prisma.$transaction(async (tx) => {
       const link = await tx.link.update({
         where: { id, teamId },
@@ -406,6 +412,7 @@ export default async function handle(
           metaImage: linkData.metaImage || null,
           metaFavicon: linkData.metaFavicon || null,
           welcomeMessage: linkData.welcomeMessage || null,
+          ...(nextBrandId !== undefined && { brandId: nextBrandId }),
           ...(linkData.customFields && {
             customFields: {
               deleteMany: {}, // Delete all existing custom fields

@@ -85,6 +85,8 @@ export const DEFAULT_LINK_PROPS = (
   metaImage: null,
   metaFavicon: null,
   welcomeMessage: null,
+  brandId: null,
+  dataroomBrandId: null,
   enableQuestion: false,
   questionText: null,
   questionType: null,
@@ -131,6 +133,8 @@ export type DEFAULT_LINK_TYPE = {
   metaImage: string | null; // metatags
   metaFavicon: string | null; // metaFavicon
   welcomeMessage: string | null; // custom welcome message
+  brandId: string | null;
+  dataroomBrandId: string | null;
   enableQuestion?: boolean; // feedback question
   questionText: string | null;
   questionType: string | null;

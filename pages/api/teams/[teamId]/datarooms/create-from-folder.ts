@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { resolveDefaultBrandId } from "@/ee/features/branding/lib/resolve-base-brand";
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { DataroomFolder, Document, Folder } from "@prisma/client";
@@ -209,16 +210,18 @@ export default async function handle(
           .json({ message: "You need a Business plan to create a data room" });
       }
 
-      // Fetch the folder structure
-      const folderContents = await fetchFolderContents(folderId, teamId);
+      const [folderContents, defaultBrandId] = await Promise.all([
+        fetchFolderContents(folderId, teamId),
+        resolveDefaultBrandId(teamId),
+      ]);
 
-      // Create the data room
       const pId = newId("dataroom");
       const dataroom = await prisma.dataroom.create({
         data: {
           pId: pId,
           name: folderContents.name,
           teamId: teamId,
+          brandId: defaultBrandId,
           documents: {
             create: folderContents.documents.map((doc) => ({
               documentId: doc.id,

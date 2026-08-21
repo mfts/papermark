@@ -5,6 +5,7 @@ import {
   sendDataroomTrialExpiredEmailTask,
   sendDataroomTrialInfoEmailTask,
 } from "@/ee/features/billing/dataroom-trial/lib/trigger/send-scheduled-email";
+import { resolveDefaultBrandId } from "@/ee/features/branding/lib/resolve-base-brand";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
@@ -103,22 +104,26 @@ export default async function handle(
         ? companyTeamName(companyName)
         : "";
 
-      await prisma.team.update({
-        where: { id: teamId },
-        data: {
-          plan: `${team.plan}+drtrial`,
-          ...(renamed ? { name: renamed } : {}),
-        },
-      });
-
       const pId = newId("dataroom");
+      const defaultBrandId = await resolveDefaultBrandId(teamId);
 
-      const dataroom = await prisma.dataroom.create({
-        data: {
-          name: name,
-          teamId: teamId,
-          pId: pId,
-        },
+      const dataroom = await prisma.$transaction(async (tx) => {
+        await tx.team.update({
+          where: { id: teamId },
+          data: {
+            plan: `${team.plan}+drtrial`,
+            ...(renamed ? { name: renamed } : {}),
+          },
+        });
+
+        return tx.dataroom.create({
+          data: {
+            name: name,
+            teamId: teamId,
+            pId: pId,
+            brandId: defaultBrandId,
+          },
+        });
       });
 
       const dataroomWithCount = {

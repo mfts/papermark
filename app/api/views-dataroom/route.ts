@@ -170,6 +170,7 @@ export async function POST(request: NextRequest) {
         allowDownload: true,
         enableConversation: true,
         teamId: true,
+        brandId: true,
         team: {
           select: {
             plan: true,
@@ -191,6 +192,7 @@ export async function POST(request: NextRequest) {
             agentsEnabled: true,
             isFrozen: true,
             name: true,
+            brandId: true,
           },
         },
         visitorGroups: {
@@ -584,6 +586,10 @@ export async function POST(request: NextRequest) {
             otpCode,
             true,
             link.teamId!,
+            {
+              linkBrandId: link.brandId,
+              dataroomBrandId: link.dataroom?.brandId,
+            },
           ),
         );
         return NextResponse.json(

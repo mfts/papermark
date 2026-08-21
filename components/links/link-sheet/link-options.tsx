@@ -35,6 +35,7 @@ import { Separator } from "@/components/ui/separator";
 
 import AgreementSection from "./agreement-section";
 import AIAgentsSection from "./ai-agents-section";
+import { BrandSection } from "./brand-section";
 import ConversationSection from "./conversation-section";
 import CustomFieldsSection from "./custom-fields-section";
 import IndexFileSection from "./index-file-section";
@@ -318,8 +319,17 @@ export const LinkOptions = ({
       )}
 
       {/* Custom Branding Section */}
-      <CollapsibleSection title="Custom branding" defaultOpen={defaultExpandSections}>
+      <CollapsibleSection
+        title="Custom branding"
+        defaultOpen={defaultExpandSections}
+      >
         <div>
+          <BrandSection
+            data={data}
+            setData={setData}
+            linkType={linkType}
+            dataroomId={linkType === "DATAROOM_LINK" ? targetId : undefined}
+          />
           <CustomFieldsSection
             {...{ data, setData }}
             isAllowed={

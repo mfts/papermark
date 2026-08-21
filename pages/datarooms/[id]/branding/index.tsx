@@ -12,7 +12,6 @@ import {
   AUTO_FILL_NOT_FOUND_MESSAGE,
   autoFillHasBrandAssets,
 } from "@/ee/features/branding/lib/auto-fill-result";
-import { mergeBrandLogoFields } from "@/ee/features/branding/lib/brand-logo";
 import {
   CARD_LAYOUT_OPTIONS,
   type DataroomCardLayout,
@@ -22,6 +21,10 @@ import {
   asDataroomViewerHeaderStyle,
   inferDataroomViewerLayoutPreset,
 } from "@/ee/features/branding/lib/dataroom-viewer-layout";
+import {
+  CUSTOM_DATAROOM_BRAND,
+  CUSTOM_DATAROOM_BRAND_LABEL,
+} from "@/ee/features/branding/lib/resolve-dataroom-displayed-brand";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { Check, CircleHelpIcon, CrownIcon, UploadIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
@@ -36,12 +39,13 @@ import {
   asSupportedLocale,
 } from "@/lib/i18n/locales";
 import { usePlan } from "@/lib/swr/use-billing";
-import { useBrand, useDataroomBrand } from "@/lib/swr/use-brand";
+import { useBrands, useDataroomBrand } from "@/lib/swr/use-brand";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { cn, convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -54,6 +58,16 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -62,6 +76,62 @@ import { UpgradeButton } from "@/components/ui/upgrade-button";
 import { DataroomBannerMedia } from "@/components/view/dataroom/dataroom-banner-media";
 
 const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
+
+type BrandEditorSnapshot = {
+  brandColor: string;
+  accentColor: string;
+  accentButtonColor: string;
+  applyAccentColorToDataroomView: boolean;
+  logo: string | null;
+  hideLogo: boolean;
+  banner: string | null;
+  welcomeMessage: string;
+  welcomeEnabled: boolean;
+  cardLayout: DataroomCardLayout;
+  showFolderTree: boolean;
+  viewerHeaderStyle: DataroomViewerHeaderStyle;
+  hideFolderIconsInMain: boolean;
+  ctaLabel: string;
+  ctaUrl: string;
+  ctaEnabled: boolean;
+  linkPreviewEnabled: boolean;
+  linkPreviewTitle: string;
+  linkPreviewDescription: string;
+  linkPreviewImage: string | null;
+  linkPreviewFavicon: string | null;
+  defaultLanguage: SupportedLocaleCode;
+};
+
+function brandEditorSnapshotsEqual(
+  left: BrandEditorSnapshot,
+  right: BrandEditorSnapshot,
+) {
+  return (
+    left.brandColor === right.brandColor &&
+    left.accentColor === right.accentColor &&
+    left.accentButtonColor === right.accentButtonColor &&
+    left.applyAccentColorToDataroomView ===
+      right.applyAccentColorToDataroomView &&
+    left.logo === right.logo &&
+    left.hideLogo === right.hideLogo &&
+    left.banner === right.banner &&
+    left.welcomeMessage === right.welcomeMessage &&
+    left.welcomeEnabled === right.welcomeEnabled &&
+    left.cardLayout === right.cardLayout &&
+    left.showFolderTree === right.showFolderTree &&
+    left.viewerHeaderStyle === right.viewerHeaderStyle &&
+    left.hideFolderIconsInMain === right.hideFolderIconsInMain &&
+    left.ctaLabel === right.ctaLabel &&
+    left.ctaUrl === right.ctaUrl &&
+    left.ctaEnabled === right.ctaEnabled &&
+    left.linkPreviewEnabled === right.linkPreviewEnabled &&
+    left.linkPreviewTitle === right.linkPreviewTitle &&
+    left.linkPreviewDescription === right.linkPreviewDescription &&
+    left.linkPreviewImage === right.linkPreviewImage &&
+    left.linkPreviewFavicon === right.linkPreviewFavicon &&
+    left.defaultLanguage === right.defaultLanguage
+  );
+}
 
 export default function DataroomBrandPage() {
   const teamInfo = useTeam();
@@ -74,7 +144,12 @@ export default function DataroomBrandPage() {
   const { brand: dataroomBrand } = useDataroomBrand({
     dataroomId: dataroom?.id,
   });
-  const { brand: globalBrand } = useBrand();
+  const { brands, defaultBrandId } = useBrands();
+  const isCustomBrand = !dataroom?.brandId;
+  const selectedTeamBrand = useMemo(
+    () => brands.find((item) => item.id === dataroom?.brandId) ?? null,
+    [brands, dataroom?.brandId],
+  );
 
   const [brandColor, setBrandColor] = useState<string>("#000000");
   const [accentColor, setAccentColor] = useState<string>("#FFFFFF");
@@ -82,10 +157,8 @@ export default function DataroomBrandPage() {
   const [applyAccentColorToDataroomView, setApplyAccentColorToDataroomView] =
     useState<boolean>(false);
   const [logo, setLogo] = useState<string | null>(null);
-  // Null keeps this data room on the team setting. Only an explicit click sends
-  // a boolean, so saving unrelated branding never pins the inherited value.
   const [hideLogoOverride, setHideLogoOverride] = useState<boolean | null>(
-    null,
+    false,
   );
   const [banner, setBanner] = useState<string | null>(null);
   const [originalBanner, setOriginalBanner] = useState<string | null>(null);
@@ -104,8 +177,7 @@ export default function DataroomBrandPage() {
     null,
   );
   const [previewTab, setPreviewTab] = useState<string>("dataroom-view");
-  // What visitors of this data room actually get, for the control and previews.
-  const hideLogo = hideLogoOverride ?? Boolean(globalBrand?.hideLogo);
+  const hideLogo = Boolean(hideLogoOverride);
 
   // Layout customization state
   const [showFolderTree, setShowFolderTree] = useState<boolean>(true);
@@ -146,7 +218,6 @@ export default function DataroomBrandPage() {
   const [autoFillLoading, setAutoFillLoading] = useState<boolean>(false);
   const [ctaEnabled, setCtaEnabled] = useState<boolean>(false);
 
-  const hasSeededNullDataroomFromGlobalRef = useRef(false);
   const lastVisibleBannerRef = useRef<string | null>(null);
 
   // Snapshot of layout fields at last load, used to detect "unsaved layout changes"
@@ -159,6 +230,7 @@ export default function DataroomBrandPage() {
   } | null>(null);
 
   const initialLanguageRef = useRef<SupportedLocaleCode | null>(null);
+  const sourceBrandSnapshotRef = useRef<BrandEditorSnapshot | null>(null);
 
   const [upgradeLayoutsModalOpen, setUpgradeLayoutsModalOpen] =
     useState<boolean>(false);
@@ -269,10 +341,6 @@ export default function DataroomBrandPage() {
         break;
     }
   };
-
-  useEffect(() => {
-    hasSeededNullDataroomFromGlobalRef.current = false;
-  }, [dataroom?.id]);
 
   const handleAutoFill = async () => {
     if (!autoFillUrl.trim()) return;
@@ -394,201 +462,217 @@ export default function DataroomBrandPage() {
     [setBanner],
   );
 
-  useEffect(() => {
-    if (dataroomBrand === undefined) return;
+  const applyEmptyCustomBrand = () => {
+    setBrandColor("#000000");
+    setAccentColor("#FFFFFF");
+    setAccentButtonColor("#000000");
+    setApplyAccentColorToDataroomView(false);
+    setLogo(null);
+    setHideLogoOverride(false);
+    setBanner(DEFAULT_BANNER_IMAGE);
+    setOriginalBanner(DEFAULT_BANNER_IMAGE);
+    setWelcomeMessage(DEFAULT_WELCOME_MESSAGE);
+    setWelcomeEnabled(false);
+    setWelcomeMessageError(null);
+    setShowFolderTree(true);
+    setCardLayout("LIST");
+    setViewerHeaderStyle("DEFAULT");
+    setHideFolderIconsInMain(false);
+    initialLayoutSnapshotRef.current = {
+      cardLayout: "LIST",
+      showFolderTree: true,
+      viewerHeaderStyle: "DEFAULT",
+      hideFolderIconsInMain: false,
+    };
+    setCtaLabel("");
+    setCtaUrl("");
+    setCtaEnabled(false);
+    setLinkPreviewEnabled(false);
+    setLinkPreviewTitle("");
+    setLinkPreviewDescription("");
+    setLinkPreviewImage(null);
+    setLinkPreviewFavicon(null);
+    setDefaultLanguage(DEFAULT_LOCALE);
+    initialLanguageRef.current = DEFAULT_LOCALE;
+    sourceBrandSnapshotRef.current = {
+      brandColor: "#000000",
+      accentColor: "#FFFFFF",
+      accentButtonColor: "#000000",
+      applyAccentColorToDataroomView: false,
+      logo: null,
+      hideLogo: false,
+      banner: DEFAULT_BANNER_IMAGE,
+      welcomeMessage: DEFAULT_WELCOME_MESSAGE,
+      welcomeEnabled: false,
+      cardLayout: "LIST",
+      showFolderTree: true,
+      viewerHeaderStyle: "DEFAULT",
+      hideFolderIconsInMain: false,
+      ctaLabel: "",
+      ctaUrl: "",
+      ctaEnabled: false,
+      linkPreviewEnabled: false,
+      linkPreviewTitle: "",
+      linkPreviewDescription: "",
+      linkPreviewImage: null,
+      linkPreviewFavicon: null,
+      defaultLanguage: DEFAULT_LOCALE,
+    };
+  };
 
-    if (dataroomBrand) {
-      setBrandColor(
-        dataroomBrand.brandColor || globalBrand?.brandColor || "#000000",
-      );
-      setAccentColor(
-        dataroomBrand.accentColor || globalBrand?.accentColor || "#FFFFFF",
-      );
-      setAccentButtonColor(
-        (dataroomBrand as any)?.accentButtonColor ||
-          (globalBrand as any)?.accentButtonColor ||
-          dataroomBrand.brandColor ||
-          globalBrand?.brandColor ||
-          "#000000",
-      );
-      setApplyAccentColorToDataroomView(
-        (dataroomBrand as any)?.applyAccentColorToDataroomView ??
-          (globalBrand as any)?.applyAccentColorToDataroomView ??
-          false,
-      );
-      const logoFields = mergeBrandLogoFields({
-        dataroom: dataroomBrand,
-        team: globalBrand,
-      });
-      setLogo(logoFields.logo);
-      setHideLogoOverride(dataroomBrand.hideLogo ?? null);
-      const bannerValue = dataroomBrand.banner || globalBrand?.banner || null;
-      setBanner(bannerValue);
-      setOriginalBanner(bannerValue);
-      const savedMessage =
-        dataroomBrand.welcomeMessage ?? globalBrand?.welcomeMessage ?? null;
-      const message = savedMessage || DEFAULT_WELCOME_MESSAGE;
-      setWelcomeMessage(message);
-      setWelcomeEnabled(
+  const applySourceBrand = (source: {
+    logo?: string | null;
+    hideLogo?: boolean | null;
+    banner?: string | null;
+    brandColor?: string | null;
+    accentColor?: string | null;
+    accentButtonColor?: string | null;
+    applyAccentColorToDataroomView?: boolean | null;
+    welcomeMessage?: string | null;
+    cardLayout?: string | null;
+    showFolderTree?: boolean | null;
+    viewerHeaderStyle?: string | null;
+    hideFolderIconsInMain?: boolean | null;
+    ctaLabel?: string | null;
+    ctaUrl?: string | null;
+    customLinkPreviewEnabled?: boolean | null;
+    linkPreviewTitle?: string | null;
+    linkPreviewDescription?: string | null;
+    linkPreviewImage?: string | null;
+    linkPreviewFavicon?: string | null;
+    defaultLanguage?: string | null;
+  }) => {
+    setBrandColor(source.brandColor || "#000000");
+    setAccentColor(source.accentColor || "#FFFFFF");
+    setAccentButtonColor(
+      source.accentButtonColor || source.brandColor || "#000000",
+    );
+    setApplyAccentColorToDataroomView(
+      source.applyAccentColorToDataroomView ?? false,
+    );
+    setLogo(source.logo || null);
+    setHideLogoOverride(source.hideLogo ?? false);
+    const bannerValue = source.banner || DEFAULT_BANNER_IMAGE;
+    setBanner(bannerValue);
+    setOriginalBanner(bannerValue);
+    const savedMessage = source.welcomeMessage ?? null;
+    const message = savedMessage || DEFAULT_WELCOME_MESSAGE;
+    setWelcomeMessage(message);
+    setWelcomeEnabled(
+      !!savedMessage && savedMessage !== DEFAULT_WELCOME_MESSAGE,
+    );
+    setWelcomeMessageError(validateWelcomeMessage(message));
+    const nextCardLayout = asDataroomCardLayout(source.cardLayout);
+    const nextShowFolderTree = source.showFolderTree ?? true;
+    const nextViewerHeaderStyle = asDataroomViewerHeaderStyle(
+      source.viewerHeaderStyle,
+    );
+    const nextHideFolderIconsInMain = Boolean(source.hideFolderIconsInMain);
+    setShowFolderTree(nextShowFolderTree);
+    setCardLayout(nextCardLayout);
+    setViewerHeaderStyle(nextViewerHeaderStyle);
+    setHideFolderIconsInMain(nextHideFolderIconsInMain);
+    initialLayoutSnapshotRef.current = {
+      cardLayout: nextCardLayout,
+      showFolderTree: nextShowFolderTree,
+      viewerHeaderStyle: nextViewerHeaderStyle,
+      hideFolderIconsInMain: nextHideFolderIconsInMain,
+    };
+    const nextCtaLabel = source.ctaLabel ?? "";
+    const nextCtaUrl = source.ctaUrl ?? "";
+    setCtaLabel(nextCtaLabel);
+    setCtaUrl(nextCtaUrl);
+    setCtaEnabled(!!(nextCtaLabel || nextCtaUrl));
+    setLinkPreviewEnabled(source.customLinkPreviewEnabled === true);
+    setLinkPreviewTitle(source.linkPreviewTitle ?? "");
+    setLinkPreviewDescription(source.linkPreviewDescription ?? "");
+    setLinkPreviewImage(source.linkPreviewImage ?? null);
+    setLinkPreviewFavicon(source.linkPreviewFavicon ?? null);
+    const nextLanguage =
+      asSupportedLocale(source.defaultLanguage) ?? DEFAULT_LOCALE;
+    setDefaultLanguage(nextLanguage);
+    initialLanguageRef.current = nextLanguage;
+    sourceBrandSnapshotRef.current = {
+      brandColor: source.brandColor || "#000000",
+      accentColor: source.accentColor || "#FFFFFF",
+      accentButtonColor:
+        source.accentButtonColor || source.brandColor || "#000000",
+      applyAccentColorToDataroomView:
+        source.applyAccentColorToDataroomView ?? false,
+      logo: source.logo || null,
+      hideLogo: source.hideLogo ?? false,
+      banner: source.banner || DEFAULT_BANNER_IMAGE,
+      welcomeMessage: message,
+      welcomeEnabled:
         !!savedMessage && savedMessage !== DEFAULT_WELCOME_MESSAGE,
-      );
-      const error = validateWelcomeMessage(message);
-      setWelcomeMessageError(error);
-      const initialShowFolderTree = dataroomBrand.showFolderTree ?? true;
-      const initialCardLayout = asDataroomCardLayout(dataroomBrand.cardLayout);
-      const initialViewerHeaderStyle = asDataroomViewerHeaderStyle(
-        (dataroomBrand as any).viewerHeaderStyle,
-      );
-      const initialHideFolderIconsInMain = Boolean(
-        (dataroomBrand as any).hideFolderIconsInMain,
-      );
-      setShowFolderTree(initialShowFolderTree);
-      setCardLayout(initialCardLayout);
-      setViewerHeaderStyle(initialViewerHeaderStyle);
-      setHideFolderIconsInMain(initialHideFolderIconsInMain);
-      initialLayoutSnapshotRef.current = {
-        cardLayout: initialCardLayout,
-        showFolderTree: initialShowFolderTree,
-        viewerHeaderStyle: initialViewerHeaderStyle,
-        hideFolderIconsInMain: initialHideFolderIconsInMain,
-      };
-      const initialCtaLabel =
-        dataroomBrand.ctaLabel ?? (globalBrand as any)?.ctaLabel ?? "";
-      const initialCtaUrl =
-        dataroomBrand.ctaUrl ?? (globalBrand as any)?.ctaUrl ?? "";
-      setCtaLabel(initialCtaLabel);
-      setCtaUrl(initialCtaUrl);
-      setCtaEnabled(!!(initialCtaLabel || initialCtaUrl));
-      setLinkPreviewEnabled(
-        (dataroomBrand as any)?.customLinkPreviewEnabled === true,
-      );
-      setLinkPreviewTitle((dataroomBrand as any)?.linkPreviewTitle ?? "");
-      setLinkPreviewDescription(
-        (dataroomBrand as any)?.linkPreviewDescription ?? "",
-      );
-      setLinkPreviewImage((dataroomBrand as any)?.linkPreviewImage ?? null);
-      setLinkPreviewFavicon((dataroomBrand as any)?.linkPreviewFavicon ?? null);
-      const initialLanguage =
-        asSupportedLocale((dataroomBrand as any)?.defaultLanguage) ??
-        asSupportedLocale((globalBrand as any)?.defaultLanguage) ??
-        DEFAULT_LOCALE;
-      setDefaultLanguage(initialLanguage);
-      initialLanguageRef.current = initialLanguage;
+      cardLayout: nextCardLayout,
+      showFolderTree: nextShowFolderTree,
+      viewerHeaderStyle: nextViewerHeaderStyle,
+      hideFolderIconsInMain: nextHideFolderIconsInMain,
+      ctaLabel: nextCtaLabel,
+      ctaUrl: nextCtaUrl,
+      ctaEnabled: !!(nextCtaLabel || nextCtaUrl),
+      linkPreviewEnabled: source.customLinkPreviewEnabled === true,
+      linkPreviewTitle: source.linkPreviewTitle ?? "",
+      linkPreviewDescription: source.linkPreviewDescription ?? "",
+      linkPreviewImage: source.linkPreviewImage ?? null,
+      linkPreviewFavicon: source.linkPreviewFavicon ?? null,
+      defaultLanguage: nextLanguage,
+    };
+  };
+
+  const brandSourceKey = isCustomBrand
+    ? dataroomBrand === undefined
+      ? null
+      : (dataroomBrand?.id ?? "empty")
+    : (selectedTeamBrand?.id ?? null);
+
+  // Re-apply only when the selected brand identity changes so SWR refreshes
+  // of the same brand do not wipe in-progress edits.
+  useEffect(() => {
+    if (!brandSourceKey) return;
+    if (isCustomBrand) {
+      if (dataroomBrand) {
+        applySourceBrand(dataroomBrand);
+        return;
+      }
+      applyEmptyCustomBrand();
       return;
     }
 
-    // No dataroom row yet (or cleared). Wait for team brand so we do not flash
-    // empty values before global defaults are known.
-    if (globalBrand === undefined) return;
+    if (!selectedTeamBrand) return;
+    applySourceBrand(selectedTeamBrand);
+  }, [brandSourceKey]);
 
-    if (hasSeededNullDataroomFromGlobalRef.current) return;
-    hasSeededNullDataroomFromGlobalRef.current = true;
-
-    if (globalBrand) {
-      const logoFields = mergeBrandLogoFields({
-        dataroom: null,
-        team: globalBrand,
-      });
-      setBrandColor(globalBrand.brandColor || "#000000");
-      setAccentColor(globalBrand.accentColor || "#FFFFFF");
-      setAccentButtonColor(
-        (globalBrand as any)?.accentButtonColor ||
-          globalBrand.brandColor ||
-          "#000000",
-      );
-      setApplyAccentColorToDataroomView(
-        (globalBrand as any)?.applyAccentColorToDataroomView ?? false,
-      );
-      setLogo(logoFields.logo);
-      setHideLogoOverride(null);
-      const bannerValue = globalBrand.banner || null;
-      setBanner(bannerValue);
-      setOriginalBanner(bannerValue);
-      const savedMessage = globalBrand.welcomeMessage ?? null;
-      const message = savedMessage || DEFAULT_WELCOME_MESSAGE;
-      setWelcomeMessage(message);
-      setWelcomeEnabled(
-        !!savedMessage && savedMessage !== DEFAULT_WELCOME_MESSAGE,
-      );
-      setWelcomeMessageError(validateWelcomeMessage(message));
-      // Layouts inherit from the team brand exactly like colors / logo / CTA.
-      // Once the user saves anything here a DataroomBrand row is created and
-      // those persisted values win, but until then we mirror the team
-      // defaults so a new dataroom doesn't reset to "Standard".
-      const inheritedCardLayout = asDataroomCardLayout(
-        (globalBrand as any)?.cardLayout,
-      );
-      const inheritedShowFolderTree =
-        (globalBrand as any)?.showFolderTree ?? true;
-      const inheritedViewerHeaderStyle = asDataroomViewerHeaderStyle(
-        (globalBrand as any)?.viewerHeaderStyle,
-      );
-      const inheritedHideFolderIconsInMain = Boolean(
-        (globalBrand as any)?.hideFolderIconsInMain,
-      );
-      setShowFolderTree(inheritedShowFolderTree);
-      setCardLayout(inheritedCardLayout);
-      setViewerHeaderStyle(inheritedViewerHeaderStyle);
-      setHideFolderIconsInMain(inheritedHideFolderIconsInMain);
-      initialLayoutSnapshotRef.current = {
-        cardLayout: inheritedCardLayout,
-        showFolderTree: inheritedShowFolderTree,
-        viewerHeaderStyle: inheritedViewerHeaderStyle,
-        hideFolderIconsInMain: inheritedHideFolderIconsInMain,
-      };
-      const initialCtaLabel = (globalBrand as any)?.ctaLabel ?? "";
-      const initialCtaUrl = (globalBrand as any)?.ctaUrl ?? "";
-      setCtaLabel(initialCtaLabel);
-      setCtaUrl(initialCtaUrl);
-      setCtaEnabled(!!(initialCtaLabel || initialCtaUrl));
-      setLinkPreviewEnabled(
-        (globalBrand as any)?.customLinkPreviewEnabled === true,
-      );
-      setLinkPreviewTitle((globalBrand as any)?.linkPreviewTitle ?? "");
-      setLinkPreviewDescription(
-        (globalBrand as any)?.linkPreviewDescription ?? "",
-      );
-      setLinkPreviewImage((globalBrand as any)?.linkPreviewImage ?? null);
-      setLinkPreviewFavicon((globalBrand as any)?.linkPreviewFavicon ?? null);
-      const inheritedLanguage =
-        asSupportedLocale((globalBrand as any)?.defaultLanguage) ??
-        DEFAULT_LOCALE;
-      setDefaultLanguage(inheritedLanguage);
-      initialLanguageRef.current = inheritedLanguage;
-    } else {
-      setBrandColor("#000000");
-      setAccentColor("#FFFFFF");
-      setAccentButtonColor("#000000");
-      setApplyAccentColorToDataroomView(false);
-      setLogo(null);
-      setHideLogoOverride(null);
-      setBanner(DEFAULT_BANNER_IMAGE);
-      setOriginalBanner(DEFAULT_BANNER_IMAGE);
-      setWelcomeMessage(DEFAULT_WELCOME_MESSAGE);
-      setWelcomeEnabled(false);
-      setWelcomeMessageError(null);
-      setShowFolderTree(true);
-      setCardLayout("LIST");
-      setViewerHeaderStyle("DEFAULT");
-      setHideFolderIconsInMain(false);
-      initialLayoutSnapshotRef.current = {
-        cardLayout: "LIST",
-        showFolderTree: true,
-        viewerHeaderStyle: "DEFAULT",
-        hideFolderIconsInMain: false,
-      };
-      setCtaLabel("");
-      setCtaUrl("");
-      setCtaEnabled(false);
-      setLinkPreviewEnabled(false);
-      setLinkPreviewTitle("");
-      setLinkPreviewDescription("");
-      setLinkPreviewImage(null);
-      setLinkPreviewFavicon(null);
-      setDefaultLanguage(DEFAULT_LOCALE);
-      initialLanguageRef.current = DEFAULT_LOCALE;
-    }
-  }, [dataroomBrand, globalBrand]);
+  const inheritedSnapshot = sourceBrandSnapshotRef.current;
+  const hasInheritedEdits =
+    !isCustomBrand &&
+    inheritedSnapshot !== null &&
+    !brandEditorSnapshotsEqual(inheritedSnapshot, {
+      brandColor,
+      accentColor,
+      accentButtonColor,
+      applyAccentColorToDataroomView,
+      logo,
+      hideLogo,
+      banner,
+      welcomeMessage,
+      welcomeEnabled,
+      cardLayout,
+      showFolderTree,
+      viewerHeaderStyle,
+      hideFolderIconsInMain,
+      ctaLabel,
+      ctaUrl,
+      ctaEnabled,
+      linkPreviewEnabled,
+      linkPreviewTitle,
+      linkPreviewDescription,
+      linkPreviewImage,
+      linkPreviewFavicon,
+      defaultLanguage,
+    });
+  const canSaveBranding = isCustomBrand || hasInheritedEdits;
 
   useEffect(() => {
     if (!linkPreviewEnabled && previewTab === "shared-link-preview") {
@@ -610,6 +694,10 @@ export default function DataroomBrandPage() {
   const saveBranding = async (e: any) => {
     e.preventDefault();
 
+    if (!canSaveBranding) {
+      return;
+    }
+
     // Block save and prompt for upgrade if the user changed any layout or
     // language settings without an eligible plan. Branding-only changes
     // (colors, banner, logo) still flow through.
@@ -630,105 +718,123 @@ export default function DataroomBrandPage() {
 
     setIsLoading(true);
 
-    // Upload the image if it's a data URL
-    let blobUrl: string | null = logo && logo.startsWith("data:") ? null : logo;
-    if (logo && logo.startsWith("data:")) {
-      // Convert the data URL to a blob
-      const blob = convertDataUrlToFile({ dataUrl: logo });
-      // Upload the blob to vercel storage
-      blobUrl = await uploadImage(blob);
-      setLogo(blobUrl);
-    }
+    try {
+      // Upload the image if it's a data URL
+      let blobUrl: string | null = logo && logo.startsWith("data:") ? null : logo;
+      if (logo && logo.startsWith("data:")) {
+        // Convert the data URL to a blob
+        const blob = convertDataUrlToFile({ dataUrl: logo });
+        // Upload the blob to vercel storage
+        blobUrl = await uploadImage(blob);
+        setLogo(blobUrl);
+      }
 
-    let bannerBlobUrl: string | null =
-      banner && banner.startsWith("data:") ? null : banner;
-    // Don't upload if banner is set to hide
-    if (banner && banner.startsWith("data:")) {
-      // Convert the data URL to a blob
-      const blob = convertDataUrlToFile({ dataUrl: banner });
-      // Upload the blob to vercel storage
-      bannerBlobUrl = await uploadImage(blob);
-      setBanner(bannerBlobUrl);
-    } else if (banner === "no-banner") {
-      // Use the special value to hide the banner
-      bannerBlobUrl = "no-banner";
-    }
+      let bannerBlobUrl: string | null =
+        banner && banner.startsWith("data:") ? null : banner;
+      // Don't upload if banner is set to hide
+      if (banner && banner.startsWith("data:")) {
+        // Convert the data URL to a blob
+        const blob = convertDataUrlToFile({ dataUrl: banner });
+        // Upload the blob to vercel storage
+        bannerBlobUrl = await uploadImage(blob);
+        setBanner(bannerBlobUrl);
+      } else if (banner === "no-banner") {
+        // Use the special value to hide the banner
+        bannerBlobUrl = "no-banner";
+      }
 
-    let linkPreviewImageUrl: string | null =
-      linkPreviewImage && linkPreviewImage.startsWith("data:")
-        ? null
-        : linkPreviewImage;
-    if (linkPreviewImage?.startsWith("data:")) {
-      const blob = convertDataUrlToFile({ dataUrl: linkPreviewImage });
-      linkPreviewImageUrl = await uploadImage(blob);
-      setLinkPreviewImage(linkPreviewImageUrl);
-    }
+      let linkPreviewImageUrl: string | null =
+        linkPreviewImage && linkPreviewImage.startsWith("data:")
+          ? null
+          : linkPreviewImage;
+      if (linkPreviewImage?.startsWith("data:")) {
+        const blob = convertDataUrlToFile({ dataUrl: linkPreviewImage });
+        linkPreviewImageUrl = await uploadImage(blob);
+        setLinkPreviewImage(linkPreviewImageUrl);
+      }
 
-    let linkPreviewFaviconUrl: string | null =
-      linkPreviewFavicon && linkPreviewFavicon.startsWith("data:")
-        ? null
-        : linkPreviewFavicon;
-    if (linkPreviewFavicon?.startsWith("data:")) {
-      const blob = convertDataUrlToFile({ dataUrl: linkPreviewFavicon });
-      linkPreviewFaviconUrl = await uploadImage(blob);
-      setLinkPreviewFavicon(linkPreviewFaviconUrl);
-    }
+      let linkPreviewFaviconUrl: string | null =
+        linkPreviewFavicon && linkPreviewFavicon.startsWith("data:")
+          ? null
+          : linkPreviewFavicon;
+      if (linkPreviewFavicon?.startsWith("data:")) {
+        const blob = convertDataUrlToFile({ dataUrl: linkPreviewFavicon });
+        linkPreviewFaviconUrl = await uploadImage(blob);
+        setLinkPreviewFavicon(linkPreviewFaviconUrl);
+      }
 
-    const data = {
-      welcomeMessage: hasBusinessMessagingAccess
-        ? welcomeEnabled
-          ? welcomeMessage.trim() || DEFAULT_WELCOME_MESSAGE
-          : null
-        : ((dataroomBrand as any)?.welcomeMessage ?? null),
-      brandColor: brandColor,
-      accentColor: accentColor,
-      accentButtonColor: accentButtonColor,
-      applyAccentColorToDataroomView,
-      logo: blobUrl,
-      hideLogo: hideLogoOverride,
-      banner: bannerBlobUrl,
-      cardLayout,
-      showFolderTree,
-      viewerLayoutPreset: derivedLayoutPreset,
-      viewerHeaderStyle,
-      hideFolderIconsInMain,
-      ctaLabel: hasBusinessMessagingAccess
-        ? ctaEnabled
-          ? ctaLabel.trim() || null
-          : null
-        : ((dataroomBrand as any)?.ctaLabel ?? null),
-      ctaUrl: hasBusinessMessagingAccess
-        ? ctaEnabled
-          ? ctaUrl.trim() || null
-          : null
-        : ((dataroomBrand as any)?.ctaUrl ?? null),
-      customLinkPreviewEnabled: linkPreviewEnabled,
-      linkPreviewTitle: linkPreviewEnabled
-        ? linkPreviewTitle.trim() || null
-        : null,
-      linkPreviewDescription: linkPreviewEnabled
-        ? linkPreviewDescription.trim() || null
-        : null,
-      linkPreviewImage: linkPreviewEnabled ? linkPreviewImageUrl : null,
-      linkPreviewFavicon: linkPreviewEnabled ? linkPreviewFaviconUrl : null,
-      defaultLanguage,
-    };
+      const data = {
+        welcomeMessage: hasBusinessMessagingAccess
+          ? welcomeEnabled
+            ? welcomeMessage.trim() || DEFAULT_WELCOME_MESSAGE
+            : null
+          : ((dataroomBrand as any)?.welcomeMessage ?? null),
+        brandColor: brandColor,
+        accentColor: accentColor,
+        accentButtonColor: accentButtonColor,
+        applyAccentColorToDataroomView,
+        logo: blobUrl,
+        hideLogo: hideLogo,
+        banner: bannerBlobUrl,
+        cardLayout,
+        showFolderTree,
+        viewerLayoutPreset: derivedLayoutPreset,
+        viewerHeaderStyle,
+        hideFolderIconsInMain,
+        ctaLabel: hasBusinessMessagingAccess
+          ? ctaEnabled
+            ? ctaLabel.trim() || null
+            : null
+          : ((dataroomBrand as any)?.ctaLabel ?? null),
+        ctaUrl: hasBusinessMessagingAccess
+          ? ctaEnabled
+            ? ctaUrl.trim() || null
+            : null
+          : ((dataroomBrand as any)?.ctaUrl ?? null),
+        customLinkPreviewEnabled: linkPreviewEnabled,
+        linkPreviewTitle: linkPreviewEnabled
+          ? linkPreviewTitle.trim() || null
+          : null,
+        linkPreviewDescription: linkPreviewEnabled
+          ? linkPreviewDescription.trim() || null
+          : null,
+        linkPreviewImage: linkPreviewEnabled ? linkPreviewImageUrl : null,
+        linkPreviewFavicon: linkPreviewEnabled ? linkPreviewFaviconUrl : null,
+        defaultLanguage,
+      };
 
-    const res = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroom.id}/branding`,
-      {
+      const brandingUrl = `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroom.id}/branding`;
+      const dataroomUrl = `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroom.id}`;
+      const res = await fetch(brandingUrl, {
         method: dataroomBrand ? "PUT" : "POST",
         body: JSON.stringify(data),
         headers: {
           "Content-Type": "application/json",
         },
-      },
-    );
-    if (res.ok) {
-      mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroom.id}/branding`,
-      );
-      // Update the original banner state to the new saved value
+      });
+      if (!res.ok) {
+        toast.error("Failed to update branding");
+        return;
+      }
+
+      await mutate(brandingUrl);
+
+      if (!isCustomBrand) {
+        const unstickRes = await fetch(dataroomUrl, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ brandId: null }),
+        });
+        if (!unstickRes.ok) {
+          toast.error(
+            "Saved branding, but failed to switch to a custom brand",
+          );
+          return;
+        }
+        await mutate(dataroomUrl);
+        await mutate(brandingUrl);
+      }
+
       setOriginalBanner(data.banner);
       initialLanguageRef.current = defaultLanguage;
       initialLayoutSnapshotRef.current = {
@@ -737,8 +843,37 @@ export default function DataroomBrandPage() {
         viewerHeaderStyle,
         hideFolderIconsInMain,
       };
+      sourceBrandSnapshotRef.current = {
+        brandColor,
+        accentColor,
+        accentButtonColor,
+        applyAccentColorToDataroomView,
+        logo: data.logo,
+        hideLogo,
+        banner: data.banner,
+        welcomeMessage,
+        welcomeEnabled,
+        cardLayout,
+        showFolderTree,
+        viewerHeaderStyle,
+        hideFolderIconsInMain,
+        ctaLabel,
+        ctaUrl,
+        ctaEnabled,
+        linkPreviewEnabled,
+        linkPreviewTitle,
+        linkPreviewDescription,
+        linkPreviewImage: data.linkPreviewImage,
+        linkPreviewFavicon: data.linkPreviewFavicon,
+        defaultLanguage,
+      };
+      toast.success(
+        isCustomBrand
+          ? "Branding updated successfully"
+          : "Saved as custom brand",
+      );
+    } finally {
       setIsLoading(false);
-      toast.success("Branding updated successfully");
     }
   };
 
@@ -755,85 +890,12 @@ export default function DataroomBrandPage() {
       },
     );
     if (res.ok) {
-      hasSeededNullDataroomFromGlobalRef.current = true;
       await mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroom.id}/branding`,
         null,
         { revalidate: false },
       );
-
-      // Rehydrate from the team/global brand instead of fixed defaults so the
-      // UI mirrors inherited branding immediately after the dataroom row is
-      // cleared (matches the seed-from-global effect above).
-      const inheritedBanner = globalBrand?.banner ?? DEFAULT_BANNER_IMAGE;
-      const inheritedCardLayout = asDataroomCardLayout(
-        (globalBrand as any)?.cardLayout,
-      );
-      const inheritedShowFolderTree =
-        (globalBrand as any)?.showFolderTree ?? true;
-      const inheritedViewerHeaderStyle = asDataroomViewerHeaderStyle(
-        (globalBrand as any)?.viewerHeaderStyle,
-      );
-      const inheritedHideFolderIconsInMain = Boolean(
-        (globalBrand as any)?.hideFolderIconsInMain,
-      );
-      const inheritedCtaLabel = (globalBrand as any)?.ctaLabel ?? "";
-      const inheritedCtaUrl = (globalBrand as any)?.ctaUrl ?? "";
-      const inheritedWelcomeSaved = globalBrand?.welcomeMessage ?? null;
-      const inheritedWelcomeMessage =
-        inheritedWelcomeSaved || DEFAULT_WELCOME_MESSAGE;
-      const inheritedLogoFields = mergeBrandLogoFields({
-        dataroom: null,
-        team: globalBrand,
-      });
-
-      setLogo(inheritedLogoFields.logo);
-      setHideLogoOverride(null);
-      setBanner(inheritedBanner);
-      setOriginalBanner(inheritedBanner);
-      setBrandColor(globalBrand?.brandColor ?? "#000000");
-      setAccentColor(globalBrand?.accentColor ?? "#FFFFFF");
-      setAccentButtonColor(
-        (globalBrand as any)?.accentButtonColor ??
-          globalBrand?.brandColor ??
-          "#000000",
-      );
-      setApplyAccentColorToDataroomView(
-        (globalBrand as any)?.applyAccentColorToDataroomView ?? false,
-      );
-      setShowFolderTree(inheritedShowFolderTree);
-      setCardLayout(inheritedCardLayout);
-      setViewerHeaderStyle(inheritedViewerHeaderStyle);
-      setHideFolderIconsInMain(inheritedHideFolderIconsInMain);
-      initialLayoutSnapshotRef.current = {
-        cardLayout: inheritedCardLayout,
-        showFolderTree: inheritedShowFolderTree,
-        viewerHeaderStyle: inheritedViewerHeaderStyle,
-        hideFolderIconsInMain: inheritedHideFolderIconsInMain,
-      };
-      setCtaLabel(inheritedCtaLabel);
-      setCtaUrl(inheritedCtaUrl);
-      setCtaEnabled(!!(inheritedCtaLabel || inheritedCtaUrl));
-      setWelcomeMessage(inheritedWelcomeMessage);
-      setWelcomeEnabled(
-        !!inheritedWelcomeSaved &&
-          inheritedWelcomeSaved !== DEFAULT_WELCOME_MESSAGE,
-      );
-      setWelcomeMessageError(validateWelcomeMessage(inheritedWelcomeMessage));
-      setLinkPreviewEnabled(
-        (globalBrand as any)?.customLinkPreviewEnabled === true,
-      );
-      setLinkPreviewTitle((globalBrand as any)?.linkPreviewTitle ?? "");
-      setLinkPreviewDescription(
-        (globalBrand as any)?.linkPreviewDescription ?? "",
-      );
-      setLinkPreviewImage((globalBrand as any)?.linkPreviewImage ?? null);
-      setLinkPreviewFavicon((globalBrand as any)?.linkPreviewFavicon ?? null);
-      const resetLanguage =
-        asSupportedLocale((globalBrand as any)?.defaultLanguage) ??
-        DEFAULT_LOCALE;
-      setDefaultLanguage(resetLanguage);
-      initialLanguageRef.current = resetLanguage;
+      applyEmptyCustomBrand();
       setIsLoading(false);
       toast.success("Branding reset successfully");
     } else {
@@ -899,7 +961,82 @@ export default function DataroomBrandPage() {
           </div>
         </div>
 
-        {/* Main Layout */}
+        {brands.length > 0 ? (
+          <div className="mb-4 max-w-md space-y-1">
+            <Label>Brand</Label>
+            <Select
+              value={dataroom?.brandId ?? CUSTOM_DATAROOM_BRAND}
+              onValueChange={async (value) => {
+                const teamId = teamInfo?.currentTeam?.id;
+                if (!teamId || !dataroom?.id) return;
+                const res = await fetch(
+                  `/api/teams/${teamId}/datarooms/${dataroom.id}`,
+                  {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      brandId: value === CUSTOM_DATAROOM_BRAND ? null : value,
+                    }),
+                  },
+                );
+                if (!res.ok) {
+                  toast.error("Failed to update brand");
+                  return;
+                }
+                const nextBrandId =
+                  value === CUSTOM_DATAROOM_BRAND ? null : value;
+                await mutate(
+                  `/api/teams/${teamId}/datarooms/${dataroom.id}`,
+                  (current) =>
+                    current ? { ...current, brandId: nextBrandId } : current,
+                  { revalidate: true },
+                );
+                await mutate(
+                  `/api/teams/${teamId}/datarooms/${dataroom.id}/branding`,
+                );
+                toast.success(
+                  value === CUSTOM_DATAROOM_BRAND
+                    ? "Using custom brand"
+                    : "Using team brand",
+                );
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={CUSTOM_DATAROOM_BRAND_LABEL} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={CUSTOM_DATAROOM_BRAND}>
+                  {CUSTOM_DATAROOM_BRAND_LABEL}
+                </SelectItem>
+                <SelectSeparator />
+                <SelectGroup>
+                  <SelectLabel className="text-xs font-normal text-muted-foreground">
+                    Inherit from team brands
+                  </SelectLabel>
+                  {brands.map((item) => (
+                    <SelectItem
+                      key={item.id}
+                      value={item.id}
+                      className={
+                        item.id === defaultBrandId ? "pr-16" : undefined
+                      }
+                    >
+                      {item.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            {isCustomBrand ? null : (
+              <p className="text-xs text-muted-foreground">
+                {hasInheritedEdits
+                  ? "Saving will switch this data room to a custom brand based on the selected team brand."
+                  : "This data room is using a team brand. Edit any setting and save to override it with a custom brand."}
+              </p>
+            )}
+          </div>
+        ) : null}
+
         <div className="flex w-full flex-col gap-6 lg:min-h-0 lg:flex-1 lg:flex-row lg:gap-8">
           {/* Settings Column */}
           <div className="flex w-full flex-col gap-6 lg:min-h-0 lg:w-[420px] lg:shrink-0">
@@ -1084,8 +1221,9 @@ export default function DataroomBrandPage() {
                                 Show no logo
                               </Label>
                               <p className="text-xs text-muted-foreground">
-                                Overrides the team logo setting for this data
-                                room.
+                                {isCustomBrand || hasInheritedEdits
+                                  ? "Visitors see no logo at all, not even the Papermark logo."
+                                  : "This setting comes from the selected team brand."}
                               </p>
                             </div>
                           </div>
@@ -1805,7 +1943,7 @@ export default function DataroomBrandPage() {
 
             {/* Action Buttons - Always Visible */}
             <div className="flex items-center gap-4 border-t bg-background pt-4 lg:sticky lg:bottom-0 lg:z-10 lg:shrink-0 lg:pb-2">
-              {blocksSave ? (
+              {blocksSave && canSaveBranding ? (
                 <UpgradeButton
                   text={languageBlocksSave ? "save changes" : "Save changes"}
                   clickedPlan={
@@ -1828,16 +1966,21 @@ export default function DataroomBrandPage() {
                 <Button
                   onClick={saveBranding}
                   loading={isLoading}
-                  disabled={hasBusinessMessagingAccess && !!welcomeMessageError}
+                  disabled={
+                    !canSaveBranding ||
+                    (hasBusinessMessagingAccess && !!welcomeMessageError)
+                  }
                   className="bg-black text-white hover:bg-gray-800"
                 >
-                  Save changes
+                  {hasInheritedEdits
+                    ? "Override custom brand"
+                    : "Save changes"}
                 </Button>
               )}
               <Button
                 variant="ghost"
                 onClick={handleDelete}
-                disabled={!dataroomBrand}
+                disabled={!isCustomBrand || !dataroomBrand}
               >
                 Reset branding
               </Button>

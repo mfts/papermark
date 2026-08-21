@@ -1,27 +1,28 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import {
+  type DataroomCardLayout,
+  DataroomCardLayoutSchema,
+  type DataroomViewerHeaderStyle,
+  DataroomViewerHeaderStyleSchema,
+  type DataroomViewerLayoutPreset,
+  DataroomViewerLayoutPresetSchema,
+} from "@/ee/features/branding/lib/dataroom-viewer-layout";
+import { upsertDataroomBrandAndClearInherited } from "@/ee/features/branding/lib/upsert-dataroom-brand";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { del } from "@vercel/blob";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
-import {
-  DataroomCardLayoutSchema,
-  DataroomViewerHeaderStyleSchema,
-  DataroomViewerLayoutPresetSchema,
-  type DataroomCardLayout,
-  type DataroomViewerHeaderStyle,
-  type DataroomViewerLayoutPreset,
-} from "@/ee/features/branding/lib/dataroom-viewer-layout";
 import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
 import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
-import { DEFAULT_LOCALE, SUPPORTED_LOCALE_CODES } from "@/lib/i18n/locales";
 import {
   teamPlanAllowsCustomWelcomeAndCta,
   teamPlanAllowsLayoutCustomization,
   teamPlanAllowsVisitorLanguage,
 } from "@/lib/billing/team-plan-custom-messaging";
 import { errorhandler } from "@/lib/errorHandler";
+import { DEFAULT_LOCALE, SUPPORTED_LOCALE_CODES } from "@/lib/i18n/locales";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -131,37 +132,26 @@ export default async function handle(
     return;
   }
 
+  let roomBrandId: string | null = null;
   try {
-    const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-        users: {
-          some: {
-            userId: (session.user as CustomUser).id,
-          },
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (!team) {
-      return res.status(403).end("Unauthorized to access this team");
-    }
-
     const dataroom = await prisma.dataroom.findUnique({
       where: {
         id: dataroomId,
         teamId: teamId,
+      },
+      select: {
+        id: true,
+        brandId: true,
       },
     });
 
     if (!dataroom) {
       return res.status(404).end("Dataroom not found");
     }
+    roomBrandId = dataroom.brandId;
   } catch (error) {
     errorhandler(error, res);
+    return;
   }
 
   if (req.method === "GET") {
@@ -171,12 +161,10 @@ export default async function handle(
         dataroomId,
       },
     });
-
-    if (!brand) {
-      return res.status(200).json(null);
-    }
-
-    return res.status(200).json(brand);
+    return res.status(200).json({
+      brand,
+      dataroomBrandId: roomBrandId,
+    });
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/datarooms/:id/branding
     const teamAuth = await prisma.team.findFirst({
@@ -230,7 +218,9 @@ export default async function handle(
       validatedCtaUrl = ctaValidation.url;
     }
 
-    const brand = await prisma.dataroomBrand.create({
+    const brand = await upsertDataroomBrandAndClearInherited({
+      dataroomId,
+      teamId,
       data: {
         logo: body.logo ?? undefined,
         hideLogo: body.hideLogo,
@@ -243,27 +233,26 @@ export default async function handle(
             ? body.applyAccentColorToDataroomView
             : undefined,
         welcomeMessage: messagingAllowed ? body.welcomeMessage : null,
-        ctaLabel: messagingAllowed ? body.ctaLabel ?? undefined : undefined,
-        ctaUrl: messagingAllowed ? validatedCtaUrl ?? undefined : undefined,
+        ctaLabel: messagingAllowed ? (body.ctaLabel ?? undefined) : undefined,
+        ctaUrl: messagingAllowed ? (validatedCtaUrl ?? undefined) : undefined,
         customLinkPreviewEnabled:
           messagingAllowed && typeof body.customLinkPreviewEnabled === "boolean"
             ? body.customLinkPreviewEnabled
             : false,
         linkPreviewTitle: messagingAllowed
-          ? body.linkPreviewTitle ?? undefined
+          ? (body.linkPreviewTitle ?? undefined)
           : undefined,
         linkPreviewDescription: messagingAllowed
-          ? body.linkPreviewDescription ?? undefined
+          ? (body.linkPreviewDescription ?? undefined)
           : undefined,
         linkPreviewImage: messagingAllowed
-          ? body.linkPreviewImage ?? undefined
+          ? (body.linkPreviewImage ?? undefined)
           : undefined,
         linkPreviewFavicon: messagingAllowed
-          ? body.linkPreviewFavicon ?? undefined
+          ? (body.linkPreviewFavicon ?? undefined)
           : undefined,
         ...layoutData,
         ...languageData,
-        dataroomId,
       },
     });
 
@@ -335,10 +324,9 @@ export default async function handle(
         ? { defaultLanguage: body.defaultLanguage }
         : {};
 
-    const brand = await prisma.dataroomBrand.update({
-      where: {
-        dataroomId,
-      },
+    const brand = await upsertDataroomBrandAndClearInherited({
+      dataroomId,
+      teamId,
       data: {
         logo: body.logo,
         hideLogo: body.hideLogo,
