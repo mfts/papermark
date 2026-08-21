@@ -43,12 +43,11 @@ import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 import {
   extractEmailDomain,
-  isEmailMatched,
   normalizeGroupDomain,
 } from "@/lib/utils/email-domain";
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
-import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
+import { checkViewerEmailAccess } from "@/lib/utils/global-block-list";
 import { resolveHtmlContentForRender } from "@/lib/utils/html-document";
 import { validateEmail } from "@/lib/utils/validate-email";
 
@@ -159,6 +158,13 @@ export async function POST(request: NextRequest) {
         enableWatermark: true,
         watermarkConfig: true,
         groupId: true,
+        group: {
+          select: {
+            members: { include: { viewer: { select: { email: true } } } },
+            domains: true,
+            allowAll: true,
+          },
+        },
         permissionGroupId: true,
         audienceType: true,
         allowDownload: true,
@@ -442,119 +448,84 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Check global block list first - this overrides all other access controls
-      const globalBlockCheck = checkGlobalBlockList(
-        effectiveEmail ?? undefined,
-        link.team?.globalBlockList,
-      );
-      if (globalBlockCheck.error) {
+      // Allow list and viewer-group audience override the team-wide global
+      // block list. Per-link deny list still applies after.
+      const isGroupAudience =
+        link.audienceType === LinkAudienceType.GROUP && !!link.groupId;
+      if (isGroupAudience && !link.group) {
         return NextResponse.json(
-          { message: globalBlockCheck.error },
-          { status: 400 },
+          { message: "Group not found." },
+          { status: 404 },
         );
       }
-      if (globalBlockCheck.isBlocked) {
-        waitUntil(
-          reportDeniedAccessAttempt(link, effectiveEmail ?? "", "global"),
-        );
 
-        return NextResponse.json({ message: "Access denied" }, { status: 403 });
-      }
-
-      // Build combined allow list from individual emails + visitor groups
+      const viewerGroup = isGroupAudience ? link.group : null;
       const visitorGroupEmails =
         link.visitorGroups?.flatMap((vg) => vg.visitorGroup.emails) || [];
-      const combinedAllowList = [
-        ...(link.allowList || []),
-        ...visitorGroupEmails,
-      ];
+      const viewerGroupAllowEntries =
+        viewerGroup && !viewerGroup.allowAll
+          ? [
+              ...viewerGroup.members.map((member) => member.viewer.email),
+              ...viewerGroup.domains,
+            ]
+          : [];
+      const emailAccess = checkViewerEmailAccess({
+        email: effectiveEmail ?? undefined,
+        allowList: [
+          ...(link.allowList || []),
+          ...visitorGroupEmails,
+          ...viewerGroupAllowEntries,
+        ],
+        denyList: link.denyList,
+        globalBlockList: link.team?.globalBlockList,
+      });
+      if (emailAccess.denied) {
+        if (emailAccess.error) {
+          return NextResponse.json(
+            { message: emailAccess.error },
+            { status: 400 },
+          );
+        }
 
-      // Check if email is allowed to visit the link
-      if (combinedAllowList.length > 0) {
-        // Determine if the email or its domain is allowed
-        const isAllowed = combinedAllowList.some((allowed) =>
-          isEmailMatched(effectiveEmail ?? "", allowed),
+        waitUntil(
+          reportDeniedAccessAttempt(
+            link,
+            effectiveEmail ?? "",
+            emailAccess.reason,
+          ),
         );
 
-        // Deny access if the email is not allowed
-        if (!isAllowed) {
+        return NextResponse.json(
+          {
+            message:
+              emailAccess.reason === "global"
+                ? "Access denied"
+                : "Unauthorized access",
+          },
+          { status: 403 },
+        );
+      }
+
+      if (viewerGroup && !viewerGroup.allowAll) {
+        const isMember = viewerGroup.members.some(
+          (member) => member.viewer.email === effectiveEmail,
+        );
+
+        const emailDomain = extractEmailDomain(effectiveEmail ?? "");
+        const hasDomainAccess = emailDomain
+          ? viewerGroup.domains.some(
+              (domain) => normalizeGroupDomain(domain) === emailDomain,
+            )
+          : false;
+
+        if (!isMember && !hasDomainAccess) {
           waitUntil(
             reportDeniedAccessAttempt(link, effectiveEmail ?? "", "allow"),
           );
-
           return NextResponse.json(
             { message: "Unauthorized access" },
             { status: 403 },
           );
-        }
-      }
-
-      // Check if email is denied to visit the link
-      if (link.denyList && link.denyList.length > 0) {
-        // Determine if the email or its domain is denied
-        const isDenied = link.denyList.some((denied) =>
-          isEmailMatched(effectiveEmail ?? "", denied),
-        );
-
-        // Deny access if the email is denied
-        if (isDenied) {
-          waitUntil(
-            reportDeniedAccessAttempt(link, effectiveEmail ?? "", "deny"),
-          );
-
-          return NextResponse.json(
-            { message: "Unauthorized access" },
-            { status: 403 },
-          );
-        }
-      }
-
-      // Check if group is allowed to visit the link
-      if (link.audienceType === LinkAudienceType.GROUP && link.groupId) {
-        const group = await prisma.viewerGroup.findUnique({
-          where: { id: link.groupId },
-          select: {
-            members: { include: { viewer: { select: { email: true } } } },
-            domains: true,
-            allowAll: true,
-          },
-        });
-
-        if (!group) {
-          return NextResponse.json(
-            { message: "Group not found." },
-            { status: 404 },
-          );
-        }
-
-        // Check if all emails are allowed
-        if (group.allowAll) {
-          // Allow access
-        } else {
-          // Check individual membership
-          const isMember = group.members.some(
-            (member) => member.viewer.email === effectiveEmail,
-          );
-
-          // Extract domain from email (canonical "@acme.com" form)
-          const emailDomain = extractEmailDomain(effectiveEmail ?? "");
-          // Check domain access. Normalize each stored domain so bare-domain
-          // rows (e.g. created before domain normalization) still match.
-          const hasDomainAccess = emailDomain
-            ? group.domains.some(
-                (domain) => normalizeGroupDomain(domain) === emailDomain,
-              )
-            : false;
-
-          if (!isMember && !hasDomainAccess) {
-            waitUntil(
-              reportDeniedAccessAttempt(link, effectiveEmail ?? "", "allow"),
-            );
-            return NextResponse.json(
-              { message: "Unauthorized access" },
-              { status: 403 },
-            );
-          }
         }
       }
 

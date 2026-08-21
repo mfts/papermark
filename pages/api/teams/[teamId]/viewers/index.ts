@@ -43,7 +43,7 @@ export default async function handle(
             },
           },
         },
-        select: { id: true, plan: true, globalBlockList: true },
+        select: { id: true, plan: true },
       });
 
       if (!team || team.plan === "free") {
@@ -58,7 +58,6 @@ export default async function handle(
         sortOrder,
         query,
         status,
-        globalBlockList: team.globalBlockList,
       });
 
       // Per-team data behind auth: never let shared/CDN caches store it, or a

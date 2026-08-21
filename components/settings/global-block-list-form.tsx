@@ -86,8 +86,9 @@ export default function GlobalBlockListForm() {
         <CardTitle>Global Block List</CardTitle>
         <CardDescription>
           Visitors with these emails or domains will be{" "}
-          <b>blocked from all links</b> in your team. Use{" "}
-          <code>@domain.com</code> for domains or full email addresses.
+          <b>blocked from all links</b> in your team, unless a link&apos;s allow
+          list explicitly includes them. Use <code>@domain.com</code> for
+          domains or full email addresses.
         </CardDescription>
       </CardHeader>
       <CardContent>

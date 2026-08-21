@@ -55,7 +55,7 @@ export default async function handle(
             some: { userId },
           },
         },
-        select: { id: true, pauseStartsAt: true, globalBlockList: true },
+        select: { id: true, pauseStartsAt: true },
       });
 
       if (!team) {
@@ -81,7 +81,6 @@ export default async function handle(
         query,
         status,
         pauseStartsAt: team.pauseStartsAt,
-        globalBlockList: team.globalBlockList,
       });
 
       const viewerIds = visitors

@@ -66,7 +66,6 @@ type RawVisitorRow = {
   invitedAt: Date | null;
   invitationStatus: string | null;
   accessSources: VisitorAccessSource[] | null;
-  globallyBlocked: boolean | null;
   createdAt: Date | null;
   updatedAt: Date | null;
   totalCount: number;
@@ -165,7 +164,6 @@ export async function getVisitors({
   email,
   status,
   pauseStartsAt,
-  globalBlockList,
 }: {
   teamId: string;
   dataroomId?: string;
@@ -178,7 +176,6 @@ export async function getVisitors({
   email?: string;
   status?: string;
   pauseStartsAt?: Date | null;
-  globalBlockList?: string[];
 }) {
   const currentPage = Math.max(page, 1);
   const limit = Math.min(Math.max(pageSize, 1), 100);
@@ -223,22 +220,6 @@ export async function getVisitors({
         SELECT NULL::text AS email_key, NULL::text AS source_type, NULL::text AS source_name,
           NULL::text AS source_id, NULL::text AS source_dataroom_id
         WHERE FALSE`;
-
-  // The team-wide block list applies everywhere, so it only ever flags people
-  // who already surfaced through another source — it never adds rows of its own.
-  const blockEntries = Array.from(
-    new Set(
-      (globalBlockList ?? [])
-        .map((entry) => entry.trim().toLowerCase())
-        .filter(Boolean),
-    ),
-  );
-  const globalBlockFilter = blockEntries.length
-    ? Prisma.sql`EXISTS (
-        SELECT 1 FROM UNNEST(ARRAY[${Prisma.join(blockEntries)}]::text[]) AS b
-        WHERE p.email_key = b OR (b LIKE '@%' AND p.email_key LIKE '%' || b)
-      )`
-    : Prisma.sql`FALSE`;
 
   // Views the stats are built from. Dataroom scope counts room sessions and
   // in-room document views; team scope keeps the historical document-view
@@ -467,14 +448,13 @@ export async function getVisitors({
         ln."viewerName" AS "viewerName",
         COALESCE(v.verified, false) AS verified,
         CASE
-          WHEN COALESCE(aa.has_deny, false) OR ${globalBlockFilter} THEN 'BLOCKED'
+          WHEN COALESCE(aa.has_deny, false) THEN 'BLOCKED'
           WHEN COALESCE(vs."allViews", 0) > 0 THEN 'VISITED'
           WHEN ia.email_key IS NOT NULL ${invitedFallback} THEN 'INVITED'
           WHEN COALESCE(aa.has_access, false) THEN 'ALLOWED'
           WHEN COALESCE(aa.has_assignment, false) THEN 'ASSIGNED'
           ELSE 'NONE'
         END AS status,
-        ${globalBlockFilter} AS "globallyBlocked",
         COALESCE(vs."totalVisits", 0) AS "totalVisits",
         COALESCE(vs."documentViews", 0) AS "documentViews",
         COALESCE(vs."downloads", 0) AS "downloads",
@@ -601,22 +581,12 @@ export async function getVisitors({
     lastViewed: row.lastViewed,
     invitedAt: row.invitedAt,
     invitationStatus: row.invitationStatus,
-    accessSources: [
-      ...(row.accessSources ?? []).map((source) => ({
-        type: source.type as VisitorAccessSource["type"],
-        name: source.name,
-        id: source.id ?? null,
-        dataroomId: source.dataroomId ?? null,
-      })),
-      ...(row.globallyBlocked
-        ? [
-            {
-              type: "BLOCK_LIST" as const,
-              name: "Team block list",
-            },
-          ]
-        : []),
-    ],
+    accessSources: (row.accessSources ?? []).map((source) => ({
+      type: source.type as VisitorAccessSource["type"],
+      name: source.name,
+      id: source.id ?? null,
+      dataroomId: source.dataroomId ?? null,
+    })),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   }));

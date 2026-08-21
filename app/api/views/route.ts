@@ -39,10 +39,9 @@ import {
 import { recordLinkView } from "@/lib/tracking/record-link-view";
 import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
-import { isEmailMatched } from "@/lib/utils/email-domain";
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
-import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
+import { checkViewerEmailAccess } from "@/lib/utils/global-block-list";
 import { resolveHtmlContentForRender } from "@/lib/utils/html-document";
 import { validateEmail } from "@/lib/utils/validate-email";
 
@@ -399,71 +398,41 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Check global block list first - this overrides all other access controls
-      const globalBlockCheck = checkGlobalBlockList(
-        effectiveEmail ?? undefined,
-        link.team?.globalBlockList,
-      );
-      if (globalBlockCheck.error) {
-        return NextResponse.json(
-          { message: globalBlockCheck.error },
-          { status: 400 },
-        );
-      }
-      if (globalBlockCheck.isBlocked) {
-        waitUntil(
-          reportDeniedAccessAttempt(link, effectiveEmail ?? "", "global"),
-        );
-
-        return NextResponse.json({ message: "Access denied" }, { status: 403 });
-      }
-
-      // Build combined allow list from individual emails + visitor groups
+      // Allow list is checked first so a per-link allow can override the
+      // team-wide global block list. Per-link deny list still applies after.
       const visitorGroupEmails =
         link.visitorGroups?.flatMap((vg) => vg.visitorGroup.emails) || [];
-      const combinedAllowList = [
-        ...(link.allowList || []),
-        ...visitorGroupEmails,
-      ];
-
-      // Check if email is allowed to visit the link
-      if (combinedAllowList.length > 0) {
-        // Determine if the email or its domain is allowed
-        const isAllowed = combinedAllowList.some((allowed) =>
-          isEmailMatched(effectiveEmail ?? "", allowed),
-        );
-
-        // Deny access if the email is not allowed
-        if (!isAllowed) {
-          waitUntil(
-            reportDeniedAccessAttempt(link, effectiveEmail ?? "", "allow"),
-          );
-
+      const emailAccess = checkViewerEmailAccess({
+        email: effectiveEmail ?? undefined,
+        allowList: [...(link.allowList || []), ...visitorGroupEmails],
+        denyList: link.denyList,
+        globalBlockList: link.team?.globalBlockList,
+      });
+      if (emailAccess.denied) {
+        if (emailAccess.error) {
           return NextResponse.json(
-            { message: "Unauthorized access" },
-            { status: 403 },
+            { message: emailAccess.error },
+            { status: 400 },
           );
         }
-      }
 
-      // Check if email is denied to visit the link
-      if (link.denyList && link.denyList.length > 0) {
-        // Determine if the email or its domain is denied
-        const isDenied = link.denyList.some((denied) =>
-          isEmailMatched(effectiveEmail ?? "", denied),
+        waitUntil(
+          reportDeniedAccessAttempt(
+            link,
+            effectiveEmail ?? "",
+            emailAccess.reason,
+          ),
         );
 
-        // Deny access if the email is denied
-        if (isDenied) {
-          waitUntil(
-            reportDeniedAccessAttempt(link, effectiveEmail ?? "", "deny"),
-          );
-
-          return NextResponse.json(
-            { message: "Unauthorized access" },
-            { status: 403 },
-          );
-        }
+        return NextResponse.json(
+          {
+            message:
+              emailAccess.reason === "global"
+                ? "Access denied"
+                : "Unauthorized access",
+          },
+          { status: 403 },
+        );
       }
 
       // Request OTP Code for email verification if
