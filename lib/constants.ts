@@ -65,6 +65,10 @@ export const LIMITS = {
   views: 20,
 };
 
+// Lives here rather than next to the sanitizer so client components can read
+// the limit without pulling `sanitize-html` into the browser/SSR bundle.
+export const MAX_MESSAGE_LENGTH = 4000;
+
 export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "application/pdf", // .pdf
   "application/vnd.ms-excel", // .xls

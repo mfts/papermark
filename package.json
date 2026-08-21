@@ -158,7 +158,7 @@
     "react-textarea-autosize": "^8.5.9",
     "react-zoom-pan-pinch": "^4.0.3",
     "resend": "^6.12.3",
-    "sanitize-html": "^2.17.3",
+    "sanitize-html": "2.17.5",
     "shiki": "^3.23.0",
     "sonner": "^2.0.7",
     "streamdown": "^2.5.0",
