@@ -10,8 +10,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "check:brand-logo": "tsx scripts/check-brand-logo.ts",
-    "check:mcp-schemas": "tsx scripts/check-mcp-schema-dialect.ts",
     "postinstall": "prisma generate",
     "vercel-build": "prisma migrate deploy && next build",
     "email": "email dev --dir ./components/emails --port 3001",
