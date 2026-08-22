@@ -57,6 +57,7 @@ scripts/*
 !scripts/mcp-smoke.mjs
 !scripts/check-tool-contracts.sh
 !scripts/check-brand-logo.ts
+!scripts/check-mcp-schema-dialect.ts
 !scripts/extend-trial.ts
 !scripts/local/
 scripts/local/.tinybird-page-views.json
