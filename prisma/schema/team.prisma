@@ -20,6 +20,7 @@ model Team {
 
   permissionGroups  PermissionGroup[]
   linkPresets       LinkPreset[] // Link presets for the team
+  watermarkPresets  WatermarkPreset[] // Named, reusable watermark configurations for the team
   incomingWebhooks  IncomingWebhook[]
   restrictedTokens  RestrictedToken[]
   webhooks          Webhook[]

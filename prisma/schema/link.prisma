@@ -173,6 +173,21 @@ model LinkPreset {
   @@index([teamId])
 }
 
+model WatermarkPreset {
+  id     String @id @default(cuid())
+  name   String
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  config Json // WatermarkConfig: {text, isTiled, position, rotation, color, fontSize, opacity}
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, name])
+  @@index([teamId])
+}
+
 enum CustomFieldType {
   SHORT_TEXT
   LONG_TEXT

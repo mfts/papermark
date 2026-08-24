@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 
 import { motion } from "motion/react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
+import { toast } from "sonner";
 import { z } from "zod";
+
+import { useTeam } from "@/context/team-context";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,6 +34,7 @@ import {
 } from "@/components/ui/sheet";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
+import { useWatermarkPresets } from "@/lib/swr/use-watermark-presets";
 import { WatermarkConfig, WatermarkConfigSchema } from "@/lib/types";
 
 import WatermarkPreview from "./watermark-preview";
@@ -53,6 +57,14 @@ export default function WatermarkConfigSheet({
   const [formValues, setFormValues] =
     useState<Partial<WatermarkConfig>>(initialConfig);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
+  const { presets, mutate: mutatePresets } = useWatermarkPresets();
+  const [selectedPresetId, setSelectedPresetId] = useState<string>("");
+  const [newPresetName, setNewPresetName] = useState<string>("");
+  const [isSavingPreset, setIsSavingPreset] = useState<boolean>(false);
+  const [isDeletingPreset, setIsDeletingPreset] = useState<boolean>(false);
 
   const previewConfig: WatermarkConfig = {
     text: formValues.text?.trim() ? formValues.text : PREVIEW_PLACEHOLDER_TEXT,
@@ -97,6 +109,86 @@ export default function WatermarkConfigSheet({
     }
   };
 
+  const handleApplyPreset = (presetId: string) => {
+    const preset = presets?.find((p) => p.id === presetId);
+    if (!preset) return;
+
+    setSelectedPresetId(presetId);
+    setFormValues(preset.config as WatermarkConfig);
+    setErrors({});
+  };
+
+  const handleSaveAsPreset = async () => {
+    if (!teamId) return;
+
+    const name = newPresetName.trim();
+    if (!name) {
+      toast.error("Please enter a name for the preset.");
+      return;
+    }
+
+    let validatedConfig: WatermarkConfig;
+    try {
+      validatedConfig = WatermarkConfigSchema.parse(formValues);
+    } catch {
+      toast.error("Fix the watermark settings above before saving a preset.");
+      return;
+    }
+
+    setIsSavingPreset(true);
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/watermark-presets`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, config: validatedConfig }),
+        },
+      );
+
+      if (!response.ok) {
+        const { error } = await response.json().catch(() => ({}));
+        toast.error(error ?? "Failed to save watermark preset");
+        return;
+      }
+
+      const preset = await response.json();
+      toast.success("Watermark preset saved!");
+      setNewPresetName("");
+      setSelectedPresetId(preset.id);
+      mutatePresets();
+    } catch {
+      toast.error("Failed to save watermark preset");
+    } finally {
+      setIsSavingPreset(false);
+    }
+  };
+
+  const handleDeletePreset = async () => {
+    if (!teamId || !selectedPresetId) return;
+
+    setIsDeletingPreset(true);
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/watermark-presets/${selectedPresetId}`,
+        { method: "DELETE" },
+      );
+
+      if (!response.ok) {
+        toast.error("Failed to delete watermark preset");
+        return;
+      }
+
+      toast.success("Watermark preset deleted");
+      setSelectedPresetId("");
+      mutatePresets();
+    } catch {
+      toast.error("Failed to delete watermark preset");
+    } finally {
+      setIsDeletingPreset(false);
+    }
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="flex h-full flex-col sm:max-w-6xl">
@@ -115,6 +207,40 @@ export default function WatermarkConfigSheet({
             {...FADE_IN_ANIMATION_SETTINGS}
           >
             <div className="flex w-full flex-col items-start gap-6 overflow-x-visible pb-4 pt-0">
+              {presets && presets.length > 0 && (
+                <div className="w-full space-y-2">
+                  <Label htmlFor="watermark-preset">Load Preset</Label>
+                  <div className="flex space-x-2">
+                    <Select
+                      name="preset"
+                      value={selectedPresetId}
+                      onValueChange={handleApplyPreset}
+                    >
+                      <SelectTrigger id="watermark-preset">
+                        <SelectValue placeholder="Select a saved preset" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {presets.map((preset) => (
+                          <SelectItem key={preset.id} value={preset.id}>
+                            {preset.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedPresetId && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isDeletingPreset}
+                        onClick={handleDeletePreset}
+                      >
+                        Delete
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="w-full space-y-2">
                 <Label htmlFor="watermark-text">Watermark Text</Label>
                 <Input
@@ -333,6 +459,30 @@ export default function WatermarkConfigSheet({
         </div>
 
         <SheetFooter className="flex-shrink-0">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button type="button" variant="outline">
+                Save as Preset
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 space-y-2">
+              <Label htmlFor="watermark-preset-name">Preset name</Label>
+              <Input
+                id="watermark-preset-name"
+                placeholder="e.g. Confidential"
+                value={newPresetName}
+                onChange={(e) => setNewPresetName(e.target.value)}
+              />
+              <Button
+                type="button"
+                className="w-full"
+                loading={isSavingPreset}
+                onClick={handleSaveAsPreset}
+              >
+                Save Preset
+              </Button>
+            </PopoverContent>
+          </Popover>
           <Button onClick={validateAndSave}>Save Watermark</Button>
         </SheetFooter>
       </SheetContent>
