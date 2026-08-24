@@ -48,39 +48,62 @@ export default async function handle(
       return res.status(403).end("Unauthorized to access this team");
     }
   } catch (error) {
-    errorhandler(error, res);
+    return errorhandler(error, res);
   }
 
   if (req.method === "GET") {
     // GET /api/teams/:teamId/watermark-presets
-    const presets = await prisma.watermarkPreset.findMany({
-      where: { teamId },
-      orderBy: { name: "asc" },
-    });
+    try {
+      const presets = await prisma.watermarkPreset.findMany({
+        where: { teamId },
+        orderBy: { name: "asc" },
+      });
 
-    return res.status(200).json({ presets });
+      return res.status(200).json({ presets });
+    } catch (error) {
+      return errorhandler(error, res);
+    }
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/watermark-presets
-    const { name, config } = createWatermarkPresetBodySchema.parse(req.body);
+    try {
+      const { name, config } = createWatermarkPresetBodySchema.parse(
+        req.body,
+      );
 
-    const existingPreset = await prisma.watermarkPreset.findFirst({
-      where: { teamId, name },
-    });
-    if (existingPreset) {
-      return res.status(400).json({
-        error: "A watermark preset with that name already exists.",
+      const existingPreset = await prisma.watermarkPreset.findFirst({
+        where: { teamId, name },
       });
+      if (existingPreset) {
+        return res.status(400).json({
+          error: "A watermark preset with that name already exists.",
+        });
+      }
+
+      const preset = await prisma.watermarkPreset.create({
+        data: {
+          name,
+          config,
+          teamId,
+        },
+      });
+
+      return res.status(200).json(preset);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors[0].message });
+      }
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "P2002"
+      ) {
+        return res.status(400).json({
+          error: "A watermark preset with that name already exists.",
+        });
+      }
+      return errorhandler(error, res);
     }
-
-    const preset = await prisma.watermarkPreset.create({
-      data: {
-        name,
-        config,
-        teamId,
-      },
-    });
-
-    return res.status(200).json(preset);
   } else {
     // We only allow GET and POST requests
     res.setHeader("Allow", ["GET", "POST"]);

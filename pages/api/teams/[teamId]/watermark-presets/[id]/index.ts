@@ -38,24 +38,28 @@ export default async function handle(
       return res.status(403).end("Unauthorized to access this team");
     }
   } catch (error) {
-    errorhandler(error, res);
+    return errorhandler(error, res);
   }
 
   if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId/watermark-presets/[id]
-    const preset = await prisma.watermarkPreset.findUnique({
-      where: { id, teamId },
-    });
+    try {
+      const preset = await prisma.watermarkPreset.findUnique({
+        where: { id, teamId },
+      });
 
-    if (!preset) {
-      return res.status(404).json({ error: "Watermark preset not found" });
+      if (!preset) {
+        return res.status(404).json({ error: "Watermark preset not found" });
+      }
+
+      await prisma.watermarkPreset.delete({
+        where: { id, teamId },
+      });
+
+      return res.status(204).end();
+    } catch (error) {
+      return errorhandler(error, res);
     }
-
-    await prisma.watermarkPreset.delete({
-      where: { id, teamId },
-    });
-
-    return res.status(204).end();
   } else {
     // We only allow DELETE requests
     res.setHeader("Allow", ["DELETE"]);
