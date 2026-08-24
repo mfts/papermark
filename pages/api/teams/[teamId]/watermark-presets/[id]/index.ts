@@ -44,17 +44,13 @@ export default async function handle(
   if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId/watermark-presets/[id]
     try {
-      const preset = await prisma.watermarkPreset.findUnique({
+      const { count } = await prisma.watermarkPreset.deleteMany({
         where: { id, teamId },
       });
 
-      if (!preset) {
+      if (count === 0) {
         return res.status(404).json({ error: "Watermark preset not found" });
       }
-
-      await prisma.watermarkPreset.delete({
-        where: { id, teamId },
-      });
 
       return res.status(204).end();
     } catch (error) {
