@@ -592,21 +592,27 @@ export const generateGravatarHash = (email: string | null): string => {
   return hash;
 };
 
+export function stripTrailingPasswordWhitespace(password: string): string {
+  return password.trimEnd();
+}
+
 export async function generateEncrpytedPassword(
   password: string,
 ): Promise<string> {
   // If the password is empty, return an empty string
   if (!password) return "";
+  const normalized = stripTrailingPasswordWhitespace(password);
+  if (!normalized) return "";
   // If the password is already encrypted, return it
   // Check if it's encrypted by validating the format: 32-char hex IV + ":" + hex encrypted text
-  const textParts: string[] = password.split(":");
+  const textParts: string[] = normalized.split(":");
   if (
     textParts.length === 2 &&
     textParts[0].length === 32 &&
     /^[a-fA-F0-9]+$/.test(textParts[0]) &&
     /^[a-fA-F0-9]+$/.test(textParts[1])
   ) {
-    return password;
+    return normalized;
   }
   // Otherwise, encrypt the password
   const encryptedKey: string = crypto
@@ -616,19 +622,20 @@ export async function generateEncrpytedPassword(
     .substring(0, 32);
   const IV: Buffer = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv("aes-256-ctr", encryptedKey, IV);
-  let encryptedText: string = cipher.update(password, "utf8", "hex");
+  let encryptedText: string = cipher.update(normalized, "utf8", "hex");
   encryptedText += cipher.final("hex");
   return IV.toString("hex") + ":" + encryptedText;
 }
 
 export function decryptEncrpytedPassword(password: string): string {
   if (!password) return "";
+  const normalized = stripTrailingPasswordWhitespace(password);
   const encryptedKey: string = crypto
     .createHash("sha256")
     .update(String(process.env.NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY))
     .digest("base64")
     .substring(0, 32);
-  const textParts: string[] = password.split(":");
+  const textParts: string[] = normalized.split(":");
   // Check if it's in the expected encrypted format: 32-char hex IV + ":" + hex encrypted text
   if (
     !textParts ||
@@ -637,7 +644,7 @@ export function decryptEncrpytedPassword(password: string): string {
     !/^[a-fA-F0-9]+$/.test(textParts[0]) ||
     !/^[a-fA-F0-9]+$/.test(textParts[1])
   ) {
-    return password; // Return as-is if not in encrypted format
+    return normalized; // Return as-is if not in encrypted format
   }
   try {
     const IV: Buffer = Buffer.from(textParts[0], "hex");
@@ -645,9 +652,9 @@ export function decryptEncrpytedPassword(password: string): string {
     const decipher = crypto.createDecipheriv("aes-256-ctr", encryptedKey, IV);
     let decrypted: string = decipher.update(encryptedText, "hex", "utf8");
     decrypted += decipher.final("utf8");
-    return decrypted;
+    return stripTrailingPasswordWhitespace(decrypted);
   } catch (error) {
-    return password;
+    return normalized;
   }
 }
 

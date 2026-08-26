@@ -5,6 +5,8 @@ import { Brand, CustomField, DataroomBrand, LinkType } from "@prisma/client";
 import { ArrowUpRightIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { stripTrailingPasswordWhitespace } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 
 import {
@@ -135,7 +137,12 @@ export default function AccessForm({
     if (requireEmail) {
       if (!data.email || !isEmailValid) return false;
     }
-    if (requirePassword && !data.password) return false;
+    if (
+      requirePassword &&
+      !stripTrailingPasswordWhitespace(data.password ?? "")
+    ) {
+      return false;
+    }
     if (requireAgreement && !data.hasConfirmedAgreement) return false;
     if (requireAgreement && requireName && !data.name) return false;
     if (customFields?.length) {

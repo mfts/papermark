@@ -40,7 +40,12 @@ import {
 } from "@/lib/signing/agreements";
 import { recordLinkView } from "@/lib/tracking/record-link-view";
 import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
-import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
+import {
+  checkPassword,
+  decryptEncrpytedPassword,
+  log,
+  stripTrailingPasswordWhitespace,
+} from "@/lib/utils";
 import {
   extractEmailDomain,
   normalizeGroupDomain,
@@ -383,12 +388,21 @@ export async function POST(request: NextRequest) {
         }
 
         let isPasswordValid: boolean = false;
+        const submittedPassword = stripTrailingPasswordWhitespace(password);
         const textParts: string[] = link.password.split(":");
         if (!textParts || textParts.length !== 2) {
-          isPasswordValid = await checkPassword(password, link.password);
+          isPasswordValid = await checkPassword(
+            submittedPassword,
+            link.password,
+          );
+          // A legacy bcrypt hash may cover trailing spaces, so the raw input
+          // still has to match or those links lock their owners out.
+          if (!isPasswordValid && password !== submittedPassword) {
+            isPasswordValid = await checkPassword(password, link.password);
+          }
         } else {
           const decryptedPassword = decryptEncrpytedPassword(link.password);
-          isPasswordValid = decryptedPassword === password;
+          isPasswordValid = decryptedPassword === submittedPassword;
         }
 
         if (!isPasswordValid) {

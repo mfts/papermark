@@ -44,13 +44,17 @@ export default function PasswordSection({
           autoComplete="off"
           translate="no"
           className="notranslate flex w-full cursor-text rounded-md border-0 bg-black py-1.5 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-[var(--access-placeholder)] focus:ring-2 focus:ring-inset focus:ring-[var(--access-input-focus)] sm:text-sm sm:leading-6"
-          style={{
-            backgroundColor: theme.controlBgColor,
-            borderColor: theme.controlBorderColor,
-            "--access-placeholder": theme.controlPlaceholderColor,
-            "--access-input-focus": theme.controlBorderStrongColor,
-            color: disableEditPassword ? theme.subtleTextColor : theme.textColor,
-          } as CSSProperties}
+          style={
+            {
+              backgroundColor: theme.controlBgColor,
+              borderColor: theme.controlBorderColor,
+              "--access-placeholder": theme.controlPlaceholderColor,
+              "--access-input-focus": theme.controlBorderStrongColor,
+              color: disableEditPassword
+                ? theme.subtleTextColor
+                : theme.textColor,
+            } as CSSProperties
+          }
           value={password || ""}
           placeholder={t("fields.password.placeholder", "Enter passcode")}
           onChange={(e) => {
