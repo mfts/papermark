@@ -96,6 +96,23 @@ export function normalizeGroupDomain(input: string): string | null {
   return `@${bare}`;
 }
 
+export function mergeGroupDomains(
+  existing: readonly string[],
+  incoming: readonly string[],
+): string[] {
+  const merged: string[] = [];
+  const seen = new Set<string>();
+  for (const entry of [...existing, ...incoming]) {
+    const normalized = normalizeGroupDomain(entry);
+    if (!normalized || seen.has(normalized)) {
+      continue;
+    }
+    seen.add(normalized);
+    merged.push(normalized);
+  }
+  return merged;
+}
+
 export function normalizeListEntry(entry: string): string {
   if (!entry || typeof entry !== "string") {
     return "";
