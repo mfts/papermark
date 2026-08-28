@@ -40,10 +40,12 @@ export async function POST(req: NextRequest) {
     if (session) {
       userId = (session.user as CustomUser).id;
 
-      // Get team ID from document or dataroom
+      // Get team ID from document or dataroom — FIXED: enforce tenant scoping via findFirst with userTeamIds (CWE-639)
       if (dataroomId) {
-        const dataroom = await prisma.dataroom.findUnique({
-          where: { id: dataroomId },
+        const userTeams = await prisma.userTeam.findMany({ where: { userId }, select: { teamId: true } });
+        const userTeamIds = userTeams.map((ut) => ut.teamId);
+        const dataroom = await prisma.dataroom.findFirst({
+          where: { id: dataroomId, teamId: { in: userTeamIds } },
           select: {
             teamId: true,
             agentsEnabled: true,
@@ -80,7 +82,7 @@ export async function POST(req: NextRequest) {
 
         teamId = dataroom.teamId;
 
-        // Verify user is member of team
+        // Verify user is member of team (redundant after scoped query, kept for defense-in-depth)
         const userTeam = await prisma.userTeam.findUnique({
           where: {
             userId_teamId: {
@@ -94,8 +96,10 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
       } else if (documentId) {
-        const document = await prisma.document.findUnique({
-          where: { id: documentId },
+        const userTeamsDoc = await prisma.userTeam.findMany({ where: { userId }, select: { teamId: true } });
+        const userTeamIdsDoc = userTeamsDoc.map((ut) => ut.teamId);
+        const document = await prisma.document.findFirst({
+          where: { id: documentId, teamId: { in: userTeamIdsDoc } },
           select: {
             teamId: true,
             agentsEnabled: true,
@@ -131,7 +135,7 @@ export async function POST(req: NextRequest) {
 
         teamId = document.teamId;
 
-        // Verify user is member of team
+        // Verify user is member of team (defense-in-depth)
         const userTeam = await prisma.userTeam.findUnique({
           where: {
             userId_teamId: {
