@@ -16,6 +16,13 @@ import {
   getViewCompletionStats,
 } from "@/lib/tinybird/pipes";
 import { CustomUser } from "@/lib/types";
+import {
+  countablePlaybackEvents,
+  completionRate,
+  eventsForView,
+  resolveVideoLength,
+  watchTimeSeconds,
+} from "@/lib/video-analytics/playback";
 
 export default async function handle(
   req: NextApiRequest,
@@ -194,32 +201,18 @@ export default async function handle(
             document_id: docId,
           });
 
-          const completionRates = await Promise.all(
-            filteredViews.map(async (view) => {
-              const viewEvents =
-                videoEvents?.data.filter(
-                  (event: any) =>
-                    event.view_id === view.id &&
-                    ["played", "muted", "unmuted", "rate_changed"].includes(
-                      event.event_type,
-                    ) &&
-                    event.end_time > event.start_time &&
-                    event.end_time - event.start_time >= 1,
-                ) || [];
-
-              const uniqueTimestamps = new Set<number>();
-              viewEvents.forEach((event: any) => {
-                for (let t = event.start_time; t < event.end_time; t++) {
-                  uniqueTimestamps.add(Math.floor(t));
-                }
-              });
-
-              const videoLength = document.versions[0]?.length || 0;
-              return videoLength > 0
-                ? Math.min(100, (uniqueTimestamps.size / videoLength) * 100)
-                : 0;
-            }),
+          const countable = countablePlaybackEvents(videoEvents?.data);
+          const videoLength = resolveVideoLength(
+            document.versions[0]?.length,
+            countable,
           );
+
+          const completionRates = filteredViews.map((view) => {
+            const { unique } = watchTimeSeconds(
+              eventsForView(countable, view.id),
+            );
+            return completionRate(unique, videoLength);
+          });
 
           avgCompletionRate =
             completionRates.reduce((sum, rate) => sum + rate, 0) /

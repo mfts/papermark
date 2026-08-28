@@ -15,6 +15,13 @@ import { getViewPageDuration } from "@/lib/tinybird";
 import { getVideoEventsByDocument } from "@/lib/tinybird/pipes";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
+import {
+  countablePlaybackEvents,
+  completionRate,
+  eventsForView,
+  resolveVideoLength,
+  watchTimeSeconds,
+} from "@/lib/video-analytics/playback";
 
 type DocumentVersion = {
   versionNumber: number;
@@ -67,52 +74,22 @@ async function getVideoViews(
   document: Document,
   videoEvents: { data: VideoEvent[] },
 ) {
+  const countable = countablePlaybackEvents(videoEvents?.data);
+  const videoLength = resolveVideoLength(
+    document.versions[0]?.length,
+    countable,
+  );
+
   const durationsPromises = views.map((view) => {
-    const viewEvents =
-      videoEvents?.data.filter(
-        (event) =>
-          event.view_id === view.id &&
-          ["played", "muted", "unmuted", "rate_changed"].includes(
-            event.event_type,
-          ) &&
-          event.end_time > event.start_time &&
-          event.end_time - event.start_time >= 1,
-      ) || [];
-
-    // Track timestamps and their frequency for total watch time
-    const timestampCounts = new Map<number, number>();
-    // Track unique timestamps for completion calculation
-    const uniqueTimestamps = new Set<number>();
-
-    // Calculate total watch time
-    // let totalWatchTime = 0;
-    viewEvents.forEach((event) => {
-      for (let t = event.start_time; t < event.end_time; t++) {
-        const timestamp = Math.floor(t);
-        // Count total occurrences including replays
-        timestampCounts.set(
-          timestamp,
-          (timestampCounts.get(timestamp) || 0) + 1,
-        );
-        // Track unique timestamps
-        uniqueTimestamps.add(timestamp);
-      }
-    });
-
-    // Sum up all timestamps including duplicates for total watch time
-    let totalWatchTime = 0;
-    timestampCounts.forEach((count) => {
-      totalWatchTime += count;
-    });
-
-    // Get the number of unique timestamps watched
-    const uniqueWatchTime = uniqueTimestamps.size;
+    const { total, unique } = watchTimeSeconds(
+      eventsForView(countable, view.id),
+    );
 
     return {
       data: [],
-      totalWatchTime,
-      uniqueWatchTime,
-      videoLength: document.versions[0]?.length || 0,
+      totalWatchTime: total,
+      uniqueWatchTime: unique,
+      videoLength,
     };
   });
 
@@ -124,16 +101,15 @@ async function getVideoViews(
     );
 
     const duration = durations[index];
-    const completionRate =
-      duration.videoLength > 0
-        ? Math.min(100, (duration.uniqueWatchTime / duration.videoLength) * 100)
-        : 0;
 
     return {
       ...view,
       duration: durations[index],
-      totalDuration: duration.totalWatchTime * 1000, // convert to milliseconds
-      completionRate: completionRate.toFixed(),
+      totalDuration: duration.totalWatchTime * 1000,
+      completionRate: completionRate(
+        duration.uniqueWatchTime,
+        duration.videoLength,
+      ).toFixed(),
       versionNumber: relevantDocumentVersion?.versionNumber || 1,
       versionNumPages: 0,
     };

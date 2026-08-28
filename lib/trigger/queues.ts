@@ -18,6 +18,11 @@ export const convertKeynoteToPdfQueue = queue({
   concurrencyLimit: 2,
 });
 
+export const videoLengthBackfillQueue = queue({
+  name: "video-length-backfill",
+  concurrencyLimit: 5,
+});
+
 // AI processing queues
 export const processPdfForAIQueue = queue({
   name: "process-pdf-for-ai",

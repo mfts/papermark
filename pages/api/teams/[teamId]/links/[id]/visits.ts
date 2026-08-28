@@ -6,9 +6,16 @@ import { LIMITS } from "@/lib/constants";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { getDocumentWithTeamAndUser } from "@/lib/team/helper";
-import { getViewPageDuration } from "@/lib/tinybird";
+import { getViewPageDuration, getVideoEventsByDocument } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
+import {
+  countablePlaybackEvents,
+  completionRate,
+  eventsForView,
+  resolveVideoLength,
+  watchTimeSeconds,
+} from "@/lib/video-analytics/playback";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 
@@ -52,11 +59,12 @@ export default async function handle(
             select: {
               id: true,
               numPages: true,
+              type: true,
               versions: {
                 where: { isPrimary: true },
                 orderBy: { createdAt: "desc" },
                 take: 1,
-                select: { numPages: true },
+                select: { numPages: true, length: true },
               },
               team: {
                 select: {
@@ -177,40 +185,61 @@ export default async function handle(
         }
       }
 
-      const durationsPromises = limitedViews.map((view) => {
-        return getViewPageDuration({
-          documentId: view.documentId!,
-          viewId: view.id,
-          since: 0,
+      const isVideo = result.document.type === "video";
+      let viewsWithDuration;
+
+      if (isVideo) {
+        const videoEvents = await getVideoEventsByDocument({
+          document_id: docId,
         });
-      });
-
-      const durations = await Promise.all(durationsPromises);
-
-      // Sum up durations for each view
-      const summedDurations = durations.map((duration) => {
-        return duration.data.reduce(
-          (totalDuration, data) => totalDuration + data.sum_duration,
-          0,
+        const countable = countablePlaybackEvents(videoEvents?.data);
+        const videoLength = resolveVideoLength(
+          result.document.versions[0]?.length,
+          countable,
         );
-      });
 
-      // Construct the response combining views and their respective durations
-      const viewsWithDuration = limitedViews.map((view, index) => {
-        const viewNumPages = view.documentId
-          ? (numPagesByDocumentId.get(view.documentId) ?? currentDocNumPages)
-          : currentDocNumPages;
-        const completionRate = viewNumPages
-          ? (durations[index].data.length / viewNumPages) * 100
-          : 0;
+        viewsWithDuration = limitedViews.map((view) => {
+          const { total, unique } = watchTimeSeconds(
+            eventsForView(countable, view.id),
+          );
+          return {
+            ...view,
+            duration: { data: [] },
+            totalDuration: total * 1000,
+            completionRate: completionRate(unique, videoLength).toFixed(),
+          };
+        });
+      } else {
+        const durations = await Promise.all(
+          limitedViews.map((view) =>
+            getViewPageDuration({
+              documentId: view.documentId!,
+              viewId: view.id,
+              since: 0,
+            }),
+          ),
+        );
 
-        return {
-          ...view,
-          duration: durations[index],
-          totalDuration: summedDurations[index],
-          completionRate: completionRate.toFixed(),
-        };
-      });
+        viewsWithDuration = limitedViews.map((view, index) => {
+          const viewNumPages = view.documentId
+            ? (numPagesByDocumentId.get(view.documentId) ?? currentDocNumPages)
+            : currentDocNumPages;
+          const viewCompletion = viewNumPages
+            ? (durations[index].data.length / viewNumPages) * 100
+            : 0;
+          const totalDuration = durations[index].data.reduce(
+            (sum, data) => sum + data.sum_duration,
+            0,
+          );
+
+          return {
+            ...view,
+            duration: durations[index],
+            totalDuration,
+            completionRate: viewCompletion.toFixed(),
+          };
+        });
+      }
 
       // TODO: Check that the user is owner of the links, otherwise return 401
 

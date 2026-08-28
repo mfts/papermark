@@ -13,6 +13,7 @@ import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { getExtension } from "@/lib/utils";
 import { isMarkdownFile } from "@/lib/utils/get-content-type";
 import { conversionQueueName } from "@/lib/utils/trigger-utils";
+import { videoProcessingMode } from "@/lib/video/processing-plan";
 import { sendDocumentCreatedWebhook } from "@/lib/webhook/triggers/document-created";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
 
@@ -191,21 +192,15 @@ export const processDocument = async ({
     );
   }
 
-  if (
-    type === "video" &&
-    contentType !== "video/mp4" &&
-    contentType?.startsWith("video/")
-  ) {
+  const videoMode = videoProcessingMode({ type, contentType });
+  if (videoMode) {
     await processVideo.trigger(
       {
-        videoUrl: key,
-        teamId,
-        docId: key.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
         documentVersionId: document.versions[0].id,
-        fileSize: fileSize || 0,
+        mode: videoMode,
       },
       {
-        idempotencyKey: `${teamId}-${document.versions[0].id}`,
+        idempotencyKey: `${teamId}-${document.versions[0].id}-${videoMode}`,
         tags: [
           `team_${teamId}`,
           `document_${document.id}`,

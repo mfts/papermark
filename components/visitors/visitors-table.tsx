@@ -731,7 +731,7 @@ export default function VisitorsTable({
                                 <VisitorVideoChart
                                   documentId={view.documentId!}
                                   viewId={view.id}
-                                  teamId={view.teamId!}
+                                  teamId={view.teamId ?? teamId}
                                 />
                               ) : (
                                 <VisitorChart

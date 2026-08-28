@@ -16,6 +16,7 @@ import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { isMarkdownFile } from "@/lib/utils/get-content-type";
 import { conversionQueueName } from "@/lib/utils/trigger-utils";
+import { videoProcessingMode } from "@/lib/video/processing-plan";
 import { documentUploadSchema } from "@/lib/zod/url-validation";
 
 export default async function handle(
@@ -201,21 +202,15 @@ export default async function handle(
         );
       }
 
-      if (
-        type === "video" &&
-        contentType !== "video/mp4" &&
-        contentType?.startsWith("video/")
-      ) {
+      const videoMode = videoProcessingMode({ type, contentType });
+      if (videoMode) {
         await processVideo.trigger(
           {
-            videoUrl: url,
-            teamId,
-            docId: url.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
             documentVersionId: version.id,
-            fileSize: fileSize || 0,
+            mode: videoMode,
           },
           {
-            idempotencyKey: `${teamId}-${version.id}`,
+            idempotencyKey: `${teamId}-${version.id}-${videoMode}`,
             tags: [
               `team_${teamId}`,
               `document_${documentId}`,
