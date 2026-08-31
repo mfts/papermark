@@ -189,8 +189,9 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
                       );
                       setSearchOpen(false);
                     }}
+                    className="gap-2"
                   >
-                    <FileText className="mr-2 h-4 w-4 text-[#fb7a00]" />
+                    <FileText className="h-4 w-4 shrink-0 text-[#fb7a00]" />
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">
                         {article.data.title}
