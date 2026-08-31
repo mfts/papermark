@@ -139,6 +139,19 @@ export default function UpgradeHolidayOfferPage() {
   const router = useRouter();
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  // If the browser restores this page from bfcache (e.g. the user hits
+  // "back" from Stripe Checkout before completing payment), the component
+  // isn't remounted, so a stale `selectedPlan` would leave the button
+  // stuck on "Redirecting to Stripe..." forever.
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setSelectedPlan(null);
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
   const teamInfo = useTeam();
   const { plan: teamPlan, trial, isCustomer, isOldAccount } = usePlan();
   const analytics = useAnalytics();

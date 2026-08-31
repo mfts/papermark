@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import React from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -59,6 +59,20 @@ export function UnlimitedPlanModal({
   // locked to their current currency, then geo, then USD as the default.
   const currency: Currency =
     externalCurrency ?? subscriptionCurrency ?? geoCurrency ?? "usd";
+
+  // If the browser restores this page from bfcache (e.g. the user hits
+  // "back" from Stripe Checkout before completing payment), the component
+  // isn't remounted, so a stale `loading` state would leave the button
+  // stuck on "Redirecting to Stripe..." forever.
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setLoading(false);
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
 
   const unlimitedPlan = PLANS.find(
     (p) => p.name === PlanEnum.DataRoomsUnlimited,
