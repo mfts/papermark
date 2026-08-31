@@ -123,7 +123,7 @@ export default function PagesVerticalViewer({
     rotate,
   } = useFullscreen();
 
-  useDisablePullToRefresh(isMobile);
+  useDisablePullToRefresh();
 
   const numPages = pages.length;
   const numPagesWithFeedback =

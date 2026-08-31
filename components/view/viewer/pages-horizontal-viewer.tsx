@@ -98,7 +98,7 @@ export default function PagesHorizontalViewer({
     rotate,
   } = useFullscreen();
 
-  useDisablePullToRefresh(!!isMobile);
+  useDisablePullToRefresh();
 
   const showStatsSlideWithAccountCreation =
     showAccountCreationSlide && // if showAccountCreationSlide is enabled
