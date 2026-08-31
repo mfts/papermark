@@ -152,7 +152,27 @@ export default async function handle(
     // Basic response for instant loading
     const response = {
       document: {
-        ...serializeFileSize(document),
+        id: document.id,
+        name: document.name,
+        description: document.description,
+        file: document.file,
+        originalFile: document.originalFile,
+        type: document.type,
+        contentType: document.contentType,
+        storageType: document.storageType,
+        numPages: document.numPages,
+        ownerId: document.ownerId,
+        teamId: document.teamId,
+        agentsEnabled: document.agentsEnabled,
+        advancedExcelEnabled: document.advancedExcelEnabled,
+        downloadOnly: document.downloadOnly,
+        createdAt: document.createdAt,
+        updatedAt: document.updatedAt,
+        folderId: document.folderId,
+        isExternalUpload: document.isExternalUpload,
+        folder: document.folder,
+        datarooms: document.datarooms,
+        _count: document._count,
         primaryVersion: serializeFileSize(primaryVersion),
         hasPageLinks,
         isEmpty: !hasLinks && !hasViews, // Flag for empty state optimization

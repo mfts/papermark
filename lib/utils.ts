@@ -925,6 +925,10 @@ export function serializeFileSize(obj: any): any {
     return obj;
   }
 
+  if (Object.prototype.toString.call(obj) === "[object Date]") {
+    return obj;
+  }
+
   if (Array.isArray(obj)) {
     return obj.map(serializeFileSize);
   }
