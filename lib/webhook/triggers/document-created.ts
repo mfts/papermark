@@ -18,22 +18,21 @@ export async function sendDocumentCreatedWebhook({
       throw new Error("Missing required parameters");
     }
 
-    // check if team is on paid plan
-    const team = await prisma.team.findUnique({
-      where: { id: teamId },
-      select: { plan: true },
-    });
+    // On self-hosted deployments all plans are webhook-eligible.
+    if (process.env.NEXT_PUBLIC_SELF_HOSTED !== "true") {
+      const team = await prisma.team.findUnique({
+        where: { id: teamId },
+        select: { plan: true },
+      });
 
-    if (team?.plan === "free" || team?.plan === "pro") {
-      // team is not on paid plan, so we don't need to send webhooks
-      return;
-    }
+      if (team?.plan === "free" || team?.plan === "pro") {
+        return;
+      }
 
-    // check if team is paused
-    const teamIsPaused = await isTeamPausedById(teamId);
-    if (teamIsPaused) {
-      // team is paused, so we don't send webhooks
-      return;
+      const teamIsPaused = await isTeamPausedById(teamId);
+      if (teamIsPaused) {
+        return;
+      }
     }
 
     // Get webhooks for team
