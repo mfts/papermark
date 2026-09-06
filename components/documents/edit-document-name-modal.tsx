@@ -295,6 +295,8 @@ export function EditDocumentNameModal({
         });
       }
 
+      mutate(`/api/teams/${teamId}/documents/hidden`);
+
       setOpen(false);
     } catch {
       toast.error("Error updating document name. Please try again.");
