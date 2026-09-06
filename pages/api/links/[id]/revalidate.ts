@@ -41,12 +41,18 @@ export default async function handle(
           teamId,
         },
       },
+      select: { status: true, blockedAt: true },
     });
 
     if (!teamAccess) {
       return res.status(403).end("Forbidden");
     }
 
+    if (teamAccess.status !== "ACTIVE" || teamAccess.blockedAt) {
+      return res
+        .status(403)
+        .json({ error: "Your access to this team is not active." });
+    }
     const link = await prisma.link.findUnique({
       where: { id, teamId, deletedAt: null },
       select: { id: true },
