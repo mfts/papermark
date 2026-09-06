@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 
 import { revalidateLinkById } from "@/lib/api/links/revalidate";
+import { enforceLinkMemberScope } from "@/lib/api/rbac/guard";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
@@ -24,9 +25,10 @@ export default async function handle(
   }
 
   const { id } = req.query as { id: string };
-  const { teamId } = req.body as { teamId?: string };
+  const teamId =
+    req.body && typeof req.body === "object" ? req.body.teamId : undefined;
 
-  if (!teamId) {
+  if (typeof teamId !== "string" || teamId.length === 0) {
     return res.status(400).json({ error: "teamId is required" });
   }
 
@@ -40,7 +42,7 @@ export default async function handle(
           teamId,
         },
       },
-      select: { status: true, blockedAt: true },
+      select: { status: true, blockedAt: true, role: true },
     });
 
     if (!teamAccess) {
@@ -59,6 +61,17 @@ export default async function handle(
 
     if (!link) {
       return res.status(404).json({ error: "Link not found" });
+    }
+
+    const scopeDenied = await enforceLinkMemberScope({
+      userId,
+      teamId,
+      linkId: link.id,
+      res,
+      role: teamAccess.role,
+    });
+    if (scopeDenied) {
+      return;
     }
 
     const revalidated = await revalidateLinkById(id);
