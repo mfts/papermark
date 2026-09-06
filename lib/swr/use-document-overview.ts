@@ -3,15 +3,11 @@ import { useRouter } from "next/router";
 import { useTeam } from "@/context/team-context";
 import useSWR from "swr";
 
-import { DocumentWithVersion } from "@/lib/types";
+import { DocumentOverviewDocument } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
 
 interface DocumentOverview {
-  document: DocumentWithVersion & {
-    hasPageLinks: boolean;
-    isEmpty: boolean;
-    primaryVersion: any;
-  };
+  document: DocumentOverviewDocument;
   limits: {
     canAddLinks: boolean;
     canAddDocuments: boolean;
