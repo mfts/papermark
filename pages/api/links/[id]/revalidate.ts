@@ -18,7 +18,6 @@ export default async function handle(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  // POST /api/links/:id/revalidate
   const session = await getServerSession(req, res, authOptions);
   if (!session) {
     return res.status(401).end("Unauthorized");
