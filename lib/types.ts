@@ -58,6 +58,12 @@ export interface DocumentWithVersion extends Document {
   hasPageLinks: boolean;
 }
 
+export type DocumentOverviewDocument = Omit<DocumentWithVersion, "versions"> & {
+  hasPageLinks: boolean;
+  isEmpty: boolean;
+  primaryVersion: DocumentVersion;
+};
+
 export interface LinkWithViews extends Link {
   _count: {
     views: number;
