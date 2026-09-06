@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
-
 import { authOptions } from "@/lib/auth/auth-options";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
@@ -10,6 +8,8 @@ import { getSlackInstallationUrl } from "@/lib/integrations/slack/install";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { getSearchParams } from "@/lib/utils/get-search-params";
+
+export const dynamic = "force-dynamic";
 
 const oAuthAuthorizeSchema = z.object({
   teamId: z.string().cuid(),
