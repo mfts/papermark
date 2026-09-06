@@ -5,6 +5,8 @@ import { z } from "zod";
 import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 // Validation schema for query parameters
 const visitorFAQParamsSchema = z.object({
   linkId: z.string().cuid("Invalid link ID format"),

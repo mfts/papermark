@@ -9,6 +9,8 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { getSearchParams } from "@/lib/utils/get-search-params";
 
+export const dynamic = "force-dynamic";
+
 const oAuthAuthorizeSchema = z.object({
   teamId: z.string().cuid(),
 });
