@@ -138,7 +138,7 @@ export default function TokenSettings() {
                   </h2>
                   <BadgeTooltip
                     content="These API keys allow other apps to access your workspace. Use them with caution — do not share your API key with others, or expose it in the browser or other client-side code."
-                    className="max-w-80 text-left leading-5 text-gray-600"
+                    className="max-w-80 text-left leading-5 text-gray-600 dark:text-gray-300"
                   >
                     <CircleHelpIcon className="h-4 w-4 text-gray-400" />
                   </BadgeTooltip>
