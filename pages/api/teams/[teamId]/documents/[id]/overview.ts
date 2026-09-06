@@ -131,9 +131,10 @@ export default async function handle(
       });
     }
 
-    const primaryVersion = document.versions[0];
-    const hasLinks = document._count.links > 0;
-    const hasViews = document._count.views > 0;
+    const { versions, _count, ...documentFields } = document;
+    const primaryVersion = versions[0];
+    const hasLinks = _count.links > 0;
+    const hasViews = _count.views > 0;
 
     // Check for page links only if needed
     let hasPageLinks = false;
@@ -152,7 +153,7 @@ export default async function handle(
     // Basic response for instant loading
     const response = {
       document: {
-        ...serializeFileSize(document),
+        ...serializeFileSize(documentFields),
         primaryVersion: serializeFileSize(primaryVersion),
         hasPageLinks,
         isEmpty: !hasLinks && !hasViews, // Flag for empty state optimization
@@ -172,8 +173,8 @@ export default async function handle(
         isTrial: team?.plan.includes("drtrial") || false,
       },
       counts: {
-        links: document._count.links,
-        views: document._count.views,
+        links: _count.links,
+        views: _count.views,
       },
     };
 
