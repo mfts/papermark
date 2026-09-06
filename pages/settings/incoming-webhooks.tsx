@@ -37,7 +37,6 @@ export default function WebhookSettings() {
   const teamId = teamInfo?.currentTeam?.id;
   const router = useRouter();
   const [name, setName] = useState("");
-  console.log("🚀 ~ WebhookSettings ~ name:", name);
   const [webhookId, setWebhookId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -116,15 +115,15 @@ export default function WebhookSettings() {
     <AppLayout>
       <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
         <SettingsHeader />
-        <Card>
+        <Card className="border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base text-gray-900 dark:text-gray-100">
               Incoming Webhooks
               <BadgeTooltip content="Use webhooks to receive data from external services">
-                <CircleHelpIcon className="h-4 w-4 text-gray-500" />
+                <CircleHelpIcon className="h-4 w-4 text-gray-400" />
               </BadgeTooltip>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm text-gray-500 dark:text-gray-400">
               Create incoming webhooks to receive data from external services
               and automatically create new documents in Papermark.
             </CardDescription>
@@ -134,7 +133,9 @@ export default function WebhookSettings() {
             <div className="flex flex-col space-y-6">
               <div className="flex flex-col space-y-4">
                 <div>
-                  <Label htmlFor="webhook-name">Webhook Name</Label>
+                  <Label htmlFor="webhook-name" className="text-gray-900 dark:text-gray-100">
+                    Webhook Name
+                  </Label>
                   <Input
                     id="webhook-name"
                     placeholder="Enter a name for your webhook"
@@ -143,11 +144,11 @@ export default function WebhookSettings() {
                   />
                 </div>
                 {webhookId && (
-                  <Card>
+                  <Card className="border-gray-200 dark:border-gray-800 dark:bg-gray-950">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <div className="flex items-center gap-2">
-                          <Label>Your Webhook URL (copy it now)</Label>
+                          <Label className="text-gray-900 dark:text-gray-100">Your Webhook URL (copy it now)</Label>
                           <BadgeTooltip content="Use webhooks to receive data from external services">
                             <CircleHelpIcon className="h-4 w-4 text-gray-500" />
                           </BadgeTooltip>
@@ -186,8 +187,8 @@ export default function WebhookSettings() {
               </div>
               {/* Webhooks List */}
               <div>
-                <h3 className="mb-4 text-lg font-medium">Existing Webhooks</h3>
-                <Card className="min-h-14">
+                <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-gray-100">Existing Webhooks</h3>
+                <Card className="min-h-14 border-gray-200 dark:border-gray-800 dark:bg-gray-950">
                   {webhooks === undefined ? (
                     <div className="flex w-full items-center justify-center p-4">
                       <Loader className="h-5 w-5 animate-spin" />
@@ -205,7 +206,7 @@ export default function WebhookSettings() {
                           className="flex items-center justify-between p-4"
                         >
                           <div className="space-y-1">
-                            <label className="font-medium">
+                            <label className="font-medium text-gray-900 dark:text-gray-100">
                               {webhook.name}
                             </label>
                             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
