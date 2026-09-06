@@ -5,6 +5,7 @@ import { useState } from "react";
 import { TeamContextType } from "@/context/team-context";
 import {
   EyeIcon,
+  FolderPenIcon,
   FolderIcon,
   MoreVertical,
   TrashIcon,
@@ -15,6 +16,7 @@ import { mutate } from "swr";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { timeAgo } from "@/lib/utils";
 
+import { EditFolderModal } from "@/components/folders/edit-folder-modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -44,6 +46,7 @@ export function HiddenFolderCard({
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [renameOpen, setRenameOpen] = useState<boolean>(false);
 
   const folderPath = `/documents/tree${folder.path}`;
 
@@ -153,6 +156,17 @@ export function HiddenFolderCard({
               <EyeIcon className="mr-2 h-4 w-4" />
               Show in All Documents
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setRenameOpen(true);
+                setMenuOpen(false);
+              }}
+            >
+              <FolderPenIcon className="mr-2 h-4 w-4" />
+              Rename
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={(event) => {
@@ -168,6 +182,16 @@ export function HiddenFolderCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      {renameOpen ? (
+        <EditFolderModal
+          open={renameOpen}
+          setOpen={setRenameOpen}
+          folderId={folder.id}
+          name={folder.name}
+          icon={folder.icon}
+          color={folder.color}
+        />
+      ) : null}
     </div>
   );
 }

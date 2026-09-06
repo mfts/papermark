@@ -147,6 +147,7 @@ export function EditFolderModal({
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
       );
+      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents/hidden`);
     } catch (error) {
       setLoading(false);
       toast.error("Error updating folder. Please try again.");

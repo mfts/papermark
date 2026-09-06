@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { TeamContextType } from "@/context/team-context";
 import {
   EyeIcon,
+  FilePenIcon,
   MoreVertical,
   ServerIcon,
   TrashIcon,
@@ -18,6 +19,7 @@ import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import BarChart from "@/components/shared/icons/bar-chart";
+import { EditDocumentNameModal } from "@/components/documents/edit-document-name-modal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -50,6 +52,7 @@ export function HiddenDocumentCard({
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [renameOpen, setRenameOpen] = useState<boolean>(false);
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -271,6 +274,16 @@ export function HiddenDocumentCard({
               <EyeIcon className="mr-2 h-4 w-4" />
               Show in All Documents
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                setRenameOpen(true);
+                setMenuOpen(false);
+              }}
+            >
+              <FilePenIcon className="mr-2 h-4 w-4" />
+              Rename
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={(event) => handleButtonClick(event, prismaDocument.id)}
@@ -287,6 +300,14 @@ export function HiddenDocumentCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      {renameOpen ? (
+        <EditDocumentNameModal
+          open={renameOpen}
+          setOpen={setRenameOpen}
+          documentId={prismaDocument.id}
+          documentName={prismaDocument.name}
+        />
+      ) : null}
     </div>
   );
 }
